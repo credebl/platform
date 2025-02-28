@@ -80,7 +80,7 @@ export class SchemaController {
   @Get('/:orgId/schemas/:schemaId/cred-defs')
   @ApiOperation({
     summary: 'Credential definitions by schema Id',
-    description: 'Retrives credential definition list by schema Id'
+    description: 'Retrives credential definition list by schema Id available on platform.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiQuery({
@@ -124,7 +124,7 @@ export class SchemaController {
   @Get('/:orgId/schemas')
   @ApiOperation({
     summary: 'Schemas by org id.',
-    description: 'Retrieves all schemas belonging to a specific organization.'
+    description: 'Retrieves all schemas belonging to a specific organization available on platform.'
   })
   @ApiQuery({
     name: 'sortField',

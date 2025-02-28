@@ -142,7 +142,7 @@ export class UserController {
   @Get('/profile')
   @ApiOperation({
     summary: 'Fetch login user details',
-    description: 'Fetch login user details'
+    description: 'Retrieves the profile details of the currently logged-in user.'
   })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
@@ -166,7 +166,7 @@ export class UserController {
   @Get('/platform-settings')
   @ApiOperation({
     summary: 'Get all platform settings',
-    description: 'Get all platform settings'
+    description: 'Retrieves all platform settings.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)
@@ -191,7 +191,7 @@ export class UserController {
  */
   @Get('/activity')
   @ApiOperation({
-    summary: 'users activity',
+    summary: 'Fetch users activity',
     description: 'Fetch a list of recent activities performed by the user.'
   })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
@@ -222,7 +222,7 @@ export class UserController {
   @Get('/org-invitations')
   @ApiOperation({
     summary: 'organization invitations',
-    description: 'Retrieve a list of invitations sent to the user to join organizations.'
+    description: 'Retrieve a list of invitations received to the user to join organizations.'
   })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
@@ -351,7 +351,7 @@ export class UserController {
   }
 
  /**
-   * @Body userInfo
+   * @body AddPasskeyDetailsDto
    * @returns User's profile update status
    */
   
@@ -380,6 +380,7 @@ export class UserController {
 
   /**
  * Updates platform settings.
+ * @body UpdatePlatformSettingsDto
  * 
  * @returns Status of the update operation.
  */

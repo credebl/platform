@@ -40,7 +40,7 @@ export class CredentialDefinitionController {
   @Get('/orgs/:orgId/cred-defs/:credDefId')
   @ApiOperation({
     summary: 'Get credential definition by credential definition Id',
-    description: 'Fetches the details of a specific credential definition using its ID.'
+    description: 'Fetches the details of a specific credential definition using its ID available credential definitions on platform.'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
@@ -68,7 +68,7 @@ export class CredentialDefinitionController {
   @Get('/verifiation/cred-defs/:schemaId')
   @ApiOperation({
     summary: 'Get all credential definitions by schema Id',
-    description: 'Fetches all credential definitions associated with a specific schema ID.'
+    description: 'Fetches all credential definitions associated with a specific schema ID available credential definitions on platform.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'))
@@ -95,7 +95,7 @@ export class CredentialDefinitionController {
   @Get('/orgs/:orgId/cred-defs')
   @ApiOperation({
     summary: 'Fetch all credential definitions by organization Id',
-    description: 'Fetches all credential definitions belonging to a specific organization.'
+    description: 'Fetches all credential definitions belonging to a specific organization created on the platform.'
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

@@ -292,7 +292,7 @@ export class AgentController {
   @Post('/orgs/:orgId/agents/configure')
   @ApiOperation({
     summary: 'Configure the organization agent',
-    description: 'Configure the running agent for the organization using the provided configuration details.'
+    description: 'Configure the running dedicated agent for the organization using the provided configuration details.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
@@ -326,8 +326,8 @@ export class AgentController {
    */
   @Delete('/orgs/:orgId/agents/wallet')
   @ApiOperation({
-    summary: 'Delete shared agent wallet',
-    description: 'Delete shared agent wallet for the organization.'
+    summary: 'Delete agent wallet',
+    description: 'Delete agent wallet for the organization using orgId.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER)

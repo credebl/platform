@@ -9,7 +9,7 @@ import { toLowerCase, trim } from '@credebl/common/cast.helper';
 @ApiExtraModels()
 export class RegisterTenantDto {
 
-  @ApiProperty({ example: 'awqx@getnada.com' })
+  @ApiProperty({ example: 'awqx@yopmail.com' })
   @Transform(({ value }) => toLowerCase(value))
   @IsNotEmpty({ message: 'Email is required.' })
   @MaxLength(256, { message: 'Email must be at most 256 character.' })

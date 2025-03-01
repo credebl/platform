@@ -1,11 +1,11 @@
 # Stage 1: Build the application
 FROM node:18-alpine as build
 # Install OpenSSL
-RUN apk add --no-cache openssl
 
 RUN npm install -g pnpm --ignore-scripts \
     && apk update \
     && apk add openssh-client \
+    && add --no-cache openssl \
     && apk add aws-cli \
     && apk add docker \
     && apk add docker-compose 
@@ -31,11 +31,10 @@ RUN pnpm run build agent-service
 # Stage 2: Create the final image
 FROM node:18-alpine
 # Install OpenSSL
-RUN apk add --no-cache openssl
-
 RUN npm install -g pnpm --ignore-scripts \
     && apk update \
     && apk add openssh-client \
+    && add --no-cache openssl \
     && apk add aws-cli \
     && apk add docker \
     && apk add docker-compose 

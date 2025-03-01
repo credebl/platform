@@ -1,6 +1,7 @@
 # Stage 1: Build the application
 FROM node:18-slim as build
-RUN npm install -g pnpm
+# Install OpenSSL
+RUN apk add --no-cache openssl && npm install -g pnpm --ignore-scripts
 
 # We don't need the standalone Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
@@ -35,6 +36,8 @@ RUN pnpm run build user
 
 # Stage 2: Create the final image
 FROM node:18-slim
+# Install OpenSSL
+RUN apk add --no-cache openssl
 
 # We don't need the standalone Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true

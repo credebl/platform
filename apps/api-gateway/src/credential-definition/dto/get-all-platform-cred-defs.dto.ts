@@ -8,11 +8,11 @@ import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 export class GetAllPlatformCredDefsDto extends PaginationDto {
 
     @ApiProperty({ example: '1a7eac11-ff05-40d7-8351-4d7467687cad'})
-    @Transform(({ value }) => trim(value))
     @ApiPropertyOptional()
+    @Transform(({ value }) => ('string' === typeof value && '' === value.trim() ? undefined : value.trim()))
     @IsOptional()
     @IsUUID('4', { message: 'Invalid format of ledgerId' })
-    ledgerId: string;
+    ledgerId?: string;
     
     @ApiProperty({
         required: false

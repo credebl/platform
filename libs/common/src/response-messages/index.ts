@@ -151,7 +151,7 @@ export const ResponseMessages = {
       create: 'Schema created successfully.'
     },
     error: {
-      invalidSchemaId: 'Invalid schema Id provided.',
+      invalidSchemaId: 'Please provide valid schema Id',
       invalidData: 'Invalid data provided.',
       nameNotEmpty: 'Schema name is required',
       versionNotEmpty: 'Schema version is required',

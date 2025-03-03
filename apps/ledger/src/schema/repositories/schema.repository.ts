@@ -157,9 +157,10 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemasDetailsBySchemaName(schemaName: string): Promise<ISchemaId[]> {
+  async getSchemasDetailsBySchemaName(schemaName: string, orgId: string): Promise<ISchemaId[]> {
     const schemaDetails = await this.prisma.schema.findMany({
       where: {
+        orgId,
         name: { contains: schemaName, mode: 'insensitive' }
       },
 

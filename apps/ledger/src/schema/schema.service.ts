@@ -716,9 +716,9 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async getSchemaDetailsBySchemaName(schemaName: string): Promise<ISchemaId[]> {   
+  async getSchemaDetailsBySchemaName(schemaName: string, orgId:string): Promise<ISchemaId[]> {   
     try {  
-     const getSchemaDetails = await this.schemaRepository.getSchemasDetailsBySchemaName(schemaName);
+     const getSchemaDetails = await this.schemaRepository.getSchemasDetailsBySchemaName(schemaName, orgId);
      return getSchemaDetails;
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);

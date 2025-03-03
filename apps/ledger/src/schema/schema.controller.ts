@@ -35,8 +35,9 @@ export class SchemaController {
   }
 
   @MessagePattern({ cmd: 'get-schemas-details-by-name' })
-  async getSchemasDetailsBySchemaName(schemaName: string): Promise<ISchemaId[]> {
-    return this.schemaService.getSchemaDetailsBySchemaName(schemaName);
+  async getSchemasDetailsBySchemaName(payload:{schemaName:string, orgId:string}): Promise<ISchemaId[]> {
+    const {orgId, schemaName} = payload;
+    return this.schemaService.getSchemaDetailsBySchemaName(schemaName, orgId);
   }
 
   @MessagePattern({ cmd: 'get-schema-by-id' })

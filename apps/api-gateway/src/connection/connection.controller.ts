@@ -217,7 +217,7 @@ export class ConnectionController {
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     async sendQuestion(
         @Param('orgId') orgId: string,
-        @Param('connectionId') connectionId: string,
+        @Param('connectionId', TrimStringParamPipe) connectionId: string,
         @Body() questionDto: QuestionDto,
         @User() reqUser: IUserRequestInterface,
         @Res() res: Response

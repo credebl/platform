@@ -16,7 +16,7 @@ import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { EmptyStringParamPipe, TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 
 @ApiBearerAuth()
@@ -46,8 +46,8 @@ export class CredentialDefinitionController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getCredentialDefinitionById(
-    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
-    @Param('credDefId') credentialDefinitionId: string,
+    @Param('orgId') orgId: string,
+    @Param('credDefId', TrimStringParamPipe, EmptyStringParamPipe.forParam('credDefId')) credentialDefinitionId: string,
     @Res() res: Response
   ): Promise<Response> {
     const credentialsDefinitionDetails = await this.credentialDefinitionService.getCredentialDefinitionById(credentialDefinitionId, orgId);
@@ -77,6 +77,10 @@ export class CredentialDefinitionController {
     @Res() res: Response
   ): Promise<Response> {
     
+    if (!schemaId) {
+      throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
+    }
+
     const credentialsDefinitions = await this.credentialDefinitionService.getCredentialDefinitionBySchemaId(schemaId);
     const credDefResponse: IResponse = {
       statusCode: HttpStatus.OK,

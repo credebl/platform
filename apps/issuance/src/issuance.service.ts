@@ -460,7 +460,8 @@ export class IssuanceService {
 
       let schemaIds;
       if (issuedCredentialsSearchCriteria?.search) {
-        const schemaDetails = await this._getSchemaDetailsByName(issuedCredentialsSearchCriteria?.search);
+   
+        const schemaDetails = await this._getSchemaDetailsByName(issuedCredentialsSearchCriteria?.search, orgId);
     
         if (schemaDetails && 0 < schemaDetails?.length) {
             schemaIds = schemaDetails.map(item => item?.schemaLedgerId);
@@ -519,11 +520,11 @@ export class IssuanceService {
     }
   }
 
-  async _getSchemaDetailsByName(schemaName: string): Promise<ISchemaId[]> {
+  async _getSchemaDetailsByName(schemaName: string, orgId: string): Promise<ISchemaId[]> {
     const pattern = { cmd: 'get-schemas-details-by-name' };
-
+    const payload = {schemaName, orgId};
     const schemaDetails = await this.natsClient
-      .send<ISchemaId[]>(this.issuanceServiceProxy, pattern, schemaName)
+      .send<ISchemaId[]>(this.issuanceServiceProxy, pattern, payload)
       
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);

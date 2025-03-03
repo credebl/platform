@@ -51,13 +51,14 @@ export class SchemaController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getSchemaById(
     @Res() res: Response,
-    @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
+    @Param('orgId') orgId: string,    
     @Param('schemaId', TrimStringParamPipe) schemaId: string
   ): Promise<Response> {
 
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
     }
+    
     const schemaDetails = await this.appService.getSchemaById(schemaId, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -92,7 +93,7 @@ export class SchemaController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getcredDeffListBySchemaId(
     @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,    
-    @Param('schemaId') schemaId: string,
+    @Param('schemaId', TrimStringParamPipe) schemaId: string,
     @Query() getCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
     @Res() res: Response,
     @User() user: IUserRequestInterface): Promise<Response> {

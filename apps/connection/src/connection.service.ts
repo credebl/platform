@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { HttpException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { from, map } from 'rxjs';
 import {
@@ -466,8 +466,16 @@ export class ConnectionService {
       const createConnectionInvitation = await this._receiveInvitationUrl(url, orgId, receiveInvitationUrl);
       return createConnectionInvitation.response;
     } catch (error) {
-      this.logger.error(`[receiveInvitationUrl] - error in receive invitation url : ${JSON.stringify(error)}`);
+      this.logger.error(`[receiveInvitationUrl] - error in receive invitation url : ${JSON.stringify(error, null, 2)}`);
 
+      const customErrorMessage = error?.status?.message?.error?.message;
+      if (customErrorMessage) {
+        throw new RpcException({
+          statusCode: HttpStatus.CONFLICT,
+          message: customErrorMessage,
+          error: ResponseMessages.errorMessages.conflict
+        });
+      } else 
       if (error?.response?.error?.reason) {
         throw new RpcException({
           message: ResponseMessages.connection.error.connectionNotFound,
@@ -487,9 +495,22 @@ export class ConnectionService {
   ): Promise<{
     response;
   }> {
+
     const pattern = { cmd: 'agent-receive-invitation-url' };
     const payload = { url, orgId, receiveInvitationUrl };
-    return this.natsCall(pattern, payload);
+
+    try {
+      return await this.natsCall(pattern, payload);
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message
+        },
+        error.status
+      );
+    }
   }
 
   async receiveInvitation(

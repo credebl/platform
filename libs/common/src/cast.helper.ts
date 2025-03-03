@@ -156,6 +156,30 @@ export class TrimStringParamPipe implements PipeTransform {
   }
 }
 
+//TODO: Need to add this logic in `trimstringpipe`
+export class EmptyStringParamPipe implements PipeTransform {
+  private paramName: string;
+
+  static forParam(paramName: string): PipeTransform {
+    return new EmptyStringParamPipe(paramName);
+  }
+
+  private constructor(paramName: string) {
+    this.paramName = paramName;
+  }
+  
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
+  transform(value: string) {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      throw new BadRequestException(`${this.paramName} is required`);
+    }
+
+    return plainToClass(String, trimmedValue);
+  }
+}
+
 // export const IsNotUUID = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
 //   registerDecorator({
 //     name: 'isNotUUID',

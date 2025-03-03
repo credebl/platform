@@ -89,6 +89,7 @@ export class GetAllSchemaByPlatformDto {
 
     @ApiProperty({ example: '1a7eac11-ff05-40d7-8351-4d7467687cad'})
     @ApiPropertyOptional()
+    @Transform(({ value }) => ('string' === typeof value && '' === value.trim() ? undefined : value.trim()))
     @IsOptional()
     @IsUUID('4', { message: 'Invalid format of ledgerId' })
     ledgerId?: string;

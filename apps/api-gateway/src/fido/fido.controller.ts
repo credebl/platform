@@ -30,7 +30,7 @@ export class FidoController {
      * @returns User details
      */
     @Get('/passkey/:email')
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Fetch fido user details', description: 'Retrieve the details of a FIDO user by their email address.' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -169,7 +169,7 @@ export class FidoController {
      * @returns Updated device name
      */
     @Put('/passkey/:credentialId')
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Update fido user device name', description: 'Update the device name of a FIDO user.' })
     @ApiQuery({ name: 'deviceName', required: true })
@@ -196,7 +196,7 @@ export class FidoController {
      * @returns Success message
      */
     @Delete('/passkey/:credentialId')
-    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+    @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Delete fido user device', description: 'Delete a FIDO user device by its credential ID.' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })

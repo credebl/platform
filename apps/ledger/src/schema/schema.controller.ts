@@ -6,7 +6,8 @@ import {
   ISchemaCredDeffSearchInterface,
   ISchemaExist,
   ISchemaSearchPayload,
-  SaveSchemaPayload
+  SaveSchemaPayload,
+  SchemaDetails
 } from './interfaces/schema-payload.interface';
 import { Prisma, schema } from '@prisma/client';
 import {
@@ -17,6 +18,7 @@ import {
 } from '@credebl/common/interfaces/schema.interface';
 import { IschemaPayload } from './interfaces/schema.interface';
 import { ISchemaId } from './schema.interface';
+import { SchemaIdsDto } from 'apps/api-gateway/src/schema/dtos/get-schema-by-ids-dto';
 
 @Controller('schema')
 export class SchemaController {
@@ -50,6 +52,11 @@ export class SchemaController {
   async getSchemas(schemaSearch: ISchemaSearchPayload): Promise<ISchemasWithPagination> {
     const { schemaSearchCriteria, orgId } = schemaSearch;
     return this.schemaService.getSchemas(schemaSearchCriteria, orgId);
+  }
+
+  @MessagePattern({ cmd: 'get-schemas-by-ids' })
+  async getSchemasByIds(schemaDetails: SchemaIdsDto): Promise<SchemaDetails[]> {
+    return this.schemaService.getSchemasByIds(schemaDetails.schemaIds);
   }
 
   @MessagePattern({ cmd: 'get-cred-def-list-by-schemas-id' })

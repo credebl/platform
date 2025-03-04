@@ -122,3 +122,11 @@ export interface ISaveSchema {
 export interface SaveSchemaPayload {
     schemaDetails: ISaveSchema
 }
+
+
+export interface SchemaDetails {
+    id: string;
+    type: string;
+    isSchemaArchived: boolean;
+    isSample: boolean;
+  }

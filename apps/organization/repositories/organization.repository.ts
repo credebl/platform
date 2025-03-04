@@ -67,7 +67,7 @@ export class OrganizationRepository {
 
   /**
    *
-   * @Body createOrgDtp
+   * @body CreateOrganizationDto
    * @returns create Organization
    */
 
@@ -98,7 +98,7 @@ export class OrganizationRepository {
 
   /**
    *
-   * @Body updateOrgDt0
+   * @body updateOrgDto
    * @returns update Organization
    */
 
@@ -156,7 +156,7 @@ export class OrganizationRepository {
 
   /**
    *
-   * @Body userOrgRoleDto
+   * @body userOrgRoleDto
    * @returns create userOrgRole
    */
 
@@ -181,7 +181,7 @@ export class OrganizationRepository {
 
   /**
    *
-   * @Body sendInvitationDto
+   * @body sendInvitationDto
    * @returns orgInvitaionDetails
    */
 
@@ -652,6 +652,11 @@ export class OrganizationRepository {
                     description: true
                   }
                 }
+              }
+            },
+            org_agents: {
+              select : {
+                orgDid: true
               }
             }
           },

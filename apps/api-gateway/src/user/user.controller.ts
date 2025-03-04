@@ -50,6 +50,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { AwsService } from '@credebl/aws/aws.service';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -104,11 +105,17 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+    /**
+   * Get public profile details of a user by username.
+   * 
+   * @param username The username of the user.
+   * @returns Public profile information.
+   */
   @Get('public-profiles/:username')
   @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Fetch user details',
-    description: 'Fetch user details'
+    description: 'Retrieve publicly available details of a user using their username.'
   })
   @ApiParam({
     name: 'username',
@@ -127,10 +134,16 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+
+  /**
+   * Retrieves the profile details of the currently logged-in user.
+   *
+   * @returns The user profile details.
+   */
   @Get('/profile')
   @ApiOperation({
     summary: 'Fetch login user details',
-    description: 'Fetch login user details'
+    description: 'Retrieves the profile details of the currently logged-in user.'
   })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
@@ -146,13 +159,15 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  /**
-   * @returns platform settings
+ /**
+   * Retrieves all platform settings.
+   * 
+   * @returns  The platform settings.
    */
   @Get('/platform-settings')
   @ApiOperation({
     summary: 'Get all platform settings',
-    description: 'Get all platform settings'
+    description: 'Retrieves all platform settings.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)
@@ -169,10 +184,16 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  /**
+ * Fetch user activities.
+ * 
+ * @param limit - Number of activities to fetch.
+ * @returns A response containing user activity data.
+ */
   @Get('/activity')
   @ApiOperation({
-    summary: 'users activity',
-    description: 'Fetch users activity'
+    summary: 'Fetch users activity',
+    description: 'Fetch a list of recent activities performed by the user.'
   })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
@@ -192,14 +213,17 @@ export class UserController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-  /**
-   * @returns Organization invitation data
-   */
 
+
+ /**
+ * Fetch organization invitations.
+ *
+ * @returns A paginated list of organization invitations.
+ */
   @Get('/org-invitations')
   @ApiOperation({
     summary: 'organization invitations',
-    description: 'Fetch organization invitations'
+    description: 'Retrieve a list of invitations received to the user to join organizations.'
   })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
@@ -247,13 +271,14 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  /**
-   *
-   * @param email
-   * @returns User's email exist status
-   */
+ /**
+ * Checks if a user is registered and verifies email existence.
+ *
+ * @param email The email address to check.
+ * @returns Returns user registration and email verification status.
+ */
   @Get('/:email')
-  @ApiOperation({ summary: 'Check user registration and email verification status', description: 'Check user registration and email verification status' })
+  @ApiOperation({ summary: 'Check user registration and email verification status', description: 'Check if a user is already registered and if their email already exists.' })
   async checkUserExist(@Param() emailParam: EmailValidator, @Res() res: Response): Promise<Response> {
     const userDetails = await this.userService.checkUserExist(emailParam.email);
 
@@ -267,20 +292,22 @@ export class UserController {
   }
 
   /**
-*
-   * @param acceptRejectInvitation
-   * @returns Organization invitation status
-   */
+ * Accept or reject an organization invitation.
+ *
+ * @param invitationId The ID of the organization invitation.
+ * @body AcceptRejectInvitationDto
+ * @returns The status of the organization invitation response.
+ */
   @Post('/org-invitations/:invitationId')
   @ApiOperation({
     summary: 'accept/reject organization invitation',
-    description: 'Accept or Reject organization invitations'
+    description: 'Accept or reject an invitation to join an organization.'
   })
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   async acceptRejectInvitaion(
       @Body() acceptRejectInvitation: AcceptRejectInvitationDto,
-      @Param('invitationId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for InvitationId`); }})) invitationId: string,
+      @Param('invitationId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for InvitationId`); }})) invitationId: string,
     @User() reqUser: user,
     @Res() res: Response
   ): Promise<Response> {
@@ -295,13 +322,15 @@ export class UserController {
   }
   
   /**
-   * @Body updateUserProfileDto
-   * @returns User details
-   */
+ * Updates the user profile.
+ *
+ * @body UpdateUserProfileDto
+ * @returns A response indicating the success of the update operation.
+ */
   @Put('/')
   @ApiOperation({
     summary: 'Update user profile',
-    description: 'Update user profile'
+    description: 'Modify the user profile details such as name, email, or other information.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
@@ -321,14 +350,15 @@ export class UserController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
  /**
-   * @Body userInfo
+   * @body AddPasskeyDetailsDto
    * @returns User's profile update status
    */
   
 
  @Put('/password/:email')
- @ApiOperation({ summary: 'Store user password details', description: 'Store user password details' })
+ @ApiOperation({ summary: 'Store user password details', description: 'Securely store and update the user’s password details.' })
  @ApiExcludeEndpoint()
  @ApiBearerAuth()
  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
@@ -350,14 +380,15 @@ export class UserController {
  }
 
   /**
-   * @Body platformSettings
-   * @returns platform settings updated status
-   */
-  
+ * Updates platform settings.
+ * @body UpdatePlatformSettingsDto
+ * 
+ * @returns Status of the update operation.
+ */
   @Put('/platform-settings')
   @ApiOperation({
     summary: 'Update platform settings',
-    description: 'Update platform settings'
+    description: 'Modify platform settings. Only accessible by platform admins.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, UserAccessGuard)
   @Roles(OrgRoles.PLATFORM_ADMIN)

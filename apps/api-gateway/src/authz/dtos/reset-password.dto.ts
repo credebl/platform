@@ -5,7 +5,7 @@ import { Transform } from 'class-transformer';
 import {  trim } from '@credebl/common/cast.helper';
 
 export class ResetPasswordDto {
-    @ApiProperty({ example: 'awqx@getnada.com' })
+    @ApiProperty({ example: 'awqx@yopmail.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })

@@ -23,6 +23,7 @@ import { ClientProxy} from '@nestjs/microservices';
 import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto} from './dtos/question-answer.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('connections')
@@ -37,23 +38,23 @@ export class ConnectionController {
     ) { }
 
     /**
-        * Get connection details by connectionId
-        * @param connectionId
-        * @param orgId
-        * @returns connection details by connection Id
-    */
+     * Get connection details by connectionId
+     * @param connectionId The ID of the connection
+     * @param orgId The ID of the organization
+     * @returns Connection details by connection Id
+     */
     @Get('orgs/:orgId/connections/:connectionId')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
     @ApiOperation({
-        summary: `Get connections by connection Id`,
-        description: `Get connections by connection Id`
+        summary: `Get connection details by connectionId`,
+        description: `Retrieve the details of a specific connection by its connectionId for a specific organization.`
     })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getConnectionsById(
         @User() user: IUserRequest,
-        @Param('connectionId') connectionId: string,
         @Param('orgId') orgId: string,
+        @Param('connectionId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.connection.error.invalidConnectionId); }})) connectionId: string,
         @Res() res: Response
     ): Promise<Response> {
         const connectionsDetails = await this.connectionService.getConnectionsById(user, connectionId, orgId);
@@ -66,17 +67,17 @@ export class ConnectionController {
     }
 
     /**
-    * Description: Get all connections
-    * @param user
-    * @param orgId
-    * 
-    */
+     * Get all connections
+     * @param user The user making the request
+     * @param orgId The ID of the organization
+     * @returns List of all connections for a specific organization
+     */
     @Get('/orgs/:orgId/connections')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
     @ApiOperation({
         summary: `Fetch all connections by orgId`,
-        description: `Fetch all connections by orgId`
+        description: `Retrieve all connections for a specific organization. Supports pagination and sorting.`
     })
     @ApiQuery({
         name: 'sortField',
@@ -110,17 +111,17 @@ export class ConnectionController {
     }
 
     /**
-   * Description: Get all connections from agent
-   * @param user
-   * @param orgId
-   *
-   */
+ * Get all connections from agent
+ * @param user The user making the request
+ * @param orgId The ID of the organization
+ * @returns List of all connections from agent for a specific organization
+ */
   @Get('/orgs/:orgId/agent/connections')
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
   @ApiOperation({
     summary: `Fetch all connections from agent by orgId`,
-    description: `Fetch all connections from agent by orgId`
+    description: `Retrieve all connections from agent for the organization.`
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getConnectionListFromAgent(
@@ -142,13 +143,18 @@ export class ConnectionController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-
+   
+    /**
+     * Get question-answer record
+     * @param orgId The ID of the organization
+     * @returns Question-answer record for a specific organization
+     */
     @Get('orgs/:orgId/question-answer/question')
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
     @ApiOperation({
         summary: `Get question-answer record`,
-        description: `Get question-answer record`
+        description: `Retrieve the question-answer record for a specific organization.`
     })
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getQuestionAnswersRecord(
@@ -165,13 +171,15 @@ export class ConnectionController {
     }
 
      /**
-        * Create out-of-band connection invitation
-        * @param connectionDto 
-        * @param res 
-        * @returns Created out-of-band connection invitation url
-    */
+     * Create out-of-band connection invitation
+     * @param orgId The ID of the organization
+     * @param createOutOfBandConnectionInvitation The details of the out-of-band connection invitation
+     * @param reqUser The user making the request
+     * @param res The response object
+     * @returns Created out-of-band connection invitation URL
+     */
      @Post('/orgs/:orgId/connections')
-     @ApiOperation({ summary: 'Create outbound out-of-band connection invitation', description: 'Create outbound out-of-band connection invitation' })
+     @ApiOperation({ summary: 'Create outbound out-of-band connection invitation', description: 'Create an outbound out-of-band connection invitation for the organization.' })
      @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
      @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
      @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
@@ -193,14 +201,23 @@ export class ConnectionController {
  
      }
 
+    /**
+   * Send question
+   * @param orgId The ID of the organization
+   * @param connectionId The ID of the connection
+   * @param questionDto The details of the question
+   * @param reqUser The user making the request
+   * @param res The response object
+   * @returns The details of the sent question
+   */
     @Post('/orgs/:orgId/question-answer/question/:connectionId')
-    @ApiOperation({ summary: '', description: 'send question' })
+    @ApiOperation({ summary: 'Send question', description: 'Send a question to the connection ID' })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     async sendQuestion(
         @Param('orgId') orgId: string,
-        @Param('connectionId') connectionId: string,
+        @Param('connectionId', TrimStringParamPipe) connectionId: string,
         @Body() questionDto: QuestionDto,
         @User() reqUser: IUserRequestInterface,
         @Res() res: Response
@@ -217,9 +234,16 @@ export class ConnectionController {
         return res.status(HttpStatus.CREATED).json(finalResponse);
 
     }
-
+      /**
+   * Receive Invitation URL
+   * @param orgId The ID of the organization
+   * @param receiveInvitationUrl The details of the invitation URL
+   * @param user The user making the request
+   * @param res The response object
+   * @returns The details of the received invitation URL
+   */
     @Post('/orgs/:orgId/receive-invitation-url')
-    @ApiOperation({ summary: 'Receive Invitation URL', description: 'Receive Invitation URL' })
+    @ApiOperation({ summary: 'Receive Invitation URL', description: 'Receive an invitation URL for the organization.' })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
@@ -238,9 +262,16 @@ export class ConnectionController {
         };
         return res.status(HttpStatus.CREATED).json(finalResponse);
     }
-
+      /**
+   * Receive Invitation
+   * @param orgId The ID of the organization
+   * @param receiveInvitation The details of the invitation
+   * @param user The user making the request
+   * @param res The response object
+   * @returns The details of the received invitation
+   */
     @Post('/orgs/:orgId/receive-invitation')
-    @ApiOperation({ summary: 'Receive Invitation', description: 'Receive Invitation' })
+    @ApiOperation({ summary: 'Receive Invitation', description: 'Receive an invitation for the organization using the invitation object.' })
     @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
@@ -261,16 +292,16 @@ export class ConnectionController {
     }
 
     /**
-   * Catch connection webhook responses.
-   * @Body connectionDto
-   * @param orgId
-   * @returns Callback URL for connection and created connections details
-   */
+ * Catch connection webhook responses
+ * @param connectionDto The details of the connection
+ * @param orgId The ID of the organization
+ * @returns Callback URL for connection and created connections details
+ */
   @Post('wh/:orgId/connections/')
   @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Catch connection webhook responses',
-    description: 'Callback URL for connection'
+    description: 'Receive connection webhook responses for the organization.'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async getConnectionWebhook(
@@ -305,12 +336,17 @@ export class ConnectionController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-
+/**
+ * Catch question-answer webhook responses
+ * @param questionAnswerWebhookDto The details of the question-answer webhook
+ * @param orgId The ID of the organization
+ * @returns Callback URL for question-answer
+ */
   @Post('wh/:orgId/question-answer/')
   @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Catch question-answer webhook responses',
-    description: 'Callback URL for question-answer'
+    description: 'Receive question-answer webhook responses for the organization.'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   async getQuestionAnswerWebhook(
@@ -338,9 +374,15 @@ export class ConnectionController {
     } 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-
+  /**
+   * Delete connection record
+   * @param orgId The ID of the organization
+   * @param user The user making the request
+   * @param res The response object
+   * @returns The status of the deletion operation
+   */
   @Delete('/orgs/:orgId/connections')
-  @ApiOperation({ summary: 'Delete connection record', description: 'Delete connections by orgId' })
+  @ApiOperation({ summary: 'Delete connection record', description: 'Delete connection records by orgId' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
@@ -365,15 +407,23 @@ export class ConnectionController {
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-
+  /**
+ * Send basic message
+ * @param orgId The ID of the organization
+ * @param connectionId The ID of the connection
+ * @param basicMessageDto The details of the basic message
+ * @param reqUser The user making the request
+ * @param res The response object
+ * @returns The details of the sent basic message
+ */
   @Post('/orgs/:orgId/basic-message/:connectionId')
-    @ApiOperation({ summary: 'Send basic message', description: 'Send basic message' })
-    @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiOperation({ summary: 'Send basic message', description: 'Send a basic message to a specific connection for a specific organization.' })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
     @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER, OrgRoles.SUPER_ADMIN, OrgRoles.PLATFORM_ADMIN)
     @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
     async sendBasicMessage(
         @Param('orgId') orgId: string,
-        @Param('connectionId') connectionId: string,
+        @Param('connectionId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.connection.error.invalidConnectionId); }})) connectionId: string,
         @Body() basicMessageDto: BasicMessageDto,
         @User() reqUser: IUserRequestInterface,
         @Res() res: Response

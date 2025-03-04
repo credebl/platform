@@ -61,18 +61,20 @@ export class AgentController {
 
   /**
    * Get Organization agent health
-   * @param orgId
-   * @param reqUser
-   * @param res
+   * @param orgId The ID of the organization
+   * @param reqUser The user making the request
+   * @param res The response object
    * @returns Get agent details
    */
   @Get('/orgs/:orgId/agents/health')
   @ApiOperation({
     summary: 'Get the agent health details',
-    description: 'Get the agent health details'
+    description: 'Get the agent health details for the organization'
   })
-  @UseGuards(AuthGuard('jwt'))
-  async getAgentHealth(@Param('orgId') orgId: string, @User() reqUser: user, @Res() res: Response): Promise<Response> {
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER, OrgRoles.VERIFIER)
+  
+  async getAgentHealth(@Param('orgId') orgId: string, @User() reqUser: user, @Res() res: Response): Promise<Response> {    
     const agentData = await this.agentService.getAgentHealth(reqUser, orgId);
 
     const finalResponse: IResponse = {
@@ -84,10 +86,16 @@ export class AgentController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  /**
+   * Get the ledger config details
+   * @param reqUser The user making the request
+   * @param res The response object
+   * @returns Ledger config details
+   */
   @Get('/orgs/agents/ledgerConfig')
   @ApiOperation({
     summary: 'Get the ledger config details',
-    description: 'Get the ledger config details'
+    description: 'Get the all supported ledger configuration details for the platform'
   })
   @UseGuards(AuthGuard('jwt'))
   async getLedgerDetails(@User() reqUser: user, @Res() res: Response): Promise<Response> {
@@ -104,14 +112,15 @@ export class AgentController {
 
   /**
    * Spinup the agent by organization
-   * @param agentSpinupDto
-   * @param user
+   * @param agentSpinupDto The details of the agent to be spun up
+   * @param user The user making the request
+   * @param res The response object
    * @returns Get agent status
    */
   @Post('/orgs/:orgId/agents/spinup')
   @ApiOperation({
-    summary: 'Agent spinup',
-    description: 'Create a new agent spin up.'
+    summary: 'Spinup the platform admin agent',
+    description: 'Initialize and configure a new platform admin agent for the platform.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
@@ -139,20 +148,20 @@ export class AgentController {
 
   /**
    * Create wallet for shared agent
-   * @param orgId
-   * @param createTenantDto
-   * @param user
-   * @param res
-   * @returns wallet initialization status
+   * @param orgId The ID of the organization
+   * @param createTenantDto The details of the tenant to be created
+   * @param user The user making the request
+   * @param res The response object
+   * @returns Wallet initialization status
    */
   @Post('/orgs/:orgId/agents/wallet')
   @ApiOperation({
-    summary: 'Shared Agent',
-    description: 'Create a shared agent.'
+    summary: 'Create Shared Agent Wallet',
+    description: 'Initialize and create a shared agent wallet for the organization.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Wallet successfully created', type: ApiResponseDto })
   async createTenant(
     @Param('orgId') orgId: string,
     @Body() createTenantDto: CreateTenantDto,
@@ -174,13 +183,16 @@ export class AgentController {
 
   /**
    * Create wallet
-   * @param orgId
-   * @returns wallet
+   * @param orgId The ID of the organization
+   * @param createWalletDto The details of the wallet to be created
+   * @param user The user making the request
+   * @param res The response object
+   * @returns Wallet details
    */
   @Post('/orgs/:orgId/agents/createWallet')
   @ApiOperation({
-    summary: 'Create wallet',
-    description: 'Create wallet'
+    summary: 'Create tenant in the agent',
+    description: 'Create a new wallet for the organization without storing the wallet details in the platform.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
@@ -203,16 +215,18 @@ export class AgentController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  // This function will be used after multiple did method implementation in create wallet
   /**
    * Create did
-   * @param orgId
-   * @returns did
+   * @param orgId The ID of the organization
+   * @param createDidDto The details of the DID to be created
+   * @param user The user making the request
+   * @param res The response object
+   * @returns DID details
    */
   @Post('/orgs/:orgId/agents/did')
   @ApiOperation({
-    summary: 'Create new did',
-    description: 'Create new did for an organization'
+    summary: 'Create new DID',
+    description: 'Create a new DID for an organization wallet'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
@@ -246,10 +260,15 @@ export class AgentController {
 
   /**
    * Create Secp256k1 key pair for polygon DID
-   * @param orgId
+   * @param orgId The ID of the organization
+   * @param res The response object
    * @returns Secp256k1 key pair for polygon DID
    */
   @Post('/orgs/:orgId/agents/polygon/create-keys')
+  @ApiOperation({
+    summary: 'Create Secp256k1 key pair for polygon DID',
+    description: 'Create Secp256k1 key pair for polygon DID for an organization'
+  })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.PLATFORM_ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
@@ -267,14 +286,15 @@ export class AgentController {
 
   /**
    * Configure the agent by organization
-   * @param agentSpinupDto
-   * @param user
-   * @returns Get agent status
+   * @param agentConfigureDto The details of the agent configuration
+   * @param user The user making the request
+   * @param res The response object
+   * @returns Agent configuration status
    */
   @Post('/orgs/:orgId/agents/configure')
   @ApiOperation({
-    summary: 'Agent configure',
-    description: 'Create a new agent configure.'
+    summary: 'Configure the organization agent',
+    description: 'Configure the running dedicated agent for the organization using the provided configuration details.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
@@ -299,10 +319,17 @@ export class AgentController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+  /**
+   * Delete wallet
+   * @param orgId The ID of the organization
+   * @param user The user making the request
+   * @param res The response object
+   * @returns Success message
+   */
   @Delete('/orgs/:orgId/agents/wallet')
   @ApiOperation({
-    summary: 'Delete wallet',
-    description: 'Delete agent wallet by organization.'
+    summary: 'Delete agent wallet',
+    description: 'Delete agent wallet for the organization using orgId.'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER)

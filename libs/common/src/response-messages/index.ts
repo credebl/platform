@@ -151,7 +151,7 @@ export const ResponseMessages = {
       create: 'Schema created successfully.'
     },
     error: {
-      invalidSchemaId: 'Invalid schema Id provided.',
+      invalidSchemaId: 'Please provide valid schema Id',
       invalidData: 'Invalid data provided.',
       nameNotEmpty: 'Schema name is required',
       versionNotEmpty: 'Schema version is required',
@@ -200,7 +200,8 @@ export const ResponseMessages = {
       fetchNetworkUrl: 'Network url retrieved successfully'
     },
     error: {
-      NotFound: 'No ledgers found.'
+      NotFound: 'No ledgers found.',
+      indyNamespaceisRequired: 'indyNamespace is a required'
     }
   },
   agent: {
@@ -281,6 +282,7 @@ export const ResponseMessages = {
       basicMessage: 'Basic message sent successfully'
     },
     error: {
+      invalidConnectionId: 'Invalid format for connectionId',
       exists: 'Connection is already exist',
       connectionNotFound: 'Connection not found',
       agentEndPointNotFound: 'agentEndPoint Not Found',

@@ -5,7 +5,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
 export class UserEmailVerificationDto {
-    @ApiProperty()
+    @ApiProperty({ example: 'awqx@yopmail.com' })
     @Transform(({ value }) => trim(value))
     @Transform(({ value }) => toLowerCase(value))
     @IsNotEmpty({ message: 'Email is required.' })

@@ -21,6 +21,7 @@ import { GenericSchemaDTO } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { SchemaIdsDto } from './dtos/get-schema-by-ids-dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -161,6 +162,32 @@ export class SchemaController {
   }
 
 
+  /**
+   * Retrieves a list of schemas associated with a given Ids.
+   * @returns A list of schemas associated with a given Ids.
+   */
+  @Get('/schemas-by-ids')
+  @ApiOperation({
+    summary: 'Retrieves a list of schemas associated with a given Ids',
+    description: 'Retrieves a list of schemas associated with a given Ids'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getSchemasByIds(
+    @Body() schemaDetails: SchemaIdsDto,   
+    @Res() res: Response
+    
+  ): Promise<Response> {
+    const schemasResponse = await this.appService.getSchemasByIds(schemaDetails);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.schema.success.fetch,
+      data: schemasResponse
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+
 /**
  * Create and register various types of schemas.
  * 
@@ -186,4 +213,5 @@ export class SchemaController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
 }

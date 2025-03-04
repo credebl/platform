@@ -7,6 +7,8 @@ import { ISchemaInfo, IUserRequestInterface } from './interfaces';
 import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { SchemaIdsDto } from './dtos/get-schema-by-ids-dto';
+import { SchemaDetails } from 'apps/issuance/interfaces/issuance.interfaces';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -30,6 +32,10 @@ export class SchemaService extends BaseService {
   getSchemas(schemaSearchCriteria: ISchemaSearchPayload, user: IUserRequestInterface, orgId: string): Promise<ISchemasWithPagination> {
     const schemaSearch = { schemaSearchCriteria, user, orgId };
     return this.natsClient.sendNatsMessage(this.schemaServiceProxy, 'get-schemas', schemaSearch);
+  }
+
+  getSchemasByIds(schemaDetails: SchemaIdsDto): Promise<SchemaDetails[]> {
+    return this.natsClient.sendNatsMessage(this.schemaServiceProxy, 'get-schemas-by-ids', schemaDetails);
   }
 
   getcredDefListBySchemaId(schemaSearchCriteria: GetCredentialDefinitionBySchemaIdDto, user: IUserRequestInterface): Promise<ICredDefWithPagination> {

@@ -269,6 +269,7 @@ model schema {
   type                  String?                 @db.VarChar
   isSchemaArchived      Boolean                 @default(false)
   credential_definition credential_definition[]
+  isSample              Boolean?                @default(false)
 }
 
 model credential_definition {

@@ -158,7 +158,12 @@ export class GenericSchemaDTO {
       @IsEnum(SchemaTypeEnum, { message: 'Type must be a valid schema type' })
       @IsNotEmpty({ message: 'Type is required' })
     type: SchemaTypeEnum;
-
+    
+    @ApiPropertyOptional({ default: false })
+    @IsBoolean()
+    @IsOptional()
+    @IsNotEmpty({ message: 'isSample property is required' })
+    isSample: boolean = false;
     @ApiProperty({
         type: Object,
         oneOf: [

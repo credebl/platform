@@ -2,7 +2,7 @@
 import { ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ledgers, org_agents, org_agents_type, organisation, Prisma, schema } from '@prisma/client';
-import { ISchema, ISchemaExist, ISchemaSearchCriteria, ISaveSchema } from '../interfaces/schema-payload.interface';
+import { ISchema, ISchemaExist, ISchemaSearchCriteria, ISaveSchema, SchemaDetails } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
 import { SchemaType, SortValue } from '@credebl/enum/enum';
@@ -456,4 +456,28 @@ export class SchemaRepository {
       throw error;
     }
   }
+
+
+  async getSchemasByIds(schemaDetails:string[]): Promise<SchemaDetails[]> {
+    try {
+      return await this.prisma.schema.findMany({
+        where: {
+          schemaLedgerId: {
+            in: schemaDetails
+          }
+        },
+        select: {
+          id: true,
+          type: true,
+          isSchemaArchived: true,
+          isSample: true
+        }
+      });
+
+    } catch (error) {
+      this.logger.error(`Error in retrieving schemas by schema ids: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+  
 }

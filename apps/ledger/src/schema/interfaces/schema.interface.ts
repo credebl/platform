@@ -95,6 +95,7 @@ export interface ICreateW3CSchema {
 }
 export interface IGenericSchema {
   type: SchemaTypeEnum;
+  isSample:boolean,
   schemaPayload: ICreateSchema | ICreateW3CSchema;
 }
 

@@ -10,7 +10,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { Prisma, schema } from '@prisma/client';
-import { ISaveSchema, ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaSearchCriteria, W3CCreateSchema } from './interfaces/schema-payload.interface';
+import { ISaveSchema, ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaSearchCriteria, SchemaDetails, W3CCreateSchema } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IUserRequestInterface } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection, ISchemaId } from './schema.interface';
@@ -48,7 +48,7 @@ export class SchemaService extends BaseService {
 
     const userId = user.id;
     try {
-       const {schemaPayload, type} = schemaDetails;
+       const {schemaPayload, type, isSample } = schemaDetails;
        
        if (type === SchemaTypeEnum.INDY) {
 
@@ -247,7 +247,7 @@ export class SchemaService extends BaseService {
         }
        } else if (type === SchemaTypeEnum.JSON) {
         const josnSchemaDetails = schemaPayload as unknown as  ICreateW3CSchema;
-        const createW3CSchema = await this.createW3CSchema(orgId, josnSchemaDetails, user.id);
+        const createW3CSchema = await this.createW3CSchema(orgId, josnSchemaDetails, user.id, isSample);
         return createW3CSchema;
        }
     } catch (error) {
@@ -259,7 +259,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async createW3CSchema(orgId:string, schemaPayload: ICreateW3CSchema, user: string): Promise<ISchemaData> {
+  async createW3CSchema(orgId:string, schemaPayload: ICreateW3CSchema, user: string, isSample:boolean): Promise<ISchemaData> {
     try {
       let createSchema;
       
@@ -325,7 +325,7 @@ export class SchemaService extends BaseService {
         createSchema.schemaUrl = `${process.env.SCHEMA_FILE_SERVER_URL}${createSchemaPayload.data.schemaId}`;
       }
      
-     const storeW3CSchema = await this.storeW3CSchemas(createSchema, user, orgId, attributes);
+     const storeW3CSchema = await this.storeW3CSchemas(createSchema, user, orgId, attributes, isSample);
 
      if (!storeW3CSchema) {
       throw new BadRequestException(ResponseMessages.schema.error.storeW3CSchema, {
@@ -524,7 +524,7 @@ export class SchemaService extends BaseService {
     return W3CSchema;
   }
   
-   private async storeW3CSchemas(schemaDetails, user, orgId, attributes): Promise <schema> {
+   private async storeW3CSchemas(schemaDetails, user, orgId, attributes, isSample): Promise <schema> {
     let ledgerDetails;
     const schemaServerUrl =  `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
     const schemaRequest = await this.commonService
@@ -563,7 +563,8 @@ export class SchemaService extends BaseService {
       publisherDid: schemaDetails.did,
       orgId,
       ledgerId: ledgerDetails.id,
-      type: SchemaType.W3C_Schema
+      type: SchemaType.W3C_Schema,
+      isSample
     };
     const saveResponse = await this.schemaRepository.saveSchema(
       storeSchemaDetails
@@ -925,6 +926,17 @@ export class SchemaService extends BaseService {
       return schemaSearchResult;
     } catch (error) {
       this.logger.error(`Error in getSchemaBySchemaId: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+
+  async getSchemasByIds(schemaDetails: string[]): Promise<SchemaDetails[]> {
+    try {
+      const schemaSearchResult = await this.schemaRepository.getSchemasByIds(schemaDetails);
+      return schemaSearchResult;
+    } catch (error) {
+      this.logger.error(`Error in getSchemasByIds: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

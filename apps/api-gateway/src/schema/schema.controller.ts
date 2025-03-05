@@ -1,7 +1,7 @@
 import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param, ParseUUIDPipe, Put } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
-import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { SchemaService } from './schema.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -22,7 +22,6 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { UpdateSchemaDto } from './dtos/update-schema-dto';
-
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -197,6 +196,7 @@ export class SchemaController {
   @Put('/schema')
   @ApiOperation({ summary: 'Update schema', description: 'Update the details of the schema' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiExcludeEndpoint()
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'))

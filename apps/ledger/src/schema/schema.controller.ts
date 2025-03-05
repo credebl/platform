@@ -19,6 +19,7 @@ import { IschemaPayload } from './interfaces/schema.interface';
 import { ISchemaId } from './schema.interface';
 import { UpdateSchemaDto } from 'apps/api-gateway/src/schema/dtos/update-schema-dto';
 
+
 @Controller('schema')
 export class SchemaController {
   constructor(private readonly schemaService: SchemaService) {}

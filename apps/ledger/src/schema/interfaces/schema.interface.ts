@@ -94,6 +94,7 @@ export interface ICreateW3CSchema {
   schemaType: JSONSchemaType;
 }
 export interface IGenericSchema {
+  alias:string;
   type: SchemaTypeEnum;
   schemaPayload: ICreateSchema | ICreateW3CSchema;
 }
@@ -123,4 +124,15 @@ export interface ISchemasResult {
 export interface ISchemasList {
   schemasCount: number;
   schemasResult: ISchemasResult[];
+}
+
+
+export interface IUpdateSchema {
+  alias: string;
+  schemaId: string;
+  orgId?: string; 
+}
+
+export interface UpdateSchemaResponse {
+  count: number; 
 }

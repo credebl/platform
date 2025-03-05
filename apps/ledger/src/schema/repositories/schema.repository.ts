@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
-import { ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ledgers, org_agents, org_agents_type, organisation, Prisma, schema } from '@prisma/client';
 import { ISchema, ISchemaExist, ISchemaSearchCriteria, ISaveSchema } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
+import { AgentDetails, ISchemasWithCount, IUpdateSchema, UpdateSchemaResponse } from '../interfaces/schema.interface';
 import { SchemaType, SortValue } from '@credebl/enum/enum';
 import { ICredDefWithCount, IPlatformSchemas } from '@credebl/common/interfaces/schema.interface';
 import { ISchemaId } from '../schema.interface';
@@ -38,7 +38,8 @@ export class SchemaRepository {
             orgId: schemaResult.orgId,
             ledgerId: schemaResult.ledgerId,
             type: schemaResult.type,
-            isSchemaArchived: false
+            isSchemaArchived: false,
+            alias: schemaResult.alias
           }
         });
         return saveResult;
@@ -120,7 +121,7 @@ export class SchemaRepository {
           orgId: true,
           issuerId: true,
           organisation: {
-            select:{
+            select: {
               name: true,
               userOrgRoles: {
                 select: {
@@ -299,11 +300,11 @@ export class SchemaRepository {
     try {
       const { ledgerId, schemaType, searchByText, sortField, sortBy, pageSize, pageNumber } = payload;
       let schemaResult;
-      /** 
-       * This is made so because the default pageNumber is set to 1 in DTO, 
+      /**
+       * This is made so because the default pageNumber is set to 1 in DTO,
        * If there is any 'searchByText' field, we ignore the pageNumbers and search
        * in all available records.
-       * 
+       *
        * Because in that case pageNumber would be insignificant.
        */
       if (searchByText) {
@@ -328,7 +329,7 @@ export class SchemaRepository {
             isSchemaArchived: true,
             createdBy: true,
             publisherDid: true,
-            orgId: true,  // This field can be null
+            orgId: true, // This field can be null
             issuerId: true,
             type: true
           },
@@ -356,7 +357,7 @@ export class SchemaRepository {
             isSchemaArchived: true,
             createdBy: true,
             publisherDid: true,
-            orgId: true,  // This field can be null
+            orgId: true, // This field can be null
             issuerId: true,
             type: true
           },
@@ -376,7 +377,7 @@ export class SchemaRepository {
       });
 
       // Handle null orgId in the response
-      const schemasWithDefaultOrgId = schemaResult.map(schema => ({
+      const schemasWithDefaultOrgId = schemaResult.map((schema) => ({
         ...schema,
         orgId: schema.orgId || null // Replace null orgId with 'N/A' or any default value
       }));
@@ -429,21 +430,23 @@ export class SchemaRepository {
     }
   }
 
-  async schemaExist(payload: ISchemaExist): Promise<{
-    id: string;
-    createDateTime: Date;
-    createdBy: string;
-    lastChangedDateTime: Date;
-    lastChangedBy: string;
-    name: string;
-    version: string;
-    attributes: string;
-    schemaLedgerId: string;
-    publisherDid: string;
-    issuerId: string;
-    orgId: string;
-    ledgerId: string;
-  }[]> {
+  async schemaExist(payload: ISchemaExist): Promise<
+    {
+      id: string;
+      createDateTime: Date;
+      createdBy: string;
+      lastChangedDateTime: Date;
+      lastChangedBy: string;
+      name: string;
+      version: string;
+      attributes: string;
+      schemaLedgerId: string;
+      publisherDid: string;
+      issuerId: string;
+      orgId: string;
+      ledgerId: string;
+    }[]
+  > {
     try {
       return this.prisma.schema.findMany({
         where: {
@@ -453,6 +456,37 @@ export class SchemaRepository {
       });
     } catch (error) {
       this.logger.error(`Error in getting get schema by name and version: ${error}`);
+      throw error;
+    }
+  }
+
+  async updateSchema(schemaDetails: IUpdateSchema): Promise<UpdateSchemaResponse> {
+    const { alias, schemaId, orgId } = schemaDetails;
+
+    try {
+      if (orgId) {
+        const orgExists = await this.prisma.schema.findFirst({
+          where: { schemaLedgerId: schemaId, orgId }
+        });
+
+        if (!orgExists) {
+          throw new NotFoundException(`No schema found with schemaLedgerId: ${schemaId} and orgId: ${orgId}`);
+        }
+
+        return await this.prisma.schema.updateMany({
+          where: orgId ? { schemaLedgerId: schemaId, orgId } : { schemaLedgerId: schemaId },
+          data: { alias }
+        });
+
+       
+      }
+
+      return await this.prisma.schema.updateMany({
+        where: { schemaLedgerId: schemaId },
+        data: { alias }
+      });
+    } catch (error) {
+      this.logger.error(`Error in updating schema details: ${error}`);
       throw error;
     }
   }

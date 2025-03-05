@@ -159,6 +159,13 @@ export class GenericSchemaDTO {
       @IsNotEmpty({ message: 'Type is required' })
     type: SchemaTypeEnum;
 
+    @ApiPropertyOptional()
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    @IsString({ message: 'alias must be a string' })
+    @IsNotEmpty({ message: 'alias is required' })
+    alias: string;
+
     @ApiProperty({
         type: Object,
         oneOf: [

@@ -120,6 +120,7 @@ export class SchemaRepository {
           publisherDid: true,
           orgId: true,
           issuerId: true,
+          alias: true,
           organisation: {
             select: {
               name: true,
@@ -317,7 +318,8 @@ export class SchemaRepository {
               { name: { contains: searchByText, mode: 'insensitive' } },
               { version: { contains: searchByText, mode: 'insensitive' } },
               { schemaLedgerId: { contains: searchByText, mode: 'insensitive' } },
-              { issuerId: { contains: searchByText, mode: 'insensitive' } }
+              { issuerId: { contains: searchByText, mode: 'insensitive' } },
+              { alias: { contains: searchByText, mode: 'insensitive' } }
             ]
           },
           select: {
@@ -331,7 +333,8 @@ export class SchemaRepository {
             publisherDid: true,
             orgId: true, // This field can be null
             issuerId: true,
-            type: true
+            type: true,
+            alias: true
           },
           orderBy: {
             [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
@@ -359,7 +362,8 @@ export class SchemaRepository {
             publisherDid: true,
             orgId: true, // This field can be null
             issuerId: true,
-            type: true
+            type: true,
+            alias: true
           },
           orderBy: {
             [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
@@ -461,15 +465,13 @@ export class SchemaRepository {
   }
 
   async updateSchema(schemaDetails: IUpdateSchema): Promise<UpdateSchemaResponse> {
-    const { alias, schemaId, orgId } = schemaDetails;
+    const { alias, schemaLedgerId, orgId } = schemaDetails;
 
     try {
-
         return await this.prisma.schema.updateMany({
-          where: orgId ? { schemaLedgerId: schemaId, orgId } : { schemaLedgerId: schemaId },
+          where: orgId ? { schemaLedgerId, orgId } : { schemaLedgerId },
           data: { alias }
         });
-
     } catch (error) {
       this.logger.error(`Error in updating schema details: ${error}`);
       throw error;

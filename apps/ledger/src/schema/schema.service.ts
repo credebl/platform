@@ -933,12 +933,12 @@ export class SchemaService extends BaseService {
 
   async updateSchema(schemaDetails:IUpdateSchema): Promise<UpdateSchemaResponse> {
     try {
-      const schemaRecord = await this.schemaRepository.getSchemaBySchemaId(schemaDetails.schemaId);
-      if (!schemaRecord) {
-        throw new NotFoundException(ResponseMessages.schema.error.notFound);
-      }
       const schemaSearchResult = await this.schemaRepository.updateSchema(schemaDetails);
-      
+
+      if (0 === schemaSearchResult?.count) {
+        throw new NotFoundException('Records with given condition not found');
+      }
+
       return schemaSearchResult;
     } catch (error) {
       this.logger.error(`Error in updateSchema: ${error}`);

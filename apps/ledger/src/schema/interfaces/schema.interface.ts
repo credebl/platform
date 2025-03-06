@@ -129,7 +129,7 @@ export interface ISchemasList {
 
 export interface IUpdateSchema {
   alias: string;
-  schemaId: string;
+  schemaLedgerId: string;
   orgId?: string; 
 }
 

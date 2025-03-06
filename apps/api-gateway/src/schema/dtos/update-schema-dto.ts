@@ -11,9 +11,9 @@ export class UpdateSchemaDto {
 
   @ApiProperty()
   @Transform(({ value }) => value?.trim())
-  @IsNotEmpty({ message: 'Schema ID is required.' })
-  @IsString({ message: 'Schema ID must be in string format.' })
-  schemaId: string;
+  @IsNotEmpty({ message: 'schemaLedgerId is required.' })
+  @IsString({ message: 'schemaLedgerId must be in string format.' })
+  schemaLedgerId: string;
 
   @ApiPropertyOptional()
   @IsOptional()

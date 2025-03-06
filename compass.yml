@@ -1,0 +1,36 @@
+name: platform
+id: ari:cloud:compass:6095931c-8137-4ae1-822a-2d7411835fc7:component/9029b47a-062e-4e25-a761-a2c0fc9ebd98/2317fb9a-d40a-4b4b-b5f7-17fa53b0a8be
+description: Open source, Open standards based Decentralised Identity & Verifiable Credentials Platform
+configVersion: 1
+typeId: SERVICE
+ownerId: ari:cloud:identity::team/6fe50e36-8efb-47a6-aab5-ea47bd10ec4e
+fields:
+  tier: 4
+links:
+  - name: null
+    type: REPOSITORY
+    url: https://github.com/credebl/platform
+relationships:
+  DEPENDS_ON: []
+labels:
+  - decentralized-identity
+  - digital-identity
+  - digital-public-goods
+  - digital-public-infrastructure
+  - digital-travel-credential
+  - digital-trust-ecosystems
+  - digitaltrust
+  - dpg
+  - dpi
+  - foundational-identity
+  - language:typescript
+  - national-identity
+  - privacy-preserving-technologies
+  - public-good
+  - public-goods
+  - self-sovereign-identity
+  - source:github
+  - verifiable-credentials
+  - w3c-did
+  - w3c-vc
+customFields: null

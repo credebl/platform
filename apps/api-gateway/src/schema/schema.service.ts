@@ -8,6 +8,9 @@ import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@cr
 import { GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 
+import { UpdateSchemaResponse } from 'apps/ledger/src/schema/interfaces/schema.interface';
+import { UpdateSchemaDto } from './dtos/update-schema-dto';
+
 @Injectable()
 export class SchemaService extends BaseService {
 
@@ -35,5 +38,10 @@ export class SchemaService extends BaseService {
   getcredDefListBySchemaId(schemaSearchCriteria: GetCredentialDefinitionBySchemaIdDto, user: IUserRequestInterface): Promise<ICredDefWithPagination> {
     const payload = { schemaSearchCriteria, user };
     return this.natsClient.sendNatsMessage(this.schemaServiceProxy, 'get-cred-def-list-by-schemas-id', payload);
+  }
+
+  updateSchema(schemaDetails: UpdateSchemaDto): Promise<UpdateSchemaResponse> {
+    const payload = { schemaDetails };
+    return this.natsClient.sendNatsMessage(this.schemaServiceProxy, 'update-schema', payload);
   }
 }

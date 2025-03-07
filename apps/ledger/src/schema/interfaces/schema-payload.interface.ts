@@ -18,6 +18,7 @@ export interface ISchema {
     endorserWriteTxn?: string;
     orgDid?: string;
     type?: string;
+    alias?: string;
 }
 
 export interface IAttributeValue {

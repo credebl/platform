@@ -4,11 +4,11 @@ import { ConflictException, Injectable, InternalServerErrorException, Logger } f
 import { ICredDefWithCount, IPlatformSchemasWithOrg } from '@credebl/common/interfaces/schema.interface';
 import { ISaveSchema, ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { Prisma, ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
+import { PrismaService } from '@credebl/prisma-service';
+import { ResponseMessages } from '@credebl/common/response-messages';
 import { SchemaType, SortValue } from '@credebl/enum/enum';
 
 import { ISchemaId } from '../schema.interface';
-import { PrismaService } from '@credebl/prisma-service';
-import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class SchemaRepository {
@@ -479,10 +479,10 @@ export class SchemaRepository {
     const { alias, schemaLedgerId, orgId } = schemaDetails;
 
     try {
-      return await this.prisma.schema.updateMany({
-        where: orgId ? { schemaLedgerId, orgId } : { schemaLedgerId },
-        data: { alias }
-      });
+        return await this.prisma.schema.updateMany({
+          where: orgId ? { schemaLedgerId, orgId } : { schemaLedgerId },
+          data: { alias }
+        });
     } catch (error) {
       this.logger.error(`Error in updating schema details: ${error}`);
       throw error;

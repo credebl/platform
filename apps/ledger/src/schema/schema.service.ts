@@ -21,14 +21,7 @@ import {
   W3CCreateSchema
 } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import {
-  ICreateSchema,
-  ICreateW3CSchema,
-  IGenericSchema,
-  IUpdateSchema,
-  IUserRequestInterface,
-  UpdateSchemaResponse
-} from './interfaces/schema.interface';
+import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IUpdateSchema, IUserRequestInterface, UpdateSchemaResponse } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection, ISchemaId } from './schema.interface';
 import { map } from 'rxjs/operators';
 import {
@@ -123,8 +116,7 @@ export class SchemaService extends BaseService {
               });
             }
 
-            const attributeDisplayNamesLowerCase = trimmedAttributes.map((attribute) =>
-              attribute.displayName.toLocaleLowerCase()
+            const attributeDisplayNamesLowerCase = trimmedAttributes.map((attribute) => attribute.displayName.toLocaleLowerCase()
             );
             const duplicateAttributeDisplayNames = attributeDisplayNamesLowerCase.filter(
               (value, index, element) => element.indexOf(value) !== index
@@ -260,8 +252,8 @@ export class SchemaService extends BaseService {
           });
         }
       } else if (type === SchemaTypeEnum.JSON) {
-        const josnSchemaDetails = schemaPayload as unknown as ICreateW3CSchema;
-        const createW3CSchema = await this.createW3CSchema(orgId, josnSchemaDetails, user.id, alias);
+        const jsonSchemaDetails = schemaPayload as unknown as ICreateW3CSchema;
+        const createW3CSchema = await this.createW3CSchema(orgId, jsonSchemaDetails, user.id, alias);
         return createW3CSchema;
       }
     } catch (error) {
@@ -271,12 +263,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-  async createW3CSchema(
-    orgId: string,
-    schemaPayload: ICreateW3CSchema,
-    user: string,
-    alias: string
-  ): Promise<ISchemaData> {
+  async createW3CSchema(orgId:string, schemaPayload: ICreateW3CSchema, user: string, alias: string): Promise<ISchemaData> {
     try {
       let createSchema;
 

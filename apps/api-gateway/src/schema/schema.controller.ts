@@ -1,7 +1,7 @@
-import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Logger, Post, Body, HttpStatus, UseGuards, Get, Query, BadRequestException, Res, UseFilters, Param, ParseUUIDPipe, Put } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
-import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery, ApiExtraModels, ApiBody, getSchemaPath } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiForbiddenResponse, ApiUnauthorizedResponse, ApiQuery, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { SchemaService } from './schema.service';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -21,6 +21,7 @@ import { GenericSchemaDTO } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { UpdateSchemaDto } from './dtos/update-schema-dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -186,4 +187,28 @@ export class SchemaController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+  /**
+ * Update an schema alias
+ * @param updateSchemaDto The details of the schema to be updated
+ * @returns Success message
+ */
+  @Put('/schema')
+  @ApiOperation({ summary: 'Update schema', description: 'Update the details of the schema' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiExcludeEndpoint()
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @UseGuards(AuthGuard('jwt'))
+  async updateSchema(@Body() updateSchemaDto: UpdateSchemaDto,  @Res() res: Response): Promise<Response> {
+
+    await this.appService.updateSchema(updateSchemaDto);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.schema.success.update
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
 }

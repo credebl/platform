@@ -17,6 +17,8 @@ import {
 } from '@credebl/common/interfaces/schema.interface';
 import { IschemaPayload } from './interfaces/schema.interface';
 import { ISchemaId } from './schema.interface';
+import { UpdateSchemaDto } from 'apps/api-gateway/src/schema/dtos/update-schema-dto';
+
 
 @Controller('schema')
 export class SchemaController {
@@ -95,5 +97,10 @@ export class SchemaController {
   @MessagePattern({ cmd: 'get-schema-record-by-schema-id' })
   async getSchemaRecordBySchemaId(payload: {schemaId: string}): Promise<schema> {
     return this.schemaService.getSchemaBySchemaId(payload.schemaId);
+  }
+
+@MessagePattern({ cmd: 'update-schema' })
+  updateSchema(payload:{schemaDetails:UpdateSchemaDto}): Promise<object> {
+    return this.schemaService.updateSchema(payload.schemaDetails);
   }
 }

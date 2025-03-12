@@ -5,7 +5,7 @@ import { ClientProxy, NatsRecordBuilder } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import * as nats from 'nats';
 import { firstValueFrom } from 'rxjs';
-import ContextStorageService, { ContextStorageServiceKey } from '../../context/src/contextStorageService.interface';
+import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import { v4 } from 'uuid';
 
 @Injectable()
@@ -51,12 +51,9 @@ export class NATSClient {
     if (!contextId) {
       contextId = v4();
     }
-
     const headers = nats.headers(1, contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
-
     const result = serviceProxy.send<T>(pattern, record);
-
     return firstValueFrom(result);
   }
 }

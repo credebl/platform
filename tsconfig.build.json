@@ -1,22 +1,15 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "ES2017",
+    "declaration": true,
     "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2017",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "declaration": true,
-    "noEmitOnError": true,
-    "lib": [],
-    "types": [],
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
   },
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
 }

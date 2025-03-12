@@ -6,6 +6,7 @@ import { map } from 'rxjs/operators';
 import * as nats from 'nats';
 import { firstValueFrom } from 'rxjs';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class NATSClient {
@@ -45,7 +46,13 @@ sendNatsMessage(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<a
 }
 
 send<T>(serviceProxy: ClientProxy, pattern: object, payload: any): Promise<T> {
-  const headers = nats.headers(1, this.contextStorageService.getContextId());
+  let contextId = this.contextStorageService.getContextId();
+
+  if (!contextId) {
+    contextId = v4();
+  }
+
+  const headers = nats.headers(1, contextId);
   const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
   const result = serviceProxy.send<T>(pattern, record);

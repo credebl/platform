@@ -108,7 +108,6 @@ export const ResponseMessages = {
       credentialsNotUpdate: 'Unable to update organization credentials',
       invalidOrgId: 'Invalid format for orgId',
       orgIdIsRequired: 'OrgId is required',
-      provideValidOrgId: 'Please provide valid orgId',
       clientIdRequired: 'clientId is required',
       notExistClientCred: 'Organization does not have client credentials',
       invalidUserId: 'Invalid format of userId',

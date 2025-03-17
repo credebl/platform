@@ -108,6 +108,7 @@ export const ResponseMessages = {
       credentialsNotUpdate: 'Unable to update organization credentials',
       invalidOrgId: 'Invalid format for orgId',
       orgIdIsRequired: 'OrgId is required',
+      provideValidOrgId: 'Please provide valid orgId',
       clientIdRequired: 'clientId is required',
       notExistClientCred: 'Organization does not have client credentials',
       invalidUserId: 'Invalid format of userId',
@@ -307,6 +308,7 @@ export const ResponseMessages = {
       fileDetailsAndFileData:'File details and File data fetched successfully'
     },
     error: {
+      invalidCredentialRecordId: 'Please provide valid credentialRecordId',
       exists: 'Credentials is already exist',
       credentialsNotFound: 'Credentials not found',
       agentEndPointNotFound: 'Agent details not found',

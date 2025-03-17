@@ -14,6 +14,7 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  IsUUID,
   MaxLength,
   ValidateNested
 } from 'class-validator';
@@ -647,6 +648,7 @@ export class FileQuery {
   @ApiProperty({ required: true })
   @IsString({ message: 'fileId should be string' })
   @IsNotEmpty({ message: 'fileId Id is required' })
+  @IsUUID('4', { message: 'Invalid format for fileId' })
   @Transform(({ value }) => trim(value))
   fileId: string;
 }

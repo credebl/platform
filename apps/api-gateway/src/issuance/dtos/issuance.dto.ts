@@ -648,7 +648,7 @@ export class FileQuery {
   @ApiProperty({ required: true })
   @IsString({ message: 'fileId should be string' })
   @IsNotEmpty({ message: 'fileId Id is required' })
-  @IsUUID('4', { message: 'Invalid format for fileId' })
+  @IsUUID('4', { message: 'Invalid format for file Id' })
   @Transform(({ value }) => trim(value))
   fileId: string;
 }

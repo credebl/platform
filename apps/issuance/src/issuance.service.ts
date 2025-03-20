@@ -591,7 +591,7 @@ export class IssuanceService {
       this.logger.error(`[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          message: error?.status?.message?.error?.reason || error?.status?.message?.error?.message || error?.status?.message?.error,
           statusCode: error?.status?.code
         });
 

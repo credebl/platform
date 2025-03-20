@@ -307,6 +307,7 @@ export const ResponseMessages = {
       fileDetailsAndFileData:'File details and File data fetched successfully'
     },
     error: {
+      invalidCredentialRecordId: 'Please provide valid credential Record Id',
       exists: 'Credentials is already exist',
       credentialsNotFound: 'Credentials not found',
       agentEndPointNotFound: 'Agent details not found',

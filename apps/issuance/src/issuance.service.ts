@@ -671,10 +671,7 @@ export class IssuanceService {
       );
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
         throw new RpcException({
-          message:
-            error?.status?.message?.error?.reason ||
-            error?.status?.message?.error?.message ||
-            error?.status?.message?.error,
+          message: error?.status?.message?.error?.reason || error?.status?.message?.error?.message || error?.status?.message?.error,
           statusCode: error?.status?.code
         });
       } else {

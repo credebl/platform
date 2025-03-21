@@ -30,16 +30,23 @@ export class OrgRolesGuard implements CanActivate {
       throw new ForbiddenException('This role is a holder.');
     }
 
-    req.params.orgId = req.params?.orgId ? req.params?.orgId?.trim() : '';
-    req.query.orgId = req.query?.orgId ? req.query?.orgId?.trim() : '';
-    req.body.orgId = req.body?.orgId ? req.body?.orgId?.trim() : '';
+    if (0 === Object.keys(req.params).length && 0 === Object.keys(req.query).length && 0 === Object.keys(req.body).length) {
+      if (requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {
+        const isPlatformAdmin = user.userOrgRoles.some((orgDetails) => orgDetails.orgRole.name === OrgRoles.PLATFORM_ADMIN);
+        if (isPlatformAdmin) {
+          return true;
+        }
+        return false;
+      }
+    }
 
-    const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+    const orgId = (req.params.orgId || req.query.orgId || req.body.orgId || '').trim();
 
-    if (orgId) {  
-
-    if (!isValidUUID(orgId)) {
-      throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+    if (!orgId) {
+    throw new BadRequestException('Please provide a valid orgId');
+    } else {
+      if (!isValidUUID(orgId)) {
+        throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
     }    
       
 
@@ -71,32 +78,13 @@ export class OrgRolesGuard implements CanActivate {
           return orgRoleItem.orgRole.name;
         }
       });
-
-    } else if (requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {      
-
-      // eslint-disable-next-line array-callback-return
-      const isPlatformAdmin = user.userOrgRoles.find((orgDetails) => {
-        if (orgDetails.orgRole.name === OrgRoles.PLATFORM_ADMIN) {
-          return true;
-        }
-      });
-
-      if (isPlatformAdmin) {
-        return true;
-      }
-
-      return false;
-
-    } else {
-      throw new BadRequestException('Please provide valid orgId');
-    }
-
-    // Sending user friendly message if a user attempts to access an API that is inaccessible to their role
+      
+      // Final role-based validation
     const roleAccess = requiredRoles.some((role) => user.selectedOrg?.orgRoles.includes(role));
     if (!roleAccess) {
       throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
     }
-
     return roleAccess;
+  }
   }
 }

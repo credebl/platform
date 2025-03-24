@@ -43,7 +43,7 @@ jobs:
           IMAGE_NAME="ghcr.io/${REPO_OWNER}/${SERVICE_NAME}:${IMAGE_TAG}"
           IMAGE_LATEST="ghcr.io/${REPO_OWNER}/${SERVICE_NAME}:latest"
 
-          echo "Building Docker image for agent-provisioning ..."
+          echo "Building Docker image for cloud-wallet ..."
           docker build -t $IMAGE_NAME -f Dockerfiles/Dockerfile.${SERVICE_NAME} .
 
           docker tag "${IMAGE_NAME}" "${IMAGE_LATEST}"

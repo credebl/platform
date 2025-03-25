@@ -48,8 +48,8 @@ jobs:
 
           docker tag "${IMAGE_NAME}" "${IMAGE_LATEST}"
 
-          echo "📤 Pushing Docker image: ${IMAGE_NAME}"
+          echo "Pushing Docker image: ${IMAGE_NAME}"
           docker push "${IMAGE_NAME}"
 
-          echo "📤 Pushing Docker image: ${IMAGE_LATEST}"
+          echo "Pushing Docker image: ${IMAGE_LATEST}"
           docker push "${IMAGE_LATEST}"

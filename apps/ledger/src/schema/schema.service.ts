@@ -90,7 +90,8 @@ export class SchemaService extends BaseService {
                 attributeName: attribute.attributeName.trim(),
                 schemaDataType: attribute.schemaDataType,
                 displayName: attribute.displayName.trim(),
-                isRequired: attribute.isRequired
+                isRequired: attribute.isRequired,
+                autoGenerate: attribute.autoGenerate
               }));
   
   

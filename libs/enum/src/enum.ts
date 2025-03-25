@@ -208,7 +208,7 @@ export enum W3CSchemaDataType {
     STRING = 'string',
     DATE_TIME = 'datetime-local',
     ARRAY= 'array',
-    LIVE_IMG = 'live-image'
+    IMAGE = 'image'
   }
 
 export enum JSONSchemaType {

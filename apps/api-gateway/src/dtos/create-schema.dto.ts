@@ -32,6 +32,12 @@ import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum
     @IsNotEmpty({ message: 'isRequired property is required' })
     isRequired: boolean;
 
+    @ApiProperty()
+    @IsOptional()
+    @IsBoolean()
+    @IsNotEmpty({ message: 'autoGenerate property is required' })
+    autoGenerate: boolean = false;
+
     @ApiPropertyOptional({
       description: 'Array of objects with dynamic keys',
       isArray: true
@@ -64,6 +70,12 @@ class AttributeValue {
     @IsBoolean()
     @IsNotEmpty({ message: 'isRequired property is required' })
     isRequired: boolean;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsBoolean()
+    @IsNotEmpty({ message: 'autoGenerate property is required' })
+    autoGenerate: boolean = false;
 }
 
 export class CreateSchemaDto {
@@ -182,6 +194,4 @@ export class GenericSchemaDTO {
         }
       })
     schemaPayload:CreateSchemaDto | CreateW3CSchemaDto;
-
-   
 }

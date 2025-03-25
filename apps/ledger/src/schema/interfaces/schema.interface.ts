@@ -71,6 +71,7 @@ interface IW3CAttributeValue {
   schemaDataType: W3CSchemaDataType;
   displayName: string;
   isRequired: boolean;
+  autoGenerate: boolean;
 }
 
 interface IAttributeValue {
@@ -78,6 +79,7 @@ interface IAttributeValue {
   schemaDataType: string;
   displayName: string;
   isRequired: boolean;
+  autoGenerate: boolean;
 }
 
 export interface ICreateSchema {

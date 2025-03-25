@@ -372,6 +372,7 @@ export interface ISchemaAttributes {
   schemaDataType: string;
   displayName: string;
   isRequired: boolean;
+  autoGenerate: boolean;
 }
 
 export interface IIssuanceAttributes {

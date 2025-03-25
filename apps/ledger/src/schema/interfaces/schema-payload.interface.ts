@@ -26,7 +26,7 @@ export interface IAttributeValue {
     attributeName: string;
     schemaDataType: string;
     displayName: string;
-
+    autoGenerate: boolean;
 }
 
 export interface ISchemaPayload {

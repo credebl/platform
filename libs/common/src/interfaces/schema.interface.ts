@@ -45,6 +45,7 @@ export interface ISchemasWithPagination extends IPaginationDetails{
     schemaDataType: string;
     displayName: string;
     isRequired: boolean;
+    autoGenerate: boolean;
   }
   
   export interface ISchemaDetail {

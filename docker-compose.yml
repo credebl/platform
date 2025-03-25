@@ -54,6 +54,7 @@ services:
   issuance:
     depends_on:
       - nats  # Use depends_on instead of needs
+      - redis
       - api-gateway
       - user
       - connection

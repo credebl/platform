@@ -179,7 +179,8 @@ export class SchemaController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   async createSchema(@Res() res: Response, @Body() schemaDetails: GenericSchemaDTO, @Param('orgId', new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, @User() user: IUserRequestInterface): Promise<Response> {
-  const schemaResponse = await this.appService.createSchema(schemaDetails, user, orgId);
+    this.logger.log('SchemaController.createSchema called');
+    const schemaResponse = await this.appService.createSchema(schemaDetails, user, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.schema.success.create,

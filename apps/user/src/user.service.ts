@@ -172,7 +172,7 @@ export class UserService {
    * @returns
    */
 
-  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName: string, redirectTo:string): Promise<boolean> {
+  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName: string, redirectTo?:string): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
 

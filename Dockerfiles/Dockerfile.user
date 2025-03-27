@@ -31,7 +31,7 @@ RUN pnpm install
 # Copy the rest of the application code
 COPY . .
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && npx prisma generate
 
 # Build the user service
 RUN pnpm run build user
@@ -66,4 +66,4 @@ COPY --from=build /app/node_modules  ./node_modules
 
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy  && cd ../.. && node dist/apps/user/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/user/main.js"]

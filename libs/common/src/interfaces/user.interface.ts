@@ -17,6 +17,7 @@ export interface ISignInUser {
         username?: string;
         brandLogoUrl?: string;
         platformName?: string;
+        redirectTo?:string;
       }
       
       export  interface IUserInvitations {

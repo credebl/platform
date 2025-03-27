@@ -1,13 +1,19 @@
 export class URLUserEmailTemplate {
-  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName:string): string {
+  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName:string, redirectTo:string): string {
 
+    const client = redirectTo.includes('localhost:3001') ? process.env.EDUCREDS_KEYCLOAK_MANAGEMENT_CLIENT_ID : process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
     const apiUrl = new URL(
-      clientId === process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID ? '/verify-email-success' : '',
+      clientId === client ? '/verify-email-success' : '',
       redirectUrl
     );
+    // eslint-disable-next-line no-console
+    console.log("🚀 ~ URLUserEmailTemplate ~ getUserURLTemplate ~ client:", client);
+    // eslint-disable-next-line no-console
+    console.log("🚀 ~ URLUserEmailTemplate ~ getUserURLTemplate ~ clientId:", clientId);
 
     apiUrl.searchParams.append('verificationCode', verificationCode);
     apiUrl.searchParams.append('email', encodeURIComponent(email));
+    apiUrl.searchParams.append('redirectTo', encodeURIComponent(redirectTo));
 
     const validUrl = apiUrl.href;
 

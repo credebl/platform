@@ -84,8 +84,10 @@ export class UserService {
    */
 
   async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
+    // eslint-disable-next-line no-console
+    console.log("🚀in user service::::{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}:", userEmailVerification);
     try {
-      const { email, brandLogoUrl, platformName, clientId, clientSecret } = userEmailVerification;
+      const { email, brandLogoUrl, platformName, clientId, clientSecret, redirectTo } = userEmailVerification;
   
       if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
         // eslint-disable-next-line prefer-destructuring
@@ -114,12 +116,14 @@ export class UserService {
         const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
 
         const [redirectUrl] = getClientData[0]?.redirectUris || [];
+        // eslint-disable-next-line no-console
+        console.log("🚀 ~ UserService ~ sendVerificationMail ~ redirectUrl::::::", redirectUrl);
   
         if (!redirectUrl) {
           throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
         }
   
-        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, clientId, brandLogoUrl, platformName);
+        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, clientId, brandLogoUrl, platformName, redirectTo);
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -168,7 +172,7 @@ export class UserService {
    * @returns
    */
 
-  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName: string): Promise<boolean> {
+  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName: string, redirectTo:string): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
 
@@ -180,7 +184,7 @@ export class UserService {
       const platform = platformName || process.env.PLATFORM_NAME;
       emailData.emailSubject = `[${platform}] Verify your email to activate your account`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, redirectUrl, decryptClientId, brandLogoUrl, platformName);
+      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, redirectUrl, decryptClientId, brandLogoUrl, platformName, redirectTo);
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;
@@ -255,6 +259,8 @@ export class UserService {
    let keycloakDetails = null;
       
    const token = await this.clientRegistrationService.getManagementToken(checkUserDetails.clientId, checkUserDetails.clientSecret);
+   // eslint-disable-next-line no-console
+   console.log("🚀 ~ UserService ~ createUserForToken ~ token:2222222222222222", token);
       if (userInfo.isPasskey) {
         const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email.toLowerCase());

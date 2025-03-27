@@ -67,14 +67,15 @@ async function bootstrap(): Promise<void> {
   SwaggerModule.setup('api', app, document);
   const httpAdapter = app.get(HttpAdapterHost);
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
-  const { ENABLE_CORS_IP_LIST } = process.env || {};
-  if (ENABLE_CORS_IP_LIST && '' !== ENABLE_CORS_IP_LIST) {
+  // const { ENABLE_CORS_IP_LIST } = process.env || {};
+  // if (ENABLE_CORS_IP_LIST && '' !== ENABLE_CORS_IP_LIST) {
     app.enableCors({
-      origin: ENABLE_CORS_IP_LIST.split(','),
+      origin: '*',
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
       credentials: true
     });
-  }
+  // };
+
 
   app.enableVersioning({
     type: VersioningType.URI,

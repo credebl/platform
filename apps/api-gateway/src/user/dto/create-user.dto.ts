@@ -38,4 +38,11 @@ export class UserEmailVerificationDto {
   @IsOptional()
   @IsString({ message: 'platformName should be string' })
   platformName?: string;
+
+
+  @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
+    @Transform(({ value }) => trim(value))
+    @IsOptional()
+    
+    redirectTo?: string;
 }

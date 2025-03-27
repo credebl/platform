@@ -34,6 +34,8 @@ export class AuthzService extends BaseService {
   }
 
   async sendVerificationMail(userEmailVerification: UserEmailVerificationDto): Promise<ISendVerificationEmail> {
+    // eslint-disable-next-line no-console
+    console.log("🚀 ~ AuthzService ~ sendVerificationMail ~ userEmailVerification:33333333333333", userEmailVerification);
     const payload = { userEmailVerification };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'send-verification-mail', payload);
   }

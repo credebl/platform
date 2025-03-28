@@ -26,6 +26,7 @@ jobs:
           - issuance
           - ledger
           - notification
+          - organization
           - user
           - utility
           - verification

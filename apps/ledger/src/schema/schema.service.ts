@@ -10,9 +10,9 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { Prisma, schema } from '@prisma/client';
-import { ISaveSchema, ISchema, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaSearchCriteria, W3CCreateSchema } from './interfaces/schema-payload.interface';
+import { ISaveSchema, ISchema, ISchemaAttributesFormat, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaSearchCriteria, W3CCreateSchema } from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IUpdateSchema, IUserRequestInterface, UpdateSchemaResponse } from './interfaces/schema.interface';
+import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IProductSchema, IUpdateSchema, IUserRequestInterface, IW3CAttributeValue, UpdateSchemaResponse } from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection, ISchemaId } from './schema.interface';
 import { map } from 'rxjs/operators';
 import { JSONSchemaType, LedgerLessConstant, LedgerLessMethods, OrgAgentType, SchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
@@ -27,6 +27,15 @@ import { networkNamespace } from '@credebl/common/common.utils';
 import { checkDidLedgerAndNetwork } from '@credebl/common/cast.helper';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { from } from 'rxjs';
+import UniqueItems from 'libs/validations/uniqueItems';
+import MaxItems from 'libs/validations/maxItems';
+import MinItems from 'libs/validations/minItems';
+import MultipleOf from 'libs/validations/multipleOf';
+import ExclusiveMinimum from 'libs/validations/exclusiveMinimum';
+import Minimum from 'libs/validations/minimum';
+import Pattern from 'libs/validations/pattern';
+import MaxLength from 'libs/validations/maxLength';
+import MinLength from 'libs/validations/minLength';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -290,6 +299,7 @@ export class SchemaService extends BaseService {
         const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
         url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`;
       }
+
       const schemaObject = await this.w3cSchemaBuilder(attributes, schemaName, description);  
       if (!schemaObject) {
         throw new BadRequestException(ResponseMessages.schema.error.schemaBuilder, {
@@ -341,67 +351,247 @@ export class SchemaService extends BaseService {
     }
   }
 
-  private async w3cSchemaBuilder(attributes, schemaName: string, description: string): Promise<object> {
-    const schemaAttributeJson = attributes.map((attribute, index) => ({
-      [attribute.attributeName]: {
-        type: attribute.schemaDataType.toLowerCase(),
-        order: index,
-        title: attribute.attributeName
-      }
-    }));
-
-    // Add the format property to the id key
-    schemaAttributeJson.unshift({
-      id: {
-        type: 'string',
-        format: 'uri'
-      }
-    });
-
-    const nestedObject = {};
-    schemaAttributeJson.forEach((obj) => {
-      // eslint-disable-next-line prefer-destructuring
-      const key = Object.keys(obj)[0];
-      nestedObject[key] = obj[key];
-    });
+  private async w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: string, description: string): Promise<object> {
    
-     const schemaNameObject = {}; 
-     schemaNameObject[schemaName] = {
-     'const': schemaName
-     };
-     const date = new Date().toISOString();
-     
+    // Function to apply validations based on attribute properties
+    const applyValidations = (attribute, propertyObj): ISchemaAttributesFormat => {
+      const context = { ...propertyObj };
+      
+      // Apply string validations
+      if ('string' === attribute.schemaDataType.toLowerCase()) {
+        if (attribute.minLength !== undefined) {
+          const validation = new MinLength(attribute.minLength);
+          validation.json(context);
+        }
+        
+        if (attribute.maxLength !== undefined) {
+          const validation = new MaxLength(attribute.maxLength);
+          validation.json(context);
+        }
+        
+        if (attribute.pattern !== undefined) {
+          const validation = new Pattern(attribute.pattern);
+          validation.json(context);
+        }
+      }
+      
+      // Apply number validations
+      if (['number', 'integer'].includes(attribute.schemaDataType.toLowerCase())) {
+        if (attribute.minimum !== undefined) {
+          const validation = new Minimum(attribute.minimum);
+          validation.json(context);
+        }
+        
+        if (attribute.exclusiveMinimum !== undefined) {
+          const validation = new ExclusiveMinimum(attribute.exclusiveMinimum);
+          validation.json(context);
+        }
+        
+        if (attribute.multipleOf !== undefined) {
+          const validation = new MultipleOf(attribute.multipleOf);
+          validation.json(context);
+        }
+      }
+      
+      // Apply array validations
+      if ('array' === attribute.schemaDataType.toLowerCase()) {
+        if (attribute.minItems !== undefined) {
+          const validation = new MinItems(attribute.minItems);
+          validation.json(context);
+        }
+        
+        if (attribute.maxItems !== undefined) {
+          const validation = new MaxItems(attribute.maxItems);
+          validation.json(context);
+        }
+        
+        if (attribute.uniqueItems !== undefined) {
+          const validation = new UniqueItems(attribute.uniqueItems);
+          validation.json(context);
+        }
+      }
+      
+      return context;
+    };
+    
+    // Function to recursively process attributes
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const processAttributes = (attrs: IW3CAttributeValue[]): IProductSchema => {
+      if (!Array.isArray(attrs)) { 
+        return { properties: {}, required: [] }; 
+      }
+
+      const properties = {};
+      const required = [];
+      
+      attrs.forEach((attribute, index) => {
+        const { attributeName, schemaDataType, isRequired, displayName } = attribute;
+        
+        // Add to required array if isRequired is true
+        if (isRequired) {
+          required.push(attributeName);
+        }
+        
+        // Create base property object with common fields
+        const baseProperty = {
+          type: schemaDataType.toLowerCase(),
+          order: index,
+          title: displayName || attributeName,
+          description: `${attributeName} field`
+        };
+
+        // Handle different attribute types
+        if (['string', 'number', 'boolean', 'integer'].includes(schemaDataType.toLowerCase())) {
+          // Apply validations to the base property
+          properties[attributeName] = applyValidations(attribute, baseProperty);
+          
+        } else if ('datetime-local' === schemaDataType.toLowerCase()) {
+          properties[attributeName] = {
+            ...baseProperty,
+            type: 'string',
+            format: 'date-time'
+          };
+          
+        } else if ('array' === schemaDataType.toLowerCase() && attribute.items) {
+          const result = processAttributes(attribute.items);
+          
+          properties[attributeName] = {
+            ...baseProperty,
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: result.properties
+            }
+          };
+
+          // Apply array-specific validations
+          properties[attributeName] = applyValidations(attribute, properties[attributeName]);
+          
+          // Add required properties to the items schema if any
+          if (0 < result.required.length) {
+            properties[attributeName].items.required = result.required;
+          }
+          
+        } else if ('object' === schemaDataType.toLowerCase() && attribute.properties) {
+          const nestedProperties = {};
+          const nestedRequired = [];
+          
+          // Process each property in the object
+          Object.keys(attribute.properties).forEach(propKey => {
+            const prop = attribute.properties[propKey];
+
+            // Add to nested required array if isRequired is true
+            if (prop.isRequired) {
+              nestedRequired.push(propKey);
+            }
+            
+            // Create base property for nested object
+            const nestedBaseProperty = {
+              type: prop.schemaDataType.toLowerCase(),
+              title: prop.displayName || prop.attributeName,
+              description: `${prop.attributeName} field`
+            };
+            
+            if ('array' === prop.schemaDataType.toLowerCase() && prop.items) {
+              // Handle nested arrays
+              const result = processAttributes(prop.items);
+              
+              nestedProperties[propKey] = {
+                ...nestedBaseProperty,
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: result.properties
+                }
+              };
+              
+              // Apply array-specific validations
+              nestedProperties[propKey] = applyValidations(prop, nestedProperties[propKey]);
+              
+              // Add required properties to the items schema if any
+              if (0 < result.required.length) {
+                nestedProperties[propKey].items.required = result.required;
+              }
+            } else {
+              // Handle basic properties with validations
+              nestedProperties[propKey] = applyValidations(prop, nestedBaseProperty);
+            }
+          });
+          
+          properties[attributeName] = {
+            ...baseProperty,
+            type: 'object',
+            properties: nestedProperties
+          };
+          
+          // Add required properties to the object schema if any
+          if (0 < nestedRequired.length) {
+            properties[attributeName].required = nestedRequired;
+          }
+        }
+      });
+      
+      return { properties, required };
+    };
+
+    // Process all attributes
+    const result = processAttributes(attributes);
+    const {properties} = result;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const required = ['id', ...result.required];
+    
+    // Add id property
+    properties['id'] = {
+      type: 'string',
+      format: 'uri'
+    };
+
+    const date = new Date().toISOString();  
+    const schemaNameObject = {};
+    schemaNameObject[schemaName] = {
+      'const': schemaName
+    };
+
     const W3CSchema = {
-      $schema: 'http://json-schema.org/draft-07/schema#',
+      $schema: 'https://json-schema.org/draft/2020-12/schema',
       $id: `${date}-${schemaName}`,
+      $vocabulary: {
+        'https://json-schema.org/draft/2020-12/vocab/core': true,
+        'https://json-schema.org/draft/2020-12/vocab/applicator': true,
+        'https://json-schema.org/draft/2020-12/vocab/unevaluated': true,
+        'https://json-schema.org/draft/2020-12/vocab/validation': true,
+        'https://json-schema.org/draft/2020-12/vocab/meta-data': true,
+        'https://json-schema.org/draft/2020-12/vocab/format-annotation': true,
+        'https://json-schema.org/draft/2020-12/vocab/content': true
+    },
       type: 'object',
       required: ['@context', 'issuer', 'issuanceDate', 'type', 'credentialSubject'],
       properties: {
         '@context': {
-          $ref: '#/definitions/context'
+          $ref: '#/$defs/context'
         },
         type: {
           type: 'array',
           items: {
             anyOf: [
               {
-                $ref: '#/definitions/VerifiableCredential'
+                $ref: '#/$defs/VerifiableCredential'
               },
               {
-                const: `#/definitions/$${schemaName}`
+                const: `#/$defs/$${schemaName}`
               }
             ]
           }
         },
         credentialSubject: {
-          $ref: '#/definitions/credentialSubject'
+          $ref: '#/$defs/credentialSubject'
         },
         id: {
           type: 'string',
           format: 'uri'
         },
         issuer: {
-          $ref: '#/definitions/uriOrId'
+          $ref: '#/$defs/uriOrId'
         },
         issuanceDate: {
           type: 'string',
@@ -412,13 +602,13 @@ export class SchemaService extends BaseService {
           format: 'date-time'
         },
         credentialStatus: {
-          $ref: '#/definitions/credentialStatus'
+          $ref: '#/$defs/credentialStatus'
         },
         credentialSchema: {
-          $ref: '#/definitions/credentialSchema'
+          $ref: '#/$defs/credentialSchema'
         }
       },
-      definitions: {
+      $defs: {
         context: {
           type: 'array',
           items: [
@@ -438,7 +628,7 @@ export class SchemaService extends BaseService {
               {
                 type: 'array',
                 items: {
-                  $ref: '#/definitions/context'
+                  $ref: '#/$defs/context'
                 }
               }
             ]
@@ -450,7 +640,7 @@ export class SchemaService extends BaseService {
           type: 'object',
           required: ['id'],
           additionalProperties: false,
-          properties: nestedObject
+          properties
         },
         VerifiableCredential: {
           const: 'VerifiableCredential'

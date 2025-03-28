@@ -1,24 +1,24 @@
-import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Min, ValidateIf, ValidateNested } from 'class-validator';
 
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { plainToClass, Transform, Type } from 'class-transformer';
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
 
+   export class W3CAttributeValue {
 
-  class W3CAttributeValue {
     @ApiProperty()
     @IsString()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'attributeName is required' })
     attributeName: string;
-
+  
     @ApiProperty()
     @IsString()
     @Transform(({ value }) => trim(value))
     @IsNotEmpty({ message: 'displayName is required' })
     displayName: string;
-
+  
     @ApiProperty({
       description: 'The type of the schema',
       enum: W3CSchemaDataType,
@@ -26,20 +26,161 @@ import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum
     })
     @IsEnum(W3CSchemaDataType, { message: 'Schema data type must be a valid type' })
     schemaDataType: W3CSchemaDataType;
-
+  
     @ApiProperty()
     @IsBoolean()
     @IsNotEmpty({ message: 'isRequired property is required' })
     isRequired: boolean;
+  
+    @ApiPropertyOptional({ description: 'Minimum length for string values' })
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.STRING)
+    minLength?: number;
+  
+    @ApiPropertyOptional({ description: 'Maximum length for string values' })
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.STRING)
+    maxLength?: number;
+  
+    @ApiPropertyOptional({ description: 'Regular expression pattern for string values' })
+    @IsOptional()
+    @IsString()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.STRING)
+    pattern?: string;
+  
+    @ApiPropertyOptional({ description: 'Enumerated values for string type' })
+    @IsOptional()
+    @IsArray()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.STRING)
+    enum?: string[];
 
-    @ApiPropertyOptional({
-      description: 'Array of objects with dynamic keys',
-      isArray: true
-    })
+    @ApiPropertyOptional({ description: 'Content encoding (e.g., base64)' })
+    @IsOptional()
+    @IsString()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.STRING)
+    contentEncoding?: string;
+  
+    @ApiPropertyOptional({ description: 'Content media type (e.g., image/png)' })
+    @IsOptional()
+    @IsString()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.STRING)
+    contentMediaType?: string;
+
+    // Number type specific validations
+    @ApiPropertyOptional({ description: 'Minimum value (inclusive) for number values' })
+    @IsOptional()
+    @IsNumber()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.NUMBER)
+    minimum?: number;
+
+    @ApiPropertyOptional({ description: 'Maximum value (inclusive) for number values' })
+    @IsOptional()
+    @IsNumber()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.NUMBER)
+    maximum?: number;
+
+    @ApiPropertyOptional({ description: 'Minimum value (exclusive) for number values' })
+    @IsOptional()
+    @IsNumber()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.NUMBER)
+    exclusiveMinimum?: number;
+
+    @ApiPropertyOptional({ description: 'Maximum value (exclusive) for number values' })
+    @IsOptional()
+    @IsNumber()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.NUMBER)
+    exclusiveMaximum?: number;
+
+    @ApiPropertyOptional({ description: 'Number must be a multiple of this value' })
+    @IsOptional()
+    @IsNumber()
+    @IsPositive()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.NUMBER)
+    multipleOf?: number;
+
+    // Array type specific validations
+    @ApiPropertyOptional({ description: 'Minimum number of items in array' })
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.ARRAY)
+    minItems?: number;
+
+    @ApiPropertyOptional({ description: 'Maximum number of items in array' })
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.ARRAY)
+    maxItems?: number;
+
+    @ApiPropertyOptional({ description: 'Whether array items must be unique' })
+    @IsOptional()
+    @IsBoolean()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.ARRAY)
+    uniqueItems?: boolean;
+
+    @ApiPropertyOptional({ description: 'Array of items', type: [W3CAttributeValue] })
     @IsArray()
     @IsOptional()
-    nestedAttributes: Record<string, Record<string, string> | string>[];
+    @ValidateNested({ each: true })
+    @Type(() => W3CAttributeValue)
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.ARRAY)
+    items?: W3CAttributeValue[];
+  
+    // Object type specific validations
+    @ApiPropertyOptional({ description: 'Minimum number of properties in object' })
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.OBJECT)
+    minProperties?: number;
+
+    @ApiPropertyOptional({ description: 'Maximum number of properties in object' })
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.OBJECT)
+    maxProperties?: number;
+
+    @ApiPropertyOptional({ description: 'additional properties must be boolean' })
+    @IsOptional()
+    @IsBoolean()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.OBJECT)
+    additionalProperties?: boolean;
+
+    @ApiPropertyOptional({ description: 'Required properties for object type' })
+    @IsOptional()
+    @IsArray()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.OBJECT)
+    required?: string[];
+
+    @ApiPropertyOptional({ description: 'Dependent required properties' })
+    @IsOptional()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.OBJECT)
+    dependentRequired?: Record<string, string[]>;
+
+    @ApiPropertyOptional({ description: 'Object with dynamic properties' })
+    @IsOptional()
+    @ValidateIf(o => o.schemaDataType === W3CSchemaDataType.OBJECT)
+    @Transform(({ value }) => {
+      if (value && 'object' === typeof value) {
+        const result = {};
+        Object.entries(value).forEach(([key, propValue]) => {
+          result[key] = plainToClass(W3CAttributeValue, propValue, { 
+            enableImplicitConversion: false 
+          });
+        });
+        return result;
+      }
+      return value;
+    })
+    properties?: Record<string, W3CAttributeValue>;
   }
+  
 class AttributeValue {
 
     @ApiProperty()
@@ -181,7 +322,5 @@ export class GenericSchemaDTO {
           return CreateW3CSchemaDto;
         }
       })
-    schemaPayload:CreateSchemaDto | CreateW3CSchemaDto;
-
-   
+    schemaPayload:CreateSchemaDto | CreateW3CSchemaDto; 
 }

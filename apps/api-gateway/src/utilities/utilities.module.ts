@@ -5,7 +5,6 @@ import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { ImageServiceService } from '@credebl/image-service';
 import { UtilitiesController } from './utilities.controller';
 import { UtilitiesService } from './utilities.service';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -20,7 +19,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
         options: getNatsOptions(CommonConstants.UTILITY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
-
       },
       CommonModule
     ])
@@ -28,5 +26,4 @@ import { NATSClient } from '@credebl/common/NATSClient';
   controllers: [UtilitiesController],
   providers: [UtilitiesService, CommonService, ImageServiceService, NATSClient]
 })
-export class UtilitiesModule { }
-
+export class UtilitiesModule {}

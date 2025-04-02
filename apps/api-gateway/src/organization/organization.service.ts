@@ -9,7 +9,14 @@ import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { organisation, user } from '@prisma/client';
 import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
-import { IOrgCredentials, IOrganization, IOrganizationInvitations, IOrganizationDashboard, IDeleteOrganization, IOrgActivityCount } from '@credebl/common/interfaces/organization.interface';
+import {
+  IOrgCredentials,
+  IOrganization,
+  IOrganizationInvitations,
+  IOrganizationDashboard,
+  IDeleteOrganization,
+  IOrgActivityCount
+} from '@credebl/common/interfaces/organization.interface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
@@ -20,7 +27,10 @@ import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class OrganizationService extends BaseService {
-  constructor(@Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy, private readonly natsClient : NATSClient) {
+  constructor(
+    @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
+    private readonly natsClient: NATSClient
+  ) {
     super('OrganizationService');
   }
 
@@ -29,7 +39,11 @@ export class OrganizationService extends BaseService {
    * @param createOrgDto
    * @returns Organization creation Success
    */
-  async createOrganization(createOrgDto: CreateOrganizationDto, userId: string, keycloakUserId: string): Promise<organisation> {
+  async createOrganization(
+    createOrgDto: CreateOrganizationDto,
+    userId: string,
+    keycloakUserId: string
+  ): Promise<organisation> {
     const payload = { createOrgDto, userId, keycloakUserId };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-organization', payload);
   }
@@ -39,16 +53,16 @@ export class OrganizationService extends BaseService {
    * @param primaryDidPayload
    * @returns Set Primary Did for organization
    */
-  async setPrimaryDid(primaryDidPayload: PrimaryDid, orgId:string): Promise<organisation> {
-    const {did, id} = primaryDidPayload;
-    const payload = { did, orgId, id};
+  async setPrimaryDid(primaryDidPayload: PrimaryDid, orgId: string): Promise<organisation> {
+    const { did, id } = primaryDidPayload;
+    const payload = { did, orgId, id };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'set-primary-did', payload);
   }
 
   /**
-   * 
-   * @param orgId 
-   * @param userId 
+   *
+   * @param orgId
+   * @param userId
    * @returns Orgnization client credentials
    */
   async createOrgCredentials(orgId: string, userId: string, keycloakUserId: string): Promise<IOrgCredentials> {
@@ -67,8 +81,8 @@ export class OrganizationService extends BaseService {
   }
 
   /**
-   * 
-   * @param orgId 
+   *
+   * @param orgId
    * @returns Organization details with owner
    */
   async findOrganizationOwner(orgId: string): Promise<IOrganization> {
@@ -86,7 +100,7 @@ export class OrganizationService extends BaseService {
     const fetchOrgs = await this.natsClient.sendNatsMessage(this.serviceProxy, 'get-organizations', payload);
     return fetchOrgs;
   }
-  
+
   /**
    *
    * @param
@@ -127,15 +141,12 @@ export class OrganizationService extends BaseService {
    * @param orgId
    * @returns Invitations details
    */
-  async getInvitationsByOrgId(
-    orgId: string,
-    pagination: PaginationDto
-  ): Promise<IOrganizationInvitations> {
+  async getInvitationsByOrgId(orgId: string, pagination: PaginationDto): Promise<IOrganizationInvitations> {
     const { pageNumber, pageSize, search } = pagination;
     const payload = { orgId, pageNumber, pageSize, search };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-invitations-by-orgId', payload);
   }
-  
+
   async getOrganizationDashboard(orgId: string, userId: string): Promise<IOrganizationDashboard> {
     const payload = { orgId, userId };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-organization-dashboard', payload);
@@ -153,7 +164,7 @@ export class OrganizationService extends BaseService {
    */
 
   async getOrgRoles(orgId: string, user: user): Promise<IClientRoles[]> {
-    const payload = {orgId, user};
+    const payload = { orgId, user };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-org-roles', payload);
   }
 
@@ -183,61 +194,48 @@ export class OrganizationService extends BaseService {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-user-roles', payload);
   }
 
-  async getOrgUsers(
-    orgId: string,
-    paginationDto: PaginationDto
-  ): Promise<IOrgUsers> {
+  async getOrgUsers(orgId: string, paginationDto: PaginationDto): Promise<IOrgUsers> {
     const { pageNumber, pageSize, search } = paginationDto;
     const payload = { orgId, pageNumber, pageSize, search };
 
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'fetch-organization-user', payload);
   }
 
-  async getDidList(
-    orgId: string
-  ): Promise<IDidList[]> {
+  async getDidList(orgId: string): Promise<IDidList[]> {
     const payload = { orgId };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'fetch-organization-dids', payload);
   }
 
-  async getOrgPofile(
-    orgId: string
-  ): Promise<organisation> {
+  async getOrgPofile(orgId: string): Promise<organisation> {
     const payload = { orgId };
 
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'fetch-organization-profile', payload);
   }
 
-  async deleteOrganization(
-    orgId: string,
-    user: user
-  ): Promise<IDeleteOrganization> {
+  async deleteOrganization(orgId: string, user: user): Promise<IDeleteOrganization> {
     const payload = { orgId, user };
 
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-organization', payload);
   }
 
-  async deleteOrgClientCredentials(
-    orgId: string,
-    user: user
-  ): Promise<string> {
+  async deleteOrgClientCredentials(orgId: string, user: user): Promise<string> {
     const payload = { orgId, user };
 
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-org-client-credentials', payload);
   }
 
-  async deleteOrganizationInvitation(
-    orgId: string,
-    invitationId: string
-  ): Promise<boolean> {
-    const payload = {orgId, invitationId};
+  async deleteOrganizationInvitation(orgId: string, invitationId: string): Promise<boolean> {
+    const payload = { orgId, invitationId };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-organization-invitation', payload);
   }
 
-  async clientLoginCredentials(
-    clientCredentialsDto: ClientCredentialsDto
-  ): Promise<IAccessTokenData> {
+  async clientLoginCredentials(clientCredentialsDto: ClientCredentialsDto): Promise<IAccessTokenData> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'authenticate-client-credentials', clientCredentialsDto);
   }
 
+  getBase64Image(base64Image: string): Buffer {
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+    return imageBuffer;
+  }
 }

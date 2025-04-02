@@ -14,12 +14,6 @@
       "@credebl/common/*": [
         "libs/common/src/*"
       ],
-      "@credebl/push-notifications": [
-        "libs/push-notifications/src"
-      ],
-      "@credebl/push-notifications/*": [
-        "libs/push-notifications/src/*"
-      ],
       "@credebl/keycloak-url": [
         "libs/keycloak-url/src"
       ],

@@ -170,8 +170,6 @@
       "@credebl/responses": "<rootDir>/libs/responses/src",
       "@credebl/common/(.*)": "<rootDir>/libs/common/src/$1",
       "@credebl/common": "<rootDir>/libs/common/src",
-      "@credebl/push-notifications/(.*)": "<rootDir>/libs/push-notifications/src/$1",
-      "@credebl/push-notifications": "<rootDir>/libs/push-notifications/src",
       "@credebl/keycloak-url/(.*)": "<rootDir>/libs/keycloak-url/src/$1",
       "@credebl/keycloak-url": "<rootDir>/libs/keycloak-url/src",
       "@credebl/client-registration/(.*)": "<rootDir>/libs/client-registration/src/$1",

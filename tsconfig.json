@@ -2,12 +2,6 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "paths": {
-      "@credebl/response": [
-        "libs/response/src"
-      ],
-      "@credebl/response/*": [
-        "libs/response/src/*"
-      ],
       "@credebl/common": [
         "libs/common/src"
       ],

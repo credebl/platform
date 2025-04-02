@@ -6,31 +6,22 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import * as CryptoJS from 'crypto-js';
 
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-  Logger,
-  NotFoundException
-} from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
-import { ResponseService } from '@credebl/response';
 import * as dotenv from 'dotenv';
 import { RpcException } from '@nestjs/microservices';
 import { ResponseMessages } from './response-messages';
-import { IOptionalParams } from './interfaces/interface';
+import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
 import { OrgAgentType } from '@credebl/enum/enum';
 dotenv.config();
 
 @Injectable()
 export class CommonService {
   private readonly logger = new Logger('CommonService');
-  result: ResponseService = new ResponseService();
 
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService) {}
 
   async httpPost(url: string, payload?: any, apiKey?: any) {
     try {
@@ -42,11 +33,7 @@ export class CommonService {
         });
     } catch (error) {
       this.logger.error(`ERROR in POST : ${JSON.stringify(error)}`);
-      if (
-        error
-          .toString()
-          .includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)
-      ) {
+      if (error.toString().includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)) {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNAUTHORIZED,
@@ -74,9 +61,7 @@ export class CommonService {
           HttpStatus.BAD_REQUEST
         );
       }
-      if (
-        error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)
-      ) {
+      if (error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)) {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -84,17 +69,16 @@ export class CommonService {
           },
           HttpStatus.UNPROCESSABLE_ENTITY
         );
-      } 
-      
-        throw new HttpException(
-          {
-            statusCode: error.response.status,
-            message: error.message,
-            error: error.response.data ? error.response.data : error.message
-          },
-          error.response.status
-        );
-      
+      }
+
+      throw new HttpException(
+        {
+          statusCode: error.response.status,
+          message: error.message,
+          error: error.response.data ? error.response.data : error.message
+        },
+        error.response.status
+      );
     }
   }
 
@@ -103,16 +87,10 @@ export class CommonService {
       return await this.httpService
         .get(url, config)
         .toPromise()
-        .then((data) =>
-          data.data
-        );
+        .then((data) => data.data);
     } catch (error) {
       this.logger.error(`ERROR in GET : ${JSON.stringify(error)}`);
-      if (
-        error.message
-          .toString()
-          .includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)
-      ) {
+      if (error.message.toString().includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)) {
         throw new HttpException(
           {
             statusCode: HttpStatus.NOT_FOUND,
@@ -121,11 +99,7 @@ export class CommonService {
           HttpStatus.NOT_FOUND
         );
       }
-      if (
-        error
-          .toString()
-          .includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)
-      ) {
+      if (error.toString().includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)) {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNAUTHORIZED,
@@ -152,9 +126,7 @@ export class CommonService {
           HttpStatus.BAD_REQUEST
         );
       }
-      if (
-        error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)
-      ) {
+      if (error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)) {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -184,11 +156,7 @@ export class CommonService {
         });
     } catch (error) {
       this.logger.error(`ERROR in PATCH : ${JSON.stringify(error)}`);
-      if (
-        error
-          .toString()
-          .includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)
-      ) {
+      if (error.toString().includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)) {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNAUTHORIZED,
@@ -215,9 +183,7 @@ export class CommonService {
           HttpStatus.BAD_REQUEST
         );
       }
-      if (
-        error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)
-      ) {
+      if (error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)) {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -247,11 +213,7 @@ export class CommonService {
         });
     } catch (error) {
       this.logger.error(`ERROR in DELETE : ${JSON.stringify(error.response.data)}`);
-      if (
-        error
-          .toString()
-          .includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)
-      ) {
+      if (error.toString().includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)) {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNAUTHORIZED,
@@ -278,9 +240,7 @@ export class CommonService {
           HttpStatus.BAD_REQUEST
         );
       }
-      if (
-        error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)
-      ) {
+      if (error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)) {
         throw new HttpException(
           {
             statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -300,15 +260,9 @@ export class CommonService {
     }
   }
 
-  async httpPut(
-    url: string,
-    payload?: any,
-    config?: any
-  ): Promise<ResponseService> {
+  async httpPut(url: string, payload?: any, config?: any): Promise<IFormattedResponse> {
     try {
-      const response = await this.httpService
-        .put(url, payload, config)
-        .toPromise();
+      const response = await this.httpService.put(url, payload, config).toPromise();
 
       return this.filterResponse(response);
     } catch (error) {
@@ -318,37 +272,23 @@ export class CommonService {
 
   filterResponse(data: any) {
     let response;
-    if (
-      data.data &&
-      data.data.message !== undefined &&
-      data.data.success !== undefined
-    ) {
-      this.logger.debug(
-        `CommonService: data is already a response object, return`
-      );
+    if (data.data && data.data.message !== undefined && data.data.success !== undefined) {
+      this.logger.debug(`CommonService: data is already a response object, return`);
       response = data.data;
     } else {
-      this.logger.debug(
-        `CommonService: create response object: ${JSON.stringify(data?.data)}`
-      );
-      response = this.result.response(
-        'fetched',
-        true,
-        !data.data.results
-          ? !data.data.result
-            ? data.data
-            : data.data.result
-          : data.data
-      );
+      this.logger.debug(`CommonService: create response object: ${JSON.stringify(data?.data)}`);
+      response = {
+        message: 'fetched',
+        success: true,
+        data: !data.data.results ? (!data.data.result ? data.data : data.data.result) : data.data
+      };
     }
 
     return response;
   }
 
-  sendError(error: any): ResponseService {
-    this.logger.error(
-      `in sendError: ${error} StatusCode: ${error.response?.status}`
-    );
+  sendError(error: any): IFormattedResponse {
+    this.logger.error(`in sendError: ${error} StatusCode: ${error.response?.status}`);
     if (error.response?.status) {
       throw new HttpException(
         {
@@ -376,7 +316,8 @@ export class CommonService {
   }
   // To validate password
   passwordValidation(password) {
-    const passwordRegEx = /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[-!@$%^*])(?=.*[!"$%*,-.\/:;=@^_])[a-zA-Z0-9!"$%*,-.\/:;=@^_]{8,}$/;
+    const passwordRegEx =
+      /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[-!@$%^*])(?=.*[!"$%*,-.\/:;=@^_])[a-zA-Z0-9!"$%*,-.\/:;=@^_]{8,}$/;
     const defaultMessage =
       'Passwords must contain at least 8 characters, including uppercase, lowercase, numbers and special character.';
     if (!passwordRegEx.test(password.trim())) {
@@ -386,10 +327,7 @@ export class CommonService {
   // To decrypt password
   decryptPassword(encryptedPassword) {
     try {
-      const password = CryptoJS.AES.decrypt(
-        encryptedPassword,
-        process.env.CRYPTO_PRIVATE_KEY
-      );
+      const password = CryptoJS.AES.decrypt(encryptedPassword, process.env.CRYPTO_PRIVATE_KEY);
 
       const decryptedPassword = JSON.parse(password.toString(CryptoJS.enc.Utf8));
       return decryptedPassword;
@@ -397,7 +335,7 @@ export class CommonService {
       throw new BadRequestException('Invalid Credentials');
     }
   }
-   dataEncryption(data: string) {
+  dataEncryption(data: string) {
     // eslint-disable-next-line no-useless-catch
     try {
       const encryptedToken = CryptoJS.AES.encrypt(JSON.stringify(data), process.env.CRYPTO_PRIVATE_KEY).toString();
@@ -420,102 +358,101 @@ export class CommonService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-  
-async checkAgentHealth(baseUrl: string, apiKey: string): Promise<boolean> {
-  if (!baseUrl || !apiKey) {
-    throw new BadRequestException(ResponseMessages.cloudWallet.error.agentDetails);
-  }
-  const url = `${baseUrl}${CommonConstants.URL_AGENT_GET_ENDPOINT}`;
-  try {
-    const agentHealthCheck = await this.httpGet(url, {
-      headers: { authorization: apiKey }
-    });
-    if (agentHealthCheck.isInitialized) {
-      return true;
-    }
-    return false;
-  } catch (error) {
-    throw new Error;
-  }
-}
 
-async createDynamicUrl(urlOptions: IOptionalParams): Promise<string> {
-  try {
-    const { alias, myDid, outOfBandId, state, theirDid, theirLabel, connectionId, threadId } = urlOptions;
-    // Create the dynamic URL for Search Criteria
-    const criteriaParams = [];
-    
-    if (alias) {
-      criteriaParams.push(`alias=${alias}`);
+  async checkAgentHealth(baseUrl: string, apiKey: string): Promise<boolean> {
+    if (!baseUrl || !apiKey) {
+      throw new BadRequestException(ResponseMessages.cloudWallet.error.agentDetails);
     }
-    if (myDid) {
-      criteriaParams.push(`myDid=${myDid}`);
+    const url = `${baseUrl}${CommonConstants.URL_AGENT_GET_ENDPOINT}`;
+    try {
+      const agentHealthCheck = await this.httpGet(url, {
+        headers: { authorization: apiKey }
+      });
+      if (agentHealthCheck.isInitialized) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      throw new Error();
     }
-    if (outOfBandId) {
-      criteriaParams.push(`outOfBandId=${outOfBandId}`);
-    }
-    if (state) {
-      criteriaParams.push(`state=${state}`);
-    }
-    if (theirDid) {
-      criteriaParams.push(`theirDid=${theirDid}`);
-    }
-    if (theirLabel) {
-      criteriaParams.push(`theirLabel=${theirLabel}`);
-    }
-    if (threadId) {
-      criteriaParams.push(`threadId=${threadId}`);
-    }
-    if (connectionId) {
-      criteriaParams.push(`connectionId=${connectionId}`);
-    }
+  }
 
-    if (0 < criteriaParams.length) {
-      const url: string = `?${criteriaParams.join('&')}`;
+  async createDynamicUrl(urlOptions: IOptionalParams): Promise<string> {
+    try {
+      const { alias, myDid, outOfBandId, state, theirDid, theirLabel, connectionId, threadId } = urlOptions;
+      // Create the dynamic URL for Search Criteria
+      const criteriaParams = [];
+
+      if (alias) {
+        criteriaParams.push(`alias=${alias}`);
+      }
+      if (myDid) {
+        criteriaParams.push(`myDid=${myDid}`);
+      }
+      if (outOfBandId) {
+        criteriaParams.push(`outOfBandId=${outOfBandId}`);
+      }
+      if (state) {
+        criteriaParams.push(`state=${state}`);
+      }
+      if (theirDid) {
+        criteriaParams.push(`theirDid=${theirDid}`);
+      }
+      if (theirLabel) {
+        criteriaParams.push(`theirLabel=${theirLabel}`);
+      }
+      if (threadId) {
+        criteriaParams.push(`threadId=${threadId}`);
+      }
+      if (connectionId) {
+        criteriaParams.push(`connectionId=${connectionId}`);
+      }
+
+      if (0 < criteriaParams.length) {
+        const url: string = `?${criteriaParams.join('&')}`;
+        return url;
+      }
+
+      return '';
+    } catch (error) {
+      throw new Error(`Failed to create dynamic URL: ${error.message}`);
+    }
+  }
+
+  async sendBasicMessageAgentUrl(
+    label: string,
+    orgAgentType: string,
+    agentEndPoint: string,
+    tenantId?: string,
+    connectionId?: string
+  ): Promise<string> {
+    try {
+      let url;
+      switch (label) {
+        case 'send-basic-message': {
+          url =
+            orgAgentType === OrgAgentType.DEDICATED
+              ? `${agentEndPoint}${CommonConstants.URL_SEND_BASIC_MESSAGE}`.replace('#', connectionId)
+              : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
+                  .replace('#', connectionId)
+                  .replace('@', tenantId)
+              : null;
+          break;
+        }
+
+        default: {
+          break;
+        }
+      }
+
+      if (!url) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
+      }
       return url;
+    } catch (error) {
+      this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);
+      throw error;
     }
-    
-    return '';
-  } catch (error) {
-    throw new Error(`Failed to create dynamic URL: ${error.message}`);
   }
-}
-
-async sendBasicMessageAgentUrl(
-  label: string,
-  orgAgentType: string,
-  agentEndPoint: string,
-  tenantId?: string,
-  connectionId?: string
-): Promise<string> {
-  try {
-    let url;
-    switch (label) {
-      case 'send-basic-message': {
-        url =
-          orgAgentType === OrgAgentType.DEDICATED
-            ? `${agentEndPoint}${CommonConstants.URL_SEND_BASIC_MESSAGE}`.replace('#', connectionId)
-            : orgAgentType === OrgAgentType.SHARED
-            ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
-                .replace('#', connectionId)
-                .replace('@', tenantId)
-            : null;
-        break;
-      }
-
-      default: {
-        break;
-      }
-    }
-
-    if (!url) {
-      throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
-    }
-    return url;
-  } catch (error) {
-    this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);
-    throw error;
-  }
-}
-
 }

@@ -86,12 +86,6 @@
       "@credebl/supabase/*": [
         "libs/supabase/src/*"
       ],
-      "@credebl/image-service": [
-        "libs/image-service/src"
-      ],
-      "@credebl/image-service/*": [
-        "libs/image-service/src/*"
-      ],
       "@credebl/aws": [
         "libs/aws/src"
       ],

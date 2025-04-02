@@ -44,15 +44,6 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
-    "push-notifications": {
-      "type": "library",
-      "root": "libs/push-notifications",
-      "entryFile": "index",
-      "sourceRoot": "libs/push-notifications/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/push-notifications/tsconfig.lib.json"
-      }
-    },
     "keycloak-url": {
       "type": "library",
       "root": "libs/keycloak-url",

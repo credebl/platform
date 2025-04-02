@@ -62,6 +62,7 @@ services:
   issuance:
     depends_on:
       - nats  # Use depends_on instead of needs
+      - redis
       - api-gateway
       - user
       - connection
@@ -158,21 +159,38 @@ services:
     depends_on:
       - nats
       - api-gateway
-      - user
-      - connection
-      - issuance
-      - ledger
-      - organization
-      - verification
-      - agent-provisioning
-      - agent-service
     build:
       context: ./  # Adjust the context path as needed
       dockerfile: Dockerfiles/Dockerfile.cloud-wallet
     env_file:
       - ./.env
-  
-  
+  geolocation:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.geolocation
+    env_file:
+      - ./.env
+  notification:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.notification
+    env_file:
+      - ./.env
+  webhook:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.webhook
+    env_file:
+      - ./.env
   
   
 

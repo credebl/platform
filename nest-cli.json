@@ -44,15 +44,6 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
-    "push-notifications": {
-      "type": "library",
-      "root": "libs/push-notifications",
-      "entryFile": "index",
-      "sourceRoot": "libs/push-notifications/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/push-notifications/tsconfig.lib.json"
-      }
-    },
     "keycloak-url": {
       "type": "library",
       "root": "libs/keycloak-url",
@@ -231,15 +222,6 @@
       "sourceRoot": "apps/webhook/src",
       "compilerOptions": {
         "tsConfigPath": "apps/webhook/tsconfig.app.json"
-      }
-    },
-    "image-service": {
-      "type": "library",
-      "root": "libs/image-service",
-      "entryFile": "index",
-      "sourceRoot": "libs/image-service/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/image-service/tsconfig.lib.json"
       }
     },
     "aws": {

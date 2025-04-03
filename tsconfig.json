@@ -1,15 +1,6 @@
 {
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "target": "es2017",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
     "paths": {
       "@credebl/response": [
         "libs/response/src"
@@ -22,12 +13,6 @@
       ],
       "@credebl/common/*": [
         "libs/common/src/*"
-      ],
-      "@credebl/push-notifications": [
-        "libs/push-notifications/src"
-      ],
-      "@credebl/push-notifications/*": [
-        "libs/push-notifications/src/*"
       ],
       "@credebl/keycloak-url": [
         "libs/keycloak-url/src"
@@ -100,12 +85,6 @@
       ],
       "@credebl/supabase/*": [
         "libs/supabase/src/*"
-      ],
-      "@credebl/image-service": [
-        "libs/image-service/src"
-      ],
-      "@credebl/image-service/*": [
-        "libs/image-service/src/*"
       ],
       "@credebl/aws": [
         "libs/aws/src"

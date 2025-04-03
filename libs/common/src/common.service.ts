@@ -93,6 +93,7 @@ export class CommonService {
       response = data.data;
     } else {
       this.logger.debug(`CommonService: create response object: ${JSON.stringify(data?.data)}`);
+      // TODO: We are not using this response in the parent functions, so we can remove this
       response = {
         message: 'fetched',
         success: true,

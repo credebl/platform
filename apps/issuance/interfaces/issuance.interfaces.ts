@@ -374,6 +374,31 @@ export interface ISchemaAttributes {
   isRequired: boolean;
 }
 
+export interface IW3CAttributeValue extends ISchemaAttributes{
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  enum?: string[];
+  contentEncoding?: string;
+  contentMediaType?: string;
+  minimum?: number;
+  maximum?: number;
+  exclusiveMinimum?: number;
+  exclusiveMaximum?: number;
+  multipleOf?: number;
+  minItems?: number;
+  maxItems?: number;
+  uniqueItems?: boolean;
+  items?: IW3CAttributeValue[];
+  minProperties?: number;
+  maxProperties?: number;
+  additionalProperties?: boolean;
+  required?: string[];
+  dependentRequired?: Record<string, string[]>;
+  properties?: Record<string, IW3CAttributeValue>;
+}
+
+
 export interface IIssuanceAttributes {
   [key: string]: string;
 }

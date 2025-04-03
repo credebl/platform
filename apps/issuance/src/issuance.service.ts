@@ -39,6 +39,7 @@ import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validato
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/extractAttributes';
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
@@ -1073,55 +1074,37 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
          fileName = `${schemaResponse.tag}-${timestamp}.csv`;
 
       } else if (schemaType === SchemaType.W3C_Schema) {
-        const schemDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
-        const {attributes, schemaLedgerId, name} = schemDetails;
+        const schemaDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
+        const {attributes, schemaLedgerId, name} = schemaDetails;
         schemaResponse = { attributes, schemaLedgerId, name };
         if (!schemaResponse) {
           throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
         }
          fileName = `${schemaResponse.name}-${timestamp}.csv`;
       }   
-      const jsonData = [];
+  
       const attributesArray = JSON.parse(schemaResponse.attributes);
       
-      // Extract the 'attributeName' values from the objects and store them in an array
-      const attributeNameArray = attributesArray
-        .filter((attribute) => W3CSchemaDataType.ARRAY !== attribute?.schemaDataType)
-        .map((attribute) => attribute.attributeName);
+      const csvFields: string[] = [TemplateIdentifier.EMAIL_COLUMN];
+         
+      const flattendData = extractAttributeNames(attributesArray);
+      csvFields.push(...flattendData);
 
-      let nestedAttributes = [];
-
-      if (attributesArray.some((attribute) => W3CSchemaDataType.ARRAY === attribute?.schemaDataType)) {
-        nestedAttributes = attributesArray
-          .filter((attribute) => W3CSchemaDataType.ARRAY === attribute?.schemaDataType)
-          .flatMap((attribute) => attribute.nestedAttributes || []) 
-          .flatMap(Object.entries) 
-          .flatMap(([key, value]) => [key, ...Object.values(value)]);
-      }
+      const jsonData = [];
       
-      attributeNameArray.unshift(TemplateIdentifier.EMAIL_COLUMN);
-
-      const [csvData, csvFields] = 0 < nestedAttributes.length
-        ? [jsonData, [...attributeNameArray, ...nestedAttributes]]
-        : [jsonData, attributeNameArray];
-
-      if (!csvData || !csvFields) {
+      if (!csvFields.length) {
         // eslint-disable-next-line prefer-promise-reject-errors
         return Promise.reject('Unable to transform schema data for CSV.');
       }
-
-      const csv = parse(csvFields, { fields: csvFields });
-
+      
+      const csv = parse(jsonData, { fields: csvFields });
       const filePath = join(process.cwd(), `uploadedFiles/exports`);
-
-
       await createFile(filePath, fileName, csv);
       const fullFilePath = join(process.cwd(), `uploadedFiles/exports/${fileName}`);
       this.logger.log('fullFilePath::::::::', fullFilePath); //remove after user
       if (!checkIfFileOrDirectoryExists(fullFilePath)) {
         throw new NotFoundException(ResponseMessages.bulkIssuance.error.PathNotFound);
       }
-
       // https required to download csv from frontend side
       const filePathToDownload = `${process.env.API_GATEWAY_PROTOCOL_SECURE}://${process.env.UPLOAD_LOGO_HOST}/${fileName}`;
       return {
@@ -1170,6 +1153,8 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         transformheader: (header) => header.toLowerCase().replace('#', '').trim(),
         complete: (results) => results.data
       });
+      
+      const nestedObject = parsedData.data.map(row => unflattenCsvRow(row));
 
       if (0 >= parsedData.data.length) {
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.emptyFile);
@@ -1184,7 +1169,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
         throw new BadRequestException(ResponseMessages.bulkIssuance.error.invalidEmails);
       }
       
-      const fileData: string[][] = parsedData.data.map(Object.values);
+      const fileData: string[][] = nestedObject.map(Object.values);
       const fileHeader: string[] = parsedData.meta.fields;
       const attributesArray = JSON.parse(credentialDetails.attributes);
 
@@ -1218,7 +1203,7 @@ async sendEmailForCredentialOffer(sendEmailCredentialOffer: SendEmailCredentialO
           return { email_identifier, ...newRow };
         });
       } else if (type === SchemaType.W3C_Schema && !isValidateSchema) {
-        validatedData = parsedData.data.map((row) => {
+        validatedData = nestedObject.map((row) => {
           const { email_identifier, ...rest } = row;
           const newRow = { ...rest };
   

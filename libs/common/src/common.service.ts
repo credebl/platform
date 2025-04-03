@@ -11,7 +11,6 @@ import { BadRequestException, HttpException, HttpStatus, Injectable, Logger, Not
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios/dist';
 import * as dotenv from 'dotenv';
-import { RpcException } from '@nestjs/microservices';
 import { ResponseMessages } from './response-messages';
 import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
 import { OrgAgentType } from '@credebl/enum/enum';
@@ -33,52 +32,7 @@ export class CommonService {
         });
     } catch (error) {
       this.logger.error(`ERROR in POST : ${JSON.stringify(error)}`);
-      if (error.toString().includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.UNAUTHORIZED,
-            error: CommonConstants.UNAUTH_MSG
-          },
-          HttpStatus.UNAUTHORIZED
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_ERR_NOT_FOUND)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.NOT_FOUND
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_BAD_REQUEST)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            message: error.message,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.BAD_REQUEST
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.UNPROCESSABLE_ENTITY
-        );
-      }
-
-      throw new HttpException(
-        {
-          statusCode: error.response.status,
-          message: error.message,
-          error: error.response.data ? error.response.data : error.message
-        },
-        error.response.status
-      );
+      this.handleError(error);
     }
   }
 
@@ -90,59 +44,7 @@ export class CommonService {
         .then((data) => data.data);
     } catch (error) {
       this.logger.error(`ERROR in GET : ${JSON.stringify(error)}`);
-      if (error.message.toString().includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: error.message
-          },
-          HttpStatus.NOT_FOUND
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.UNAUTHORIZED,
-            error: CommonConstants.UNAUTH_MSG
-          },
-          HttpStatus.UNAUTHORIZED
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_ERR_NOT_FOUND)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.NOT_FOUND
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_BAD_REQUEST)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.BAD_REQUEST
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.UNPROCESSABLE_ENTITY
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
-      }
+      this.handleError(error);
     }
   }
 
@@ -156,50 +58,7 @@ export class CommonService {
         });
     } catch (error) {
       this.logger.error(`ERROR in PATCH : ${JSON.stringify(error)}`);
-      if (error.toString().includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.UNAUTHORIZED,
-            error: CommonConstants.UNAUTH_MSG
-          },
-          HttpStatus.UNAUTHORIZED
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_ERR_NOT_FOUND)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.NOT_FOUND
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_BAD_REQUEST)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.BAD_REQUEST
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.UNPROCESSABLE_ENTITY
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
-      }
+      this.handleError(error);
     }
   }
 
@@ -213,50 +72,7 @@ export class CommonService {
         });
     } catch (error) {
       this.logger.error(`ERROR in DELETE : ${JSON.stringify(error.response.data)}`);
-      if (error.toString().includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.UNAUTHORIZED,
-            error: CommonConstants.UNAUTH_MSG
-          },
-          HttpStatus.UNAUTHORIZED
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_ERR_NOT_FOUND)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.NOT_FOUND
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_BAD_REQUEST)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.BAD_REQUEST
-        );
-      }
-      if (error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.UNPROCESSABLE_ENTITY
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: error.response.data ? error.response.data : error.message
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
-      }
+      this.handleError(error);
     }
   }
 
@@ -347,16 +163,61 @@ export class CommonService {
   }
 
   handleError(error): Promise<void> {
-    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
-      throw new RpcException({
-        message: error?.status?.message?.error?.reason
-          ? error?.status?.message?.error?.reason
-          : error?.status?.message?.error,
-        statusCode: error?.status?.code
-      });
-    } else {
-      throw new RpcException(error.response ? error.response : error);
+    if (error.message.toString().includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          error: error.message
+        },
+        HttpStatus.NOT_FOUND
+      );
     }
+    if (error.toString().includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.UNAUTHORIZED,
+          error: CommonConstants.UNAUTH_MSG
+        },
+        HttpStatus.UNAUTHORIZED
+      );
+    }
+    if (error.toString().includes(CommonConstants.RESP_ERR_NOT_FOUND)) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          error: error.response.data ? error.response.data : error.message
+        },
+        HttpStatus.NOT_FOUND
+      );
+    }
+    if (error.toString().includes(CommonConstants.RESP_BAD_REQUEST)) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: error.message,
+          error: error.response.data ? error.response.data : error.message
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+    if (error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+          error: error.response.data ? error.response.data : error.message
+        },
+        HttpStatus.UNPROCESSABLE_ENTITY
+      );
+    }
+
+    throw new HttpException(
+      {
+        statusCode: error.response.status,
+        message: error.message,
+        error: error.response.data ? error.response.data : error.message
+      },
+      error.response.status
+    );
   }
 
   async checkAgentHealth(baseUrl: string, apiKey: string): Promise<boolean> {

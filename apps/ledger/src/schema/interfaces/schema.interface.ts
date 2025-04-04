@@ -1,5 +1,6 @@
-import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
+import { JSONSchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
 import { UserRoleOrgPermsDto } from '../dtos/user-role-org-perms.dto';
+import { IW3CAttributeValue } from '@credebl/common/interfaces/interface';
 
 export interface IUserRequestInterface {
   id: string;
@@ -28,8 +29,7 @@ export interface ISelectedOrgInterface {
 export interface IOrganizationInterface {
   name: string;
   description: string;
-  org_agents: IOrgAgentInterface[]
-  
+  org_agents: IOrgAgentInterface[];
 }
 
 export interface IOrgAgentInterface {
@@ -43,9 +43,9 @@ export interface IOrgAgentInterface {
 }
 
 export interface AgentDetails {
-    orgDid: string;
-    agentEndPoint: string;
-    tenantId: string
+  orgDid: string;
+  agentEndPoint: string;
+  tenantId: string;
 }
 
 export interface ISchemaData {
@@ -66,33 +66,6 @@ export interface ISchemasWithCount {
   schemasCount: number;
   schemasResult: ISchemaData[];
 }
-export interface IW3CAttributeValue {
-  attributeName: string;
-  schemaDataType: W3CSchemaDataType;
-  displayName: string;
-  isRequired: boolean;
-  minLength?: number;
-  maxLength?: number;
-  pattern?: string;
-  enum?: string[];
-  contentEncoding?: string;
-  contentMediaType?: string;
-  minimum?: number;
-  maximum?: number;
-  exclusiveMinimum?: number;
-  exclusiveMaximum?: number;
-  multipleOf?: number;
-  minItems?: number;
-  maxItems?: number;
-  uniqueItems?: boolean;
-  items?: IW3CAttributeValue[];
-  minProperties?: number;
-  maxProperties?: number;
-  additionalProperties?: boolean;
-  required?: string[];
-  dependentRequired?: Record<string, string[]>;
-  properties?: Record<string, IW3CAttributeValue>;
-}
 
 export interface IProductSchema {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,7 +84,7 @@ export interface ICreateSchema {
   schemaVersion?: string;
   schemaName: string;
   attributes: IAttributeValue[];
-  orgId?: string;  
+  orgId?: string;
   orgDid?: string;
 }
 export interface ICreateW3CSchema {
@@ -121,15 +94,15 @@ export interface ICreateW3CSchema {
   schemaType: JSONSchemaType;
 }
 export interface IGenericSchema {
-  alias:string;
+  alias: string;
   type: SchemaTypeEnum;
   schemaPayload: ICreateSchema | ICreateW3CSchema;
 }
 
 export interface IschemaPayload {
-  schemaDetails: IGenericSchema,
-  user: IUserRequestInterface,
-  orgId: string
+  schemaDetails: IGenericSchema;
+  user: IUserRequestInterface;
+  orgId: string;
 }
 export interface ISchemasResult {
   id: string;
@@ -153,13 +126,12 @@ export interface ISchemasList {
   schemasResult: ISchemasResult[];
 }
 
-
 export interface IUpdateSchema {
   alias: string;
   schemaLedgerId: string;
-  orgId?: string; 
+  orgId?: string;
 }
 
 export interface UpdateSchemaResponse {
-  count: number; 
+  count: number;
 }

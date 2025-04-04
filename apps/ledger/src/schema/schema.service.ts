@@ -5,18 +5,48 @@ import {
   Inject,
   ConflictException,
   Injectable,
-  NotAcceptableException, NotFoundException} from '@nestjs/common';
+  NotAcceptableException,
+  NotFoundException
+} from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { Prisma, schema } from '@prisma/client';
-import { ISaveSchema, ISchema, ISchemaAttributesFormat, ISchemaCredDeffSearchInterface, ISchemaExist, ISchemaSearchCriteria, W3CCreateSchema } from './interfaces/schema-payload.interface';
+import {
+  ISaveSchema,
+  ISchema,
+  ISchemaAttributesFormat,
+  ISchemaCredDeffSearchInterface,
+  ISchemaExist,
+  ISchemaSearchCriteria,
+  W3CCreateSchema
+} from './interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { ICreateSchema, ICreateW3CSchema, IGenericSchema, IProductSchema, IUpdateSchema, IUserRequestInterface, IW3CAttributeValue, UpdateSchemaResponse } from './interfaces/schema.interface';
+import {
+  ICreateSchema,
+  ICreateW3CSchema,
+  IGenericSchema,
+  IProductSchema,
+  IUpdateSchema,
+  IUserRequestInterface,
+  UpdateSchemaResponse
+} from './interfaces/schema.interface';
 import { CreateSchemaAgentRedirection, GetSchemaAgentRedirection, ISchemaId } from './schema.interface';
 import { map } from 'rxjs/operators';
-import { JSONSchemaType, LedgerLessConstant, LedgerLessMethods, OrgAgentType, SchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
-import { ICredDefWithPagination, ISchemaData, ISchemaDetails, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
+import {
+  JSONSchemaType,
+  LedgerLessConstant,
+  LedgerLessMethods,
+  OrgAgentType,
+  SchemaType,
+  SchemaTypeEnum
+} from '@credebl/enum/enum';
+import {
+  ICredDefWithPagination,
+  ISchemaData,
+  ISchemaDetails,
+  ISchemasWithPagination
+} from '@credebl/common/interfaces/schema.interface';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -36,6 +66,7 @@ import Minimum from 'libs/validations/minimum';
 import Pattern from 'libs/validations/pattern';
 import MaxLength from 'libs/validations/maxLength';
 import MinLength from 'libs/validations/minLength';
+import { IW3CAttributeValue } from '@credebl/common/interfaces/interface';
 
 @Injectable()
 export class SchemaService extends BaseService {
@@ -44,116 +75,108 @@ export class SchemaService extends BaseService {
     private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy,
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
-    private readonly natsClient : NATSClient
+    private readonly natsClient: NATSClient
   ) {
     super('SchemaService');
   }
 
-  async createSchema(
-    schemaDetails: IGenericSchema,
-    user: IUserRequestInterface,
-    orgId: string
-   ): Promise<ISchemaData> {
-
+  async createSchema(schemaDetails: IGenericSchema, user: IUserRequestInterface, orgId: string): Promise<ISchemaData> {
     const userId = user.id;
     try {
-       const {schemaPayload, type, alias} = schemaDetails;
-       
-       if (type === SchemaTypeEnum.INDY) {
+      const { schemaPayload, type, alias } = schemaDetails;
 
-          const schema = schemaPayload as ICreateSchema;
-          const schemaExists = await this.schemaRepository.schemaExists(
-          schema.schemaName,
-          schema.schemaVersion
-           );
+      if (type === SchemaTypeEnum.INDY) {
+        const schema = schemaPayload as ICreateSchema;
+        const schemaExists = await this.schemaRepository.schemaExists(schema.schemaName, schema.schemaVersion);
 
-           if (0 !== schemaExists.length) {
-             this.logger.error(ResponseMessages.schema.error.exists);
-             throw new ConflictException(
-               ResponseMessages.schema.error.exists,
-               { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
-             );
-           }
-           if (null !== schema || schema !== undefined) {
-            const schemaVersionIndexOf = -1;
-            if (
+        if (0 !== schemaExists.length) {
+          this.logger.error(ResponseMessages.schema.error.exists);
+          throw new ConflictException(ResponseMessages.schema.error.exists, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.conflict
+          });
+        }
+        if (null !== schema || schema !== undefined) {
+          const schemaVersionIndexOf = -1;
+          if (
             isNaN(parseFloat(schema.schemaVersion)) ||
-            schema.schemaVersion.toString().indexOf('.') ===
-            schemaVersionIndexOf
+            schema.schemaVersion.toString().indexOf('.') === schemaVersionIndexOf
           ) {
-            throw new NotAcceptableException(
-              ResponseMessages.schema.error.invalidVersion,
-              { cause: new Error(), description: ResponseMessages.errorMessages.notAcceptable }
-            );
+            throw new NotAcceptableException(ResponseMessages.schema.error.invalidVersion, {
+              cause: new Error(),
+              description: ResponseMessages.errorMessages.notAcceptable
+            });
           }
-  
+
           const schemaAttributeLength = 0;
           if (schema.attributes.length === schemaAttributeLength) {
-              throw new NotAcceptableException(
-                ResponseMessages.schema.error.insufficientAttributes,
-                { cause: new Error(), description: ResponseMessages.errorMessages.notAcceptable }
-              );
-            } else if (schema.attributes.length > schemaAttributeLength) {
-              
-              const trimmedAttributes = schema.attributes.map(attribute => ({
-                attributeName: attribute.attributeName.trim(),
-                schemaDataType: attribute.schemaDataType,
-                displayName: attribute.displayName.trim(),
-                isRequired: attribute.isRequired
-              }));
-  
-  
-            const attributeNamesLowerCase = trimmedAttributes.map(attribute => attribute.attributeName.toLowerCase());
-            const duplicateAttributeNames = attributeNamesLowerCase
-              .filter((value, index, element) => element.indexOf(value) !== index);
-  
-          if (0 < duplicateAttributeNames.length) {
-              throw new ConflictException(
-                ResponseMessages.schema.error.uniqueAttributesnames,
-                { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
-              );
-          }
-  
-            const attributeDisplayNamesLowerCase = trimmedAttributes.map(attribute => attribute.displayName.toLocaleLowerCase());
-            const duplicateAttributeDisplayNames = attributeDisplayNamesLowerCase
-              .filter((value, index, element) => element.indexOf(value) !== index);
-  
-          if (0 < duplicateAttributeDisplayNames.length) {
-              throw new ConflictException(
-                ResponseMessages.schema.error.uniqueAttributesDisplaynames,
-                { cause: new Error(), description: ResponseMessages.errorMessages.conflict }
-              );
-          }
-  
+            throw new NotAcceptableException(ResponseMessages.schema.error.insufficientAttributes, {
+              cause: new Error(),
+              description: ResponseMessages.errorMessages.notAcceptable
+            });
+          } else if (schema.attributes.length > schemaAttributeLength) {
+            const trimmedAttributes = schema.attributes.map((attribute) => ({
+              attributeName: attribute.attributeName.trim(),
+              schemaDataType: attribute.schemaDataType,
+              displayName: attribute.displayName.trim(),
+              isRequired: attribute.isRequired
+            }));
+
+            const attributeNamesLowerCase = trimmedAttributes.map((attribute) => attribute.attributeName.toLowerCase());
+            const duplicateAttributeNames = attributeNamesLowerCase.filter(
+              (value, index, element) => element.indexOf(value) !== index
+            );
+
+            if (0 < duplicateAttributeNames.length) {
+              throw new ConflictException(ResponseMessages.schema.error.uniqueAttributesnames, {
+                cause: new Error(),
+                description: ResponseMessages.errorMessages.conflict
+              });
+            }
+
+            const attributeDisplayNamesLowerCase = trimmedAttributes.map((attribute) =>
+              attribute.displayName.toLocaleLowerCase()
+            );
+            const duplicateAttributeDisplayNames = attributeDisplayNamesLowerCase.filter(
+              (value, index, element) => element.indexOf(value) !== index
+            );
+
+            if (0 < duplicateAttributeDisplayNames.length) {
+              throw new ConflictException(ResponseMessages.schema.error.uniqueAttributesDisplaynames, {
+                cause: new Error(),
+                description: ResponseMessages.errorMessages.conflict
+              });
+            }
+
             schema.schemaName = schema.schemaName.trim();
             const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
             if (!agentDetails) {
-              throw new NotFoundException(
-                ResponseMessages.schema.error.agentDetailsNotFound,
-                { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
-              );
+              throw new NotFoundException(ResponseMessages.schema.error.agentDetailsNotFound, {
+                cause: new Error(),
+                description: ResponseMessages.errorMessages.notFound
+              });
             }
             const { agentEndPoint, orgDid } = agentDetails;
             const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
             // eslint-disable-next-line yoda
             const did = schema.orgDid?.split(':').length >= 4 ? schema.orgDid : orgDid;
-  
-            const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-            
-            const attributeArray = trimmedAttributes.map(item => item.attributeName);
-  
-            const isRequiredAttributeExists = trimmedAttributes.some(attribute => attribute.isRequired);
-  
-             if (!isRequiredAttributeExists) {
-               throw new BadRequestException(
-                 ResponseMessages.schema.error.atLeastOneRequired
-               );
-             }
-  
+
+            const orgAgentType = await this.schemaRepository.getOrgAgentType(
+              getAgentDetails.org_agents[0].orgAgentTypeId
+            );
+
+            const attributeArray = trimmedAttributes.map((item) => item.attributeName);
+
+            const isRequiredAttributeExists = trimmedAttributes.some((attribute) => attribute.isRequired);
+
+            if (!isRequiredAttributeExists) {
+              throw new BadRequestException(ResponseMessages.schema.error.atLeastOneRequired);
+            }
+
             let schemaResponseFromAgentService;
             if (OrgAgentType.DEDICATED === orgAgentType) {
               const issuerId = did;
-  
+
               const schemaPayload = {
                 attributes: attributeArray,
                 version: schema.schemaVersion,
@@ -164,10 +187,9 @@ export class SchemaService extends BaseService {
                 agentType: OrgAgentType.DEDICATED
               };
               schemaResponseFromAgentService = await this._createSchema(schemaPayload);
-  
             } else if (OrgAgentType.SHARED === orgAgentType) {
               const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
-  
+
               const schemaPayload = {
                 tenantId,
                 method: 'registerSchema',
@@ -183,9 +205,9 @@ export class SchemaService extends BaseService {
               };
               schemaResponseFromAgentService = await this._createSchema(schemaPayload);
             }
-  
+
             const responseObj = JSON.parse(JSON.stringify(schemaResponseFromAgentService.response));
-  
+
             const indyNamespace = `${did.split(':')[2]}:${did.split(':')[3]}`;
             const getLedgerId = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
             const schemaDetails: ISchema = {
@@ -197,7 +219,7 @@ export class SchemaService extends BaseService {
               ledgerId: getLedgerId.id,
               type: SchemaType.INDY
             };
-  
+
             if ('finished' === responseObj.schema.state) {
               schemaDetails.schema.schemaName = responseObj.schema.schema.name;
               schemaDetails.schema.attributes = trimmedAttributes;
@@ -207,16 +229,13 @@ export class SchemaService extends BaseService {
               schemaDetails.changedBy = userId;
               schemaDetails.orgId = orgId;
               schemaDetails.issuerId = responseObj.schema.schema.issuerId;
-              const saveResponse = this.schemaRepository.saveSchema(
-                schemaDetails
-              );
-  
+              const saveResponse = this.schemaRepository.saveSchema(schemaDetails);
+
               const attributesArray = JSON.parse((await saveResponse).attributes);
               (await saveResponse).attributes = attributesArray;
               delete (await saveResponse).lastChangedBy;
               delete (await saveResponse).lastChangedDateTime;
               return saveResponse;
-  
             } else if ('finished' === responseObj.state) {
               schemaDetails.schema.schemaName = responseObj.schema.name;
               schemaDetails.schema.attributes = trimmedAttributes;
@@ -226,53 +245,53 @@ export class SchemaService extends BaseService {
               schemaDetails.changedBy = userId;
               schemaDetails.orgId = orgId;
               schemaDetails.issuerId = responseObj.schema.issuerId;
-              const saveResponse = this.schemaRepository.saveSchema(
-                schemaDetails
-              );
-  
+              const saveResponse = this.schemaRepository.saveSchema(schemaDetails);
+
               const attributesArray = JSON.parse((await saveResponse).attributes);
               (await saveResponse).attributes = attributesArray;
               delete (await saveResponse).lastChangedBy;
               delete (await saveResponse).lastChangedDateTime;
               return saveResponse;
-  
             } else {
-              throw new NotFoundException(
-                ResponseMessages.schema.error.notCreated,
-                { cause: new Error(), description: ResponseMessages.errorMessages.notFound }
-              );
+              throw new NotFoundException(ResponseMessages.schema.error.notCreated, {
+                cause: new Error(),
+                description: ResponseMessages.errorMessages.notFound
+              });
             }
           } else {
-            throw new BadRequestException(
-              ResponseMessages.schema.error.emptyData,
-              { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-            );
+            throw new BadRequestException(ResponseMessages.schema.error.emptyData, {
+              cause: new Error(),
+              description: ResponseMessages.errorMessages.badRequest
+            });
           }
-        } else {       
-          throw new BadRequestException(
-            ResponseMessages.schema.error.emptyData,
-            { cause: new Error(), description: ResponseMessages.errorMessages.badRequest }
-          );
+        } else {
+          throw new BadRequestException(ResponseMessages.schema.error.emptyData, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.badRequest
+          });
         }
-       } else if (type === SchemaTypeEnum.JSON) {
-        const josnSchemaDetails = schemaPayload as unknown as  ICreateW3CSchema;
+      } else if (type === SchemaTypeEnum.JSON) {
+        const josnSchemaDetails = schemaPayload as unknown as ICreateW3CSchema;
         const createW3CSchema = await this.createW3CSchema(orgId, josnSchemaDetails, user.id, alias);
         return createW3CSchema;
-       }
+      }
     } catch (error) {
-      this.logger.error(
-        `[createSchema] - outer Error: ${JSON.stringify(error)}`
-      );
+      this.logger.error(`[createSchema] - outer Error: ${JSON.stringify(error)}`);
 
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async createW3CSchema(orgId:string, schemaPayload: ICreateW3CSchema, user: string, alias: string): Promise<ISchemaData> {
+  async createW3CSchema(
+    orgId: string,
+    schemaPayload: ICreateW3CSchema,
+    user: string,
+    alias: string
+  ): Promise<ISchemaData> {
     try {
       let createSchema;
-      
-      const { description, attributes, schemaName} = schemaPayload;
+
+      const { description, attributes, schemaName } = schemaPayload;
       const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.schema.error.agentDetailsNotFound, {
@@ -289,7 +308,7 @@ export class SchemaService extends BaseService {
           description: ResponseMessages.errorMessages.badRequest
         });
       }
-     
+
       const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
       let url;
@@ -300,7 +319,7 @@ export class SchemaService extends BaseService {
         url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`;
       }
 
-      const schemaObject = await this.w3cSchemaBuilder(attributes, schemaName, description);  
+      const schemaObject = await this.w3cSchemaBuilder(attributes, schemaName, description);
       if (!schemaObject) {
         throw new BadRequestException(ResponseMessages.schema.error.schemaBuilder, {
           cause: new Error(),
@@ -308,7 +327,7 @@ export class SchemaService extends BaseService {
         });
       }
       const agentSchemaPayload = {
-        schema:schemaObject,
+        schema: schemaObject,
         did: agentDetails.orgDid,
         schemaName
       };
@@ -334,16 +353,16 @@ export class SchemaService extends BaseService {
         createSchema.type = JSONSchemaType.LEDGER_LESS;
         createSchema.schemaUrl = `${process.env.SCHEMA_FILE_SERVER_URL}${createSchemaPayload.data.schemaId}`;
       }
-     
-     const storeW3CSchema = await this.storeW3CSchemas(createSchema, user, orgId, attributes, alias);
 
-     if (!storeW3CSchema) {
-      throw new BadRequestException(ResponseMessages.schema.error.storeW3CSchema, {
-        cause: new Error(),
-        description: ResponseMessages.errorMessages.notFound
-      });
-     }
-      
+      const storeW3CSchema = await this.storeW3CSchemas(createSchema, user, orgId, attributes, alias);
+
+      if (!storeW3CSchema) {
+        throw new BadRequestException(ResponseMessages.schema.error.storeW3CSchema, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
+        });
+      }
+
       return storeW3CSchema;
     } catch (error) {
       this.logger.error(`[createSchema] - outer Error: ${JSON.stringify(error)}`);
@@ -351,87 +370,90 @@ export class SchemaService extends BaseService {
     }
   }
 
-  private async w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: string, description: string): Promise<object> {
-   
+  private async w3cSchemaBuilder(
+    attributes: IW3CAttributeValue[],
+    schemaName: string,
+    description: string
+  ): Promise<object> {
     // Function to apply validations based on attribute properties
     const applyValidations = (attribute, propertyObj): ISchemaAttributesFormat => {
       const context = { ...propertyObj };
-      
+
       // Apply string validations
       if ('string' === attribute.schemaDataType.toLowerCase()) {
         if (attribute.minLength !== undefined) {
           const validation = new MinLength(attribute.minLength);
           validation.json(context);
         }
-        
+
         if (attribute.maxLength !== undefined) {
           const validation = new MaxLength(attribute.maxLength);
           validation.json(context);
         }
-        
+
         if (attribute.pattern !== undefined) {
           const validation = new Pattern(attribute.pattern);
           validation.json(context);
         }
       }
-      
+
       // Apply number validations
       if (['number', 'integer'].includes(attribute.schemaDataType.toLowerCase())) {
         if (attribute.minimum !== undefined) {
           const validation = new Minimum(attribute.minimum);
           validation.json(context);
         }
-        
+
         if (attribute.exclusiveMinimum !== undefined) {
           const validation = new ExclusiveMinimum(attribute.exclusiveMinimum);
           validation.json(context);
         }
-        
+
         if (attribute.multipleOf !== undefined) {
           const validation = new MultipleOf(attribute.multipleOf);
           validation.json(context);
         }
       }
-      
+
       // Apply array validations
       if ('array' === attribute.schemaDataType.toLowerCase()) {
         if (attribute.minItems !== undefined) {
           const validation = new MinItems(attribute.minItems);
           validation.json(context);
         }
-        
+
         if (attribute.maxItems !== undefined) {
           const validation = new MaxItems(attribute.maxItems);
           validation.json(context);
         }
-        
+
         if (attribute.uniqueItems !== undefined) {
           const validation = new UniqueItems(attribute.uniqueItems);
           validation.json(context);
         }
       }
-      
+
       return context;
     };
-    
+
     // Function to recursively process attributes
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const processAttributes = (attrs: IW3CAttributeValue[]): IProductSchema => {
-      if (!Array.isArray(attrs)) { 
-        return { properties: {}, required: [] }; 
+      if (!Array.isArray(attrs)) {
+        return { properties: {}, required: [] };
       }
 
       const properties = {};
       const required = [];
-      
+
       attrs.forEach((attribute, index) => {
         const { attributeName, schemaDataType, isRequired, displayName } = attribute;
-        
+
         // Add to required array if isRequired is true
         if (isRequired) {
           required.push(attributeName);
         }
-        
+
         // Create base property object with common fields
         const baseProperty = {
           type: schemaDataType.toLowerCase(),
@@ -444,17 +466,15 @@ export class SchemaService extends BaseService {
         if (['string', 'number', 'boolean', 'integer'].includes(schemaDataType.toLowerCase())) {
           // Apply validations to the base property
           properties[attributeName] = applyValidations(attribute, baseProperty);
-          
         } else if ('datetime-local' === schemaDataType.toLowerCase()) {
           properties[attributeName] = {
             ...baseProperty,
             type: 'string',
             format: 'date-time'
           };
-          
         } else if ('array' === schemaDataType.toLowerCase() && attribute.items) {
           const result = processAttributes(attribute.items);
-          
+
           properties[attributeName] = {
             ...baseProperty,
             type: 'array',
@@ -466,36 +486,35 @@ export class SchemaService extends BaseService {
 
           // Apply array-specific validations
           properties[attributeName] = applyValidations(attribute, properties[attributeName]);
-          
+
           // Add required properties to the items schema if any
           if (0 < result.required.length) {
             properties[attributeName].items.required = result.required;
           }
-          
         } else if ('object' === schemaDataType.toLowerCase() && attribute.properties) {
           const nestedProperties = {};
           const nestedRequired = [];
-          
+
           // Process each property in the object
-          Object.keys(attribute.properties).forEach(propKey => {
+          Object.keys(attribute.properties).forEach((propKey) => {
             const prop = attribute.properties[propKey];
 
             // Add to nested required array if isRequired is true
             if (prop.isRequired) {
               nestedRequired.push(propKey);
             }
-            
+
             // Create base property for nested object
             const nestedBaseProperty = {
               type: prop.schemaDataType.toLowerCase(),
               title: prop.displayName || prop.attributeName,
               description: `${prop.attributeName} field`
             };
-            
+
             if ('array' === prop.schemaDataType.toLowerCase() && prop.items) {
               // Handle nested arrays
               const result = processAttributes(prop.items);
-              
+
               nestedProperties[propKey] = {
                 ...nestedBaseProperty,
                 type: 'array',
@@ -504,10 +523,10 @@ export class SchemaService extends BaseService {
                   properties: result.properties
                 }
               };
-              
+
               // Apply array-specific validations
               nestedProperties[propKey] = applyValidations(prop, nestedProperties[propKey]);
-              
+
               // Add required properties to the items schema if any
               if (0 < result.required.length) {
                 nestedProperties[propKey].items.required = result.required;
@@ -517,39 +536,39 @@ export class SchemaService extends BaseService {
               nestedProperties[propKey] = applyValidations(prop, nestedBaseProperty);
             }
           });
-          
+
           properties[attributeName] = {
             ...baseProperty,
             type: 'object',
             properties: nestedProperties
           };
-          
+
           // Add required properties to the object schema if any
           if (0 < nestedRequired.length) {
             properties[attributeName].required = nestedRequired;
           }
         }
       });
-      
+
       return { properties, required };
     };
 
     // Process all attributes
     const result = processAttributes(attributes);
-    const {properties} = result;
+    const { properties } = result;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const required = ['id', ...result.required];
-    
+
     // Add id property
     properties['id'] = {
       type: 'string',
       format: 'uri'
     };
 
-    const date = new Date().toISOString();  
+    const date = new Date().toISOString();
     const schemaNameObject = {};
     schemaNameObject[schemaName] = {
-      'const': schemaName
+      const: schemaName
     };
 
     const W3CSchema = {
@@ -563,7 +582,7 @@ export class SchemaService extends BaseService {
         'https://json-schema.org/draft/2020-12/vocab/meta-data': true,
         'https://json-schema.org/draft/2020-12/vocab/format-annotation': true,
         'https://json-schema.org/draft/2020-12/vocab/content': true
-    },
+      },
       type: 'object',
       required: ['@context', 'issuer', 'issuanceDate', 'type', 'credentialSubject'],
       properties: {
@@ -713,40 +732,37 @@ export class SchemaService extends BaseService {
     };
     return W3CSchema;
   }
-  
-   private async storeW3CSchemas(schemaDetails, user, orgId, attributes, alias): Promise <schema> {
+
+  private async storeW3CSchemas(schemaDetails, user, orgId, attributes, alias): Promise<schema> {
     let ledgerDetails;
-    const schemaServerUrl =  `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
-    const schemaRequest = await this.commonService
-    .httpGet(schemaServerUrl)
-    .then(async (response) => response);
+    const schemaServerUrl = `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
+    const schemaRequest = await this.commonService.httpGet(schemaServerUrl).then(async (response) => response);
     if (!schemaRequest) {
       throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
         cause: new Error(),
         description: ResponseMessages.errorMessages.notFound
       });
     }
-  const indyNamespace = await networkNamespace(schemaDetails?.did); 
-  if (indyNamespace === LedgerLessMethods.WEB || indyNamespace === LedgerLessMethods.KEY) {
-    ledgerDetails = await this.schemaRepository.getLedgerByNamespace(LedgerLessConstant.NO_LEDGER);
-  } else {
-    ledgerDetails = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
-  }
+    const indyNamespace = await networkNamespace(schemaDetails?.did);
+    if (indyNamespace === LedgerLessMethods.WEB || indyNamespace === LedgerLessMethods.KEY) {
+      ledgerDetails = await this.schemaRepository.getLedgerByNamespace(LedgerLessConstant.NO_LEDGER);
+    } else {
+      ledgerDetails = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
+    }
 
-  if (!ledgerDetails) {
-    throw new NotFoundException(ResponseMessages.schema.error.networkNotFound, {
-      cause: new Error(),
-      description: ResponseMessages.errorMessages.notFound
-    });
-  }
+    if (!ledgerDetails) {
+      throw new NotFoundException(ResponseMessages.schema.error.networkNotFound, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.notFound
+      });
+    }
     const storeSchemaDetails = {
-        schema: {
-          schemaName: schemaRequest.title,
-          schemaVersion: W3CSchemaVersion.W3C_SCHEMA_VERSION,
-          attributes,
-          id: schemaDetails.schemaUrl
-
-        },
+      schema: {
+        schemaName: schemaRequest.title,
+        schemaVersion: W3CSchemaVersion.W3C_SCHEMA_VERSION,
+        attributes,
+        id: schemaDetails.schemaUrl
+      },
       issuerId: schemaDetails.did,
       createdBy: user,
       changedBy: user,
@@ -756,62 +772,62 @@ export class SchemaService extends BaseService {
       type: SchemaType.W3C_Schema,
       alias
     };
-    const saveResponse = await this.schemaRepository.saveSchema(
-      storeSchemaDetails
-    );
+    const saveResponse = await this.schemaRepository.saveSchema(storeSchemaDetails);
     return saveResponse;
-   }
-  
+  }
+
   async _createSchema(payload: CreateSchemaAgentRedirection): Promise<{
     response: string;
   }> {
-      const pattern = {
-        cmd: 'agent-create-schema'
-      };
-      const schemaResponse = await from(this.natsClient
-        .send<string>(this.schemaServiceProxy, pattern, payload))
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,  
-              error: error.error,
-              message: error.message
-            }, error.error);
-        });
-      return schemaResponse;  
+    const pattern = {
+      cmd: 'agent-create-schema'
+    };
+    const schemaResponse = await from(this.natsClient.send<string>(this.schemaServiceProxy, pattern, payload))
+      .pipe(
+        map((response) => ({
+          response
+        }))
+      )
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.statusCode,
+            error: error.error,
+            message: error.message
+          },
+          error.error
+        );
+      });
+    return schemaResponse;
   }
 
   async _createW3CSchema(payload: W3CCreateSchema): Promise<{
     response: string;
   }> {
-      const natsPattern = {
-        cmd: 'agent-create-w3c-schema'
-      };
-      const W3CSchemaResponse = await from(this.natsClient
-        .send<string>(this.schemaServiceProxy, natsPattern, payload))
-        .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
-          this.logger.error(`Error in creating W3C schema : ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.error.code,  
-              error: error.message,
-              message: error.error.message.error.message
-            }, error.error);
-        });
-      return W3CSchemaResponse;  
+    const natsPattern = {
+      cmd: 'agent-create-w3c-schema'
+    };
+    const W3CSchemaResponse = await from(this.natsClient.send<string>(this.schemaServiceProxy, natsPattern, payload))
+      .pipe(
+        map((response) => ({
+          response
+        }))
+      )
+      .toPromise()
+      .catch((error) => {
+        this.logger.error(`Error in creating W3C schema : ${JSON.stringify(error)}`);
+        throw new HttpException(
+          {
+            status: error.error.code,
+            error: error.message,
+            message: error.error.message.error.message
+          },
+          error.error
+        );
+      });
+    return W3CSchemaResponse;
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
@@ -834,7 +850,7 @@ export class SchemaService extends BaseService {
           }
         }
       );
-  
+
       return jsonldSchemaResponse;
     } catch (error) {
       this.logger.error('Error creating W3C ledger agnostic schema:', error);
@@ -843,18 +859,17 @@ export class SchemaService extends BaseService {
   }
 
   async getSchemaById(schemaId: string, orgId: string): Promise<schema> {
-    
-    try {  
-      const [{agentEndPoint}, getAgentDetails, getSchemaDetails] = await Promise.all([
+    try {
+      const [{ agentEndPoint }, getAgentDetails, getSchemaDetails] = await Promise.all([
         this.schemaRepository.getAgentDetailsByOrgId(orgId),
         this.schemaRepository.getAgentType(orgId),
         this.schemaRepository.getSchemaBySchemaId(schemaId)
       ]);
 
       if (!getSchemaDetails) {
-         throw new NotFoundException(ResponseMessages.schema.error.notFound);
+        throw new NotFoundException(ResponseMessages.schema.error.notFound);
       }
-  
+
       const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
 
       let schemaResponse;
@@ -881,36 +896,36 @@ export class SchemaService extends BaseService {
         }
         return schemaResponse.response;
       } else if (getSchemaDetails?.type === SchemaType.W3C_Schema) {
-         return getSchemaDetails;
+        return getSchemaDetails;
       }
-     
     } catch (error) {
       this.logger.error(`Error in getting schema by id: ${error}`);
       if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason ? error?.status?.message?.error?.reason : error?.status?.message?.error,
+          message: error?.status?.message?.error?.reason
+            ? error?.status?.message?.error?.reason
+            : error?.status?.message?.error,
           statusCode: error?.status?.code
         });
-
       } else {
         throw new RpcException(error.response ? error.response : error);
       }
     }
   }
 
-  async getSchemaDetails(templateIds: string[]): Promise<schema[]> {   
-    try {  
-     const getSchemaData = await this.schemaRepository.getSchemasDetailsBySchemaIds(templateIds);
-     return getSchemaData;
+  async getSchemaDetails(templateIds: string[]): Promise<schema[]> {
+    try {
+      const getSchemaData = await this.schemaRepository.getSchemasDetailsBySchemaIds(templateIds);
+      return getSchemaData;
     } catch (error) {
-        throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async getSchemaDetailsBySchemaName(schemaName: string, orgId:string): Promise<ISchemaId[]> {   
-    try {  
-     const getSchemaDetails = await this.schemaRepository.getSchemasDetailsBySchemaName(schemaName, orgId);
-     return getSchemaDetails;
+  async getSchemaDetailsBySchemaName(schemaName: string, orgId: string): Promise<ISchemaId[]> {
+    try {
+      const getSchemaDetails = await this.schemaRepository.getSchemasDetailsBySchemaName(schemaName, orgId);
+      return getSchemaDetails;
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
@@ -921,21 +936,22 @@ export class SchemaService extends BaseService {
       const pattern = {
         cmd: 'agent-get-schema'
       };
-      const schemaResponse = await from(this.natsClient
-        .send<string>(this.schemaServiceProxy, pattern, payload))
+      const schemaResponse = await from(this.natsClient.send<string>(this.schemaServiceProxy, pattern, payload))
         .pipe(
-          map((response) => (
-            {
-              response
-            }))
-        ).toPromise()
-        .catch(error => {
+          map((response) => ({
+            response
+          }))
+        )
+        .toPromise()
+        .catch((error) => {
           this.logger.error(`Catch : ${JSON.stringify(error)}`);
           throw new HttpException(
             {
               status: error.statusCode,
               error: error.message
-            }, error.error);
+            },
+            error.error
+          );
         });
       return schemaResponse;
     } catch (error) {
@@ -950,23 +966,23 @@ export class SchemaService extends BaseService {
 
       if (0 === response.schemasCount) {
         throw new NotFoundException(ResponseMessages.schema.error.notFound);
-      } 
-      
-      const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
-        const attributes = JSON.parse(schemaAttributeItem.attributes);       
+      }
+
+      const schemasDetails = response?.schemasResult.map((schemaAttributeItem) => {
+        const attributes = JSON.parse(schemaAttributeItem.attributes);
         const firstName = schemaAttributeItem?.['organisation']?.userOrgRoles[0]?.user?.firstName;
         const orgName = schemaAttributeItem?.['organisation'].name;
         delete schemaAttributeItem?.['organisation'];
 
-      return {
-        ...schemaAttributeItem, 
-        attributes,
-        organizationName: orgName,
-        userName: firstName
-      };
-      });      
+        return {
+          ...schemaAttributeItem,
+          attributes,
+          organizationName: orgName,
+          userName: firstName
+        };
+      });
 
-      const nextPage:number = Number(schemaSearchCriteria.pageNumber) + 1;      
+      const nextPage: number = Number(schemaSearchCriteria.pageNumber) + 1;
 
       const schemasResponse: ISchemasWithPagination = {
         totalItems: response.schemasCount,
@@ -979,24 +995,21 @@ export class SchemaService extends BaseService {
       };
 
       return schemasResponse;
-
     } catch (error) {
       this.logger.error(`Error in retrieving schemas by org id: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async getcredDefListBySchemaId(
-    payload: ISchemaCredDeffSearchInterface
-    ): Promise<ICredDefWithPagination> {
+  async getcredDefListBySchemaId(payload: ISchemaCredDeffSearchInterface): Promise<ICredDefWithPagination> {
     const { schemaSearchCriteria } = payload;
-    
+
     try {
       const response = await this.schemaRepository.getSchemasCredDeffList(schemaSearchCriteria);
-      
+
       if (0 === response.credDefCount) {
         throw new NotFoundException(ResponseMessages.schema.error.credentialDefinitionNotFound);
-      } 
+      }
 
       const schemasResponse = {
         totalItems: response.credDefCount,
@@ -1009,7 +1022,6 @@ export class SchemaService extends BaseService {
       };
 
       return schemasResponse;
-
     } catch (error) {
       this.logger.error(`Error in retrieving credential definition: ${error}`);
       throw new RpcException(error.response ? error.response : error);
@@ -1020,7 +1032,7 @@ export class SchemaService extends BaseService {
     try {
       const response = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
 
-      const schemasDetails = response?.schemasResult.map(schemaAttributeItem => {
+      const schemasDetails = response?.schemasResult.map((schemaAttributeItem) => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
         return { ...schemaAttributeItem, attributes };
       });
@@ -1040,8 +1052,6 @@ export class SchemaService extends BaseService {
       } else {
         throw new NotFoundException(ResponseMessages.schema.error.notFound);
       }
-
-
     } catch (error) {
       this.logger.error(`Error in retrieving all schemas: ${error}`);
       throw new RpcException(error.response ? error.response : error);
@@ -1051,39 +1061,43 @@ export class SchemaService extends BaseService {
   async _getOrgAgentApiKey(orgId: string): Promise<string> {
     const pattern = { cmd: 'get-org-agent-api-key' };
     const payload = { orgId };
-   
+
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message = await this.natsClient.send<any>(this.schemaServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw new HttpException({
-        status: error.status,
-        error: error.message
-      }, error.status);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message
+        },
+        error.status
+      );
     }
   }
 
-  async schemaExist(payload: ISchemaExist): Promise<{
-    id: string;
-    createDateTime: Date;
-    createdBy: string;
-    lastChangedDateTime: Date;
-    lastChangedBy: string;
-    name: string;
-    version: string;
-    attributes: string;
-    schemaLedgerId: string;
-    publisherDid: string;
-    issuerId: string;
-    orgId: string;
-    ledgerId: string;
-  }[]> {
+  async schemaExist(payload: ISchemaExist): Promise<
+    {
+      id: string;
+      createDateTime: Date;
+      createdBy: string;
+      lastChangedDateTime: Date;
+      lastChangedBy: string;
+      name: string;
+      version: string;
+      attributes: string;
+      schemaLedgerId: string;
+      publisherDid: string;
+      issuerId: string;
+      orgId: string;
+      ledgerId: string;
+    }[]
+  > {
     try {
       const schemaExist = await this.schemaRepository.schemaExist(payload);
       return schemaExist;
-    
     } catch (error) {
       this.logger.error(`Error in schema exist: ${error}`);
       throw new RpcException(error.response ? error.response : error);
@@ -1120,8 +1134,7 @@ export class SchemaService extends BaseService {
     }
   }
 
-
-  async updateSchema(schemaDetails:IUpdateSchema): Promise<UpdateSchemaResponse> {
+  async updateSchema(schemaDetails: IUpdateSchema): Promise<UpdateSchemaResponse> {
     try {
       const schemaSearchResult = await this.schemaRepository.updateSchema(schemaDetails);
 
@@ -1135,5 +1148,4 @@ export class SchemaService extends BaseService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
 }

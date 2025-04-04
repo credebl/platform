@@ -61,7 +61,7 @@ function mergeArrayObjects(obj): void {
       if (Array.isArray(obj[key])) {
         // Check if the array contains objects with numbered keys
         const hasNumericKeys = obj[key].some(
-          (item) => item && 'object' === typeof item && Object.keys(item).some((k) => /\d+$/.test(k))
+          (item) => item && 'object' === typeof item && Object.keys(item).some((k) => /\d{1,10}$/.test(k))
         );
 
         // Only apply the merging logic if we have numeric keys that need merging
@@ -70,7 +70,8 @@ function mergeArrayObjects(obj): void {
           obj[key].forEach((item) => {
             if ('object' === typeof item && null !== item) {
               Object.keys(item).forEach((k) => {
-                const match = k.match(/^(.+?)(\d+)$/);
+                const match = k.match(/^([^0-9]+)(\d{1,10})$/);
+
                 if (match) {
                   const baseKey = match[1].trim();
                   const index = parseInt(match[2]);

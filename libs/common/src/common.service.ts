@@ -164,7 +164,9 @@ export class CommonService {
     }
   }
 
-  // This function is used to handle common errors inside the CommonService file with HttpException
+  /**
+   * This function is used to handle common errors inside the CommonService file with HttpException
+   */
   handleCommonErrors(error): Promise<void> {
     if (error.message.toString().includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)) {
       throw new HttpException(
@@ -233,7 +235,10 @@ export class CommonService {
     );
   }
 
-  // This function is used to handle errors in apps with RpcException
+  /**
+   *
+   * This function is used to handle errors in apps with RpcException
+   */
   handleError(error): Promise<void> {
     if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
       throw new RpcException({

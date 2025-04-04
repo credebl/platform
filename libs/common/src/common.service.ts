@@ -14,6 +14,7 @@ import * as dotenv from 'dotenv';
 import { ResponseMessages } from './response-messages';
 import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
 import { OrgAgentType } from '../../enum/src/enum';
+import { RpcException } from '@nestjs/microservices';
 dotenv.config();
 
 @Injectable()
@@ -32,7 +33,7 @@ export class CommonService {
         });
     } catch (error) {
       this.logger.error(`ERROR in POST : ${JSON.stringify(error)}`);
-      this.handleError(error);
+      this.handleCommonErrors(error);
     }
   }
 
@@ -44,7 +45,7 @@ export class CommonService {
         .then((data) => data.data);
     } catch (error) {
       this.logger.error(`ERROR in GET : ${JSON.stringify(error)}`);
-      this.handleError(error);
+      this.handleCommonErrors(error);
     }
   }
 
@@ -58,7 +59,7 @@ export class CommonService {
         });
     } catch (error) {
       this.logger.error(`ERROR in PATCH : ${JSON.stringify(error)}`);
-      this.handleError(error);
+      this.handleCommonErrors(error);
     }
   }
 
@@ -72,7 +73,7 @@ export class CommonService {
         });
     } catch (error) {
       this.logger.error(`ERROR in DELETE : ${JSON.stringify(error.response.data)}`);
-      this.handleError(error);
+      this.handleCommonErrors(error);
     }
   }
 
@@ -163,7 +164,20 @@ export class CommonService {
     }
   }
 
-  handleError(error): Promise<void> {
+  /**
+   * This function is used to handle common errors inside the CommonService file with HttpException
+   */
+  handleCommonErrors(error): Promise<void> {
+    if (error.message.toString().includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          error: error.message
+        },
+        HttpStatus.NOT_FOUND
+      );
+    }
+
     if (error.message.toString().includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)) {
       throw new HttpException(
         {
@@ -219,6 +233,23 @@ export class CommonService {
       },
       error.response.status
     );
+  }
+
+  /**
+   *
+   * This function is used to handle errors in apps with RpcException
+   */
+  handleError(error): Promise<void> {
+    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      throw new RpcException({
+        message: error?.status?.message?.error?.reason
+          ? error?.status?.message?.error?.reason
+          : error?.status?.message?.error,
+        statusCode: error?.status?.code
+      });
+    } else {
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 
   async checkAgentHealth(baseUrl: string, apiKey: string): Promise<boolean> {

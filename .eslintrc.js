@@ -1,23 +1,34 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: 'tsconfig.json',
-    sourceType: 'module'
+    tsconfigRootDir: __dirname,
+    project: ['./tsconfig.eslint.json'],
+    sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin'],
-  extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
-  root: true,
-  env: {
-    node: true,
-    jest: true
-  },
-  ignorePatterns: ['.eslintrc.js'],
+  plugins: ['workspaces'],
+  extends: [
+    'eslint:recommended',
+    'plugin:import/recommended',
+    'plugin:import/typescript',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended', // Enables eslint-plugin-prettier and displays prettier errors as ESLint errors. Make sure this is always the last configuration in the extends array.
+  ],
   rules: {
-    'prettier/prettier': 0,
+    'import/newline-after-import': ['error', { count: 1 }],
+    'import/order': [
+      'error',
+      {
+        groups: ['type', ['builtin', 'external'], 'parent', 'sibling', 'index'],
+        alphabetize: {
+          order: 'asc',
+        },
+        'newlines-between': 'always',
+      },
+    ],
     'no-console': 'error',
     //  "@typescript-eslint/consistent-type-imports": "error",
     '@typescript-eslint/no-unused-vars': [
-      'error'
+      'error',
       // {
       //   "argsIgnorePattern": "_"
       // }
@@ -59,11 +70,11 @@ module.exports = {
       'error',
       {
         array: true,
-        object: true
+        object: true,
       },
       {
-        enforceForRenamedProperties: false
-      }
+        enforceForRenamedProperties: false,
+      },
     ],
     'prefer-numeric-literals': 'error',
     'prefer-rest-params': 'warn',
@@ -72,7 +83,6 @@ module.exports = {
     'array-bracket-spacing': 'error',
     'brace-style': ['error', '1tbs', { allowSingleLine: true }],
     'block-spacing': 'error',
-    'comma-dangle': 'error',
     'comma-spacing': 'error',
     'comma-style': 'error',
     'computed-property-spacing': 'error',
@@ -87,8 +97,6 @@ module.exports = {
     'no-whitespace-before-property': 'error',
     'nonblock-statement-body-position': ['error', 'below'],
     'object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }],
-    semi: ['error', 'always'],
-    'semi-spacing': 'error',
     'space-before-blocks': 'error',
     'space-in-parens': 'error',
     'space-infix-ops': 'error',
@@ -99,6 +107,18 @@ module.exports = {
     'object-shorthand': 'error',
     'prefer-const': 'error',
     'prefer-template': 'error',
-    quotes: ['warn', 'single', { allowTemplateLiterals: true }]
-  }
-};
+    quotes: ['warn', 'single', { allowTemplateLiterals: true }],
+  },
+  overrides: [
+    {
+      files: ['.eslintrc.js'],
+      env: {
+        node: true,
+      },
+      rules: {
+        '@typescript-eslint/no-var-requires': 'off',
+        'no-undef': 'off',
+      },
+    },
+  ],
+}

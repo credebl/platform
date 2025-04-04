@@ -146,10 +146,10 @@ export function unflattenCsvRow(row: object): object {
     }
   }
 
-  for (const groupKey in groupedKeys) {
-    if (Object.prototype.hasOwnProperty.call(groupedKeys, groupKey)) {
-      const [arrayName, arrayIndex] = groupKey.split('~');
-      const keys = groupedKeys[groupKey];
+  for (const grpKey in groupedKeys) {
+    if (Object.prototype.hasOwnProperty.call(groupedKeys, grpKey)) {
+      const [arrayName, arrayIndex] = grpKey.split('~');
+      const keys = groupedKeys[grpKey];
       if (!result[arrayName]) {
         result[arrayName] = [];
       }

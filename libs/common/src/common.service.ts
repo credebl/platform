@@ -236,7 +236,6 @@ export class CommonService {
   }
 
   /**
-   *
    * This function is used to handle errors in apps with RpcException
    */
   handleError(error): Promise<void> {

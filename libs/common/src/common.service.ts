@@ -9,11 +9,11 @@ import * as CryptoJS from 'crypto-js';
 import { BadRequestException, HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import { CommonConstants } from './common.constant';
-import { HttpService } from '@nestjs/axios/dist';
+import { HttpService } from '@nestjs/axios';
 import * as dotenv from 'dotenv';
 import { ResponseMessages } from './response-messages';
 import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
-import { OrgAgentType } from '@credebl/enum/enum';
+import { OrgAgentType } from '../../enum/src/enum';
 import { RpcException } from '@nestjs/microservices';
 dotenv.config();
 
@@ -236,7 +236,6 @@ export class CommonService {
   }
 
   /**
-   *
    * This function is used to handle errors in apps with RpcException
    */
   handleError(error): Promise<void> {

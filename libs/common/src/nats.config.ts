@@ -1,8 +1,9 @@
-import { NATSReconnects } from '@credebl/enum/enum';
+import { NATSReconnects } from '../../enum/src/enum';
 import { Authenticator, nkeyAuthenticator } from 'nats';
 
 export const getNatsOptions = (
-  serviceName: string, nkeySeed?: string
+  serviceName: string,
+  nkeySeed?: string
 ): {
   servers: string[];
   authenticator?: Authenticator;
@@ -22,7 +23,6 @@ export const getNatsOptions = (
       ...baseOptions,
       authenticator: nkeyAuthenticator(new TextEncoder().encode(nkeySeed))
     };
-  } 
+  }
   return baseOptions;
 };
-

@@ -26,15 +26,6 @@
         "tsConfigPath": "apps/platform-service/tsconfig.app.json"
       }
     },
-    "response": {
-      "type": "library",
-      "root": "libs/response",
-      "entryFile": "index",
-      "sourceRoot": "libs/response/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/response/tsconfig.lib.json"
-      }
-    },
     "common": {
       "type": "library",
       "root": "libs/common",

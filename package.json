@@ -168,8 +168,6 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "@credebl/responses/(.*)": "<rootDir>/libs/responses/src/$1",
-      "@credebl/responses": "<rootDir>/libs/responses/src",
       "@credebl/common/(.*)": "<rootDir>/libs/common/src/$1",
       "@credebl/common": "<rootDir>/libs/common/src",
       "@credebl/keycloak-url/(.*)": "<rootDir>/libs/keycloak-url/src/$1",

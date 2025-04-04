@@ -13,7 +13,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import helmet from 'helmet';
 import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
-import { NatsInterceptor } from '../../../libs/interceptors/nats.interceptor';
+import { NatsInterceptor } from '@credebl/common';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -58,10 +58,10 @@ async function bootstrap(): Promise<void> {
     .addServer(`${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_GATEWAY_HOST}`)
     .build();
 
-    app.enableVersioning({
-      type: VersioningType.URI,
-      defaultVersion: ['1']
-    });
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: ['1']
+  });
 
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);

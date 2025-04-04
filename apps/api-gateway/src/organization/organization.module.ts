@@ -24,6 +24,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ])
   ],
   controllers: [OrganizationController],
-  providers: [OrganizationService, CommonService, ImageServiceService, AwsService, NATSClient]
+  providers: [OrganizationService, CommonService, AwsService, NATSClient]
 })
 export class OrganizationModule {}

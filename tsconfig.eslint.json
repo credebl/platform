@@ -110,7 +110,7 @@
   },
   "include": [
     "libs",
-    "./.eslintrc.js",
+    "./eslint.config.mjs",
   ],
   "exclude": ["node_modules", "build"]
 }

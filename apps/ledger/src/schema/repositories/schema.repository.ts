@@ -16,8 +16,10 @@ export class SchemaRepository {
   constructor(private prisma: PrismaService) {}
   async saveSchema(schemaResult: ISchema): Promise<schema> {
     try {
+      this.logger.log(`Schema result: ${JSON.stringify(schemaResult)}`);  
       if (schemaResult.schema.schemaName) {
         const schema = await this.schemaExists(schemaResult.schema.schemaName, schemaResult.schema.schemaVersion);
+        this.logger.log(`Schema exists: ${JSON.stringify(schema)}`);
         const schemaLength = 0;
         if (schema.length !== schemaLength) {
           throw new ConflictException(ResponseMessages.schema.error.exists, {
@@ -42,6 +44,7 @@ export class SchemaRepository {
             alias: schemaResult.alias
           }
         });
+        this.logger.log(`Schema created: ${JSON.stringify(saveResult)}`);
         return saveResult;
       }
     } catch (error) {

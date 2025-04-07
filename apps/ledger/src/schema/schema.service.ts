@@ -326,6 +326,7 @@ export class SchemaService extends BaseService {
       }
      
      const storeW3CSchema = await this.storeW3CSchemas(createSchema, user, orgId, attributes, alias);
+     this.logger.debug(`Store W3C schema: ${JSON.stringify(storeW3CSchema)}`);
 
      if (!storeW3CSchema) {
       throw new BadRequestException(ResponseMessages.schema.error.storeW3CSchema, {
@@ -527,9 +528,11 @@ export class SchemaService extends BaseService {
    private async storeW3CSchemas(schemaDetails, user, orgId, attributes, alias): Promise <schema> {
     let ledgerDetails;
     const schemaServerUrl =  `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
+    this.logger.debug(`Schema server URL: ${schemaServerUrl}`);
     const schemaRequest = await this.commonService
     .httpGet(schemaServerUrl)
     .then(async (response) => response);
+    this.logger.debug(`Schema request: ${JSON.stringify(schemaRequest)}`);
     if (!schemaRequest) {
       throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
         cause: new Error(),
@@ -537,10 +540,12 @@ export class SchemaService extends BaseService {
       });
     }
   const indyNamespace = await networkNamespace(schemaDetails?.did); 
+  this.logger.debug(`Namespace: ${indyNamespace}`);
   if (indyNamespace === LedgerLessMethods.WEB || indyNamespace === LedgerLessMethods.KEY) {
     ledgerDetails = await this.schemaRepository.getLedgerByNamespace(LedgerLessConstant.NO_LEDGER);
   } else {
     ledgerDetails = await this.schemaRepository.getLedgerByNamespace(indyNamespace);
+    this.logger.debug(`Ledger details: ${JSON.stringify(ledgerDetails)}`);
   }
 
   if (!ledgerDetails) {
@@ -566,6 +571,7 @@ export class SchemaService extends BaseService {
       type: SchemaType.W3C_Schema,
       alias
     };
+    this.logger.debug(`Store schema details: ${JSON.stringify(storeSchemaDetails)}`);
     const saveResponse = await this.schemaRepository.saveSchema(
       storeSchemaDetails
     );

@@ -28,7 +28,18 @@ export default tseslint.config(
     },
   },
   {
+    settings: {
+      'import/extensions': ['.js', '.ts'],
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+        },
+      },
+    },
+  },
+  {
     rules: {
+      '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',

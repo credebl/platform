@@ -88,6 +88,21 @@ export interface SchemaPayload {
     title: string,
  }
   
+ export interface ISchemaAttributesFormat extends W3CSchemaAttributes{
+    order: number,
+    description: string;
+    exclusiveMinimum?: number;
+    multipleOf?: number;
+    pattern?: string;
+    minLength?: number;
+    maxLength?: number;
+    items?: object[] | string [] | number [];
+    properties?: object;
+    format?: string;
+    minItems?: number;
+    maxItems?: number;
+    uniqueItems?: boolean;
+ }
 export interface W3CSchemaPayload {
     schemaPayload: SchemaPayload,
     orgId: string,

@@ -83,7 +83,7 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
     const required = [];
 
     attrs.forEach((attribute) => {
-      const { attributeName, schemaDataType, isRequired, displayName } = attribute;
+      const { attributeName, schemaDataType, isRequired, displayName, description } = attribute;
 
       // Add to required array if isRequired is true
       if (isRequired) {
@@ -94,7 +94,7 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
       const baseProperty = {
         type: schemaDataType.toLowerCase(),
         title: displayName || attributeName,
-        description: `${attributeName} field`
+        description: description ? description : `${attributeName} field`
       };
 
       // Handle different attribute types

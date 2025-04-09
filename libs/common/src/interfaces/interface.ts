@@ -38,6 +38,7 @@ export interface IW3CAttributeValue {
   schemaDataType: W3CSchemaDataType;
   displayName: string;
   isRequired: boolean;
+  description?: string;
   minLength?: number;
   maxLength?: number;
   pattern?: string;

@@ -16,8 +16,8 @@ export interface IAttributes {
 interface ICredentialsAttributes {
   connectionId: string;
   attributes: IAttributes[];
-  credential?:ICredential;
-  options?:IOptions
+  credential?: ICredential;
+  options?: IOptions;
 }
 export interface IIssuance {
   user?: IUserRequest;
@@ -25,27 +25,27 @@ export interface IIssuance {
   comment?: string;
   credentialData: ICredentialsAttributes[];
   orgId: string;
-  autoAcceptCredential?: AutoAccept,
+  autoAcceptCredential?: AutoAccept;
   protocolVersion?: string;
-  goalCode?: string,
-  parentThreadId?: string,
-  willConfirm?: boolean,
-  label?: string,
-  credentialType: string,
+  goalCode?: string;
+  parentThreadId?: string;
+  willConfirm?: boolean;
+  label?: string;
+  credentialType: string;
 }
 
 interface IIndy {
-  attributes: IAttributes[],
-  credentialDefinitionId: string
+  attributes: IAttributes[];
+  credentialDefinitionId: string;
 }
 
 export interface IIssueData {
   protocolVersion?: string;
   connectionId: string;
   credentialFormats: {
-    indy: IIndy
-  },
-  autoAcceptCredential: string,
+    indy: IIndy;
+  };
+  autoAcceptCredential: string;
   comment?: string;
 }
 
@@ -90,8 +90,8 @@ export interface IPattern {
 }
 
 export interface ISendOfferNatsPayload {
-  issueData: IIssueData,
-  url: string,
+  issueData: IIssueData;
+  url: string;
   apiKey?: string;
   orgId?: string;
 }
@@ -137,8 +137,8 @@ export interface ICredentialAttributesInterface {
   value: string;
 }
 
-export interface ICredential{
-  '@context':[];
+export interface ICredential {
+  '@context': [];
   type: string[];
   prettyVc?: IPrettyVc;
   issuer?: {
@@ -152,15 +152,15 @@ interface ICredentialSubject {
   [key: string]: string;
 }
 
-export interface IOptions{ 
-  proofType:string;
-  proofPurpose:string;
+export interface IOptions {
+  proofType: string;
+  proofPurpose: string;
 }
 export interface CredentialOffer {
   emailId: string;
   attributes: IAttributes[];
-  credential?:ICredential;
-  options?:IOptions
+  credential?: ICredential;
+  options?: IOptions;
 }
 export interface OutOfBandCredentialOfferPayload {
   credentialDefinitionId?: string;
@@ -171,13 +171,13 @@ export interface OutOfBandCredentialOfferPayload {
   attributes?: IAttributes[];
   protocolVersion?: string;
   isReuseConnection?: boolean;
-  goalCode?: string,
-  parentThreadId?: string,
-  willConfirm?: boolean,
-  label?: string,
-  imageUrl?: string,
+  goalCode?: string;
+  parentThreadId?: string;
+  willConfirm?: boolean;
+  label?: string;
+  imageUrl?: string;
   autoAcceptCredential?: string;
-  credentialType?:IssueCredentialType;
+  credentialType?: IssueCredentialType;
 }
 
 export interface OutOfBandCredentialOffer {
@@ -199,30 +199,30 @@ export interface ImportFileDetails {
   isValidateSchema?: boolean;
 }
 export interface ICredentialPayload {
-schemaLedgerId: string,
-credentialDefinitionId: string,
-fileData: object,
-fileName: string,
-credentialType: string,
-schemaName?: string
+  schemaLedgerId: string;
+  credentialDefinitionId: string;
+  fileData: object;
+  fileName: string;
+  credentialType: string;
+  schemaName?: string;
 }
 export interface PreviewRequest {
-  pageNumber: number,
-  pageSize: number,
-  searchByText: string,
-  sortField?: string,
-  sortBy?: string
+  pageNumber: number;
+  pageSize: number;
+  searchByText: string;
+  sortField?: string;
+  sortBy?: string;
 }
 
 export interface FileUpload {
-  name?: string,
-  upload_type?: string,
-  status?: string,
-  orgId?: string,
-  createDateTime?: Date | null,
-  lastChangedDateTime?: Date | null,
-  credentialType?: string,
-  templateId?: string
+  name?: string;
+  upload_type?: string;
+  status?: string;
+  orgId?: string;
+  createDateTime?: Date | null;
+  lastChangedDateTime?: Date | null;
+  credentialType?: string;
+  templateId?: string;
 }
 
 export interface FileUploadData {
@@ -284,19 +284,19 @@ export interface SendEmailCredentialOffer {
   iterator: CredentialOffer;
   emailId: string;
   index: number;
-  credentialType: IssueCredentialType; 
+  credentialType: IssueCredentialType;
   protocolVersion: string;
   isReuseConnection?: boolean;
-  attributes: IAttributes[]; 
-  credentialDefinitionId: string; 
+  attributes: IAttributes[];
+  credentialDefinitionId: string;
   outOfBandCredential: OutOfBandCredentialOfferPayload;
   comment: string;
-  organisation: organisation; 
+  organisation: organisation;
   errors;
   url: string;
-  orgId: string; 
+  orgId: string;
   organizationDetails: organisation;
-  platformName?: string,
+  platformName?: string;
   organizationLogoUrl?: string;
   prettyVc?: IPrettyVc;
   isValidateSchema?: boolean;
@@ -321,12 +321,12 @@ export interface IJobDetails {
   schemaLedgerId: string;
   credentialDefinitionId?: string;
   status?: boolean;
-  credential_data: CredentialData
+  credential_data: CredentialData;
   orgId: string;
   credentialType: string;
 }
 
-export interface IQueuePayload{
+export interface IQueuePayload {
   id: string;
   jobId: string;
   cacheId?: string;
@@ -356,17 +356,17 @@ export interface IQueuePayload{
 interface FileDetails {
   schemaLedgerId: string;
   credentialDefinitionId: string;
-  fileData:object
+  fileData: object;
   fileName: string;
   credentialType: string;
   schemaName: string;
 }
 export interface IBulkPayloadObject {
-  parsedData?: unknown[],
-  parsedFileDetails?: FileDetails,
-  userId: string,
-  fileUploadId: string
-  };
+  parsedData?: unknown[];
+  parsedFileDetails?: FileDetails;
+  userId: string;
+  fileUploadId: string;
+}
 export interface ISchemaAttributes {
   attributeName: string;
   schemaDataType: string;

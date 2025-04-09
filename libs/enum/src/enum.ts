@@ -208,6 +208,8 @@ export enum W3CSchemaDataType {
     STRING = 'string',
     DATE_TIME = 'datetime-local',
     ARRAY= 'array',
+    OBJECT = 'object',
+    BOOLEAN = 'boolean'
   }
 
 export enum JSONSchemaType {

@@ -17,7 +17,7 @@ import {
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
 import { plainToClass, Transform, Type } from 'class-transformer';
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
-import { JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
+import { IndySchemaDataType, JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
 
 export class W3CAttributeValue {
   @ApiProperty()
@@ -37,7 +37,9 @@ export class W3CAttributeValue {
     enum: W3CSchemaDataType,
     example: W3CSchemaDataType.STRING
   })
-  @IsEnum(W3CSchemaDataType, { message: 'Schema data type must be a valid type' })
+  @IsEnum(W3CSchemaDataType, {
+    message: `Schema data type must be one of [${Object.values(W3CSchemaDataType).join(', ')}]`
+  })
   schemaDataType: W3CSchemaDataType;
 
   @ApiProperty()
@@ -205,11 +207,17 @@ class AttributeValue {
   @IsNotEmpty({ message: 'attributeName is required' })
   attributeName: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'The type of the schema',
+    enum: IndySchemaDataType,
+    example: IndySchemaDataType.STRING
+  })
   @IsString()
   @Transform(({ value }) => trim(value))
-  @IsNotEmpty({ message: 'schemaDataType is required' })
-  schemaDataType: string;
+  @IsEnum(IndySchemaDataType, {
+    message: `Schema data type must be one of [${Object.values(IndySchemaDataType).join(', ')}]`
+  })
+  schemaDataType: IndySchemaDataType;
 
   @ApiProperty()
   @IsString()

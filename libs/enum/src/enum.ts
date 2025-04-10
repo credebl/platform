@@ -213,13 +213,6 @@ export enum W3CSchemaDataType {
   BOOLEAN = 'boolean'
 }
 
-export enum IndySchemaDataType {
-  NUMBER = 'number',
-  STRING = 'string',
-  DATE_TIME = 'datetime-local',
-  BOOLEAN = 'boolean'
-}
-
 export enum JSONSchemaType {
   POLYGON_W3C = 'polygon',
   LEDGER_LESS = 'no_ledger'

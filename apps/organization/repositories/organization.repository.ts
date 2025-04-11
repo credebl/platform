@@ -118,7 +118,7 @@ export class OrganizationRepository {
       return orgData;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new error();
+      throw error;
     }
   }
 
@@ -149,7 +149,7 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new error();
+      throw error;
     }
   }
 
@@ -420,7 +420,7 @@ export class OrganizationRepository {
       return this.getOrgInvitationsPagination(query, pageNumber, pageSize);
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new error();
+      throw error;
     }
   }
 
@@ -434,7 +434,7 @@ export class OrganizationRepository {
       return getUserById;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new error();
+      throw error;
     }
   }
 

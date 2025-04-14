@@ -7,7 +7,9 @@ export type Issue = {
   message: string;
 };
 
-type FlattenedIssue = { [key: string]: string[] };
+type FlattenedIssue = {
+  [key: string]: { expected?: Primitive; received?: Primitive; message: string }[];
+};
 
 // ----------
 
@@ -35,11 +37,12 @@ export class VError extends Error {
       }
 
       flattened[key].push({
-        message: error.message,
-        received: error.received
+        expected: error.expected,
+        received: error.received,
+        message: error.message
       });
 
       return flattened;
-    }, {});
+    }, {} as FlattenedIssue);
   }
 }

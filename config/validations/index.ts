@@ -1,8 +1,9 @@
-import { makeSafeParse, SafeParseReturnType } from './core';
 import {
+  _enum,
+  domain,
   email,
   endpoint,
-  _enum,
+  localhost,
   host,
   notEmpty,
   number,
@@ -10,6 +11,8 @@ import {
   protocol,
   startsWith,
   url,
+  multipleUrl,
+  postgresUrl,
   Validator
 } from './validators';
 import { Issue, VError } from './error';
@@ -17,6 +20,10 @@ import { Issue, VError } from './error';
 /* --------------------------------------------------------------------------------
  * StringBuilder: Builder for string validators
  * -------------------------------------------------------------------------------- */
+
+export type SafeParseReturnType<T> =
+  | { success: true; data: T; error: null }
+  | { success: false; data: null; error: VError };
 
 class StringBuilder {
   private validators: Validator<string>[] = [];
@@ -46,6 +53,16 @@ class StringBuilder {
     return this;
   }
 
+  multipleUrl(): this {
+    this.validators.push(multipleUrl());
+    return this;
+  }
+
+  postgresUrl(): this {
+    this.validators.push(postgresUrl());
+    return this;
+  }
+
   email(): this {
     this.validators.push(email());
     return this;
@@ -58,6 +75,11 @@ class StringBuilder {
 
   host(): this {
     this.validators.push(host());
+    return this;
+  }
+
+  localhost(): this {
+    this.validators.push(localhost());
     return this;
   }
 
@@ -76,8 +98,40 @@ class StringBuilder {
     return this;
   }
 
+  domain(): this {
+    this.validators.push(domain());
+    return this;
+  }
+
+  // --
+
+  prismaURL(): this {
+    // TODO: Implement prismaURL validator
+    return this;
+  }
+
+  optional(): this {
+    // TODO: Implement optional validator
+    return this;
+  }
+
+  // --
+
   safeParse(input: string): SafeParseReturnType<string> {
-    return makeSafeParse(this.validators).check(input);
+    const issues: Issue[] = [];
+
+    for (const validator of this.validators) {
+      const issue = validator(input);
+      if (issue) {
+        issues.push(issue);
+      }
+    }
+
+    if (0 < issues.length) {
+      return { data: null, error: new VError(issues), success: false };
+    }
+
+    return { data: input, error: null, success: true };
   }
 }
 
@@ -85,22 +139,23 @@ class StringBuilder {
  * ObjectBuilder: Builder for object validators
  * -------------------------------------------------------------------------------- */
 
-type SchemaShape = {
+export type SchemaShape = {
   [key: string]: StringBuilder;
 };
 
-type InferShape<T extends SchemaShape> = {
+export type InferShape<T extends SchemaShape> = {
   [K in keyof T]: string;
 };
 
-class ObjectBuilder<T extends SchemaShape> {
+export class ObjectBuilder<T extends SchemaShape> {
   private errors: Issue[] = [];
 
   constructor(private shape: T) {}
 
   safeParse(value: object): SafeParseReturnType<InferShape<T>> {
     this.errors = Object.entries(this.shape).reduce((issues, [key, validator]) => {
-      const parsed = validator.safeParse(value[key]);
+      // const parsed = validator.safeParse(value[key]);
+      const parsed = validator.safeParse((value as Record<string, string>)[key]);
 
       if (!parsed.success) {
         const updatedIssues = parsed.error.errors().map((issue) => ({ path: key, ...issue }));
@@ -131,6 +186,6 @@ class ObjectBuilder<T extends SchemaShape> {
  * -------------------------------------------------------------------------------- */
 
 export const v = {
-  string: (): StringBuilder => new StringBuilder(),
-  createSchema: <T extends SchemaShape>(shape: T): ObjectBuilder<T> => new ObjectBuilder(shape)
+  str: (): StringBuilder => new StringBuilder(),
+  schema: <T extends SchemaShape>(shape: T): ObjectBuilder<T> => new ObjectBuilder(shape)
 };

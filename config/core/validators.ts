@@ -78,12 +78,12 @@ export function number(): Validator<string> {
 
 export function optional(): Validator<string> {
   return (input) => {
-    const success = _STR._isOptional(input);
+    const success = _STR._isOptional();
     if (!success) {
       return {
         expected: 'An optional value',
         received: input,
-        message: 'Must be a valid optional value'
+        message: 'Must be a valid optional value.'
       };
     }
   };
@@ -244,7 +244,8 @@ export function multipleUrl(): Validator<string> {
 
     if (!success) {
       return {
-        expected: 'A valid collection of URLs, with the form: "http://localhost:3000, http://localhost:3001"',
+        expected:
+          'A valid collection of URLs, with the format: "http://localhost:3000, http://localhost:3001,http://localhost:3002"',
         received: input,
         message: 'Invalid collection of URLs.'
       };
@@ -260,10 +261,13 @@ export function postgresUrl(): Validator<string> {
 
     if (!success) {
       return {
-        expected: 'A valid collection of URLs, with the form: "http://localhost:3000, http://localhost:3001"',
+        expected:
+          'A valid postgresURL with the format: postgresql://{postgres.user}:{postgres.password}@{your-ip}:{postgres.port}/{database-name}/schema={}',
         received: input,
         message: 'Invalid collection of URLs.'
       };
     }
   };
 }
+
+// --------------------------------------------------------------------------------

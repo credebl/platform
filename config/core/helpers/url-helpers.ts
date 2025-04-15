@@ -17,13 +17,13 @@ function _isPort(input: string | undefined): boolean {
 }
 
 function _isLocalhost(input: string | undefined): boolean {
-  const regex = /^(http:\/\/)?(localhost|127\.0\.0\.1|::1)(:\d{1,5})?$/;
+  const regex = /^(http:\/\/)?(localhost|127\.0\.0\.1|::1)(:\d{1,5})?(\/)?$/;
 
   if (!regex.test(input || '')) {
     return false;
   }
 
-  const port = input.split(':').at(-1);
+  const port = input.split(':').at(-1).split('/').at(0);
 
   return _isPort(port);
 }
@@ -51,7 +51,7 @@ function _isEmail(input: string | undefined): boolean {
 }
 
 function _isMultipleURL(input: string | undefined): boolean {
-  return input.split(',').every((url) => _isURL(url));
+  return input.split(',').every((url) => _isURL(url.trim()) || _isLocalhost(url.trim()));
 }
 
 function _isPostgresURL(input: string | undefined): boolean {

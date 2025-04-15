@@ -6,7 +6,9 @@ import {
   localhost,
   host,
   notEmpty,
+  optional,
   number,
+  boolean,
   port,
   protocol,
   startsWith,
@@ -26,92 +28,87 @@ export type SafeParseReturnType<T> =
   | { success: false; data: null; error: VError };
 
 class StringBuilder {
-  private validators: Validator<string>[] = [];
+  #validators: Validator<string>[] = [];
 
   enum(inputs: string[]): this {
-    this.validators.push(_enum(inputs));
+    this.#validators.push(_enum(inputs));
     return this;
   }
 
   notEmpty(): this {
-    this.validators.push(notEmpty());
+    this.#validators.push(notEmpty());
     return this;
   }
 
   number(): this {
-    this.validators.push(number());
+    this.#validators.push(number());
     return this;
   }
 
   boolean(): this {
-    this.validators.push(number());
+    this.#validators.push(boolean());
     return this;
   }
 
   url(): this {
-    this.validators.push(url());
+    this.#validators.push(url());
     return this;
   }
 
   multipleUrl(): this {
-    this.validators.push(multipleUrl());
+    this.#validators.push(multipleUrl());
     return this;
   }
 
   postgresUrl(): this {
-    this.validators.push(postgresUrl());
+    this.#validators.push(postgresUrl());
     return this;
   }
 
   email(): this {
-    this.validators.push(email());
+    this.#validators.push(email());
     return this;
   }
 
   protocol(): this {
-    this.validators.push(protocol());
+    this.#validators.push(protocol());
     return this;
   }
 
   host(): this {
-    this.validators.push(host());
+    this.#validators.push(host());
     return this;
   }
 
   localhost(): this {
-    this.validators.push(localhost());
+    this.#validators.push(localhost());
     return this;
   }
 
   port(): this {
-    this.validators.push(port());
+    this.#validators.push(port());
     return this;
   }
 
   endpoint(): this {
-    this.validators.push(endpoint());
+    this.#validators.push(endpoint());
     return this;
   }
 
   startsWith(input: string): this {
-    this.validators.push(startsWith(input));
+    this.#validators.push(startsWith(input));
     return this;
   }
 
   domain(): this {
-    this.validators.push(domain());
+    this.#validators.push(domain());
     return this;
   }
 
   // --
 
-  prismaURL(): this {
-    // TODO: Implement prismaURL validator
-    return this;
-  }
-
   optional(): this {
-    // TODO: Implement optional validator
+    this.#validators.push(optional());
     return this;
   }
 
@@ -120,7 +117,7 @@ class StringBuilder {
   safeParse(input: string): SafeParseReturnType<string> {
     const issues: Issue[] = [];
 
-    for (const validator of this.validators) {
+    for (const validator of this.#validators) {
       const issue = validator(input);
       if (issue) {
         issues.push(issue);
@@ -148,12 +145,12 @@ export type InferShape<T extends SchemaShape> = {
 };
 
 export class ObjectBuilder<T extends SchemaShape> {
-  private errors: Issue[] = [];
+  #errors: Issue[] = [];
 
   constructor(private shape: T) {}
 
   safeParse(value: object): SafeParseReturnType<InferShape<T>> {
-    this.errors = Object.entries(this.shape).reduce((issues, [key, validator]) => {
+    this.#errors = Object.entries(this.shape).reduce((issues, [key, validator]) => {
       // const parsed = validator.safeParse(value[key]);
       const parsed = validator.safeParse((value as Record<string, string>)[key]);
 
@@ -165,9 +162,9 @@ export class ObjectBuilder<T extends SchemaShape> {
       return issues;
     }, [] as Issue[]);
 
-    if (this.errors.length) {
+    if (this.#errors.length) {
       return {
-        error: new VError(this.errors),
+        error: new VError(this.#errors),
         success: false,
         data: null
       };

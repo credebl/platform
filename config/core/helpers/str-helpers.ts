@@ -10,8 +10,8 @@ function _isNotEmpty(input: string | undefined): boolean {
   return input !== undefined && '' !== input.trim();
 }
 
-function _isOptional(input: string | undefined): boolean {
-  return input === undefined || '' === input.trim();
+function _isOptional(): boolean {
+  return true;
 }
 
 function _startsWith(input: string | undefined, prefix: string): boolean {

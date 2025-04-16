@@ -3,14 +3,14 @@ version: '3'
 services:
   nats:
     container_name: nats
-    entrypoint: '/nats-server -c /nats-server.conf -DV'  # Corrected the path to nats-server.conf
     image: nats
+    command: ["-c", "/nats-server.conf"]
     ports:
       - '4222:4222'
       - '6222:6222'
       - '8222:8222'
-   # volumes:
-    #  - ./nats-server.conf:/nats-server.conf  # Mount the config file
+    volumes:
+      - ./nats-server.conf:/nats-server.conf:ro
   redis:
     image: redis:6.2-alpine
     restart: always
@@ -19,10 +19,20 @@ services:
     command: redis-server --save 20 1 --loglevel warning
     volumes: 
       - cache:/data
+  seed:
+    # build:
+    #   context: ./
+    #   dockerfile: Dockerfiles/Dockerfile.seed
+    image: sahilk3/sovio:seed-1
+    env_file:
+      - ./.env
+    volumes:
+      - ./master.json:/app/libs/prisma-service/prisma/data/credebl-master-table.json
   api-gateway:
     depends_on:
       - nats  # Use depends_on instead of needs
       - redis
+      - seed
     image: ghcr.io/credebl/api-gateway:latest
     ports:
       - '5000:5000'
@@ -32,6 +42,7 @@ services:
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
+      - seed      
     image: ghcr.io/credebl/user:latest
     env_file:
       - ./.env
@@ -39,6 +50,7 @@ services:
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
+      - seed      
     image: ghcr.io/credebl/utility:latest
     env_file:
       - ./.env
@@ -48,6 +60,7 @@ services:
       - api-gateway
       - utility
       - user
+      - seed
     image: ghcr.io/credebl/connection:latest
     env_file:
       - ./.env
@@ -57,6 +70,7 @@ services:
       - api-gateway
       - user
       - connection
+      - seed
     image: ghcr.io/credebl/issuance:latest
     env_file:
       - ./.env
@@ -67,6 +81,7 @@ services:
       - user
       - connection
       - issuance
+      - seed
     image: ghcr.io/credebl/ledger:latest
     env_file:
       - ./.env
@@ -78,6 +93,7 @@ services:
       - connection
       - issuance
       - ledger
+      - seed
     image: ghcr.io/credebl/organization:latest
     env_file:
       - ./.env
@@ -90,6 +106,7 @@ services:
       - issuance
       - ledger
       - organization
+      - seed
     image: ghcr.io/credebl/verification:latest
     env_file:
       - ./.env
@@ -103,6 +120,7 @@ services:
       - ledger
       - organization
       - verification
+      - seed
     image: ghcr.io/credebl/agent-provisioning:latest
     # args:
     #   - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
@@ -126,7 +144,14 @@ services:
       - organization
       - verification
       - agent-provisioning
-    command: sh -c 'until (docker logs platform-agent-provisioning-1 | grep "Agent-Provisioning-Service Microservice is listening to NATS"); do sleep 1; done && node dist/apps/agent-service/main.js'
+      - seed
+    # command: sh -c 'until (docker logs platform-agent-provisioning-1 | grep "Agent-Provisioning-Service Microservice is listening to NATS"); do sleep 1; done && node dist/apps/agent-service/main.js'
+    command: >
+      sh -c '
+        until docker logs platform-agent-provisioning-1 | grep "Agent-Provisioning-Service Microservice is listening to NATS"; do sleep 1; done &&
+        until docker logs platform-seed-1 | grep "The seed command has been executed."; do sleep 1; done &&
+        node dist/apps/agent-service/main.js
+      '
     image: ghcr.io/credebl/agent-service:latest
     env_file:
       - ./.env
@@ -146,6 +171,7 @@ services:
       - verification
       - agent-provisioning
       - agent-service
+      - seed
     image: ghcr.io/credebl/cloud-wallet:latest
     env_file:
       - ./.env
@@ -162,6 +188,7 @@ services:
       - agent-provisioning
       - agent-service
       - cloud-wallet
+      - seed
     image: ghcr.io/credebl/geolocation:latest
     env_file:
       - ./.env
@@ -179,6 +206,7 @@ services:
       - agent-service
       - cloud-wallet
       - geolocation
+      - seed
     image: ghcr.io/credebl/notification:latest
     env_file:
       - ./.env
@@ -197,6 +225,7 @@ services:
       - cloud-wallet
       - geolocation
       - notification
+      - seed
     image: ghcr.io/credebl/webhook:latest
     env_file:
       - ./.env

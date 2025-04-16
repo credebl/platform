@@ -1,14 +1,21 @@
-# Stage 1: Build the application
 FROM node:18 as build
 
-# Set the working directory
+# Install pnpm
+RUN npm install -g pnpm
+
+# Install PostgreSQL client (use apt for Debian-based images)
+RUN apt-get update && apt-get install -y postgresql-client
+
+# Set working directory
 WORKDIR /app
 
-# Copy the rest of the application code
 COPY . .
 
-# RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
-RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN pnpm install
+
+# Run Prisma commands
+RUN cd libs/prisma-service && npx prisma generate
+
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && npx prisma db seed"]

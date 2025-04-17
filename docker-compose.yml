@@ -39,7 +39,7 @@ services:
     env_file:
       - ./.env
     volumes:
-      - ./credebl-master-table.json:/app/libs/prisma-service/prisma/data/credebl-master-table.json
+      - ./libs/prisma-service/prisma/data/credebl-master-table.json:/app/libs/prisma-service/prisma/data/credebl-master-table.json
   api-gateway:
     container_name: api-gateway
     depends_on:

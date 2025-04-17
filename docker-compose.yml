@@ -12,6 +12,7 @@ services:
     volumes:
       - ./nats-server.conf:/nats-server.conf:ro
   redis:
+    container_name: redis
     image: redis:6.2-alpine
     restart: always
     ports:
@@ -19,62 +20,84 @@ services:
     command: redis-server --save 20 1 --loglevel warning
     volumes: 
       - cache:/data
+  postgres:
+    container_name: postgres-db
+    image: postgres:latest
+    ports:
+      - "5435:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=credebl
+    volumes:
+      - ./platform-volume:/var/lib/postgresql/data
   seed:
-    # build:
-    #   context: ./
-    #   dockerfile: Dockerfiles/Dockerfile.seed
+    container_name: seed-service
     image: sahilk3/sovio:seed-1
+    depends_on:
+      - postgres
     env_file:
       - ./.env
     volumes:
-      - ./master.json:/app/libs/prisma-service/prisma/data/credebl-master-table.json
+      - ./credebl-master-table.json:/app/libs/prisma-service/prisma/data/credebl-master-table.json
   api-gateway:
+    container_name: api-gateway
     depends_on:
       - nats  # Use depends_on instead of needs
       - redis
       - seed
+      - postgres
     image: ghcr.io/credebl/api-gateway:latest
     ports:
       - '5000:5000'
     env_file:
       - ./.env
   user:
+    container_name: user-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
-      - seed      
+      - seed
+      - postgres
     image: ghcr.io/credebl/user:latest
     env_file:
       - ./.env
   utility:
+    container_name: utility-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
-      - seed      
+      - seed
+      - postgres  
     image: ghcr.io/credebl/utility:latest
     env_file:
       - ./.env
   connection:
+    container_name: connection-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
       - utility
       - user
       - seed
+      - postgres
     image: ghcr.io/credebl/connection:latest
     env_file:
       - ./.env
   issuance:
+    container_name: issuance-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
       - user
       - connection
       - seed
+      - postgres
     image: ghcr.io/credebl/issuance:latest
     env_file:
       - ./.env
   ledger:
+    container_name: ledger-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -82,10 +105,12 @@ services:
       - connection
       - issuance
       - seed
+      - postgres
     image: ghcr.io/credebl/ledger:latest
     env_file:
       - ./.env
   organization:
+    container_name: organization-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -94,10 +119,12 @@ services:
       - issuance
       - ledger
       - seed
-    image: ghcr.io/credebl/organization:latest
+      - postgres
+    image: ghcr.io/credebl/organization:v2.0.0
     env_file:
       - ./.env
   verification:
+    container_name: verification-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -107,10 +134,12 @@ services:
       - ledger
       - organization
       - seed
+      - postgres
     image: ghcr.io/credebl/verification:latest
     env_file:
       - ./.env
   agent-provisioning:
+    container_name: agent-provisioning-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -121,6 +150,7 @@ services:
       - organization
       - verification
       - seed
+      - postgres
     image: ghcr.io/credebl/agent-provisioning:latest
     # args:
     #   - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
@@ -134,6 +164,7 @@ services:
       - /app/agent-provisioning/AFJ/token:/app/agent-provisioning/AFJ/token
       - $PWD/agent.env:/app/agent.env
   agent-service:
+    container_name: agent-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -145,11 +176,12 @@ services:
       - verification
       - agent-provisioning
       - seed
+      - postgres
     # command: sh -c 'until (docker logs platform-agent-provisioning-1 | grep "Agent-Provisioning-Service Microservice is listening to NATS"); do sleep 1; done && node dist/apps/agent-service/main.js'
     command: >
       sh -c '
-        until docker logs platform-agent-provisioning-1 | grep "Agent-Provisioning-Service Microservice is listening to NATS"; do sleep 1; done &&
-        until docker logs platform-seed-1 | grep "The seed command has been executed."; do sleep 1; done &&
+        until docker logs agent-provisioning-service | grep "Agent-Provisioning-Service Microservice is listening to NATS"; do sleep 1; done &&
+        until docker logs seed-service | grep "The seed command has been executed."; do sleep 1; done &&
         node dist/apps/agent-service/main.js
       '
     image: ghcr.io/credebl/agent-service:latest
@@ -160,6 +192,7 @@ services:
     volumes_from:
       - agent-provisioning
   cloud-wallet:
+    container_name: cloud-wallet-service
     depends_on:
       - nats
       - api-gateway
@@ -172,10 +205,12 @@ services:
       - agent-provisioning
       - agent-service
       - seed
+      - postgres
     image: ghcr.io/credebl/cloud-wallet:latest
     env_file:
       - ./.env
   geolocation:
+    container_name: geolocation-service
     depends_on:
       - nats
       - api-gateway
@@ -189,10 +224,12 @@ services:
       - agent-service
       - cloud-wallet
       - seed
+      - postgres
     image: ghcr.io/credebl/geolocation:latest
     env_file:
       - ./.env
   notification:
+    container_name: notification-service
     depends_on:
       - nats
       - api-gateway
@@ -207,10 +244,12 @@ services:
       - cloud-wallet
       - geolocation
       - seed
+      - postgres
     image: ghcr.io/credebl/notification:latest
     env_file:
       - ./.env
   webhook:
+    container_name: webhook-service
     depends_on:
       - nats
       - api-gateway
@@ -226,10 +265,13 @@ services:
       - geolocation
       - notification
       - seed
+      - postgres
     image: ghcr.io/credebl/webhook:latest
     env_file:
       - ./.env
   
 volumes:
+  platform-volume:
+  keycloak-volume:
   cache:
     driver: local

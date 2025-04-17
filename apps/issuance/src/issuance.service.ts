@@ -1164,6 +1164,12 @@ export class IssuanceService {
       }
       const timestamp = Math.floor(Date.now() / 1000);
 
+      const schemaData = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
+
+      if (schemaData?.type !== schemaType) {
+        throw new BadRequestException(ResponseMessages.bulkIssuance.error.mismatchedSchemaType);
+      }
+
       if (schemaType === SchemaType.INDY) {
         schemaResponse = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
         if (!schemaResponse) {
@@ -1209,7 +1215,8 @@ export class IssuanceService {
         fileName
       };
     } catch (error) {
-      throw new Error(ResponseMessages.bulkIssuance.error.exportFile);
+      this.logger.error(`error in downloading csv : ${error.response}`);
+      throw error;
     }
   }
 

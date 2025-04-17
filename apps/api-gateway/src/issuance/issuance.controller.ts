@@ -175,7 +175,16 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
   async getIssueCredentialsbyCredentialRecordId(
     @User() user: IUserRequest,
-    @Param('credentialRecordId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.issuance.error.invalidCredentialRecordId); }})) credentialRecordId: string,
+    @Param(
+      'credentialRecordId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.issuance.error.invalidCredentialRecordId);
+        }
+      })
+    )
+    credentialRecordId: string,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
@@ -278,7 +287,7 @@ export class IssuanceController {
         .status(HttpStatus.OK)
         .send(templateData.fileContent);
     } catch (error) {
-      return res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json(error.error);
+      return res.status(error.status || error.error.code || HttpStatus.INTERNAL_SERVER_ERROR).json(error.error);
     }
   }
   /**

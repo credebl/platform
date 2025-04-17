@@ -161,7 +161,7 @@ services:
     volumes:
       - $PWD/apps/agent-provisioning/AFJ/agent-config:/app/agent-provisioning/AFJ/agent-config
       - /var/run/docker.sock:/var/run/docker.sock
-      - /app/agent-provisioning/AFJ/token:/app/agent-provisioning/AFJ/token
+      - $PWD/app/agent-provisioning/AFJ/token:/app/agent-provisioning/AFJ/token
       - $PWD/agent.env:/app/agent.env
   agent-service:
     container_name: agent-service

@@ -1,15 +1,14 @@
 export class URLUserEmailTemplate {
-  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName:string, redirectTo?:string): string {
-
-    const client = redirectTo?.includes('localhost:3001') ? process.env.EDUCREDS_KEYCLOAK_MANAGEMENT_CLIENT_ID : process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
-    const apiUrl = new URL(
-      clientId === client ? '/verify-email-success' : '',
-      redirectUrl
-    );
-    // eslint-disable-next-line no-console
-    console.log("🚀 ~ URLUserEmailTemplate ~ getUserURLTemplate ~ client:", client);
-    // eslint-disable-next-line no-console
-    console.log("🚀 ~ URLUserEmailTemplate ~ getUserURLTemplate ~ clientId:", clientId);
+  public getUserURLTemplate(
+    email: string,
+    verificationCode: string,
+    redirectUrl: string,
+    clientId: string,
+    brandLogoUrl: string,
+    platformName: string,
+    redirectTo?: string
+  ): string {
+    const apiUrl = new URL(clientId ? '/verify-email-success' : '', redirectUrl);
 
     apiUrl.searchParams.append('verificationCode', verificationCode);
     apiUrl.searchParams.append('email', encodeURIComponent(email));
@@ -73,7 +72,7 @@ export class URLUserEmailTemplate {
       </body>
       </html>`;
     } catch (error) {
-      throw new Error("Error creating email verification template");
+      throw new Error('Error creating email verification template');
     }
   }
 }

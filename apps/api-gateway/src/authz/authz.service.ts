@@ -1,19 +1,21 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from '../../../../libs/service/base.service';
-import {
-  WebSocketGateway,
-  WebSocketServer
-
-} from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AddUserDetailsDto } from '../user/dto/add-user.dto';
-import { IResetPasswordResponse, ISendVerificationEmail, ISignInUser, ISignUpUserResponse, IVerifyUserEmail } from '@credebl/common/interfaces/user.interface';
+import {
+  IResetPasswordResponse,
+  ISignInUser,
+  ISignUpUserResponse,
+  IVerifyUserEmail
+} from '@credebl/common/interfaces/user.interface';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { user } from '@prisma/client';
 
 @Injectable()
 @WebSocketGateway()
@@ -22,9 +24,8 @@ export class AuthzService extends BaseService {
   @WebSocketServer() server;
   constructor(
     @Inject('NATS_CLIENT') private readonly authServiceProxy: ClientProxy,
-    private readonly natsClient : NATSClient
+    private readonly natsClient: NATSClient
   ) {
-
     super('AuthzService');
   }
 
@@ -33,9 +34,7 @@ export class AuthzService extends BaseService {
     return this.natsClient.sendNats(this.authServiceProxy, 'get-user-by-keycloakUserId', keycloakUserId);
   }
 
-  async sendVerificationMail(userEmailVerification: UserEmailVerificationDto): Promise<ISendVerificationEmail> {
-    // eslint-disable-next-line no-console
-    console.log("🚀 ~ AuthzService ~ sendVerificationMail ~ userEmailVerification:33333333333333", userEmailVerification);
+  async sendVerificationMail(userEmailVerification: UserEmailVerificationDto): Promise<user> {
     const payload = { userEmailVerification };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'send-verification-mail', payload);
   }
@@ -49,11 +48,11 @@ export class AuthzService extends BaseService {
     const payload = { email, password, isPasskey };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-holder-login', payload);
   }
-  
+
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<IResetPasswordResponse> {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-reset-password', resetPasswordDto);
   }
-  
+
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<IResetPasswordResponse> {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-forgot-password', forgotPasswordDto);
   }

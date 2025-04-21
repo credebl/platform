@@ -1,5 +1,5 @@
 function _includes(inputs: string[], value: string | undefined): boolean {
-  return value !== undefined && inputs.includes(value);
+  return inputs?.includes(value);
 }
 
 function _isNumber(input: string | undefined): boolean {
@@ -7,7 +7,7 @@ function _isNumber(input: string | undefined): boolean {
 }
 
 function _isNotEmpty(input: string | undefined): boolean {
-  return input !== undefined && '' !== input.trim();
+  return '' !== input?.trim();
 }
 
 function _isOptional(): boolean {
@@ -15,7 +15,7 @@ function _isOptional(): boolean {
 }
 
 function _startsWith(input: string | undefined, prefix: string): boolean {
-  return input !== undefined && input.startsWith(prefix);
+  return input?.startsWith(prefix);
 }
 
 // --------------------------------------------------------------------------------

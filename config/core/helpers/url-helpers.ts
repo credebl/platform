@@ -56,7 +56,7 @@ function _isMultipleURL(input: string | undefined): boolean {
 
 function _isPostgresURL(input: string | undefined): boolean {
   const regex =
-    /^postgresql:\/\/([a-zA-Z0-9]+):([a-zA-Z0-9]+)@(localhost|[0-9.]+):([0-9]{1,5})\/([a-zA-Z0-9]+)(\?schema=)?([a-zA-Z0-9]+)/;
+    /^postgresql:\/\/([a-zA-Z0-9]+):([a-zA-Z0-9]+)@(localhost|[0-9.]+):(\d{1,5})\/([a-zA-Z0-9]+)(\?schema=)?([a-zA-Z0-9]+)/;
 
   return regex.test(input);
 }

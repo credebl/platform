@@ -14,7 +14,7 @@ type FlattenedIssue = {
 // ----------
 
 export class VError extends Error {
-  private issues: Issue[];
+  private readonly issues: Issue[];
 
   constructor(errors: Issue[]) {
     const message = JSON.stringify(errors, null, 2);

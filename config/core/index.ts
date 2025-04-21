@@ -28,7 +28,7 @@ export type SafeParseReturnType<T> =
   | { success: false; data: null; error: VError };
 
 class StringBuilder {
-  #validators: Validator<string>[] = [];
+  readonly #validators: Validator<string>[] = [];
 
   enum(inputs: string[]): this {
     this.#validators.push(_enum(inputs));
@@ -147,11 +147,10 @@ export type InferShape<T extends SchemaShape> = {
 export class ObjectBuilder<T extends SchemaShape> {
   #errors: Issue[] = [];
 
-  constructor(private shape: T) {}
+  constructor(private readonly shape: T) {}
 
   safeParse(value: object): SafeParseReturnType<InferShape<T>> {
     this.#errors = Object.entries(this.shape).reduce((issues, [key, validator]) => {
-      // const parsed = validator.safeParse(value[key]);
       const parsed = validator.safeParse((value as Record<string, string>)[key]);
 
       if (!parsed.success) {

@@ -28,7 +28,8 @@ import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { RefreshTokenDto } from './dtos/refresh-token.dto';
-import { ClientAlias } from '@credebl/enum/enum';
+import { ClientAliasValidationPipe } from './decorators/user-auth-client';
+import { getDefaultClient } from '../user/utils';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -75,15 +76,18 @@ export class AuthzController {
   @ApiQuery({
     name: 'clientAlias',
     required: false,
-    enum: ClientAlias
+    enum: (process.env.SUPPORTED_SSO_CLIENTS || '')
+      .split(',')
+      .map((alias) => alias.trim()?.toUpperCase())
+      .filter(Boolean)
   })
   @ApiOperation({ summary: 'Send verification email', description: 'Send verification email to new user' })
   async create(
-    @Query('clientAlias') clientAlias: ClientAlias,
+    @Query('clientAlias', ClientAliasValidationPipe) clientAlias: string,
     @Body() userEmailVerification: UserEmailVerificationDto,
     @Res() res: Response
   ): Promise<Response> {
-    userEmailVerification.clientAlias = clientAlias ?? ClientAlias.Sovio;
+    userEmailVerification.clientAlias = clientAlias ?? (await getDefaultClient()).alias;
     await this.authzService.sendVerificationMail(userEmailVerification);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,

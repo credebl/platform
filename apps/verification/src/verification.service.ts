@@ -427,108 +427,56 @@ export class VerificationService {
  */
   async sendOutOfBandPresentationRequest(outOfBandRequestProof: ISendProofRequestPayload, user: IUserRequest): Promise<boolean | object> {
     try {
-
-      // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
-     
+      const MAX_RESEND_ATTEMPTS = 3; // Configurable limit
+      const { emailId, resend = false } = outOfBandRequestProof;
+  
+      if (!emailId) {
+        throw new BadRequestException('Email ID is required to send verification.');
+      }
+  
+      // Fetch existing resend attempts from the database
+      const userRecord = await this.verificationRepository.getUserByEmail(emailId);
+  
+      if (!userRecord) {
+        throw new NotFoundException('User not found.');
+      }
+  
+      if (resend) {
+        if (userRecord.resendAttempts >= MAX_RESEND_ATTEMPTS) {
+          throw new BadRequestException('Maximum resend attempts reached. Please contact support.');
+        }
+  
+        // Increment resend attempts
+        await this.verificationRepository.incrementResendAttempts(emailId);
+      } else {
+        // Reset resend attempts for initial requests
+        await this.verificationRepository.resetResendAttempts(emailId);
+      }
+  
+      // Generate verification payload
       const [getAgentDetails, getOrganization] = await Promise.all([
         this.verificationRepository.getAgentEndPoint(user.orgId),
-        this.verificationRepository.getOrganization(user.orgId)
+        this.verificationRepository.getOrganization(user.orgId),
       ]);
-
-      const label = getOrganization?.name;
-
-      if (getOrganization?.logoUrl) {
-        outOfBandRequestProof['imageUrl'] = getOrganization?.logoUrl;
-      }
-      
-      outOfBandRequestProof['label'] = label;
-
-      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      const verificationMethodLabel = 'create-request-out-of-band';
-      const url = await this.getAgentUrl(verificationMethodLabel, orgAgentType, getAgentDetails?.agentEndPoint, getAgentDetails?.tenantId);
-      
-
-      // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
-      const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
-      let invitationDid: string | undefined;
-      if (true === reuseConnection) {
-        const data: agent_invitations[] = await this.verificationRepository.getInvitationDidByOrgId(user.orgId);
-         if (data && 0 < data.length) {
-          const [firstElement] = data;
-          invitationDid = firstElement?.invitationDid ?? undefined;
-      }
-      }
-      outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;
-
-
-      let payload: IProofRequestPayload;
-
-      if (ProofRequestType.INDY === type) {
-        updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
-        updateOutOfBandRequestProof.invitationDid = invitationDid || undefined;
-        updateOutOfBandRequestProof.imageUrl = getOrganization?.logoUrl || undefined;
-        payload   = {
+  
+      const payload = {
         orgId: user.orgId,
-        url,
-        proofRequestPayload: updateOutOfBandRequestProof
+        url: await this.getAgentUrl('create-request-out-of-band', getAgentDetails.orgAgentType, getAgentDetails.agentEndPoint, getAgentDetails.tenantId),
+        proofRequestPayload: {
+          ...outOfBandRequestProof,
+          label: getOrganization?.name,
+          imageUrl: getOrganization?.logoUrl,
+        },
       };
-      }
-      
-      if (ProofRequestType.PRESENTATIONEXCHANGE === type) {
-
-         payload = {
-          orgId: user.orgId,
-          url,
-          proofRequestPayload: {
-            goalCode: outOfBandRequestProof.goalCode,
-            // TODO: [Credo-ts] Issue with parentThreadId in creating an OOB proof request.  
-            // This causes failures in OOB connection establishment.            
-            // parentThreadId: outOfBandRequestProof?.parentThreadId,     
-            protocolVersion:outOfBandRequestProof.protocolVersion || 'v2',
-            comment:outOfBandRequestProof.comment,
-            label,
-            imageUrl: outOfBandRequestProof?.imageUrl,
-            proofFormats: {
-              presentationExchange: {
-                presentationDefinition: {
-                  id: outOfBandRequestProof.presentationDefinition.id,
-                  name: outOfBandRequestProof.presentationDefinition.name,
-                  purpose: outOfBandRequestProof?.presentationDefinition?.purpose,
-                  input_descriptors: [...outOfBandRequestProof.presentationDefinition.input_descriptors]
-                }
-              }
-            },
-            autoAcceptProof:outOfBandRequestProof.autoAcceptProof,
-            invitationDid:invitationDid || undefined
-          }
-        };  
-      }
-
-      if (emailId) {
-        const emailResponse = await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization);
-        return emailResponse;
-      } else {
-        const presentationProof: IInvitation = await this.generateOOBProofReq(payload);
-        const proofRequestInvitationUrl: string = presentationProof.invitationUrl;
-        if (isShortenUrl) {
-          const shortenedUrl: string = await this.storeVerificationObjectAndReturnUrl(proofRequestInvitationUrl, false);
-          this.logger.log('shortenedUrl', shortenedUrl);
-          if (shortenedUrl) {
-            presentationProof.invitationUrl = shortenedUrl;
-            presentationProof.deepLinkURL = convertUrlToDeepLinkUrl(shortenedUrl);
-          }
-        }
-        if (!presentationProof) {
-          throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
-        }
-        return presentationProof;
-      }      
+  
+      const emailResponse = await this.sendEmailInBatches(payload, [emailId], getAgentDetails, getOrganization);
+  
+      return emailResponse;
     } catch (error) {
-      this.logger.error(`[sendOutOfBandPresentationRequest] - error in out of band proof request : ${error.message}`);
-      this.verificationErrorHandling(error);
+      this.logger.error(`[sendOutOfBandPresentationRequest] - Error: ${error.message}`);
+      throw error;
     }
   }
-
   async storeVerificationObjectAndReturnUrl(storeObj: string, persistent: boolean): Promise<string> {
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };

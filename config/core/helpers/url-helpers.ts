@@ -51,7 +51,7 @@ function _isEmail(input: string | undefined): boolean {
 }
 
 function _isMultipleURL(input: string | undefined): boolean {
-  return input.split(',').every((url) => _isURL(url.trim()) || _isLocalhost(url.trim()));
+  return input?.split(',').every((url) => _isURL(url.trim()) || _isLocalhost(url.trim()));
 }
 
 function _isPostgresURL(input: string | undefined): boolean {

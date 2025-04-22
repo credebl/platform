@@ -1,18 +1,46 @@
+import { encryptClientCredential } from '@credebl/common/cast.helper';
 import { IClientDetailsSSO } from '@credebl/common/interfaces/user.interface';
-import { ClientAlias } from '@credebl/enum/enum';
 
-export function getCredentialsByAlias(alias: ClientAlias): IClientDetailsSSO {
-  const registry = {
-    EDUCREDS: {
-      domain: process.env.EDUCREDS_DOMAIN,
-      clientId: process.env.EDUCREDS_KEYCLOAK_MANAGEMENT_CLIENT_ID,
-      clientSecret: process.env.EDUCREDS_KEYCLOAK_MANAGEMENT_CLIENT_SECRET
-    },
-    SOVIO: {
-      domain: process.env.SOVIO_DOMAIN,
-      clientId: process.env.SOVIO_KEYCLOAK_MANAGEMENT_CLIENT_ID,
-      clientSecret: process.env.SOVIO_KEYCLOAK_MANAGEMENT_CLIENT_SECRET
-    }
+export const getDefaultClient = async (): Promise<IClientDetailsSSO> => ({
+  alias: process.env.PLATFORM_NAME?.toUpperCase(),
+  domain: process.env.DEFAULT_DOMAIN,
+  clientId: await encryptClientCredential(process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID),
+  clientSecret: await encryptClientCredential(process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET)
+});
+
+// Now getting from env, but can get from DB
+function getClientDetails(alias: string): IClientDetailsSSO {
+  const clientIdKey = `${alias}_KEYCLOAK_MANAGEMENT_CLIENT_ID`;
+  const clientSecretKey = `${alias}_KEYCLOAK_MANAGEMENT_CLIENT_SECRET`;
+  const domainKey = `${alias}_DOMAIN`;
+  const aliasNameKey = `${alias}_ALIAS`;
+
+  const clientId = process.env[clientIdKey];
+  const clientSecret = process.env[clientSecretKey];
+  const domain = process.env[domainKey];
+  const aliasName = process.env[aliasNameKey] || alias;
+
+  const clientDetails: IClientDetailsSSO = {
+    clientId,
+    clientSecret,
+    domain,
+    alias: aliasName
   };
-  return registry[alias];
+
+  return clientDetails;
+}
+
+export async function getCredentialsByAlias(alias: string): Promise<IClientDetailsSSO> {
+  const defaultClient = await getDefaultClient();
+  if (alias.toUpperCase() === defaultClient.alias) {
+    return defaultClient;
+  }
+
+  const clientDetails = getClientDetails(alias);
+
+  if (!clientDetails.clientId || !clientDetails.clientSecret || !clientDetails.domain) {
+    throw new Error(`Missing configuration for SSO client: ${alias}`);
+  }
+
+  return clientDetails;
 }

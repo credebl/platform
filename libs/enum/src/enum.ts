@@ -3,11 +3,6 @@ export enum NATSReconnects {
   reconnectTimeWait = 5000 // 5 second delay between reconnection attempts
 }
 
-export enum ClientAlias {
-  Educreds = 'EDUCREDS',
-  Sovio = 'SOVIO'
-}
-
 export enum SortValue {
   ASC = 'asc',
   DESC = 'desc'

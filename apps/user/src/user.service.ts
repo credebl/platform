@@ -115,7 +115,7 @@ export class UserService {
       const verifyCode = uuidv4();
       let sendVerificationMail: boolean;
 
-      const clientDetails = getCredentialsByAlias(clientAlias);
+      const clientDetails = await getCredentialsByAlias(clientAlias);
       try {
         const token = await this.clientRegistrationService.getManagementToken(
           clientDetails.clientId,

@@ -3,7 +3,6 @@ import { toLowerCase, trim } from '@credebl/common/cast.helper';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { ClientAlias } from '@credebl/enum/enum';
 
 export class UserEmailVerificationDto {
   @ApiProperty({ example: 'awqx@yopmail.com' })
@@ -34,5 +33,5 @@ export class UserEmailVerificationDto {
   @IsString({ message: 'platformName should be string' })
   platformName?: string;
 
-  clientAlias?: ClientAlias = ClientAlias.Sovio;
+  clientAlias?: string;
 }

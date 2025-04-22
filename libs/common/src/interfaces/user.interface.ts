@@ -1,5 +1,3 @@
-import { ClientAlias } from '@credebl/enum/enum';
-
 export interface ISignInUser {
   access_token: string;
   token_type?: string;
@@ -20,10 +18,11 @@ export interface ISendVerificationEmail {
   brandLogoUrl?: string;
   platformName?: string;
   redirectTo?: string;
-  clientAlias: ClientAlias;
+  clientAlias: string;
 }
 
 export interface IClientDetailsSSO {
+  alias: string;
   domain: string;
   clientId: string;
   clientSecret: string;

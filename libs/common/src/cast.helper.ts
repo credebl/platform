@@ -7,7 +7,7 @@ import {
   TemplateIdentifier
 } from '../../enum/src/enum';
 import { ISchemaFields } from './interfaces/schema.interface';
-import { BadRequestException, PipeTransform } from '@nestjs/common';
+import { BadRequestException, Logger, PipeTransform } from '@nestjs/common';
 import { plainToClass } from 'class-transformer';
 import {
   ValidationArguments,
@@ -20,7 +20,9 @@ import {
 } from 'class-validator';
 import { ResponseMessages } from './response-messages';
 import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import * as CryptoJS from 'crypto-js';
 
+const logger = new Logger();
 interface ToNumberOptions {
   default?: number;
   min?: number;
@@ -433,3 +435,19 @@ export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICreden
     return item;
   });
 }
+
+export const encryptClientCredential = async (clientCredential: string): Promise<string> => {
+  try {
+    const encryptedToken = CryptoJS.AES.encrypt(
+      JSON.stringify(clientCredential),
+      process.env.CRYPTO_PRIVATE_KEY
+    ).toString();
+
+    logger.debug('Client credentials encrypted successfully');
+
+    return encryptedToken;
+  } catch (error) {
+    logger.error('An error occurred during encryptClientCredential:', error);
+    throw error;
+  }
+};

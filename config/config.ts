@@ -164,6 +164,6 @@ if (!parsedEnv.success) {
   throw parsedEnv.error.flatten();
 }
 
-const { data } = parsedEnv;
+const { data: env } = parsedEnv;
 
-export { data };
+export { env };

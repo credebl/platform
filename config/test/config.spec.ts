@@ -2,14 +2,22 @@ import { v } from '../core';
 
 import * as dotenv from 'dotenv';
 dotenv.config({
-  path: './config/test/.env'
+  path: './config/test/.env.test.sample'
 });
 
 // --- PROTOCOL ---
 
-test('Protocol Success http', () => {
+test('Protocol Error', () => {
   const mockSchema = v.schema({
     PROTOCOL_TEST_1: v.str().protocol()
+  });
+
+  expect(mockSchema.safeParse(process.env).success).toBeFalsy();
+});
+
+test('Protocol Success http', () => {
+  const mockSchema = v.schema({
+    PROTOCOL_TEST_2: v.str().protocol()
   });
 
   expect(mockSchema.safeParse(process.env).success).toBeTruthy();
@@ -21,14 +29,6 @@ test('Protocol Success https', () => {
   });
 
   expect(mockSchema.safeParse(process.env).success).toBeTruthy();
-});
-
-test('Protocol Error', () => {
-  const mockSchema = v.schema({
-    PROTOCOL_TEST_2: v.str().protocol()
-  });
-
-  expect(mockSchema.safeParse(process.env).success).toBeFalsy();
 });
 
 // --- HOST ---
@@ -65,22 +65,47 @@ test('Host Error contains letters', () => {
   expect(mockSchema.safeParse(process.env).success).toBeFalsy();
 });
 
-// --- URL ---
+// --- LOCALHOST ---
 
-test('URL Success', () => {
+test('LOCALHOST error, doesnt have port number.', () => {
   const mockSchema = v.schema({
-    TEST_URL_1: v.str().url()
+    TEST_LOCALHOST_1: v.str().localhost()
+  });
+
+  expect(mockSchema.safeParse(process.env).success).toBeFalsy();
+});
+
+test('LOCALHOST success, doesnt have protocol.', () => {
+  const mockSchema = v.schema({
+    TEST_LOCALHOST_2: v.str().localhost()
   });
 
   expect(mockSchema.safeParse(process.env).success).toBeTruthy();
 });
 
+test('LOCALHOST success, with protocol.', () => {
+  const mockSchema = v.schema({
+    TEST_LOCALHOST_3: v.str().localhost()
+  });
+
+  expect(mockSchema.safeParse(process.env).success).toBeTruthy();
+});
+
+// --- URL ---
 test('URL Error invalid protocol', () => {
+  const mockSchema = v.schema({
+    TEST_URL_1: v.str().url()
+  });
+
+  expect(mockSchema.safeParse(process.env).success).toBeFalsy();
+});
+
+test('URL Success', () => {
   const mockSchema = v.schema({
     TEST_URL_2: v.str().url()
   });
 
-  expect(mockSchema.safeParse(process.env).success).toBeFalsy();
+  expect(mockSchema.safeParse(process.env).success).toBeTruthy();
 });
 
 test('URL Success with Localhost', () => {
@@ -307,7 +332,7 @@ test('Boolean success, is false.', () => {
 
 // --- NUMBER ---
 
-test('Boolean error, is not a valid number.', () => {
+test('Number error, is not a valid number.', () => {
   const mockSchema = v.schema({
     TEST_NUMBER_1: v.str().number()
   });
@@ -315,7 +340,7 @@ test('Boolean error, is not a valid number.', () => {
   expect(mockSchema.safeParse(process.env).success).toBeFalsy();
 });
 
-test('Boolean success, is a valid number.', () => {
+test('Number success, is a valid number.', () => {
   const mockSchema = v.schema({
     TEST_NUMBER_2: v.str().number()
   });
@@ -323,4 +348,54 @@ test('Boolean success, is a valid number.', () => {
   expect(mockSchema.safeParse(process.env).success).toBeTruthy();
 });
 
-// TODO undefined cases
+// --- POSTGRESURL ---
+
+test('POSTGRESURL error, doesnt start with postgresql://.', () => {
+  const mockSchema = v.schema({
+    TEST_POSTGRES_URL_1: v.str().postgresUrl()
+  });
+
+  expect(mockSchema.safeParse(process.env).success).toBeFalsy();
+});
+
+test('POSTGRESURL error, wrong format, doesnt contain @.', () => {
+  const mockSchema = v.schema({
+    TEST_POSTGRES_URL_2: v.str().postgresUrl()
+  });
+
+  expect(mockSchema.safeParse(process.env).success).toBeFalsy();
+});
+
+test('POSTGRESURL error, invalid host.', () => {
+  const mockSchema = v.schema({
+    TEST_POSTGRES_URL_3: v.str().postgresUrl()
+  });
+
+  expect(mockSchema.safeParse(process.env).success).toBeFalsy();
+});
+
+test('POSTGRESURL success, valid postgres url.', () => {
+  const mockSchema = v.schema({
+    TEST_POSTGRES_URL_4: v.str().postgresUrl()
+  });
+
+  expect(mockSchema.safeParse(process.env).success).toBeTruthy();
+});
+
+// --- STARTS WITH ---
+
+test('Startswith error, doesnt starts with given value.', () => {
+  const mockSchema = v.schema({
+    TEST_START_WITH_1: v.str().startsWith('AVALUE')
+  });
+
+  expect(mockSchema.safeParse(process.env).success).toBeFalsy();
+});
+
+test('Startswith success, starts with given value.', () => {
+  const mockSchema = v.schema({
+    TEST_START_WITH_2: v.str().startsWith('WORLD')
+  });
+
+  expect(mockSchema.safeParse(process.env).success).toBeTruthy();
+});

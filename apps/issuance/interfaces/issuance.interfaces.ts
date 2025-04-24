@@ -1,10 +1,11 @@
 // eslint-disable-next-line camelcase
 import { AutoAccept, SchemaType } from '@credebl/enum/enum';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { Prisma, organisation } from '@prisma/client';
+
+import { IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
+import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
-import { IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
 
 export interface IAttributes {
   attributeName: string;
@@ -32,6 +33,7 @@ export interface IIssuance {
   willConfirm?: boolean;
   label?: string;
   credentialType: string;
+  isValidateSchema?: string;
 }
 
 interface IIndy {
@@ -178,6 +180,7 @@ export interface OutOfBandCredentialOfferPayload {
   imageUrl?: string;
   autoAcceptCredential?: string;
   credentialType?: IssueCredentialType;
+  isValidateSchema?: boolean;
 }
 
 export interface OutOfBandCredentialOffer {

@@ -33,7 +33,8 @@ import {
   ApiQuery,
   ApiExcludeEndpoint,
   ApiConsumes,
-  ApiBody
+  ApiBody,
+  ApiNotFoundResponse
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -79,6 +80,7 @@ import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { SchemaType } from '@credebl/enum/enum';
 import { CommonConstants } from '../../../../libs/common/src/common.constant';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -255,6 +257,7 @@ export class IssuanceController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiNotFoundResponse({ status: HttpStatus.NOT_FOUND, description: 'Not Found', type: NotFoundErrorDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -287,7 +290,11 @@ export class IssuanceController {
         .status(HttpStatus.OK)
         .send(templateData.fileContent);
     } catch (error) {
-      return res.status(error.status || error.error.code || HttpStatus.INTERNAL_SERVER_ERROR).json(error.error);
+      return res
+        .status(error.statusCode)
+        .header('Content-Type', 'application/json')
+        .header('Content-Disposition', '')
+        .send(error);
     }
   }
   /**
@@ -380,7 +387,7 @@ export class IssuanceController {
         isValidateSchema
       };
 
-      const importCsvDetails = await this.issueCredentialService.uploadCSVTemplate(uploadedfileDetails);
+      const importCsvDetails = await this.issueCredentialService.uploadCSVTemplate(uploadedfileDetails, orgId);
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.CREATED,
         message: ResponseMessages.issuance.success.importCSV,
@@ -744,6 +751,11 @@ export class IssuanceController {
     description: `Issuer creates a credential offer and sends it to the holder`
   })
   @ApiQuery({
+    name: 'isValidateSchema',
+    type: Boolean,
+    required: false
+  })
+  @ApiQuery({
     name: 'credentialType',
     enum: IssueCredentialType
   })
@@ -763,10 +775,12 @@ export class IssuanceController {
     orgId: string,
     @Body() issueCredentialDto: IssueCredentialDto,
     @Res() res: Response,
-    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY
+    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
+    @Query('isValidateSchema') isValidateSchema: boolean = true
   ): Promise<Response> {
     issueCredentialDto.orgId = orgId;
     issueCredentialDto.credentialType = credentialType;
+    issueCredentialDto.isValidateSchema = isValidateSchema;
 
     const credOffer = issueCredentialDto?.credentialData || [];
 
@@ -832,15 +846,23 @@ export class IssuanceController {
     name: 'credentialType',
     enum: IssueCredentialType
   })
+  @ApiQuery({
+    name: 'isValidateSchema',
+    type: Boolean,
+    required: false
+  })
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
     @Body() outOfBandCredentialDto: OOBCredentialDtoWithEmail,
     @Param('orgId') orgId: string,
     @Res() res: Response,
-    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY
+    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
+    @Query('isValidateSchema') isValidateSchema: boolean = true
   ): Promise<Response> {
     outOfBandCredentialDto.orgId = orgId;
     outOfBandCredentialDto.credentialType = credentialType;
+    outOfBandCredentialDto.isValidateSchema = isValidateSchema;
+
     const credOffer = outOfBandCredentialDto?.credentialOffer || [];
     if (IssueCredentialType.INDY !== credentialType && IssueCredentialType.JSONLD !== credentialType) {
       throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);

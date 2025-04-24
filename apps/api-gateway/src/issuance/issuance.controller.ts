@@ -291,7 +291,7 @@ export class IssuanceController {
         .send(templateData.fileContent);
     } catch (error) {
       return res
-        .status(error.statusCode)
+        .status(error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR)
         .header('Content-Type', 'application/json')
         .header('Content-Disposition', '')
         .send(error);

@@ -325,7 +325,6 @@ export class IssuanceService {
         reuseConnection,
         isValidateSchema
       } = payload;
-
       if (credentialType === IssueCredentialType.INDY) {
         const schemadetailsResponse: SchemaDetails =
           await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);

@@ -28,6 +28,7 @@ import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/int
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
+
 @Injectable()
 export class IssuanceRepository {
   constructor(
@@ -275,7 +276,7 @@ export class IssuanceRepository {
 
   async getSchemaDetails(schemaId: string): Promise<schema> {
     try {
-      const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+      const schemaDetails = await this.prisma.schema.findFirst({
         where: {
           schemaLedgerId: schemaId
         }

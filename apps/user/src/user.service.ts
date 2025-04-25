@@ -83,82 +83,88 @@ export class UserService {
    * @returns
    */
 
-  async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
+  async sendEmailForVerification(
+    email: string,
+    verificationCode: string,
+    redirectUrl: string,
+    clientId: string,
+    brandLogoUrl: string,
+    platformName: string,
+    resend: boolean = false,
+  ): Promise<boolean> {
     try {
-      const { email, brandLogoUrl, platformName, clientId, clientSecret } = userEmailVerification;
-  
-      if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
-        // eslint-disable-next-line prefer-destructuring
-        const domain = email.split('@')[1];
-        if (DISALLOWED_EMAIL_DOMAIN.includes(domain)) {
-          throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
-        }
+      const platformConfigData = await this.prisma.platform_config.findMany();
+      if (!platformConfigData || platformConfigData.length === 0) {
+        throw new InternalServerErrorException('Platform configuration not found.');
       }
-  
-      const userDetails = await this.userRepository.checkUserExist(email);
-  
-      if (userDetails) {
-        if (userDetails.isEmailVerified) {
-          throw new ConflictException(ResponseMessages.user.error.exists);
-        } else {
-          throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
-        }
+      const maxResendAttempts = platformConfigData[0].maxVerificationEmailResend; 
+      const user = await this.prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        throw new NotFoundException('User not found.');
       }
-  
-      const verifyCode = uuidv4();
-      let sendVerificationMail: boolean;
-
-      try {
-
-        const token = await this.clientRegistrationService.getManagementToken(clientId, clientSecret);
-        const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
-
-        const [redirectUrl] = getClientData[0]?.redirectUris || [];
-  
-        if (!redirectUrl) {
-          throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
+      if (resend) {
+        if (user.emailVerificationAttempts >= maxResendAttempts) {
+          throw new Error('You have exceeded the maximum number of verification email attempts. Please contact support.');
         }
-  
-        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, clientId, brandLogoUrl, platformName);
-      } catch (error) {
-        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+        const now = new Date();
+        const lastSentDate = user.lastEmailSentDateTime;
+        if (lastSentDate && now.getTime() - new Date(lastSentDate).getTime() < 5 * 60 * 1000) {
+          throw new Error('Please wait before requesting another verification email.');
+        }
+        await this.prisma.user.update({
+          where: { email },
+          data: {
+            emailVerificationAttempts: user.emailVerificationAttempts + 1, 
+            lastEmailSentDateTime: new Date(), 
+          },
+        });
       }
-  
-      if (sendVerificationMail) {
-        const uniqueUsername = await this.createUsername(email, verifyCode);
-        userEmailVerification.username = uniqueUsername;
-        userEmailVerification.clientId = clientId;
-        userEmailVerification.clientSecret = clientSecret;
-        const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
-        return resUser;
-      } 
+      const urlEmailTemplate = new URLUserEmailTemplate();
+      const emailData = new EmailDto();
+      emailData.emailFrom = platformConfigData[0].emailFrom;
+      emailData.emailTo = email;
+      const platform = platformName || process.env.PLATFORM_NAME;
+      emailData.emailSubject = `[${platform}] Verify your email to activate your account`;
+      if (resend) {
+        verificationCode = this.generateVerificationCode(); 
+      }
+      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(
+        email,
+        verificationCode,
+        redirectUrl,
+        clientId,
+        brandLogoUrl,
+        platformName,
+      );
+      const isEmailSent = await sendEmail(emailData);
+      if (isEmailSent) {
+        return true;
+      } else {
+        throw new InternalServerErrorException('Failed to send verification email.');
+      }
     } catch (error) {
-      this.logger.error(`In Create User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in sendEmailForVerification: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 
-  async createUsername(email: string, verifyCode: string): Promise<string> {
-    try {
-      // eslint-disable-next-line prefer-destructuring
-      const emailTrim = email.split('@')[0];
-
-      // Replace special characters with hyphens
-      const cleanedUsername = emailTrim.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '-');
-
-      // Generate a 5-digit UUID
-      // eslint-disable-next-line prefer-destructuring
-      const uuid = verifyCode.split('-')[0];
-
-      // Combine cleaned username and UUID
-      const uniqueUsername = `${cleanedUsername}-${uuid}`;
-
-      return uniqueUsername;
-    } catch (error) {
-      this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
+  private generateVerificationCode(): string {
+    return Math.random().toString(36).substring(2, 8).toUpperCase(); // Example: "A1B2C3"
   }
+}
+
+async createUsername(email: string, verifyCode: string): Promise<string> {
+  try {
+    const emailTrim = email.split('@')[0]; // Extract username part
+    const cleanedUsername = emailTrim.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '-'); // Clean special characters
+    const uuid = verifyCode.split('-')[0]; // Extract part of UUID
+    const uniqueUsername = `${cleanedUsername}-${uuid}`;
+    return uniqueUsername;
+  } catch (error) {
+    this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
+    throw new RpcException(error.message || error);
+  }
+}
 
   /**
    *
@@ -168,10 +174,36 @@ export class UserService {
    * @returns
    */
 
-  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName: string): Promise<boolean> {
+  async sendEmailForVerification(
+    email: string, 
+    verificationCode: string, 
+    redirectUrl: string, 
+    clientId: string, 
+    brandLogoUrl: string, 
+    platformName: string, 
+    resend: boolean = false 
+  ): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
-
+      const maxResendAttempts = platformConfigData[0].maxVerificationEmailResend;  
+      const user = await this.prisma.user.findUnique({ where: { email } });
+      if (resend) {
+        if (user.emailVerificationAttempts >= maxResendAttempts) {
+          throw new Error("You have exceeded the maximum number of verification email attempts. Please contact support.");
+        }
+        const now = new Date();
+        const lastSentDate = user.lastEmailSentDateTime;
+        if (lastSentDate && (now.getTime() - new Date(lastSentDate).getTime()) < 5 * 60 * 1000) {
+          throw new Error("Please wait before requesting another verification email.");
+        }
+        await this.prisma.user.update({
+          where: { email },
+          data: {
+            emailVerificationAttempts: user.emailVerificationAttempts + 1,
+            lastEmailSentDateTime: new Date(), 
+          },
+        });
+      }
       const decryptClientId = await this.commonService.decryptPassword(clientId);
       const urlEmailTemplate = new URLUserEmailTemplate();
       const emailData = new EmailDto();
@@ -179,26 +211,29 @@ export class UserService {
       emailData.emailTo = email;
       const platform = platformName || process.env.PLATFORM_NAME;
       emailData.emailSubject = `[${platform}] Verify your email to activate your account`;
-
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, redirectUrl, decryptClientId, brandLogoUrl, platformName);
+      if (resend) {
+        verificationCode = this.generateVerificationCode(); 
+      }
+      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(
+        email, 
+        verificationCode, 
+        redirectUrl, 
+        decryptClientId, 
+        brandLogoUrl, 
+        platformName
+      );
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
-        return isEmailSent;
+        return true; 
       } else {
-        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+        throw new InternalServerErrorException("Failed to send verification email.");
       }
     } catch (error) {
       this.logger.error(`Error in sendEmailForVerification: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
-  /**
-   *
-   * @param param email, verification code
-   * @returns Email verification succcess
-   */
-
+  
   async verifyEmail(param: VerifyEmailTokenDto): Promise<IVerifyUserEmail> {
     try {
       const invalidMessage = ResponseMessages.user.error.invalidEmailUrl;

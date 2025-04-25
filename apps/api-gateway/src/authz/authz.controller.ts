@@ -66,14 +66,31 @@ export class AuthzController {
  * @returns The status of the verification email.
  */
   @Post('/verification-mail')
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
-  @ApiOperation({ summary: 'Send verification email', description: 'Send verification email to new user' })
-  async create(@Body() userEmailVerification: UserEmailVerificationDto, @Res() res: Response): Promise<Response> {
-    await this.authzService.sendVerificationMail(userEmailVerification);
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Created',
+    type: ApiResponseDto,
+  })
+  @ApiOperation({
+    summary: 'Send verification email',
+    description: 'Send verification email to new user',
+  })
+  async create(
+    @Body() userEmailVerification: UserEmailVerificationDto,
+    @Res() res: Response,
+  ): Promise<Response> {
+    const { email, resend = false } = userEmailVerification;
+
+    // Call the AuthzService method to handle resend logic and retry limit
+    await this.authzService.sendVerificationMail(userEmailVerification, resend);
+
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.user.success.sendVerificationCode
+      message: resend
+        ? ResponseMessages.user.success.resendVerificationCode
+        : ResponseMessages.user.success.sendVerificationCode,
     };
+
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 

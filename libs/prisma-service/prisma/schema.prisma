@@ -4,36 +4,38 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("POOL_DATABASE_URL")
-  directUrl = env("DATABASE_URL")
+  url       = env("")
+  directUrl = env("")
 }
 
 model user {
-  id                     String                   @id(map: "PK_cace4a159ff9f2512dd42373760") @default(uuid()) @db.Uuid
-  createDateTime         DateTime                 @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime    DateTime                 @default(now()) @db.Timestamptz(6)
-  firstName              String?                  @db.VarChar(500)
-  lastName               String?                  @db.VarChar(500)
-  email                  String?                  @unique(map: "UQ_e12875dfb3b1d92d7d7c5377e22") @db.VarChar(500)
-  username               String?                  @db.VarChar(500)
-  verificationCode       String?                  @db.VarChar(500)
-  isEmailVerified        Boolean                  @default(false)
-  supabaseUserId         String?                  @db.VarChar(500)
-  keycloakUserId         String?                  @db.VarChar(500)
-  clientId               String?                  @db.VarChar(500)
-  clientSecret           String?                  @db.VarChar(500)
-  profileImg             String?
-  fidoUserId             String?                  @db.VarChar(1000)
-  isFidoVerified         Boolean                  @default(false)
-  publicProfile          Boolean                  @default(false)
-  password               String?                  @db.VarChar
-  orgInvitations         org_invitations[]
-  user_activities        user_activity[]
-  userDevices            user_devices[]
-  userOrgRoles           user_org_roles[]
-  token                  token[]
-  user_role_mapping      user_role_mapping[]
-  cloud_wallet_user_info cloud_wallet_user_info[]
+  id                        String     @id @default(uuid()) @db.Uuid
+  createDateTime             DateTime   @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime        DateTime   @default(now()) @db.Timestamptz(6)
+  firstName                  String?    @db.VarChar(500)
+  lastName                   String?    @db.VarChar(500)
+  email                      String?    @unique @db.VarChar(500)
+  username                   String?    @db.VarChar(500)
+  verificationCode           String?    @db.VarChar(500)
+  isEmailVerified            Boolean    @default(false)
+  emailVerificationAttempts  Int        @default(0) 
+  lastEmailSentDateTime      DateTime?  @db.Timestamptz(6) 
+  supabaseUserId             String?    @db.VarChar(500)
+  keycloakUserId             String?    @db.VarChar(500)
+  clientId                   String?    @db.VarChar(500)
+  clientSecret               String?    @db.VarChar(500)
+  profileImg                 String?
+  fidoUserId                 String?    @db.VarChar(1000)
+  isFidoVerified             Boolean    @default(false)
+  publicProfile              Boolean    @default(false)
+  password                   String?    @db.VarChar
+  orgInvitations             org_invitations[]
+  user_activities            user_activity[]
+  userDevices                user_devices[]
+  userOrgRoles               user_org_roles[]
+  token                      token[]
+  user_role_mapping          user_role_mapping[]
+  cloud_wallet_user_info     cloud_wallet_user_info[]
 }
 
 model token {
@@ -150,19 +152,20 @@ model user_devices {
 }
 
 model platform_config {
-  id                  String    @id @default(uuid()) @db.Uuid
-  externalIp          String    @db.VarChar
-  inboundEndpoint     String?   @db.VarChar
-  username            String    @db.VarChar
-  sgApiKey            String    @db.VarChar
-  emailFrom           String    @db.VarChar
-  apiEndpoint         String    @db.VarChar
-  tailsFileServer     String    @db.VarChar
-  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           String    @default("1")
-  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String    @default("1")
-  deletedAt           DateTime? @db.Timestamp(6)
+  id                        String    @id @default(uuid()) @db.Uuid
+  externalIp                String    @db.VarChar
+  inboundEndpoint           String?   @db.VarChar
+  username                  String    @db.VarChar
+  sgApiKey                  String    @db.VarChar
+  emailFrom                 String    @db.VarChar
+  apiEndpoint               String    @db.VarChar
+  tailsFileServer           String    @db.VarChar
+  createDateTime            DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy                 String    @default("1")
+  lastChangedDateTime       DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy             String    @default("1")
+  deletedAt                 DateTime? @db.Timestamp(6)
+  maxVerificationEmailResend Int    @default(3) 
 }
 
 model org_agents {

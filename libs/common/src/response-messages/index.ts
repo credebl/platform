@@ -339,7 +339,8 @@ export const ResponseMessages = {
       cachedfileData: 'Cached file data does not exist',
       storeBulkData: 'Error while storing the bulk deata',
       issuanceRecordsNotFound: 'Issuance records does not exists',
-      removeIssuanceData: 'First you have to remove issuance data'
+      removeIssuanceData: 'First you have to remove issuance data',
+      ledgerMismatched: `Organization ledger mismatch detected. This template cannot be used. Please use a template created with the organization's specific ledger`
     }
   },
   verification: {

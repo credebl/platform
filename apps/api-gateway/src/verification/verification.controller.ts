@@ -143,6 +143,37 @@ export class VerificationController {
   }
 
   /**
+   * Get proof presentation details by issuerId
+   * @param proofId The ID of the proof
+   * @param issuerId The ID of the issuer
+   * @returns Proof presentation details by issuerId
+   */
+  @Get('/orgs/proofs')
+  @ApiOperation({
+    summary: 'Get verified proof presentation details by issuer Id',
+    description: 'Retrieve the details of a proof presentation by its issuer Id'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async getProofPresentationByIssuerId(
+    @Res() res: Response,
+    @User() user: IUserRequest,
+    @Query('issuerId') issuerId: string
+  ): Promise<Response> {
+    const verifiedProofDetails = await this.verificationService.getPresentationDetailsByIssuerId(issuerId, user);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.verification.success.fetch,
+      data: verifiedProofDetails
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
    * Get all proof presentations
    * @param user The user making the request
    * @param orgId The ID of the organization
@@ -186,7 +217,7 @@ export class VerificationController {
       sortField,
       sortBy
     };
-
+      
     const proofPresentationDetails = await this.verificationService.getProofPresentations(
       proofRequestsSearchCriteria,
       user,

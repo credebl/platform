@@ -13,11 +13,12 @@ import {
   IsObject,
   IsOptional,
   IsString,
-  IsUrl,
   IsUUID,
+  IsUrl,
   MaxLength,
   ValidateNested
 } from 'class-validator';
+import { AutoAccept, SchemaType, SortValue } from '@credebl/enum/enum';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import {
   IssueCredentialType,
@@ -27,7 +28,6 @@ import {
 } from '../interfaces';
 import { Transform, Type } from 'class-transformer';
 
-import { AutoAccept, SchemaType, SortValue } from '@credebl/enum/enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { trim } from '@credebl/common/cast.helper';
 
@@ -487,6 +487,8 @@ export class OOBCredentialDtoWithEmail {
 
   imageUrl?: string;
 
+  isValidateSchema?: boolean;
+
   orgId: string;
 }
 
@@ -654,8 +656,7 @@ export class FileQuery {
 }
 
 export class RequestIdQuery {
-  @ApiPropertyOptional({ required: false })
-  @IsOptional()
+  @ApiProperty()
   @IsString({ message: 'requestId should be string' })
   @IsNotEmpty({ message: 'requestId Id is required' })
   @Transform(({ value }) => trim(value))

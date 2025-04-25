@@ -149,7 +149,7 @@ export const ResponseMessages = {
     success: {
       fetch: 'Schema retrieved successfully.',
       create: 'Schema created successfully.',
-      update:'Schema updated successfully'
+      update: 'Schema updated successfully'
     },
     error: {
       invalidSchemaId: 'Please provide valid schema Id',
@@ -263,12 +263,11 @@ export const ResponseMessages = {
       requiredDomain: 'Domain is required for Web method',
       requiredNetwork: 'Network is required',
       keyType: 'Only ed25519 key type is supported',
-      keyTypeWeb : 'Only ed25519 and bls12381g2 key type is supported',
+      keyTypeWeb: 'Only ed25519 and bls12381g2 key type is supported',
       requiredEndorserDid: 'Role or endorser DID is required',
       requiredPrivateKey: 'Privatekey is required for polygon method',
       privateKeyLength: 'Private key must be exactly 64 characters long',
       requiredSeed: 'Seed is required'
-
     }
   },
   connection: {
@@ -304,9 +303,10 @@ export const ResponseMessages = {
       notFound: 'Schema records not found',
       bulkProcess: 'Process initiated for bulk issuance',
       deleteIssuanceRecords: 'Issuance records deleted',
-      fileDetailsAndFileData:'File details and File data fetched successfully'
+      fileDetailsAndFileData: 'File details and File data fetched successfully'
     },
     error: {
+      invalidCredentialRecordId: 'Please provide valid credential Record Id',
       exists: 'Credentials is already exist',
       credentialsNotFound: 'Credentials not found',
       agentEndPointNotFound: 'Agent details not found',
@@ -339,7 +339,8 @@ export const ResponseMessages = {
       cachedfileData: 'Cached file data does not exist',
       storeBulkData: 'Error while storing the bulk deata',
       issuanceRecordsNotFound: 'Issuance records does not exists',
-      removeIssuanceData: 'First you have to remove issuance data'
+      removeIssuanceData: 'First you have to remove issuance data',
+      ledgerMismatched: `Organization ledger mismatch detected. This template cannot be used. Please use a template created with the organization's specific ledger`
     }
   },
   verification: {
@@ -367,7 +368,7 @@ export const ResponseMessages = {
       emailSend: 'Unable to send email to the user',
       verificationRecordsNotFound: 'Verification records does not exists',
       removeVerificationData: 'First you have to remove verification data',
-      uniqueAttributes:'Please provide unique attribute names'
+      uniqueAttributes: 'Please provide unique attribute names'
     }
   },
 
@@ -384,6 +385,7 @@ export const ResponseMessages = {
       emailColumn: '1st column of the file should always be email_identifier.',
       attributeNumber: 'Number of supplied values is different from the number of schema attributes.',
       mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
+      mismatchedSchemaType: 'The provided schema type does not match the template ID schema type',
       fileDetailsNotFound: 'File details not found.',
       emptyFile: 'File data is empty',
       emptyheader: 'File header is empty',
@@ -398,7 +400,7 @@ export const ResponseMessages = {
     notFound: 'Not Found',
     serverError: 'Internal Server error'
   },
-  
+
   webhook: {
     success: {
       webhookUrlRegister: 'Webhook Url registered successfully',
@@ -448,7 +450,7 @@ export const ResponseMessages = {
   cloudWallet: {
     success: {
       create: 'Cloud wallet created successfully',
-      receive:'Received invitation successfully',
+      receive: 'Received invitation successfully',
       configureBaseWallet: 'Successfully configure the base wallet.',
       acceptProofRequest: 'Proof request has been successfully accepted.',
       createConnection: 'Connection created successfully.',
@@ -480,12 +482,11 @@ export const ResponseMessages = {
     }
   },
   nats: {
-    success: {
-      
-    },
+    success: {},
     error: {
-     noSubscribers: 'No subscribers for the requested message. Error while connecting to NATS, service might not be started',
-     natsConnect: 'Empty response. There are no subscribers listening to that message'
+      noSubscribers:
+        'No subscribers for the requested message. Error while connecting to NATS, service might not be started',
+      natsConnect: 'Empty response. There are no subscribers listening to that message'
     }
   }
 };

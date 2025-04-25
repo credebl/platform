@@ -1,3 +1,4 @@
+import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
 import {
   ArrayMinSize,
   IsArray,
@@ -13,11 +14,9 @@ import {
   ValidateIf,
   ValidateNested
 } from 'class-validator';
-
-import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
-import { plainToClass, Transform, Type } from 'class-transformer';
-import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 import { IndySchemaDataType, JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
+import { IsNotSQLInjection, ValidateNestedStructureFields, trim } from '@credebl/common/cast.helper';
+import { Transform, Type, plainToClass } from 'class-transformer';
 
 export class W3CAttributeValue {
   @ApiProperty()
@@ -40,6 +39,7 @@ export class W3CAttributeValue {
   @IsEnum(W3CSchemaDataType, {
     message: `Schema data type must be one of [${Object.values(W3CSchemaDataType).join(', ')}]`
   })
+  @ValidateNestedStructureFields()
   schemaDataType: W3CSchemaDataType;
 
   @ApiProperty()

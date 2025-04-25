@@ -142,7 +142,7 @@ export class IssuanceService {
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
     try {
-      const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
+      const { orgId, credentialDefinitionId, comment, credentialData, isValidateSchema } = payload || {};
 
       if (payload.credentialType === IssueCredentialType.INDY) {
         const schemaResponse: SchemaDetails =
@@ -226,7 +226,10 @@ export class IssuanceService {
           const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
 
           const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
-          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+
+          if (isValidateSchema) {
+            validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+          }
         }
 
         await this.delay(500);
@@ -714,8 +717,7 @@ export class IssuanceService {
     outOfBandCredential: OutOfBandCredentialOfferPayload,
     platformName?: string,
     organizationLogoUrl?: string,
-    prettyVc?: IPrettyVc,
-    isValidateSchema?: boolean
+    prettyVc?: IPrettyVc
   ): Promise<boolean> {
     try {
       const {
@@ -727,7 +729,8 @@ export class IssuanceService {
         attributes,
         emailId,
         credentialType,
-        isReuseConnection
+        isReuseConnection,
+        isValidateSchema
       } = outOfBandCredential;
 
       if (IssueCredentialType.JSONLD === credentialType) {
@@ -1152,10 +1155,12 @@ export class IssuanceService {
     }
   }
 
-  async downloadBulkIssuanceCSVTemplate(templateDetails: TemplateDetailsInterface): Promise<object> {
+  async downloadBulkIssuanceCSVTemplate(orgId: string, templateDetails: TemplateDetailsInterface): Promise<object> {
     try {
       let schemaResponse: SchemaDetails;
       let fileName: string;
+
+      const orgDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       const { schemaType, templateId } = templateDetails;
 
@@ -1164,25 +1169,32 @@ export class IssuanceService {
       }
       const timestamp = Math.floor(Date.now() / 1000);
 
-      const schemaData = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
-
-      if (schemaData?.type !== schemaType) {
-        throw new BadRequestException(ResponseMessages.bulkIssuance.error.mismatchedSchemaType);
-      }
-
       if (schemaType === SchemaType.INDY) {
         schemaResponse = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
+
         if (!schemaResponse) {
           throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
         }
+
+        const schemaDetails = await this.issuanceRepository.getSchemaDetails(schemaResponse.schemaLedgerId);
+
+        if (orgDetails?.ledgerId !== schemaDetails?.ledgerId) {
+          throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+        }
+
         fileName = `${schemaResponse.tag}-${timestamp}.csv`;
       } else if (schemaType === SchemaType.W3C_Schema) {
         const schemaDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
-        const { attributes, schemaLedgerId, name } = schemaDetails;
-        schemaResponse = { attributes, schemaLedgerId, name };
-        if (!schemaResponse) {
+
+        if (orgDetails?.ledgerId !== schemaDetails?.ledgerId) {
+          throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+        }
+
+        if (!schemaDetails) {
           throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
         }
+        const { attributes, schemaLedgerId, name } = schemaDetails;
+        schemaResponse = { attributes, schemaLedgerId, name };
         fileName = `${schemaResponse.name}-${timestamp}.csv`;
       }
 
@@ -1215,12 +1227,12 @@ export class IssuanceService {
         fileName
       };
     } catch (error) {
-      this.logger.error(`error in downloading csv : ${error.response}`);
-      throw error;
+      this.logger.error(`error in downloading csv : ${JSON.stringify(error.response)}`);
+      throw new RpcException(error?.response ? error?.response : error);
     }
   }
 
-  async uploadCSVTemplate(importFileDetails: ImportFileDetails, requestId?: string): Promise<string> {
+  async uploadCSVTemplate(importFileDetails: ImportFileDetails, orgId: string, requestId?: string): Promise<string> {
     try {
       let credentialDetails;
       const credentialPayload: ICredentialPayload = {
@@ -1231,15 +1243,29 @@ export class IssuanceService {
         credentialType: '',
         schemaName: ''
       };
+
+      const orgDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+
       const { fileName, templateId, type, isValidateSchema } = importFileDetails;
       if (type === SchemaType.W3C_Schema) {
         credentialDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
+
+        if (orgDetails?.ledgerId !== credentialDetails?.ledgerId) {
+          throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+        }
+
         credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
         credentialPayload.credentialDefinitionId = SchemaType.W3C_Schema;
         credentialPayload.credentialType = SchemaType.W3C_Schema;
         credentialPayload.schemaName = credentialDetails.name;
       } else if (type === SchemaType.INDY) {
         credentialDetails = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
+        const schemaDetails = await this.issuanceRepository.getSchemaDetails(credentialDetails.schemaLedgerId);
+
+        if (orgDetails?.ledgerId !== schemaDetails?.ledgerId) {
+          throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+        }
+
         credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
         credentialPayload.credentialDefinitionId = credentialDetails.credentialDefinitionId;
         credentialPayload.credentialType = SchemaType.INDY;
@@ -1771,14 +1797,14 @@ export class IssuanceService {
         };
 
         oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails, prettyVc);
+        oobIssuancepayload.isValidateSchema = jobDetails?.isValidateSchema;
       }
 
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload,
         jobDetails?.platformName,
         jobDetails?.organizationLogoUrl,
-        prettyVc,
-        jobDetails?.isValidateSchema
+        prettyVc
       );
       if (oobCredentials) {
         await this.issuanceRepository.deleteFileDataByJobId(jobDetails.id);

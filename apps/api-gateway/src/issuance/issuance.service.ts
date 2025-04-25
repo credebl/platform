@@ -49,6 +49,7 @@ export class IssuanceService extends BaseService {
       protocolVersion: issueCredentialDto.protocolVersion,
       autoAcceptCredential: issueCredentialDto.autoAcceptCredential,
       credentialType: issueCredentialDto.credentialType,
+      isValidateSchema: issueCredentialDto.isValidateSchema,
       user
     };
 
@@ -172,8 +173,8 @@ export class IssuanceService extends BaseService {
       .response;
   }
 
-  async uploadCSVTemplate(importFileDetails: UploadedFileDetails): Promise<{ response: object }> {
-    const payload = { importFileDetails };
+  async uploadCSVTemplate(importFileDetails: UploadedFileDetails, orgId: string): Promise<{ response: object }> {
+    const payload = { importFileDetails, orgId };
     return this.natsClient.sendNats(this.issuanceProxy, 'upload-csv-template', payload);
   }
 

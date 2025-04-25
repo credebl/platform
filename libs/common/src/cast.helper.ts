@@ -1,14 +1,14 @@
+import { BadRequestException, PipeTransform } from '@nestjs/common';
 import {
   DidMethod,
   JSONSchemaType,
-  ledgerLessDIDType,
   ProofType,
-  schemaRequestType,
-  TemplateIdentifier
+  TemplateIdentifier,
+  W3CSchemaDataType,
+  ledgerLessDIDType,
+  schemaRequestType
 } from '../../enum/src/enum';
-import { ISchemaFields } from './interfaces/schema.interface';
-import { BadRequestException, PipeTransform } from '@nestjs/common';
-import { plainToClass } from 'class-transformer';
+import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
 import {
   ValidationArguments,
   ValidationOptions,
@@ -18,8 +18,10 @@ import {
   isMimeType,
   registerDecorator
 } from 'class-validator';
+
+import { ISchemaFields } from './interfaces/schema.interface';
 import { ResponseMessages } from './response-messages';
-import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import { plainToClass } from 'class-transformer';
 
 interface ToNumberOptions {
   default?: number;
@@ -432,4 +434,70 @@ export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICreden
 
     return item;
   });
+}
+
+export function ValidateNestedStructureFields(validationOptions?: ValidationOptions) {
+  return function (object: object, propertyName: string): void {
+    registerDecorator({
+      name: 'validateNestedStructureFields',
+      target: object.constructor,
+      propertyName,
+      options: validationOptions,
+      validator: {
+        validate(_, args: ValidationArguments) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const obj = args.object as any;
+          const { schemaDataType, properties, items } = obj;
+
+          // object: must only have properties
+          if (W3CSchemaDataType.OBJECT === schemaDataType) {
+            return properties !== undefined && items === undefined;
+          }
+
+          // array: must only have items
+          if (W3CSchemaDataType.ARRAY === schemaDataType) {
+            return items !== undefined && properties === undefined;
+          }
+
+          // Others: neither properties nor items should be present
+          return items === undefined && properties === undefined;
+        },
+
+        defaultMessage(args: ValidationArguments) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const obj = args.object as any;
+          const { schemaDataType, properties, items } = obj;
+
+          if (W3CSchemaDataType.OBJECT === schemaDataType) {
+            if (items !== undefined) {
+              return `'items' is not allowed when schemaDataType is object`;
+            }
+            if (properties === undefined) {
+              return `'properties' is required when schemaDataType is object`;
+            }
+          }
+
+          if (W3CSchemaDataType.ARRAY === schemaDataType) {
+            if (properties !== undefined) {
+              return `'properties' is not allowed when schemaDataType is array`;
+            }
+            if (items === undefined) {
+              return `'items' is required when schemaDataType is array`;
+            }
+          }
+
+          if (W3CSchemaDataType.OBJECT !== schemaDataType && W3CSchemaDataType.ARRAY !== schemaDataType) {
+            if (properties !== undefined) {
+              return `'properties' is only allowed when schemaDataType is object`;
+            }
+            if (items !== undefined) {
+              return `'items' is only allowed when schemaDataType is array`;
+            }
+          }
+
+          return 'Invalid structure based on schemaDataType';
+        }
+      }
+    });
+  };
 }

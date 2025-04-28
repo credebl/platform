@@ -11,7 +11,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN pnpm install
+RUN pnpm i --ignore-scripts
 
 # Run Prisma commands
 RUN cd libs/prisma-service && npx prisma generate

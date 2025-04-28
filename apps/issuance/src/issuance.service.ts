@@ -135,6 +135,11 @@ export class IssuanceService {
     }
 
     const getSchemaDetails = await this.issuanceRepository.getSchemaDetails(schemaUrl);
+
+    if (!getSchemaDetails) {
+      throw new NotFoundException(ResponseMessages.schema.error.notFound);
+    }
+
     const schemaAttributes = JSON.parse(getSchemaDetails?.attributes);
 
     return schemaAttributes;
@@ -206,6 +211,21 @@ export class IssuanceService {
             comment
           };
         } else if (payload.credentialType === IssueCredentialType.JSONLD) {
+          const schemaIds = credentialData?.map((item) => {
+            const context: string[] = item?.credential?.['@context'];
+            return Array.isArray(context) && 1 < context.length ? context[1] : undefined;
+          });
+
+          const schemaDetails = await this._getSchemaDetails(schemaIds);
+
+          const ledgerIds = schemaDetails?.map((item) => item?.ledgerId);
+
+          for (const ledgerId of ledgerIds) {
+            if (agentDetails?.ledgerId !== ledgerId) {
+              throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+            }
+          }
+
           issueData = {
             protocolVersion: payload.protocolVersion || 'v2',
             connectionId,
@@ -379,6 +399,20 @@ export class IssuanceService {
       }
 
       if (credentialType === IssueCredentialType.JSONLD) {
+        const context = credential?.['@context'][1];
+
+        const schemaDetails = await this.issuanceRepository.getSchemaDetails(String(context));
+
+        if (!schemaDetails) {
+          throw new NotFoundException(ResponseMessages.schema.error.notFound);
+        }
+
+        const ledgerId = schemaDetails?.ledgerId;
+
+        if (agentDetails?.ledgerId !== ledgerId) {
+          throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+        }
+
         issueData = {
           protocolVersion: protocolVersion || 'v2',
           credentialFormats: {
@@ -733,8 +767,25 @@ export class IssuanceService {
         isValidateSchema
       } = outOfBandCredential;
 
+      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+
       if (IssueCredentialType.JSONLD === credentialType) {
         await validateAndUpdateIssuanceDates(credentialOffer);
+
+        const schemaIds = credentialOffer?.map((item) => {
+          const context: string[] = item?.credential?.['@context'];
+          return Array.isArray(context) && 1 < context.length ? context[1] : undefined;
+        });
+
+        const schemaDetails = await this._getSchemaDetails(schemaIds);
+
+        const ledgerIds = schemaDetails?.map((item) => item?.ledgerId);
+
+        for (const ledgerId of ledgerIds) {
+          if (agentDetails?.ledgerId !== ledgerId) {
+            throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+          }
+        }
       }
 
       if (IssueCredentialType.INDY === credentialType) {
@@ -780,7 +831,6 @@ export class IssuanceService {
           }
         }
       }
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       const { organisation } = agentDetails;
       if (!agentDetails) {
@@ -1177,6 +1227,10 @@ export class IssuanceService {
 
         const schemaDetails = await this.issuanceRepository.getSchemaDetails(schemaResponse.schemaLedgerId);
 
+        if (!schemaDetails) {
+          throw new NotFoundException(ResponseMessages.schema.error.notFound);
+        }
+
         if (orgDetails?.ledgerId !== schemaDetails?.ledgerId) {
           throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
         }
@@ -1260,6 +1314,10 @@ export class IssuanceService {
       } else if (type === SchemaType.INDY) {
         credentialDetails = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
         const schemaDetails = await this.issuanceRepository.getSchemaDetails(credentialDetails.schemaLedgerId);
+
+        if (!schemaDetails) {
+          throw new NotFoundException(ResponseMessages.schema.error.notFound);
+        }
 
         if (orgDetails?.ledgerId !== schemaDetails?.ledgerId) {
           throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);

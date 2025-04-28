@@ -28,6 +28,7 @@ import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/int
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
+
 @Injectable()
 export class IssuanceRepository {
   constructor(
@@ -275,7 +276,8 @@ export class IssuanceRepository {
 
   async getSchemaDetails(schemaId: string): Promise<schema> {
     try {
-      const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+      //Todo: Enhance this query by using FindFirstOrThrow
+      const schemaDetails = await this.prisma.schema.findFirst({
         where: {
           schemaLedgerId: schemaId
         }
@@ -317,7 +319,7 @@ export class IssuanceRepository {
       return credentialDefRes;
     } catch (error) {
       this.logger.error(`Error in getCredentialDefinitionDetails: ${error.message}`);
-      throw new InternalServerErrorException(error.message);
+      throw error;
     }
   }
 

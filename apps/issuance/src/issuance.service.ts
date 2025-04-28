@@ -135,6 +135,11 @@ export class IssuanceService {
     }
 
     const getSchemaDetails = await this.issuanceRepository.getSchemaDetails(schemaUrl);
+
+    if (!getSchemaDetails) {
+      throw new NotFoundException(ResponseMessages.schema.error.notFound);
+    }
+
     const schemaAttributes = JSON.parse(getSchemaDetails?.attributes);
 
     return schemaAttributes;
@@ -1222,6 +1227,10 @@ export class IssuanceService {
 
         const schemaDetails = await this.issuanceRepository.getSchemaDetails(schemaResponse.schemaLedgerId);
 
+        if (!schemaDetails) {
+          throw new NotFoundException(ResponseMessages.schema.error.notFound);
+        }
+
         if (orgDetails?.ledgerId !== schemaDetails?.ledgerId) {
           throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
         }
@@ -1305,6 +1314,10 @@ export class IssuanceService {
       } else if (type === SchemaType.INDY) {
         credentialDetails = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
         const schemaDetails = await this.issuanceRepository.getSchemaDetails(credentialDetails.schemaLedgerId);
+
+        if (!schemaDetails) {
+          throw new NotFoundException(ResponseMessages.schema.error.notFound);
+        }
 
         if (orgDetails?.ledgerId !== schemaDetails?.ledgerId) {
           throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);

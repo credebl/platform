@@ -318,7 +318,7 @@ export class IssuanceRepository {
       return credentialDefRes;
     } catch (error) {
       this.logger.error(`Error in getCredentialDefinitionDetails: ${error.message}`);
-      throw new InternalServerErrorException(error.message);
+      throw error;
     }
   }
 

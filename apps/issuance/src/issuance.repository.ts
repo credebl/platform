@@ -276,6 +276,7 @@ export class IssuanceRepository {
 
   async getSchemaDetails(schemaId: string): Promise<schema> {
     try {
+      //Todo: Enhance this query by using FindFirstOrThrow
       const schemaDetails = await this.prisma.schema.findFirst({
         where: {
           schemaLedgerId: schemaId

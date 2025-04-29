@@ -1,0 +1,12 @@
+version: '3'
+services:
+  nats:
+    container_name: nats # Sets the name of the container to nats
+    image: nats # Uses the official NATS Docker image
+    command: ["-c", "/nats-server.conf"]  # Passes the NATS configuration file to the container at startup
+    ports:
+      - '4222:4222' # Main NATS client communication port
+      - '6222:6222' # Routing port for NATS clusters
+      - '8222:8222' # HTTP monitoring port for server statistics and health checks
+    volumes:
+      - ./nats-server.conf:/nats-server.conf:ro # Mounts the nats-server.conf configuration file into the container as read-only (ro)

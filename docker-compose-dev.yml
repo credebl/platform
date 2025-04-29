@@ -23,7 +23,9 @@ services:
     depends_on:
       - nats  # Use depends_on instead of needs
       - redis
-    image: ghcr.io/credebl/api-gateway:latest
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.api-gateway
     ports:
       - '5000:5000'
     env_file:
@@ -32,14 +34,18 @@ services:
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
-    image: ghcr.io/credebl/user:latest
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.user
     env_file:
       - ./.env
   utility:
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
-    image: ghcr.io/credebl/utility:latest
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.utility
     env_file:
       - ./.env
   connection:
@@ -48,7 +54,9 @@ services:
       - api-gateway
       - utility
       - user
-    image: ghcr.io/credebl/connection:latest
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.connection
     env_file:
       - ./.env
   issuance:
@@ -58,7 +66,9 @@ services:
       - api-gateway
       - user
       - connection
-    image: ghcr.io/credebl/issuance:latest
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.issuance
     env_file:
       - ./.env
   ledger:
@@ -68,7 +78,9 @@ services:
       - user
       - connection
       - issuance
-    image: ghcr.io/credebl/ledger:latest
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.ledger
     env_file:
       - ./.env
   organization:
@@ -79,7 +91,9 @@ services:
       - connection
       - issuance
       - ledger
-    image: ghcr.io/credebl/organization:latest
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.organization
     env_file:
       - ./.env
   verification:
@@ -91,7 +105,9 @@ services:
       - issuance
       - ledger
       - organization
-    image: ghcr.io/credebl/verification:latest
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.verification
     env_file:
       - ./.env
   agent-provisioning:
@@ -104,9 +120,11 @@ services:
       - ledger
       - organization
       - verification
-    image: ghcr.io/credebl/agent-provisioning:latest
-    # args:
-    #   - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.agent-provisioning
+      args:
+        - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
     env_file:
       - ./.env
     environment:
@@ -128,7 +146,9 @@ services:
       - verification
       - agent-provisioning
     command: sh -c 'until (docker logs platform-agent-provisioning-1 | grep "Agent-Provisioning-Service Microservice is listening to NATS"); do sleep 1; done && node dist/apps/agent-service/main.js'
-    image: ghcr.io/credebl/agent-service:latest
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.agent-service
     env_file:
       - ./.env
     volumes:

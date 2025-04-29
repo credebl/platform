@@ -1,6 +1,7 @@
 import { JSONSchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
-import { UserRoleOrgPermsDto } from '../dtos/user-role-org-perms.dto';
+
 import { IW3CAttributeValue } from '@credebl/common/interfaces/interface';
+import { UserRoleOrgPermsDto } from '../dtos/user-role-org-perms.dto';
 
 export interface IUserRequestInterface {
   id: string;

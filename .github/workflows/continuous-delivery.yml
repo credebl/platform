@@ -29,6 +29,8 @@ jobs:
           - utility
           - verification
           - webhook
+          - organization
+          - seed
 
     permissions:
       contents: read

@@ -7,7 +7,6 @@ import { Module } from '@nestjs/common';
 import { OrganizationController } from './organization.controller';
 import { OrganizationService } from './organization.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { ImageServiceService } from '@credebl/image-service';
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
@@ -20,13 +19,11 @@ import { NATSClient } from '@credebl/common/NATSClient';
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
         options: getNatsOptions(CommonConstants.ORGANIZATION_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
-
       },
       CommonModule
     ])
   ],
   controllers: [OrganizationController],
-  providers: [OrganizationService, CommonService, ImageServiceService, AwsService, NATSClient]
+  providers: [OrganizationService, CommonService, AwsService, NATSClient]
 })
-export class OrganizationModule { }
-
+export class OrganizationModule {}

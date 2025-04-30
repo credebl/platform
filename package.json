@@ -145,8 +145,10 @@
     "typescript": "^5.1.6"
   },
   "lint-staged": {
-    "apps/**/*.{ts}": "prettier --write",
-    "apps/**/*.ts": "eslint"
+    "**/*.{js,ts}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "jest": {
     "moduleFileExtensions": [
@@ -166,12 +168,8 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "@credebl/responses/(.*)": "<rootDir>/libs/responses/src/$1",
-      "@credebl/responses": "<rootDir>/libs/responses/src",
       "@credebl/common/(.*)": "<rootDir>/libs/common/src/$1",
       "@credebl/common": "<rootDir>/libs/common/src",
-      "@credebl/push-notifications/(.*)": "<rootDir>/libs/push-notifications/src/$1",
-      "@credebl/push-notifications": "<rootDir>/libs/push-notifications/src",
       "@credebl/keycloak-url/(.*)": "<rootDir>/libs/keycloak-url/src/$1",
       "@credebl/keycloak-url": "<rootDir>/libs/keycloak-url/src",
       "@credebl/client-registration/(.*)": "<rootDir>/libs/client-registration/src/$1",
@@ -185,12 +183,15 @@
       "^@credebl/user-org-roles(|/.*)$": "<rootDir>/libs/user-org-roles/src/$1",
       "^y/user-activity(|/.*)$": "<rootDir>/libs/user-activity/src/$1",
       "^@app/supabase(|/.*)$": "<rootDir>/libs/supabase/src/$1",
-      "^@credebl/image-service(|/.*)$": "<rootDir>/libs/image-service/src/$1",
       "^@credebl/aws(|/.*)$": "<rootDir>/libs/aws/src/$1",
       "^credebl/utility(|/.*)$": "<rootDir>/libs/utility/src/$1",
       "^@credebl/config(|/.*)$": "<rootDir>/libs/config/src/$1",
       "^@credebl/context(|/.*)$": "<rootDir>/libs/context/src/$1",
       "^@credebl/logger(|/.*)$": "<rootDir>/libs/logger/src/$1"
     }
+  },
+  "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a",
+  "engines": {
+    "node": ">=18"
   }
 }

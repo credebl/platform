@@ -1,10 +1,11 @@
 import { PrismaService } from '@credebl/prisma-service';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { ledgers } from '@prisma/client';
 import { LedgerDetails } from '../interfaces/ledgers.interface';
 import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
 import { ISchemasList, ISchemasResult } from '../schema/interfaces/schema.interface';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 
 @Injectable()
@@ -27,7 +28,7 @@ export class LedgerRepository {
     async getNetworkUrl(indyNamespace: string): Promise<INetworkUrl> {
 
         try {
-            return this.prisma.ledgers.findFirstOrThrow({
+            const network = await this.prisma.ledgers.findFirst({
               where: {
                 indyNamespace                
               },
@@ -35,6 +36,12 @@ export class LedgerRepository {
                 networkUrl: true
               }
             });
+
+            if (!network) {
+              throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+            }
+
+            return network;
         } catch (error) {
             this.logger.error(`Error in getNetworkUrl: ${error}`);
             throw error;

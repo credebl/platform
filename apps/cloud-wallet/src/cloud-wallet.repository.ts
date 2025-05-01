@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CloudWalletType } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
 import { cloud_wallet_user_info, user } from '@prisma/client';
 import { ICloudWalletDetails, IGetStoredWalletInfo, IStoredWalletDetails, IStoreWalletInfo } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 
 @Injectable()
@@ -17,11 +18,16 @@ export class CloudWalletRepository {
   // eslint-disable-next-line camelcase
   async getCloudWalletDetails(type: CloudWalletType): Promise<cloud_wallet_user_info> {
     try {
-      const agentDetails = await this.prisma.cloud_wallet_user_info.findFirstOrThrow({
+      const agentDetails = await this.prisma.cloud_wallet_user_info.findFirst({
         where: {
           type
         }
       });
+      
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.cloudWallet.error.walletRecordNotFound);
+      }
+      
       return agentDetails;
     } catch (error) {
       this.logger.error(`Error in getCloudWalletBaseAgentDetails: ${error.message}`);
@@ -126,11 +132,16 @@ export class CloudWalletRepository {
   // eslint-disable-next-line camelcase
   async getCloudSubWallet(userId: string): Promise<cloud_wallet_user_info> {
     try {
-      const cloudSubWalletDetails = await this.prisma.cloud_wallet_user_info.findFirstOrThrow({
+      const cloudSubWalletDetails = await this.prisma.cloud_wallet_user_info.findFirst({
         where: {
           userId
         }
       });
+      
+      if (!cloudSubWalletDetails) {
+        throw new NotFoundException(ResponseMessages.cloudWallet.error.walletRecordNotFound);
+      }
+      
       return cloudSubWalletDetails;
     } catch (error) {
       this.logger.error(`Error in getCloudSubWallet: ${error}`);

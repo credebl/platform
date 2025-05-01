@@ -276,12 +276,16 @@ export class IssuanceRepository {
 
   async getSchemaDetails(schemaId: string): Promise<schema> {
     try {
-      //Todo: Enhance this query by using FindFirstOrThrow
+      // We're intentionally using findFirst with explicit error handling instead of findFirstOrThrow
       const schemaDetails = await this.prisma.schema.findFirst({
         where: {
           schemaLedgerId: schemaId
         }
       });
+      
+      if (!schemaDetails) {
+        throw new NotFoundException(ResponseMessages.schema.error.notFound);
+      }
 
       return schemaDetails;
     } catch (error) {
@@ -324,12 +328,22 @@ export class IssuanceRepository {
   }
 
   async getSchemaDetailsBySchemaIdentifier(schemaIdentifier: string): Promise<schema> {
-    const schemaDetails = await this.prisma.schema.findFirst({
-      where: {
-        schemaLedgerId: schemaIdentifier
+    try {
+      const schemaDetails = await this.prisma.schema.findFirst({
+        where: {
+          schemaLedgerId: schemaIdentifier
+        }
+      });
+      
+      if (!schemaDetails) {
+        throw new NotFoundException(ResponseMessages.schema.error.notFound);
       }
-    });
-    return schemaDetails;
+      
+      return schemaDetails;
+    } catch (error) {
+      this.logger.error(`Error in getSchemaDetailsBySchemaIdentifier: ${error.message}`);
+      throw error;
+    }
   }
 
   async saveFileUploadDetails(fileUploadPayload: FileUpload, userId: string): Promise<file_upload> {

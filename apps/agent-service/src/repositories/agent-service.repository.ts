@@ -1,9 +1,10 @@
 import { PrismaService } from '@credebl/prisma-service';
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { Prisma, ledgerConfig, ledgers, org_agents, org_agents_type, org_dids, organisation, platform_config, user } from '@prisma/client';
 import { ICreateOrgAgent, ILedgers, IOrgAgent, IOrgAgentsResponse, IOrgLedgers, IStoreAgent, IStoreDidDetails, IStoreOrgAgentDetails, LedgerNameSpace, OrgDid } from '../interface/agent-service.interface';
 import { AgentType, PrismaTables } from '@credebl/enum/enum';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class AgentServiceRepository {
@@ -265,8 +266,8 @@ export class AgentServiceRepository {
     }
 
      // eslint-disable-next-line camelcase
-     async platformAdminAgent(platformOrg: string): Promise<IOrgAgentsResponse> {
-        return this.prisma.organisation.findFirstOrThrow({
+    async platformAdminAgent(platformOrg: string): Promise<IOrgAgentsResponse> {
+        const organization = await this.prisma.organisation.findFirst({
             where: {
                 name: platformOrg
             },
@@ -281,16 +282,27 @@ export class AgentServiceRepository {
                 }
             }
         });
+        
+        if (!organization) {
+            throw new NotFoundException(ResponseMessages.organisation.error.organizationNotFound);
+        }
+        
+        return organization;
     }
-
+    
     async getAgentTypeDetails(): Promise<string> {
         try {
-            const { id } = await this.prisma.agents_type.findFirstOrThrow({
+            const agentType = await this.prisma.agents_type.findFirst({
                 where: {
                     agent: AgentType.AFJ
                 }
             });
-            return id;
+            
+            if (!agentType) {
+                throw new NotFoundException(ResponseMessages.agent.error.agentNotExists);
+            }
+            
+            return agentType.id;
         } catch (error) {
             this.logger.error(`[getAgentTypeDetails] - get org agent health details: ${JSON.stringify(error)}`);
             throw error;
@@ -328,12 +340,17 @@ export class AgentServiceRepository {
 
     async getOrgAgentTypeDetails(agentType: string): Promise<string> {
         try {
-            const { id } = await this.prisma.org_agents_type.findFirstOrThrow({
+            const orgAgentType = await this.prisma.org_agents_type.findFirst({
                 where: {
                     agent: agentType
                 }
             });
-            return id;
+            
+            if (!orgAgentType) {
+                throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
+            }
+            
+            return orgAgentType.id;
         } catch (error) {
             this.logger.error(`[getOrgAgentTypeDetails] - get org agent type details: ${JSON.stringify(error)}`);
             throw error;
@@ -342,12 +359,17 @@ export class AgentServiceRepository {
 
     async getPlatfomOrg(orgName: string): Promise<string> {
         try {
-            const { id } = await this.prisma.organisation.findFirstOrThrow({
+            const organization = await this.prisma.organisation.findFirst({
                 where: {
                     name: orgName
                 }
             });
-            return id;
+            
+            if (!organization) {
+                throw new NotFoundException(ResponseMessages.organisation.error.organizationNotFound);
+            }
+            
+            return organization.id;
         } catch (error) {
             this.logger.error(`[getPlatfomOrg] - get platform org details: ${JSON.stringify(error)}`);
             throw error;
@@ -370,12 +392,17 @@ export class AgentServiceRepository {
 
     async getAgentTypeId(agentType: string): Promise<string> {
         try {
-            const { id } = await this.prisma.agents_type.findFirstOrThrow({
+            const agent = await this.prisma.agents_type.findFirst({
                 where: {
                     agent: agentType
                 }
             });
-            return id;
+            
+            if (!agent) {
+                throw new NotFoundException(ResponseMessages.agent.error.agentNotExists);
+            }
+            
+            return agent.id;
         } catch (error) {
             this.logger.error(`[getAgentType] - get agent type details: ${JSON.stringify(error)}`);
             throw error;
@@ -457,11 +484,16 @@ export class AgentServiceRepository {
   async getLedgerByNameSpace(indyNamespace: string): Promise<LedgerNameSpace> {
     try {
       if (indyNamespace) {
-        const ledgerDetails = await this.prisma.ledgers.findFirstOrThrow({
+        const ledgerDetails = await this.prisma.ledgers.findFirst({
           where: {
             indyNamespace
           }
         });
+        
+        if (!ledgerDetails) {
+          throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+        }
+        
         return ledgerDetails;
       }
 
@@ -544,11 +576,16 @@ export class AgentServiceRepository {
 
     async getLedger(name: string): Promise<ILedgers> {
         try {
-          const ledgerData = await this.prisma.ledgers.findFirstOrThrow({
+          const ledgerData = await this.prisma.ledgers.findFirst({
             where: {
              name
             }
           });
+          
+          if (!ledgerData) {
+            throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+          }
+          
           return ledgerData;
         } catch (error) {
           this.logger.error(`[getLedger] - get org ledger: ${JSON.stringify(error)}`);

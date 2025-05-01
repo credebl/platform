@@ -1,9 +1,10 @@
 /* eslint-disable camelcase */
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ICreateWebhookUrl, IGetWebhookUrl } from '../interfaces/webhook.interfaces';
 import { org_agents } from '@prisma/client';
 import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
+import { ResponseMessages } from '@credebl/common/response-messages';
 @Injectable()
 export class WebhookRepository {
   constructor(
@@ -36,19 +37,27 @@ export class WebhookRepository {
       let webhookUrlInfo;
 
       if ((undefined === tenantId || 'default' === tenantId) && orgId) {
-        webhookUrlInfo = await this.prisma.org_agents.findFirstOrThrow({
+        webhookUrlInfo = await this.prisma.org_agents.findFirst({
 
           where: {
             orgId
           }
         });
+        
+        if (!webhookUrlInfo) {
+          throw new NotFoundException(ResponseMessages.webhook.error.notFound);
+        }
       } else if (tenantId && 'default' !== tenantId) {
-        webhookUrlInfo = await this.prisma.org_agents.findFirstOrThrow({
+        webhookUrlInfo = await this.prisma.org_agents.findFirst({
 
           where: {
             tenantId
           }
         });
+        
+        if (!webhookUrlInfo) {
+          throw new NotFoundException(ResponseMessages.webhook.error.notFound);
+        }
       }
       
       return webhookUrlInfo;

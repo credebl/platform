@@ -1,0 +1,26 @@
+{
+  "name": "@credebl/aws",
+  "main": "src/index",
+  "types": "src/index",
+  "version": "0.0.1",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm run clean && pnpm run compile",
+    "clean": "rimraf ../../dist/libs/aws",
+    "compile": "tsc -p tsconfig.build.json",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.2.7",
+    "@nestjs/testing": "^10.1.3",
+    "@nestjs/microservices": "^10.1.3",
+    "aws-sdk": "^2.1510.0"
+  },
+  "devDependencies": {
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^4.4.0",
+    "typescript": "^5.1.6"
+  }
+}

@@ -11,5 +11,5 @@ export enum SortFields {
 }
 
 export enum W3CSchemaVersion {
-    W3C_SCHEMA_VERSION = 'draft-07'
+    W3C_SCHEMA_VERSION = 'draft/2020-12'
 }

@@ -1,6 +1,7 @@
 /* eslint-disable prefer-destructuring */
 
 import { Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { ResponseMessages } from '@credebl/common/response-messages';
 import {
   IOrgUsers,
   PlatformSettings,
@@ -201,7 +202,7 @@ export class UserRepository {
    */
   async getUserByKeycloakId(id: string): Promise<object> {
     try {
-      return this.prisma.user.findFirstOrThrow({
+      const user = await this.prisma.user.findFirst({
         where: {
           keycloakUserId: id
         },
@@ -229,6 +230,12 @@ export class UserRepository {
           }
         }
       });
+      
+      if (!user) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
+      }
+      
+      return user;
     } catch (error) {
       this.logger.error(`error in getUserByKeycloakId: ${JSON.stringify(error)}`);
       throw error;
@@ -786,11 +793,16 @@ export class UserRepository {
 
   async getUserRole(role: UserRole): Promise<UserRoleDetails> {
     try {
-      const getUserRole = await this.prisma.user_role.findFirstOrThrow({
+      const getUserRole = await this.prisma.user_role.findFirst({
         where: {
           role
         }
       });
+      
+      if (!getUserRole) {
+        throw new NotFoundException(ResponseMessages.user.error.userRoleNotFound);
+      }
+      
       return getUserRole;
     } catch (error) {
       this.logger.error(`Error in getUserRole: ${error.message} `);

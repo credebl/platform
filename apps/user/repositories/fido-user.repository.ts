@@ -4,6 +4,7 @@ import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { user } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 type UserUpdateData = {
   fidoUserId?: string;
@@ -53,11 +54,17 @@ export class FidoUserRepository {
   // eslint-disable-next-line camelcase
   async checkFidoUserExist(email: string): Promise<user> {
     try {
-      return this.prisma.user.findFirstOrThrow({
+      const user = await this.prisma.user.findFirst({
         where: {
           email
         }
       });
+      
+      if (!user) {
+        throw new NotFoundException(ResponseMessages.user.error.notFound);
+      }
+      
+      return user;
     } catch (error) {
       this.logger.error(`checkUserExist: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

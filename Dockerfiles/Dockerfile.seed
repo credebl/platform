@@ -1,4 +1,4 @@
-FROM node:18 as build
+FROM node:18-slim
 
 # Install pnpm
 RUN npm install -g pnpm
@@ -11,10 +11,8 @@ WORKDIR /app
 
 COPY . .
 
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN pnpm i --ignore-scripts
-
-# Run Prisma commands
-RUN cd libs/prisma-service && npx prisma generate
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && npx prisma db seed"]

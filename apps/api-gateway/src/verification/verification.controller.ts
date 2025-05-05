@@ -57,7 +57,7 @@ import { Validator } from '@credebl/common/validator';
 @Controller()
 @ApiTags('verifications')
 export class VerificationController {
-  constructor(private readonly verificationService: VerificationService) {}
+  constructor(private readonly verificationService: VerificationService) { }
 
   private readonly logger = new Logger('VerificationController');
 
@@ -138,6 +138,37 @@ export class VerificationController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.verification.success.fetch,
       data: getProofPresentationById
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Get proof presentation details by issuerId
+   * @param proofId The ID of the proof
+   * @param issuerId The ID of the issuer
+   * @returns Proof presentation details by issuerId
+   */
+  @Get('/orgs/proofs')
+  @ApiOperation({
+    summary: 'Get verified proof presentation details by issuer Id',
+    description: 'Retrieve the details of a proof presentation by its issuer Id'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async getProofPresentationByIssuerId(
+    @Res() res: Response,
+    @User() user: IUserRequest,
+    @Query('issuerId') issuerId: string
+  ): Promise<Response> {
+    const verifiedProofDetails = await this.verificationService.getPresentationDetailsByIssuerId(issuerId, user);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.verification.success.fetch,
+      data: verifiedProofDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

@@ -3,11 +3,11 @@ name: Continuous Delivery
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 env:
   REGISTRY: ghcr.io
-  
+
 jobs:
   build-and-push:
     name: Push Docker image to GitHub
@@ -29,6 +29,8 @@ jobs:
           - utility
           - verification
           - webhook
+          - organization
+          - seed
 
     permissions:
       contents: read

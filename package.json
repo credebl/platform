@@ -137,10 +137,16 @@
     "typescript": "^5.1.6"
   },
   "lint-staged": {
-    "*": ["pnpm style:fix"]
+    "*": [
+      "pnpm style:fix"
+    ]
   },
   "jest": {
-    "moduleFileExtensions": ["js", "json", "ts"],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
     "rootDir": ".",
     "testRegex": ".spec.ts$",
     "transform": {
@@ -148,7 +154,10 @@
     },
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
-    "roots": ["<rootDir>/apps/", "<rootDir>/libs/"],
+    "roots": [
+      "<rootDir>/apps/",
+      "<rootDir>/libs/"
+    ],
     "moduleNameMapper": {
       "@credebl/common/(.*)": "<rootDir>/libs/common/src/$1",
       "@credebl/common": "<rootDir>/libs/common/src",

@@ -1,15 +1,16 @@
-FROM node:18-slim
+FROM node:18-alpine
 
 # Install pnpm
 RUN npm install -g pnpm
 
-# Install PostgreSQL client (use apt for Debian-based images)
-RUN apt-get update && apt-get install -y postgresql-client
+RUN apk add --no-cache postgresql-client openssl 
 
 # Set working directory
 WORKDIR /app
 
 COPY . .
+RUN chmod +x /app/libs/prisma-service/prisma/scripts/geo_location_data_import.sh
+RUN chmod +x /app/libs/prisma-service/prisma/scripts/update_client_credential_data.sh
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN pnpm i --ignore-scripts

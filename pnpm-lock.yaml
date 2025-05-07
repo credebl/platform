@@ -441,6 +441,55 @@ importers:
         specifier: ^5.1.6
         version: 5.1.6
 
+  libs/logger:
+    dependencies:
+      '@credebl/common':
+        specifier: workspace:*
+        version: link:../common
+      '@elastic/ecs-winston-format':
+        specifier: ^1.5.3
+        version: 1.5.3
+      '@nestjs/common':
+        specifier: ^10.2.7
+        version: 10.2.8(class-transformer@0.5.1)(class-validator@0.14.0)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      '@nestjs/config':
+        specifier: ^3.0.0
+        version: 3.0.0(@nestjs/common@10.2.8(class-transformer@0.5.1)(class-validator@0.14.0)(reflect-metadata@0.1.13)(rxjs@7.8.1))(reflect-metadata@0.1.13)
+      '@nestjs/core':
+        specifier: ^10.1.3
+        version: 10.1.3(@nestjs/common@10.2.8(class-transformer@0.5.1)(class-validator@0.14.0)(reflect-metadata@0.1.13)(rxjs@7.8.1))(@nestjs/microservices@10.1.3)(@nestjs/platform-express@10.1.3)(@nestjs/websockets@10.1.3)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      morgan:
+        specifier: ^1.10.0
+        version: 1.10.0
+      nestjs-cls:
+        specifier: ^4.3.0
+        version: 4.4.1(@nestjs/common@10.2.8(class-transformer@0.5.1)(class-validator@0.14.0)(reflect-metadata@0.1.13)(rxjs@7.8.1))(@nestjs/core@10.1.3)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.1
+      uuid:
+        specifier: ^9.0.0
+        version: 9.0.0
+      winston:
+        specifier: '3.4'
+        version: 3.4.0
+      winston-daily-rotate-file:
+        specifier: ^5.0.0
+        version: 5.0.0(winston@3.4.0)
+      winston-elasticsearch:
+        specifier: 0.16.0
+        version: 0.16.0
+    devDependencies:
+      reflect-metadata:
+        specifier: ^0.1.13
+        version: 0.1.13
+      rimraf:
+        specifier: ^4.4.0
+        version: 4.4.1
+      typescript:
+        specifier: ^5.1.6
+        version: 5.1.6
+
 packages:
 
   '@aashutoshrathi/word-wrap@1.2.6':
@@ -3740,6 +3789,7 @@ packages:
 
   lodash.omit@4.5.0:
     resolution: {integrity: sha512-XeqSp49hNGmlkj2EJlfrQFIzQ6lXdNro9sddtQzcJY8QaoC2GO0DT7xaIokHeyM+mIT0mPMlPvkYzg2xCuHdZg==}
+    deprecated: This package is deprecated. Use destructuring assignment syntax instead.
 
   lodash.sortby@4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
@@ -7941,7 +7991,7 @@ snapshots:
   define-properties@1.2.1:
     dependencies:
       define-data-property: 1.1.4
-      has-property-descriptors: 1.0.0
+      has-property-descriptors: 1.0.2
       object-keys: 1.1.1
     optional: true
 

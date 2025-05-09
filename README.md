@@ -25,7 +25,7 @@ docker run --name some-postgres -p 5432:5432 -e POSTGRES_PASSWORD=<secretpasswor
 **Run prisma to generate db schema**
 
 ```bash
-cd ./libs/prisma-servie/prisma
+cd ./libs/prisma-service/prisma
 npx prisma generate
 npx prisma db push
 ```
@@ -33,7 +33,7 @@ npx prisma db push
 **Seed initial data**
 
 ```bash
-cd ./libs/prisma-servie
+cd ./libs/prisma-service
 npx prisma db seed
 ```
 

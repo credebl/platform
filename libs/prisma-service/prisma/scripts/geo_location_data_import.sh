@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Database connection details
 DB_URL=$1

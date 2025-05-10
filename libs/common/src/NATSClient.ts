@@ -51,7 +51,6 @@ export class NATSClient {
     if (!contextId) {
       contextId = v4();
     }
-
     const headers = nats.headers(1, contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 

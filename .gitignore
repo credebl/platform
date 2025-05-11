@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+sonar-project.properties
+.scannerwork/*
+coverage
+libs/prisma-service/prisma/data/credebl-master-table.json
+uploadedFles/exports
+uploadedFles/import
+uploadedFles/export
+nats-server.conf

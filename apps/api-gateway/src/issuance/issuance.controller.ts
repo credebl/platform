@@ -522,6 +522,7 @@ export class IssuanceController {
     @Body() fileDetails?: object,
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
+    requestId = requestId.trim();
     const { credDefId } = query;
     clientDetails.userId = user.id;
     let reqPayload;

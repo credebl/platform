@@ -101,7 +101,8 @@
         "**/dist",
         "**/.idea",
         "**/coverage",
-        "**/pnpm-lock.yaml"
+        "**/pnpm-lock.yaml",
+        "*.spec.ts"
       ],
       "linter": {
         "rules": {

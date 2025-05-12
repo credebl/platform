@@ -1,5 +1,12 @@
 {
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "files": {
+    "maxSize": 10000000,
     "ignore": [
       "**/*.eslintrc.js",
       "**/*.json",
@@ -19,50 +26,34 @@
     "lineEnding": "lf",
     "lineWidth": 120,
     "attributePosition": "auto",
-    "bracketSpacing": true
+    "bracketSpacing": true,
+    "ignore": ["**/node_modules/*", "**/dist/*", "**/.idea", "**/coverage", "**/pnpm-lock.yaml", "**/test/*", "*.spec.ts"]
   },
   "linter": {
     "rules": {
       "recommended": true,
-      "complexity": {
-        "noBannedTypes": "error",
-        "noUselessCatch": "error",
-        "noUselessLoneBlockStatements": "error",
-        "noUselessRename": "error",
-        "noUselessStringConcat": "error",
-        "noUselessTernary": "error",
-        "noUselessTypeConstraint": "error"
+      "style": {
+        "useImportType": "off",
+        "useNodejsImportProtocol": "off",
+        "noNonNullAssertion": "error"
       },
       "correctness": {
-        "noInvalidUseBeforeDeclaration": "error",
-        "noPrecisionLoss": "error",
-        "noSwitchDeclarations": "error",
-        "noUnusedVariables": "off",
-        "useArrayLiterals": "off"
+        "noUnusedVariables": {
+          "level": "error",
+          "fix": "safe"
+        },
+        "noUnusedFunctionParameters": "off",
+        "noUnusedImports": "error",
+        "noUndeclaredDependencies": "off"
       },
-      "style": {
-        "noArguments": "warn",
-        "noNamespace": "error",
-        "noParameterAssign": "error",
-        "noVar": "error",
-        "noYodaExpression": "error",
-        "useAsConstAssertion": "error",
-        "useBlockStatements": "error",
-        "useConsistentArrayType": "error",
-        "useConst": "error",
-        "useDefaultParameterLast": "error",
-        "useDefaultSwitchClause": "error",
-        "useNumericLiterals": "error",
-        "useTemplate": "error"
+      "performance": {
+        "noDelete": {
+          "level": "error"
+        }
       },
-      "suspicious": {
-        "noConsole": "error",
-        "noExplicitAny": "error",
-        "noExtraNonNullAssertion": "error",
-        "noMisleadingInstantiator": "error",
-        "noSelfCompare": "error",
-        "noUnsafeDeclarationMerging": "error",
-        "useDefaultSwitchClauseLast": "error"
+      "complexity": {
+        "useLiteralKeys": "warn",
+        "noForEach": "warn"
       }
     },
     "ignore": [
@@ -72,29 +63,33 @@
       "**/dist",
       "**/.idea",
       "**/coverage",
-      "**/pnpm-lock.yaml"
+      "**/pnpm-lock.yaml",
+      "**/test/*",
+      "*.spec.ts"
     ]
   },
   "javascript": {
     "formatter": {
-      "jsxQuoteStyle": "double",
-      "quoteProperties": "asNeeded",
-      "trailingCommas": "none",
-      "semicolons": "always",
-      "arrowParentheses": "always",
-      "bracketSameLine": false,
+      "semicolons": "asNeeded",
       "quoteStyle": "single",
-      "attributePosition": "auto",
-      "bracketSpacing": true
+      "trailingCommas": "es5",
+      "lineWidth": 120,
+      "indentStyle": "space"
     },
     "parser": {
       "unsafeParameterDecoratorsEnabled": true
     }
   },
   "json": {
+    "parser": {
+      "allowComments": true
+    },
     "formatter": {
       "enabled": false
     }
+  },
+  "organizeImports": {
+    "enabled": true
   },
   "overrides": [
     {

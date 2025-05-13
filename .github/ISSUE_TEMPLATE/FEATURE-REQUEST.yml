@@ -3,16 +3,18 @@ description: Suggest an idea or enhancement for this project
 labels: [enhancement]
 title: "feat: "
 body:
+  - type: checkboxes
+    id: agreement
+    label: Preliminary Checks
+    options:
+      - label: "I've read the contributions guide [contibution guide](https://docs.credebl.id/docs/contribute/how-to-contribute) and agree to it"
+        required: true
+      - label: "I have searched [existing issues](https://github.com/credebl/platform/issues) and [pull requests](https://github.com/credebl/platform/pulls) to avoid duplicates."
+        required: true
+      - label: "I'm willing to create a PR for this feature. (if applicable)."
   - type: markdown
     attributes:
       value: |
-        ## ✅ Preliminary Checks
-
-        - [ ] I have searched [existing issues](https://github.com/credebl/platform/issues) and [pull requests](https://github.com/credebl/platform/pulls) to avoid duplicates.
-        - [ ] I'm willing to create a PR for this feature. (if applicable).
-
-        ---
-
         ## 🧩 Problem Statement
 
         _Is your feature request related to a problem? Please describe it clearly._

@@ -16,13 +16,6 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## 🧾 Preliminary Checks
-
-        - [ ] I have searched [existing issues](https://github.com/credebl/platform/issues) and [pull requests](https://github.com/credebl/platform/pulls) for duplicates.
-        - [ ] I'm willing to create a PR fixing this issue. (if applicable).
-
-        ---
-
         ## 🐞 Bug Description
 
         _A clear and concise description of what the bug is._

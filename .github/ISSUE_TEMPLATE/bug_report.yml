@@ -46,10 +46,10 @@ body:
       required: true
 
   - type: textarea
-    id: actual-behavior
+    id: current-behavior
     attributes:
-      label: "❌ Actual Behavior"
-      description: "What actually happened instead?"
+      label: "❌ Current Behavior"
+      description: "What is currently happening instead?"
       placeholder: |
         Ex: The page crashed with a 500 error when clicking 'Submit'.
     validations:

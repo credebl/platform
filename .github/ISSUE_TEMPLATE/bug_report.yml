@@ -10,7 +10,7 @@ body:
       options:
         - label: I have read the contributions guide [contibution guide](https://docs.credebl.id/docs/contribute/how-to-contribute) and agree to it
           required: true
-        - label: "I have searched [existing issues](https://github.com/credebl/platform/issues) and [pull requests](https://github.com/credebl/platform/pulls) to avoid duplicates."
+        - label: I have searched existing issues (https://github.com/credebl/platform/issues) and pull requests (https://github.com/credebl/platform/pulls) to avoid duplicates.
           required: true
         - label: "I'm willing to create a PR for this feature. (if applicable)."
   - type: markdown

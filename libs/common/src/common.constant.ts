@@ -138,6 +138,9 @@ export enum CommonConstants {
   // CREATE KEYS
   CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
 
+  // Nested attribute separator
+  NESTED_ATTRIBUTE_SEPARATOR = '~',
+
   // ENTITY NAMES
   ENTITY_NAME_TEMPLATE = 'templates',
   ENTITY_NAME_CRED_DEF = 'credential_definition',

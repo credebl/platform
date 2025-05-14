@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as winston from 'winston';
-import { LogLevel } from '@credebl/logger/log';
+import { LogLevel } from '../log';
 
 enum LogColors {
   red = '\x1b[31m',

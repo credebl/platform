@@ -18,7 +18,6 @@ import { UserRepository } from '../repositories/user.repository';
 import { UserService } from './user.service';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
@@ -35,16 +34,17 @@ import { NATSClient } from '@credebl/common/NATSClient';
         options: getNatsOptions(CommonConstants.USER_SERVICE, process.env.USER_NKEY_SEED)
       }
     ]),
-    
+
     CommonModule,
     GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
     FidoModule,
     OrgRolesModule
-],
+  ],
   controllers: [UserController],
   providers: [
-    AwsService,
     UserService,
     UserRepository,
     PrismaService,

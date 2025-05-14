@@ -187,7 +187,8 @@
       "^credebl/utility(|/.*)$": "<rootDir>/libs/utility/src/$1",
       "^@credebl/config(|/.*)$": "<rootDir>/libs/config/src/$1",
       "^@credebl/context(|/.*)$": "<rootDir>/libs/context/src/$1",
-      "^@credebl/logger(|/.*)$": "<rootDir>/libs/logger/src/$1"
+      "^@credebl/logger(|/.*)$": "<rootDir>/libs/logger/src/$1",
+      "^@credebl/storage(|/.*)$": "<rootDir>/libs/storage/src/$1"
     }
   },
   "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a",

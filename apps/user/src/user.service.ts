@@ -11,7 +11,6 @@ import {
   HttpException
 } from '@nestjs/common';
 
-
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { CommonService } from '@credebl/common';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -34,13 +33,13 @@ import {
   PlatformSettings,
   IOrgUsers,
   UpdateUserProfile,
-   IUserInformation,
-    IUsersProfile,
-    IUserResetPassword,
-    IUserDeletedActivity,
-    UserKeycloakId,
-    IEcosystemConfig,
-    IUserForgotPassword
+  IUserInformation,
+  IUsersProfile,
+  IUserResetPassword,
+  IUserDeletedActivity,
+  UserKeycloakId,
+  IEcosystemConfig,
+  IUserForgotPassword
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -50,9 +49,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { Invitation, UserRole } from '@credebl/enum/enum';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
-import { AwsService } from '@credebl/aws';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse, ISignUpUserResponse } from '@credebl/common/interfaces/user.interface';
+import {
+  ISendVerificationEmail,
+  ISignInUser,
+  IVerifyUserEmail,
+  IUserInvitations,
+  IResetPasswordResponse,
+  ISignUpUserResponse
+} from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
 import { toNumber } from '@credebl/common/cast.helper';
@@ -70,11 +75,9 @@ export class UserService {
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
     private readonly userRepository: UserRepository,
-    private readonly awsService: AwsService,
-    private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
-    private readonly natsClient : NATSClient
+    private readonly natsClient: NATSClient
   ) {}
 
   /**
@@ -86,7 +89,7 @@ export class UserService {
   async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
     try {
       const { email, brandLogoUrl, platformName, clientId, clientSecret } = userEmailVerification;
-  
+
       if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
         // eslint-disable-next-line prefer-destructuring
         const domain = email.split('@')[1];
@@ -94,9 +97,9 @@ export class UserService {
           throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
         }
       }
-  
+
       const userDetails = await this.userRepository.checkUserExist(email);
-  
+
       if (userDetails) {
         if (userDetails.isEmailVerified) {
           throw new ConflictException(ResponseMessages.user.error.exists);
@@ -104,26 +107,32 @@ export class UserService {
           throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
         }
       }
-  
+
       const verifyCode = uuidv4();
       let sendVerificationMail: boolean;
 
       try {
-
         const token = await this.clientRegistrationService.getManagementToken(clientId, clientSecret);
         const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
 
         const [redirectUrl] = getClientData[0]?.redirectUris || [];
-  
+
         if (!redirectUrl) {
           throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
         }
-  
-        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, clientId, brandLogoUrl, platformName);
+
+        sendVerificationMail = await this.sendEmailForVerification(
+          email,
+          verifyCode,
+          redirectUrl,
+          clientId,
+          brandLogoUrl,
+          platformName
+        );
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
-  
+
       if (sendVerificationMail) {
         const uniqueUsername = await this.createUsername(email, verifyCode);
         userEmailVerification.username = uniqueUsername;
@@ -131,7 +140,7 @@ export class UserService {
         userEmailVerification.clientSecret = clientSecret;
         const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
         return resUser;
-      } 
+      }
     } catch (error) {
       this.logger.error(`In Create User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -168,7 +177,14 @@ export class UserService {
    * @returns
    */
 
-  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName: string): Promise<boolean> {
+  async sendEmailForVerification(
+    email: string,
+    verificationCode: string,
+    redirectUrl: string,
+    clientId: string,
+    brandLogoUrl: string,
+    platformName: string
+  ): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
 
@@ -180,7 +196,14 @@ export class UserService {
       const platform = platformName || process.env.PLATFORM_NAME;
       emailData.emailSubject = `[${platform}] Verify your email to activate your account`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, redirectUrl, decryptClientId, brandLogoUrl, platformName);
+      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(
+        email,
+        verificationCode,
+        redirectUrl,
+        decryptClientId,
+        brandLogoUrl,
+        platformName
+      );
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;
@@ -252,9 +275,12 @@ export class UserService {
       if (!userDetails) {
         throw new NotFoundException(ResponseMessages.user.error.adduser);
       }
-   let keycloakDetails = null;
-      
-   const token = await this.clientRegistrationService.getManagementToken(checkUserDetails.clientId, checkUserDetails.clientSecret);
+      let keycloakDetails = null;
+
+      const token = await this.clientRegistrationService.getManagementToken(
+        checkUserDetails.clientId,
+        checkUserDetails.clientSecret
+      );
       if (userInfo.isPasskey) {
         const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email.toLowerCase());
@@ -265,8 +291,12 @@ export class UserService {
         }
 
         userInfo.password = decryptedPassword;
-        try {          
-          keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
+        try {
+          keycloakDetails = await this.clientRegistrationService.createUser(
+            userInfo,
+            process.env.KEYCLOAK_REALM,
+            token
+          );
         } catch (error) {
           throw new InternalServerErrorException('Error while registering user on keycloak');
         }
@@ -275,16 +305,18 @@ export class UserService {
 
         userInfo.password = decryptedPassword;
 
-        try {          
-          keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
+        try {
+          keycloakDetails = await this.clientRegistrationService.createUser(
+            userInfo,
+            process.env.KEYCLOAK_REALM,
+            token
+          );
         } catch (error) {
           throw new InternalServerErrorException('Error while registering user on keycloak');
         }
       }
 
-      await this.userRepository.updateUserDetails(userDetails.id,
-        keycloakDetails.keycloakUserId.toString()
-      );
+      await this.userRepository.updateUserDetails(userDetails.id, keycloakDetails.keycloakUserId.toString());
 
       if (userInfo?.isHolder) {
         const getUserRole = await this.userRepository.getUserRole(UserRole.HOLDER);
@@ -296,9 +328,9 @@ export class UserService {
       }
 
       const realmRoles = await this.clientRegistrationService.getAllRealmRoles(token);
-      
-      const holderRole = realmRoles.filter(role => role.name === OrgRoles.HOLDER);
-      const holderRoleData =  0 < holderRole.length && holderRole[0];
+
+      const holderRole = realmRoles.filter((role) => role.name === OrgRoles.HOLDER);
+      const holderRoleData = 0 < holderRole.length && holderRole[0];
 
       const payload = [
         {
@@ -307,7 +339,11 @@ export class UserService {
         }
       ];
 
-      await this.clientRegistrationService.createUserHolderRole(token,  keycloakDetails.keycloakUserId.toString(), payload);
+      await this.clientRegistrationService.createUserHolderRole(
+        token,
+        keycloakDetails.keycloakUserId.toString(),
+        payload
+      );
       const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id);
 
@@ -368,7 +404,6 @@ export class UserService {
     const { email, password, isPasskey } = loginUserDto;
 
     try {
-
       this.validateEmail(email.toLowerCase());
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());
       if (!userData) {
@@ -388,9 +423,8 @@ export class UserService {
         const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
         return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       } else {
-
         const decryptedPassword = await this.commonService.decryptPassword(password);
-        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);        
+        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       }
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
@@ -399,21 +433,22 @@ export class UserService {
   }
 
   async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
-
     try {
-        try {
-          const data = jwt.decode(refreshToken) as jwt.JwtPayload;
-          const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
-          const tokenResponse = await this.clientRegistrationService.getAccessToken(refreshToken, userByKeycloakId?.['clientId'], userByKeycloakId?.['clientSecret']);
-          return tokenResponse;
-        } catch (error) {
-          throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken);
-        }
-   
+      try {
+        const data = jwt.decode(refreshToken) as jwt.JwtPayload;
+        const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
+        const tokenResponse = await this.clientRegistrationService.getAccessToken(
+          refreshToken,
+          userByKeycloakId?.['clientId'],
+          userByKeycloakId?.['clientSecret']
+        );
+        return tokenResponse;
+      } catch (error) {
+        throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken);
+      }
     } catch (error) {
       this.logger.error(`In refreshTokenDetails : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
-
     }
   }
 
@@ -426,8 +461,8 @@ export class UserService {
 
   /**
    * Forgot password
-   * @param forgotPasswordDto 
-   * @returns 
+   * @param forgotPasswordDto
+   * @returns
    */
   async forgotPassword(forgotPasswordDto: IUserForgotPassword): Promise<IResetPasswordResponse> {
     const { email, brandLogoUrl, platformName, endpoint } = forgotPasswordDto;
@@ -445,7 +480,7 @@ export class UserService {
       const token = uuidv4();
       const expirationTime = new Date();
       expirationTime.setHours(expirationTime.getHours() + 1); // Set expiration time to 1 hour from now
-  
+
       const tokenCreated = await this.userRepository.createTokenForResetPassword(userData.id, token, expirationTime);
 
       if (!tokenCreated) {
@@ -462,7 +497,6 @@ export class UserService {
         id: tokenCreated.id,
         email: userData.email
       };
-      
     } catch (error) {
       this.logger.error(`Error In forgotPassword : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -471,11 +505,17 @@ export class UserService {
 
   /**
    * Send email for token verification of reset password
-   * @param email 
-   * @param verificationCode 
-   * @returns 
+   * @param email
+   * @param verificationCode
+   * @returns
    */
-  async sendEmailForResetPassword(email: string, brandLogoUrl: string, platformName: string, endpoint: string, verificationCode: string): Promise<boolean> {
+  async sendEmailForResetPassword(
+    email: string,
+    brandLogoUrl: string,
+    platformName: string,
+    endpoint: string,
+    verificationCode: string
+  ): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
 
@@ -487,7 +527,13 @@ export class UserService {
       const platform = platformName || process.env.PLATFORM_NAME;
       emailData.emailSubject = `[${platform}] Important: Password Reset Request`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, platform, brandLogoUrl, endpoint, verificationCode);
+      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(
+        email,
+        platform,
+        brandLogoUrl,
+        endpoint,
+        verificationCode
+      );
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;
@@ -502,11 +548,10 @@ export class UserService {
 
   /**
    * Create reset password token
-   * @param resetPasswordDto 
+   * @param resetPasswordDto
    * @returns user details
    */
   async resetTokenPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
-    
     const { email, password, token } = resetPasswordDto;
 
     try {
@@ -519,30 +564,32 @@ export class UserService {
       if (userData && !userData.isEmailVerified) {
         throw new BadRequestException(ResponseMessages.user.error.verifyMail);
       }
- 
+
       const tokenDetails = await this.userRepository.getResetPasswordTokenDetails(userData.id, token);
 
-      if (!tokenDetails || (new Date() > tokenDetails.expiresAt)) {
+      if (!tokenDetails || new Date() > tokenDetails.expiresAt) {
         throw new BadRequestException(ResponseMessages.user.error.invalidResetLink);
       }
 
       const decryptedPassword = await this.commonService.decryptPassword(password);
-      try {    
-        
-
-        const authToken = await this.clientRegistrationService.getManagementToken(userData.clientId, userData.clientSecret);  
+      try {
+        const authToken = await this.clientRegistrationService.getManagementToken(
+          userData.clientId,
+          userData.clientSecret
+        );
         userData.password = decryptedPassword;
         if (userData.keycloakUserId) {
           await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken);
-        } else {          
-          const keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, authToken);
-          await this.userRepository.updateUserDetails(userData.id,
-            keycloakDetails.keycloakUserId.toString()
+        } else {
+          const keycloakDetails = await this.clientRegistrationService.createUser(
+            userData,
+            process.env.KEYCLOAK_REALM,
+            authToken
           );
+          await this.userRepository.updateUserDetails(userData.id, keycloakDetails.keycloakUserId.toString());
         }
 
         await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, password);
-
       } catch (error) {
         this.logger.error(`Error reseting the password`, error);
         throw new InternalServerErrorException('Error while reseting user password');
@@ -554,7 +601,6 @@ export class UserService {
         id: userData.id,
         email: userData.email
       };
-      
     } catch (error) {
       this.logger.error(`Error In resetTokenPassword : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -563,7 +609,6 @@ export class UserService {
 
   findUserByUserId(id: string): Promise<IUsersProfile> {
     return this.userRepository.getUserById(id);
-
   }
 
   async resetPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
@@ -588,23 +633,30 @@ export class UserService {
       }
 
       const tokenResponse = await this.generateToken(email.toLowerCase(), oldDecryptedPassword, userData);
-      
+
       if (tokenResponse) {
         userData.password = newDecryptedPassword;
-        try {    
-          let keycloakDetails = null;    
-          const token = await this.clientRegistrationService.getManagementToken(userData.clientId, userData.clientSecret);  
+        try {
+          let keycloakDetails = null;
+          const token = await this.clientRegistrationService.getManagementToken(
+            userData.clientId,
+            userData.clientSecret
+          );
 
           if (userData.keycloakUserId) {
-
-            keycloakDetails = await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, token);
-            await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
-
-          } else {
-            keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, token);
-            await this.userRepository.updateUserDetails(userData.id,
-              keycloakDetails.keycloakUserId.toString()
+            keycloakDetails = await this.clientRegistrationService.resetPasswordOfUser(
+              userData,
+              process.env.KEYCLOAK_REALM,
+              token
             );
+            await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
+          } else {
+            keycloakDetails = await this.clientRegistrationService.createUser(
+              userData,
+              process.env.KEYCLOAK_REALM,
+              token
+            );
+            await this.userRepository.updateUserDetails(userData.id, keycloakDetails.keycloakUserId.toString());
             await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
           }
 
@@ -612,14 +664,12 @@ export class UserService {
             id: userData.id,
             email: userData.email
           };
-    
         } catch (error) {
           throw new InternalServerErrorException('Error while registering user on keycloak');
         }
       } else {
         throw new BadRequestException(ResponseMessages.user.error.invalidCredentials);
       }
-
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -627,44 +677,46 @@ export class UserService {
   }
 
   async generateToken(email: string, password: string, userData: user): Promise<ISignInUser> {
-
-      if (userData.keycloakUserId) {
-
-        try {
-          const tokenResponse = await this.clientRegistrationService.getUserToken(email, password, userData.clientId, userData.clientSecret);
-          tokenResponse.isRegisteredToSupabase = false;
-          return tokenResponse;
-        } catch (error) {
-          throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);
-        }
-       
-      } else {
-        const supaInstance = await this.supabaseService.getClient();  
-        const { data, error } = await supaInstance.auth.signInWithPassword({
+    if (userData.keycloakUserId) {
+      try {
+        const tokenResponse = await this.clientRegistrationService.getUserToken(
           email,
-          password
-        });
-  
-        this.logger.error(`Supa Login Error::`, JSON.stringify(error));
-  
-        if (error) {
-          throw new BadRequestException(error?.message);
-        }
-  
-        const token = data?.session;
-
-        return {
-          // eslint-disable-next-line camelcase
-          access_token: token.access_token,
-          // eslint-disable-next-line camelcase
-          token_type: token.token_type,
-          // eslint-disable-next-line camelcase
-          expires_in: token.expires_in,
-          // eslint-disable-next-line camelcase
-          expires_at: token.expires_at,
-          isRegisteredToSupabase: true
-        };
+          password,
+          userData.clientId,
+          userData.clientSecret
+        );
+        tokenResponse.isRegisteredToSupabase = false;
+        return tokenResponse;
+      } catch (error) {
+        throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);
       }
+    } else {
+      const supaInstance = await this.supabaseService.getClient();
+      const { data, error } = await supaInstance.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+
+      if (error) {
+        throw new BadRequestException(error?.message);
+      }
+
+      const token = data?.session;
+
+      return {
+        // eslint-disable-next-line camelcase
+        access_token: token.access_token,
+        // eslint-disable-next-line camelcase
+        token_type: token.token_type,
+        // eslint-disable-next-line camelcase
+        expires_in: token.expires_in,
+        // eslint-disable-next-line camelcase
+        expires_at: token.expires_at,
+        isRegisteredToSupabase: true
+      };
+    }
   }
 
   async getProfile(payload: { id }): Promise<IUsersProfile> {
@@ -677,7 +729,7 @@ export class UserService {
           userData[setting.key] = 'true' === setting.value;
         }
       }
-    
+
       return userData;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
@@ -685,9 +737,9 @@ export class UserService {
     }
   }
 
-  async  _getEcosystemConfig(): Promise<IEcosystemConfig[]> {
+  async _getEcosystemConfig(): Promise<IEcosystemConfig[]> {
     const pattern = { cmd: 'get-ecosystem-config-details' };
-    const payload = { };
+    const payload = {};
 
     const getEcosystemConfigDetails = await this.userServiceProxy
       .send(pattern, payload)
@@ -779,13 +831,12 @@ export class UserService {
         payload.pageNumber,
         payload.pageSize,
         payload.search
-        );
-       
-        const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
-        invitationsData['invitations'] = invitations;
+      );
+
+      const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
+      invitationsData['invitations'] = invitations;
 
       return invitationsData;
-      
     } catch (error) {
       this.logger.error(`Error in get invitations: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -810,7 +861,7 @@ export class UserService {
 
     const invitationsData = await this.natsClient
       .send<IUserInvitations>(this.userServiceProxy, pattern, payload)
-      
+
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -826,8 +877,6 @@ export class UserService {
   }
 
   async updateOrgInvitations(invitations: OrgInvitations[]): Promise<OrgInvitations[]> {
-
-    
     const updatedInvitations = [];
 
     for (const invitation of invitations) {
@@ -854,17 +903,20 @@ export class UserService {
    * @param userId
    * @returns Organization invitation status
    */
-  async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<IUserInvitations> {
+  async acceptRejectInvitations(
+    acceptRejectInvitation: AcceptRejectInvitationDto,
+    userId: string
+  ): Promise<IUserInvitations> {
     try {
       const userData = await this.userRepository.getUserById(userId);
-     
+
       if (Invitation.ACCEPTED === acceptRejectInvitation.status) {
-        const payload = {userId};
+        const payload = { userId };
         const TotalOrgs = await this._getTotalOrgCount(payload);
-  
+
         if (TotalOrgs >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
-        throw new BadRequestException(ResponseMessages.user.error.userOrgsLimit);
-         }
+          throw new BadRequestException(ResponseMessages.user.error.userOrgsLimit);
+        }
       }
       return this.fetchInvitationsStatus(acceptRejectInvitation, userData.keycloakUserId, userData.email, userId);
     } catch (error) {
@@ -873,12 +925,12 @@ export class UserService {
     }
   }
 
-  async  _getTotalOrgCount(payload): Promise<number> {
+  async _getTotalOrgCount(payload): Promise<number> {
     const pattern = { cmd: 'get-organizations-count' };
 
     const getOrganizationCount = await this.natsClient
       .send<number>(this.userServiceProxy, pattern, payload)
-      
+
       .catch((error) => {
         this.logger.error(`catch: ${JSON.stringify(error)}`);
         throw new HttpException(
@@ -915,7 +967,7 @@ export class UserService {
 
       const invitationsData = await this.natsClient
         .send<IUserInvitations>(this.userServiceProxy, pattern, payload)
-        
+
         .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(
@@ -942,7 +994,6 @@ export class UserService {
    */
   async getOrgUsers(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrgUsers> {
     try {
-  
       const query = {
         userOrgRoles: {
           some: { orgId }
@@ -990,16 +1041,15 @@ export class UserService {
   async checkUserExist(email: string): Promise<ICheckUserDetails> {
     try {
       const userDetails = await this.userRepository.checkUniqueUserExist(email.toLowerCase());
-     let userVerificationDetails;
+      let userVerificationDetails;
       if (userDetails) {
         userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
           isRegistrationCompleted: null !== userDetails.keycloakUserId && undefined !== userDetails.keycloakUserId,
-          message:'',
+          message: '',
           userId: userDetails.id
         };
-
       }
       if (userDetails && !userDetails.isEmailVerified) {
         userVerificationDetails.message = ResponseMessages.user.error.verificationAlreadySent;
@@ -1011,11 +1061,11 @@ export class UserService {
         userVerificationDetails.message = ResponseMessages.user.error.exists;
         return userVerificationDetails;
       } else if (null === userDetails) {
-         return {
+        return {
           isRegistrationCompleted: false,
-           isEmailVerified: false,
-           userId:null,
-           message: ResponseMessages.user.error.notFound
+          isEmailVerified: false,
+          userId: null,
+          message: ResponseMessages.user.error.notFound
         };
       } else {
         return userVerificationDetails;
@@ -1069,9 +1119,23 @@ export class UserService {
     }
   }
 
-  async updateOrgDeletedActivity(orgId: string, userId: string, deletedBy: string, recordType: RecordType, userEmail: string, txnMetadata: object): Promise<IUserDeletedActivity> {
+  async updateOrgDeletedActivity(
+    orgId: string,
+    userId: string,
+    deletedBy: string,
+    recordType: RecordType,
+    userEmail: string,
+    txnMetadata: object
+  ): Promise<IUserDeletedActivity> {
     try {
-      return await this.userRepository.updateOrgDeletedActivity(orgId, userId, deletedBy, recordType, userEmail, txnMetadata);
+      return await this.userRepository.updateOrgDeletedActivity(
+        orgId,
+        userId,
+        deletedBy,
+        recordType,
+        userEmail,
+        txnMetadata
+      );
     } catch (error) {
       this.logger.error(`In updateOrgDeletedActivity : ${JSON.stringify(error)}`);
       throw error;
@@ -1091,7 +1155,6 @@ export class UserService {
 
   async getUserKeycloakIdByEmail(userEmails: string[]): Promise<UserKeycloakId[]> {
     try {
-     
       const getkeycloakUserIds = await this.userRepository.getUserKeycloak(userEmails);
       return getkeycloakUserIds;
     } catch (error) {
@@ -1102,7 +1165,6 @@ export class UserService {
 
   async getUserByUserIdInKeycloak(email: string): Promise<string> {
     try {
-     
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());
 
       if (!userData) {
@@ -1119,19 +1181,19 @@ export class UserService {
     }
   }
 
-   // eslint-disable-next-line camelcase
-   async getuserOrganizationByUserId(userId: string): Promise<user_org_roles[]> {
+  // eslint-disable-next-line camelcase
+  async getuserOrganizationByUserId(userId: string): Promise<user_org_roles[]> {
     try {
-        const getOrganizationDetails = await this.userRepository.handleGetUserOrganizations(userId);
+      const getOrganizationDetails = await this.userRepository.handleGetUserOrganizations(userId);
 
-        if (!getOrganizationDetails) {
-            throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
-        }
+      if (!getOrganizationDetails) {
+        throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+      }
 
-        return getOrganizationDetails;
+      return getOrganizationDetails;
     } catch (error) {
-        this.logger.error(`Error in getuserOrganizationByUserId: ${error}`);
-        throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in getuserOrganizationByUserId: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
     }
-}
+  }
 }

@@ -20,7 +20,10 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json",
     "prisma:generate": "npx prisma generate",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "check": "biome check",
+    "check:fix": "biome check --write",
+    "ci": "biome ci"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -113,6 +116,7 @@
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@nestjs/cli": "^10.1.11",
     "@nestjs/schematics": "^10.0.1",
     "@nestjs/testing": "^10.1.3",
@@ -146,8 +150,7 @@
   },
   "lint-staged": {
     "**/*.{js,ts}": [
-      "eslint --fix",
-      "prettier --write"
+      "biome check --write"
     ]
   },
   "jest": {

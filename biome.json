@@ -11,7 +11,7 @@
   "formatter": {
     "indentStyle": "space",
     "lineWidth": 120,
-    "ignore": ["**/node_modules", "**/dist", "**/.idea", "**/coverage", "**/pnpm-lock.yaml"]
+    "ignore": ["**/node_modules", "**/dist", "**/.idea", "**/coverage", "**/pnpm-lock.yaml", "*.json"]
   },
   "javascript": {
     "parser": {
@@ -51,17 +51,37 @@
         "noInvalidUseBeforeDeclaration": "error"
       },
       "suspicious": {
-        "noConsole": "error"
+        "noConsole": {
+          "level": "warn",
+          "fix": "none",
+          "options": {}
+        }
       },
       "complexity": {
-        "noBannedTypes": "error"
+        "noBannedTypes": "error",
+        "useLiteralKeys": "off",
+        "noForEach": {
+          "level": "off"
+        }
       },
       "performance": {
         "noDelete": {
-          "fix": "none",
+          "fix": "safe",
           "level": "error"
         }
       }
-    }
+    },
+    "ignore": [
+      "**/*.eslintrc.js",
+      "**/*.json",
+      "**/node_modules",
+      "**/dist",
+      "**/.idea",
+      "**/coverage",
+      "**/pnpm-lock.yaml",
+      "**/test/*",
+      "*.spec.ts",
+      "*.json"
+    ]
   }
 }

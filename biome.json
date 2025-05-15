@@ -54,7 +54,7 @@
         "noConsole": {
           "level": "warn",
           "fix": "none",
-          "options": { "allow": []}
+          "options": {}
         }
       },
       "complexity": {

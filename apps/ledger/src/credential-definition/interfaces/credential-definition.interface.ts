@@ -33,6 +33,7 @@ export interface GetCredDefFromTenantPayload {
 }
 
 export interface CredDefSchema {
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   [x: string]: any
   credentialDefinitionId?: string
   schemaCredDefName: string

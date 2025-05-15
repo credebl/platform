@@ -19,9 +19,11 @@ interface LogData {
   error?: string
   durationMs?: number
   stack?: string
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   props?: Record<string, any>
 }
 
+// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default class ConsoleTransport {
   public static createColorize(): winston.transports.ConsoleTransportInstance {
     return new winston.transports.Console({

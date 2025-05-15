@@ -45,11 +45,11 @@ export function toDate(value: string): Date {
 
 export function toBoolean(value: string): boolean {
   // eslint-disable-next-line no-param-reassign
-  value = value.toLowerCase()
+  const _value = value.toLowerCase()
 
   // return 'true' === value || '1' === value ? true : false;
 
-  return Boolean(value === 'true' || value === '1')
+  return Boolean(_value === 'true' || _value === '1')
 }
 
 export function toNumber(value: string, opts: ToNumberOptions = {}): number {
@@ -303,6 +303,7 @@ export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: 
   }
 }
 
+// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class AgentSpinupValidator {
   private static validateField(value: string, errorMessage: string): void {
     if (!value) {
@@ -338,6 +339,7 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
   const proofType = orgDid?.includes(DidMethod.POLYGON) ? ProofType.POLYGON_PROOFTYPE : ProofType.NO_LEDGER_PROOFTYPE
 
   for (const key in credentialData) {
+    // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
       credentialSubject[key] = credentialData[key]
     }

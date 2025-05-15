@@ -1032,6 +1032,7 @@ export class UserService {
   async checkUserExist(email: string): Promise<ICheckUserDetails> {
     try {
       const userDetails = await this.userRepository.checkUniqueUserExist(email.toLowerCase())
+      // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
       let userVerificationDetails
       if (userDetails) {
         userVerificationDetails = {
@@ -1103,7 +1104,7 @@ export class UserService {
         throw new BadRequestException(ResponseMessages.user.error.platformSetttingsNotFound)
       }
 
-      platformSettings.platform_config = platformConfigSettings
+      platformSettings['platform_config'] = platformConfigSettings
 
       return platformSettings
     } catch (error) {

@@ -1,5 +1,6 @@
 import DailyRotateFile = require('winston-daily-rotate-file')
 
+// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default class FileTransport {
   public static create() {
     return new DailyRotateFile({

@@ -26,7 +26,6 @@ export function extractAttributeNames(
     if (attributeObj.hasOwnProperty('items') && Array.isArray(attributeObj.items)) {
       // Always use index 0 for items in an array
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-
       attributeObj.items.forEach((item: any) => {
         extractAttributeNames(item, `${newParentKey}${CommonConstants.NESTED_ATTRIBUTE_SEPARATOR}0`, result, true)
       })

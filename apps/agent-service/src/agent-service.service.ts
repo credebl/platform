@@ -277,7 +277,6 @@ export class AgentServiceService {
           .map((result, index) => (result.status === 'rejected' ? index : -1))
           .filter((index) => index !== -1)
 
-        // biome-ignore lint/complexity/noForEach: <explanation>
         rejectedIndices.forEach((index) => {
           switch (index) {
             case 0:
@@ -638,7 +637,7 @@ export class AgentServiceService {
   private async _getDidMethod(payload: IStoreOrgAgentDetails, agentDid: object): Promise<object> {
     const { agentEndPoint, apiKey, seed, keyType, method, network, role } = payload
     const getDidDoc = 'get-did-doc'
-    // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
     const getDidMethodUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_GET_DID}/${agentDid['did']}`
     return this._retryAgentSpinup(
       getDidMethodUrl,
@@ -649,7 +648,7 @@ export class AgentServiceService {
       method,
       network,
       role,
-      // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
       `${agentDid['did']}`
     )
   }
@@ -660,9 +659,8 @@ export class AgentServiceService {
     orgAgentTypeId: string
   ): IStoreOrgAgentDetails {
     return {
-      // biome-ignore lint/complexity/useLiteralKeys: <explanation>
       did: getDidMethod['didDocument']?.id,
-      // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
       verkey: getDidMethod['didDocument']?.verificationMethod[0]?.publicKeyBase58,
       isDidPublic: true,
       agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
@@ -995,9 +993,9 @@ export class AgentServiceService {
 
       const createdDidDetails = {
         orgId,
-        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
         did: didDetails?.['did'] ?? didDetails?.['didState']?.['did'],
-        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
         didDocument: didDetails?.['didDocument'] ?? didDetails?.['didDoc'] ?? didDetails?.['didState']?.['didDocument'],
         isPrimaryDid,
         orgAgentId: agentDetails.id,

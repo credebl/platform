@@ -19,9 +19,9 @@ export class NATSClient {
     this.logger = new Logger('NATSClient')
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   sendNats(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<any> {
-    this.logger.log(`Inside NATSClient for sendNats()`)
+    this.logger.log('Inside NATSClient for sendNats()')
     const pattern = { cmd }
     const headers = nats.headers(1, this.contextStorageService.getContextId())
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build()
@@ -36,6 +36,7 @@ export class NATSClient {
       .toPromise()
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   sendNatsMessage(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<any> {
     const pattern = { cmd }
     const headers = nats.headers(1, this.contextStorageService.getContextId())
@@ -46,6 +47,7 @@ export class NATSClient {
     return firstValueFrom(result)
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   send<T>(serviceProxy: ClientProxy, pattern: object, payload: any): Promise<T> {
     let contextId = this.contextStorageService.getContextId()
 

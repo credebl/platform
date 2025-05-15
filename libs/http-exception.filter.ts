@@ -22,6 +22,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       case RpcException:
         this.logger.error('Its RpcException')
         return throwError(() => exception.getError())
+        // biome-ignore lint/correctness/noUnreachable: <explanation>
         break
       case PrismaClientKnownRequestError:
         this.logger.error('Its PrismaClientKnownRequestError')

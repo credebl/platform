@@ -61,7 +61,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
     if (payload.hasOwnProperty('client_id')) {
-      // biome-ignore lint/complexity/useLiteralKeys: <explanation>
       const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id'])
 
       this.logger.log('Organization details fetched')
@@ -91,9 +90,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new NotFoundException(ResponseMessages.user.error.notFound)
     }
     //TODO patch to QA
-    // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
     if (userInfo?.['attributes']?.userRole) {
-      // biome-ignore lint/complexity/useLiteralKeys: <explanation>
       userDetails.userRole = userInfo?.['attributes']?.userRole
     }
 

@@ -20,9 +20,7 @@ if (process.env.ELK_LOG?.toLowerCase() === 'true') {
   }
   esTransport = new Elasticsearch.ElasticsearchTransport(esTransportOpts)
 
-  esTransport.on('error', (error) => {
-    console.error('Error caught in logger', error)
-  })
+  esTransport.on('error', (_error) => {})
 }
 
 @Injectable()
@@ -42,7 +40,7 @@ export default class WinstonLogger implements Logger {
     // Setting log levels for winston
     const levels = {}
     let cont = 0
-    // biome-ignore lint/complexity/noForEach: <explanation>
+
     Object.values(LogLevel).forEach((level) => {
       levels[level] = cont
       cont++

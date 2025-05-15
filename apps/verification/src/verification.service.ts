@@ -144,7 +144,6 @@ export class VerificationService {
 
       return proofPresentationsResponse
     } catch (error) {
-      console.log('')
       this.logger.error(
         `[getProofRequests] [NATS call]- error in fetch proof requests details : ${JSON.stringify(error)}`
       )
@@ -212,7 +211,7 @@ export class VerificationService {
       const orgDetails = await this.verificationRepository.getOrgDetails(issuerId)
 
       const getVerifiedProofCount = await this.verificationRepository.getVerificationRecordsCount(
-        orgDetails?.orgId,
+        orgDetails?.['orgId'],
         VerificationProcessState.DONE
       )
 
@@ -739,7 +738,7 @@ export class VerificationService {
       const requestedPredicates = {}
 
       const indyAttributes = proofRequestpayload.proofFormats?.indy
-      if (indyAttributes && indyAttributes.attributes) {
+      if (indyAttributes?.attributes) {
         requestedAttributes = Object.fromEntries(
           indyAttributes.attributes.map((attribute, index) => {
             const attributeElement = attribute.attributeName || attribute.attributeNames
@@ -761,20 +760,19 @@ export class VerificationService {
                   ],
                 },
               ]
-            } else {
-              requestedPredicates[attributeReferent] = {
-                p_type: attribute.condition,
-                name: attributeElement,
-                p_value: Number.parseInt(attribute.value),
-                restrictions: [
-                  {
-                    cred_def_id: proofRequestpayload?.proofFormats?.indy?.attributes[index].credDefId
-                      ? proofRequestpayload?.proofFormats?.indy?.attributes[index].credDefId
-                      : undefined,
-                    schema_id: proofRequestpayload?.proofFormats?.indy?.attributes[index].schemaId,
-                  },
-                ],
-              }
+            }
+            requestedPredicates[attributeReferent] = {
+              p_type: attribute.condition,
+              name: attributeElement,
+              p_value: Number.parseInt(attribute.value),
+              restrictions: [
+                {
+                  cred_def_id: proofRequestpayload?.proofFormats?.indy?.attributes[index].credDefId
+                    ? proofRequestpayload?.proofFormats?.indy?.attributes[index].credDefId
+                    : undefined,
+                  schema_id: proofRequestpayload?.proofFormats?.indy?.attributes[index].schemaId,
+                },
+              ],
             }
 
             return [attributeReferent]
@@ -785,9 +783,8 @@ export class VerificationService {
           requestedAttributes,
           requestedPredicates,
         }
-      } else {
-        throw new BadRequestException(ResponseMessages.verification.error.proofNotSend)
       }
+      throw new BadRequestException(ResponseMessages.verification.error.proofNotSend)
     } catch (error) {
       this.logger.error(`[proofRequestPayload] - error in proof request payload : ${JSON.stringify(error)}`)
       throw new RpcException(error.response ? error.response : error)
@@ -808,7 +805,7 @@ export class VerificationService {
     proofPresentationId?: string
   ): Promise<string> {
     try {
-      let url
+      let url: string
       switch (verificationMethodLabel) {
         case 'get-proof-presentation': {
           url =
@@ -903,8 +900,11 @@ export class VerificationService {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId)
       const verificationMethodLabel = 'get-verified-proof'
+      // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
       let credDefId
+      // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
       let schemaId
+      // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
       let certificate
       const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId)
       const url = await this.getAgentUrl(
@@ -978,6 +978,7 @@ export class VerificationService {
 
         if (Object.keys(requestedAttributes).length !== 0 && Object.keys(requestedPredicates).length !== 0) {
           for (const key in requestedAttributes) {
+            // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
             if (requestedAttributes.hasOwnProperty(key)) {
               const requestedAttributeKey = requestedAttributes[key]
               const attributeName = requestedAttributeKey.name
@@ -990,6 +991,7 @@ export class VerificationService {
                 schemaId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].schema_id
               }
 
+              // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
               if (revealedAttrs.hasOwnProperty(key)) {
                 const extractedData: IProofPresentationDetails = {
                   [attributeName]: revealedAttrs[key]?.raw,
@@ -1002,6 +1004,7 @@ export class VerificationService {
           }
 
           for (const key in requestedPredicates) {
+            // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
             if (requestedPredicates.hasOwnProperty(key)) {
               const attribute = requestedPredicates[key]
 
@@ -1022,11 +1025,13 @@ export class VerificationService {
           }
         } else if (Object.keys(requestedAttributes).length !== 0) {
           for (const key in requestedAttributes) {
+            // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
             if (requestedAttributes.hasOwnProperty(key)) {
               const attribute = requestedAttributes[key]
               const attributeName = attribute.name
               ;[credDefId, schemaId] = await this._schemaCredDefRestriction(attribute, getProofPresentationById)
 
+              // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
               if (revealedAttrs.hasOwnProperty(key)) {
                 const extractedData: IProofPresentationDetails = {
                   [attributeName]: revealedAttrs[key]?.raw,
@@ -1039,6 +1044,7 @@ export class VerificationService {
           }
         } else if (Object.keys(requestedPredicates).length !== 0) {
           for (const key in requestedPredicates) {
+            // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
             if (requestedPredicates.hasOwnProperty(key)) {
               const attribute = requestedPredicates[key]
               const attributeName = attribute?.name
@@ -1070,15 +1076,14 @@ export class VerificationService {
           statusCode: error?.response?.status,
           error: errorStack,
         })
-      } else {
-        throw new RpcException(error.response ? error.response : error)
       }
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async _schemaCredDefRestriction(attribute, getProofPresentationById): Promise<string[]> {
-    let credDefId
-    let schemaId
+    let credDefId: string
+    let schemaId: string
 
     if (attribute?.restrictions) {
       credDefId = attribute?.restrictions[0]?.cred_def_id
@@ -1130,14 +1135,13 @@ export class VerificationService {
   verificationErrorHandling(error): void {
     if (!error && !error?.status && !error?.status?.message && !error?.status?.message?.error) {
       throw new RpcException(error.response ? error.response : error)
-    } else {
-      throw new RpcException({
-        message: error?.status?.message?.error?.reason
-          ? error?.status?.message?.error?.reason
-          : error?.status?.message?.error,
-        statusCode: error?.status?.code,
-      })
     }
+    throw new RpcException({
+      message: error?.status?.message?.error?.reason
+        ? error?.status?.message?.error?.reason
+        : error?.status?.message?.error,
+      statusCode: error?.status?.code,
+    })
   }
 
   async natsCall(

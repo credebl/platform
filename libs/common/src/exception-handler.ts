@@ -84,7 +84,7 @@ export class CustomExceptionFilter implements RpcExceptionFilter<RpcException> {
 
   // Add explicit types for 'exception' and 'host'
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      catch(exception: RpcException, _host: ArgumentsHost): Observable<any> {
+  catch(exception: RpcException, _host: ArgumentsHost): Observable<any> {
     this.logger.error(`CustomExceptionFilter caught error: ${JSON.stringify(exception)}`)
     return throwError(() => new RpcException({ message: exception.getError(), code: HttpStatus.BAD_REQUEST }))
   }

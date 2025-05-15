@@ -106,9 +106,8 @@ export class UserService {
       if (userDetails) {
         if (userDetails.isEmailVerified) {
           throw new ConflictException(ResponseMessages.user.error.exists)
-        } else {
-          throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent)
         }
+        throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent)
       }
 
       const verifyCode = uuidv4()
@@ -210,9 +209,8 @@ export class UserService {
       const isEmailSent = await sendEmail(emailData)
       if (isEmailSent) {
         return isEmailSent
-      } else {
-        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend)
       }
+      throw new InternalServerErrorException(ResponseMessages.user.error.emailSend)
     } catch (error) {
       this.logger.error(`Error in sendEmailForVerification: ${JSON.stringify(error)}`)
       throw new RpcException(error.response ? error.response : error)
@@ -417,10 +415,9 @@ export class UserService {
         const getUserDetails = await this.userRepository.getUserDetails(userData.email.toLowerCase())
         const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password)
         return await this.generateToken(email.toLowerCase(), decryptedPassword, userData)
-      } else {
-        const decryptedPassword = await this.commonService.decryptPassword(password)
-        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData)
       }
+      const decryptedPassword = await this.commonService.decryptPassword(password)
+      return await this.generateToken(email.toLowerCase(), decryptedPassword, userData)
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`)
       throw new RpcException(error.response ? error.response : error)
@@ -532,9 +529,8 @@ export class UserService {
       const isEmailSent = await sendEmail(emailData)
       if (isEmailSent) {
         return isEmailSent
-      } else {
-        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend)
       }
+      throw new InternalServerErrorException(ResponseMessages.user.error.emailSend)
     } catch (error) {
       this.logger.error(`Error in sendEmailForResetPassword: ${JSON.stringify(error)}`)
       throw new RpcException(error.response ? error.response : error)
@@ -692,7 +688,7 @@ export class UserService {
         password,
       })
 
-      this.logger.error(`Supa Login Error::`, JSON.stringify(error))
+      this.logger.error('Supa Login Error::', JSON.stringify(error))
 
       if (error) {
         throw new BadRequestException(error?.message)
@@ -1049,22 +1045,24 @@ export class UserService {
       if (userDetails && !userDetails.isEmailVerified) {
         userVerificationDetails.message = ResponseMessages.user.error.verificationAlreadySent
         return userVerificationDetails
-      } else if (userDetails && userDetails.keycloakUserId) {
+      }
+      if (userDetails?.keycloakUserId) {
         userVerificationDetails.message = ResponseMessages.user.error.exists
         return userVerificationDetails
-      } else if (userDetails && !userDetails.keycloakUserId && userDetails.supabaseUserId) {
+      }
+      if (userDetails && !userDetails.keycloakUserId && userDetails.supabaseUserId) {
         userVerificationDetails.message = ResponseMessages.user.error.exists
         return userVerificationDetails
-      } else if (userDetails === null) {
+      }
+      if (userDetails === null) {
         return {
           isRegistrationCompleted: false,
           isEmailVerified: false,
           userId: null,
           message: ResponseMessages.user.error.notFound,
         }
-      } else {
-        return userVerificationDetails
       }
+      return userVerificationDetails
     } catch (error) {
       this.logger.error(`In check User : ${JSON.stringify(error)}`)
       throw new RpcException(error.response ? error.response : error)

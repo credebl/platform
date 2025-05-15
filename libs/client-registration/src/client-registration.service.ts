@@ -40,9 +40,8 @@ export class ClientRegistrationService {
       )
       if (getUserResponse[0].username === userDetails.email || getUserResponse[1].username === userDetails.email) {
         return { keycloakUserId: getUserResponse[0].id }
-      } else {
-        throw new NotFoundException(ResponseMessages.user.error.invalidKeycloakId)
       }
+      throw new NotFoundException(ResponseMessages.user.error.invalidKeycloakId)
     } catch (error) {
       this.logger.error(`error in keycloakUserRegistration in client-registration: ${JSON.stringify(error)}`)
       throw error
@@ -150,8 +149,8 @@ export class ClientRegistrationService {
     try {
       const payload = new ClientCredentialTokenPayloadDto()
       if (!clientId && !clientSecret) {
-        this.logger.error(`getManagementToken ::: Client ID and client secret are missing`)
-        throw new BadRequestException(`Client ID and client secret are missing`)
+        this.logger.error('getManagementToken ::: Client ID and client secret are missing')
+        throw new BadRequestException('Client ID and client secret are missing')
       }
 
       const decryptClientId = await this.commonService.decryptPassword(clientId)
@@ -575,8 +574,8 @@ export class ClientRegistrationService {
   async getUserToken(email: string, password: string, clientId: string, clientSecret: string) {
     const payload = new userTokenPayloadDto()
     if (!clientId && !clientSecret) {
-      this.logger.error(`getUserToken ::: Client ID and client secret are missing`)
-      throw new BadRequestException(`Client ID and client secret are missing`)
+      this.logger.error('getUserToken ::: Client ID and client secret are missing')
+      throw new BadRequestException('Client ID and client secret are missing')
     }
 
     const decryptClientId = await this.commonService.decryptPassword(clientId)
@@ -618,8 +617,8 @@ export class ClientRegistrationService {
     try {
       const payload = new accessTokenPayloadDto()
       if (!clientId && !clientSecret) {
-        this.logger.error(`getAccessToken ::: Client ID and client secret are missing`)
-        throw new BadRequestException(`Client ID and client secret are missing`)
+        this.logger.error('getAccessToken ::: Client ID and client secret are missing')
+        throw new BadRequestException('Client ID and client secret are missing')
       }
 
       const decryptClientId = await this.commonService.decryptPassword(clientId)

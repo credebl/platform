@@ -73,7 +73,7 @@ export function toNumber(value: string, opts: ToNumberOptions = {}): number {
 }
 
 export function ledgerName(value: string): string {
-  let network
+  let network: string
   network = value.replace(':', ' ')
   network = network.charAt(0).toUpperCase() + network.slice(1)
   const words = network.split(' ')
@@ -127,7 +127,7 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
   validate(value: string, _args: ValidationArguments) {
     // Implement your custom validation logic here
     // Validation to allow option param logo
-    if (value == '') {
+    if (value === '') {
       return true
     }
     if (!value || typeof value !== 'string') {
@@ -147,7 +147,7 @@ export class ImageBase64Validator implements ValidatorConstraintInterface {
       throw new BadRequestException('Please provide valid MIME type')
     }
     // Validate base64 data
-    if (!isBase64(base64Data) || base64Data == '' || base64Data == null) {
+    if (!isBase64(base64Data) || base64Data === '' || base64Data == null) {
       throw new BadRequestException('Invalid base64 string')
     }
     return true
@@ -321,7 +321,7 @@ export class AgentSpinupValidator {
   }
 
   public static validate(agentSpinupDto): void {
-    this.validateWalletName(agentSpinupDto.walletName)
+    AgentSpinupValidator.validateWalletName(agentSpinupDto.walletName)
   }
 }
 

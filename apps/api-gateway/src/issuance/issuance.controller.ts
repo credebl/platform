@@ -386,7 +386,7 @@ export class IssuanceController {
         type: schemaType,
         templateId,
         fileKey,
-        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
         fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
         isValidateSchema,
       }
@@ -541,9 +541,9 @@ export class IssuanceController {
       reqPayload = {
         templateId: credDefId,
         fileKey,
-        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
         fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
-        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
         type: fileDetails?.['type'],
       }
     }

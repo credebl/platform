@@ -9,7 +9,6 @@ export function extractAttributeNames(
   inNestedArray = false
 ): string[] {
   if (Array.isArray(attributeObj)) {
-    // biome-ignore lint/complexity/noForEach: <explanation>
     attributeObj.forEach((item) => {
       extractAttributeNames(item, parentKey, result, inNestedArray)
     })
@@ -27,19 +26,17 @@ export function extractAttributeNames(
     if (attributeObj.hasOwnProperty('items') && Array.isArray(attributeObj.items)) {
       // Always use index 0 for items in an array
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-      // biome-ignore lint/complexity/noForEach: <explanation>
+
       attributeObj.items.forEach((item: any) => {
         extractAttributeNames(item, `${newParentKey}${CommonConstants.NESTED_ATTRIBUTE_SEPARATOR}0`, result, true)
       })
       // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
     } else if (attributeObj.hasOwnProperty('properties')) {
-      // biome-ignore lint/complexity/noForEach: <explanation>
       Object.entries(attributeObj.properties).forEach(([key, value]) => {
         const propertyKey = `${newParentKey}${CommonConstants.NESTED_ATTRIBUTE_SEPARATOR}${key}`
         extractAttributeNames(value, propertyKey, result, inNestedArray)
       })
     } else {
-      // biome-ignore lint/complexity/noForEach: <explanation>
       Object.entries(attributeObj).forEach(([key, value]) => {
         if (!['attributeName', 'items', 'properties'].includes(key)) {
           extractAttributeNames(value, newParentKey, result, inNestedArray)
@@ -71,7 +68,6 @@ function mergeArrayObjects(obj): void {
 
       // Process arrays
       if (Array.isArray(value)) {
-        // biome-ignore lint/complexity/noForEach: <explanation>
         value.forEach((item) => {
           if (item && typeof item === 'object') {
             mergeArrayObjects(item)
@@ -88,7 +84,7 @@ function mergeArrayObjects(obj): void {
           const tempArray = []
 
           // First, add all numeric keys to the array
-          // biome-ignore lint/complexity/noForEach: <explanation>
+
           numericKeys
             .sort((a, b) => Number.parseInt(a) - Number.parseInt(b))
             .forEach((k) => {
@@ -109,7 +105,6 @@ function mergeArrayObjects(obj): void {
                 tempArray[index] = {}
               }
 
-              // biome-ignore lint/complexity/noForEach: <explanation>
               nonNumericKeys.forEach((k) => {
                 tempArray[index][k] = value[k]
               })
@@ -131,14 +126,14 @@ function mergeArrayObjects(obj): void {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       if (Array.isArray(obj[key])) {
         // Look for patterns like "field1", "field2" in each array element
-        // biome-ignore lint/complexity/noForEach: <explanation>
+
         obj[key].forEach((item) => {
           if (item && typeof item === 'object') {
             const keys = Object.keys(item)
             const prefixMap = new Map()
 
             // Group keys by prefix
-            // biome-ignore lint/complexity/noForEach: <explanation>
+
             keys.forEach((k) => {
               const match = k.match(/^([^0-9]+)(\d{1,10})$/)
               if (match) {
@@ -158,7 +153,7 @@ function mergeArrayObjects(obj): void {
                 const tempArray = []
 
                 // Sort by index and populate array
-                // biome-ignore lint/complexity/noForEach: <explanation>
+
                 matches
                   .sort((a, b) => a.index - b.index)
                   .forEach((match) => {

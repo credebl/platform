@@ -33,25 +33,24 @@ export class WebhookService {
   async registerWebhook(registerWebhookDto: IWebhookDto): Promise<ICreateWebhookUrl> {
     try {
       const orgData = await this.webhookRepository.getOrganizationDetails(registerWebhookDto.orgId)
+      // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
       let webhookUrl
       if (!orgData) {
         throw new NotFoundException(ResponseMessages.organisation.error.notFound)
-      } else {
-        try {
-          webhookUrl = await this.webhookRepository.registerWebhook(
-            registerWebhookDto.orgId,
-            registerWebhookDto.webhookUrl
-          )
-        } catch (_error) {
-          throw new InternalServerErrorException(ResponseMessages.webhook.error.registerWebhook)
-        }
-
-        if (!webhookUrl) {
-          throw new InternalServerErrorException(ResponseMessages.webhook.error.registerWebhook)
-        } else {
-          return webhookUrl.webhookUrl
-        }
       }
+      try {
+        webhookUrl = await this.webhookRepository.registerWebhook(
+          registerWebhookDto.orgId,
+          registerWebhookDto.webhookUrl
+        )
+      } catch (_error) {
+        throw new InternalServerErrorException(ResponseMessages.webhook.error.registerWebhook)
+      }
+
+      if (!webhookUrl) {
+        throw new InternalServerErrorException(ResponseMessages.webhook.error.registerWebhook)
+      }
+      return webhookUrl.webhookUrl
     } catch (error) {
       this.logger.error(`[registerWebhookUrl] - register webhook url details : ${JSON.stringify(error)}`)
       throw new RpcException(error.response ? error.response : error)
@@ -59,6 +58,7 @@ export class WebhookService {
   }
 
   async getWebhookUrl(getWebhook: IWebhookUrl): Promise<IGetWebhookUrl> {
+    // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
     let webhookUrlInfo
     try {
       webhookUrlInfo = await this.webhookRepository.getWebhookUrl(getWebhook)
@@ -85,7 +85,7 @@ export class WebhookService {
       })
 
       if (!response.ok) {
-        this.logger.error(`Error in sending webhook response to org webhook url:`, response.status)
+        this.logger.error('Error in sending webhook response to org webhook url:', response.status)
         throw new InternalServerErrorException(ResponseMessages.webhook.error.webhookResponse)
       }
       return response

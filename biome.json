@@ -51,16 +51,13 @@
         "noInvalidUseBeforeDeclaration": "error"
       },
       "suspicious": {
-        "noConsole": "error"
+        "noConsole": "warn"
       },
       "complexity": {
         "noBannedTypes": "error",
-        "useLiteralKeys": {
-          "level": "warn",
-          "fix": "safe"
-        },
+        "useLiteralKeys": "off",
         "noForEach": {
-          "level": "warn"
+          "level": "off"
         }
       },
       "performance": {

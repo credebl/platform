@@ -164,11 +164,9 @@ export class IssuanceService {
           const schemaResponseError = []
           const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes)
 
-          // biome-ignore lint/complexity/noForEach: <explanation>
           attributesArray.forEach((attribute) => {
             if (attribute.attributeName && attribute.isRequired) {
               credentialData.forEach((credential, i) => {
-                // biome-ignore lint/complexity/noForEach: <explanation>
                 credential.attributes.forEach((attr) => {
                   if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
                     schemaResponseError.push(`Attribute ${attribute.attributeName} is required at position ${i + 1}`)
@@ -349,10 +347,8 @@ export class IssuanceService {
           const schemadetailsResponseError = []
           const attributesArray: IAttributes[] = JSON.parse(schemadetailsResponse.attributes)
 
-          // biome-ignore lint/complexity/noForEach: <explanation>
           attributesArray.forEach((attribute) => {
             if (attribute.attributeName && attribute.isRequired) {
-              // biome-ignore lint/complexity/noForEach: <explanation>
               payload.attributes.forEach((attr) => {
                 if (attr.name === attribute.attributeName && attribute.isRequired && !attr.value) {
                   schemadetailsResponseError.push(
@@ -1386,7 +1382,6 @@ export class IssuanceService {
           const { email_identifier, ...rest } = row
           const newRow = { ...rest }
 
-          // biome-ignore lint/complexity/noForEach: <explanation>
           attributesArray.forEach((attr) => {
             if (!(attr?.attributeName in newRow)) {
               throw new BadRequestException(`Missing attribute ${attr?.attributeName} in CSV data`)
@@ -1993,9 +1988,7 @@ export class IssuanceService {
       const errorFileData = []
 
       filedata.forEach((attr, i) => {
-        // biome-ignore lint/complexity/noForEach: <explanation>
         attr.forEach((eachElement) => {
-          // biome-ignore lint/complexity/noForEach: <explanation>
           attributesArray.forEach((eachItem) => {
             if (eachItem.attributeName === eachElement.header) {
               if (eachItem.isRequired && !eachElement.value) {

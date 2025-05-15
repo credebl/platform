@@ -188,7 +188,7 @@ export class W3CAttributeValue {
   @Transform(({ value }) => {
     if (value && typeof value === 'object') {
       const result = {}
-      // biome-ignore lint/complexity/noForEach: <explanation>
+
       Object.entries(value).forEach(([key, propValue]) => {
         result[key] = plainToClass(W3CAttributeValue, propValue, {
           enableImplicitConversion: false,

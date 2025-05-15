@@ -43,10 +43,12 @@ import type { UpdateInvitationDto } from '../dtos/update-invitation.dt'
 import type {
   IClientCredentials,
   ICreateConnectionUrl,
+  IDidDetails,
   IDidList,
   IEcosystemOrgStatus,
   IGetOrgById,
   IGetOrganization,
+  ILedgerNameSpace,
   IOrgDetails,
   IOrgRole,
   IPrimaryDidDetails,
@@ -224,8 +226,8 @@ export class OrganizationService {
       const dids = await this.organizationRepository.getDids(orgId)
       const noPrimaryDid = dids.every((orgDids) => orgDids.isPrimaryDid === false)
 
-      let existingPrimaryDid
-      let priviousDidFalse
+      let existingPrimaryDid: IDidDetails
+      let priviousDidFalse: IDidDetails
       if (!noPrimaryDid) {
         existingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId)
 
@@ -248,7 +250,7 @@ export class OrganizationService {
         nameSpace = null
       }
 
-      let network
+      let network: ILedgerNameSpace
       if (nameSpace !== null) {
         network = await this.organizationRepository.getNetworkByNameSpace(nameSpace)
       } else {
@@ -454,10 +456,9 @@ export class OrganizationService {
       const maskedString = '*'.repeat(inputString.length - 8) + lastFiveCharacters
 
       return maskedString
-    } else {
-      // If the inputString is less than 5 characters, return the original string
-      return inputString
     }
+    // If the inputString is less than 5 characters, return the original string
+    return inputString
   }
 
   async isValidBase64(value: string): Promise<boolean> {
@@ -532,6 +533,7 @@ export class OrganizationService {
         updateOrgDto.logo = undefined
       }
 
+      // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
       let organizationDetails
       const checkAgentIsExists = await this.organizationRepository.getAgentInvitationDetails(orgId)
 
@@ -636,7 +638,8 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.organizationNotFound)
       }
 
-      let orgIds
+      let orgIds: string[]
+      // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
       let updatedOrgs
 
       if (process.env.IS_ECOSYSTEM_ENABLE === 'true') {
@@ -1286,7 +1289,7 @@ export class OrganizationService {
       this.userOrgRoleService.deleteOrgRoles(userId, orgId),
     ])
 
-    if (deletedUserRoleRecords.count === 0) {
+    if (deletedUserRoleRecords['count'] === 0) {
       throw new InternalServerErrorException(ResponseMessages.organisation.error.updateUserRoles)
     }
 
@@ -1333,7 +1336,7 @@ export class OrganizationService {
 
         const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId)
 
-        if (deleteUserRecords.count === 0) {
+        if (deleteUserRecords['count'] === 0) {
           throw new InternalServerErrorException(ResponseMessages.organisation.error.updateUserRoles)
         }
 
@@ -1342,9 +1345,8 @@ export class OrganizationService {
         }
 
         return true
-      } else {
-        return this.updateUserClientRoles(roleIds, organizationDetails.idpId, userId, organizationDetails.id)
       }
+      return this.updateUserClientRoles(roleIds, organizationDetails.idpId, userId, organizationDetails.id)
     } catch (error) {
       this.logger.error(`Error in updateUserRoles: ${JSON.stringify(error)}`)
       throw new RpcException(error.response ? error.response : error)
@@ -1731,17 +1733,17 @@ export class OrganizationService {
 
   async registerOrgsMapUsers(): Promise<string> {
     try {
-      const unregisteredOrgsList = await this.organizationRepository.getUnregisteredClientOrgs()
+      const unregisteredOrgsList: organisation[] = await this.organizationRepository.getUnregisteredClientOrgs()
 
       if (!unregisteredOrgsList || unregisteredOrgsList.length === 0) {
         throw new NotFoundException('Unregistered client organizations not found')
       }
 
       for (const org of unregisteredOrgsList) {
-        const userOrgRoles = org.userOrgRoles.length > 0 && org.userOrgRoles
+        const userOrgRoles = org['userOrgRoles'].length > 0 && org['userOrgRoles']
 
         const ownerUserList =
-          org.userOrgRoles.length > 0 &&
+          org['userOrgRoles'].length > 0 &&
           userOrgRoles.filter((userOrgRole) => userOrgRole.orgRole.name === OrgRoles.OWNER)
 
         const ownerUser = ownerUserList.length > 0 && ownerUserList[0].user
@@ -1799,7 +1801,7 @@ export class OrganizationService {
                 this.userOrgRoleService.deleteOrgRoles(user.id, orgObj.id),
               ])
 
-              this.logger.log(`deletedUserRoleRecords::`, deletedUserRoleRecords)
+              this.logger.log('deletedUserRoleRecords::', deletedUserRoleRecords)
 
               deletedUserDetails.push(user.id)
             }
@@ -1817,7 +1819,7 @@ export class OrganizationService {
                 matchedClientRoles.map((role) => ({ roleId: role.roleId, idpRoleId: role.idpRoleId }))
               ),
             ])
-            this.logger.log(`Organization client created and users mapped to roles`)
+            this.logger.log('Organization client created and users mapped to roles')
           }
         }
       }

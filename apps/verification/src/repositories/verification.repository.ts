@@ -165,10 +165,10 @@ export class VerificationRepository {
       const { proofPresentationPayload, orgId } = payload
 
       //For Educreds
-      // biome-ignore lint/complexity/useLiteralKeys: <explanation>
-            if (proofPresentationPayload?.['proofData']?.['presentation']?.presentationExchange?.verifiableCredential) {
+
+      if (proofPresentationPayload?.['proofData']?.['presentation']?.presentationExchange?.verifiableCredential) {
         const emailId =
-          proofPresentationPayload?.['proofData']?.['presentation']?.presentationExchange?.verifiableCredential[0]
+          proofPresentationPayload?.proofData?.presentation?.presentationExchange?.verifiableCredential[0]
             .credentialSubject?.email
         encryptEmailId = await this.commonService.dataEncryption(emailId)
       } else {
@@ -176,9 +176,9 @@ export class VerificationRepository {
       }
 
       //For Educreds
-      if (proofPresentationPayload?.['proofData']?.request?.presentationExchange) {
+      if (proofPresentationPayload?.proofData?.request?.presentationExchange) {
         schemaId =
-          proofPresentationPayload?.['proofData']?.request?.presentationExchange?.presentation_definition
+          proofPresentationPayload?.proofData?.request?.presentationExchange?.presentation_definition
             ?.input_descriptors[0].schema[0].uri
       }
 

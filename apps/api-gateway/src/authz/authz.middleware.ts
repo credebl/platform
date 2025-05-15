@@ -34,7 +34,7 @@ export class AuthzMiddleware implements NestMiddleware {
     }
 
     // TODO: add type to decoded
-    // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
     return decoded['payload']
   }
 
@@ -54,7 +54,7 @@ export class AuthzMiddleware implements NestMiddleware {
       }
 
       const requestor = new RequestingUser()
-      // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+
       const tenant = (await this.authService.getUserByKeycloakUserId(payload['sub']))?.response
 
       if (tenant) {
@@ -87,10 +87,8 @@ export class AuthzMiddleware implements NestMiddleware {
         if (payload.hasOwnProperty('clientId')) {
           this.logger.log(`tenant requestor.permissions: ${JSON.stringify(requestor)}`)
         } else {
-          // biome-ignore lint/complexity/useLiteralKeys: <explanation>
           requestor.email = payload['email']
 
-          // biome-ignore lint/complexity/useLiteralKeys: <explanation>
           const userData = (await this.authService.getUserByKeycloakUserId(payload['sub']))?.response
 
           this.logger.debug(`User by keycloak ID ${userData.id}`)
@@ -107,7 +105,6 @@ export class AuthzMiddleware implements NestMiddleware {
         }
       }
 
-      // biome-ignore lint/complexity/useLiteralKeys: <explanation>
       req['requestor'] = requestor
 
       next()

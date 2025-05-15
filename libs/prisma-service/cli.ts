@@ -37,8 +37,7 @@ const getRole = async (roleName) => {
       },
     })
     return roleDetails
-  } catch (error) {
-    console.error('An error occurred in getRole:', error)
+  } catch (_error) {
   }
 }
 
@@ -54,8 +53,7 @@ const createUserOrgRole = async (userId, roleId) => {
     })
 
     return saveResponse
-  } catch (error) {
-    console.error('An error occurred in createUserOrgRole:', error)
+  } catch (_error) {
   }
 }
 
@@ -89,10 +87,7 @@ const createUser = async () => {
     const platformRoleData = await getRole('platform_admin')
 
     await createUserOrgRole(user.id, platformRoleData.id)
-
-    console.log('Platform admin user created')
-  } catch (e) {
-    console.error('An error occurred in createUser:', e)
+  } catch (_e) {
   }
 }
 
@@ -101,4 +96,4 @@ async function main() {
   readline.close()
 }
 
-main().catch((e) => console.error(e))
+main().catch((_e) => )

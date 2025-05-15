@@ -515,9 +515,8 @@ export class IssuanceRepository {
             fileUploadId: fileUpload,
           },
         })
-      } else {
-        throw error
       }
+      throw error
     } catch (error) {
       this.logger.error(`[saveFileUploadData] - error: ${JSON.stringify(error)}`)
       throw error

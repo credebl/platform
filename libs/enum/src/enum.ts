@@ -1,11 +1,11 @@
 export enum NATSReconnects {
   maxReconnectAttempts = (10 * 60) / 5, // 10 minutes with a reconnection attempt every 5 seconds
-  reconnectTimeWait = 5000 // 5 second delay between reconnection attempts
+  reconnectTimeWait = 5000, // 5 second delay between reconnection attempts
 }
 
 export enum SortValue {
   ASC = 'asc',
-  DESC = 'desc'
+  DESC = 'desc',
 }
 
 export enum SortFields {
@@ -15,26 +15,26 @@ export enum SortFields {
   VERSION = 'version',
   LEDGER_ID = 'schemaLedgerId',
   PUBLISHER_DID = 'publisherDid',
-  ISSUER_ID = 'issuerId'
+  ISSUER_ID = 'issuerId',
 }
 
 export enum CredDefSortFields {
   CREATED_DATE_TIME = 'createDateTime',
   TAG = 'tag',
   LEDGER_ID = 'schemaLedgerId',
-  CRED_DEF_ID = 'credentialDefinitionId'
+  CRED_DEF_ID = 'credentialDefinitionId',
 }
 
 export enum AgentType {
   // TODO: Change to Credo
   AFJ = 'AFJ',
-  ACAPY = 'ACAPY'
+  ACAPY = 'ACAPY',
 }
 
 export enum DevelopmentEnvironment {
   PRODUCTION = 'production',
   DEVELOPMENT = 'development',
-  TEST = 'test'
+  TEST = 'test',
 }
 
 export declare enum KeyType {
@@ -46,14 +46,14 @@ export declare enum KeyType {
   P256 = 'p256',
   P384 = 'p384',
   P521 = 'p521',
-  K256 = 'k256'
+  K256 = 'k256',
 }
 
 export enum DidMethod {
   INDY = 'indy',
   KEY = 'key',
   WEB = 'web',
-  POLYGON = 'polygon'
+  POLYGON = 'polygon',
 }
 
 export enum Ledgers {
@@ -61,87 +61,87 @@ export enum Ledgers {
   Indicio_Testnet = 'Indicio Testnet',
   Indicio_Demonet = 'Indicio Demonet',
   Indicio_Mainnet = 'Indicio Mainnet',
-  Not_Applicable = 'NA'
+  Not_Applicable = 'NA',
 }
 
 export enum Invitation {
   ACCEPTED = 'accepted',
   REJECTED = 'rejected',
-  PENDING = 'pending'
+  PENDING = 'pending',
 }
 
 export enum EndorserTransactionType {
   SCHEMA = 'schema',
-  CREDENTIAL_DEFINITION = 'credential-definition'
+  CREDENTIAL_DEFINITION = 'credential-definition',
 }
 
 export enum schemaRequestType {
   W3C = 'w3c',
-  INDY = 'indy'
+  INDY = 'indy',
 }
 
 export enum OrgAgentType {
   DEDICATED = 'DEDICATED',
-  SHARED = 'SHARED'
+  SHARED = 'SHARED',
 }
 
 export enum AgentSpinUpStatus {
   PENDING = 0,
   PROCESSED = 1,
-  COMPLETED = 2
+  COMPLETED = 2,
 }
 
 export enum UserCertificateId {
   WINNER = 'Winner',
   PARTICIPANT = 'Participant',
   ARBITER = 'Arbiter',
-  WORLD_RECORD = 'WorldRecord'
+  WORLD_RECORD = 'WorldRecord',
 }
 
 export enum NodeEnvironment {
   DEVELOPMENT = 'DEV',
-  PRODUCTION = 'PROD'
+  PRODUCTION = 'PROD',
 }
 
 export enum AutoAccept {
   Always = 'always',
   ContentApproved = 'contentApproved',
-  Never = 'never'
+  Never = 'never',
 }
 
 export enum SortMembers {
   CREATED_DATE_TIME = 'createDateTime',
   STATUS = 'status',
   ID = 'id',
-  ORGANIZATION = 'organization'
+  ORGANIZATION = 'organization',
 }
 
 const transitionMap: { [key in Invitation]: Invitation[] } = {
   [Invitation.PENDING]: [Invitation.ACCEPTED, Invitation.REJECTED],
   [Invitation.ACCEPTED]: [],
-  [Invitation.REJECTED]: []
-};
+  [Invitation.REJECTED]: [],
+}
 
 export const transition = (currentStatus: Invitation, nextStatus: Invitation): boolean =>
-  transitionMap[currentStatus].includes(nextStatus);
+  transitionMap[currentStatus].includes(nextStatus)
 
 export enum SchemaType {
   INDY = 'indy',
-  W3C_Schema = 'w3c'
+  W3C_Schema = 'w3c',
 }
 
 export enum IssueCredentialType {
   JSONLD = 'jsonld',
-  INDY = 'indy'
+  INDY = 'indy',
 }
 
 export enum TemplateIdentifier {
-  EMAIL_COLUMN = 'email_identifier'
+  EMAIL_COLUMN = 'email_identifier',
 }
 
 export enum PromiseResult {
   REJECTED = 'rejected',
-  FULFILLED = 'fulfilled'
+  FULFILLED = 'fulfilled',
 }
 
 export enum PrismaTables {
@@ -156,7 +156,7 @@ export enum PrismaTables {
   USER_ACTIVITY = 'user_activity',
   USER_ORG_ROLES = 'user_org_roles',
   ORG_INVITATIONS = 'org_invitations',
-  ORGANIZATION = 'organization'
+  ORGANIZATION = 'organization',
 }
 
 export enum IssuanceProcessState {
@@ -170,7 +170,7 @@ export enum IssuanceProcessState {
   CREDENTIAL_ISSUED = 'credential-issued',
   CREDENTIAL_RECEIVED = 'credential-received',
   DONE = 'done',
-  ABANDONED = 'abandoned'
+  ABANDONED = 'abandoned',
 }
 
 export enum VerificationProcessState {
@@ -182,7 +182,7 @@ export enum VerificationProcessState {
   PRESENTATION_RECEIVED = 'presentation-received',
   DECLIEND = 'declined',
   ABANDONED = 'abandoned',
-  DONE = 'done'
+  DONE = 'done',
 }
 
 export enum ConnectionProcessState {
@@ -195,12 +195,12 @@ export enum ConnectionProcessState {
   RESPONSE_SENT = 'response-sent',
   RESPONSE_RECEIVED = 'response-received',
   COMPLETE = 'completed',
-  ABANDONED = 'abandoned'
+  ABANDONED = 'abandoned',
 }
 
 export enum SchemaTypeEnum {
   JSON = 'json',
-  INDY = 'indy'
+  INDY = 'indy',
 }
 
 export enum W3CSchemaDataType {
@@ -210,50 +210,50 @@ export enum W3CSchemaDataType {
   DATE_TIME = 'datetime-local',
   ARRAY = 'array',
   OBJECT = 'object',
-  BOOLEAN = 'boolean'
+  BOOLEAN = 'boolean',
 }
 
 export enum IndySchemaDataType {
   NUMBER = 'number',
   STRING = 'string',
   DATE_TIME = 'datetime-local',
-  BOOLEAN = 'boolean'
+  BOOLEAN = 'boolean',
 }
 
 export enum JSONSchemaType {
   POLYGON_W3C = 'polygon',
-  LEDGER_LESS = 'no_ledger'
+  LEDGER_LESS = 'no_ledger',
 }
 
 export enum NetworkNamespace {
-  POLYGON_TESTNET = 'polygon:testnet'
+  POLYGON_TESTNET = 'polygon:testnet',
 }
 
 export enum LedgerLessMethods {
   WEB = 'web',
-  KEY = 'key'
+  KEY = 'key',
 }
 
 export enum LedgerLessConstant {
-  NO_LEDGER = 'no_ledger'
+  NO_LEDGER = 'no_ledger',
 }
 
 export enum ledgerLessDIDType {
   DID_KEY = 'did:key',
-  DID_WEB = 'did:web'
+  DID_WEB = 'did:web',
 }
 
 export enum CloudWalletType {
   BASE_WALLET = 'CLOUD_BASE_WALLET',
-  SUB_WALLET = 'CLOUD_SUB_WALLET'
+  SUB_WALLET = 'CLOUD_SUB_WALLET',
 }
 
 export enum UserRole {
   DEFAULT_USER = 'DEFAULT_USER',
-  HOLDER = 'HOLDER'
+  HOLDER = 'HOLDER',
 }
 
 export enum ProofType {
   POLYGON_PROOFTYPE = 'EcdsaSecp256k1Signature2019',
-  NO_LEDGER_PROOFTYPE = 'Ed25519Signature2018'
+  NO_LEDGER_PROOFTYPE = 'Ed25519Signature2018',
 }

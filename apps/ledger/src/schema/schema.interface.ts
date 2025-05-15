@@ -1,59 +1,59 @@
-import { IUserRequestInterface } from './interfaces/schema.interface';
+import type { IUserRequestInterface } from './interfaces/schema.interface'
 
 export interface ISchemaId {
-    schemaLedgerId: string;
+  schemaLedgerId: string
 }
 export interface SchemaSearchCriteria {
-    schemaLedgerId: string;
-    credentialDefinitionId: string;
-    user : IUserRequestInterface
+  schemaLedgerId: string
+  credentialDefinitionId: string
+  user: IUserRequestInterface
 }
 
 export interface IAttributeValue {
-    attributeName: string;
-    schemaDataType: string;
-    displayName: string
+  attributeName: string
+  schemaDataType: string
+  displayName: string
 }
 
 export interface CreateSchemaAgentRedirection {
-    tenantId?: string;
-    attributes?: string[];
-    version?: string;
-    name?: string;
-    issuerId?: string;
-    payload?: ITenantSchemaDto;
-    method?: string;
-    agentType?: string;
-    apiKey?: string;
-    agentEndPoint?: string;
-    orgId?: string;
+  tenantId?: string
+  attributes?: string[]
+  version?: string
+  name?: string
+  issuerId?: string
+  payload?: ITenantSchemaDto
+  method?: string
+  agentType?: string
+  apiKey?: string
+  agentEndPoint?: string
+  orgId?: string
 }
 
 export interface ITenantSchemaDto {
-    attributes: string[];
-    version: string;
-    name: string;
-    issuerId: string;
+  attributes: string[]
+  version: string
+  name: string
+  issuerId: string
 }
 
 export interface GetSchemaAgentRedirection {
-    schemaId?: string;
-    tenantId?: string;
-    payload?: GetSchemaFromTenantPayload;
-    apiKey?: string;
-    agentEndPoint?: string;
-    agentType?: string;
-    method?: string;
-    orgId?: string;
+  schemaId?: string
+  tenantId?: string
+  payload?: GetSchemaFromTenantPayload
+  apiKey?: string
+  agentEndPoint?: string
+  agentType?: string
+  method?: string
+  orgId?: string
 }
 
 export interface GetSchemaFromTenantPayload {
-    schemaId: string;
+  schemaId: string
 }
 
 export interface ISchemaInfo {
-    schemaUrl: string;
-    did: string;
-    schemaId: string;
-    schemaTxnHash: string;
-  }
+  schemaUrl: string
+  did: string
+  schemaId: string
+  schemaTxnHash: string
+}

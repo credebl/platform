@@ -120,10 +120,9 @@ export enum CommonConstants {
   URL_SHAGENT_SEND_ANSWER = '/multi-tenancy/question-answer/answer/#/@',
   URL_SHAGENT_QUESTION_ANSWER_RECORD = '/multi-tenancy/question-answer/#',
   URL_SHAGENT_DELETE_SUB_WALLET = '/multi-tenancy/#',
-  URL_SHARED_SEND_BASIC_MESSAGE =  '/multi-tenancy/basic-messages/#/@',
+  URL_SHARED_SEND_BASIC_MESSAGE = '/multi-tenancy/basic-messages/#/@',
   URL_SHAGENT_ACCEPT_PROOF_REQUEST = '/multi-tenancy/proofs/#/accept-request/@',
 
-  
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/proofs/request-proof',
   URL_GET_PROOF_PRESENTATIONS = '/proofs',
@@ -140,7 +139,7 @@ export enum CommonConstants {
 
   // CREATE KEYS
   CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
- 
+
   // Nested attribute separator
   NESTED_ATTRIBUTE_SEPARATOR = '~',
 
@@ -161,7 +160,7 @@ export enum CommonConstants {
 
   // POLYGON KEYWORDS
   POLYGON = 'polygon',
-  
+
   // DOMAIN EVENTS
   DOMAIN_EVENT_SCHEMA_CREATED = 'Schema Created',
   DOMAIN_EVENT_CRED_DEF_CREATED = 'Cred-Def Created',
@@ -257,7 +256,7 @@ export enum CommonConstants {
 
   // agent status
   URL_AGENT_STATUS = '/agent',
-  
+
   // Tenant Status
   PENDING_STATE = 0,
   REJECT_STATE = 2,
@@ -284,14 +283,12 @@ export enum CommonConstants {
   ACTIVE_NON_ADMIN_USER = 1,
   ALL_NON_ADMIN_USER = 3,
 
-
   // Platform admin Details
-  PLATFORM_ADMIN_EMAIL='platform.admin@yopmail.com',
-  PLATFORM_ADMIN_ORG='Platform-admin',
-  PLATFORM_ADMIN_ORG_ROLE='platform_admin',
-  
-  USER_HOLDER_ROLE='holder',
+  PLATFORM_ADMIN_EMAIL = 'platform.admin@yopmail.com',
+  PLATFORM_ADMIN_ORG = 'Platform-admin',
+  PLATFORM_ADMIN_ORG_ROLE = 'platform_admin',
 
+  USER_HOLDER_ROLE = 'holder',
 
   //onBoarding Type
   ONBOARDING_TYPE_ADMIN = 0,
@@ -322,114 +319,112 @@ export enum CommonConstants {
   KEYTYPE = 'ed25519',
   METHOD = 'indy',
   NETWORK = 'bcovrin:testnet',
-  ROLE = 'endorser', 
+  ROLE = 'endorser',
 
- //CacheInfo
-CACHE_SHARED_APIKEY_KEY = "dedicatedApiKey",
-CACHE_APIKEY_KEY = "sharedApiKey",
-CACHE_TTL_SECONDS = 604800,
+  //CacheInfo
+  CACHE_SHARED_APIKEY_KEY = 'dedicatedApiKey',
+  CACHE_APIKEY_KEY = 'sharedApiKey',
+  CACHE_TTL_SECONDS = 604800,
 
-CLOUD_WALLET_GET_PROOF_REQUEST = '/multi-tenancy/proofs',
-CLOUD_WALLET_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation',
-CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
-CLOUD_WALLET_DID_LIST = '/multi-tenancy/dids/',
-CLOUD_WALLET_CONNECTION_BY_ID = '/multi-tenancy/connections/',
-CLOUD_WALLET_CREDENTIAL = '/multi-tenancy/credentials',
-CLOUD_WALLET_BASIC_MESSAGE = '/multi-tenancy/basic-messages/',
+  CLOUD_WALLET_GET_PROOF_REQUEST = '/multi-tenancy/proofs',
+  CLOUD_WALLET_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation',
+  CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
+  CLOUD_WALLET_DID_LIST = '/multi-tenancy/dids/',
+  CLOUD_WALLET_CONNECTION_BY_ID = '/multi-tenancy/connections/',
+  CLOUD_WALLET_CREDENTIAL = '/multi-tenancy/credentials',
+  CLOUD_WALLET_BASIC_MESSAGE = '/multi-tenancy/basic-messages/',
 
-// Bulk-issuance
-BATCH_SIZE = 100,
-MAX_CONCURRENT_OPERATIONS = 50,
-ISSUANCE_BATCH_SIZE = 2000,
-ISSUANCE_MAX_CONCURRENT_OPERATIONS = 1000,
-ISSUANCE_BATCH_DELAY = 60000, //Intially 60000
+  // Bulk-issuance
+  BATCH_SIZE = 100,
+  MAX_CONCURRENT_OPERATIONS = 50,
+  ISSUANCE_BATCH_SIZE = 2000,
+  ISSUANCE_MAX_CONCURRENT_OPERATIONS = 1000,
+  ISSUANCE_BATCH_DELAY = 60000, //Intially 60000
 
+  // MICROSERVICES NAMES
+  API_GATEWAY_SERVICE = 'api-gateway',
+  ORGANIZATION_SERVICE = 'organization',
+  USER_SERVICE = 'user',
+  AUTH_SERVICE = 'authz',
+  FIDO_SERVICE = 'fido',
+  UTILITY_SERVICE = 'utilitites',
+  CONNECTION_SERVICE = 'connection',
+  LEDGER_SERVICE = 'ledger',
+  PLATFORM_SERVICE = 'platform',
+  SCHEMA_SERVICE = 'schema',
+  CREDENTIAL_DEFINITION_SERVICE = 'credential-definition',
+  AGENT_SERVICE = 'agent-service',
+  AGENT_PROVISIONING = 'agent-provisioning',
+  ISSUANCE_SERVICE = 'issuance',
+  VERIFICATION_SERVICE = 'verification',
+  WEBHOOK_SERVICE = 'webhook',
+  NOTIFICATION_SERVICE = 'notification',
+  GEO_LOCATION_SERVICE = 'geo-location',
+  CLOUD_WALLET_SERVICE = 'cloud-wallet',
 
-// MICROSERVICES NAMES
-API_GATEWAY_SERVICE = 'api-gateway',
-ORGANIZATION_SERVICE = 'organization',
-USER_SERVICE = 'user',
-AUTH_SERVICE = 'authz',
-FIDO_SERVICE = 'fido',
-UTILITY_SERVICE = 'utilitites',
-CONNECTION_SERVICE = 'connection',
-LEDGER_SERVICE = 'ledger',
-PLATFORM_SERVICE = 'platform',
-SCHEMA_SERVICE = 'schema',
-CREDENTIAL_DEFINITION_SERVICE = 'credential-definition',
-AGENT_SERVICE = 'agent-service',
-AGENT_PROVISIONING = 'agent-provisioning',
-ISSUANCE_SERVICE = 'issuance',
-VERIFICATION_SERVICE = 'verification',
-WEBHOOK_SERVICE = 'webhook',
-NOTIFICATION_SERVICE = 'notification',
-GEO_LOCATION_SERVICE = 'geo-location',
-CLOUD_WALLET_SERVICE = 'cloud-wallet',
-
-//CLOUD WALLET
-RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
-ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
-SEED_LENGTH = 32
+  //CLOUD WALLET
+  RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
+  ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
+  SEED_LENGTH = 32,
 }
-export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
-export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;
+export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME')
+export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/
 
-export const postgresqlErrorCodes = [];
-postgresqlErrorCodes['23503'] = 'foreign_key_violation';
-postgresqlErrorCodes['00000'] = 'successful_completion';
-postgresqlErrorCodes['01000'] = 'warning';
-postgresqlErrorCodes['0100C'] = 'dynamic_result_sets_returned';
-postgresqlErrorCodes['01008'] = 'implicit_zero_bit_padding';
-postgresqlErrorCodes['01003'] = 'null_value_eliminated_in_set_function';
-postgresqlErrorCodes['01007'] = 'privilege_not_granted';
-postgresqlErrorCodes['01006'] = 'string_data_right_truncation';
-postgresqlErrorCodes['01P01'] = 'deprecated_feature';
-postgresqlErrorCodes['02000'] = 'no_data';
+export const postgresqlErrorCodes = []
+postgresqlErrorCodes['23503'] = 'foreign_key_violation'
+postgresqlErrorCodes['00000'] = 'successful_completion'
+postgresqlErrorCodes['01000'] = 'warning'
+postgresqlErrorCodes['0100C'] = 'dynamic_result_sets_returned'
+postgresqlErrorCodes['01008'] = 'implicit_zero_bit_padding'
+postgresqlErrorCodes['01003'] = 'null_value_eliminated_in_set_function'
+postgresqlErrorCodes['01007'] = 'privilege_not_granted'
+postgresqlErrorCodes['01006'] = 'string_data_right_truncation'
+postgresqlErrorCodes['01P01'] = 'deprecated_feature'
+postgresqlErrorCodes['02000'] = 'no_data'
 
-postgresqlErrorCodes['02001'] = 'no_additional_dynamic_result_sets_returned';
-postgresqlErrorCodes['03000'] = 'sql_statement_not_yet_complete';
-postgresqlErrorCodes['08000'] = 'connection_exception';
-postgresqlErrorCodes['08003'] = 'connection_does_not_exist';
-postgresqlErrorCodes['08006'] = 'connection_failure';
-postgresqlErrorCodes['08001'] = 'sqlclient_unable_to_establish_sqlconnection';
-postgresqlErrorCodes['08004'] = 'sqlserver_rejected_establishment_of_sqlconnection';
-postgresqlErrorCodes['08007'] = 'transaction_resolution_unknown';
-postgresqlErrorCodes['08P01'] = 'protocol_violation';
-postgresqlErrorCodes['09000'] = 'triggered_action_exception';
-postgresqlErrorCodes['0A000'] = 'feature_not_supported';
-postgresqlErrorCodes['0B000'] = 'invalid_transaction_initiation';
-postgresqlErrorCodes['0F000'] = 'locator_exception';
-postgresqlErrorCodes['0F001'] = 'invalid_locator_specification';
-postgresqlErrorCodes['0L000'] = 'invalid_grantor';
-postgresqlErrorCodes['0LP01'] = 'invalid_grant_operation';
-postgresqlErrorCodes['0P000'] = 'invalid_role_specification';
-postgresqlErrorCodes['0Z000'] = 'diagnostics_exception';
-postgresqlErrorCodes['0Z002'] = 'stacked_diagnostics_accessed_without_active_handler';
-postgresqlErrorCodes['20000'] = 'case_not_found';
-postgresqlErrorCodes['21000'] = 'cardinality_violation';
-postgresqlErrorCodes['22000'] = 'data_exception';
-postgresqlErrorCodes['2202E'] = 'array_subscript_error';
-postgresqlErrorCodes['22021'] = 'character_not_in_repertoire';
-postgresqlErrorCodes['22008'] = 'datetime_field_overflow';
-postgresqlErrorCodes['22012'] = 'division_by_zero';
-postgresqlErrorCodes['22005'] = 'error_in_assignment';
-postgresqlErrorCodes['2200B'] = 'escape_character_conflict';
+postgresqlErrorCodes['02001'] = 'no_additional_dynamic_result_sets_returned'
+postgresqlErrorCodes['03000'] = 'sql_statement_not_yet_complete'
+postgresqlErrorCodes['08000'] = 'connection_exception'
+postgresqlErrorCodes['08003'] = 'connection_does_not_exist'
+postgresqlErrorCodes['08006'] = 'connection_failure'
+postgresqlErrorCodes['08001'] = 'sqlclient_unable_to_establish_sqlconnection'
+postgresqlErrorCodes['08004'] = 'sqlserver_rejected_establishment_of_sqlconnection'
+postgresqlErrorCodes['08007'] = 'transaction_resolution_unknown'
+postgresqlErrorCodes['08P01'] = 'protocol_violation'
+postgresqlErrorCodes['09000'] = 'triggered_action_exception'
+postgresqlErrorCodes['0A000'] = 'feature_not_supported'
+postgresqlErrorCodes['0B000'] = 'invalid_transaction_initiation'
+postgresqlErrorCodes['0F000'] = 'locator_exception'
+postgresqlErrorCodes['0F001'] = 'invalid_locator_specification'
+postgresqlErrorCodes['0L000'] = 'invalid_grantor'
+postgresqlErrorCodes['0LP01'] = 'invalid_grant_operation'
+postgresqlErrorCodes['0P000'] = 'invalid_role_specification'
+postgresqlErrorCodes['0Z000'] = 'diagnostics_exception'
+postgresqlErrorCodes['0Z002'] = 'stacked_diagnostics_accessed_without_active_handler'
+postgresqlErrorCodes['20000'] = 'case_not_found'
+postgresqlErrorCodes['21000'] = 'cardinality_violation'
+postgresqlErrorCodes['22000'] = 'data_exception'
+postgresqlErrorCodes['2202E'] = 'array_subscript_error'
+postgresqlErrorCodes['22021'] = 'character_not_in_repertoire'
+postgresqlErrorCodes['22008'] = 'datetime_field_overflow'
+postgresqlErrorCodes['22012'] = 'division_by_zero'
+postgresqlErrorCodes['22005'] = 'error_in_assignment'
+postgresqlErrorCodes['2200B'] = 'escape_character_conflict'
 
-postgresqlErrorCodes['22022'] = 'indicator_overflow';
-postgresqlErrorCodes['22015'] = 'interval_field_overflow';
-postgresqlErrorCodes['2201E'] = 'invalid_argument_for_logarithm';
-postgresqlErrorCodes['22014'] = 'invalid_argument_for_ntile_function';
-postgresqlErrorCodes['22016'] = 'invalid_argument_for_nth_value_function';
-postgresqlErrorCodes['2201F'] = 'invalid_argument_for_power_function';
-postgresqlErrorCodes['2201G'] = 'invalid_argument_for_width_bucket_function';
-postgresqlErrorCodes['22018'] = 'invalid_character_value_for_cast';
-postgresqlErrorCodes['22007'] = 'invalid_datetime_format';
-postgresqlErrorCodes['22019'] = 'invalid_escape_character';
-postgresqlErrorCodes['22P02'] = 'invalid_datatype';
-postgresqlErrorCodes[''] = '';
+postgresqlErrorCodes['22022'] = 'indicator_overflow'
+postgresqlErrorCodes['22015'] = 'interval_field_overflow'
+postgresqlErrorCodes['2201E'] = 'invalid_argument_for_logarithm'
+postgresqlErrorCodes['22014'] = 'invalid_argument_for_ntile_function'
+postgresqlErrorCodes['22016'] = 'invalid_argument_for_nth_value_function'
+postgresqlErrorCodes['2201F'] = 'invalid_argument_for_power_function'
+postgresqlErrorCodes['2201G'] = 'invalid_argument_for_width_bucket_function'
+postgresqlErrorCodes['22018'] = 'invalid_character_value_for_cast'
+postgresqlErrorCodes['22007'] = 'invalid_datetime_format'
+postgresqlErrorCodes['22019'] = 'invalid_escape_character'
+postgresqlErrorCodes['22P02'] = 'invalid_datatype'
+postgresqlErrorCodes[''] = ''
 
-
-export const DISALLOWED_EMAIL_DOMAIN  = [
+export const DISALLOWED_EMAIL_DOMAIN = [
   '0x01.gq',
   '0x01.tk',
   '10mail.org',
@@ -828,5 +823,5 @@ export const DISALLOWED_EMAIL_DOMAIN  = [
   'zalvisual.us',
   'zapto.org',
   'ze.cx',
-  'zeroe.ml'
-];
+  'zeroe.ml',
+]

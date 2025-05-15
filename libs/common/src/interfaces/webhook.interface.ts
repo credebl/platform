@@ -1,4 +1,4 @@
 export interface IWebhookUrl {
-    orgId?: string;
-    tenantId?: string;
-  }
+  orgId?: string
+  tenantId?: string
+}

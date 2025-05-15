@@ -1,14 +1,14 @@
-import { Logger, Module } from '@nestjs/common';
-import { AgentProvisioningController } from './agent-provisioning.controller';
-import { AgentProvisioningService } from './agent-provisioning.service';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ConfigModule } from '@nestjs/config';
-import { getNatsOptions } from '@credebl/common/nats.config';
-import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant'
+import { getNatsOptions } from '@credebl/common/nats.config'
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module'
+import { GlobalConfigModule } from '@credebl/config/global-config.module'
+import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule'
+import { LoggerModule } from '@credebl/logger/logger.module'
+import { Logger, Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
+import { ClientsModule, Transport } from '@nestjs/microservices'
+import { AgentProvisioningController } from './agent-provisioning.controller'
+import { AgentProvisioningService } from './agent-provisioning.service'
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -20,9 +20,9 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.AGENT_PROVISIONING, process.env.AGENT_PROVISIONING_NKEY_SEED)
-      }
-    ])
+        options: getNatsOptions(CommonConstants.AGENT_PROVISIONING, process.env.AGENT_PROVISIONING_NKEY_SEED),
+      },
+    ]),
   ],
   controllers: [AgentProvisioningController],
   providers: [
@@ -30,8 +30,8 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
     Logger,
     {
       provide: MICRO_SERVICE_NAME,
-      useValue: 'Agent-provisioning'
-    }
-  ]
+      useValue: 'Agent-provisioning',
+    },
+  ],
 })
 export class AgentProvisioningModule {}

@@ -1,49 +1,67 @@
+import type { AwsService } from '@credebl/aws'
+import { TrimStringParamPipe } from '@credebl/common/cast.helper'
+import type IResponseType from '@credebl/common/interfaces/response.interface'
+import type { IResponse } from '@credebl/common/interfaces/response.interface'
+import { ResponseMessages } from '@credebl/common/response-messages'
+import { SchemaType } from '@credebl/enum/enum'
+import type { IUserRequest } from '@credebl/user-request/user-request.interface'
 /* eslint-disable default-param-last */
 /* eslint-disable no-param-reassign */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable camelcase */
 import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  HttpStatus,
-  Res,
-  Query,
-  Get,
-  Param,
-  UseFilters,
-  Header,
-  UploadedFile,
-  UseInterceptors,
-  Logger,
   BadRequestException,
-  NotFoundException,
-  ParseUUIDPipe,
+  Body,
+  Controller,
   Delete,
-  ValidationPipe
-} from '@nestjs/common';
+  Get,
+  Header,
+  HttpStatus,
+  Logger,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  Res,
+  UploadedFile,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+  ValidationPipe,
+} from '@nestjs/common'
+import { RpcException } from '@nestjs/microservices'
+import { AuthGuard } from '@nestjs/passport'
+import { FileInterceptor } from '@nestjs/platform-express'
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
   ApiBearerAuth,
-  ApiForbiddenResponse,
-  ApiUnauthorizedResponse,
-  ApiQuery,
-  ApiExcludeEndpoint,
-  ApiConsumes,
   ApiBody,
-  ApiNotFoundResponse
-} from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { ApiResponseDto } from '../dtos/apiResponse.dto';
-import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
-import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { Response } from 'express';
-import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
-import { IssuanceService } from './issuance.service';
-import {
+  ApiConsumes,
+  ApiExcludeEndpoint,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger'
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import type { user } from '@prisma/client'
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler'
+import type { Response } from 'express'
+import { OrgRoles } from 'libs/org-roles/enums'
+import { v4 as uuidv4 } from 'uuid'
+import { CommonConstants } from '../../../../libs/common/src/common.constant'
+import { Roles } from '../authz/decorators/roles.decorator'
+import { User } from '../authz/decorators/user.decorator'
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard'
+import { ApiResponseDto } from '../dtos/apiResponse.dto'
+import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto'
+import { NotFoundErrorDto } from '../dtos/not-found-error.dto'
+import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto'
+import type { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto'
+import type {
   ClientDetails,
   CredentialQuery,
   FileParameter,
@@ -54,33 +72,17 @@ import {
   PreviewFileDetails,
   RequestIdQuery,
   TemplateDetails,
-  TemplateQuery
-} from './dtos/issuance.dto';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { User } from '../authz/decorators/user.decorator';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from 'libs/org-roles/enums';
-import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+  TemplateQuery,
+} from './dtos/issuance.dto'
+import type { IssueCredentialDto } from './dtos/multi-connection.dto'
 import {
-  FileExportResponse,
-  IIssuedCredentialSearchParams,
+  type FileExportResponse,
+  type IIssuedCredentialSearchParams,
+  IReqPayload,
   IssueCredentialType,
-  UploadedFileDetails
-} from './interfaces';
-import { AwsService } from '@credebl/aws';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { v4 as uuidv4 } from 'uuid';
-import { RpcException } from '@nestjs/microservices';
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { user } from '@prisma/client';
-import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
-import { IssueCredentialDto } from './dtos/multi-connection.dto';
-import { SchemaType } from '@credebl/enum/enum';
-import { CommonConstants } from '../../../../libs/common/src/common.constant';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
-import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
+  type UploadedFileDetails,
+} from './interfaces'
+import type { IssuanceService } from './issuance.service'
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -91,7 +93,7 @@ export class IssuanceController {
     private readonly issueCredentialService: IssuanceService,
     private readonly awsService: AwsService
   ) {}
-  private readonly logger = new Logger('IssuanceController');
+  private readonly logger = new Logger('IssuanceController')
 
   /**
    * Get all issued credentials for a specific organization
@@ -106,23 +108,23 @@ export class IssuanceController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Get all issued credentials for a specific organization`,
-    description: `Retrieve all issued credentials for a specific organization. Supports pagination and search.`
+    summary: 'Get all issued credentials for a specific organization',
+    description: 'Retrieve all issued credentials for a specific organization. Supports pagination and search.',
   })
   @ApiQuery({
     name: 'pageNumber',
     type: Number,
-    required: false
+    required: false,
   })
   @ApiQuery({
     name: 'pageSize',
     type: Number,
-    required: false
+    required: false,
   })
   @ApiQuery({
     name: 'search',
     type: String,
-    required: false
+    required: false,
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
@@ -134,27 +136,27 @@ export class IssuanceController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
-    const { pageSize, search, pageNumber, sortField, sortBy } = getAllIssuedCredentials;
+    const { pageSize, search, pageNumber, sortField, sortBy } = getAllIssuedCredentials
     const issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams = {
       pageNumber,
       search,
       pageSize,
       sortField,
-      sortBy
-    };
+      sortBy,
+    }
 
     const getCredentialDetails = await this.issueCredentialService.getIssueCredentials(
       issuedCredentialsSearchCriteria,
       user,
       orgId
-    );
+    )
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.fetch,
-      data: getCredentialDetails
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      data: getCredentialDetails,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 
   /**
@@ -169,8 +171,8 @@ export class IssuanceController {
   @Get('/orgs/:orgId/credentials/:credentialRecordId')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Fetch credentials by credentialRecordId`,
-    description: `Retrieve the details of a specific credential by its credentialRecordId.`
+    summary: 'Fetch credentials by credentialRecordId',
+    description: 'Retrieve the details of a specific credential by its credentialRecordId.',
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -182,8 +184,8 @@ export class IssuanceController {
       TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.issuance.error.invalidCredentialRecordId);
-        }
+          throw new BadRequestException(ResponseMessages.issuance.error.invalidCredentialRecordId)
+        },
       })
     )
     credentialRecordId: string,
@@ -194,14 +196,14 @@ export class IssuanceController {
       user,
       credentialRecordId,
       orgId
-    );
+    )
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.fetch,
-      data: getCredentialDetails.response
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      data: getCredentialDetails.response,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 
   /**
@@ -214,11 +216,11 @@ export class IssuanceController {
   @Get('/orgs/:orgId/credentials/bulk/template')
   @ApiOperation({
     summary: 'Fetch all templates for bulk operation',
-    description: 'Retrieve all templates for a specific organization for bulk operation.'
+    description: 'Retrieve all templates for a specific organization for bulk operation.',
   })
   @ApiQuery({
     name: 'schemaType',
-    enum: SchemaType
+    enum: SchemaType,
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
@@ -229,21 +231,21 @@ export class IssuanceController {
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-        }
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId)
+        },
       })
     )
     orgId: string,
     @Res() res: Response,
     @Query('schemaType') schemaType: SchemaType = SchemaType.INDY
   ): Promise<Response> {
-    const templateList = await this.issueCredentialService.getAllCredentialTemplates(orgId, schemaType);
+    const templateList = await this.issueCredentialService.getAllCredentialTemplates(orgId, schemaType)
     const credDefResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.credentialDefinition.success.template,
-      data: templateList
-    };
-    return res.status(HttpStatus.OK).json(credDefResponse);
+      data: templateList,
+    }
+    return res.status(HttpStatus.OK).json(credDefResponse)
   }
 
   /**
@@ -265,15 +267,15 @@ export class IssuanceController {
   @Header('Content-Type', 'application/csv')
   @ApiOperation({
     summary: 'Download csv template for bulk-issuance',
-    description: 'Download csv template for a specific organization bulk-issuance using template details.'
+    description: 'Download csv template for a specific organization bulk-issuance using template details.',
   })
   async downloadBulkIssuanceCSVTemplate(
     @Param(
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-        }
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId)
+        },
       })
     )
     orgId: string,
@@ -284,17 +286,17 @@ export class IssuanceController {
       const templateData: FileExportResponse = await this.issueCredentialService.downloadBulkIssuanceCSVTemplate(
         orgId,
         templateDetails
-      );
+      )
       return res
         .header('Content-Disposition', `attachment; filename="${templateData.fileName}"`)
         .status(HttpStatus.OK)
-        .send(templateData.fileContent);
+        .send(templateData.fileContent)
     } catch (error) {
       return res
         .status(error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR)
         .header('Content-Type', 'application/json')
         .header('Content-Disposition', '')
-        .send(error);
+        .send(error)
     }
   }
   /**
@@ -312,18 +314,18 @@ export class IssuanceController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Upload file for bulk issuance',
-    description: 'Upload a filled CSV file for bulk issuance.'
+    description: 'Upload a filled CSV file for bulk issuance.',
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
-    type: UnauthorizedErrorDto
+    type: UnauthorizedErrorDto,
   })
   @ApiForbiddenResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
-    type: ForbiddenErrorDto
+    type: ForbiddenErrorDto,
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -334,22 +336,22 @@ export class IssuanceController {
       properties: {
         file: {
           type: 'string',
-          format: 'binary'
-        }
-      }
+          format: 'binary',
+        },
+      },
     },
-    required: true
+    required: true,
   })
   @ApiQuery({
     name: 'schemaType',
     enum: SchemaType,
     required: true,
-    description: 'The type of schema to be used'
+    description: 'The type of schema to be used',
   })
   @ApiQuery({
     name: 'isValidateSchema',
     type: Boolean,
-    required: false
+    required: false,
   })
   @UseInterceptors(FileInterceptor('file'))
   async uploadCSVTemplate(
@@ -357,43 +359,45 @@ export class IssuanceController {
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-        }
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId)
+        },
       })
     )
     orgId: string,
     @Query(new ValidationPipe({ transform: true })) query: TemplateQuery,
     @UploadedFile() file: Express.Multer.File,
+    // TODO: Add type
     @Body() fileDetails: object,
     @Res() res: Response,
     @Query('schemaType') schemaType: SchemaType = SchemaType.INDY,
-    @Query('isValidateSchema') isValidateSchema: boolean = true
+    @Query('isValidateSchema') isValidateSchema = true
   ): Promise<object> {
-    const { templateId } = query;
+    const { templateId } = query
 
     if (file) {
-      const fileKey: string = uuidv4();
+      const fileKey: string = uuidv4()
       try {
-        await this.awsService.uploadCsvFile(fileKey, file?.buffer);
+        await this.awsService.uploadCsvFile(fileKey, file?.buffer)
       } catch (error) {
-        throw new RpcException(error.response ? error.response : error);
+        throw new RpcException(error.response ? error.response : error)
       }
 
       const uploadedfileDetails: UploadedFileDetails = {
         type: schemaType,
         templateId,
         fileKey,
+        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
         fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
-        isValidateSchema
-      };
+        isValidateSchema,
+      }
 
-      const importCsvDetails = await this.issueCredentialService.uploadCSVTemplate(uploadedfileDetails, orgId);
+      const importCsvDetails = await this.issueCredentialService.uploadCSVTemplate(uploadedfileDetails, orgId)
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.CREATED,
         message: ResponseMessages.issuance.success.importCSV,
-        data: importCsvDetails.response
-      };
-      return res.status(HttpStatus.CREATED).json(finalResponse);
+        data: importCsvDetails.response,
+      }
+      return res.status(HttpStatus.CREATED).json(finalResponse)
     }
   }
   /**
@@ -412,32 +416,32 @@ export class IssuanceController {
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
-    type: UnauthorizedErrorDto
+    type: UnauthorizedErrorDto,
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiForbiddenResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
-    type: ForbiddenErrorDto
+    type: ForbiddenErrorDto,
   })
   @ApiOperation({
     summary: 'Preview uploaded file details',
-    description: 'Preview uploaded CSV file details for bulk issuance.'
+    description: 'Preview uploaded CSV file details for bulk issuance.',
   })
   @ApiQuery({
     name: 'pageNumber',
     type: Number,
-    required: false
+    required: false,
   })
   @ApiQuery({
     name: 'searchByText',
     type: String,
-    required: false
+    required: false,
   })
   @ApiQuery({
     name: 'pageSize',
     type: Number,
-    required: false
+    required: false,
   })
   async previewFileDataForIssuance(
     @Param('orgId') orgId: string,
@@ -445,14 +449,14 @@ export class IssuanceController {
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<Response> {
-    const { requestId } = query;
-    const previewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
+    const { requestId } = query
+    const previewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails)
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.previewCSV,
-      data: previewCSVDetails
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      data: previewCSVDetails,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 
   /**
@@ -474,21 +478,21 @@ export class IssuanceController {
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
-    type: UnauthorizedErrorDto
+    type: UnauthorizedErrorDto,
   })
   @ApiForbiddenResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
-    type: ForbiddenErrorDto
+    type: ForbiddenErrorDto,
   })
   @ApiOperation({
     summary: 'bulk issue credential',
-    description: 'Start bulk-issuance process for a specific requestId.'
+    description: 'Start bulk-issuance process for a specific requestId.',
   })
   @ApiQuery({
     name: 'isValidateSchema',
     type: Boolean,
-    required: false
+    required: false,
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiConsumes('multipart/form-data')
@@ -500,15 +504,15 @@ export class IssuanceController {
       properties: {
         file: {
           type: 'string',
-          format: 'binary'
-        }
-      }
+          format: 'binary',
+        },
+      },
     },
-    required: true
+    required: true,
   })
   @UseInterceptors(
     FileInterceptor('file', {
-      limits: { fieldSize: Number(process.env.FIELD_UPLOAD_SIZE) || CommonConstants.DEFAULT_FIELD_UPLOAD_SIZE }
+      limits: { fieldSize: Number(process.env.FIELD_UPLOAD_SIZE) || CommonConstants.DEFAULT_FIELD_UPLOAD_SIZE },
     })
   )
   async issueBulkCredentials(
@@ -517,29 +521,31 @@ export class IssuanceController {
     @Param('orgId') orgId: string,
     @User() user: user,
     @Query(new ValidationPipe({ transform: true })) query: CredentialQuery,
-    @Query('isValidateSchema') isValidateSchema: boolean = true,
     @Res() res: Response,
     @Body() fileDetails?: object,
-    @UploadedFile() file?: Express.Multer.File
+    @UploadedFile() file?: Express.Multer.File,
+    @Query('isValidateSchema') isValidateSchema = true
   ): Promise<Response> {
-    const { credDefId } = query;
-    clientDetails.userId = user.id;
-    let reqPayload;
+    const { credDefId } = query
+    clientDetails.userId = user.id
+    let reqPayload: IReqPayload
 
     // Need to update logic for University DEMO
     if (file && clientDetails?.isSelectiveIssuance) {
-      const fileKey: string = uuidv4();
+      const fileKey: string = uuidv4()
       try {
-        await this.awsService.uploadCsvFile(fileKey, file.buffer);
+        await this.awsService.uploadCsvFile(fileKey, file.buffer)
       } catch (error) {
-        throw new RpcException(error.response ? error.response : error);
+        throw new RpcException(error.response ? error.response : error)
       }
       reqPayload = {
         templateId: credDefId,
         fileKey,
+        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
         fileName: fileDetails['fileName'] || file?.filename || file?.originalname,
-        type: fileDetails?.['type']
-      };
+        // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+        type: fileDetails?.['type'],
+      }
     }
     const bulkIssuanceDetails = await this.issueCredentialService.issueBulkCredential(
       requestId,
@@ -547,14 +553,14 @@ export class IssuanceController {
       clientDetails,
       reqPayload,
       isValidateSchema
-    );
+    )
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssuanceDetails
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+      data: bulkIssuanceDetails,
+    }
+    return res.status(HttpStatus.CREATED).json(finalResponse)
   }
 
   /**
@@ -572,29 +578,29 @@ export class IssuanceController {
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
-    type: UnauthorizedErrorDto
+    type: UnauthorizedErrorDto,
   })
   @ApiForbiddenResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
-    type: ForbiddenErrorDto
+    type: ForbiddenErrorDto,
   })
   @ApiOperation({
     summary: 'Get all file list uploaded for bulk operation',
-    description: 'Retrieve the list of all files uploaded for bulk operation for a specific organization.'
+    description: 'Retrieve the list of all files uploaded for bulk operation for a specific organization.',
   })
   async issuedFileDetails(
     @Param('orgId') orgId: string,
     @Query() fileParameter: FileParameter,
     @Res() res: Response
   ): Promise<object> {
-    const issuedFileDetails = await this.issueCredentialService.issuedFileDetails(orgId, fileParameter);
+    const issuedFileDetails = await this.issueCredentialService.issuedFileDetails(orgId, fileParameter)
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.previewCSV,
-      data: issuedFileDetails.response
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      data: issuedFileDetails.response,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 
   /**
@@ -614,16 +620,16 @@ export class IssuanceController {
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
-    type: UnauthorizedErrorDto
+    type: UnauthorizedErrorDto,
   })
   @ApiForbiddenResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
-    type: ForbiddenErrorDto
+    type: ForbiddenErrorDto,
   })
   @ApiOperation({
     summary: 'Get uploaded file details by file ID',
-    description: 'Retrieve the details of an uploaded file by its file ID for a specific organization.'
+    description: 'Retrieve the details of an uploaded file by its file ID for a specific organization.',
   })
   async getFileDetailsByFileId(
     @Param('orgId') orgId: string,
@@ -631,14 +637,14 @@ export class IssuanceController {
     @Query() fileParameter: FileParameter,
     @Res() res: Response
   ): Promise<object> {
-    const { fileId } = query;
-    const issuedFileDetails = await this.issueCredentialService.getFileDetailsByFileId(orgId, fileId, fileParameter);
+    const { fileId } = query
+    const issuedFileDetails = await this.issueCredentialService.getFileDetailsByFileId(orgId, fileId, fileParameter)
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.previewCSV,
-      data: issuedFileDetails.response
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      data: issuedFileDetails.response,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 
   /**
@@ -655,31 +661,31 @@ export class IssuanceController {
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
-    type: UnauthorizedErrorDto
+    type: UnauthorizedErrorDto,
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiForbiddenResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
-    type: ForbiddenErrorDto
+    type: ForbiddenErrorDto,
   })
   @ApiOperation({
     summary: 'Get all file details and file data by file ID',
-    description: 'Retrieve all details and data of an uploaded file by its file ID for a specific organization.'
+    description: 'Retrieve all details and data of an uploaded file by its file ID for a specific organization.',
   })
   async getFileDetailsAndFileDataByFileId(
     @Param('orgId') orgId: string,
     @Param(new ValidationPipe({ transform: true })) query: FileQuery,
     @Res() res: Response
   ): Promise<object> {
-    const { fileId } = query;
-    const issuedFileDetails = await this.issueCredentialService.getFileDetailsAndFileDataByFileId(orgId, fileId);
+    const { fileId } = query
+    const issuedFileDetails = await this.issueCredentialService.getFileDetailsAndFileDataByFileId(orgId, fileId)
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.fileDetailsAndFileData,
-      data: issuedFileDetails
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      data: issuedFileDetails,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
   /**
    * Retry bulk issue credential
@@ -698,41 +704,41 @@ export class IssuanceController {
   @ApiUnauthorizedResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
-    type: UnauthorizedErrorDto
+    type: UnauthorizedErrorDto,
   })
   @ApiForbiddenResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
-    type: ForbiddenErrorDto
+    type: ForbiddenErrorDto,
   })
   @ApiOperation({
     summary: 'Retry bulk issue credential',
-    description: 'Retry the bulk issuance of credentials for a specific file ID and organization.'
+    description: 'Retry the bulk issuance of credentials for a specific file ID and organization.',
   })
   @ApiQuery({
     name: 'isValidateSchema',
     type: Boolean,
-    required: false
+    required: false,
   })
   async retryBulkCredentials(
     @Param('fileId') fileId: string,
     @Param('orgId') orgId: string,
-    @Query('isValidateSchema') isValidateSchema: boolean = true,
     @Res() res: Response,
-    @Body() clientDetails: ClientDetails
+    @Body() clientDetails: ClientDetails,
+    @Query('isValidateSchema') isValidateSchema = true
   ): Promise<Response> {
     const bulkIssuanceDetails = await this.issueCredentialService.retryBulkCredential(
       fileId,
       orgId,
       clientDetails,
       isValidateSchema
-    );
+    )
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.bulkIssuance,
-      data: bulkIssuanceDetails
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+      data: bulkIssuanceDetails,
+    }
+    return res.status(HttpStatus.CREATED).json(finalResponse)
   }
 
   /**
@@ -747,17 +753,17 @@ export class IssuanceController {
   @Post('/orgs/:orgId/credentials/offer')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Issuer create a credential offer`,
-    description: `Issuer creates a credential offer and sends it to the holder`
+    summary: 'Issuer create a credential offer',
+    description: 'Issuer creates a credential offer and sends it to the holder',
   })
   @ApiQuery({
     name: 'isValidateSchema',
     type: Boolean,
-    required: false
+    required: false,
   })
   @ApiQuery({
     name: 'credentialType',
-    enum: IssueCredentialType
+    enum: IssueCredentialType,
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
@@ -768,60 +774,60 @@ export class IssuanceController {
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for orgId`);
-        }
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId)
+        },
       })
     )
     orgId: string,
     @Body() issueCredentialDto: IssueCredentialDto,
     @Res() res: Response,
     @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
-    @Query('isValidateSchema') isValidateSchema: boolean = true
+    @Query('isValidateSchema') isValidateSchema = true
   ): Promise<Response> {
-    issueCredentialDto.orgId = orgId;
-    issueCredentialDto.credentialType = credentialType;
-    issueCredentialDto.isValidateSchema = isValidateSchema;
+    issueCredentialDto.orgId = orgId
+    issueCredentialDto.credentialType = credentialType
+    issueCredentialDto.isValidateSchema = isValidateSchema
 
-    const credOffer = issueCredentialDto?.credentialData || [];
+    const credOffer = issueCredentialDto?.credentialData || []
 
     if (IssueCredentialType.INDY !== credentialType && IssueCredentialType.JSONLD !== credentialType) {
-      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
+      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType)
     }
 
     if (credentialType === IssueCredentialType.INDY && !issueCredentialDto.credentialDefinitionId) {
-      throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired);
+      throw new BadRequestException(ResponseMessages.credentialDefinition.error.isRequired)
     }
 
     if (
       issueCredentialDto.credentialType !== IssueCredentialType.INDY &&
-      !credOffer.every((offer) => !offer?.attributes || 0 === Object.keys(offer?.attributes).length)
+      !credOffer.every((offer) => !offer?.attributes || Object.keys(offer?.attributes).length === 0)
     ) {
-      throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired);
+      throw new BadRequestException(ResponseMessages.issuance.error.attributesAreRequired)
     }
 
     if (
       issueCredentialDto.credentialType === IssueCredentialType.JSONLD &&
-      credOffer.every((offer) => !offer?.credential || 0 === Object.keys(offer?.credential).length)
+      credOffer.every((offer) => !offer?.credential || Object.keys(offer?.credential).length === 0)
     ) {
-      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
+      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent)
     }
 
     if (
       issueCredentialDto.credentialType === IssueCredentialType.JSONLD &&
-      credOffer.every((offer) => !offer?.options || 0 === Object.keys(offer?.options).length)
+      credOffer.every((offer) => !offer?.options || Object.keys(offer?.options).length === 0)
     ) {
-      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
+      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent)
     }
-    const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
-    const { statusCode, message, data } = getCredentialDetails;
+    const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user)
+    const { statusCode, message, data } = getCredentialDetails
 
     const finalResponse: IResponse = {
       statusCode,
       message,
-      data
-    };
+      data,
+    }
 
-    return res.status(statusCode).json(finalResponse);
+    return res.status(statusCode).json(finalResponse)
   }
   /**
    * Creates a out-of-band credential offer and sends them via emails
@@ -835,8 +841,8 @@ export class IssuanceController {
   @Post('/orgs/:orgId/credentials/oob/email')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
-    summary: `Creates a out-of-band credential offer and sends them via emails`,
-    description: `Issuer creates a out-of-band credential offers and sends them to holders via emails`
+    summary: 'Creates a out-of-band credential offer and sends them via emails',
+    description: 'Issuer creates a out-of-band credential offers and sends them to holders via emails',
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @ApiBearerAuth()
@@ -844,12 +850,12 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   @ApiQuery({
     name: 'credentialType',
-    enum: IssueCredentialType
+    enum: IssueCredentialType,
   })
   @ApiQuery({
     name: 'isValidateSchema',
     type: Boolean,
-    required: false
+    required: false,
   })
   async outOfBandCredentialOffer(
     @User() user: IUserRequest,
@@ -857,40 +863,40 @@ export class IssuanceController {
     @Param('orgId') orgId: string,
     @Res() res: Response,
     @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
-    @Query('isValidateSchema') isValidateSchema: boolean = true
+    @Query('isValidateSchema') isValidateSchema = true
   ): Promise<Response> {
-    outOfBandCredentialDto.orgId = orgId;
-    outOfBandCredentialDto.credentialType = credentialType;
-    outOfBandCredentialDto.isValidateSchema = isValidateSchema;
+    outOfBandCredentialDto.orgId = orgId
+    outOfBandCredentialDto.credentialType = credentialType
+    outOfBandCredentialDto.isValidateSchema = isValidateSchema
 
-    const credOffer = outOfBandCredentialDto?.credentialOffer || [];
+    const credOffer = outOfBandCredentialDto?.credentialOffer || []
     if (IssueCredentialType.INDY !== credentialType && IssueCredentialType.JSONLD !== credentialType) {
-      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType);
+      throw new NotFoundException(ResponseMessages.issuance.error.invalidCredentialType)
     }
     if (
       outOfBandCredentialDto.credentialType === IssueCredentialType.JSONLD &&
-      credOffer.every((offer) => !offer?.credential || 0 === Object.keys(offer?.credential).length)
+      credOffer.every((offer) => !offer?.credential || Object.keys(offer?.credential).length === 0)
     ) {
-      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent);
+      throw new BadRequestException(ResponseMessages.issuance.error.credentialNotPresent)
     }
 
     if (
       outOfBandCredentialDto.credentialType === IssueCredentialType.JSONLD &&
-      credOffer.every((offer) => !offer?.options || 0 === Object.keys(offer?.options).length)
+      credOffer.every((offer) => !offer?.options || Object.keys(offer?.options).length === 0)
     ) {
-      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
+      throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent)
     }
     const getCredentialDetails = await this.issueCredentialService.outOfBandCredentialOffer(
       user,
       outOfBandCredentialDto
-    );
+    )
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.createOOB,
-      data: getCredentialDetails.response
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+      data: getCredentialDetails.response,
+    }
+    return res.status(HttpStatus.CREATED).json(finalResponse)
   }
 
   /**
@@ -906,38 +912,38 @@ export class IssuanceController {
   @Post('/orgs/:orgId/credentials/oob/offer')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: `Create out-of-band credential offer`,
-    description: `Creates an out-of-band credential offer`
+    summary: 'Create out-of-band credential offer',
+    description: 'Creates an out-of-band credential offer',
   })
   @ApiQuery({
     name: 'credentialType',
-    enum: IssueCredentialType
+    enum: IssueCredentialType,
   })
   @ApiQuery({
     name: 'isValidateSchema',
     type: Boolean,
-    required: false
+    required: false,
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   async createOOBCredentialOffer(
-    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
-    @Query('isValidateSchema') isValidateSchema: boolean = true,
     @Param('orgId') orgId: string,
     @Body() issueCredentialDto: OOBIssueCredentialDto,
-    @Res() res: Response
+    @Res() res: Response,
+    @Query('credentialType') credentialType: IssueCredentialType = IssueCredentialType.INDY,
+    @Query('isValidateSchema') isValidateSchema = true
   ): Promise<Response> {
-    issueCredentialDto.orgId = orgId;
-    issueCredentialDto.credentialType = credentialType;
-    issueCredentialDto.isValidateSchema = isValidateSchema;
-    const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto);
+    issueCredentialDto.orgId = orgId
+    issueCredentialDto.credentialType = credentialType
+    issueCredentialDto.isValidateSchema = isValidateSchema
+    const getCredentialDetails = await this.issueCredentialService.sendCredentialOutOfBand(issueCredentialDto)
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,
-      data: getCredentialDetails.response
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+      data: getCredentialDetails.response,
+    }
+    return res.status(HttpStatus.CREATED).json(finalResponse)
   }
 
   /**
@@ -951,43 +957,43 @@ export class IssuanceController {
   @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Catch issue credential webhook responses',
-    description: 'Callback URL for issue credential'
+    description: 'Callback URL for issue credential',
   })
   async getIssueCredentialWebhook(
     @Body() issueCredentialDto: IssuanceDto,
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
-    issueCredentialDto.type = 'Issuance';
+    issueCredentialDto.type = 'Issuance'
 
-    if (id && 'default' === issueCredentialDto.contextCorrelationId) {
-      issueCredentialDto.orgId = id;
+    if (id && issueCredentialDto.contextCorrelationId === 'default') {
+      issueCredentialDto.orgId = id
     }
 
     const getCredentialDetails = await this.issueCredentialService
       .getIssueCredentialWebhook(issueCredentialDto, id)
       .catch((error) => {
-        this.logger.debug(`error in saving issuance webhook ::: ${JSON.stringify(error)}`);
-      });
+        this.logger.debug(`error in saving issuance webhook ::: ${JSON.stringify(error)}`)
+      })
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.create,
-      data: getCredentialDetails
-    };
+      data: getCredentialDetails,
+    }
 
     const webhookUrl = await this.issueCredentialService
       ._getWebhookUrl(issueCredentialDto.contextCorrelationId, id)
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-      });
+        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`)
+      })
     if (webhookUrl) {
-      const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
+      const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto))
 
       await this.issueCredentialService._postWebhookResponse(webhookUrl, { data: plainIssuanceDto }).catch((error) => {
-        this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
-      });
+        this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`)
+      })
     }
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.CREATED).json(finalResponse)
   }
 
   /**
@@ -1008,19 +1014,19 @@ export class IssuanceController {
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-        }
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId)
+        },
       })
     )
     orgId: string,
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    await this.issueCredentialService.deleteIssuanceRecords(orgId, user);
+    await this.issueCredentialService.deleteIssuanceRecords(orgId, user)
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.issuance.success.deleteIssuanceRecords
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      message: ResponseMessages.issuance.success.deleteIssuanceRecords,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 }

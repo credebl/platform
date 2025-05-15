@@ -1,39 +1,39 @@
 export enum sortValue {
-    ASC = 'asc',
-    DESC = 'desc',
+  ASC = 'asc',
+  DESC = 'desc',
 }
 export enum SortValue {
-    ASC = 'asc',
-    DESC = 'desc',
+  ASC = 'asc',
+  DESC = 'desc',
 }
 export enum onboardRequestSort {
-    id = 'id',
-    orgName = 'orgName',
-    createDateTime = 'createDateTime',
-    isEmailVerified = 'isEmailVerified',
-    lastChangedDateTime = 'lastChangedDateTime'
+  id = 'id',
+  orgName = 'orgName',
+  createDateTime = 'createDateTime',
+  isEmailVerified = 'isEmailVerified',
+  lastChangedDateTime = 'lastChangedDateTime',
 }
 
 export enum schemaSortBy {
-    id = 'id',
-    schemaName = 'schemaName',
-    createDateTime = 'createDateTime'
+  id = 'id',
+  schemaName = 'schemaName',
+  createDateTime = 'createDateTime',
 }
 
 export enum credDefSortBy {
-    id = 'id',
-    createDateTime = 'createDateTime',
-    tag = 'tag'
+  id = 'id',
+  createDateTime = 'createDateTime',
+  tag = 'tag',
 }
 
 export enum connectionSortBy {
-    id = 'id',
-    theirLabel = 'theirLabel',
-    createDateTime = 'createdAt'
+  id = 'id',
+  theirLabel = 'theirLabel',
+  createDateTime = 'createdAt',
 }
 export enum credentialSortBy {
-    id = 'id',
-    createDateTime = 'createDateTime'
+  id = 'id',
+  createDateTime = 'createDateTime',
 }
 
 // export enum credRevokeStatus {
@@ -43,88 +43,87 @@ export enum credentialSortBy {
 // }
 
 export enum booleanStatus {
-    all = 'all',
-    true = 'true',
-    false = 'false'
+  all = 'all',
+  true = 'true',
+  false = 'false',
 }
 
 export enum orgPresentProofRequestsSort {
-    id = 'id',
-    holderName = 'theirLabel',
-    createDateTime = 'createDateTime'
+  id = 'id',
+  holderName = 'theirLabel',
+  createDateTime = 'createDateTime',
 }
 
 export enum orgHolderRequestsSort {
-    id = 'id',
-    holderName = 'theirLabel',
-    createDateTime = 'createDateTime'
+  id = 'id',
+  holderName = 'theirLabel',
+  createDateTime = 'createDateTime',
 }
 
 export enum holderProofRequestsSort {
-    id = 'id',
-    createDateTime = 'createDateTime'
+  id = 'id',
+  createDateTime = 'createDateTime',
 }
 
-
 export enum OnboardRequestSort {
-    id = 'id',
-    createDateTime = 'createDateTime',
-    orgName = 'orgName'
+  id = 'id',
+  createDateTime = 'createDateTime',
+  orgName = 'orgName',
 }
 
 export enum CategorySortBy {
-    id = 'id',
-    Name = 'name'
+  id = 'id',
+  Name = 'name',
 }
 export enum CredDefSortBy {
-    id = 'id',
-    createDateTime = 'createDateTime',
-    tag = 'tag'
+  id = 'id',
+  createDateTime = 'createDateTime',
+  tag = 'tag',
 }
 export enum transactionSort {
-    id = 'id',
-    createDateTime = 'createDateTime',
+  id = 'id',
+  createDateTime = 'createDateTime',
 }
 
 export enum ConnectionAlias {
-    endorser = 'ENDORSER',
-    author = 'AUTHOR',
+  endorser = 'ENDORSER',
+  author = 'AUTHOR',
 }
 
 export enum TransactionRole {
-    transactionAuthor = 'TRANSACTION_AUTHOR',
-    transactionEndorser = 'TRANSACTION_ENDORSER',
+  transactionAuthor = 'TRANSACTION_AUTHOR',
+  transactionEndorser = 'TRANSACTION_ENDORSER',
 }
 
 export enum TransactionType {
-    schema = 'SCHEMA',
-    credDef = 'CREDENTIAL_DEF',
+  schema = 'SCHEMA',
+  credDef = 'CREDENTIAL_DEF',
 }
 
 export enum OrderBy {
-    ASC = 'ASC',
-    DESC = 'DESC',
+  ASC = 'ASC',
+  DESC = 'DESC',
 }
 
 export enum EmailAuditOrderByColumns {
-    CreatedDateTime = 'createDateTime',
-    Id = 'id',
+  CreatedDateTime = 'createDateTime',
+  Id = 'id',
 }
 
 export enum ExpiredSubscriptionSortBy {
-    startDate = 'startDate',
-    endDate = 'endDate',
-    id = 'id',
+  startDate = 'startDate',
+  endDate = 'endDate',
+  id = 'id',
 }
 
 export enum FileUploadType {
-    Issuance = 'ISSUANCE'
+  Issuance = 'ISSUANCE',
 }
 
 export enum FileUploadStatus {
-    started = 'PROCESS_STARTED',
-    completed = 'PROCESS_COMPLETED',
-    interrupted= 'PROCESS_INTERRUPTED',
-    retry= 'PROCESS_REINITIATED',
-    partially_completed= 'PARTIALLY_COMPLETED'
+  started = 'PROCESS_STARTED',
+  completed = 'PROCESS_COMPLETED',
+  interrupted = 'PROCESS_INTERRUPTED',
+  retry = 'PROCESS_REINITIATED',
+  partially_completed = 'PARTIALLY_COMPLETED',
 }

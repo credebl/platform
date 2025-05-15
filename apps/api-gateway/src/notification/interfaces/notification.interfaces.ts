@@ -1,5 +1,5 @@
 export interface INotification {
-    id: string;
-    orgId: string;
-    webhookEndpoint: string;
+  id: string
+  orgId: string
+  webhookEndpoint: string
 }

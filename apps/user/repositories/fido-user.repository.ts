@@ -1,30 +1,32 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { CreateUserDto } from '../dtos/create-user.dto';
-import { InternalServerErrorException } from '@nestjs/common';
-import { PrismaService } from '@credebl/prisma-service';
-import { user } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
+import type { PrismaService } from '@credebl/prisma-service'
+import { Injectable, type Logger, NotFoundException } from '@nestjs/common'
+import { InternalServerErrorException } from '@nestjs/common'
+import type { user } from '@prisma/client'
+import { v4 as uuidv4 } from 'uuid'
+import type { CreateUserDto } from '../dtos/create-user.dto'
 
 type UserUpdateData = {
-  fidoUserId?: string;
-  isFidoVerified?: boolean;
-  username?: string;
+  fidoUserId?: string
+  isFidoVerified?: boolean
+  username?: string
   // Add other properties you want to update
-};
+}
 
 @Injectable()
 export class FidoUserRepository {
-  constructor(private readonly prisma: PrismaService, private readonly logger: Logger) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: Logger
+  ) {}
 
-  
   /**
-   * 
-   * @param createUserDto 
+   *
+   * @param createUserDto
    * @returns user details
    */
   async createUser(createUserDto: CreateUserDto): Promise<user> {
     try {
-      const verifyCode = uuidv4();
+      const verifyCode = uuidv4()
 
       const saveResponse = await this.prisma.user.create({
         data: {
@@ -32,21 +34,20 @@ export class FidoUserRepository {
           email: createUserDto.email,
           firstName: createUserDto.firstName,
           lastName: createUserDto.lastName,
-          verificationCode: verifyCode
-        }
-      });
+          verificationCode: verifyCode,
+        },
+      })
 
-      return saveResponse;
-
+      return saveResponse
     } catch (error) {
-      this.logger.error(`In Create User Repository: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`In Create User Repository: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
   /**
-   * 
-   * @param email 
+   *
+   * @param email
    * @returns User exist details
    */
 
@@ -55,75 +56,71 @@ export class FidoUserRepository {
     try {
       return this.prisma.user.findFirstOrThrow({
         where: {
-          email
-        }
-      });
+          email,
+        },
+      })
     } catch (error) {
-      this.logger.error(`checkUserExist: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(error);
+      this.logger.error(`checkUserExist: ${JSON.stringify(error)}`)
+      throw new InternalServerErrorException(error)
     }
   }
 
   /**
- * 
- * @param email 
- * @returns User details
- */
+   *
+   * @param email
+   * @returns User details
+   */
 
   // eslint-disable-next-line camelcase
   async getUserDetails(email: string): Promise<user> {
     try {
       return this.prisma.user.findFirst({
         where: {
-          email
-        }
-      });
+          email,
+        },
+      })
     } catch (error) {
-      this.logger.error(`Not Found: ${JSON.stringify(error)}`);
-      throw new NotFoundException(error);
+      this.logger.error(`Not Found: ${JSON.stringify(error)}`)
+      throw new NotFoundException(error)
     }
   }
 
   /**
- * 
- * @param tenantDetails 
- * @returns Updates organization details
- */
+   *
+   * @param tenantDetails
+   * @returns Updates organization details
+   */
   // eslint-disable-next-line camelcase
-  async updateFidoUserDetails(email:string, fidoUserId: string, username: string): Promise<user> {
+  async updateFidoUserDetails(email: string, fidoUserId: string, username: string): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {
-          email
+          email,
         },
         data: {
           fidoUserId,
-          username
-        }
-      });
-      return updateUserDetails;
-
+          username,
+        },
+      })
+      return updateUserDetails
     } catch (error) {
-      this.logger.error(`Error in update isEmailVerified: ${error.message} `);
-      throw error;
+      this.logger.error(`Error in update isEmailVerified: ${error.message} `)
+      throw error
     }
   }
 
-
-  async updateUserDetails(email:string, additionalParams:UserUpdateData[]): Promise<user> {
+  async updateUserDetails(email: string, additionalParams: UserUpdateData[]): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
         where: {
-          email
+          email,
         },
-        data: { ...additionalParams[0]}
-      });
-      return updateUserDetails;
-
+        data: { ...additionalParams[0] },
+      })
+      return updateUserDetails
     } catch (error) {
-      this.logger.error(`Error in update isEmailVerified: ${error.message} `);
-      throw error;
+      this.logger.error(`Error in update isEmailVerified: ${error.message} `)
+      throw error
     }
   }
 }
-

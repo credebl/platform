@@ -1,13 +1,13 @@
-import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsBoolean, MaxLength, MinLength, Validate } from 'class-validator';
+import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger'
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength, Validate } from 'class-validator'
 
-import { Transform } from 'class-transformer';
-import { ImageBase64Validator, IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
-import { GeoLocationDto } from '../../dtos/geo-location-dto';
+import { ImageBase64Validator, IsNotSQLInjection, trim } from '@credebl/common/cast.helper'
+import { Transform } from 'class-transformer'
+import { GeoLocationDto } from '../../dtos/geo-location-dto'
 
 @ApiExtraModels()
 export class UpdateOrganizationDto extends GeoLocationDto {
-  orgId: string;
+  orgId: string
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -17,7 +17,7 @@ export class UpdateOrganizationDto extends GeoLocationDto {
   @MaxLength(200, { message: 'Organization name must be at most 200 characters.' })
   @IsString({ message: 'Organization name must be in string format.' })
   @IsNotSQLInjection({ message: 'Incorrect pattern for organization name.' })
-  name: string;
+  name: string
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -26,21 +26,21 @@ export class UpdateOrganizationDto extends GeoLocationDto {
   @MinLength(2, { message: 'Description must be at least 2 characters.' })
   @MaxLength(1000, { message: 'Description must be at most 1000 characters.' })
   @IsString({ message: 'Description must be in string format.' })
-  description: string;
+  description: string
 
   @ApiPropertyOptional()
   @IsOptional()
   @Transform(({ value }) => trim(value))
   @Validate(ImageBase64Validator)
-  logo?: string = '';
+  logo?: string = ''
 
   @ApiPropertyOptional()
   @IsOptional()
-  website?: string;
+  website?: string
 
   @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean({ message: 'isPublic should be boolean' })
   @IsOptional()
-  isPublic?: boolean = false;
+  isPublic?: boolean = false
 }

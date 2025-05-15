@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ClientsModule } from '@nestjs/microservices';
-import { RevocationService } from './revocation.service';
-import { RevocationController } from './revocation.controller';
-import { commonNatsOptions } from 'libs/service/nats.options';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient'
+import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
+import { ClientsModule } from '@nestjs/microservices'
+import { commonNatsOptions } from 'libs/service/nats.options'
+import { RevocationController } from './revocation.controller'
+import { RevocationService } from './revocation.service'
 
 @Module({
   imports: [
@@ -12,11 +12,11 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
-        ...commonNatsOptions('REVOCATION_SERVICE:REQUESTER')
-      }
-    ])
+        ...commonNatsOptions('REVOCATION_SERVICE:REQUESTER'),
+      },
+    ]),
   ],
   controllers: [RevocationController],
-  providers: [RevocationService, NATSClient]
+  providers: [RevocationService, NATSClient],
 })
 export class RevocationModule {}

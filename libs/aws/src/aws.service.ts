@@ -1,32 +1,32 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
-import { S3 } from 'aws-sdk';
-import { promisify } from 'util';
+import { promisify } from 'util'
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import { RpcException } from '@nestjs/microservices'
+import { S3 } from 'aws-sdk'
 
 @Injectable()
 export class AwsService {
-  private s3: S3;
-  private s4: S3;
-  private s3StoreObject: S3;
+  private s3: S3
+  private s4: S3
+  private s3StoreObject: S3
 
   constructor() {
     this.s3 = new S3({
       accessKeyId: process.env.AWS_ACCESS_KEY,
       secretAccessKey: process.env.AWS_SECRET_KEY,
-      region: process.env.AWS_REGION
-    });
+      region: process.env.AWS_REGION,
+    })
 
     this.s4 = new S3({
       accessKeyId: process.env.AWS_PUBLIC_ACCESS_KEY,
       secretAccessKey: process.env.AWS_PUBLIC_SECRET_KEY,
-      region: process.env.AWS_PUBLIC_REGION
-    });
+      region: process.env.AWS_PUBLIC_REGION,
+    })
 
     this.s3StoreObject = new S3({
       accessKeyId: process.env.AWS_S3_STOREOBJECT_ACCESS_KEY,
       secretAccessKey: process.env.AWS_S3_STOREOBJECT_SECRET_KEY,
-      region: process.env.AWS_S3_STOREOBJECT_REGION
-    });
+      region: process.env.AWS_S3_STOREOBJECT_REGION,
+    })
   }
 
   async uploadFileToS3Bucket(
@@ -35,10 +35,10 @@ export class AwsService {
     filename: string,
     bucketName: string,
     encoding: string,
-    pathAWS: string = ''
+    pathAWS = ''
   ): Promise<string> {
-    const timestamp = Date.now();
-    const putObjectAsync = promisify(this.s4.putObject).bind(this.s4);
+    const timestamp = Date.now()
+    const putObjectAsync = promisify(this.s4.putObject).bind(this.s4)
 
     try {
       await putObjectAsync({
@@ -46,13 +46,13 @@ export class AwsService {
         Key: `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`,
         Body: fileBuffer,
         ContentEncoding: encoding,
-        ContentType: `image/png`
-      });
+        ContentType: `image/png`,
+      })
 
-      const imageUrl = `https://${bucketName}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
-      return imageUrl;
+      const imageUrl = `https://${bucketName}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`
+      return imageUrl
     } catch (error) {
-      throw new HttpException(error, HttpStatus.SERVICE_UNAVAILABLE);
+      throw new HttpException(error, HttpStatus.SERVICE_UNAVAILABLE)
     }
   }
 
@@ -60,56 +60,56 @@ export class AwsService {
     const params: AWS.S3.PutObjectRequest = {
       Bucket: process.env.AWS_BUCKET,
       Key: key,
-      Body: 'string' === typeof body ? body : body.toString()
-    };
+      Body: typeof body === 'string' ? body : body.toString(),
+    }
 
     try {
-      await this.s3.upload(params).promise();
+      await this.s3.upload(params).promise()
     } catch (error) {
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getFile(key: string): Promise<AWS.S3.GetObjectOutput> {
     const params: AWS.S3.GetObjectRequest = {
       Bucket: process.env.AWS_BUCKET,
-      Key: key
-    };
+      Key: key,
+    }
     try {
-      return this.s3.getObject(params).promise();
+      return this.s3.getObject(params).promise()
     } catch (error) {
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async deleteFile(key: string): Promise<void> {
     const params: AWS.S3.DeleteObjectRequest = {
       Bucket: process.env.AWS_BUCKET,
-      Key: key
-    };
+      Key: key,
+    }
     try {
-      await this.s3.deleteObject(params).promise();
+      await this.s3.deleteObject(params).promise()
     } catch (error) {
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async storeObject(persistent: boolean, key: string, body: unknown): Promise<S3.ManagedUpload.SendData> {
-    const objKey: string = persistent.valueOf() ? `persist/${key}` : `default/${key}`;
-    const buf = Buffer.from(JSON.stringify(body));
+    const objKey: string = persistent.valueOf() ? `persist/${key}` : `default/${key}`
+    const buf = Buffer.from(JSON.stringify(body))
     const params: AWS.S3.PutObjectRequest = {
       Bucket: process.env.AWS_S3_STOREOBJECT_BUCKET,
       Body: buf,
       Key: objKey,
       ContentEncoding: 'base64',
-      ContentType: 'application/json'
-    };
+      ContentType: 'application/json',
+    }
 
     try {
-      const receivedData = await this.s3StoreObject.upload(params).promise();
-      return receivedData;
+      const receivedData = await this.s3StoreObject.upload(params).promise()
+      return receivedData
     } catch (error) {
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 }

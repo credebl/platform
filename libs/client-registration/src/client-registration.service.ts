@@ -4,21 +4,21 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
-import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import * as qs from 'qs';
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common'
+import * as qs from 'qs'
 
-import { ClientCredentialTokenPayloadDto } from './dtos/client-credential-token-payload.dto';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { CommonService } from '@credebl/common';
-import { CreateUserDto } from './dtos/create-user.dto';
-import { JwtService } from '@nestjs/jwt';
-import { KeycloakUrlService } from '@credebl/keycloak-url';
-import { accessTokenPayloadDto } from './dtos/accessTokenPayloadDto';
-import { userTokenPayloadDto } from './dtos/userTokenPayloadDto';
-import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { IClientRoles } from './interfaces/client.interface';
-import { IFormattedResponse } from '@credebl/common/interfaces/interface';
+import type { CommonService } from '@credebl/common'
+import { CommonConstants } from '@credebl/common/common.constant'
+import type { IFormattedResponse } from '@credebl/common/interfaces/interface'
+import { ResponseMessages } from '@credebl/common/response-messages'
+import type { KeycloakUrlService } from '@credebl/keycloak-url'
+import { JwtService } from '@nestjs/jwt'
+import type { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto'
+import { accessTokenPayloadDto } from './dtos/accessTokenPayloadDto'
+import { ClientCredentialTokenPayloadDto } from './dtos/client-credential-token-payload.dto'
+import type { CreateUserDto } from './dtos/create-user.dto'
+import { userTokenPayloadDto } from './dtos/userTokenPayloadDto'
+import type { IClientRoles } from './interfaces/client.interface'
 
 @Injectable()
 export class ClientRegistrationService {
@@ -27,25 +27,25 @@ export class ClientRegistrationService {
     private readonly keycloakUrlService: KeycloakUrlService
   ) {}
 
-  private readonly logger = new Logger('ClientRegistrationService');
+  private readonly logger = new Logger('ClientRegistrationService')
 
   async registerKeycloakUser(userDetails: KeycloakUserRegistrationDto, realm: string, token: string) {
     try {
-      const url = await this.keycloakUrlService.createUserURL(realm);
-      await this.commonService.httpPost(url, userDetails, this.getAuthHeader(token));
+      const url = await this.keycloakUrlService.createUserURL(realm)
+      await this.commonService.httpPost(url, userDetails, this.getAuthHeader(token))
 
       const getUserResponse = await this.commonService.httpGet(
         await this.keycloakUrlService.getUserByUsernameURL(realm, userDetails.email),
         this.getAuthHeader(token)
-      );
+      )
       if (getUserResponse[0].username === userDetails.email || getUserResponse[1].username === userDetails.email) {
-        return { keycloakUserId: getUserResponse[0].id };
+        return { keycloakUserId: getUserResponse[0].id }
       } else {
-        throw new NotFoundException(ResponseMessages.user.error.invalidKeycloakId);
+        throw new NotFoundException(ResponseMessages.user.error.invalidKeycloakId)
       }
     } catch (error) {
-      this.logger.error(`error in keycloakUserRegistration in client-registration: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`error in keycloakUserRegistration in client-registration: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
@@ -53,12 +53,12 @@ export class ClientRegistrationService {
     const getUserResponse = await this.commonService.httpGet(
       await this.keycloakUrlService.getUserByUsernameURL(realm, user.email),
       this.getAuthHeader(token)
-    );
-    const userid = getUserResponse[0].id;
+    )
+    const userid = getUserResponse[0].id
 
-    const passwordResponse = await this.resetPasswordOfKeycloakUser(realm, user.password, userid, token);
+    const passwordResponse = await this.resetPasswordOfKeycloakUser(realm, user.password, userid, token)
 
-    return passwordResponse;
+    return passwordResponse
   }
 
   async createUser(user: CreateUserDto, realm: string, token: string): Promise<{ keycloakUserId: string }> {
@@ -79,105 +79,105 @@ export class ClientRegistrationService {
         view: true,
         mapRoles: true,
         impersonate: true,
-        manage: true
+        manage: true,
       },
       realmRoles: ['mb-user'],
       attributes: {
-        ...(user.isHolder ? { userRole: `${CommonConstants.USER_HOLDER_ROLE}` } : {})
-      }
-    };
+        ...(user.isHolder ? { userRole: `${CommonConstants.USER_HOLDER_ROLE}` } : {}),
+      },
+    }
 
     await this.commonService.httpPost(
       await this.keycloakUrlService.createUserURL(realm),
       payload,
       this.getAuthHeader(token)
-    );
+    )
 
     const getUserResponse = await this.commonService.httpGet(
       await this.keycloakUrlService.getUserByUsernameURL(realm, user.email),
       this.getAuthHeader(token)
-    );
-    const userid = getUserResponse[0].id;
+    )
+    const userid = getUserResponse[0].id
 
-    await this.resetPasswordOfKeycloakUser(realm, user.password, userid, token);
+    await this.resetPasswordOfKeycloakUser(realm, user.password, userid, token)
 
     return {
-      keycloakUserId: getUserResponse[0].id
-    };
+      keycloakUserId: getUserResponse[0].id,
+    }
   }
 
   async resetPasswordOfKeycloakUser(realm: string, resetPasswordValue: string, userid: string, token: string) {
     const passwordPayload = {
       type: 'password',
       value: resetPasswordValue,
-      temporary: false
-    };
+      temporary: false,
+    }
     const setPasswordResponse = await this.commonService.httpPut(
       //await this.keycloakUrlService.ResetPasswordURL(`${process.env.KEYCLOAK_CREDEBL_REALM}`, userid),
       await this.keycloakUrlService.ResetPasswordURL(realm, userid),
       passwordPayload,
       this.getAuthHeader(token)
-    );
-    return setPasswordResponse;
+    )
+    return setPasswordResponse
   }
 
   getAuthHeader(token: string) {
-    return { headers: { authorization: `Bearer ${token}` } };
+    return { headers: { authorization: `Bearer ${token}` } }
   }
 
   async getUserInfo(token: string) {
     try {
-      const jwtService = new JwtService({});
-      const decoded = jwtService.decode(token, { complete: true });
+      const jwtService = new JwtService({})
+      const decoded = jwtService.decode(token, { complete: true })
       if (!decoded) {
-        throw new UnauthorizedException('Invalid token');
+        throw new UnauthorizedException('Invalid token')
       }
 
-      const payload = decoded['payload'];
+      const payload = decoded.payload
 
       const userInfoResponse = await this.commonService.httpGet(
-        `${process.env.KEYCLOAK_DOMAIN}admin/realms/${process.env.KEYCLOAK_REALM}/users/${payload['sub']}`,
+        `${process.env.KEYCLOAK_DOMAIN}admin/realms/${process.env.KEYCLOAK_REALM}/users/${payload.sub}`,
         this.getAuthHeader(token)
-      );
-      return userInfoResponse.data;
+      )
+      return userInfoResponse.data
     } catch (error) {
-      this.logger.error(`[getUserInfo]: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`[getUserInfo]: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
   async getManagementToken(clientId: string, clientSecret: string) {
     try {
-      const payload = new ClientCredentialTokenPayloadDto();
+      const payload = new ClientCredentialTokenPayloadDto()
       if (!clientId && !clientSecret) {
-        this.logger.error(`getManagementToken ::: Client ID and client secret are missing`);
-        throw new BadRequestException(`Client ID and client secret are missing`);
+        this.logger.error(`getManagementToken ::: Client ID and client secret are missing`)
+        throw new BadRequestException(`Client ID and client secret are missing`)
       }
 
-      const decryptClientId = await this.commonService.decryptPassword(clientId);
-      const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
+      const decryptClientId = await this.commonService.decryptPassword(clientId)
+      const decryptClientSecret = await this.commonService.decryptPassword(clientSecret)
 
-      payload.client_id = decryptClientId;
-      payload.client_secret = decryptClientSecret;
-      const mgmtTokenResponse = await this.getToken(payload);
-      return mgmtTokenResponse.access_token;
+      payload.client_id = decryptClientId
+      payload.client_secret = decryptClientSecret
+      const mgmtTokenResponse = await this.getToken(payload)
+      return mgmtTokenResponse.access_token
     } catch (error) {
-      this.logger.error(`Error in getManagementToken: ${JSON.stringify(error)}`);
+      this.logger.error(`Error in getManagementToken: ${JSON.stringify(error)}`)
 
-      throw error;
+      throw error
     }
   }
 
   async getManagementTokenForMobile() {
-    const payload = new ClientCredentialTokenPayloadDto();
-    payload.client_id = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_ID;
-    payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_SECRET;
-    payload.scope = 'email profile';
+    const payload = new ClientCredentialTokenPayloadDto()
+    payload.client_id = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_ID
+    payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_SECRET
+    payload.scope = 'email profile'
 
-    this.logger.log(`management Payload: ${JSON.stringify(payload)}`);
-    const mgmtTokenResponse = await this.getToken(payload);
-    this.logger.debug(`ClientRegistrationService management token ${JSON.stringify(mgmtTokenResponse)}`);
-    return mgmtTokenResponse;
+    this.logger.log(`management Payload: ${JSON.stringify(payload)}`)
+    const mgmtTokenResponse = await this.getToken(payload)
+    this.logger.debug(`ClientRegistrationService management token ${JSON.stringify(mgmtTokenResponse)}`)
+    return mgmtTokenResponse
   }
 
   async getClientIdAndSecret(
@@ -186,64 +186,64 @@ export class ClientRegistrationService {
   ): Promise<{ clientId: string; clientSecret: string }> | undefined {
     // Client id cannot be undefined
     if (!clientId) {
-      return;
+      return
     }
     try {
-      const realmName = process.env.KEYCLOAK_REALM;
+      const realmName = process.env.KEYCLOAK_REALM
       const getClientResponse = await this.commonService.httpGet(
         await this.keycloakUrlService.GetClientURL(realmName, clientId),
         this.getAuthHeader(token)
-      );
-      const { id } = getClientResponse[0];
-      const client_id = getClientResponse[0].clientId;
+      )
+      const { id } = getClientResponse[0]
+      const client_id = getClientResponse[0].clientId
 
       const response = await this.commonService.httpGet(
         `${process.env.KEYCLOAK_DOMAIN}${CommonConstants.URL_KEYCLOAK_CLIENT_SECRET.replace('{id}', id)}`,
         this.getAuthHeader(token)
-      );
+      )
 
       return {
         clientId: client_id,
-        clientSecret: response.value
-      };
+        clientSecret: response.value,
+      }
     } catch (error) {
-      if (404 === error?.response?.statusCode) {
+      if (error?.response?.statusCode === 404) {
       } else {
-        this.logger.error(`Caught exception while retrieving clientSecret from Auth0: ${JSON.stringify(error)}`);
-        throw new Error('Unable to retrieve clientSecret from server');
+        this.logger.error(`Caught exception while retrieving clientSecret from Auth0: ${JSON.stringify(error)}`)
+        throw new Error('Unable to retrieve clientSecret from server')
       }
     }
   }
 
   async deleteClient(idpId: string, token: string) {
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
     const getClientDeleteResponse = await this.commonService.httpDelete(
       await this.keycloakUrlService.GetClientIdpURL(realmName, idpId),
       this.getAuthHeader(token)
-    );
+    )
 
-    this.logger.log(`Delete realm client ${JSON.stringify(getClientDeleteResponse)}`);
+    this.logger.log(`Delete realm client ${JSON.stringify(getClientDeleteResponse)}`)
 
-    return getClientDeleteResponse;
+    return getClientDeleteResponse
   }
 
   async createUserClientRole(idpId: string, token: string, userId: string, payload: object[]): Promise<string> {
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
     const createClientRolesResponse = await this.commonService.httpPost(
       await this.keycloakUrlService.GetClientUserRoleURL(realmName, userId, idpId),
       payload,
       this.getAuthHeader(token)
-    );
+    )
 
-    this.logger.debug(`createUserClientRolesResponse ${JSON.stringify(createClientRolesResponse)}`);
+    this.logger.debug(`createUserClientRolesResponse ${JSON.stringify(createClientRolesResponse)}`)
 
-    return 'User client role is assigned';
+    return 'User client role is assigned'
   }
 
   async deleteUserClientRoles(idpId: string, token: string, userId: string): Promise<boolean> {
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
     const createClientRolesResponse = await this.commonService
       .httpDelete(
@@ -251,113 +251,113 @@ export class ClientRegistrationService {
         this.getAuthHeader(token)
       )
       .then((data) => data?.data)
-      .catch((error) => error);
+      .catch((error) => error)
 
-    this.logger.debug(`deleteUserClientRoles ${JSON.stringify(createClientRolesResponse)}`);
+    this.logger.debug(`deleteUserClientRoles ${JSON.stringify(createClientRolesResponse)}`)
 
-    return true;
+    return true
   }
 
   async createUserHolderRole(token: string, userId: string, payload: object[]): Promise<string> {
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
     const createClientRolesResponse = await this.commonService.httpPost(
       await this.keycloakUrlService.GetClientUserRoleURL(realmName, userId),
       payload,
       this.getAuthHeader(token)
-    );
+    )
 
-    this.logger.debug(`createUserHolderRole ${JSON.stringify(createClientRolesResponse)}`);
+    this.logger.debug(`createUserHolderRole ${JSON.stringify(createClientRolesResponse)}`)
 
-    return 'User holder role is assigned';
+    return 'User holder role is assigned'
   }
 
   async getAllClientRoles(idpId: string, token: string): Promise<IClientRoles[]> {
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
     const clientRolesResponse = await this.commonService.httpGet(
       await this.keycloakUrlService.GetClientRoleURL(realmName, idpId),
       this.getAuthHeader(token)
-    );
+    )
 
-    this.logger.debug(`getAllClientRoles ${JSON.stringify(clientRolesResponse)}`);
+    this.logger.debug(`getAllClientRoles ${JSON.stringify(clientRolesResponse)}`)
 
-    return clientRolesResponse;
+    return clientRolesResponse
   }
 
   async getClientSpecificRoles(idpId: string, token: string, roleName: string): Promise<IClientRoles> {
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
     const clientRolesResponse = await this.commonService.httpGet(
       await this.keycloakUrlService.GetClientRoleURL(realmName, idpId, roleName),
       this.getAuthHeader(token)
-    );
+    )
 
-    this.logger.debug(`getClientSpecificRoles ${JSON.stringify(clientRolesResponse)}`);
+    this.logger.debug(`getClientSpecificRoles ${JSON.stringify(clientRolesResponse)}`)
 
-    return clientRolesResponse;
+    return clientRolesResponse
   }
 
   async getAllRealmRoles(token: string): Promise<IClientRoles[]> {
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
     const realmRolesResponse = await this.commonService.httpGet(
       await this.keycloakUrlService.GetRealmRoleURL(realmName),
       this.getAuthHeader(token)
-    );
+    )
 
-    this.logger.debug(`getAllRealmRoles ${JSON.stringify(realmRolesResponse)}`);
+    this.logger.debug(`getAllRealmRoles ${JSON.stringify(realmRolesResponse)}`)
 
-    return realmRolesResponse;
+    return realmRolesResponse
   }
 
   async createClientRole(idpId: string, token: string, name: string, description: string): Promise<string> {
     const payload = {
       clientRole: true,
       name,
-      description
-    };
+      description,
+    }
 
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
     const createClientRolesResponse = await this.commonService.httpPost(
       await this.keycloakUrlService.GetClientRoleURL(realmName, idpId),
       payload,
       this.getAuthHeader(token)
-    );
+    )
 
-    this.logger.debug(`createClientRolesResponse ${JSON.stringify(createClientRolesResponse)}`);
+    this.logger.debug(`createClientRolesResponse ${JSON.stringify(createClientRolesResponse)}`)
 
-    return 'Client role is created';
+    return 'Client role is created'
   }
 
   async generateClientSecret(idpId: string, token: string): Promise<string> {
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
     const createClientSercretResponse = await this.commonService.httpPost(
       await this.keycloakUrlService.GetClientSecretURL(realmName, idpId),
       {},
       this.getAuthHeader(token)
-    );
+    )
 
     this.logger.debug(
       `ClientRegistrationService create realm client secret ${JSON.stringify(createClientSercretResponse)}`
-    );
+    )
 
     const getClientSercretResponse = await this.commonService.httpGet(
       await this.keycloakUrlService.GetClientSecretURL(realmName, idpId),
       this.getAuthHeader(token)
-    );
-    this.logger.debug(`ClientRegistrationService get client secret ${JSON.stringify(getClientSercretResponse)}`);
-    this.logger.log(`${getClientSercretResponse.value}`);
-    const clientSecret = getClientSercretResponse.value;
+    )
+    this.logger.debug(`ClientRegistrationService get client secret ${JSON.stringify(getClientSercretResponse)}`)
+    this.logger.log(`${getClientSercretResponse.value}`)
+    const clientSecret = getClientSercretResponse.value
 
-    return clientSecret;
+    return clientSecret
   }
 
   async createClient(orgName: string, orgId: string, token: string) {
     //create client for respective created realm in order to access its resources
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
     const clientPayload = {
       clientId: `${orgId}`,
       name: `${orgName}`,
@@ -366,10 +366,10 @@ export class ClientRegistrationService {
       access: {
         view: true,
         configure: true,
-        manage: true
+        manage: true,
       },
       attributes: {
-        orgId: `${orgId}`
+        orgId: `${orgId}`,
       },
       authenticationFlowBindingOverrides: {},
       authorizationServicesEnabled: false,
@@ -394,39 +394,39 @@ export class ClientRegistrationService {
       publicClient: false,
       frontchannelLogout: false,
       fullScopeAllowed: false,
-      nodeReRegistrationTimeout: 0
-    };
+      nodeReRegistrationTimeout: 0,
+    }
 
     const createClientResponse = await this.commonService.httpPost(
       await this.keycloakUrlService.createClientURL(realmName),
       clientPayload,
       this.getAuthHeader(token)
-    );
-    this.logger.debug(`ClientRegistrationService create realm client ${JSON.stringify(createClientResponse)}`);
+    )
+    this.logger.debug(`ClientRegistrationService create realm client ${JSON.stringify(createClientResponse)}`)
 
     const getClientResponse = await this.commonService.httpGet(
       await this.keycloakUrlService.GetClientURL(realmName, `${orgId}`),
       this.getAuthHeader(token)
-    );
-    this.logger.debug(`ClientRegistrationService get realm admin client ${JSON.stringify(createClientResponse)}`);
-    const { id } = getClientResponse[0];
-    const client_id = getClientResponse[0].clientId;
+    )
+    this.logger.debug(`ClientRegistrationService get realm admin client ${JSON.stringify(createClientResponse)}`)
+    const { id } = getClientResponse[0]
+    const client_id = getClientResponse[0].clientId
 
     const getClientSercretResponse = await this.commonService.httpGet(
       await this.keycloakUrlService.GetClientSecretURL(realmName, id),
       this.getAuthHeader(token)
-    );
+    )
     this.logger.debug(
       `ClientRegistrationService get realm admin client secret ${JSON.stringify(getClientSercretResponse)}`
-    );
-    this.logger.log(`${getClientSercretResponse.value}`);
-    const client_secret = getClientSercretResponse.value;
+    )
+    this.logger.log(`${getClientSercretResponse.value}`)
+    const client_secret = getClientSercretResponse.value
 
     return {
       idpId: id,
       clientId: client_id,
-      clientSecret: client_secret
-    };
+      clientSecret: client_secret,
+    }
   }
 
   async registerApplication(name: string, organizationId: number, token: string) {
@@ -439,79 +439,79 @@ export class ClientRegistrationService {
       cross_origin_auth: false,
       refresh_token: {
         rotation_type: 'non-rotating',
-        expiration_type: 'non-expiring'
+        expiration_type: 'non-expiring',
       },
       jwt_configuration: {
         alg: 'RS256',
         lifetime_in_seconds: 36000,
-        secret_encoded: false
+        secret_encoded: false,
       },
       app_type: 'non_interactive',
       grant_types: ['client_credentials'],
       custom_login_page_on: true,
       client_metadata: {
-        organizationId: organizationId.toString()
-      }
-    };
+        organizationId: organizationId.toString(),
+      },
+    }
     const registerAppResponse = await this.commonService.httpPost(
       `${process.env.KEYCLOAK_DOMAIN}${CommonConstants.URL_KEYCLOAK_MANAGEMENT_APPLICATIONS}`,
       payload,
       this.getAuthHeader(token)
-    );
-    this.logger.debug(`ClientRegistrationService register app ${JSON.stringify(registerAppResponse)}`);
+    )
+    this.logger.debug(`ClientRegistrationService register app ${JSON.stringify(registerAppResponse)}`)
 
     return {
       clientId: registerAppResponse.data.client_id,
-      clientSecret: registerAppResponse.data.client_secret
-    };
+      clientSecret: registerAppResponse.data.client_secret,
+    }
   }
 
   async authorizeApi(clientId: string, scope: string[], token: string) {
     const existingGrantsResponse = await this.commonService.httpGet(
       `${process.env.KEYCLOAK_DOMAIN}${CommonConstants.URL_KEYCLOAK_MANAGEMENT_GRANTS}`,
       this.getAuthHeader(token)
-    );
+    )
 
     // If an grant matching the client id is already found, don't recreate it.
-    let grantResponse = { data: undefined };
-    grantResponse.data = existingGrantsResponse.data.find((grant) => grant.client_id === clientId);
-    this.logger.debug(`ClientRegistrationService existing grant ${JSON.stringify(grantResponse)}`);
+    let grantResponse = { data: undefined }
+    grantResponse.data = existingGrantsResponse.data.find((grant) => grant.client_id === clientId)
+    this.logger.debug(`ClientRegistrationService existing grant ${JSON.stringify(grantResponse)}`)
 
     // Grant wasn't found, so we need to create it
     if (!grantResponse.data) {
       const payload = {
         client_id: clientId,
         audience: process.env.AUTH0_AUDIENCE,
-        scope
-      };
+        scope,
+      }
       grantResponse = await this.commonService.httpPost(
         `${process.env.KEYCLOAK_DOMAIN}${CommonConstants.URL_KEYCLOAK_MANAGEMENT_GRANTS}`,
         payload,
         this.getAuthHeader(token)
-      );
-      this.logger.debug(`ClientRegistrationService authorize api ${JSON.stringify(grantResponse)}`);
+      )
+      this.logger.debug(`ClientRegistrationService authorize api ${JSON.stringify(grantResponse)}`)
     }
-    return grantResponse.data.id;
+    return grantResponse.data.id
   }
 
   async getToken(payload: ClientCredentialTokenPayloadDto) {
-    if ('client_credentials' !== payload.grant_type || !payload.client_id || !payload.client_secret) {
-      throw new Error('Invalid inputs while getting token.');
+    if (payload.grant_type !== 'client_credentials' || !payload.client_id || !payload.client_secret) {
+      throw new Error('Invalid inputs while getting token.')
     }
-    const strURL = await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM);
-    this.logger.log(`getToken URL: ${strURL}`);
+    const strURL = await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM)
+    this.logger.log(`getToken URL: ${strURL}`)
     const config = {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    };
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    }
     const tokenResponse = await this.commonService.httpPost(
       await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM),
       qs.stringify(payload),
       config
-    );
+    )
 
-    return tokenResponse;
+    return tokenResponse
   }
 
   async CreateConnection(clientId: string, token: string) {
@@ -534,191 +534,191 @@ export class ClientRegistrationService {
           get_user:
             "function getByEmail(email, callback) {\n  // This script should retrieve a user profile from your existing database,\n  // without authenticating the user.\n  // It is used to check if a user exists before executing flows that do not\n  // require authentication (signup and password reset).\n  //\n  // There are three ways this script can finish:\n  // 1. A user was successfully found. The profile should be in the following\n  // format: https://auth0.com/docs/users/normalized/auth0/normalized-user-profile-schema.\n  //     callback(null, profile);\n  // 2. A user was not found\n  //     callback(null);\n  // 3. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n\n  const msg = 'Please implement the Get User script for this database connection ' +\n    'at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
           change_password:
-            "function changePassword(email, newPassword, callback) {\n  // This script should change the password stored for the current user in your\n  // database. It is executed when the user clicks on the confirmation link\n  // after a reset password request.\n  // The content and behavior of password confirmation emails can be customized\n  // here: https://manage.auth0.com/#/emails\n  // The `newPassword` parameter of this function is in plain text. It must be\n  // hashed/salted to match whatever is stored in your database.\n  //\n  // There are three ways that this script can finish:\n  // 1. The user's password was updated successfully:\n  //     callback(null, true);\n  // 2. The user's password was not updated:\n  //     callback(null, false);\n  // 3. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n  //\n  // If an error is returned, it will be passed to the query string of the page\n  // where the user is being redirected to after clicking the confirmation link.\n  // For example, returning `callback(new Error(\"error\"))` and redirecting to\n  // https://example.com would redirect to the following URL:\n  //     https://example.com?email=alice%40example.com&message=error&success=false\n\n  const msg = 'Please implement the Change Password script for this database ' +\n    'connection at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n"
+            "function changePassword(email, newPassword, callback) {\n  // This script should change the password stored for the current user in your\n  // database. It is executed when the user clicks on the confirmation link\n  // after a reset password request.\n  // The content and behavior of password confirmation emails can be customized\n  // here: https://manage.auth0.com/#/emails\n  // The `newPassword` parameter of this function is in plain text. It must be\n  // hashed/salted to match whatever is stored in your database.\n  //\n  // There are three ways that this script can finish:\n  // 1. The user's password was updated successfully:\n  //     callback(null, true);\n  // 2. The user's password was not updated:\n  //     callback(null, false);\n  // 3. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n  //\n  // If an error is returned, it will be passed to the query string of the page\n  // where the user is being redirected to after clicking the confirmation link.\n  // For example, returning `callback(new Error(\"error\"))` and redirecting to\n  // https://example.com would redirect to the following URL:\n  //     https://example.com?email=alice%40example.com&message=error&success=false\n\n  const msg = 'Please implement the Change Password script for this database ' +\n    'connection at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
         },
         passwordPolicy: 'good',
         password_complexity_options: {
-          min_length: 8
+          min_length: 8,
         },
         password_history: {
           size: 5,
-          enable: false
+          enable: false,
         },
         password_no_personal_info: {
-          enable: false
+          enable: false,
         },
         password_dictionary: {
           enable: false,
-          dictionary: []
+          dictionary: [],
         },
 
-        gateway_authentication: 'object'
+        gateway_authentication: 'object',
       },
       enabled_clients: [clientId],
       realms: [''],
-      metadata: {}
-    };
+      metadata: {},
+    }
 
     const clientConnResponse = await this.commonService.httpPost(
       `${process.env.KEYCLOAK_DOMAIN}${CommonConstants.URL_KEYCLOAK_MANAGEMENT_CONNECTIONS}`,
       payload,
       this.getAuthHeader(token)
-    );
-    this.logger.debug(`ClientRegistrationService create connection app ${JSON.stringify(clientConnResponse)}`);
+    )
+    this.logger.debug(`ClientRegistrationService create connection app ${JSON.stringify(clientConnResponse)}`)
 
     return {
       name: clientConnResponse.data.name,
-      id: clientConnResponse.data.id
-    };
+      id: clientConnResponse.data.id,
+    }
   }
 
   async getUserToken(email: string, password: string, clientId: string, clientSecret: string) {
-    const payload = new userTokenPayloadDto();
+    const payload = new userTokenPayloadDto()
     if (!clientId && !clientSecret) {
-      this.logger.error(`getUserToken ::: Client ID and client secret are missing`);
-      throw new BadRequestException(`Client ID and client secret are missing`);
+      this.logger.error(`getUserToken ::: Client ID and client secret are missing`)
+      throw new BadRequestException(`Client ID and client secret are missing`)
     }
 
-    const decryptClientId = await this.commonService.decryptPassword(clientId);
-    const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
+    const decryptClientId = await this.commonService.decryptPassword(clientId)
+    const decryptClientSecret = await this.commonService.decryptPassword(clientSecret)
 
-    payload.client_id = decryptClientId;
-    payload.client_secret = decryptClientSecret;
-    payload.username = email;
-    payload.password = password;
+    payload.client_id = decryptClientId
+    payload.client_secret = decryptClientSecret
+    payload.username = email
+    payload.password = password
 
     if (
-      'password' !== payload.grant_type ||
+      payload.grant_type !== 'password' ||
       !payload.client_id ||
       !payload.client_secret ||
       !payload.username ||
       !payload.password
     ) {
-      throw new Error('Invalid inputs while getting token.');
+      throw new Error('Invalid inputs while getting token.')
     }
 
-    const strURL = await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM);
-    this.logger.log(`getToken URL: ${strURL}`);
+    const strURL = await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM)
+    this.logger.log(`getToken URL: ${strURL}`)
     const config = {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    };
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    }
 
     const tokenResponse = await this.commonService.httpPost(
       await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM),
       qs.stringify(payload),
       config
-    );
+    )
 
-    return tokenResponse;
+    return tokenResponse
   }
 
   async getAccessToken(refreshToken: string, clientId: string, clientSecret: string) {
     try {
-      const payload = new accessTokenPayloadDto();
+      const payload = new accessTokenPayloadDto()
       if (!clientId && !clientSecret) {
-        this.logger.error(`getAccessToken ::: Client ID and client secret are missing`);
-        throw new BadRequestException(`Client ID and client secret are missing`);
+        this.logger.error(`getAccessToken ::: Client ID and client secret are missing`)
+        throw new BadRequestException(`Client ID and client secret are missing`)
       }
 
-      const decryptClientId = await this.commonService.decryptPassword(clientId);
-      const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
+      const decryptClientId = await this.commonService.decryptPassword(clientId)
+      const decryptClientSecret = await this.commonService.decryptPassword(clientSecret)
 
-      payload.client_id = decryptClientId;
-      payload.client_secret = decryptClientSecret;
+      payload.client_id = decryptClientId
+      payload.client_secret = decryptClientSecret
 
-      payload.grant_type = 'refresh_token';
-      payload.refresh_token = refreshToken;
+      payload.grant_type = 'refresh_token'
+      payload.refresh_token = refreshToken
 
       if (
-        'refresh_token' !== payload.grant_type ||
+        payload.grant_type !== 'refresh_token' ||
         !payload.client_id ||
         !payload.client_secret ||
         !payload.refresh_token
       ) {
-        throw new Error('Invalid inputs while getting token.');
+        throw new Error('Invalid inputs while getting token.')
       }
 
       const config = {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      };
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
 
       const tokenResponse = await this.commonService.httpPost(
         await this.keycloakUrlService.GetSATURL(process.env.KEYCLOAK_REALM),
         qs.stringify(payload),
         config
-      );
+      )
 
-      return tokenResponse;
+      return tokenResponse
     } catch (error) {
-      this.logger.error(`Error in getAccessToken ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`Error in getAccessToken ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
   async getAccessTokenHolder(refreshToken: string) {
-    const payload = new accessTokenPayloadDto();
-    payload.grant_type = 'refresh_token';
-    payload.client_id = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_ID;
-    payload.refresh_token = refreshToken;
-    payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_SECRET;
+    const payload = new accessTokenPayloadDto()
+    payload.grant_type = 'refresh_token'
+    payload.client_id = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_ID
+    payload.refresh_token = refreshToken
+    payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_SECRET
 
-    this.logger.log(`access Token for holderPayload: ${JSON.stringify(payload)}`);
+    this.logger.log(`access Token for holderPayload: ${JSON.stringify(payload)}`)
 
     if (
-      'refresh_token' !== payload.grant_type ||
+      payload.grant_type !== 'refresh_token' ||
       !payload.client_id ||
       !payload.client_secret ||
       !payload.refresh_token
     ) {
-      throw new Error('Bad Request');
+      throw new Error('Bad Request')
     }
 
-    const strURL = await this.keycloakUrlService.GetSATURL('credebl-platform');
-    this.logger.log(`getToken URL: ${strURL}`);
+    const strURL = await this.keycloakUrlService.GetSATURL('credebl-platform')
+    this.logger.log(`getToken URL: ${strURL}`)
     const config = {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    };
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    }
 
     const tokenResponse = await this.commonService.httpPost(
       await this.keycloakUrlService.GetSATURL('credebl-platform'),
       qs.stringify(payload),
       config
-    );
+    )
 
-    this.logger.debug(`ClientRegistrationService token ${JSON.stringify(tokenResponse)}`);
-    return tokenResponse;
+    this.logger.debug(`ClientRegistrationService token ${JSON.stringify(tokenResponse)}`)
+    return tokenResponse
   }
 
   async getClientRedirectUrl(clientId: string, token: string) {
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
-    const decryptClientId = await this.commonService.decryptPassword(clientId);
+    const decryptClientId = await this.commonService.decryptPassword(clientId)
     const redirectUrls = await this.commonService.httpGet(
       await this.keycloakUrlService.GetClientURL(realmName, decryptClientId),
       this.getAuthHeader(token)
-    );
+    )
 
-    this.logger.debug(`redirectUrls ${JSON.stringify(redirectUrls)}`);
+    this.logger.debug(`redirectUrls ${JSON.stringify(redirectUrls)}`)
 
-    return redirectUrls;
+    return redirectUrls
   }
 
   async getUserInfoByUserId(userId: string, token: string) {
-    const realmName = process.env.KEYCLOAK_REALM;
+    const realmName = process.env.KEYCLOAK_REALM
 
     const userInfo = await this.commonService.httpGet(
       await this.keycloakUrlService.GetUserInfoURL(realmName, userId),
       this.getAuthHeader(token)
-    );
+    )
 
-    this.logger.debug(`userInfo ${JSON.stringify(userInfo)}`);
+    this.logger.debug(`userInfo ${JSON.stringify(userInfo)}`)
 
-    return userInfo;
+    return userInfo
   }
 }

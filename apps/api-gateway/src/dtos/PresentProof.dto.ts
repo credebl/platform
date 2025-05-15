@@ -1,3 +1,3 @@
 export class PresentProofDto {
-    credDef?: string;
+  credDef?: string
 }

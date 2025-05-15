@@ -2,14 +2,14 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: 'tsconfig.json',
-    sourceType: 'module'
+    sourceType: 'module',
   },
   plugins: ['@typescript-eslint/eslint-plugin'],
   extends: ['plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'],
   root: true,
   env: {
     node: true,
-    jest: true
+    jest: true,
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
@@ -17,7 +17,7 @@ module.exports = {
     'no-console': 'error',
     //  "@typescript-eslint/consistent-type-imports": "error",
     '@typescript-eslint/no-unused-vars': [
-      'error'
+      'error',
       // {
       //   "argsIgnorePattern": "_"
       // }
@@ -59,11 +59,11 @@ module.exports = {
       'error',
       {
         array: true,
-        object: true
+        object: true,
       },
       {
-        enforceForRenamedProperties: false
-      }
+        enforceForRenamedProperties: false,
+      },
     ],
     'prefer-numeric-literals': 'error',
     'prefer-rest-params': 'warn',
@@ -99,6 +99,6 @@ module.exports = {
     'object-shorthand': 'error',
     'prefer-const': 'error',
     'prefer-template': 'error',
-    quotes: ['warn', 'single', { allowTemplateLiterals: true }]
-  }
-};
+    quotes: ['warn', 'single', { allowTemplateLiterals: true }],
+  },
+}

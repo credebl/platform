@@ -1,24 +1,14 @@
-import {
-  Global,
-  Inject,
-  MiddlewareConsumer,
-  Module,
-  NestModule
-} from '@nestjs/common';
+import { Global, Inject, type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common'
 
-import WinstonLogger, {
-  WinstonLoggerTransportsKey
-} from '@credebl/logger/winstonLogger';
-import Logger, {
-  LoggerBaseKey,
-  LoggerKey
-} from '@credebl/logger/logger.interface';
-import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
-import ConsoleTransport from '@credebl/logger/transports/consoleTransport';
-import * as morgan from 'morgan';
-import { ConfigService } from '../../config/src/config.service';
-import LoggerService from '@credebl/logger/logger.service';
-import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant'
+import type Logger from '@credebl/logger/logger.interface'
+import { LoggerBaseKey, LoggerKey } from '@credebl/logger/logger.interface'
+import LoggerService from '@credebl/logger/logger.service'
+import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter'
+import ConsoleTransport from '@credebl/logger/transports/consoleTransport'
+import WinstonLogger, { WinstonLoggerTransportsKey } from '@credebl/logger/winstonLogger'
+import * as morgan from 'morgan'
+import { ConfigService } from '../../config/src/config.service'
 
 @Global()
 @Module({
@@ -27,31 +17,31 @@ import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
   providers: [
     {
       provide: LoggerBaseKey,
-      useClass: WinstonLogger
+      useClass: WinstonLogger,
     },
     {
       provide: LoggerKey,
-      useClass: LoggerService
+      useClass: LoggerService,
     },
     {
       provide: NestjsLoggerServiceAdapter,
       // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
       useFactory: (logger: Logger) => new NestjsLoggerServiceAdapter(logger),
-      inject: [LoggerKey]
+      inject: [LoggerKey],
     },
     {
       provide: WinstonLoggerTransportsKey,
       // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
-      useFactory: (configService: ConfigService) => {
-        const transports = [];
+      useFactory: (_configService: ConfigService) => {
+        const transports = []
 
-        transports.push(ConsoleTransport.createColorize());
-        return transports;
+        transports.push(ConsoleTransport.createColorize())
+        return transports
       },
-      inject: [ConfigService, MICRO_SERVICE_NAME]
-    }
+      inject: [ConfigService, MICRO_SERVICE_NAME],
+    },
   ],
-  exports: [LoggerKey, NestjsLoggerServiceAdapter]
+  exports: [LoggerKey, NestjsLoggerServiceAdapter],
 })
 export class LoggerModule implements NestModule {
   public constructor(
@@ -66,12 +56,12 @@ export class LoggerModule implements NestModule {
           stream: {
             write: (message: string) => {
               this.logger.debug(message, {
-                sourceClass: 'RequestLogger'
-              });
-            }
-          }
+                sourceClass: 'RequestLogger',
+              })
+            },
+          },
         })
       )
-      .forRoutes('*');
+      .forRoutes('*')
   }
 }

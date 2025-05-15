@@ -1,14 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class RolesPermissionsObj {
-    @ApiProperty()
-    roleId: string;
+  @ApiProperty()
+  roleId: string
 
-    @ApiProperty({ type: [] })
-    permissionsId: number;
+  @ApiProperty({ type: [] })
+  permissionsId: number
 }
 
 export class SaveRolesPermissionsDto {
-    @ApiProperty({ type: [] })
-    data: RolesPermissionsObj;
+  @ApiProperty({ type: [] })
+  data: RolesPermissionsObj
 }

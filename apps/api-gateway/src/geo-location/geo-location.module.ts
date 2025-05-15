@@ -1,12 +1,12 @@
-import { Logger, Module } from '@nestjs/common';
-import { GeoLocationController } from './geo-location.controller';
-import { GeoLocationService } from './geo-location.service';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { getNatsOptions } from '@credebl/common/nats.config';
-import { RateLimiterModule, RateLimiterGuard } from 'nestjs-rate-limiter';
-import { APP_GUARD } from '@nestjs/core';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/NATSClient'
+import { CommonConstants } from '@credebl/common/common.constant'
+import { getNatsOptions } from '@credebl/common/nats.config'
+import { Logger, Module } from '@nestjs/common'
+import { APP_GUARD } from '@nestjs/core'
+import { ClientsModule, Transport } from '@nestjs/microservices'
+import { RateLimiterGuard, RateLimiterModule } from 'nestjs-rate-limiter'
+import { GeoLocationController } from './geo-location.controller'
+import { GeoLocationService } from './geo-location.service'
 
 @Module({
   imports: [
@@ -14,15 +14,15 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.GEO_LOCATION_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
-      }
+        options: getNatsOptions(CommonConstants.GEO_LOCATION_SERVICE, process.env.API_GATEWAY_NKEY_SEED),
+      },
     ]),
     RateLimiterModule.register({
       points: 50,
       duration: 1,
       keyPrefix: 'rateLimiter',
-      errorMessage: 'Rate limit exceeded, please try again later.'
-    })
+      errorMessage: 'Rate limit exceeded, please try again later.',
+    }),
   ],
   controllers: [GeoLocationController],
   providers: [
@@ -30,9 +30,9 @@ import { NATSClient } from '@credebl/common/NATSClient';
     Logger,
     {
       provide: APP_GUARD,
-      useClass: RateLimiterGuard
+      useClass: RateLimiterGuard,
     },
-    NATSClient
-  ]
+    NATSClient,
+  ],
 })
 export class GeoLocationModule {}

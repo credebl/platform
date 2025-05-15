@@ -1,57 +1,68 @@
-/* eslint-disable prefer-destructuring */
-// eslint-disable-next-line camelcase
-import { RecordType, org_invitations, organisation, user } from '@prisma/client';
-import {
-  Injectable,
-  Logger,
-  ConflictException,
-  InternalServerErrorException,
-  HttpException,
-  BadRequestException,
-  ForbiddenException,
-  UnauthorizedException,
-  NotFoundException,
-  Inject
-} from '@nestjs/common';
-import { PrismaService } from '@credebl/prisma-service';
-import { CommonService } from '@credebl/common';
-import { OrganizationRepository } from '../repositories/organization.repository';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { OrgRolesService } from '@credebl/org-roles';
-import { OrgRoles } from 'libs/org-roles/enums';
-import { UserOrgRolesService } from '@credebl/user-org-roles';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { OrganizationInviteTemplate } from '../templates/organization-invitation.template';
-import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
-import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
-import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum';
-import { IGetOrgById, IGetOrganization, IUpdateOrganization, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails, IEcosystemOrgStatus, IOrgDetails } from '../interfaces/organization.interface';
-import { UserActivityService } from '@credebl/user-activity';
-import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
-import { map } from 'rxjs/operators';
-import { Cache } from 'cache-manager';
-import { AwsService } from '@credebl/aws';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import {
+import type { AwsService } from '@credebl/aws'
+import type { ClientRegistrationService } from '@credebl/client-registration/client-registration.service'
+import type { CommonService } from '@credebl/common'
+import { EmailDto } from '@credebl/common/dtos/email.dto'
+import type {
+  IDeleteOrganization,
+  IOrgActivityCount,
   IOrgCredentials,
   IOrganization,
-  IOrganizationInvitations,
   IOrganizationDashboard,
-  IDeleteOrganization,
-  IOrgActivityCount
-} from '@credebl/common/interfaces/organization.interface';
+  IOrganizationInvitations,
+} from '@credebl/common/interfaces/organization.interface'
+import { ResponseMessages } from '@credebl/common/response-messages'
+import { sendEmail } from '@credebl/common/send-grid-helper-file'
+import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum'
+import type { OrgRolesService } from '@credebl/org-roles'
+import type { PrismaService } from '@credebl/prisma-service'
+import type { UserActivityService } from '@credebl/user-activity'
+import type { UserOrgRolesService } from '@credebl/user-org-roles'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  HttpException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  type Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common'
+import { type ClientProxy, RpcException } from '@nestjs/microservices'
+/* eslint-disable prefer-destructuring */
+// eslint-disable-next-line camelcase
+import { RecordType, type org_invitations, type organisation, type user } from '@prisma/client'
+import type { Cache } from 'cache-manager'
+import { OrgRoles } from 'libs/org-roles/enums'
+import { map } from 'rxjs/operators'
+import type { CreateOrganizationDto } from '../dtos/create-organization.dto'
+import type { BulkSendInvitationDto } from '../dtos/send-invitation.dto'
+import type { UpdateInvitationDto } from '../dtos/update-invitation.dt'
+import type {
+  IClientCredentials,
+  ICreateConnectionUrl,
+  IDidList,
+  IEcosystemOrgStatus,
+  IGetOrgById,
+  IGetOrganization,
+  IOrgDetails,
+  IOrgRole,
+  IPrimaryDidDetails,
+  IUpdateOrganization,
+} from '../interfaces/organization.interface'
+import type { OrganizationRepository } from '../repositories/organization.repository'
+import { OrganizationInviteTemplate } from '../templates/organization-invitation.template'
 
-import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
-import { IAccessTokenData } from '@credebl/common/interfaces/interface';
-import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
-import { toNumber } from '@credebl/common/cast.helper';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
-import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto'
+import type { IClientRoles } from '@credebl/client-registration/interfaces/client.interface'
+import type { NATSClient } from '@credebl/common/NATSClient'
+import { toNumber } from '@credebl/common/cast.helper'
+import type { IAccessTokenData } from '@credebl/common/interfaces/interface'
+import type { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface'
+import type { UserActivityRepository } from 'libs/user-activity/repositories'
+import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template'
 @Injectable()
 export class OrganizationService {
   constructor(
@@ -67,19 +78,19 @@ export class OrganizationService {
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly clientRegistrationService: ClientRegistrationService,
     private readonly userActivityRepository: UserActivityRepository,
-    private readonly natsClient : NATSClient
+    private readonly natsClient: NATSClient
   ) {}
-  
+
   async getPlatformConfigDetails(): Promise<object> {
     try {
-      const getPlatformDetails = await this.organizationRepository.getPlatformConfigDetails();
-      return getPlatformDetails;
+      const getPlatformDetails = await this.organizationRepository.getPlatformConfigDetails()
+      return getPlatformDetails
     } catch (error) {
-      this.logger.error(`In fetch getPlatformConfigDetails : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In fetch getPlatformConfigDetails : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
-  
+
   /**
    *
    * @param registerOrgDto
@@ -93,45 +104,44 @@ export class OrganizationService {
     keycloakUserId: string
   ): Promise<organisation> {
     try {
-      const userOrgCount = await this.organizationRepository.userOrganizationCount(userId); 
-  
+      const userOrgCount = await this.organizationRepository.userOrganizationCount(userId)
+
       if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
-       throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
+        throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit)
       }
 
-      const organizationExist = await this.organizationRepository.checkOrganizationNameExist(createOrgDto.name);
+      const organizationExist = await this.organizationRepository.checkOrganizationNameExist(createOrgDto.name)
 
       if (organizationExist) {
-        throw new ConflictException(ResponseMessages.organisation.error.exists);
+        throw new ConflictException(ResponseMessages.organisation.error.exists)
       }
 
-      const orgSlug = this.createOrgSlug(createOrgDto.name);
+      const orgSlug = this.createOrgSlug(createOrgDto.name)
 
-      const isOrgSlugExist = await this.organizationRepository.checkOrganizationSlugExist(orgSlug);
+      const isOrgSlugExist = await this.organizationRepository.checkOrganizationSlugExist(orgSlug)
 
       if (isOrgSlugExist) {
-        throw new ConflictException(ResponseMessages.organisation.error.exists);
-      }   
-
-      createOrgDto.orgSlug = orgSlug;
-      createOrgDto.createdBy = userId;
-      createOrgDto.lastChangedBy = userId;
-
-      if (await this.isValidBase64(createOrgDto?.logo)) {
-        const imageUrl = await this.uploadFileToS3(createOrgDto.logo);
-        createOrgDto.logo = imageUrl;
-      } else {
-        createOrgDto.logo = '';
+        throw new ConflictException(ResponseMessages.organisation.error.exists)
       }
 
-      
-      const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto);
+      createOrgDto.orgSlug = orgSlug
+      createOrgDto.createdBy = userId
+      createOrgDto.lastChangedBy = userId
+
+      if (await this.isValidBase64(createOrgDto?.logo)) {
+        const imageUrl = await this.uploadFileToS3(createOrgDto.logo)
+        createOrgDto.logo = imageUrl
+      } else {
+        createOrgDto.logo = ''
+      }
+
+      const organizationDetails = await this.organizationRepository.createOrganization(createOrgDto)
 
       // To return selective object data
-      delete organizationDetails.lastChangedBy;
-      delete organizationDetails.lastChangedDateTime;
-      delete organizationDetails.orgSlug;
-      delete organizationDetails.website;
+      organizationDetails.lastChangedBy = undefined
+      organizationDetails.lastChangedDateTime = undefined
+      organizationDetails.orgSlug = undefined
+      organizationDetails.website = undefined
 
       try {
         const orgCredentials = await this.registerToKeycloak(
@@ -140,30 +150,30 @@ export class OrganizationService {
           keycloakUserId,
           userId,
           false
-        );
+        )
 
-        const { clientId, idpId } = orgCredentials;
+        const { clientId, idpId } = orgCredentials
 
         const updateOrgData = {
           clientId,
-          idpId
-        };
-  
+          idpId,
+        }
+
         const updatedOrg = await this.organizationRepository.updateOrganizationById(
           updateOrgData,
           organizationDetails.id
-        );
-  
+        )
+
         if (!updatedOrg) {
-          throw new InternalServerErrorException(ResponseMessages.organisation.error.credentialsNotUpdate);
+          throw new InternalServerErrorException(ResponseMessages.organisation.error.credentialsNotUpdate)
         }
       } catch (error) {
-        this.logger.error(`Error In creating client : ${JSON.stringify(error)}`);
-        throw new InternalServerErrorException('Unable to create client');
+        this.logger.error(`Error In creating client : ${JSON.stringify(error)}`)
+        throw new InternalServerErrorException('Unable to create client')
       }
 
       if (createOrgDto.notificationWebhook) {
-        await this.storeOrgWebhookEndpoint(organizationDetails.id, createOrgDto.notificationWebhook);
+        await this.storeOrgWebhookEndpoint(organizationDetails.id, createOrgDto.notificationWebhook)
       }
 
       await this.userActivityService.createActivity(
@@ -171,84 +181,80 @@ export class OrganizationService {
         organizationDetails.id,
         `${organizationDetails.name} organization created`,
         'Get started with inviting users to join organization'
-      );
+      )
 
-      return organizationDetails;
+      return organizationDetails
     } catch (error) {
-      this.logger.error(`In create organization : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In create organization : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
-   /**
+  /**
    *
    * @param registerOrgDto
    * @returns
    */
 
   // eslint-disable-next-line camelcase
-  async setPrimaryDid(
-    orgId:string,
-    did:string,
-    id:string
-  ): Promise<string> {
+  async setPrimaryDid(orgId: string, did: string, id: string): Promise<string> {
     try {
-      const organizationExist = await this.organizationRepository.getOrgProfile(orgId);
+      const organizationExist = await this.organizationRepository.getOrgProfile(orgId)
       if (!organizationExist) {
-        throw new NotFoundException(ResponseMessages.organisation.error.notFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.notFound)
       }
-      const orgAgentDetails = await this.organizationRepository.getAgentEndPoint(orgId);
+      const orgAgentDetails = await this.organizationRepository.getAgentEndPoint(orgId)
       if (orgAgentDetails.orgDid === did) {
-        throw new ConflictException(ResponseMessages.organisation.error.primaryDid);
+        throw new ConflictException(ResponseMessages.organisation.error.primaryDid)
       }
 
       //check user DID exist in the organization's did list
-      const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId);
-      const isDidMatch = organizationDidList.some(item => item.did === did);
+      const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId)
+      const isDidMatch = organizationDidList.some((item) => item.did === did)
 
       if (!isDidMatch) {
-        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound)
       }
-      const didDetails = await this.organizationRepository.getDidDetailsByDid(did);
+      const didDetails = await this.organizationRepository.getDidDetailsByDid(did)
 
       if (!didDetails) {
-        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound)
       }
-      
-      const dids = await this.organizationRepository.getDids(orgId);
-      const noPrimaryDid = dids.every(orgDids => false === orgDids.isPrimaryDid);
 
-      let existingPrimaryDid;
-      let priviousDidFalse;
+      const dids = await this.organizationRepository.getDids(orgId)
+      const noPrimaryDid = dids.every((orgDids) => orgDids.isPrimaryDid === false)
+
+      let existingPrimaryDid
+      let priviousDidFalse
       if (!noPrimaryDid) {
-        existingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId);
-        
-        if (!existingPrimaryDid) {
-          throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
-        }
-  
-        priviousDidFalse = await this.organizationRepository.setPreviousDidFlase(existingPrimaryDid.id);
-      } 
+        existingPrimaryDid = await this.organizationRepository.getPerviousPrimaryDid(orgId)
 
-      const didParts = did.split(':');
-      let nameSpace: string | null = null;
-        
+        if (!existingPrimaryDid) {
+          throw new NotFoundException(ResponseMessages.organisation.error.didNotFound)
+        }
+
+        priviousDidFalse = await this.organizationRepository.setPreviousDidFlase(existingPrimaryDid.id)
+      }
+
+      const didParts = did.split(':')
+      let nameSpace: string | null = null
+
       // This condition will handle the multi-ledger support
       if (DidMethod.INDY === didParts[1]) {
-        nameSpace = `${didParts[2]}:${didParts[3]}`;
+        nameSpace = `${didParts[2]}:${didParts[3]}`
       } else if (DidMethod.POLYGON === didParts[1]) {
-        nameSpace = `${didParts[1]}:${didParts[2]}`;
+        nameSpace = `${didParts[1]}:${didParts[2]}`
       } else {
-        nameSpace = null;
+        nameSpace = null
       }
 
-      let network;
-      if (null !== nameSpace) {
-        network = await this.organizationRepository.getNetworkByNameSpace(nameSpace);
+      let network
+      if (nameSpace !== null) {
+        network = await this.organizationRepository.getNetworkByNameSpace(nameSpace)
       } else {
-        network = await this.organizationRepository.getLedger(Ledgers.Not_Applicable);
+        network = await this.organizationRepository.getLedger(Ledgers.Not_Applicable)
         if (!network) {
-          throw new NotFoundException(ResponseMessages.agent.error.noLedgerFound);
+          throw new NotFoundException(ResponseMessages.agent.error.noLedgerFound)
         }
       }
 
@@ -257,19 +263,17 @@ export class OrganizationService {
         orgId,
         id,
         didDocument: didDetails.didDocument,
-        networkId: network?.id ?? null
-      };
+        networkId: network?.id ?? null,
+      }
 
-      const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(primaryDidDetails);
+      const setPrimaryDid = await this.organizationRepository.setOrgsPrimaryDid(primaryDidDetails)
 
-      await Promise.all([setPrimaryDid, existingPrimaryDid, priviousDidFalse]);
+      await Promise.all([setPrimaryDid, existingPrimaryDid, priviousDidFalse])
 
-
-      return ResponseMessages.organisation.success.primaryDid;
-      
+      return ResponseMessages.organisation.success.primaryDid
     } catch (error) {
-      this.logger.error(`In setPrimaryDid method: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In setPrimaryDid method: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -280,30 +284,31 @@ export class OrganizationService {
    */
   async createOrgCredentials(orgId: string, userId: string, keycloakUserId: string): Promise<IOrgCredentials> {
     try {
-      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId)
 
       if (!organizationDetails) {
-        throw new ConflictException(ResponseMessages.organisation.error.orgNotFound);
+        throw new ConflictException(ResponseMessages.organisation.error.orgNotFound)
       }
 
-      let updateOrgData = {};
-      let generatedClientSecret = '';
+      let updateOrgData = {}
+      let generatedClientSecret = ''
 
       if (organizationDetails.idpId) {
-
-        const userDetails = await this.organizationRepository.getUser(userId);
-        const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
+        const userDetails = await this.organizationRepository.getUser(userId)
+        const token = await this.clientRegistrationService.getManagementToken(
+          userDetails.clientId,
+          userDetails.clientSecret
+        )
 
         generatedClientSecret = await this.clientRegistrationService.generateClientSecret(
           organizationDetails.idpId,
           token
-        );
+        )
 
         updateOrgData = {
-          clientSecret: this.maskString(generatedClientSecret)
-        };
+          clientSecret: this.maskString(generatedClientSecret),
+        }
       } else {
-
         try {
           const orgCredentials = await this.registerToKeycloak(
             organizationDetails.name,
@@ -311,37 +316,37 @@ export class OrganizationService {
             keycloakUserId,
             userId,
             true
-          );
-  
-          const { clientId, idpId, clientSecret } = orgCredentials;
-  
-          generatedClientSecret = clientSecret;
-  
+          )
+
+          const { clientId, idpId, clientSecret } = orgCredentials
+
+          generatedClientSecret = clientSecret
+
           updateOrgData = {
             clientId,
             clientSecret: this.maskString(clientSecret),
-            idpId
-          };
+            idpId,
+          }
         } catch (error) {
-          this.logger.error(`Error In creating client : ${JSON.stringify(error)}`);
-          throw new InternalServerErrorException('Unable to create client');
+          this.logger.error(`Error In creating client : ${JSON.stringify(error)}`)
+          throw new InternalServerErrorException('Unable to create client')
         }
       }
 
-      const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgId);
+      const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgId)
 
       if (!updatedOrg) {
-        throw new InternalServerErrorException(ResponseMessages.organisation.error.credentialsNotUpdate);
+        throw new InternalServerErrorException(ResponseMessages.organisation.error.credentialsNotUpdate)
       }
 
       return {
         idpId: updatedOrg.idpId,
         clientId: updatedOrg.clientId,
-        clientSecret: generatedClientSecret
-      };
+        clientSecret: generatedClientSecret,
+      }
     } catch (error) {
-      this.logger.error(`In createOrgCredentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In createOrgCredentials : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -358,80 +363,81 @@ export class OrganizationService {
     userId: string,
     shouldUpdateRole: boolean
   ): Promise<IOrgCredentials> {
-    const userDetails = await this.organizationRepository.getUser(userId);
-    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
-    const orgDetails = await this.clientRegistrationService.createClient(orgName, orgId, token);
+    const userDetails = await this.organizationRepository.getUser(userId)
+    const token = await this.clientRegistrationService.getManagementToken(
+      userDetails.clientId,
+      userDetails.clientSecret
+    )
+    const orgDetails = await this.clientRegistrationService.createClient(orgName, orgId, token)
 
-    const orgRolesList = [OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER];
+    const orgRolesList = [OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER]
 
-      for (const role of orgRolesList) {
-        await this.clientRegistrationService.createClientRole(orgDetails.idpId, token, role, role);
-      }   
+    for (const role of orgRolesList) {
+      await this.clientRegistrationService.createClientRole(orgDetails.idpId, token, role, role)
+    }
 
     const ownerRoleClient = await this.clientRegistrationService.getClientSpecificRoles(
       orgDetails.idpId,
       token,
       OrgRoles.OWNER
-    );
+    )
 
     const payload = [
       {
         id: ownerRoleClient.id,
-        name: ownerRoleClient.name
-      }
-    ];
+        name: ownerRoleClient.name,
+      },
+    ]
 
-    const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER);
+    const ownerRoleData = await this.orgRoleService.getRole(OrgRoles.OWNER)
 
     if (!shouldUpdateRole) {
-
       await Promise.all([
         this.clientRegistrationService.createUserClientRole(orgDetails.idpId, token, keycloakUserId, payload),
-        this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, orgId, ownerRoleClient.id)
-      ]);
-      
+        this.userOrgRoleService.createUserOrgRole(userId, ownerRoleData.id, orgId, ownerRoleClient.id),
+      ])
     } else {
       const roleIdList = [
         {
           roleId: ownerRoleData.id,
-          idpRoleId: ownerRoleClient.id
-        }
-      ];     
-      
+          idpRoleId: ownerRoleClient.id,
+        },
+      ]
+
       await Promise.all([
         this.clientRegistrationService.createUserClientRole(orgDetails.idpId, token, keycloakUserId, payload),
         this.userOrgRoleService.deleteOrgRoles(userId, orgId),
-        this.userOrgRoleService.updateUserOrgRole(userId, orgId, roleIdList)
-      ]);
+        this.userOrgRoleService.updateUserOrgRole(userId, orgId, roleIdList),
+      ])
     }
 
-    return orgDetails;
+    return orgDetails
   }
 
   async deleteClientCredentials(orgId: string, user: user): Promise<string> {
-    const getUser = await this.organizationRepository.getUser(user?.id);
-    const token = await this.clientRegistrationService.getManagementToken(getUser.clientId, getUser.clientSecret);
+    const getUser = await this.organizationRepository.getUser(user?.id)
+    const token = await this.clientRegistrationService.getManagementToken(getUser.clientId, getUser.clientSecret)
 
-    const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+    const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId)
 
     if (!organizationDetails) {
-      throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound)
     }
 
     try {
-      await this.clientRegistrationService.deleteClient(organizationDetails.idpId, token);
+      await this.clientRegistrationService.deleteClient(organizationDetails.idpId, token)
       const updateOrgData = {
         clientId: null,
         clientSecret: null,
-        idpId: null
-      };
+        idpId: null,
+      }
 
-      await this.organizationRepository.updateOrganizationById(updateOrgData, orgId);
-    } catch (error) {
-      throw new InternalServerErrorException('Unable to delete client credentails');
+      await this.organizationRepository.updateOrganizationById(updateOrgData, orgId)
+    } catch (_error) {
+      throw new InternalServerErrorException('Unable to delete client credentails')
     }
 
-    return ResponseMessages.organisation.success.deleteCredentials;
+    return ResponseMessages.organisation.success.deleteCredentials
   }
 
   /**
@@ -440,38 +446,38 @@ export class OrganizationService {
    * @returns
    */
   maskString(inputString: string): string {
-    if (5 <= inputString.length) {
+    if (inputString.length >= 5) {
       // Extract the last 5 characters
-      const lastFiveCharacters = inputString.slice(-8);
+      const lastFiveCharacters = inputString.slice(-8)
 
       // Create a masked string with '*' characters
-      const maskedString = '*'.repeat(inputString.length - 8) + lastFiveCharacters;
+      const maskedString = '*'.repeat(inputString.length - 8) + lastFiveCharacters
 
-      return maskedString;
+      return maskedString
     } else {
       // If the inputString is less than 5 characters, return the original string
-      return inputString;
+      return inputString
     }
   }
 
   async isValidBase64(value: string): Promise<boolean> {
     try {
-      if (!value || 'string' !== typeof value) {
-        return false;
+      if (!value || typeof value !== 'string') {
+        return false
       }
 
-      const base64Regex = /^data:image\/([a-zA-Z]*);base64,([^\"]*)$/;
-      const matches = value.match(base64Regex);
-      return Boolean(matches) && 3 === matches.length;
-    } catch (error) {
-      return false;
+      const base64Regex = /^data:image\/([a-zA-Z]*);base64,([^\"]*)$/
+      const matches = value.match(base64Regex)
+      return Boolean(matches) && matches.length === 3
+    } catch (_error) {
+      return false
     }
   }
 
   async uploadFileToS3(orgLogo: string): Promise<string> {
     try {
-      const updatedOrglogo = orgLogo.split(',')[1];
-      const imgData = Buffer.from(updatedOrglogo, 'base64');
+      const updatedOrglogo = orgLogo.split(',')[1]
+      const imgData = Buffer.from(updatedOrglogo, 'base64')
       const logoUrl = await this.awsService.uploadFileToS3Bucket(
         imgData,
         'png',
@@ -479,11 +485,11 @@ export class OrganizationService {
         process.env.AWS_ORG_LOGO_BUCKET_NAME,
         'base64',
         'orgLogos'
-      );
-      return logoUrl;
+      )
+      return logoUrl
     } catch (error) {
-      this.logger.error(`In getting imageUrl : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In getting imageUrl : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -497,7 +503,7 @@ export class OrganizationService {
       .toLowerCase() // Convert the input to lowercase
       .replace(/\s+/g, '-') // Replace spaces with hyphens
       .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric characters except hyphens
-      .replace(/--+/g, '-'); // Replace multiple consecutive hyphens with a single hyphen
+      .replace(/--+/g, '-') // Replace multiple consecutive hyphens with a single hyphen
   }
 
   /**
@@ -509,91 +515,90 @@ export class OrganizationService {
   // eslint-disable-next-line camelcase
   async updateOrganization(updateOrgDto: IUpdateOrganization, userId: string, orgId: string): Promise<organisation> {
     try {
-
-      const organizationExist = await this.organizationRepository.checkOrganizationNameExist(updateOrgDto.name);
+      const organizationExist = await this.organizationRepository.checkOrganizationNameExist(updateOrgDto.name)
 
       if (organizationExist && organizationExist.id !== orgId) {
-        throw new ConflictException(ResponseMessages.organisation.error.exists);
+        throw new ConflictException(ResponseMessages.organisation.error.exists)
       }
 
-      const orgSlug = await this.createOrgSlug(updateOrgDto.name);
-      updateOrgDto.orgSlug = orgSlug;
-      updateOrgDto.userId = userId;
+      const orgSlug = await this.createOrgSlug(updateOrgDto.name)
+      updateOrgDto.orgSlug = orgSlug
+      updateOrgDto.userId = userId
 
       if (await this.isValidBase64(updateOrgDto.logo)) {
-        const imageUrl = await this.uploadFileToS3(updateOrgDto.logo);
-        updateOrgDto.logo = imageUrl;
+        const imageUrl = await this.uploadFileToS3(updateOrgDto.logo)
+        updateOrgDto.logo = imageUrl
       } else {
-        delete updateOrgDto.logo;
+        updateOrgDto.logo = undefined
       }
 
-      let organizationDetails;
-      const checkAgentIsExists = await this.organizationRepository.getAgentInvitationDetails(orgId);
+      let organizationDetails
+      const checkAgentIsExists = await this.organizationRepository.getAgentInvitationDetails(orgId)
 
       if (!checkAgentIsExists?.connectionInvitation && !checkAgentIsExists?.agentId) {
-      organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto);
-      } else if (organizationDetails?.logoUrl !== organizationExist?.logoUrl || organizationDetails?.name !== organizationExist?.name) {
-        const invitationData = await this._createConnection(updateOrgDto?.logo, updateOrgDto?.name, orgId);
-        await this.organizationRepository.updateConnectionInvitationDetails(orgId, invitationData?.connectionInvitation);
+        organizationDetails = await this.organizationRepository.updateOrganization(updateOrgDto)
+      } else if (
+        organizationDetails?.logoUrl !== organizationExist?.logoUrl ||
+        organizationDetails?.name !== organizationExist?.name
+      ) {
+        const invitationData = await this._createConnection(updateOrgDto?.logo, updateOrgDto?.name, orgId)
+        await this.organizationRepository.updateConnectionInvitationDetails(orgId, invitationData?.connectionInvitation)
       }
 
-      await this.userActivityService.createActivity(userId, organizationDetails.id, `${organizationDetails.name} organization updated`, 'Organization details updated successfully');
-      return organizationDetails;
+      await this.userActivityService.createActivity(
+        userId,
+        organizationDetails.id,
+        `${organizationDetails.name} organization updated`,
+        'Organization details updated successfully'
+      )
+      return organizationDetails
     } catch (error) {
-      this.logger.error(`In update organization : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In update organization : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
-  async _createConnection(
-    orgName: string,
-    logoUrl: string,
-    orgId: string
-  ): Promise<ICreateConnectionUrl> {
-    const pattern = { cmd: 'create-connection-invitation' };
+  async _createConnection(orgName: string, logoUrl: string, orgId: string): Promise<ICreateConnectionUrl> {
+    const pattern = { cmd: 'create-connection-invitation' }
 
     const payload = {
       createOutOfBandConnectionInvitation: {
         orgName,
         logoUrl,
-        orgId
-      }
-    };
+        orgId,
+      },
+    }
     const connectionInvitationData = await this.natsClient
       .send<ICreateConnectionUrl>(this.organizationServiceProxy, pattern, payload)
-      
+
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error(`catch: ${JSON.stringify(error)}`)
         throw new HttpException(
           {
             status: error.status,
-            error: error.message
+            error: error.message,
           },
           error.status
-        );
-      });
+        )
+      })
 
-    return connectionInvitationData;
+    return connectionInvitationData
   }
 
-  async countTotalOrgs(
-    userId: string
-    
-   ): Promise<number> {
+  async countTotalOrgs(userId: string): Promise<number> {
     try {
-      
-      const getOrgs = await this.organizationRepository.userOrganizationCount(userId);
-      return getOrgs;
+      const getOrgs = await this.organizationRepository.userOrganizationCount(userId)
+      return getOrgs
     } catch (error) {
-      this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
-  
+
   /**
    * @returns Get created organizations details
    */
-  
+
   async getOrganizations(
     userId: string,
     pageNumber: number,
@@ -604,18 +609,18 @@ export class OrganizationService {
     try {
       const query = {
         userOrgRoles: {
-          some: { userId }
+          some: { userId },
         },
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } }
-        ]
-      };
-  
+          { description: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+
       const filterOptions = {
-        userId
-      };
-  
+        userId,
+      }
+
       const getOrgs = await this.organizationRepository.getOrganizations(
         query,
         filterOptions,
@@ -623,93 +628,91 @@ export class OrganizationService {
         pageSize,
         role,
         userId
-      );
+      )
 
-      const { organizations } = getOrgs;
-      
-      if (0 === organizations?.length) {
-        throw new NotFoundException(ResponseMessages.organisation.error.organizationNotFound);
+      const { organizations } = getOrgs
+
+      if (organizations?.length === 0) {
+        throw new NotFoundException(ResponseMessages.organisation.error.organizationNotFound)
       }
 
-      let orgIds;
-      let updatedOrgs;
+      let orgIds
+      let updatedOrgs
 
-      if ('true' === process.env.IS_ECOSYSTEM_ENABLE) {
-          orgIds = organizations?.map(item => item.id);
-        
-        const orgEcosystemDetails = await this._getOrgEcosystems(orgIds);
-    
-        updatedOrgs = getOrgs.organizations.map(org => {
+      if (process.env.IS_ECOSYSTEM_ENABLE === 'true') {
+        orgIds = organizations?.map((item) => item.id)
+
+        const orgEcosystemDetails = await this._getOrgEcosystems(orgIds)
+
+        updatedOrgs = getOrgs.organizations.map((org) => {
           const matchingEcosystems = orgEcosystemDetails
-            .filter(ecosystem => ecosystem.orgId === org.id)
-            .map(ecosystem => ({ ecosystemId: ecosystem.ecosystemId }));
+            .filter((ecosystem) => ecosystem.orgId === org.id)
+            .map((ecosystem) => ({ ecosystemId: ecosystem.ecosystemId }))
           return {
             ...org,
-            ecosystemOrgs: 0 < matchingEcosystems.length ? matchingEcosystems : []
-          };
-        });
+            ecosystemOrgs: matchingEcosystems.length > 0 ? matchingEcosystems : [],
+          }
+        })
       } else {
-        updatedOrgs = getOrgs?.organizations?.map(org => ({
-          ...org
-        }));
+        updatedOrgs = getOrgs?.organizations?.map((org) => ({
+          ...org,
+        }))
       }
-      
+
       return {
         totalCount: getOrgs.totalCount,
         totalPages: getOrgs.totalPages,
-        organizations: updatedOrgs
-      };
+        organizations: updatedOrgs,
+      }
     } catch (error) {
-      this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async _getOrgEcosystems(orgIds: string[]): Promise<IEcosystemOrgStatus[]> {
-    const pattern = { cmd: 'get-ecosystems-by-org' };
+    const pattern = { cmd: 'get-ecosystems-by-org' }
 
-    const payload = { orgIds };
+    const payload = { orgIds }
 
     const response = await this.organizationServiceProxy
       .send(pattern, payload)
       .toPromise()
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error(`catch: ${JSON.stringify(error)}`)
         throw new HttpException(
           {
             status: error.status,
-            error: error.message
+            error: error.message,
           },
           error.status
-        );
-      });
-    return response;
+        )
+      })
+    return response
   }
 
   async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
-      const {clientId, clientSecret} = clientCredentials;
-      return this.authenticateClientKeycloak(clientId, clientSecret);
-}
+    const { clientId, clientSecret } = clientCredentials
+    return this.authenticateClientKeycloak(clientId, clientSecret)
+  }
 
   async authenticateClientKeycloak(clientId: string, clientSecret: string): Promise<IAccessTokenData> {
-    
     try {
-    const payload = new ClientCredentialTokenPayloadDto();
-    // eslint-disable-next-line camelcase
-    payload.client_id = clientId;
-    // eslint-disable-next-line camelcase
-    payload.client_secret = clientSecret;
+      const payload = new ClientCredentialTokenPayloadDto()
+      // eslint-disable-next-line camelcase
+      payload.client_id = clientId
+      // eslint-disable-next-line camelcase
+      payload.client_secret = clientSecret
 
-    try {
-      const mgmtTokenResponse = await this.clientRegistrationService.getToken(payload);
-      return mgmtTokenResponse;
+      try {
+        const mgmtTokenResponse = await this.clientRegistrationService.getToken(payload)
+        return mgmtTokenResponse
+      } catch (_error) {
+        throw new UnauthorizedException(ResponseMessages.organisation.error.invalidClient)
+      }
     } catch (error) {
-      throw new UnauthorizedException(ResponseMessages.organisation.error.invalidClient);
-    }
-
-    } catch (error) {
-      this.logger.error(`Error in authenticateClientKeycloak : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in authenticateClientKeycloak : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -725,38 +728,38 @@ export class OrganizationService {
         publicProfile: true,
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } }
-        ]
-      };
+          { description: { contains: search, mode: 'insensitive' } },
+        ],
+      }
 
-      const filterOptions = {};
+      const filterOptions = {}
 
-      return this.organizationRepository.getOrganizations(query, filterOptions, pageNumber, pageSize);
+      return this.organizationRepository.getOrganizations(query, filterOptions, pageNumber, pageSize)
     } catch (error) {
-      this.logger.error(`In fetch getPublicOrganizations : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In fetch getPublicOrganizations : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getPublicProfile(payload: { orgSlug: string }): Promise<IGetOrgById> {
-    const { orgSlug } = payload;
+    const { orgSlug } = payload
     try {
       const query = {
         orgSlug,
-        publicProfile: true
-      };
-
-      const organizationDetails = await this.organizationRepository.getOrganization(query);
-      if (!organizationDetails) {
-        throw new NotFoundException(ResponseMessages.organisation.error.orgProfileNotFound);
+        publicProfile: true,
       }
 
-      const credDefs = await this.organizationRepository.getCredDefByOrg(organizationDetails.id);
-      organizationDetails['credential_definitions'] = credDefs;
-      return organizationDetails;
+      const organizationDetails = await this.organizationRepository.getOrganization(query)
+      if (!organizationDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgProfileNotFound)
+      }
+
+      const credDefs = await this.organizationRepository.getCredDefByOrg(organizationDetails.id)
+      organizationDetails.credential_definitions = credDefs
+      return organizationDetails
     } catch (error) {
-      this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get user: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -769,14 +772,14 @@ export class OrganizationService {
   async getOrganization(orgId: string): Promise<IGetOrgById> {
     try {
       const query = {
-        id: orgId
-      };
+        id: orgId,
+      }
 
-      const organizationDetails = await this.organizationRepository.getOrganization(query);
-      return organizationDetails;
+      const organizationDetails = await this.organizationRepository.getOrganization(query)
+      return organizationDetails
     } catch (error) {
-      this.logger.error(`In create organization : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In create organization : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -798,15 +801,15 @@ export class OrganizationService {
         pageNumber,
         pageSize,
         search
-      );
-      for await (const item of getOrganization['invitations']) {
-        const getOrgRoles = await this.orgRoleService.getOrgRolesByIds(item['orgRoles']);
-        (item['orgRoles'] as object) = getOrgRoles;
+      )
+      for await (const item of getOrganization.invitations) {
+        const getOrgRoles = await this.orgRoleService.getOrgRolesByIds(item.orgRoles)
+        ;(item.orgRoles as object) = getOrgRoles
       }
-      return getOrganization;
+      return getOrganization
     } catch (error) {
-      this.logger.error(`In create organization : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In create organization : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -818,26 +821,26 @@ export class OrganizationService {
   async getOrgRoles(orgId: string, user: user): Promise<IClientRoles[]> {
     try {
       if (!orgId) {
-        throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired);
+        throw new BadRequestException(ResponseMessages.organisation.error.orgIdIsRequired)
       }
 
-      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId)
 
       if (!organizationDetails) {
-        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound)
       }
 
       if (!organizationDetails.idpId) {
-        return this.orgRoleService.getOrgRoles();
+        return this.orgRoleService.getOrgRoles()
       }
 
-      const getUser = await this.organizationRepository.getUser(user?.id);
-      const token = await this.clientRegistrationService.getManagementToken(getUser?.clientId, getUser?.clientSecret);
+      const getUser = await this.organizationRepository.getUser(user?.id)
+      const token = await this.clientRegistrationService.getManagementToken(getUser?.clientId, getUser?.clientSecret)
 
-      return this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token);
+      return this.clientRegistrationService.getAllClientRoles(organizationDetails.idpId, token)
     } catch (error) {
-      this.logger.error(`In getOrgRoles : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In getOrgRoles : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -850,31 +853,31 @@ export class OrganizationService {
     try {
       const query = {
         email,
-        orgId
-      };
+        orgId,
+      }
 
-      const invitations = await this.organizationRepository.getOrgInvitations(query);
+      const invitations = await this.organizationRepository.getOrgInvitations(query)
 
-      let isPendingInvitation = false;
-      let isAcceptedInvitation = false;
+      let isPendingInvitation = false
+      let isAcceptedInvitation = false
 
       for (const invitation of invitations) {
         if (invitation.status === Invitation.PENDING) {
-          isPendingInvitation = true;
+          isPendingInvitation = true
         }
         if (invitation.status === Invitation.ACCEPTED) {
-          isAcceptedInvitation = true;
+          isAcceptedInvitation = true
         }
       }
 
       if (isPendingInvitation || isAcceptedInvitation) {
-        return true;
+        return true
       }
 
-      return false;
+      return false
     } catch (error) {
-      this.logger.error(`error: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`error: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -883,36 +886,35 @@ export class OrganizationService {
     userEmail: string,
     userId: string,
     orgName: string
-    ): Promise<void> {
-    const { invitations, orgId } = bulkInvitationDto;
+  ): Promise<void> {
+    const { invitations, orgId } = bulkInvitationDto
 
-      for (const invitation of invitations) {
-        const { orgRoleId, email } = invitation;
+    for (const invitation of invitations) {
+      const { orgRoleId, email } = invitation
 
-        const isUserExist = await this.checkUserExistInPlatform(email);
+      const isUserExist = await this.checkUserExistInPlatform(email)
 
-        const userData = await this.getUserFirstName(userEmail);
-        
-        const {firstName} = userData;
-        const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId);
-       
-        if (0 === orgRolesDetails.length) {
-          throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
-        }
+      const userData = await this.getUserFirstName(userEmail)
 
-        const isInvitationExist = await this.checkInvitationExist(email, orgId);
+      const { firstName } = userData
+      const orgRolesDetails = await this.orgRoleService.getOrgRolesByIds(orgRoleId)
 
-        if (!isInvitationExist && userEmail !== invitation.email) {
+      if (orgRolesDetails.length === 0) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound)
+      }
 
-          await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
+      const isInvitationExist = await this.checkInvitationExist(email, orgId)
 
-          try {
-            await this.sendInviteEmailTemplate(email, orgName, orgRolesDetails, firstName, isUserExist);
-          } catch (error) {
-            throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
-          }
+      if (!isInvitationExist && userEmail !== invitation.email) {
+        await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId)
+
+        try {
+          await this.sendInviteEmailTemplate(email, orgName, orgRolesDetails, firstName, isUserExist)
+        } catch (_error) {
+          throw new InternalServerErrorException(ResponseMessages.user.error.emailSend)
         }
       }
+    }
   }
 
   async createInvitationByClientRoles(
@@ -921,54 +923,48 @@ export class OrganizationService {
     userId: string,
     orgName: string,
     idpId: string
-    ): Promise<void> {
-    const { invitations, orgId } = bulkInvitationDto;
+  ): Promise<void> {
+    const { invitations, orgId } = bulkInvitationDto
 
-    const userDetails = await this.organizationRepository.getUser(userId);
-    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
-    const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
-    const orgRoles = await this.orgRoleService.getOrgRoles();
+    const userDetails = await this.organizationRepository.getUser(userId)
+    const token = await this.clientRegistrationService.getManagementToken(
+      userDetails.clientId,
+      userDetails.clientSecret
+    )
+    const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token)
+    const orgRoles = await this.orgRoleService.getOrgRoles()
 
     for (const invitation of invitations) {
-      const { orgRoleId, email } = invitation;
+      const { orgRoleId, email } = invitation
 
-      const isUserExist = await this.checkUserExistInPlatform(email);
+      const isUserExist = await this.checkUserExistInPlatform(email)
 
-      const userData = await this.getUserFirstName(userEmail);
+      const userData = await this.getUserFirstName(userEmail)
 
-      const { firstName } = userData;
+      const { firstName } = userData
 
-      const matchedRoles = clientRolesList
-        .filter((role) => orgRoleId.includes(role.id.trim()))
-        .map((role) => role.name);
+      const matchedRoles = clientRolesList.filter((role) => orgRoleId.includes(role.id.trim())).map((role) => role.name)
 
       if (orgRoleId.length !== matchedRoles.length) {
-        throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound)
       }
 
-      const filteredOrgRoles = orgRoles.filter((role) => matchedRoles.includes(role.name.trim()));
+      const filteredOrgRoles = orgRoles.filter((role) => matchedRoles.includes(role.name.trim()))
 
-      const isInvitationExist = await this.checkInvitationExist(email, orgId);
+      const isInvitationExist = await this.checkInvitationExist(email, orgId)
 
       if (!isInvitationExist && userEmail !== invitation.email) {
-
         await this.organizationRepository.createSendInvitation(
           email,
           String(orgId),
           String(userId),
           filteredOrgRoles.map((role) => role.id)
-        );
+        )
 
         try {
-          await this.sendInviteEmailTemplate(
-            email,
-            orgName,
-            filteredOrgRoles,
-            firstName,
-            isUserExist
-          );
-        } catch (error) {
-          throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+          await this.sendInviteEmailTemplate(email, orgName, filteredOrgRoles, firstName, isUserExist)
+        } catch (_error) {
+          throw new InternalServerErrorException(ResponseMessages.user.error.emailSend)
         }
       }
     }
@@ -981,22 +977,17 @@ export class OrganizationService {
    */
 
   async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
-    const { orgId } = bulkInvitationDto;
+    const { orgId } = bulkInvitationDto
 
     try {
-      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId)
 
       if (!organizationDetails) {
-        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound)
       }
 
       if (!organizationDetails.idpId) {
-        await this.createInvitationByOrgRoles(
-           bulkInvitationDto,
-           userEmail,
-           userId,
-           organizationDetails.name
-           );
+        await this.createInvitationByOrgRoles(bulkInvitationDto, userEmail, userId, organizationDetails.name)
       } else {
         await this.createInvitationByClientRoles(
           bulkInvitationDto,
@@ -1004,7 +995,7 @@ export class OrganizationService {
           userId,
           organizationDetails.name,
           organizationDetails.idpId
-        );
+        )
       }
 
       await this.userActivityService.createActivity(
@@ -1012,11 +1003,11 @@ export class OrganizationService {
         organizationDetails.id,
         `Invitations sent for ${organizationDetails.name}`,
         'Get started with user role management once invitations accepted'
-      );
-      return ResponseMessages.organisation.success.createInvitation;
+      )
+      return ResponseMessages.organisation.success.createInvitation
     } catch (error) {
-      this.logger.error(`In send Invitation : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In send Invitation : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -1035,13 +1026,13 @@ export class OrganizationService {
     firstName: string,
     isUserExist: boolean
   ): Promise<boolean> {
-    const platformConfigData = await this.prisma.platform_config.findMany();
+    const platformConfigData = await this.prisma.platform_config.findMany()
 
-    const urlEmailTemplate = new OrganizationInviteTemplate();
-    const emailData = new EmailDto();
-    emailData.emailFrom = platformConfigData[0].emailFrom;
-    emailData.emailTo = email;
-    emailData.emailSubject = `Invitation to join “${orgName}” on ${process.env.PLATFORM_NAME}`;
+    const urlEmailTemplate = new OrganizationInviteTemplate()
+    const emailData = new EmailDto()
+    emailData.emailFrom = platformConfigData[0].emailFrom
+    emailData.emailTo = email
+    emailData.emailSubject = `Invitation to join “${orgName}” on ${process.env.PLATFORM_NAME}`
 
     emailData.emailHtml = await urlEmailTemplate.sendInviteEmailTemplate(
       email,
@@ -1049,75 +1040,73 @@ export class OrganizationService {
       orgRolesDetails,
       firstName,
       isUserExist
-    );
+    )
 
     //Email is sent to user for the verification through emailData
-    const isEmailSent = await sendEmail(emailData);
+    const isEmailSent = await sendEmail(emailData)
 
-    return isEmailSent;
+    return isEmailSent
   }
 
   async checkUserExistInPlatform(email: string): Promise<boolean> {
-    const pattern = { cmd: 'get-user-by-mail' };
-    const payload = { email };
+    const pattern = { cmd: 'get-user-by-mail' }
+    const payload = { email }
 
     const userData: user = await this.natsClient
       .send<user>(this.organizationServiceProxy, pattern, payload)
-      
+
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error(`catch: ${JSON.stringify(error)}`)
         throw new HttpException(
           {
             status: error.status,
-            error: error.message
+            error: error.message,
           },
           error.status
-        );
-      });
+        )
+      })
     if (userData?.isEmailVerified) {
-      return true;
+      return true
     }
-    return false;
+    return false
   }
 
   async getUserFirstName(userEmail: string): Promise<user> {
-    const pattern = { cmd: 'get-user-by-mail' };
-    const payload = { email: userEmail };
+    const pattern = { cmd: 'get-user-by-mail' }
+    const payload = { email: userEmail }
 
     const userData = await this.natsClient
       .send<user>(this.organizationServiceProxy, pattern, payload)
-      
+
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error(`catch: ${JSON.stringify(error)}`)
         throw new HttpException(
           {
             status: error.status,
-            error: error.message
+            error: error.message,
           },
           error.status
-        );
-      });
-    return userData;
+        )
+      })
+    return userData
   }
 
   async getUserUserId(userId: string): Promise<user> {
-    const pattern = { cmd: 'get-user-by-user-id' };
+    const pattern = { cmd: 'get-user-by-user-id' }
     // const payload = { id: userId };
 
-    const userData = await this.natsClient
-      .send<user>(this.organizationServiceProxy, pattern, userId)
-      .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
-        throw new HttpException(
-          {
-            status: error.status,
-            error: error.error,
-            message: error.message
-          },
-          error.status
-        );
-      });
-    return userData;
+    const userData = await this.natsClient.send<user>(this.organizationServiceProxy, pattern, userId).catch((error) => {
+      this.logger.error(`catch: ${JSON.stringify(error)}`)
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.error,
+          message: error.message,
+        },
+        error.status
+      )
+    })
+    return userData
   }
 
   async fetchUserInvitation(
@@ -1128,10 +1117,10 @@ export class OrganizationService {
     search = ''
   ): Promise<IOrganizationInvitations> {
     try {
-      return this.organizationRepository.getAllOrgInvitations(email, status, pageNumber, pageSize, search);
+      return this.organizationRepository.getAllOrgInvitations(email, status, pageNumber, pageSize, search)
     } catch (error) {
-      this.logger.error(`In fetchUserInvitation : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In fetchUserInvitation : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -1144,39 +1133,46 @@ export class OrganizationService {
     orgId: string,
     status: string
   ): Promise<void> {
-    const userDetails = await this.organizationRepository.getUser(userId);
-    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
-      const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
+    const userDetails = await this.organizationRepository.getUser(userId)
+    const token = await this.clientRegistrationService.getManagementToken(
+      userDetails.clientId,
+      userDetails.clientSecret
+    )
+    const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token)
 
-      const orgRoles = await this.orgRoleService.getOrgRolesByIds(invitation.orgRoles);
+    const orgRoles = await this.orgRoleService.getOrgRolesByIds(invitation.orgRoles)
 
-      const rolesPayload: { roleId: string; name: string; idpRoleId: string }[] = orgRoles.map((orgRole: IOrgRole) => {
-        let roleObj: { roleId: string;  name: string; idpRoleId: string} = null;
+    const rolesPayload: { roleId: string; name: string; idpRoleId: string }[] = orgRoles.map((orgRole: IOrgRole) => {
+      let roleObj: { roleId: string; name: string; idpRoleId: string } = null
 
-        for (let index = 0; index < clientRolesList.length; index++) {
-          if (clientRolesList[index].name === orgRole.name) {
-            roleObj = {
-              roleId: orgRole.id,
-              name: orgRole.name,
-              idpRoleId: clientRolesList[index].id
-            };
-            break;
+      for (let index = 0; index < clientRolesList.length; index++) {
+        if (clientRolesList[index].name === orgRole.name) {
+          roleObj = {
+            roleId: orgRole.id,
+            name: orgRole.name,
+            idpRoleId: clientRolesList[index].id,
           }
+          break
         }
+      }
 
-        return roleObj;
-      });
+      return roleObj
+    })
 
-      const data = {
-        status
-      };
+    const data = {
+      status,
+    }
 
-      await Promise.all([
-        this.organizationRepository.updateOrgInvitation(invitation.id, data),
-        this.clientRegistrationService.createUserClientRole(idpId, token, keycloakUserId, rolesPayload.map(role => ({id: role.idpRoleId, name: role.name}))),
-        this.userOrgRoleService.updateUserOrgRole(userId, orgId, rolesPayload)
-      ]);
-
+    await Promise.all([
+      this.organizationRepository.updateOrgInvitation(invitation.id, data),
+      this.clientRegistrationService.createUserClientRole(
+        idpId,
+        token,
+        keycloakUserId,
+        rolesPayload.map((role) => ({ id: role.idpRoleId, name: role.name }))
+      ),
+      this.userOrgRoleService.updateUserOrgRole(userId, orgId, rolesPayload),
+    ])
   }
 
   /**
@@ -1186,60 +1182,60 @@ export class OrganizationService {
    */
   async updateOrgInvitation(payload: UpdateInvitationDto): Promise<string> {
     try {
-      const { orgId, status, invitationId, userId, keycloakUserId, email } = payload;
-      const invitation = await this.organizationRepository.getInvitationById(String(invitationId));
+      const { orgId, status, invitationId, userId, keycloakUserId, email } = payload
+      const invitation = await this.organizationRepository.getInvitationById(String(invitationId))
 
       if (Invitation.ACCEPTED === payload.status) {
-        const userOrgCount = await this.organizationRepository.userOrganizationCount(userId);
+        const userOrgCount = await this.organizationRepository.userOrganizationCount(userId)
 
         if (userOrgCount >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
-          throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit);
+          throw new BadRequestException(ResponseMessages.organisation.error.MaximumOrgsLimit)
         }
       }
       if (!invitation || (invitation && invitation.email !== email)) {
-        throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
+        throw new NotFoundException(ResponseMessages.user.error.invitationNotFound)
       }
 
       if (invitation.orgId !== orgId) {
-        throw new NotFoundException(ResponseMessages.user.error.invalidOrgId);
+        throw new NotFoundException(ResponseMessages.user.error.invalidOrgId)
       }
 
-      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId)
 
       if (!organizationDetails) {
-        throw new ConflictException(ResponseMessages.organisation.error.orgNotFound);
+        throw new ConflictException(ResponseMessages.organisation.error.orgNotFound)
       }
 
-      const invitationStatus = invitation.status as Invitation;
+      const invitationStatus = invitation.status as Invitation
       if (!transition(invitationStatus, payload.status)) {
         throw new BadRequestException(
           `${ResponseMessages.user.error.invitationStatusUpdateInvalid} ${invitation.status}`
-        );
+        )
       }
 
       const data = {
-        status
-      };
+        status,
+      }
 
       if (status === Invitation.REJECTED) {
-        await this.organizationRepository.updateOrgInvitation(invitationId, data);
-        return ResponseMessages.user.success.invitationReject;
+        await this.organizationRepository.updateOrgInvitation(invitationId, data)
+        return ResponseMessages.user.success.invitationReject
       }
 
       if (organizationDetails.idpId) {
-        await this.updateClientInvitation(invitation, organizationDetails.idpId, userId, keycloakUserId, orgId, status);
+        await this.updateClientInvitation(invitation, organizationDetails.idpId, userId, keycloakUserId, orgId, status)
       } else {
-        await this.organizationRepository.updateOrgInvitation(invitationId, data);
+        await this.organizationRepository.updateOrgInvitation(invitationId, data)
 
         for (const roleId of invitation.orgRoles) {
-          await this.userOrgRoleService.createUserOrgRole(userId, roleId, orgId);
+          await this.userOrgRoleService.createUserOrgRole(userId, roleId, orgId)
         }
       }
 
-      return ResponseMessages.user.success.invitationAccept;
+      return ResponseMessages.user.success.invitationAccept
     } catch (error) {
-      this.logger.error(`In updateOrgInvitation : ${error}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In updateOrgInvitation : ${error}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -1250,52 +1246,48 @@ export class OrganizationService {
     userId: string,
     orgId: string
   ): Promise<boolean> {
-    const userDetails = await this.organizationRepository.getUser(userId);
-    const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
-    const clientRolesList = await this.clientRegistrationService.getAllClientRoles(
-      idpId,
-      token
-    );
-    const orgRoles = await this.orgRoleService.getOrgRoles();
+    const userDetails = await this.organizationRepository.getUser(userId)
+    const token = await this.clientRegistrationService.getManagementToken(
+      userDetails.clientId,
+      userDetails.clientSecret
+    )
+    const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token)
+    const orgRoles = await this.orgRoleService.getOrgRoles()
 
-    const matchedClientRoles = clientRolesList.filter((role) => roleIds.includes(role.id.trim()));
+    const matchedClientRoles = clientRolesList.filter((role) => roleIds.includes(role.id.trim()))
 
     if (roleIds.length !== matchedClientRoles.length) {
-      throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
+      throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound)
     }
 
     const rolesPayload: { roleId: string; name: string; idpRoleId: string }[] = matchedClientRoles.map(
       (clientRole: IClientRoles) => {
-        let roleObj: { roleId: string; name: string; idpRoleId: string } = null;
+        let roleObj: { roleId: string; name: string; idpRoleId: string } = null
 
         for (let index = 0; index < orgRoles.length; index++) {
           if (orgRoles[index].name === clientRole.name) {
             roleObj = {
               roleId: orgRoles[index].id,
               name: orgRoles[index].name,
-              idpRoleId: clientRole.id
-            };
-            break;
+              idpRoleId: clientRole.id,
+            }
+            break
           }
         }
 
-        return roleObj;
+        return roleObj
       }
-    );
+    )
 
-    const userData = await this.getUserUserId(userId);
+    const userData = await this.getUserUserId(userId)
 
     const [, deletedUserRoleRecords] = await Promise.all([
-      this.clientRegistrationService.deleteUserClientRoles(
-        idpId,
-        token,
-        userData.keycloakUserId
-      ),
-      this.userOrgRoleService.deleteOrgRoles(userId, orgId)
-    ]);
+      this.clientRegistrationService.deleteUserClientRoles(idpId, token, userData.keycloakUserId),
+      this.userOrgRoleService.deleteOrgRoles(userId, orgId),
+    ])
 
-    if (0 === deletedUserRoleRecords['count']) {
-      throw new InternalServerErrorException(ResponseMessages.organisation.error.updateUserRoles);
+    if (deletedUserRoleRecords.count === 0) {
+      throw new InternalServerErrorException(ResponseMessages.organisation.error.updateUserRoles)
     }
 
     const [, isUserRoleUpdated] = await Promise.all([
@@ -1305,10 +1297,10 @@ export class OrganizationService {
         userData.keycloakUserId,
         rolesPayload.map((role) => ({ id: role.idpRoleId, name: role.name }))
       ),
-      this.userOrgRoleService.updateUserOrgRole(userId, orgId, rolesPayload)
-    ]);
+      this.userOrgRoleService.updateUserOrgRole(userId, orgId, rolesPayload),
+    ])
 
-    return isUserRoleUpdated;
+    return isUserRoleUpdated
   }
 
   /**
@@ -1320,439 +1312,439 @@ export class OrganizationService {
    */
   async updateUserRoles(orgId: string, roleIds: string[], userId: string): Promise<boolean> {
     try {
-      const isUserExistForOrg = await this.userOrgRoleService.checkUserOrgExist(userId, orgId);
+      const isUserExistForOrg = await this.userOrgRoleService.checkUserOrgExist(userId, orgId)
 
       if (!isUserExistForOrg) {
-        throw new NotFoundException(ResponseMessages.organisation.error.userNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.userNotFound)
       }
 
-      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId);
+      const organizationDetails = await this.organizationRepository.getOrganizationDetails(orgId)
 
       if (!organizationDetails) {
-        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound)
       }
 
       if (!organizationDetails.idpId) {
-        const isRolesExist = await this.orgRoleService.getOrgRolesByIds(roleIds);
+        const isRolesExist = await this.orgRoleService.getOrgRolesByIds(roleIds)
 
-        if (isRolesExist && 0 === isRolesExist.length) {
-          throw new NotFoundException(ResponseMessages.organisation.error.rolesNotExist);
+        if (isRolesExist && isRolesExist.length === 0) {
+          throw new NotFoundException(ResponseMessages.organisation.error.rolesNotExist)
         }
 
-        const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId);
+        const deleteUserRecords = await this.userOrgRoleService.deleteOrgRoles(userId, orgId)
 
-        if (0 === deleteUserRecords['count']) {
-          throw new InternalServerErrorException(ResponseMessages.organisation.error.updateUserRoles);
+        if (deleteUserRecords.count === 0) {
+          throw new InternalServerErrorException(ResponseMessages.organisation.error.updateUserRoles)
         }
 
         for (const role of roleIds) {
-          this.userOrgRoleService.createUserOrgRole(userId, role, orgId);
+          this.userOrgRoleService.createUserOrgRole(userId, role, orgId)
         }
 
-        return true;
+        return true
       } else {
-
-        return this.updateUserClientRoles(
-          roleIds,
-          organizationDetails.idpId,
-          userId,
-          organizationDetails.id          
-        );      
+        return this.updateUserClientRoles(roleIds, organizationDetails.idpId, userId, organizationDetails.id)
       }
-
     } catch (error) {
-      this.logger.error(`Error in updateUserRoles: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in updateUserRoles: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getOrgDashboard(orgId: string): Promise<IOrganizationDashboard> {
     try {
-      return this.organizationRepository.getOrgDashboard(orgId);
+      return this.organizationRepository.getOrgDashboard(orgId)
     } catch (error) {
-      this.logger.error(`In create organization : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In create organization : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
-
   async getOrganizationActivityCount(orgId: string, userId: string): Promise<IOrgActivityCount> {
     try {
-      const [
+      const [verificationRecordsCount, issuanceRecordsCount, connectionRecordsCount, orgInvitationsCount, orgUsers] =
+        await Promise.all([
+          this._getVerificationRecordsCount(orgId, userId),
+          this._getIssuanceRecordsCount(orgId, userId),
+          this._getConnectionRecordsCount(orgId, userId),
+          this.organizationRepository.getOrgInvitationsCount(orgId),
+          this.organizationRepository.getOrgDashboard(orgId),
+        ])
+
+      const orgUsersCount = orgUsers?.usersCount
+
+      return {
         verificationRecordsCount,
         issuanceRecordsCount,
         connectionRecordsCount,
-        orgInvitationsCount, 
-        orgUsers
-      ] = await Promise.all([
-        this._getVerificationRecordsCount(orgId, userId),
-        this._getIssuanceRecordsCount(orgId, userId),
-        this._getConnectionRecordsCount(orgId, userId),
-        this.organizationRepository.getOrgInvitationsCount(orgId),
-        this.organizationRepository.getOrgDashboard(orgId)
-      ]);
-
-      const orgUsersCount = orgUsers?.['usersCount'];
-
-      return {verificationRecordsCount, issuanceRecordsCount, connectionRecordsCount, orgUsersCount, orgInvitationsCount};
+        orgUsersCount,
+        orgInvitationsCount,
+      }
     } catch (error) {
-      this.logger.error(`In fetch organization references count : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In fetch organization references count : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async _getEcosystemsCount(orgId: string, userId: string): Promise<number> {
-    const pattern = { cmd: 'get-ecosystem-records' };
+    const pattern = { cmd: 'get-ecosystem-records' }
 
     const payload = {
       orgId,
-      userId
-    };
-    const ecosystemsCount = await (this.natsClient
-      .send<string>(this.organizationServiceProxy, pattern, payload) as unknown as Promise<number>)
-      
-      .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
-        throw new HttpException(
-          {
-            status: error.status,
-            error: error.message
-          },
-          error.status
-        );
-      });
+      userId,
+    }
+    const ecosystemsCount = await (
+      this.natsClient.send<string>(this.organizationServiceProxy, pattern, payload) as unknown as Promise<number>
+    ).catch((error) => {
+      this.logger.error(`catch: ${JSON.stringify(error)}`)
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message,
+        },
+        error.status
+      )
+    })
 
-    return ecosystemsCount;
+    return ecosystemsCount
   }
-
 
   async _getConnectionRecordsCount(orgId: string, userId: string): Promise<number> {
-    const pattern = { cmd: 'get-connection-records' };
+    const pattern = { cmd: 'get-connection-records' }
 
     const payload = {
       orgId,
-      userId
-    };
+      userId,
+    }
     const connectionsCount = await this.natsClient
       .send<number>(this.organizationServiceProxy, pattern, payload)
-      
+
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error(`catch: ${JSON.stringify(error)}`)
         throw new HttpException(
           {
             status: error.status,
-            error: error.message
+            error: error.message,
           },
           error.status
-        );
-      });
+        )
+      })
 
-    return connectionsCount;
+    return connectionsCount
   }
 
-
   async _getIssuanceRecordsCount(orgId: string, userId: string): Promise<number> {
-    const pattern = { cmd: 'get-issuance-records' };
+    const pattern = { cmd: 'get-issuance-records' }
 
     const payload = {
       orgId,
-      userId
-    };
+      userId,
+    }
     const issuanceCount = await this.natsClient
       .send<number>(this.organizationServiceProxy, pattern, payload)
-      
+
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error(`catch: ${JSON.stringify(error)}`)
         throw new HttpException(
           {
             status: error.status,
-            error: error.message
+            error: error.message,
           },
           error.status
-        );
-      });
+        )
+      })
 
-    return issuanceCount;
+    return issuanceCount
   }
 
   async _getVerificationRecordsCount(orgId: string, userId: string): Promise<number> {
-    const pattern = { cmd: 'get-verification-records' };
+    const pattern = { cmd: 'get-verification-records' }
 
     const payload = {
       orgId,
-      userId
-    };
+      userId,
+    }
     const verificationCount = await this.natsClient
       .send<number>(this.organizationServiceProxy, pattern, payload)
-      
+
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error(`catch: ${JSON.stringify(error)}`)
         throw new HttpException(
           {
             status: error.status,
-            error: error.message
+            error: error.message,
           },
           error.status
-        );
-      });
+        )
+      })
 
-    return verificationCount;
+    return verificationCount
   }
 
   async getOrgPofile(orgId: string): Promise<organisation> {
     try {
-      const orgProfile = await this.organizationRepository.getOrgProfile(orgId);
-      if (!orgProfile.logoUrl || '' === orgProfile.logoUrl) {
-        throw new NotFoundException(ResponseMessages.organisation.error.orgProfile);
+      const orgProfile = await this.organizationRepository.getOrgProfile(orgId)
+      if (!orgProfile.logoUrl || orgProfile.logoUrl === '') {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgProfile)
       }
-      return orgProfile;
+      return orgProfile
     } catch (error) {
-      this.logger.error(`get organization profile : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get organization profile : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async fetchOrgCredentials(orgId: string): Promise<IOrgCredentials> {
     try {
-      const orgCredentials = await this.organizationRepository.getOrganizationDetails(orgId);
+      const orgCredentials = await this.organizationRepository.getOrganizationDetails(orgId)
       if (!orgCredentials.clientId) {
-        throw new NotFoundException(ResponseMessages.organisation.error.notExistClientCred);
+        throw new NotFoundException(ResponseMessages.organisation.error.notExistClientCred)
       }
       return {
         clientId: orgCredentials.clientId,
-        clientSecret: orgCredentials.clientSecret
-      };
+        clientSecret: orgCredentials.clientSecret,
+      }
     } catch (error) {
-      this.logger.error(`Error in fetchOrgCredentials : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in fetchOrgCredentials : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getOrgDetails(orgId: string): Promise<organisation> {
     try {
-      const orgDetails = await this.organizationRepository.getOrganizationDetails(orgId);
-      return orgDetails;
+      const orgDetails = await this.organizationRepository.getOrganizationDetails(orgId)
+      return orgDetails
     } catch (error) {
-      this.logger.error(`in getting organization details : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`in getting organization details : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getOrgOwner(orgId: string): Promise<IOrganization> {
     try {
-      const orgDetails = await this.organizationRepository.getOrganizationOwnerDetails(orgId, OrgRoles.OWNER);
-      return orgDetails;
+      const orgDetails = await this.organizationRepository.getOrganizationOwnerDetails(orgId, OrgRoles.OWNER)
+      return orgDetails
     } catch (error) {
-      this.logger.error(`get organization profile : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get organization profile : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
-  
+
   async deleteOrganization(orgId: string, user: user): Promise<IDeleteOrganization> {
     try {
-      const getUser = await this.organizationRepository.getUser(user?.id);
+      const getUser = await this.organizationRepository.getUser(user?.id)
       // Fetch token and organization details in parallel
       const [token, organizationDetails] = await Promise.all([
         this.clientRegistrationService.getManagementToken(getUser?.clientId, getUser?.clientSecret),
-        this.organizationRepository.getOrganizationDetails(orgId)
-      ]);
-  
+        this.organizationRepository.getOrganizationDetails(orgId),
+      ])
+
       if (!organizationDetails) {
-        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound)
       }
-  
-      const organizationInvitationDetails = await this.organizationRepository.getOrgInvitationsByOrg(orgId);
-        
-      const arrayEmail = organizationInvitationDetails.map(userData => userData.email);
-      this.logger.debug(`arrayEmail ::: ${JSON.stringify(arrayEmail)}`);
-      
+
+      const organizationInvitationDetails = await this.organizationRepository.getOrgInvitationsByOrg(orgId)
+
+      const arrayEmail = organizationInvitationDetails.map((userData) => userData.email)
+      this.logger.debug(`arrayEmail ::: ${JSON.stringify(arrayEmail)}`)
+
       // Fetch Keycloak IDs only if there are emails to process
-      const keycloakUserIds = 0 < arrayEmail.length
-        ? (await this.getUserKeycloakIdByEmail(arrayEmail)).response.map(user => user.keycloakUserId)
-        : [];
-      
-      this.logger.log('Keycloak User Ids');
+      const keycloakUserIds =
+        arrayEmail.length > 0
+          ? (await this.getUserKeycloakIdByEmail(arrayEmail)).response.map((user) => user.keycloakUserId)
+          : []
+
+      this.logger.log('Keycloak User Ids')
 
       // Delete user client roles in parallel
-      const deleteUserRolesPromises = keycloakUserIds.map(keycloakUserId => this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, keycloakUserId)
-      );
+      const deleteUserRolesPromises = keycloakUserIds.map((keycloakUserId) =>
+        this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, keycloakUserId)
+      )
       deleteUserRolesPromises.push(
         this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, getUser?.keycloakUserId)
-      );
-  
-      this.logger.debug(`deleteUserRolesPromises ::: ${JSON.stringify(deleteUserRolesPromises)}`);
+      )
 
-      const deleteUserRolesResults = await Promise.allSettled(deleteUserRolesPromises);
-  
+      this.logger.debug(`deleteUserRolesPromises ::: ${JSON.stringify(deleteUserRolesPromises)}`)
+
+      const deleteUserRolesResults = await Promise.allSettled(deleteUserRolesPromises)
+
       // Check for failures in deleting user roles
-      const deletionFailures = deleteUserRolesResults.filter(result => 'rejected' === result?.status);
-      
-      if (0 < deletionFailures.length) {
-        this.logger.error(`deletionFailures ::: ${JSON.stringify(deletionFailures)}`);
-        throw new NotFoundException(ResponseMessages.organisation.error.orgDataNotFoundInkeycloak);
+      const deletionFailures = deleteUserRolesResults.filter((result) => result?.status === 'rejected')
+
+      if (deletionFailures.length > 0) {
+        this.logger.error(`deletionFailures ::: ${JSON.stringify(deletionFailures)}`)
+        throw new NotFoundException(ResponseMessages.organisation.error.orgDataNotFoundInkeycloak)
       }
-  
-      const deletedOrgInvitationInfo: { email?: string, orgName?: string, orgRoleNames?: string[] }[] = [];
-      const userIds = (await this.getUserKeycloakIdByEmail(arrayEmail)).response.map(user => user.id);
-      await Promise.all(userIds.map(async (userId) => {
-        const userOrgRoleIds = await this.organizationRepository.getUserOrgRole(userId, orgId);
-        this.logger.debug(`userOrgRoleIds ::::: ${JSON.stringify(userOrgRoleIds)}`);
 
-        const userDetails = await this.organizationRepository.getUser(userId);
-        this.logger.debug(`userDetails ::::: ${JSON.stringify(userDetails)}`);
+      const deletedOrgInvitationInfo: { email?: string; orgName?: string; orgRoleNames?: string[] }[] = []
+      const userIds = (await this.getUserKeycloakIdByEmail(arrayEmail)).response.map((user) => user.id)
+      await Promise.all(
+        userIds.map(async (userId) => {
+          const userOrgRoleIds = await this.organizationRepository.getUserOrgRole(userId, orgId)
+          this.logger.debug(`userOrgRoleIds ::::: ${JSON.stringify(userOrgRoleIds)}`)
 
-        const orgRoles = await this.organizationRepository.getOrgRole(userOrgRoleIds);
-        this.logger.debug(`orgRoles ::::: ${JSON.stringify(orgRoles)}`);
-        
-        const orgRoleNames = orgRoles.map(orgRoleName => orgRoleName.name);
-        const sendEmail = await this.sendEmailForOrgInvitationsMember(userDetails?.email, organizationDetails?.name, orgRoleNames);
-        const newInvitation = {
-          email: userDetails.email,
-          orgName: organizationDetails?.name,
-          orgRoleNames
-        };
-        
-        // Step 3: Push the data into the array
-        deletedOrgInvitationInfo.push(newInvitation);
-        
-        this.logger.log(`email: ${userDetails.email}, orgName: ${organizationDetails?.name}, orgRoles: ${JSON.stringify(orgRoleNames)}, sendEmail: ${sendEmail}`);
-      }));
-      
+          const userDetails = await this.organizationRepository.getUser(userId)
+          this.logger.debug(`userDetails ::::: ${JSON.stringify(userDetails)}`)
+
+          const orgRoles = await this.organizationRepository.getOrgRole(userOrgRoleIds)
+          this.logger.debug(`orgRoles ::::: ${JSON.stringify(orgRoles)}`)
+
+          const orgRoleNames = orgRoles.map((orgRoleName) => orgRoleName.name)
+          const sendEmail = await this.sendEmailForOrgInvitationsMember(
+            userDetails?.email,
+            organizationDetails?.name,
+            orgRoleNames
+          )
+          const newInvitation = {
+            email: userDetails.email,
+            orgName: organizationDetails?.name,
+            orgRoleNames,
+          }
+
+          // Step 3: Push the data into the array
+          deletedOrgInvitationInfo.push(newInvitation)
+
+          this.logger.log(
+            `email: ${userDetails.email}, orgName: ${organizationDetails?.name}, orgRoles: ${JSON.stringify(orgRoleNames)}, sendEmail: ${sendEmail}`
+          )
+        })
+      )
+
       // Delete organization data
-      const { deletedUserActivity, deletedUserOrgRole, deleteOrg, deletedOrgInvitations, deletedNotification } = await this.organizationRepository.deleteOrg(orgId);
-  
-      this.logger.debug(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`);
-      this.logger.debug(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`);
-      this.logger.debug(`deleteOrg ::: ${JSON.stringify(deleteOrg)}`);
-      this.logger.debug(`deletedOrgInvitations ::: ${JSON.stringify(deletedOrgInvitations)}`);
-  
+      const { deletedUserActivity, deletedUserOrgRole, deleteOrg, deletedOrgInvitations, deletedNotification } =
+        await this.organizationRepository.deleteOrg(orgId)
+
+      this.logger.debug(`deletedUserActivity ::: ${JSON.stringify(deletedUserActivity)}`)
+      this.logger.debug(`deletedUserOrgRole ::: ${JSON.stringify(deletedUserOrgRole)}`)
+      this.logger.debug(`deleteOrg ::: ${JSON.stringify(deleteOrg)}`)
+      this.logger.debug(`deletedOrgInvitations ::: ${JSON.stringify(deletedOrgInvitations)}`)
+
       const deletions = [
         { records: deletedUserActivity.count, tableName: `${PrismaTables.USER_ACTIVITY}` },
         { records: deletedUserOrgRole.count, tableName: `${PrismaTables.USER_ORG_ROLES}` },
-        { records: deletedOrgInvitations.count, deletedOrgInvitationInfo, tableName: `${PrismaTables.ORG_INVITATIONS}` },
+        {
+          records: deletedOrgInvitations.count,
+          deletedOrgInvitationInfo,
+          tableName: `${PrismaTables.ORG_INVITATIONS}`,
+        },
         { records: deletedNotification.count, tableName: `${PrismaTables.NOTIFICATION}` },
-        { records: deleteOrg ? 1 : 0, tableName: `${PrismaTables.ORGANIZATION}` }
-      ];
-  
+        { records: deleteOrg ? 1 : 0, tableName: `${PrismaTables.ORGANIZATION}` },
+      ]
+
       // Log deletion activities in parallel
-      await Promise.all(deletions.map(async ({ records, tableName, deletedOrgInvitationInfo }) => {
-        if (records) {
-          const txnMetadata: {
-            deletedRecordsCount: number;
-            deletedRecordInTable: string;
-            deletedOrgInvitationInfo?: object[]
-          } = {
-            deletedRecordsCount: records,
-            deletedRecordInTable: tableName
-          };
-          
-          if (deletedOrgInvitationInfo) {
-            txnMetadata.deletedOrgInvitationInfo = deletedOrgInvitationInfo;
+      await Promise.all(
+        deletions.map(async ({ records, tableName, deletedOrgInvitationInfo }) => {
+          if (records) {
+            const txnMetadata: {
+              deletedRecordsCount: number
+              deletedRecordInTable: string
+              deletedOrgInvitationInfo?: object[]
+            } = {
+              deletedRecordsCount: records,
+              deletedRecordInTable: tableName,
+            }
+
+            if (deletedOrgInvitationInfo) {
+              txnMetadata.deletedOrgInvitationInfo = deletedOrgInvitationInfo
+            }
+
+            const recordType = RecordType.ORGANIZATION
+            await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType)
           }
-          
-          const recordType = RecordType.ORGANIZATION;
-          await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
-        }
-      }));
-  
-      return deleteOrg;
-  
+        })
+      )
+
+      return deleteOrg
     } catch (error) {
-      this.logger.error(`delete organization: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ?? error);
+      this.logger.error(`delete organization: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ?? error)
     }
   }
-   
 
   async sendEmailForOrgInvitationsMember(email: string, orgName: string, orgRole: string[]): Promise<boolean> {
-    const platformConfigData = await this.prisma.platform_config.findMany();
-    const urlEmailTemplate = new DeleteOrgInvitationsEmail();
-    const emailData = new EmailDto();
-    emailData.emailFrom = platformConfigData[0].emailFrom;
-    emailData.emailTo = email;
-    emailData.emailSubject = `Removal of participation of “${orgName}”`;
+    const platformConfigData = await this.prisma.platform_config.findMany()
+    const urlEmailTemplate = new DeleteOrgInvitationsEmail()
+    const emailData = new EmailDto()
+    emailData.emailFrom = platformConfigData[0].emailFrom
+    emailData.emailTo = email
+    emailData.emailSubject = `Removal of participation of “${orgName}”`
 
-    emailData.emailHtml = await urlEmailTemplate.sendDeleteOrgMemberEmailTemplate(
-      email,
-      orgName,
-      orgRole
-    );
+    emailData.emailHtml = await urlEmailTemplate.sendDeleteOrgMemberEmailTemplate(email, orgName, orgRole)
 
     //Email is sent to user for the verification through emailData
-    const isEmailSent = await sendEmail(emailData);
+    const isEmailSent = await sendEmail(emailData)
 
-    return isEmailSent;
+    return isEmailSent
   }
 
   async getUserKeycloakIdByEmail(userEmails: string[]): Promise<{
-    response;
+    response
   }> {
     try {
       const pattern = {
-        cmd: 'get-user-keycloak-id'
-      };
+        cmd: 'get-user-keycloak-id',
+      }
 
       return this.organizationServiceProxy
         .send<string>(pattern, userEmails)
         .pipe(
           map((response: string) => ({
-            response
+            response,
           }))
         )
         .toPromise()
         .catch((error) => {
-          this.logger.error(`getUserKeycloakIdByEmail catch: ${JSON.stringify(error)}`);
+          this.logger.error(`getUserKeycloakIdByEmail catch: ${JSON.stringify(error)}`)
           throw new HttpException(
             {
               status: error?.statusCode,
-              error: error?.message
+              error: error?.message,
             },
             error.error
-          );
-        });
+          )
+        })
     } catch (error) {
-      this.logger.error(`[getUserKeycloakIdByEmail] - error in get keycloak id by email : ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`[getUserKeycloakIdByEmail] - error in get keycloak id by email : ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
   async _getOrgAgentApiKey(orgId: string): Promise<string> {
-    const pattern = { cmd: 'get-org-agent-api-key' };
-    const payload = { orgId };
+    const pattern = { cmd: 'get-org-agent-api-key' }
+    const payload = { orgId }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.organizationServiceProxy.send<any>(pattern, payload).toPromise();
-      return message;
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      const message = await this.organizationServiceProxy.send<any>(pattern, payload).toPromise()
+      return message
     } catch (error) {
-      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      this.logger.error(`catch: ${JSON.stringify(error)}`)
       throw new HttpException(
         {
           status: error.status,
-          error: error.message
+          error: error.message,
         },
         error.status
-      );
+      )
     }
   }
 
   async registerOrgsMapUsers(): Promise<string> {
-
     try {
+      const unregisteredOrgsList = await this.organizationRepository.getUnregisteredClientOrgs()
 
-      const unregisteredOrgsList = await this.organizationRepository.getUnregisteredClientOrgs();
-      
-      if (!unregisteredOrgsList || 0 === unregisteredOrgsList.length) {
-        throw new NotFoundException('Unregistered client organizations not found');
-      }      
+      if (!unregisteredOrgsList || unregisteredOrgsList.length === 0) {
+        throw new NotFoundException('Unregistered client organizations not found')
+      }
 
       for (const org of unregisteredOrgsList) {
-        const userOrgRoles = 0 < org['userOrgRoles'].length && org['userOrgRoles'];
+        const userOrgRoles = org.userOrgRoles.length > 0 && org.userOrgRoles
 
-        const ownerUserList = 0 < org['userOrgRoles'].length 
-        && userOrgRoles.filter(userOrgRole => userOrgRole.orgRole.name === OrgRoles.OWNER);
+        const ownerUserList =
+          org.userOrgRoles.length > 0 &&
+          userOrgRoles.filter((userOrgRole) => userOrgRole.orgRole.name === OrgRoles.OWNER)
 
-        const ownerUser = 0 < ownerUserList.length && ownerUserList[0].user;
+        const ownerUser = ownerUserList.length > 0 && ownerUserList[0].user
 
         const orgObj = {
           id: org.id,
@@ -1760,8 +1752,8 @@ export class OrganizationService {
           name: org.name,
           ownerId: ownerUser.id,
           ownerEmail: ownerUser.email,
-          ownerKeycloakId: ownerUser.keycloakUserId
-        };
+          ownerKeycloakId: ownerUser.keycloakUserId,
+        }
 
         if (orgObj.ownerKeycloakId) {
           const orgCredentials = await this.registerToKeycloak(
@@ -1770,120 +1762,121 @@ export class OrganizationService {
             orgObj.ownerKeycloakId,
             orgObj.ownerId,
             true
-          );
+          )
 
-          const { clientId, idpId, clientSecret } = orgCredentials;
-    
+          const { clientId, idpId, clientSecret } = orgCredentials
+
           const updateOrgData = {
             clientId,
             clientSecret: this.maskString(clientSecret),
-            idpId
-          };
+            idpId,
+          }
 
-          const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgObj.id);
-          
-          this.logger.log(`updatedOrg::`, updatedOrg);
+          const updatedOrg = await this.organizationRepository.updateOrganizationById(updateOrgData, orgObj.id)
 
-          const usersToRegisterList = userOrgRoles.filter(userOrgRole => null !== userOrgRole.user.keycloakUserId);
-          
-            const userDetails = await this.organizationRepository.getUser(orgObj.ownerId);
-            const token = await this.clientRegistrationService.getManagementToken(userDetails.clientId, userDetails.clientSecret);
-            const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token);
+          this.logger.log('updatedOrg::', updatedOrg)
 
-            const deletedUserDetails: string[] = [];
-            for (const userRole of usersToRegisterList) {
-              const user = userRole.user;
+          const usersToRegisterList = userOrgRoles.filter((userOrgRole) => userOrgRole.user.keycloakUserId !== null)
 
-              const matchedClientRoles = clientRolesList.filter((role) => userRole.orgRole.name === role.name)
-              .map(clientRole => ({roleId: userRole.orgRole.id, idpRoleId: clientRole.id, name: clientRole.name}));
+          const userDetails = await this.organizationRepository.getUser(orgObj.ownerId)
+          const token = await this.clientRegistrationService.getManagementToken(
+            userDetails.clientId,
+            userDetails.clientSecret
+          )
+          const clientRolesList = await this.clientRegistrationService.getAllClientRoles(idpId, token)
 
-              if (!deletedUserDetails.includes(user.id)) {
-                const [, deletedUserRoleRecords] = await Promise.all([
-                  this.clientRegistrationService.deleteUserClientRoles(idpId, token, user.keycloakUserId),
-                  this.userOrgRoleService.deleteOrgRoles(user.id, orgObj.id)
-                ]);
-  
-                this.logger.log(`deletedUserRoleRecords::`, deletedUserRoleRecords);
+          const deletedUserDetails: string[] = []
+          for (const userRole of usersToRegisterList) {
+            const user = userRole.user
 
-                deletedUserDetails.push(user.id);
-              }
+            const matchedClientRoles = clientRolesList
+              .filter((role) => userRole.orgRole.name === role.name)
+              .map((clientRole) => ({ roleId: userRole.orgRole.id, idpRoleId: clientRole.id, name: clientRole.name }))
 
-           
-              await Promise.all([
-                this.clientRegistrationService.createUserClientRole(
-                  idpId,
-                  token,
-                  user.keycloakUserId,
-                  matchedClientRoles.map((role) => ({ id: role.idpRoleId, name: role.name }))
-                ),
-                this.userOrgRoleService.updateUserOrgRole(
-                  user.id,
-                  orgObj.id,
-                  matchedClientRoles.map((role) => ({ roleId: role.roleId, idpRoleId: role.idpRoleId }))
-                )
-              ]);
-              this.logger.log(`Organization client created and users mapped to roles`);
+            if (!deletedUserDetails.includes(user.id)) {
+              const [, deletedUserRoleRecords] = await Promise.all([
+                this.clientRegistrationService.deleteUserClientRoles(idpId, token, user.keycloakUserId),
+                this.userOrgRoleService.deleteOrgRoles(user.id, orgObj.id),
+              ])
 
-            }      
-        }      
+              this.logger.log(`deletedUserRoleRecords::`, deletedUserRoleRecords)
+
+              deletedUserDetails.push(user.id)
+            }
+
+            await Promise.all([
+              this.clientRegistrationService.createUserClientRole(
+                idpId,
+                token,
+                user.keycloakUserId,
+                matchedClientRoles.map((role) => ({ id: role.idpRoleId, name: role.name }))
+              ),
+              this.userOrgRoleService.updateUserOrgRole(
+                user.id,
+                orgObj.id,
+                matchedClientRoles.map((role) => ({ roleId: role.roleId, idpRoleId: role.idpRoleId }))
+              ),
+            ])
+            this.logger.log(`Organization client created and users mapped to roles`)
+          }
+        }
       }
-     
-      return '';
-    } catch (error) {
-      this.logger.error(`Error in registerOrgsMapUsers: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
 
+      return ''
+    } catch (error) {
+      this.logger.error(`Error in registerOrgsMapUsers: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async deleteOrganizationInvitation(orgId: string, invitationId: string): Promise<boolean> {
     try {
-      const invitationDetails = await this.organizationRepository.getInvitationById(invitationId);
+      const invitationDetails = await this.organizationRepository.getInvitationById(invitationId)
 
       // Check invitation is present
       if (!invitationDetails) {
-        throw new NotFoundException(ResponseMessages.user.error.invitationNotFound);
+        throw new NotFoundException(ResponseMessages.user.error.invitationNotFound)
       }
 
       // Check if delete process initiated by the org who has created invitation
       if (orgId !== invitationDetails.orgId) {
-        throw new ForbiddenException(ResponseMessages.organisation.error.deleteOrgInvitation);
+        throw new ForbiddenException(ResponseMessages.organisation.error.deleteOrgInvitation)
       }
 
       // Check if invitation is already accepted/rejected
       if (Invitation.PENDING !== invitationDetails.status) {
-        throw new BadRequestException(ResponseMessages.organisation.error.invitationStatusInvalid);
+        throw new BadRequestException(ResponseMessages.organisation.error.invitationStatusInvalid)
       }
 
-      await this.organizationRepository.deleteOrganizationInvitation(invitationId);
+      await this.organizationRepository.deleteOrganizationInvitation(invitationId)
 
-      return true;
+      return true
     } catch (error) {
-      this.logger.error(`delete organization invitation: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`delete organization invitation: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async storeOrgWebhookEndpoint(orgId: string, notificationWebhook: string): Promise<string> {
-    const pattern = { cmd: 'register-org-webhook-endpoint-for-notification' };
+    const pattern = { cmd: 'register-org-webhook-endpoint-for-notification' }
     const payload = {
       orgId,
-      notificationWebhook
-    };
+      notificationWebhook,
+    }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.natsClient.send<any>(this.organizationServiceProxy, pattern, payload);
-      return message;
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      const message = await this.natsClient.send<any>(this.organizationServiceProxy, pattern, payload)
+      return message
     } catch (error) {
-      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      this.logger.error(`catch: ${JSON.stringify(error)}`)
       throw new HttpException(
         {
           status: error.status,
-          error: error.message
+          error: error.message,
         },
         error.status
-      );
+      )
     }
   }
 
@@ -1894,72 +1887,72 @@ export class OrganizationService {
    */
   async getOrgDidList(orgId: string): Promise<IDidList[]> {
     try {
-      return await this.organizationRepository.getAllOrganizationDid(orgId);
+      return await this.organizationRepository.getAllOrganizationDid(orgId)
     } catch (error) {
-      this.logger.error(`get Org dids: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get Org dids: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getAgentTypeByAgentTypeId(orgAgentTypeId: string): Promise<string> {
     try {
-      return await this.organizationRepository.getAgentTypeByAgentTypeId(orgAgentTypeId);
+      return await this.organizationRepository.getAgentTypeByAgentTypeId(orgAgentTypeId)
     } catch (error) {
-      this.logger.error(`get getAgentTypeByAgentTypeId error: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get getAgentTypeByAgentTypeId error: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getOrgRolesDetails(roleName: string): Promise<object> {
     try {
-      const orgRoleDetails = await this.organizationRepository.getOrgRoles(roleName);
-      return orgRoleDetails;
+      const orgRoleDetails = await this.organizationRepository.getOrgRoles(roleName)
+      return orgRoleDetails
     } catch (error) {
-      this.logger.error(`in getting organization role details : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`in getting organization role details : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getAllOrgRoles(): Promise<IOrgRoles[]> {
     try {
-      const orgRoleDetails = await this.organizationRepository.getAllOrgRolesDetails();
-      return orgRoleDetails;
+      const orgRoleDetails = await this.organizationRepository.getAllOrgRolesDetails()
+      return orgRoleDetails
     } catch (error) {
-      this.logger.error(`in getting all organization roles : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`in getting all organization roles : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getOrgRolesDetailsByIds(orgRoles: string[]): Promise<object[]> {
     try {
-      const orgRoleDetails = await this.organizationRepository.getOrgRolesById(orgRoles);
-      return orgRoleDetails;
+      const orgRoleDetails = await this.organizationRepository.getOrgRolesById(orgRoles)
+      return orgRoleDetails
     } catch (error) {
-      this.logger.error(`in getting org roles by id : ${JSON.stringify(error)}`);
+      this.logger.error(`in getting org roles by id : ${JSON.stringify(error)}`)
     }
   }
 
   async getOrganisationsByIds(organisationIds): Promise<object[]> {
     try {
-      return await this.organizationRepository.getOrganisationsByIds(organisationIds);
+      return await this.organizationRepository.getOrganisationsByIds(organisationIds)
     } catch (error) {
-      this.logger.error(`get getOrganisationsByIds error: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get getOrganisationsByIds error: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
-  async getOrgAgentDetailsForEcosystem(data: {orgIds: string[], search: string}): Promise<IOrgDetails> {
+  async getOrgAgentDetailsForEcosystem(data: { orgIds: string[]; search: string }): Promise<IOrgDetails> {
     try {
-        const getAllOrganizationDetails = await this.organizationRepository.handleGetOrganisationData(data);
+      const getAllOrganizationDetails = await this.organizationRepository.handleGetOrganisationData(data)
 
-        if (!getAllOrganizationDetails) {
-            throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
-        }
+      if (!getAllOrganizationDetails) {
+        throw new NotFoundException(ResponseMessages.ledger.error.NotFound)
+      }
 
-        return getAllOrganizationDetails;
+      return getAllOrganizationDetails
     } catch (error) {
-        this.logger.error(`Error in getOrgAgentDetailsForEcosystem: ${error}`);
-        throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in getOrgAgentDetailsForEcosystem: ${error}`)
+      throw new RpcException(error.response ? error.response : error)
     }
-}
+  }
 }

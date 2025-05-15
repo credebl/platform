@@ -1,26 +1,26 @@
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { Logger, Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common'
+import { ClientsModule, Transport } from '@nestjs/microservices'
 
-import { ClientRegistrationService } from '@credebl/client-registration';
-import { CommonModule } from '@credebl/common';
-import { FidoController } from './fido.controller';
-import { FidoService } from './fido.service';
-import { FidoUserRepository } from '../../repositories/fido-user.repository';
-import { HttpModule } from '@nestjs/axios';
-import { KeycloakUrlService } from '@credebl/keycloak-url';
-import { OrgRolesRepository } from 'libs/org-roles/repositories';
-import { OrgRolesService } from '@credebl/org-roles';
-import { PrismaService } from '@credebl/prisma-service';
-import { SupabaseService } from '@credebl/supabase';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { UserActivityService } from '@credebl/user-activity';
-import { UserDevicesRepository } from '../../repositories/user-device.repository';
-import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
-import { UserOrgRolesService } from '@credebl/user-org-roles';
-import { UserRepository } from '../../repositories/user.repository';
-import { UserService } from '../user.service';
-import { AwsService } from '@credebl/aws';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { AwsService } from '@credebl/aws'
+import { ClientRegistrationService } from '@credebl/client-registration'
+import { CommonModule } from '@credebl/common'
+import { NATSClient } from '@credebl/common/NATSClient'
+import { KeycloakUrlService } from '@credebl/keycloak-url'
+import { OrgRolesService } from '@credebl/org-roles'
+import { PrismaService } from '@credebl/prisma-service'
+import { SupabaseService } from '@credebl/supabase'
+import { UserActivityService } from '@credebl/user-activity'
+import { UserOrgRolesService } from '@credebl/user-org-roles'
+import { HttpModule } from '@nestjs/axios'
+import { OrgRolesRepository } from 'libs/org-roles/repositories'
+import { UserActivityRepository } from 'libs/user-activity/repositories'
+import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories'
+import { FidoUserRepository } from '../../repositories/fido-user.repository'
+import { UserDevicesRepository } from '../../repositories/user-device.repository'
+import { UserRepository } from '../../repositories/user.repository'
+import { UserService } from '../user.service'
+import { FidoController } from './fido.controller'
+import { FidoService } from './fido.service'
 
 @Module({
   imports: [
@@ -29,13 +29,13 @@ import { NATSClient } from '@credebl/common/NATSClient';
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
         options: {
-          servers: [`${process.env.NATS_URL}`]
-        }
-      }
+          servers: [`${process.env.NATS_URL}`],
+        },
+      },
     ]),
     HttpModule,
-    CommonModule
-],
+    CommonModule,
+  ],
   controllers: [FidoController],
   providers: [
     AwsService,
@@ -55,7 +55,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
     UserOrgRolesRepository,
     UserActivityService,
     UserActivityRepository,
-    NATSClient
-]
+    NATSClient,
+  ],
 })
-export class FidoModule { }
+export class FidoModule {}

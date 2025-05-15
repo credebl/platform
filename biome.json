@@ -6,31 +6,35 @@
     "useIgnoreFile": true
   },
   "files": {
-    "maxSize": 10000000,
-    "ignore": [
-      "**/*.eslintrc.js",
-      "**/*.json",
-      "**/node_modules",
-      "**/dist",
-      "**/.idea",
-      "**/coverage",
-      "**/pnpm-lock.yaml"
-    ]
+    "maxSize": 10000000
   },
   "formatter": {
-    "enabled": true,
-    "formatWithErrors": true,
     "indentStyle": "space",
-    "indentWidth": 2, 
-    "lineEnding": "lf",
     "lineWidth": 120,
-    "attributePosition": "auto",
-    "bracketSpacing": true,
-    "ignore": ["**/node_modules/*", "**/dist/*", "**/coverage", "**/pnpm-lock.yaml", "**/test/*", "*.spec.ts"]
+    "ignore": ["**/node_modules", "**/dist", "**/.idea", "**/coverage", "**/pnpm-lock.yaml"]
+  },
+  "javascript": {
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    },
+    "formatter": {
+      "semicolons": "asNeeded",
+      "quoteStyle": "single",
+      "trailingCommas": "es5",
+      "lineWidth": 120,
+      "indentStyle": "space"
+    }
+  },
+  "json": {
+    "parser": {
+      "allowComments": true
+    }
+  },
+  "organizeImports": {
+    "enabled": true
   },
   "linter": {
     "rules": {
-      "recommended": true,
       "style": {
         "useImportType": "off",
         "useNodejsImportProtocol": "off",
@@ -43,20 +47,26 @@
         },
         "noUnusedFunctionParameters": "off",
         "noUnusedImports": "error",
-        "noUndeclaredDependencies": "off"
+        "noUndeclaredDependencies": "off",
+        "noInvalidUseBeforeDeclaration": "error"
       },
-      "performance": {
-        "noDelete": {
-          "level": "error"
-        }
+      "suspicious": {
+        "noConsole": "error"
       },
       "complexity": {
+        "noBannedTypes": "error",
         "useLiteralKeys": {
           "level": "warn",
           "fix": "safe"
         },
         "noForEach": {
-          "level": "info"
+          "level": "warn"
+        }
+      },
+      "performance": {
+        "noDelete": {
+          "fix": "safe",
+          "level": "error"
         }
       }
     },
@@ -71,71 +81,5 @@
       "**/test/*",
       "*.spec.ts"
     ]
-  },
-  "javascript": {
-    "formatter": {
-      "semicolons": "asNeeded",
-      "quoteStyle": "single",
-      "trailingCommas": "es5",
-      "lineWidth": 120,
-      "indentStyle": "space"
-    },
-    "parser": {
-      "unsafeParameterDecoratorsEnabled": true
-    }
-  },
-  "json": {
-    "parser": {
-      "allowComments": true
-    },
-    "formatter": {
-      "enabled": false
-    }
-  },
-  "organizeImports": {
-    "enabled": true
-  },
-  "overrides": [
-    {
-      "include": ["*.tsx", "*.mts", "*.cts"],
-      "ignore": [
-        "**/*.eslintrc.js",
-        "**/*.json",
-        "**/node_modules",
-        "**/dist",
-        "**/coverage",
-        "**/pnpm-lock.yaml",
-        "*.spec.ts"
-      ],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noConstAssign": "off",
-            "noGlobalObjectCalls": "off",
-            "noInvalidConstructorSuper": "off",
-            "noNewSymbol": "off",
-            "noSetterReturn": "off",
-            "noUndeclaredVariables": "off",
-            "noUnreachable": "off",
-            "noUnreachableSuper": "off"
-          },
-          "style": {
-            "noArguments": "error",
-            "noVar": "error",
-            "useConst": "error"
-          },
-          "suspicious": {
-            "noDuplicateClassMembers": "off",
-            "noDuplicateObjectKeys": "off",
-            "noDuplicateParameters": "off",
-            "noFunctionAssign": "off",
-            "noImportAssign": "off",
-            "noRedeclare": "off",
-            "noUnsafeNegation": "off",
-            "useGetterReturn": "off"
-          }
-        }
-      }
-    }
-  ]
+  }
 }

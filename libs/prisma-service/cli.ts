@@ -36,6 +36,7 @@ const getRole = async (roleName) => {
     })
     return roleDetails
   } catch (error) {
+    // biome-ignore lint/suspicious/noConsole: <explanation>
     console.error('An error occurred in getRole:', error)
   }
 }
@@ -53,6 +54,7 @@ const createUserOrgRole = async (userId, roleId) => {
 
     return saveResponse
   } catch (error) {
+    // biome-ignore lint/suspicious/noConsole: <explanation>
     console.error('An error occurred in createUserOrgRole:', error)
   }
 }
@@ -88,8 +90,10 @@ const createUser = async () => {
 
     await createUserOrgRole(user.id, platformRoleData.id)
 
+    // biome-ignore lint/suspicious/noConsole: <explanation>
     console.log('Platform admin user created')
   } catch (e) {
+    // biome-ignore lint/suspicious/noConsole: <explanation>
     console.error('An error occurred in createUser:', e)
   }
 }
@@ -98,5 +102,5 @@ async function main() {
   await createUser()
   readline.close()
 }
-
+// biome-ignore lint/suspicious/noConsole: <explanation>
 main().catch((e) => console.error(e))

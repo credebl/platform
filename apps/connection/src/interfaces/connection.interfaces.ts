@@ -1,4 +1,3 @@
-// eslint-disable-next-line camelcase
 import type { IUserRequest } from '@credebl/user-request/user-request.interface'
 import type { organisation } from '@prisma/client'
 import type { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto'

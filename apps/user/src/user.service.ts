@@ -35,7 +35,7 @@ import type { SupabaseService } from '@credebl/supabase'
 import type { UserActivityService } from '@credebl/user-activity'
 import type { UserOrgRolesService } from '@credebl/user-org-roles'
 import { type ClientProxy, RpcException } from '@nestjs/microservices'
-// eslint-disable-next-line camelcase
+
 import type { RecordType, user, user_org_roles } from '@prisma/client'
 import type { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto'
 import * as jwt from 'jsonwebtoken'
@@ -697,13 +697,12 @@ export class UserService {
       const token = data?.session
 
       return {
-        // eslint-disable-next-line camelcase
         access_token: token.access_token,
-        // eslint-disable-next-line camelcase
+
         token_type: token.token_type,
-        // eslint-disable-next-line camelcase
+
         expires_in: token.expires_in,
-        // eslint-disable-next-line camelcase
+
         expires_at: token.expires_at,
         isRegisteredToSupabase: true,
       }
@@ -1079,7 +1078,6 @@ export class UserService {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async updatePlatformSettings(platformSettings: PlatformSettings): Promise<string> {
     try {
       const platformConfigSettings = await this.userRepository.updatePlatformSettings(platformSettings)
@@ -1175,7 +1173,6 @@ export class UserService {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getuserOrganizationByUserId(userId: string): Promise<user_org_roles[]> {
     try {
       const getOrganizationDetails = await this.userRepository.handleGetUserOrganizations(userId)

@@ -1,6 +1,6 @@
 import type { PrismaService } from '@credebl/prisma-service'
 import { Injectable, type Logger } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type { shortening_url } from '@prisma/client'
 
 @Injectable()
@@ -27,7 +27,6 @@ export class UtilitiesRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getShorteningUrl(referenceId): Promise<shortening_url> {
     try {
       const storeShorteningUrl = await this.prisma.shortening_url.findUnique({

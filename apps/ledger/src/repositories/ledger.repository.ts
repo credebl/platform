@@ -1,7 +1,7 @@
 import type { INetworkUrl } from '@credebl/common/interfaces/schema.interface'
 import type { PrismaService } from '@credebl/prisma-service'
 import { Injectable, Logger } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type { ledgers } from '@prisma/client'
 import type { LedgerDetails } from '../interfaces/ledgers.interface'
 import type { ISchemasList, ISchemasResult } from '../schema/interfaces/schema.interface'

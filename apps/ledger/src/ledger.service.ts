@@ -2,7 +2,7 @@ import type { INetworkUrl } from '@credebl/common/interfaces/schema.interface'
 import { ResponseMessages } from '@credebl/common/response-messages'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { RpcException } from '@nestjs/microservices'
-// eslint-disable-next-line camelcase
+
 import type { ledgers } from '@prisma/client'
 import { BaseService } from 'libs/service/base.service'
 import type { LedgerDetails } from './interfaces/ledgers.interface'

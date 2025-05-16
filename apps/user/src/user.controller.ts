@@ -8,7 +8,7 @@ import type {
 } from '@credebl/common/interfaces/user.interface'
 import { Controller } from '@nestjs/common'
 import { MessagePattern } from '@nestjs/microservices'
-// eslint-disable-next-line camelcase
+
 import type { user, user_org_roles } from '@prisma/client'
 import type { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto'
 import type { IUsersActivity } from 'libs/user-activity/interface'
@@ -243,7 +243,6 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'get-user-organizations' })
-  // eslint-disable-next-line camelcase
   async getuserOrganizationByUserId(payload: { userId: string }): Promise<user_org_roles[]> {
     return this.userService.getuserOrganizationByUserId(payload.userId)
   }

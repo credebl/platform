@@ -1,7 +1,7 @@
 import { AgentType, PrismaTables } from '@credebl/enum/enum'
 import type { PrismaService } from '@credebl/prisma-service'
 import { ConflictException, Injectable, type Logger } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type {
   Prisma,
   ledgerConfig,
@@ -37,7 +37,7 @@ export class AgentServiceRepository {
    * Get platform config details
    * @returns
    */
-  // eslint-disable-next-line camelcase
+
   async getPlatformConfigDetails(): Promise<platform_config> {
     try {
       return this.prisma.platform_config.findFirst()
@@ -99,7 +99,6 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async createOrgAgent(agentSpinUpStatus: number, userId: string): Promise<ICreateOrgAgent> {
     try {
       return this.prisma.org_agents.create({
@@ -118,7 +117,6 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async removeOrgAgent(id: string): Promise<void> {
     try {
       if (id) {
@@ -134,7 +132,6 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getAgentDetailsByOrgId(orgId: string): Promise<org_agents> {
     try {
       const agentDetails = await this.prisma.org_agents.findFirst({
@@ -154,7 +151,7 @@ export class AgentServiceRepository {
    * @param storeAgentDetails
    * @returns
    */
-  // eslint-disable-next-line camelcase
+
   async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
     try {
       const { id, userId, ledgerId, did, didDoc, ...commonFields } = storeOrgAgentDetails
@@ -168,7 +165,6 @@ export class AgentServiceRepository {
         orgDid: did,
       }
 
-      // eslint-disable-next-line camelcase
       const query: Promise<org_agents> = id
         ? this.prisma.org_agents.update({
             where: { id },
@@ -188,7 +184,7 @@ export class AgentServiceRepository {
    * @param storeDidDetails
    * @returns did details
    */
-  // eslint-disable-next-line camelcase
+
   async storeDidDetails(storeDidDetails: IStoreDidDetails): Promise<org_dids> {
     try {
       const { orgId, did, didDocument, isPrimaryDid, userId, orgAgentId } = storeDidDetails
@@ -215,7 +211,7 @@ export class AgentServiceRepository {
    * @param did
    * @returns did details
    */
-  // eslint-disable-next-line camelcase
+
   async setPrimaryDid(orgDid: string, orgId: string, didDocument: Prisma.JsonValue): Promise<org_agents> {
     try {
       return await this.prisma.org_agents.update({
@@ -233,7 +229,6 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async updateLedgerId(orgId: string, ledgerId: string): Promise<org_agents> {
     try {
       return await this.prisma.org_agents.update({
@@ -255,7 +250,7 @@ export class AgentServiceRepository {
    * @param orgId
    * @returns
    */
-  // eslint-disable-next-line camelcase
+
   async getAgentDetails(orgId: string): Promise<IOrgAgent> {
     try {
       if (orgId) {
@@ -274,14 +269,12 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async platformAdminAgent(platformOrg: string): Promise<IOrgAgentsResponse> {
     return this.prisma.organisation.findFirstOrThrow({
       where: {
         name: platformOrg,
       },
       select: {
-        // eslint-disable-next-line camelcase
         org_agents: {
           select: {
             agentSpinUpStatus: true,
@@ -397,7 +390,7 @@ export class AgentServiceRepository {
    * @param orgId
    * @returns Agent health details
    */
-  // eslint-disable-next-line camelcase
+
   async getOrgAgentDetails(orgId: string): Promise<org_agents> {
     try {
       if (orgId) {
@@ -414,7 +407,6 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getOrgAgentType(orgAgentId: string): Promise<org_agents_type> {
     try {
       const orgAgent = await this.prisma.org_agents_type.findUnique({
@@ -444,7 +436,6 @@ export class AgentServiceRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getAgentApiKey(orgId: string): Promise<org_agents> {
     try {
       if (orgId) {
@@ -511,7 +502,7 @@ export class AgentServiceRepository {
   async deleteOrgAgentByOrg(orgId: string): Promise<{
     orgDid: Prisma.BatchPayload
     agentInvitation: Prisma.BatchPayload
-    // eslint-disable-next-line camelcase
+
     deleteOrgAgent: org_agents
   }> {
     const tablesToCheck = [

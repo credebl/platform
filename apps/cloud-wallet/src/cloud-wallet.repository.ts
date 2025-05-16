@@ -7,7 +7,7 @@ import type {
 import type { CloudWalletType } from '@credebl/enum/enum'
 import type { PrismaService } from '@credebl/prisma-service'
 import { Injectable, type Logger } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type { cloud_wallet_user_info, user } from '@prisma/client'
 
 @Injectable()
@@ -17,7 +17,6 @@ export class CloudWalletRepository {
     private readonly logger: Logger
   ) {}
 
-  // eslint-disable-next-line camelcase
   async getCloudWalletDetails(type: CloudWalletType): Promise<cloud_wallet_user_info> {
     try {
       const agentDetails = await this.prisma.cloud_wallet_user_info.findFirstOrThrow({
@@ -32,7 +31,6 @@ export class CloudWalletRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async checkUserExist(email: string): Promise<cloud_wallet_user_info> {
     try {
       const agentDetails = await this.prisma.cloud_wallet_user_info.findUnique({
@@ -46,7 +44,7 @@ export class CloudWalletRepository {
       throw error
     }
   }
-  // eslint-disable-next-line camelcase
+
   async storeCloudWalletDetails(cloudWalletDetails: ICloudWalletDetails): Promise<IStoredWalletDetails> {
     try {
       const {
@@ -92,7 +90,6 @@ export class CloudWalletRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getCloudWalletInfo(email: string): Promise<cloud_wallet_user_info> {
     try {
       const walletInfoData = await this.prisma.cloud_wallet_user_info.findUnique({
@@ -136,7 +133,6 @@ export class CloudWalletRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getCloudSubWallet(userId: string): Promise<cloud_wallet_user_info> {
     try {
       const cloudSubWalletDetails = await this.prisma.cloud_wallet_user_info.findFirstOrThrow({

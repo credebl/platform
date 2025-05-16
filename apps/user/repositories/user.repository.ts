@@ -3,7 +3,7 @@
 import type { UserRole } from '@credebl/enum/enum'
 import type { PrismaService } from '@credebl/prisma-service'
 import { Injectable, InternalServerErrorException, type Logger, NotFoundException } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type { RecordType, schema, token, user, user_org_roles } from '@prisma/client'
 import type {
   IOrgUsers,
@@ -71,7 +71,6 @@ export class UserRepository {
    * @returns User exist details
    */
 
-  // eslint-disable-next-line camelcase
   async checkUserExist(email: string): Promise<user> {
     try {
       return this.prisma.user.findFirst({
@@ -180,7 +179,6 @@ export class UserRepository {
               orgRole: true,
               organisation: {
                 include: {
-                  // eslint-disable-next-line camelcase
                   org_agents: true,
                 },
               },
@@ -221,7 +219,6 @@ export class UserRepository {
               orgRole: true,
               organisation: {
                 include: {
-                  // eslint-disable-next-line camelcase
                   org_agents: true,
                 },
               },
@@ -360,7 +357,7 @@ export class UserRepository {
    * @param tenantDetails
    * @returns Updates organization details
    */
-  // eslint-disable-next-line camelcase
+
   async updateUserDetails(id: string, keycloakId: string): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
@@ -384,7 +381,7 @@ export class UserRepository {
    * @param userInfo
    * @returns Updates user details
    */
-  // eslint-disable-next-line camelcase
+
   async updateUserInfo(email: string, userInfo: IUserInformation): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
@@ -450,7 +447,7 @@ export class UserRepository {
                   description: true,
                   orgSlug: true,
                   logoUrl: true,
-                  // eslint-disable-next-line camelcase
+
                   org_agents: {
                     select: {
                       id: true,
@@ -581,7 +578,7 @@ export class UserRepository {
    * @param userInfo
    * @returns Updates user credentials
    */
-  // eslint-disable-next-line camelcase
+
   async addUserPassword(email: string, userInfo: string): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({
@@ -807,7 +804,6 @@ export class UserRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async handleGetUserOrganizations(userId: string): Promise<user_org_roles[]> {
     try {
       const getUserOrgs = await this.prisma.user_org_roles.findMany({

@@ -1,4 +1,3 @@
-// eslint-disable-next-line camelcase
 import type { AutoAccept, SchemaType } from '@credebl/enum/enum'
 import type { Prisma, organisation } from '@prisma/client'
 

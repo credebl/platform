@@ -51,7 +51,6 @@ export class FidoUserRepository {
    * @returns User exist details
    */
 
-  // eslint-disable-next-line camelcase
   async checkFidoUserExist(email: string): Promise<user> {
     try {
       return this.prisma.user.findFirstOrThrow({
@@ -71,7 +70,6 @@ export class FidoUserRepository {
    * @returns User details
    */
 
-  // eslint-disable-next-line camelcase
   async getUserDetails(email: string): Promise<user> {
     try {
       return this.prisma.user.findFirst({
@@ -90,7 +88,7 @@ export class FidoUserRepository {
    * @param tenantDetails
    * @returns Updates organization details
    */
-  // eslint-disable-next-line camelcase
+
   async updateFidoUserDetails(email: string, fidoUserId: string, username: string): Promise<user> {
     try {
       const updateUserDetails = await this.prisma.user.update({

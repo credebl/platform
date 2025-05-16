@@ -564,9 +564,8 @@ export class ClientDetails {
   @IsOptional()
   @IsUrl(
     {
-      // eslint-disable-next-line camelcase
       require_protocol: true,
-      // eslint-disable-next-line camelcase
+
       require_tld: true,
     },
     { message: 'brandLogoUrl should be a valid URL' }

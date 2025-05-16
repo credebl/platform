@@ -8,7 +8,7 @@ import {
   type Logger,
   NotFoundException,
 } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type {
   Prisma,
   agent_invitations,
@@ -886,7 +886,6 @@ export class OrganizationRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getAllOrganizationDid(orgId: string): Promise<IDidList[]> {
     try {
       return this.prisma.org_dids.findMany({
@@ -1162,7 +1161,7 @@ export class OrganizationRepository {
           id: { in: orgIds },
           OR: [
             { name: { contains: search, mode: 'insensitive' } },
-            // eslint-disable-next-line camelcase
+
             { org_agents: { some: { orgDid: { contains: search, mode: 'insensitive' } } } },
           ],
         },

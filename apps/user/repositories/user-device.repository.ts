@@ -1,7 +1,7 @@
 import type { PrismaService } from '@credebl/prisma-service'
 import { Injectable, type Logger, NotFoundException } from '@nestjs/common'
 import { InternalServerErrorException } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type { Prisma, user_devices } from '@prisma/client'
 
 type FidoMultiDevicePayload = {
@@ -27,7 +27,6 @@ export class UserDevicesRepository {
    * @returns User exist details
    */
 
-  // eslint-disable-next-line camelcase
   async checkUserDevice(userId: string): Promise<user_devices> {
     try {
       return this.prisma.user_devices.findFirst({
@@ -46,7 +45,7 @@ export class UserDevicesRepository {
    * @param createFidoMultiDevice
    * @returns Device details
    */
-  // eslint-disable-next-line camelcase
+
   async createMultiDevice(newDevice: Prisma.JsonValue, userId: string): Promise<user_devices> {
     try {
       const saveResponse = await this.prisma.user_devices.create({
@@ -70,7 +69,7 @@ export class UserDevicesRepository {
    * @param userId
    * @returns Device details
    */
-  // eslint-disable-next-line camelcase
+
   async fidoMultiDevice(userId: string): Promise<user_devices[]> {
     try {
       const userDetails = await this.prisma.user_devices.findMany({
@@ -95,7 +94,6 @@ export class UserDevicesRepository {
    * @param userId
    * @returns Get all device details
    */
-  // eslint-disable-next-line camelcase, @typescript-eslint/no-explicit-any
   async getfidoMultiDevice(userId: string): Promise<user_devices[]> {
     try {
       const fidoMultiDevice = await this.prisma.user_devices.findMany({
@@ -186,7 +184,7 @@ export class UserDevicesRepository {
    * @param credentialId
    * @returns Device detail for specific credentialId
    */
-  // eslint-disable-next-line camelcase
+
   async checkUserDeviceByCredentialId(credentialId: string): Promise<user_devices> {
     try {
       return await this.prisma.user_devices.findFirst({
@@ -205,7 +203,7 @@ export class UserDevicesRepository {
    * @param credentialId
    * @returns Delete device
    */
-  // eslint-disable-next-line camelcase
+
   async deleteUserDeviceByCredentialId(credentialId: string): Promise<Prisma.BatchPayload> {
     try {
       return await this.prisma.user_devices.updateMany({
@@ -268,7 +266,7 @@ export class UserDevicesRepository {
    * @param deviceFriendlyName
    * @returns Update device name for specific credentialId
    */
-  // eslint-disable-next-line camelcase
+
   async addCredentialIdAndNameById(id: string, updateFidoUserDetails: string): Promise<user_devices> {
     try {
       return await this.prisma.user_devices.update({

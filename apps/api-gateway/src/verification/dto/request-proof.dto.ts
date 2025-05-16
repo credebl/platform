@@ -162,7 +162,6 @@ export class ProofRequestPresentationDefinition {
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => InputDescriptors)
-  // eslint-disable-next-line camelcase
   input_descriptors: InputDescriptors[]
 }
 
@@ -237,7 +236,7 @@ export class RequestProofDtoBase extends ProofPayload {
     example: {
       id: '32f54163-7166-48f1-93d8-ff217bdb0653',
       purpose: 'Used for KYC verification.',
-      // eslint-disable-next-line camelcase
+
       input_descriptors: [
         {
           id: 'healthcare_input_1',
@@ -375,7 +374,7 @@ export class SendProofRequestPayload {
       indy: {
         name: 'Verify national identity',
         version: '1.0',
-        // eslint-disable-next-line camelcase
+
         requested_attributes: {
           verifynameAddress: {
             names: ['name', 'address'],
@@ -386,7 +385,7 @@ export class SendProofRequestPayload {
             restrictions: [{ schema_id: 'KU583UbI4yAKfaBTSz1rqG:2:Birth Certificate:1.0.0' }],
           },
         },
-        // eslint-disable-next-line camelcase
+
         requested_predicates: {},
       },
     },

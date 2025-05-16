@@ -3,7 +3,7 @@ import type {
   IVerificationRecords,
 } from '@credebl/common/interfaces/verification.interface'
 import { Injectable, type Logger, NotFoundException } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type { agent_invitations, org_agents, organisation, platform_config, presentations } from '@prisma/client'
 import type { IProofPresentation, IProofRequestSearchCriteria } from '../interfaces/verification.interface'
 
@@ -26,7 +26,7 @@ export class VerificationRepository {
    * @param orgId
    * @returns
    */
-  // eslint-disable-next-line camelcase
+
   async getAgentEndPoint(orgId: string): Promise<org_agents> {
     try {
       const agentDetails = await this.prisma.org_agents.findFirst({
@@ -70,7 +70,6 @@ export class VerificationRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getOrganizationByTenantId(tenantId: string): Promise<org_agents> {
     try {
       return this.prisma.org_agents.findFirst({
@@ -226,7 +225,7 @@ export class VerificationRepository {
    * Get platform config details
    * @returns
    */
-  // eslint-disable-next-line camelcase
+
   async getPlatformConfigDetails(): Promise<platform_config> {
     try {
       return this.prisma.platform_config.findFirst()
@@ -264,7 +263,6 @@ export class VerificationRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {
       return this.prisma.agent_invitations.findMany({

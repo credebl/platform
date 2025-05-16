@@ -352,7 +352,6 @@ class InvitationDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString({ each: true })
-  // eslint-disable-next-line camelcase
   handshake_protocols: string[]
 
   @ApiProperty()

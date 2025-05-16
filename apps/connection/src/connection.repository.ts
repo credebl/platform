@@ -4,7 +4,7 @@ import { PrismaTables, SortValue } from '@credebl/enum/enum'
 import type { PrismaService } from '@credebl/prisma-service'
 import type { IUserRequest } from '@credebl/user-request/user-request.interface'
 import { ConflictException, Injectable, type Logger } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type { agent_invitations, org_agents, platform_config, shortening_url } from '@prisma/client'
 import type { IConnectionSearchCriteria, ICreateConnection, OrgAgent } from './interfaces/connection.interfaces'
 // import { OrgAgent } from './interfaces/connection.interfaces';
@@ -20,7 +20,7 @@ export class ConnectionRepository {
    * @param connectionId
    * @returns Get getAgentEndPoint details
    */
-  // eslint-disable-next-line camelcase
+
   async getAgentEndPoint(orgId: string): Promise<OrgAgent> {
     try {
       const agentDetails = await this.prisma.org_agents.findFirst({
@@ -45,13 +45,12 @@ export class ConnectionRepository {
    * @param orgId
    * @returns Get connection details
    */
-  // eslint-disable-next-line camelcase
+
   async saveAgentConnectionInvitations(
     connectionInvitation: string,
     agentId: string,
     orgId: string,
     invitationDid: string
-    // eslint-disable-next-line camelcase
   ): Promise<agent_invitations> {
     try {
       const agentDetails = await this.prisma.agent_invitations.create({
@@ -75,7 +74,7 @@ export class ConnectionRepository {
    * @param orgId
    * @returns Get connection details
    */
-  // eslint-disable-next-line camelcase
+
   async getConnectionInvitationByOrgId(orgId: string): Promise<agent_invitations> {
     try {
       const agentInvitationDetails = await this.prisma.agent_invitations.findFirst({
@@ -111,7 +110,7 @@ export class ConnectionRepository {
    * @param orgId
    * @returns Get connection details
    */
-  // eslint-disable-next-line camelcase
+
   async saveConnectionWebhook(payload: ICreateConnection): Promise<object> {
     try {
       let organisationId: string
@@ -195,7 +194,7 @@ export class ConnectionRepository {
    * @param connectionInvitationUrl
    * @returns Get storeShorteningUrl details
    */
-  // eslint-disable-next-line camelcase
+
   async storeShorteningUrl(referenceId: string): Promise<shortening_url> {
     try {
       return this.prisma.shortening_url.create({
@@ -210,7 +209,6 @@ export class ConnectionRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getOrganization(tenantId: string): Promise<org_agents> {
     try {
       return this.prisma.org_agents.findFirst({
@@ -229,7 +227,7 @@ export class ConnectionRepository {
    * @param referenceId
    * @returns Get storeShorteningUrl details
    */
-  // eslint-disable-next-line camelcase
+
   async getShorteningUrl(referenceId: string): Promise<shortening_url> {
     try {
       return this.prisma.shortening_url.findFirst({
@@ -247,7 +245,7 @@ export class ConnectionRepository {
    * Get platform config details
    * @returns
    */
-  // eslint-disable-next-line camelcase
+
   async getPlatformConfigDetails(): Promise<platform_config> {
     try {
       return this.prisma.platform_config.findFirst()
@@ -373,7 +371,6 @@ export class ConnectionRepository {
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {
       return this.prisma.agent_invitations.findMany({

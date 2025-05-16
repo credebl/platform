@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/no-var-requires */
 
-// eslint-disable-next-line camelcase
 const { createInterface } = require('readline')
 
 const { PrismaClient } = require('@prisma/client')
@@ -28,7 +27,6 @@ const readLineAsync = (msg) =>
     })
   })
 
-// eslint-disable-next-line camelcase
 const getRole = async (roleName) => {
   try {
     const roleDetails = await prisma.org_roles.findFirst({

@@ -2,7 +2,7 @@ import { Injectable, type Logger } from '@nestjs/common'
 
 import type { PrismaService } from '@credebl/prisma-service'
 import { InternalServerErrorException } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type { user_org_roles } from '@prisma/client'
 import type { Prisma } from '@prisma/client'
 
@@ -20,7 +20,7 @@ export class UserOrgRolesRepository {
    * @param createUserDto
    * @returns user details
    */
-  // eslint-disable-next-line camelcase
+
   async createUserOrgRole(userId: string, roleId: string, orgId?: string, idpRoleId?: string): Promise<user_org_roles> {
     try {
       const data: {
@@ -57,7 +57,7 @@ export class UserOrgRolesRepository {
    * @param
    * @returns organizations details
    */
-  // eslint-disable-next-line camelcase
+
   async getUserOrgData(queryOptions: object): Promise<user_org_roles[]> {
     try {
       return this.prisma.user_org_roles.findMany({
@@ -67,7 +67,6 @@ export class UserOrgRolesRepository {
         include: {
           organisation: {
             include: {
-              // eslint-disable-next-line camelcase
               org_agents: true,
               orgInvitations: true,
             },

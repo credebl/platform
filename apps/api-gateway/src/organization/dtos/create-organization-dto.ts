@@ -35,9 +35,8 @@ export class CreateOrganizationDto extends GeoLocationDto {
   @IsNotEmpty({ message: 'notificationWebhook is required.' })
   @IsString({ message: 'notificationWebhook must be in string format.' })
   @IsUrl({
-    // eslint-disable-next-line camelcase
     require_protocol: true, // require URL protocol (e.g., http:// or https://)
-    // eslint-disable-next-line camelcase
+
     require_tld: true, // require top-level domain (e.g., .com, .net)
   })
   notificationWebhook?: string

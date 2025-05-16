@@ -32,7 +32,7 @@ import {
 } from '@nestjs/common'
 import { type ClientProxy, RpcException } from '@nestjs/microservices'
 /* eslint-disable prefer-destructuring */
-// eslint-disable-next-line camelcase
+
 import { RecordType, type org_invitations, type organisation, type user } from '@prisma/client'
 import type { Cache } from 'cache-manager'
 import { OrgRoles } from 'libs/org-roles/enums'
@@ -99,7 +99,6 @@ export class OrganizationService {
    * @returns
    */
 
-  // eslint-disable-next-line camelcase
   async createOrganization(
     createOrgDto: CreateOrganizationDto,
     userId: string,
@@ -198,7 +197,6 @@ export class OrganizationService {
    * @returns
    */
 
-  // eslint-disable-next-line camelcase
   async setPrimaryDid(orgId: string, did: string, id: string): Promise<string> {
     try {
       const organizationExist = await this.organizationRepository.getOrgProfile(orgId)
@@ -513,7 +511,6 @@ export class OrganizationService {
    * @returns
    */
 
-  // eslint-disable-next-line camelcase
   async updateOrganization(updateOrgDto: IUpdateOrganization, userId: string, orgId: string): Promise<organisation> {
     try {
       const organizationExist = await this.organizationRepository.checkOrganizationNameExist(updateOrgDto.name)
@@ -702,9 +699,9 @@ export class OrganizationService {
   async authenticateClientKeycloak(clientId: string, clientSecret: string): Promise<IAccessTokenData> {
     try {
       const payload = new ClientCredentialTokenPayloadDto()
-      // eslint-disable-next-line camelcase
+
       payload.client_id = clientId
-      // eslint-disable-next-line camelcase
+
       payload.client_secret = clientSecret
 
       try {
@@ -1128,7 +1125,6 @@ export class OrganizationService {
   }
 
   async updateClientInvitation(
-    // eslint-disable-next-line camelcase
     invitation: org_invitations,
     idpId: string,
     userId: string,
@@ -1242,13 +1238,7 @@ export class OrganizationService {
     }
   }
 
-  async updateUserClientRoles(
-    // eslint-disable-next-line camelcase
-    roleIds: string[],
-    idpId: string,
-    userId: string,
-    orgId: string
-  ): Promise<boolean> {
+  async updateUserClientRoles(roleIds: string[], idpId: string, userId: string, orgId: string): Promise<boolean> {
     const userDetails = await this.organizationRepository.getUser(userId)
     const token = await this.clientRegistrationService.getManagementToken(
       userDetails.clientId,

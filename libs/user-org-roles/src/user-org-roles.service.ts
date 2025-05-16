@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type { user_org_roles } from '@prisma/client'
 import type { UserOrgRolesRepository } from '../repositories'
 
@@ -12,7 +12,7 @@ export class UserOrgRolesService {
    * @param createUserDto
    * @returns user details
    */
-  // eslint-disable-next-line camelcase
+
   async createUserOrgRole(userId: string, roleId: string, orgId?: string, idpRoleId?: string): Promise<user_org_roles> {
     return this.userOrgRoleRepository.createUserOrgRole(userId, roleId, orgId, idpRoleId)
   }

@@ -7,7 +7,7 @@ import {
   type Logger,
   NotFoundException,
 } from '@nestjs/common'
-// eslint-disable-next-line camelcase
+
 import type {
   agent_invitations,
   credentials,
@@ -47,7 +47,7 @@ export class IssuanceRepository {
    * @param connectionId
    * @returns Get getAgentEndPoint details
    */
-  // eslint-disable-next-line camelcase
+
   async getAgentEndPoint(orgId: string): Promise<OrgAgent> {
     try {
       const agentDetails = await this.prisma.org_agents.findFirst({
@@ -186,7 +186,7 @@ export class IssuanceRepository {
    * @param connectionId
    * @returns Get saved credential details
    */
-  // eslint-disable-next-line camelcase
+
   async saveIssuedCredentialDetails(payload: IssueCredentialWebhookPayload): Promise<credentials> {
     try {
       let organisationId: string
@@ -255,7 +255,7 @@ export class IssuanceRepository {
    * Get platform config details
    * @returns
    */
-  // eslint-disable-next-line camelcase
+
   async getPlatformConfigDetails(): Promise<platform_config> {
     try {
       return this.prisma.platform_config.findFirst()

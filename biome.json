@@ -52,9 +52,9 @@
       },
       "suspicious": {
         "noConsole": {
-          "level": "warn",
-          "fix": "none",
-          "options": {}
+          "level": "error",
+          "fix": "safe",
+          "options": { "allow": [] }
         }
       },
       "complexity": {

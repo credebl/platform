@@ -30,6 +30,7 @@ import { Transform, Type } from 'class-transformer';
 
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { trim } from '@credebl/common/cast.helper';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 class Issuer {
   @ApiProperty()
@@ -492,33 +493,13 @@ export class OOBCredentialDtoWithEmail {
   orgId: string;
 }
 
-export class PreviewFileDetails {
-  @ApiProperty({ required: false, example: '1' })
-  @IsOptional()
-  pageNumber: number = 1;
-
-  @ApiProperty({ required: false, example: '10' })
-  @IsOptional()
-  pageSize: number = 10;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @Transform(({ value }) => trim(value))
-  @Type(() => String)
-  searchByText: string = '';
+export class PreviewFileDetails extends PaginationDto {
+  
 }
 
-export class FileParameter {
-  @ApiProperty({ required: false, example: '10' })
-  @IsOptional()
-  pageSize: number = 10;
-
-  @ApiProperty({ required: false, example: '1' })
-  @IsOptional()
-  pageNumber: number = 1;
-
-  @ApiProperty({
-    required: false
+export class FileParameter extends PaginationDto {
+   @ApiProperty({
+    required: false,
   })
   @Transform(({ value }) => trim(value))
   @IsOptional()
@@ -527,18 +508,12 @@ export class FileParameter {
 
   @ApiProperty({
     enum: [SortValue.DESC, SortValue.ASC],
-    required: false
+    required: false,
   })
   @Transform(({ value }) => trim(value))
   @IsOptional()
   @IsEnum(SortValue)
   sortBy: string = SortValue.DESC;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @Transform(({ value }) => trim(value))
-  @Type(() => String)
-  searchByText: string = '';
 }
 
 export class ClientDetails {

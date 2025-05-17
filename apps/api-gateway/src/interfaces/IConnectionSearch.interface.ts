@@ -5,7 +5,7 @@ export interface IConnectionSearchCriteria {
   pageSize: number;
   sortField: string;
   sortBy: string;
-  searchByText: string;
+  search: string;
   user?: IUserRequestInterface;
 }
 

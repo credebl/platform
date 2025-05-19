@@ -11,7 +11,7 @@
   "formatter": {
     "indentStyle": "space",
     "lineWidth": 120,
-    "ignore": ["**/node_modules", "**/dist", "**/.idea", "**/coverage", "**/pnpm-lock.yaml", "*.json"]
+    "ignore": ["**/node_modules", "**/dist", "**/.idea", "**/coverage", "**/pnpm-lock.yaml"]
   },
   "javascript": {
     "parser": {
@@ -80,8 +80,7 @@
       "**/coverage",
       "**/pnpm-lock.yaml",
       "**/test/*",
-      "*.spec.ts",
-      "*.json"
+      "*.spec.ts"
     ]
   }
 }

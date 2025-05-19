@@ -59,7 +59,7 @@
       },
       "complexity": {
         "noBannedTypes": "error",
-        "useLiteralKeys": "off",
+        "useLiteralKeys": "warn",
         "noForEach": {
           "level": "warn"
         }

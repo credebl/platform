@@ -250,14 +250,16 @@ export class VerificationService {
       const getProofPresentationById = await this._getProofPresentationById(payload)
       return getProofPresentationById?.response
     } catch (error) {
-      this.logger.error(`[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`);
-      const errorMessage = error?.response?.error?.reason || error?.message;
+      this.logger.error(
+        `[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`
+      )
+      const errorMessage = error?.response?.error?.reason || error?.message
 
       if (errorMessage?.includes('not found')) {
-        throw new NotFoundException(errorMessage);
+        throw new NotFoundException(errorMessage)
       }
 
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 

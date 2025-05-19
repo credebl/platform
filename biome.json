@@ -61,7 +61,7 @@
         "noBannedTypes": "error",
         "useLiteralKeys": "off",
         "noForEach": {
-          "level": "off"
+          "level": "warn"
         }
       },
       "performance": {

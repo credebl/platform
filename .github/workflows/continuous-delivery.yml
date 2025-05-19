@@ -3,7 +3,7 @@ name: Continuous Delivery
 on:
   push:
     branches:
-      - 'feat/multi-arch-image'
+      - 'fix/multi-arch-image'
 
 env:
   REGISTRY: ghcr.io

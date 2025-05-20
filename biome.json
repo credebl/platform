@@ -71,16 +71,6 @@
         }
       }
     },
-    "ignore": [
-      "**/*.eslintrc.js",
-      "**/*.json",
-      "**/node_modules",
-      "**/dist",
-      "**/.idea",
-      "**/coverage",
-      "**/pnpm-lock.yaml",
-      "**/test/*",
-      "*.spec.ts"
-    ]
+    "ignore": ["**/node_modules", "**/dist", "**/.idea", "**/coverage", "**/pnpm-lock.yaml", "**/test/*", "*.spec.ts"]
   }
 }

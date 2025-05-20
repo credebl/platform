@@ -1,0 +1,76 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "maxSize": 10000000
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "lineWidth": 120,
+    "ignore": ["**/node_modules", "**/dist", "**/.idea", "**/coverage", "**/pnpm-lock.yaml"]
+  },
+  "javascript": {
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    },
+    "formatter": {
+      "semicolons": "asNeeded",
+      "quoteStyle": "single",
+      "trailingCommas": "es5",
+      "lineWidth": 120,
+      "indentStyle": "space"
+    }
+  },
+  "json": {
+    "parser": {
+      "allowComments": true
+    }
+  },
+  "organizeImports": {
+    "enabled": true
+  },
+  "linter": {
+    "rules": {
+      "style": {
+        "useImportType": "off",
+        "useNodejsImportProtocol": "off",
+        "noNonNullAssertion": "error"
+      },
+      "correctness": {
+        "noUnusedVariables": {
+          "level": "error",
+          "fix": "safe"
+        },
+        "noUnusedFunctionParameters": "off",
+        "noUnusedImports": "error",
+        "noUndeclaredDependencies": "off",
+        "noInvalidUseBeforeDeclaration": "error"
+      },
+      "suspicious": {
+        "noConsole": {
+          "level": "error",
+          "fix": "safe",
+          "options": { "allow": [] }
+        }
+      },
+      "complexity": {
+        "noBannedTypes": "error",
+        "useLiteralKeys": "warn",
+        "noForEach": {
+          "level": "warn"
+        }
+      },
+      "performance": {
+        "noDelete": {
+          "fix": "safe",
+          "level": "error"
+        }
+      }
+    },
+    "ignore": ["**/node_modules", "**/dist", "**/.idea", "**/coverage", "**/pnpm-lock.yaml", "**/test/*", "*.spec.ts"]
+  }
+}

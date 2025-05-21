@@ -5,10 +5,6 @@ import type { IResponse } from '@credebl/common/interfaces/response.interface'
 import { ResponseMessages } from '@credebl/common/response-messages'
 import { SchemaType } from '@credebl/enum/enum'
 import type { IUserRequest } from '@credebl/user-request/user-request.interface'
-/* eslint-disable default-param-last */
-/* eslint-disable no-param-reassign */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable camelcase */
 import {
   BadRequestException,
   Body,
@@ -292,11 +288,7 @@ export class IssuanceController {
         .status(HttpStatus.OK)
         .send(templateData.fileContent)
     } catch (error) {
-      return res
-        .status(error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR)
-        .header('Content-Type', 'application/json')
-        .header('Content-Disposition', '')
-        .send(error)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
   /**

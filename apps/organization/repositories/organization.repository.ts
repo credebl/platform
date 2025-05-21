@@ -260,7 +260,7 @@ export class OrganizationRepository {
 
   async getOrganizationOwnerDetails(orgId: string, role: string): Promise<IOrganization> {
     try {
-      return this.prisma.organisation.findFirstOrThrow({
+      const organization = await this.prisma.organisation.findFirst({
         where: {
           id: orgId
         },
@@ -287,6 +287,12 @@ export class OrganizationRepository {
           }
         }
       });
+      
+      if (!organization) {
+        throw new NotFoundException(ResponseMessages.organisation.error.organizationNotFound);
+      }
+      
+      return organization;
     } catch (error) {
       this.logger.error(`error in getOrganizationOwnerDetails: ${JSON.stringify(error)}`);
       throw error;
@@ -785,7 +791,7 @@ export class OrganizationRepository {
 
   async getAgentEndPoint(orgId: string): Promise<org_agents> {
     try {
-      const agentDetails = await this.prisma.org_agents.findFirstOrThrow({
+      const agentDetails = await this.prisma.org_agents.findFirst({
         where: {
           orgId
         }
@@ -933,11 +939,17 @@ export class OrganizationRepository {
 
   async getDidDetailsByDid(did: string): Promise<IDidDetails> {
     try {
-      return this.prisma.org_dids.findFirstOrThrow({
+      const didDetails = await this.prisma.org_dids.findFirst({
         where: {
           did
         }
       });
+      
+      if (!didDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+      }
+      
+      return didDetails;
     } catch (error) {
       this.logger.error(`[getDidDetailsByDid] - get DID details: ${JSON.stringify(error)}`);
       throw error;
@@ -946,12 +958,18 @@ export class OrganizationRepository {
 
   async getPerviousPrimaryDid(orgId: string): Promise<IDidDetails> {
     try {
-      return this.prisma.org_dids.findFirstOrThrow({
+      const primaryDid = await this.prisma.org_dids.findFirst({
         where: {
           orgId,
           isPrimaryDid: true
         }
       });
+      
+      if (!primaryDid) {
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+      }
+      
+      return primaryDid;
     } catch (error) {
       this.logger.error(`[getPerviousPrimaryDid] - get DID details: ${JSON.stringify(error)}`);
       throw error;
@@ -1002,11 +1020,17 @@ export class OrganizationRepository {
 
   async getNetworkByNameSpace(nameSpace: string): Promise<ILedgerNameSpace> {
     try {
-      return this.prisma.ledgers.findFirstOrThrow({
+      const network = await this.prisma.ledgers.findFirst({
         where: {
           indyNamespace: nameSpace
         }
       });
+      
+      if (!network) {
+        throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+      }
+      
+      return network;
     } catch (error) {
       this.logger.error(`[getNetworkByIndyNameSpace] - get network by namespace: ${JSON.stringify(error)}`);
       throw error;
@@ -1015,11 +1039,15 @@ export class OrganizationRepository {
 
   async getLedger(name: string): Promise<ILedgerDetails> {
     try {
-      const ledgerData = await this.prisma.ledgers.findFirstOrThrow({
+      const ledgerData = await this.prisma.ledgers.findFirst({
         where: {
           name
         }
       });
+      
+      if (!ledgerData) {
+        throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
+      }
       return ledgerData;
     } catch (error) {
       this.logger.error(`[getLedger] - get ledger details: ${JSON.stringify(error)}`);
@@ -1081,11 +1109,15 @@ export class OrganizationRepository {
 
   async getOrgRoles(roleName: string): Promise<org_roles> {
     try {
-      const orgRoleDetails = await this.prisma.org_roles.findFirstOrThrow({
+      const orgRoleDetails = await this.prisma.org_roles.findFirst({
         where: {
           name: roleName
         }
       });
+      
+      if (!orgRoleDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgRoleIdNotFound);
+      }
 
       return orgRoleDetails;
     } catch (error) {

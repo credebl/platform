@@ -1,12 +1,10 @@
-import * as sendgrid from '@sendgrid/mail';
-import * as dotenv from 'dotenv';
-import { EmailDto } from './dtos/email.dto';
+import * as sendgrid from '@sendgrid/mail'
+import * as dotenv from 'dotenv'
+import type { EmailDto } from './dtos/email.dto'
 
-dotenv.config();
+dotenv.config()
 
-sendgrid.setApiKey(
-  process.env.SENDGRID_API_KEY
-);
+sendgrid.setApiKey(process.env.SENDGRID_API_KEY)
 
 export const sendEmail = async (EmailDto: EmailDto): Promise<boolean> => {
   try {
@@ -16,12 +14,13 @@ export const sendEmail = async (EmailDto: EmailDto): Promise<boolean> => {
       subject: EmailDto.emailSubject,
       text: EmailDto.emailText,
       html: EmailDto.emailHtml,
-      attachments: EmailDto.emailAttachments
-    };
-    return await sendgrid.send(msg).then(() => true).catch(() => false);
-
-  } catch (error) {
-    return false;
+      attachments: EmailDto.emailAttachments,
+    }
+    return await sendgrid
+      .send(msg)
+      .then(() => true)
+      .catch(() => false)
+  } catch (_error) {
+    return false
   }
-
-};
+}

@@ -1,6 +1,6 @@
-import { CountryInterface, StateInterface, CityInterface } from '@credebl/common/interfaces/geolocation.interface';
-import { PrismaService } from '@credebl/prisma-service';
-import { Injectable, Logger } from '@nestjs/common';
+import type { CityInterface, CountryInterface, StateInterface } from '@credebl/common/interfaces/geolocation.interface'
+import type { PrismaService } from '@credebl/prisma-service'
+import { Injectable, type Logger } from '@nestjs/common'
 
 @Injectable()
 export class GeoLocationRepository {
@@ -14,12 +14,12 @@ export class GeoLocationRepository {
       return await this.prisma.countries.findMany({
         select: {
           id: true,
-          name: true
-        }
-      });
+          name: true,
+        },
+      })
     } catch (error) {
-      this.logger.error(`Error in GeoLocationRepository::[findAllCountries]: ${error}`);
-      throw error;
+      this.logger.error(`Error in GeoLocationRepository::[findAllCountries]: ${error}`)
+      throw error
     }
   }
   async findStatesByCountryId(countryId: number): Promise<StateInterface[]> {
@@ -30,12 +30,12 @@ export class GeoLocationRepository {
           id: true,
           name: true,
           countryId: true,
-          countryCode: true
-        }
-      });
+          countryCode: true,
+        },
+      })
     } catch (error) {
-      this.logger.error(`Error in GeoLocationRepository::[findStatesByCountryId]: ${error} `);
-      throw error;
+      this.logger.error(`Error in GeoLocationRepository::[findStatesByCountryId]: ${error} `)
+      throw error
     }
   }
 
@@ -44,7 +44,7 @@ export class GeoLocationRepository {
       return await this.prisma.cities.findMany({
         where: {
           stateId: Number(stateId),
-          countryId: Number(countryId)
+          countryId: Number(countryId),
         },
         select: {
           id: true,
@@ -52,12 +52,12 @@ export class GeoLocationRepository {
           stateId: true,
           stateCode: true,
           countryId: true,
-          countryCode: true
-        }
-      });
+          countryCode: true,
+        },
+      })
     } catch (error) {
-      this.logger.error(`Error finding cities for stateId ${stateId} and countryId ${countryId}: ${error}`);
-      throw error;
+      this.logger.error(`Error finding cities for stateId ${stateId} and countryId ${countryId}: ${error}`)
+      throw error
     }
   }
 }

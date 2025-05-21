@@ -1,12 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class UserLoginDto {
-    @ApiProperty()
-    username: string;
+  @ApiProperty()
+  username: string
 
-    @ApiProperty()
-    password: string;
+  @ApiProperty()
+  password: string
 
-    @ApiProperty()
-    firebaseToken: string;
+  @ApiProperty()
+  firebaseToken: string
 }

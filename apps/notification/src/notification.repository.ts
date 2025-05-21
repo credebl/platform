@@ -1,65 +1,62 @@
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { PrismaService } from '@credebl/prisma-service';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { INotification, IWebhookEndpoint } from '../interfaces/notification.interfaces';
+import { ResponseMessages } from '@credebl/common/response-messages'
+import type { PrismaService } from '@credebl/prisma-service'
+import { Injectable, type Logger, NotFoundException } from '@nestjs/common'
+import type { INotification, IWebhookEndpoint } from '../interfaces/notification.interfaces'
 
 @Injectable()
 export class NotificationRepository {
-    constructor(
-        private readonly prisma: PrismaService,
-        private readonly logger: Logger
-    ) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: Logger
+  ) {}
 
+  /**
+   * Register organization webhook endpoint
+   * @param payload
+   * @returns Stored notification data
+   */
+  async storeOrgWebhookEndpoint(payload: IWebhookEndpoint): Promise<INotification> {
+    try {
+      const { orgId, notificationWebhook } = payload
+      const updateNotification = await this.prisma.notification.create({
+        data: {
+          orgId,
+          notificationWebhook,
+        },
+      })
 
-    /**
-     * Register organization webhook endpoint
-     * @param payload 
-     * @returns Stored notification data
-     */
-    async storeOrgWebhookEndpoint(payload: IWebhookEndpoint): Promise<INotification> {
-        try {
+      if (!updateNotification) {
+        throw new NotFoundException(ResponseMessages.notification.error.notFound)
+      }
 
-            const { orgId, notificationWebhook } = payload;
-            const updateNotification = await this.prisma.notification.create({
-                data: {
-                    orgId,
-                    notificationWebhook
-                }
-            });
-
-            if (!updateNotification) {
-                throw new NotFoundException(ResponseMessages.notification.error.notFound);
-            }
-
-            return updateNotification;
-        } catch (error) {
-            this.logger.error(`Error in storeOrgWebhookEndpoint: ${error.message} `);
-            throw error;
-        }
+      return updateNotification
+    } catch (error) {
+      this.logger.error(`Error in storeOrgWebhookEndpoint: ${error.message} `)
+      throw error
     }
+  }
 
-    /**
-     * Get webhook endpoint
-     * @param orgId 
-     * @returns Get notification details
-     */
-    async getOrgWebhookEndpoint(orgId: string): Promise<INotification> {
-        try {
+  /**
+   * Get webhook endpoint
+   * @param orgId
+   * @returns Get notification details
+   */
+  async getOrgWebhookEndpoint(orgId: string): Promise<INotification> {
+    try {
+      const updateNotification = await this.prisma.notification.findUnique({
+        where: {
+          orgId,
+        },
+      })
 
-            const updateNotification = await this.prisma.notification.findUnique({
-                where: {
-                    orgId
-                }
-            });
+      if (!updateNotification) {
+        throw new NotFoundException(ResponseMessages.notification.error.notFound)
+      }
 
-            if (!updateNotification) {
-                throw new NotFoundException(ResponseMessages.notification.error.notFound);
-            }
-
-            return updateNotification;
-        } catch (error) {
-            this.logger.error(`Error in getOrgWebhookEndpoint: ${error.message} `);
-            throw error;
-        }
+      return updateNotification
+    } catch (error) {
+      this.logger.error(`Error in getOrgWebhookEndpoint: ${error.message} `)
+      throw error
     }
+  }
 }

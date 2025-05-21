@@ -1,4 +1,4 @@
 export enum CredentialSortBy {
-    id = 'id',
-    createDateTime = 'createDateTime'
+  id = 'id',
+  createDateTime = 'createDateTime',
 }

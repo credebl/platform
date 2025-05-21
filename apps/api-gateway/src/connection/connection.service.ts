@@ -1,56 +1,65 @@
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { Inject, Injectable} from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
-import { ConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDto, ReceiveInvitationUrlDto } from './dtos/connection.dto';
-import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
-import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
-import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
-import { BasicMessageDto, QuestionDto } from './dtos/question-answer.dto';
-import { user } from '@prisma/client';
-import { NATSClient } from '@credebl/common/NATSClient';
+import type { NATSClient } from '@credebl/common/NATSClient'
+import type { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface'
+import type { IUserRequest } from '@credebl/user-request/user-request.interface'
+import { Inject, Injectable } from '@nestjs/common'
+import { type ClientProxy, RpcException } from '@nestjs/microservices'
+import type { user } from '@prisma/client'
+import { BaseService } from 'libs/service/base.service'
+import type {
+  AgentConnectionSearchCriteria,
+  IConnectionDetailsById,
+  IConnectionSearchCriteria,
+} from '../interfaces/IConnectionSearch.interface'
+import type {
+  ConnectionDto,
+  CreateOutOfBandConnectionInvitation,
+  ReceiveInvitationDto,
+  ReceiveInvitationUrlDto,
+} from './dtos/connection.dto'
+import type { BasicMessageDto, QuestionDto } from './dtos/question-answer.dto'
+import type { IReceiveInvitationRes, IUserRequestInterface } from './interfaces'
 @Injectable()
 export class ConnectionService extends BaseService {
-  constructor(@Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy, private readonly natsClient : NATSClient) {
-    super('ConnectionService');
+  constructor(
+    @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy,
+    private readonly natsClient: NATSClient
+  ) {
+    super('ConnectionService')
   }
 
-  sendQuestion(
-    questionDto: QuestionDto
-  ): Promise<object> {
+  sendQuestion(questionDto: QuestionDto): Promise<object> {
     try {
-      return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'send-question', questionDto);
+      return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'send-question', questionDto)
     } catch (error) {
-      throw new RpcException(error.response);
+      throw new RpcException(error.response)
     }
   }
 
-  sendBasicMessage(
-    basicMessageDto: BasicMessageDto
-  ): Promise<object> {
+  sendBasicMessage(basicMessageDto: BasicMessageDto): Promise<object> {
     try {
-      return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'send-basic-message-on-connection', basicMessageDto);
+      return this.natsClient.sendNatsMessage(
+        this.connectionServiceProxy,
+        'send-basic-message-on-connection',
+        basicMessageDto
+      )
     } catch (error) {
-      throw new RpcException(error.response);
+      throw new RpcException(error.response)
     }
   }
 
-  getConnectionWebhook(
-    connectionDto: ConnectionDto,
-    orgId: string
-  ): Promise<object> {
-    const payload = { connectionDto, orgId };
-    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'webhook-get-connection', payload);
+  getConnectionWebhook(connectionDto: ConnectionDto, orgId: string): Promise<object> {
+    const payload = { connectionDto, orgId }
+    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'webhook-get-connection', payload)
   }
 
   getUrl(referenceId: string): Promise<{
-    response: object;
+    response: object
   }> {
     try {
-      const connectionDetails = { referenceId };
-      return this.natsClient.sendNats(this.connectionServiceProxy, 'get-connection-url', connectionDetails);
+      const connectionDetails = { referenceId }
+      return this.natsClient.sendNats(this.connectionServiceProxy, 'get-connection-url', connectionDetails)
     } catch (error) {
-      throw new RpcException(error.response);
+      throw new RpcException(error.response)
     }
   }
 
@@ -59,33 +68,29 @@ export class ConnectionService extends BaseService {
     user: IUserRequest,
     orgId: string
   ): Promise<IConnectionList> {
-    const payload = { connectionSearchCriteria, user, orgId };
-    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'get-all-connections', payload);
+    const payload = { connectionSearchCriteria, user, orgId }
+    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'get-all-connections', payload)
   }
 
   getConnectionListFromAgent(
     connectionSearchCriteria: AgentConnectionSearchCriteria,
     orgId: string
   ): Promise<IConnectionList> {
-    const payload = { connectionSearchCriteria, orgId };
-    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'get-all-agent-connection-list', payload);
+    const payload = { connectionSearchCriteria, orgId }
+    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'get-all-agent-connection-list', payload)
   }
 
-  getConnectionsById(
-    user: IUserRequest,
-    connectionId: string,
-    orgId: string
-  ): Promise<IConnectionDetailsById> {
-    const payload = { user, connectionId, orgId };
-    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'get-connection-details-by-connectionId', payload);
+  getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<IConnectionDetailsById> {
+    const payload = { user, connectionId, orgId }
+    return this.natsClient.sendNatsMessage(
+      this.connectionServiceProxy,
+      'get-connection-details-by-connectionId',
+      payload
+    )
   }
 
-
-  getQuestionAnswersRecord(
-    orgId: string
-  ): Promise<object> {
-    
-    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'get-question-answer-record', orgId);
+  getQuestionAnswersRecord(orgId: string): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'get-question-answer-record', orgId)
   }
 
   receiveInvitationUrl(
@@ -93,8 +98,8 @@ export class ConnectionService extends BaseService {
     orgId: string,
     user: IUserRequestInterface
   ): Promise<IReceiveInvitationRes> {
-    const payload = { user, receiveInvitationUrl, orgId };
-    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation-url', payload);
+    const payload = { user, receiveInvitationUrl, orgId }
+    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation-url', payload)
   }
 
   receiveInvitation(
@@ -102,36 +107,36 @@ export class ConnectionService extends BaseService {
     orgId: string,
     user: IUserRequestInterface
   ): Promise<IReceiveInvitationRes> {
-    const payload = { user, receiveInvitation, orgId };
-    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation', payload);
+    const payload = { user, receiveInvitation, orgId }
+    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation', payload)
   }
 
   async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
-    const pattern = { cmd: 'get-webhookurl' };
+    const pattern = { cmd: 'get-webhookurl' }
 
-    const payload = { tenantId, orgId };
-    
+    const payload = { tenantId, orgId }
+
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
-      return message;
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise()
+      return message
     } catch (error) {
-      this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`catch: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
-  async _postWebhookResponse(webhookUrl: string, data:object): Promise<string> {
-    const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
-    const payload = { webhookUrl, data  };
-    
+  async _postWebhookResponse(webhookUrl: string, data: object): Promise<string> {
+    const pattern = { cmd: 'post-webhook-response-to-webhook-url' }
+    const payload = { webhookUrl, data }
+
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise();
-      return message;
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      const message = await this.connectionServiceProxy.send<any>(pattern, payload).toPromise()
+      return message
     } catch (error) {
-      this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`catch: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
@@ -139,12 +144,12 @@ export class ConnectionService extends BaseService {
     createOutOfBandConnectionInvitation: CreateOutOfBandConnectionInvitation,
     user: IUserRequestInterface
   ): Promise<IReceiveInvitationRes> {
-    const payload = { user, createOutOfBandConnectionInvitation };
-    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'create-connection-invitation', payload);
+    const payload = { user, createOutOfBandConnectionInvitation }
+    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'create-connection-invitation', payload)
   }
 
   async deleteConnectionRecords(orgId: string, userDetails: user): Promise<IDeletedConnectionsRecord> {
-    const payload = { orgId, userDetails };
-    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'delete-connection-records', payload);
+    const payload = { orgId, userDetails }
+    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'delete-connection-records', payload)
   }
 }

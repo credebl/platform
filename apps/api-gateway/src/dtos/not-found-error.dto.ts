@@ -1,22 +1,21 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class NotFoundErrorDto {
+  @ApiProperty({ example: 404 })
+  statusCode: number
 
-    @ApiProperty({ example: 404 })
-    statusCode: number;
+  @ApiProperty({ example: 'Not Found' })
+  error: string
 
-    @ApiProperty({ example: 'Not Found' })
-    error: string;
+  @ApiProperty({ example: 'Not Found' })
+  message: string
 
-    @ApiProperty({ example: 'Not Found' })
-    message: string;
+  @ApiProperty()
+  success: boolean
 
-    @ApiProperty()
-    success: boolean;
+  @ApiProperty()
+  data?: boolean | object | []
 
-    @ApiProperty()
-    data?: boolean | {} | [];
-
-    @ApiProperty({ example: 404 })
-    code: number;
+  @ApiProperty({ example: 404 })
+  code: number
 }

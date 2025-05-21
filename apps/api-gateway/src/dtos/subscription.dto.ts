@@ -1,10 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class SubscriptionDto {
+  @ApiProperty()
+  name: string
 
-    @ApiProperty()
-    name: string;
-
-    @ApiProperty()
-    description: string;
+  @ApiProperty()
+  description: string
 }

@@ -1,3 +1,3 @@
-export * from './config.service';
-export * from './config.module';
-export * from './global-config.module';
+export * from './config.service'
+export * from './config.module'
+export * from './global-config.module'

@@ -1,16 +1,22 @@
-import * as url from 'url';
+import * as url from 'url'
 export class URLUserResetPasswordTemplate {
-  public getUserResetPasswordTemplate(email: string, platform: string, brandLogoUrl: string, uiEndpoint: string, verificationCode: string): string {
-    const endpoint = uiEndpoint || process.env.FRONT_END_URL;
+  public getUserResetPasswordTemplate(
+    email: string,
+    platform: string,
+    brandLogoUrl: string,
+    uiEndpoint: string,
+    verificationCode: string
+  ): string {
+    const endpoint = uiEndpoint || process.env.FRONT_END_URL
 
     const apiUrl = url.parse(
       `${endpoint}/reset-password?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
-    );
-    
-    const logoUrl = brandLogoUrl || process.env.BRAND_LOGO;
-    const poweredBy = platform || process.env.POWERED_BY;
+    )
 
-    const validUrl = apiUrl.href.replace('/:', ':');
+    const logoUrl = brandLogoUrl || process.env.BRAND_LOGO
+    const poweredBy = platform || process.env.POWERED_BY
+
+    const validUrl = apiUrl.href.replace('/:', ':')
 
     try {
       return `<!DOCTYPE html>
@@ -59,8 +65,7 @@ export class URLUserResetPasswordTemplate {
               </div>
           </div>
       </body>
-      </html>`;
-
-    } catch (error) {}
+      </html>`
+    } catch (_error) {}
   }
 }

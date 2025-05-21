@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { UserOrgRolesRepository } from '../repositories';
-// eslint-disable-next-line camelcase
-import { user_org_roles } from '@prisma/client';
+import { Injectable } from '@nestjs/common'
+
+import type { user_org_roles } from '@prisma/client'
+import type { UserOrgRolesRepository } from '../repositories'
 
 @Injectable()
 export class UserOrgRolesService {
@@ -12,67 +12,62 @@ export class UserOrgRolesService {
    * @param createUserDto
    * @returns user details
    */
-  // eslint-disable-next-line camelcase
+
   async createUserOrgRole(userId: string, roleId: string, orgId?: string, idpRoleId?: string): Promise<user_org_roles> {
-    return this.userOrgRoleRepository.createUserOrgRole(userId, roleId, orgId, idpRoleId);
+    return this.userOrgRoleRepository.createUserOrgRole(userId, roleId, orgId, idpRoleId)
   }
 
-
   /**
-   * 
-   * @param userId 
-   * @param orgId 
+   *
+   * @param userId
+   * @param orgId
    * @returns Boolean response for user exist
    */
   async checkUserOrgExist(userId: string, orgId: string): Promise<boolean> {
     const queryOptions = {
       userId,
-      orgId
-    };
-    const userOrgDetails = await this.userOrgRoleRepository.getUserOrgData(queryOptions);
+      orgId,
+    }
+    const userOrgDetails = await this.userOrgRoleRepository.getUserOrgData(queryOptions)
 
-    if (userOrgDetails && 0 === userOrgDetails.length) {
-      return false;
+    if (userOrgDetails && userOrgDetails.length === 0) {
+      return false
     }
 
-    return true;
+    return true
   }
 
-
   /**
-   * 
-   * @param userId 
-   * @param orgId 
-   * @param roleIds 
-   * @returns 
+   *
+   * @param userId
+   * @param orgId
+   * @param roleIds
+   * @returns
    */
   async updateUserOrgRole(
     userId: string,
     orgId: string,
-    roleIdList: {roleId: string, idpRoleId: string}[]
-     ): Promise<boolean> {
-  
+    roleIdList: { roleId: string; idpRoleId: string }[]
+  ): Promise<boolean> {
     for (const roleData of roleIdList) {
-      this.userOrgRoleRepository.createUserOrgRole(userId, roleData.roleId, orgId, roleData.idpRoleId);
+      this.userOrgRoleRepository.createUserOrgRole(userId, roleData.roleId, orgId, roleData.idpRoleId)
     }
 
-    return true;
+    return true
   }
 
   /**
-   * 
-   * @param userId 
-   * @param orgId 
+   *
+   * @param userId
+   * @param orgId
    * @returns Delete user org roles
    */
   async deleteOrgRoles(userId: string, orgId: string): Promise<object> {
-
     const queryOptions = {
       userId,
-      orgId
-    };
+      orgId,
+    }
 
-    return this.userOrgRoleRepository.deleteMany(queryOptions);
-
+    return this.userOrgRoleRepository.deleteMany(queryOptions)
   }
 }

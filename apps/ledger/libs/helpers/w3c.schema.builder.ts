@@ -1,136 +1,136 @@
-import { IW3CAttributeValue } from '@credebl/common/interfaces/interface';
-import { ISchemaAttributesFormat } from 'apps/ledger/src/schema/interfaces/schema-payload.interface';
-import { IProductSchema } from 'apps/ledger/src/schema/interfaces/schema.interface';
-import ExclusiveMinimum from 'libs/validations/exclusiveMinimum';
-import MaxItems from 'libs/validations/maxItems';
-import MaxLength from 'libs/validations/maxLength';
-import Minimum from 'libs/validations/minimum';
-import MinItems from 'libs/validations/minItems';
-import MinLength from 'libs/validations/minLength';
-import MultipleOf from 'libs/validations/multipleOf';
-import Pattern from 'libs/validations/pattern';
-import UniqueItems from 'libs/validations/uniqueItems';
+import type { IW3CAttributeValue } from '@credebl/common/interfaces/interface'
+import type { ISchemaAttributesFormat } from 'apps/ledger/src/schema/interfaces/schema-payload.interface'
+import type { IProductSchema } from 'apps/ledger/src/schema/interfaces/schema.interface'
+import ExclusiveMinimum from 'libs/validations/exclusiveMinimum'
+import MaxItems from 'libs/validations/maxItems'
+import MaxLength from 'libs/validations/maxLength'
+import MinItems from 'libs/validations/minItems'
+import MinLength from 'libs/validations/minLength'
+import Minimum from 'libs/validations/minimum'
+import MultipleOf from 'libs/validations/multipleOf'
+import Pattern from 'libs/validations/pattern'
+import UniqueItems from 'libs/validations/uniqueItems'
 
 export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: string, description: string): object {
   // Function to apply validations based on attribute properties
   const applyValidations = (attribute, propertyObj): ISchemaAttributesFormat => {
-    const context = { ...propertyObj };
+    const context = { ...propertyObj }
 
     // Apply string validations
-    if ('string' === attribute.schemaDataType.toLowerCase()) {
+    if (attribute.schemaDataType.toLowerCase() === 'string') {
       if (attribute.minLength !== undefined) {
-        const validation = new MinLength(attribute.minLength);
-        validation.json(context);
+        const validation = new MinLength(attribute.minLength)
+        validation.json(context)
       }
 
       if (attribute.maxLength !== undefined) {
-        const validation = new MaxLength(attribute.maxLength);
-        validation.json(context);
+        const validation = new MaxLength(attribute.maxLength)
+        validation.json(context)
       }
 
       if (attribute.pattern !== undefined) {
-        const validation = new Pattern(attribute.pattern);
-        validation.json(context);
+        const validation = new Pattern(attribute.pattern)
+        validation.json(context)
       }
     }
 
     // Apply number validations
     if (['number', 'integer'].includes(attribute.schemaDataType.toLowerCase())) {
       if (attribute.minimum !== undefined) {
-        const validation = new Minimum(attribute.minimum);
-        validation.json(context);
+        const validation = new Minimum(attribute.minimum)
+        validation.json(context)
       }
 
       if (attribute.exclusiveMinimum !== undefined) {
-        const validation = new ExclusiveMinimum(attribute.exclusiveMinimum);
-        validation.json(context);
+        const validation = new ExclusiveMinimum(attribute.exclusiveMinimum)
+        validation.json(context)
       }
 
       if (attribute.multipleOf !== undefined) {
-        const validation = new MultipleOf(attribute.multipleOf);
-        validation.json(context);
+        const validation = new MultipleOf(attribute.multipleOf)
+        validation.json(context)
       }
     }
 
     // Apply array validations
-    if ('array' === attribute.schemaDataType.toLowerCase()) {
+    if (attribute.schemaDataType.toLowerCase() === 'array') {
       if (attribute.minItems !== undefined) {
-        const validation = new MinItems(attribute.minItems);
-        validation.json(context);
+        const validation = new MinItems(attribute.minItems)
+        validation.json(context)
       }
 
       if (attribute.maxItems !== undefined) {
-        const validation = new MaxItems(attribute.maxItems);
-        validation.json(context);
+        const validation = new MaxItems(attribute.maxItems)
+        validation.json(context)
       }
 
       if (attribute.uniqueItems !== undefined) {
-        const validation = new UniqueItems(attribute.uniqueItems);
-        validation.json(context);
+        const validation = new UniqueItems(attribute.uniqueItems)
+        validation.json(context)
       }
     }
 
-    return context;
-  };
+    return context
+  }
 
   // Function to recursively process attributes
   const processAttributes = (attrs: IW3CAttributeValue[]): IProductSchema => {
     if (!Array.isArray(attrs)) {
-      return { properties: {}, required: [] };
+      return { properties: {}, required: [] }
     }
 
-    const properties = {};
-    const required = [];
+    const properties = {}
+    const required = []
 
     attrs.forEach((attribute) => {
-      const { attributeName, schemaDataType, isRequired, displayName, description } = attribute;
+      const { attributeName, schemaDataType, isRequired, displayName, description } = attribute
 
       // Add to required array if isRequired is true
       if (isRequired) {
-        required.push(attributeName);
+        required.push(attributeName)
       }
 
       // Create base property object with common fields
       const baseProperty = {
         type: schemaDataType.toLowerCase(),
         title: displayName || attributeName,
-        description: description ? description : `${attributeName} field`
-      };
+        description: description ? description : `${attributeName} field`,
+      }
 
       // Handle different attribute types
       if (['string', 'number', 'boolean', 'integer'].includes(schemaDataType.toLowerCase())) {
         // Apply validations to the base property
-        properties[attributeName] = applyValidations(attribute, baseProperty);
-      } else if ('datetime-local' === schemaDataType.toLowerCase()) {
+        properties[attributeName] = applyValidations(attribute, baseProperty)
+      } else if (schemaDataType.toLowerCase() === 'datetime-local') {
         properties[attributeName] = {
           ...baseProperty,
           type: 'string',
-          format: 'date-time'
-        };
-      } else if ('array' === schemaDataType.toLowerCase() && attribute.items) {
+          format: 'date-time',
+        }
+      } else if (schemaDataType.toLowerCase() === 'array' && attribute.items) {
         // Process array items
-        const arrayItemProperties = {};
-        const arrayItemRequired = [];
+        const arrayItemProperties = {}
+        const arrayItemRequired = []
 
         if (Array.isArray(attribute.items)) {
           // If items is an array, process each item
           attribute.items.forEach((item) => {
-            if ('object' === item.schemaDataType.toLowerCase() && item.properties) {
+            if (item.schemaDataType.toLowerCase() === 'object' && item.properties) {
               // Process object properties
-              const nestedObjProperties = {};
-              const nestedObjRequired = [];
+              const nestedObjProperties = {}
+              const nestedObjRequired = []
 
               // Process properties object
               Object.keys(item.properties).forEach((propKey) => {
-                const prop = item.properties[propKey];
+                const prop = item.properties[propKey]
 
                 if (prop.isRequired) {
-                  nestedObjRequired.push(prop.attributeName);
+                  nestedObjRequired.push(prop.attributeName)
                 }
 
-                if ('array' === prop.schemaDataType.toLowerCase() && prop.items) {
+                if (prop.schemaDataType.toLowerCase() === 'array' && prop.items) {
                   // Handle nested array
-                  const nestedArrayResult = processAttributes(prop.items);
+                  const nestedArrayResult = processAttributes(prop.items)
 
                   nestedObjProperties[prop.attributeName] = {
                     type: prop.schemaDataType.toLowerCase(),
@@ -138,151 +138,151 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
                     description: `${prop.attributeName} field`,
                     items: {
                       type: 'object',
-                      properties: nestedArrayResult.properties
-                    }
-                  };
+                      properties: nestedArrayResult.properties,
+                    },
+                  }
 
-                  if (0 < nestedArrayResult.required.length) {
-                    nestedObjProperties[prop.attributeName].items.required = nestedArrayResult.required;
+                  if (nestedArrayResult.required.length > 0) {
+                    nestedObjProperties[prop.attributeName].items.required = nestedArrayResult.required
                   }
                 } else {
                   // Handle basic property
                   nestedObjProperties[prop.attributeName] = {
                     type: prop.schemaDataType.toLowerCase(),
                     title: prop.displayName || prop.attributeName,
-                    description: `${prop.attributeName} field`
-                  };
+                    description: `${prop.attributeName} field`,
+                  }
 
                   // Apply validations
                   nestedObjProperties[prop.attributeName] = applyValidations(
                     prop,
                     nestedObjProperties[prop.attributeName]
-                  );
+                  )
                 }
-              });
+              })
 
               // Add object to array item properties
               arrayItemProperties[item.attributeName] = {
                 type: 'object',
                 title: item.displayName || item.attributeName,
                 description: `${item.attributeName} field`,
-                properties: nestedObjProperties
-              };
+                properties: nestedObjProperties,
+              }
 
-              if (0 < nestedObjRequired.length) {
-                arrayItemProperties[item.attributeName].required = nestedObjRequired;
+              if (nestedObjRequired.length > 0) {
+                arrayItemProperties[item.attributeName].required = nestedObjRequired
               }
 
               if (item.isRequired) {
-                arrayItemRequired.push(item.attributeName);
+                arrayItemRequired.push(item.attributeName)
               }
             } else {
               // Handle basic array item
               arrayItemProperties[item.attributeName] = {
                 type: item.schemaDataType.toLowerCase(),
                 title: item.displayName || item.attributeName,
-                description: `${item.attributeName} field`
-              };
+                description: `${item.attributeName} field`,
+              }
 
               // Apply validations
-              arrayItemProperties[item.attributeName] = applyValidations(item, arrayItemProperties[item.attributeName]);
+              arrayItemProperties[item.attributeName] = applyValidations(item, arrayItemProperties[item.attributeName])
 
               if (item.isRequired) {
-                arrayItemRequired.push(item.attributeName);
+                arrayItemRequired.push(item.attributeName)
               }
             }
-          });
+          })
         }
 
         properties[attributeName] = {
           ...baseProperty,
           items: {
             type: 'object',
-            properties: arrayItemProperties
-          }
-        };
+            properties: arrayItemProperties,
+          },
+        }
 
         // Apply array-specific validations
-        properties[attributeName] = applyValidations(attribute, properties[attributeName]);
+        properties[attributeName] = applyValidations(attribute, properties[attributeName])
 
         // Add required properties to the items schema if any
-        if (0 < arrayItemRequired.length) {
-          properties[attributeName].items.required = arrayItemRequired;
+        if (arrayItemRequired.length > 0) {
+          properties[attributeName].items.required = arrayItemRequired
         }
-      } else if ('object' === schemaDataType.toLowerCase() && attribute.properties) {
-        const nestedProperties = {};
-        const nestedRequired = [];
+      } else if (schemaDataType.toLowerCase() === 'object' && attribute.properties) {
+        const nestedProperties = {}
+        const nestedRequired = []
 
         // Process each property in the object
         Object.keys(attribute.properties).forEach((propKey) => {
-          const prop = attribute.properties[propKey];
+          const prop = attribute.properties[propKey]
 
           // Add to nested required array if isRequired is true
           if (prop.isRequired) {
-            nestedRequired.push(propKey);
+            nestedRequired.push(propKey)
           }
 
           // Create base property for nested object
           const nestedBaseProperty = {
             type: prop.schemaDataType.toLowerCase(),
             title: prop.displayName || prop.attributeName,
-            description: `${prop.attributeName} field`
-          };
+            description: `${prop.attributeName} field`,
+          }
 
-          if ('array' === prop.schemaDataType.toLowerCase() && prop.items) {
+          if (prop.schemaDataType.toLowerCase() === 'array' && prop.items) {
             // Handle nested arrays
-            const result = processAttributes(prop.items);
+            const result = processAttributes(prop.items)
 
             nestedProperties[prop.attributeName] = {
               ...nestedBaseProperty,
               type: 'array',
               items: {
                 type: 'object',
-                properties: result.properties
-              }
-            };
+                properties: result.properties,
+              },
+            }
 
             // Apply array-specific validations
-            nestedProperties[prop.attributeName] = applyValidations(prop, nestedProperties[prop.attributeName]);
+            nestedProperties[prop.attributeName] = applyValidations(prop, nestedProperties[prop.attributeName])
 
             // Add required properties to the items schema if any
-            if (0 < result.required.length) {
-              nestedProperties[prop.attributeName].items.required = result.required;
+            if (result.required.length > 0) {
+              nestedProperties[prop.attributeName].items.required = result.required
             }
           } else {
             // Handle basic properties with validations
-            nestedProperties[prop.attributeName] = applyValidations(prop, nestedBaseProperty);
+            nestedProperties[prop.attributeName] = applyValidations(prop, nestedBaseProperty)
           }
-        });
+        })
 
         properties[attributeName] = {
           ...baseProperty,
           type: 'object',
-          properties: nestedProperties
-        };
+          properties: nestedProperties,
+        }
 
         // Add required properties to the object schema if any
-        if (0 < nestedRequired.length) {
-          properties[attributeName].required = nestedRequired;
+        if (nestedRequired.length > 0) {
+          properties[attributeName].required = nestedRequired
         }
       }
-    });
+    })
 
-    return { properties, required };
-  };
+    return { properties, required }
+  }
 
   // Process all attributes
-  const result = processAttributes(attributes);
-  const { properties } = result;
+  const result = processAttributes(attributes)
+  const { properties } = result
   // Add id property to required fields along with other required fields
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const required = ['id', ...result.required];
+  const _required = ['id', ...result.required]
 
   // Add id property
-  properties['id'] = {
+  properties.id = {
     type: 'string',
-    format: 'uri'
-  };
+    format: 'uri',
+  }
 
   // Create the final W3C Schema
   const W3CSchema = {
@@ -294,107 +294,107 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
     required: ['@context', 'issuer', 'issuanceDate', 'type', 'credentialSubject'],
     properties: {
       '@context': {
-        $ref: '#/$defs/context'
+        $ref: '#/$defs/context',
       },
       type: {
         type: 'array',
         items: {
           anyOf: [
             {
-              const: 'VerifiableCredential'
+              const: 'VerifiableCredential',
             },
             {
-              const: schemaName
-            }
-          ]
-        }
+              const: schemaName,
+            },
+          ],
+        },
       },
       credentialSubject: {
-        $ref: '#/$defs/credentialSubject'
+        $ref: '#/$defs/credentialSubject',
       },
       id: {
         type: 'string',
-        format: 'uri'
+        format: 'uri',
       },
       issuer: {
-        $ref: '#/$defs/uriOrId'
+        $ref: '#/$defs/uriOrId',
       },
       issuanceDate: {
         type: 'string',
-        format: 'date-time'
+        format: 'date-time',
       },
       expirationDate: {
         type: 'string',
-        format: 'date-time'
+        format: 'date-time',
       },
       credentialStatus: {
-        $ref: '#/$defs/credentialStatus'
+        $ref: '#/$defs/credentialStatus',
       },
       credentialSchema: {
-        $ref: '#/$defs/credentialSchema'
-      }
+        $ref: '#/$defs/credentialSchema',
+      },
     },
     $defs: {
       context: {
         type: 'array',
         prefixItems: [
           {
-            const: 'https://www.w3.org/2018/credentials/v1'
-          }
+            const: 'https://www.w3.org/2018/credentials/v1',
+          },
         ],
         items: {
           oneOf: [
             {
               type: 'string',
-              format: 'uri'
+              format: 'uri',
             },
             {
-              type: 'object'
+              type: 'object',
             },
             {
               type: 'array',
-              items: false
-            }
-          ]
+              items: false,
+            },
+          ],
         },
         minItems: 1,
-        uniqueItems: true
+        uniqueItems: true,
       },
       credentialSubject: {
         type: 'object',
         required: ['id', ...result.required],
         additionalProperties: false,
-        properties
+        properties,
       },
       credentialSchema: {
         oneOf: [
           {
-            $ref: '#/$defs/idAndType'
+            $ref: '#/$defs/idAndType',
           },
           {
             type: 'array',
             items: {
-              $ref: '#/$defs/idAndType'
+              $ref: '#/$defs/idAndType',
             },
             minItems: 1,
-            uniqueItems: true
-          }
-        ]
+            uniqueItems: true,
+          },
+        ],
       },
       credentialStatus: {
         oneOf: [
           {
-            $ref: '#/$defs/idAndType'
+            $ref: '#/$defs/idAndType',
           },
           {
             type: 'array',
             items: {
-              $ref: '#/$defs/idAndType'
+              $ref: '#/$defs/idAndType',
             },
             minItems: 1,
-            uniqueItems: true
-          }
-        ]
+            uniqueItems: true,
+          },
+        ],
       },
       idAndType: {
         type: 'object',
@@ -402,18 +402,18 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
         properties: {
           id: {
             type: 'string',
-            format: 'uri'
+            format: 'uri',
           },
           type: {
-            type: 'string'
-          }
-        }
+            type: 'string',
+          },
+        },
       },
       uriOrId: {
         oneOf: [
           {
             type: 'string',
-            format: 'uri'
+            format: 'uri',
           },
           {
             type: 'object',
@@ -421,14 +421,14 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
             properties: {
               id: {
                 type: 'string',
-                format: 'uri'
-              }
-            }
-          }
-        ]
-      }
-    }
-  };
+                format: 'uri',
+              },
+            },
+          },
+        ],
+      },
+    },
+  }
 
-  return W3CSchema;
+  return W3CSchema
 }

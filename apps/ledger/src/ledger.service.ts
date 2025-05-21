@@ -1,83 +1,82 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { BaseService } from 'libs/service/base.service';
-import { LedgerRepository } from './repositories/ledger.repository';
-import { RpcException } from '@nestjs/microservices';
-// eslint-disable-next-line camelcase
-import { ledgers } from '@prisma/client';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { LedgerDetails } from './interfaces/ledgers.interface';
-import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
-import { ISchemasList } from './schema/interfaces/schema.interface';
+import type { INetworkUrl } from '@credebl/common/interfaces/schema.interface'
+import { ResponseMessages } from '@credebl/common/response-messages'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { RpcException } from '@nestjs/microservices'
+
+import type { ledgers } from '@prisma/client'
+import { BaseService } from 'libs/service/base.service'
+import type { LedgerDetails } from './interfaces/ledgers.interface'
+import type { LedgerRepository } from './repositories/ledger.repository'
+import type { ISchemasList } from './schema/interfaces/schema.interface'
 
 @Injectable()
 export class LedgerService extends BaseService {
+  constructor(private readonly ledgerRepository: LedgerRepository) {
+    super('LedgerService')
+  }
 
-    constructor(
-        private readonly ledgerRepository: LedgerRepository
-    ) {
-        super('LedgerService');
+  async getAllLedgers(): Promise<ledgers[]> {
+    try {
+      const getAllLedgerDetails = await this.ledgerRepository.getAllLedgers()
+
+      if (!getAllLedgerDetails) {
+        throw new NotFoundException(ResponseMessages.ledger.error.NotFound)
+      }
+
+      return getAllLedgerDetails
+    } catch (error) {
+      this.logger.error(`Error in retrieving all ledgers: ${error}`)
+      throw new RpcException(error.response ? error.response : error)
     }
+  }
 
-    async getAllLedgers(): Promise<ledgers[]> {
-        try {
-            const getAllLedgerDetails = await this.ledgerRepository.getAllLedgers();
+  async getNetworkUrl(indyNamespace: string): Promise<INetworkUrl> {
+    try {
+      const getNetworkUrl = await this.ledgerRepository.getNetworkUrl(indyNamespace)
 
-            if (!getAllLedgerDetails) {
-                throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
-            }
+      if (!getNetworkUrl) {
+        throw new NotFoundException(ResponseMessages.ledger.error.NotFound)
+      }
 
-            return getAllLedgerDetails;
-        } catch (error) {
-            this.logger.error(`Error in retrieving all ledgers: ${error}`);
-            throw new RpcException(error.response ? error.response : error);
-        }
+      return getNetworkUrl
+    } catch (error) {
+      this.logger.error(`Error in retrieving network url: ${error}`)
+      throw new RpcException(error.response ? error.response : error)
     }
+  }
 
-    async getNetworkUrl(indyNamespace: string): Promise<INetworkUrl> {
-        try {
-            const getNetworkUrl = await this.ledgerRepository.getNetworkUrl(indyNamespace);
+  async getLedgerDetailsById(id: string): Promise<LedgerDetails> {
+    try {
+      const getAllLedgerDetails = await this.ledgerRepository.getNetworkById(id)
 
-            if (!getNetworkUrl) {
-                throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
-            }
+      if (!getAllLedgerDetails) {
+        throw new NotFoundException(ResponseMessages.ledger.error.NotFound)
+      }
 
-            return getNetworkUrl;
-        } catch (error) {
-            this.logger.error(`Error in retrieving network url: ${error}`);
-            throw new RpcException(error.response ? error.response : error);
-        }
+      return getAllLedgerDetails
+    } catch (error) {
+      this.logger.error(`Error in getLedgerDetailsById: ${error}`)
+      throw new RpcException(error.response ? error.response : error)
     }
+  }
 
-    async getLedgerDetailsById(id: string): Promise<LedgerDetails> {
-        try {
-            const getAllLedgerDetails = await this.ledgerRepository.getNetworkById(id);
+  async schemaDetailsForEcosystem(data: {
+    schemaArray: string[]
+    search: string
+    pageSize: number
+    pageNumber: number
+  }): Promise<ISchemasList> {
+    try {
+      const getSchemaDetails = await this.ledgerRepository.handleGetSchemas(data)
 
-            if (!getAllLedgerDetails) {
-                throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
-            }
+      if (!getSchemaDetails) {
+        throw new NotFoundException(ResponseMessages.ledger.error.NotFound)
+      }
 
-            return getAllLedgerDetails;
-        } catch (error) {
-            this.logger.error(`Error in getLedgerDetailsById: ${error}`);
-            throw new RpcException(error.response ? error.response : error);
-        }
+      return getSchemaDetails
+    } catch (error) {
+      this.logger.error(`Error in getLedgerDetailsById: ${error}`)
+      throw new RpcException(error.response ? error.response : error)
     }
-
-
-    async schemaDetailsForEcosystem(data: {schemaArray: string[], search: string, pageSize: number, pageNumber: number}): Promise<ISchemasList> {
-
-        try {
-            const getSchemaDetails = await this.ledgerRepository.handleGetSchemas(data);
-
-            if (!getSchemaDetails) {
-                throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
-            }
-
-            return getSchemaDetails;
-        } catch (error) {
-            this.logger.error(`Error in getLedgerDetailsById: ${error}`);
-            throw new RpcException(error.response ? error.response : error);
-        }
-    }
-
+  }
 }

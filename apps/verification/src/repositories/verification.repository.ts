@@ -1,14 +1,17 @@
-import { IProofPresentation, IProofRequestSearchCriteria } from '../interfaces/verification.interface';
-import { IProofPresentationsListCount, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-// eslint-disable-next-line camelcase
-import { agent_invitations, org_agents, organisation, platform_config, presentations } from '@prisma/client';
+import type {
+  IProofPresentationsListCount,
+  IVerificationRecords,
+} from '@credebl/common/interfaces/verification.interface'
+import { Injectable, type Logger, NotFoundException } from '@nestjs/common'
 
-import { CommonService } from '@credebl/common';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { PrismaService } from '@credebl/prisma-service';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { SortValue } from '@credebl/enum/enum';
+import type { agent_invitations, org_agents, organisation, platform_config, presentations } from '@prisma/client'
+import type { IProofPresentation, IProofRequestSearchCriteria } from '../interfaces/verification.interface'
+
+import type { CommonService } from '@credebl/common'
+import { ResponseMessages } from '@credebl/common/response-messages'
+import { SortValue } from '@credebl/enum/enum'
+import type { PrismaService } from '@credebl/prisma-service'
+import type { IUserRequest } from '@credebl/user-request/user-request.interface'
 
 @Injectable()
 export class VerificationRepository {
@@ -23,23 +26,23 @@ export class VerificationRepository {
    * @param orgId
    * @returns
    */
-  // eslint-disable-next-line camelcase
+
   async getAgentEndPoint(orgId: string): Promise<org_agents> {
     try {
       const agentDetails = await this.prisma.org_agents.findFirst({
         where: {
-          orgId
-        }
-      });
+          orgId,
+        },
+      })
 
       if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.verification.error.notFound);
+        throw new NotFoundException(ResponseMessages.verification.error.notFound)
       }
 
-      return agentDetails;
+      return agentDetails
     } catch (error) {
-      this.logger.error(`[getProofPresentations] - error in get agent endpoint : ${error.message} `);
-      throw error;
+      this.logger.error(`[getProofPresentations] - error in get agent endpoint : ${error.message} `)
+      throw error
     }
   }
 
@@ -52,37 +55,36 @@ export class VerificationRepository {
     try {
       const orgId = await this.prisma.org_agents.findFirst({
         where: {
-          orgDid: issuerId
+          orgDid: issuerId,
         },
         select: {
           orgId: true,
-          orgDid: true
-        }
-      });
+          orgDid: true,
+        },
+      })
 
-      return orgId;
+      return orgId
     } catch (error) {
-      this.logger.error(`[getOrgId] - error in getting orgId : ${error.message} `);
-      throw error;
+      this.logger.error(`[getOrgId] - error in getting orgId : ${error.message} `)
+      throw error
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getOrganizationByTenantId(tenantId: string): Promise<org_agents> {
     try {
       return this.prisma.org_agents.findFirst({
         where: {
-          tenantId
-        }
-      });
+          tenantId,
+        },
+      })
     } catch (error) {
-      this.logger.error(`Error in getOrganization in issuance repository: ${error.message} `);
-      throw error;
+      this.logger.error(`Error in getOrganization in issuance repository: ${error.message} `)
+      throw error
     }
   }
 
   async getAllProofRequests(
-    user: IUserRequest,
+    _user: IUserRequest,
     orgId: string,
     proofRequestsSearchCriteria: IProofRequestSearchCriteria
   ): Promise<IProofPresentationsListCount> {
@@ -93,8 +95,8 @@ export class VerificationRepository {
           OR: [
             { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
             { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } }
-          ]
+            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+          ],
         },
         select: {
           createDateTime: true,
@@ -106,30 +108,31 @@ export class VerificationRepository {
           presentationId: true,
           schemaId: true,
           emailId: true,
-          errorMessage: true
+          errorMessage: true,
         },
         orderBy: {
-          [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc'
+          [proofRequestsSearchCriteria.sortField]:
+            SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc',
         },
 
         take: Number(proofRequestsSearchCriteria.pageSize),
-        skip: (proofRequestsSearchCriteria.pageNumber - 1) * proofRequestsSearchCriteria.pageSize
-      });
+        skip: (proofRequestsSearchCriteria.pageNumber - 1) * proofRequestsSearchCriteria.pageSize,
+      })
       const proofRequestsCount = await this.prisma.presentations.count({
         where: {
           orgId,
           OR: [
             { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
             { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } }
-          ]
-        }
-      });
+            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+          ],
+        },
+      })
 
-      return { proofRequestsCount, proofRequestsList };
+      return { proofRequestsCount, proofRequestsList }
     } catch (error) {
-      this.logger.error(`[getAllProofRequests] - error: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`[getAllProofRequests] - error: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
@@ -137,55 +140,57 @@ export class VerificationRepository {
     try {
       const whereClause = {
         orgId,
-        ...(state ? { state } : {})
-      };
+        ...(state ? { state } : {}),
+      }
 
       const verificationRecordsCount = await this.prisma.presentations.count({
-        where: whereClause
-      });
+        where: whereClause,
+      })
 
-      return verificationRecordsCount;
+      return verificationRecordsCount
     } catch (error) {
-      this.logger.error(`[get verification records by org Id] - error: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`[get verification records by org Id] - error: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
   async storeProofPresentation(payload: IProofPresentation): Promise<presentations> {
     try {
-      let encryptEmailId;
-      let organisationId: string;
-      let schemaId;
+      let encryptEmailId: string
+      let organisationId: string
+      // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
+      let schemaId
 
-      const { proofPresentationPayload, orgId } = payload;
+      const { proofPresentationPayload, orgId } = payload
 
       //For Educreds
-      if (proofPresentationPayload?.['proofData']?.presentation?.presentationExchange?.verifiableCredential) {
+
+      if (proofPresentationPayload?.['proofData']?.['presentation']?.presentationExchange?.verifiableCredential) {
         const emailId =
-          proofPresentationPayload?.['proofData']?.presentation?.presentationExchange?.verifiableCredential[0]
-            .credentialSubject?.email;
-        encryptEmailId = await this.commonService.dataEncryption(emailId);
+          proofPresentationPayload?.proofData?.presentation?.presentationExchange?.verifiableCredential[0]
+            .credentialSubject?.email
+        encryptEmailId = await this.commonService.dataEncryption(emailId)
       } else {
-        encryptEmailId = 'Not Available';
+        encryptEmailId = 'Not Available'
       }
 
       //For Educreds
-      if (proofPresentationPayload?.['proofData']?.request?.presentationExchange) {
+      if (proofPresentationPayload?.proofData?.request?.presentationExchange) {
         schemaId =
-          proofPresentationPayload?.['proofData']?.request?.presentationExchange?.presentation_definition
-            ?.input_descriptors[0].schema[0].uri;
+          proofPresentationPayload?.proofData?.request?.presentationExchange?.presentation_definition
+            ?.input_descriptors[0].schema[0].uri
       }
 
-      if ('default' !== proofPresentationPayload?.contextCorrelationId) {
-        const getOrganizationId = await this.getOrganizationByTenantId(proofPresentationPayload?.contextCorrelationId);
-        organisationId = getOrganizationId?.orgId;
+      if (proofPresentationPayload?.contextCorrelationId !== 'default') {
+        const getOrganizationId = await this.getOrganizationByTenantId(proofPresentationPayload?.contextCorrelationId)
+        organisationId = getOrganizationId?.orgId
       } else {
-        organisationId = orgId;
+        organisationId = orgId
       }
 
       const proofPresentationsDetails = await this.prisma.presentations.upsert({
         where: {
-          threadId: proofPresentationPayload?.threadId
+          threadId: proofPresentationPayload?.threadId,
         },
         update: {
           state: proofPresentationPayload.state,
@@ -194,7 +199,7 @@ export class VerificationRepository {
           lastChangedBy: organisationId,
           connectionId: proofPresentationPayload.connectionId,
           emailId: encryptEmailId,
-          errorMessage: proofPresentationPayload.errorMessage
+          errorMessage: proofPresentationPayload.errorMessage,
         },
         create: {
           connectionId: proofPresentationPayload.connectionId,
@@ -206,13 +211,13 @@ export class VerificationRepository {
           presentationId: proofPresentationPayload.id,
           orgId: organisationId,
           schemaId,
-          emailId: encryptEmailId
-        }
-      });
-      return proofPresentationsDetails;
+          emailId: encryptEmailId,
+        },
+      })
+      return proofPresentationsDetails
     } catch (error) {
-      this.logger.error(`Error in get saveProofPresentationDetails: ${error.message} `);
-      throw error;
+      this.logger.error(`Error in get saveProofPresentationDetails: ${error.message} `)
+      throw error
     }
   }
 
@@ -220,13 +225,13 @@ export class VerificationRepository {
    * Get platform config details
    * @returns
    */
-  // eslint-disable-next-line camelcase
+
   async getPlatformConfigDetails(): Promise<platform_config> {
     try {
-      return this.prisma.platform_config.findFirst();
+      return this.prisma.platform_config.findFirst()
     } catch (error) {
-      this.logger.error(`[getPlatformConfigDetails] - error: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`[getPlatformConfigDetails] - error: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
@@ -236,10 +241,10 @@ export class VerificationRepository {
    */
   async getOrganization(orgId: string): Promise<organisation> {
     try {
-      return this.prisma.organisation.findFirst({ where: { id: orgId } });
+      return this.prisma.organisation.findFirst({ where: { id: orgId } })
     } catch (error) {
-      this.logger.error(`[getOrganization] - error: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`[getOrganization] - error: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
@@ -247,31 +252,30 @@ export class VerificationRepository {
     try {
       const { agent } = await this.prisma.org_agents_type.findFirst({
         where: {
-          id: orgAgentId
-        }
-      });
+          id: orgAgentId,
+        },
+      })
 
-      return agent;
+      return agent
     } catch (error) {
-      this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
-  // eslint-disable-next-line camelcase
   async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {
       return this.prisma.agent_invitations.findMany({
         where: {
-          orgId
+          orgId,
         },
         orderBy: {
-          createDateTime: 'asc' // or 'desc' for descending order
-        }
-      });
+          createDateTime: 'asc', // or 'desc' for descending order
+        },
+      })
     } catch (error) {
-      this.logger.error(`Error in getInvitationDid in verification repository: ${error.message}`);
-      throw error;
+      this.logger.error(`Error in getInvitationDid in verification repository: ${error.message}`)
+      throw error
     }
   }
 
@@ -279,18 +283,18 @@ export class VerificationRepository {
     try {
       return await this.prisma.$transaction(async (prisma) => {
         const recordsToDelete = await this.prisma.presentations.findMany({
-          where: { orgId }
-        });
+          where: { orgId },
+        })
 
         const deleteResult = await prisma.presentations.deleteMany({
-          where: { orgId }
-        });
+          where: { orgId },
+        })
 
-        return { deleteResult, recordsToDelete };
-      });
+        return { deleteResult, recordsToDelete }
+      })
     } catch (error) {
-      this.logger.error(`Error in deleting verification records: ${error.message}`);
-      throw error;
+      this.logger.error(`Error in deleting verification records: ${error.message}`)
+      throw error
     }
   }
 }

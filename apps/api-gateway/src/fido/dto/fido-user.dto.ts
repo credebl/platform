@@ -1,103 +1,96 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
-
+import { ApiProperty } from '@nestjs/swagger'
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional } from 'class-validator'
 
 export class GenerateRegistrationDto {
-    @ApiProperty({ example: 'abc@vomoto.com' })
-    @IsNotEmpty({ message: 'Email is required.' })
-    @IsEmail({}, { message: 'Please provide a valid email' })
-    userName: string;
-    
-    @IsOptional()
-    @ApiProperty({ example: 'false' })
-    @IsBoolean({ message: 'isPasskey should be boolean' })
-    deviceFlag: boolean;
+  @ApiProperty({ example: 'abc@vomoto.com' })
+  @IsNotEmpty({ message: 'Email is required.' })
+  @IsEmail({}, { message: 'Please provide a valid email' })
+  userName: string
+
+  @IsOptional()
+  @ApiProperty({ example: 'false' })
+  @IsBoolean({ message: 'isPasskey should be boolean' })
+  deviceFlag: boolean
 }
 
 export class VerifyRegistrationDto {
-    @ApiProperty()
-    id: string;
+  @ApiProperty()
+  id: string
 
-    @ApiProperty()
-    rawId: string;
+  @ApiProperty()
+  rawId: string
 
-    @ApiProperty()
-    response: Response;
+  @ApiProperty()
+  response: Response
 
-    @ApiProperty()
-    type: string;
+  @ApiProperty()
+  type: string
 
-    @ApiProperty()
-    clientExtensionResults: ClientExtensionResults;
+  @ApiProperty()
+  clientExtensionResults: ClientExtensionResults
 
-    @ApiProperty()
-    authenticatorAttachment: string;
+  @ApiProperty()
+  authenticatorAttachment: string
 
-    @ApiProperty()
-    challangeId: string;
+  @ApiProperty()
+  challangeId: string
 }
 
 export interface Response {
-    attestationObject: string
-    clientDataJSON: string
-    transports: []
+  attestationObject: string
+  clientDataJSON: string
+  transports: []
 }
 
 export interface ClientExtensionResults {
-    credProps: CredProps
+  credProps: CredProps
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface CredProps { }
-
+// biome-ignore lint/complexity/noBannedTypes: <explanation>
+export type CredProps = {}
 
 export class VerifyAuthenticationDto {
-    @ApiProperty()
-    id: string;
+  @ApiProperty()
+  id: string
 
-    @ApiProperty()
-    rawId: string;
+  @ApiProperty()
+  rawId: string
 
-    @ApiProperty()
-    response: Response;
+  @ApiProperty()
+  response: Response
 
-    @ApiProperty()
-    type: string;
+  @ApiProperty()
+  type: string
 
-    @ApiProperty()
-    clientExtensionResults: ClientExtensionResults;
+  @ApiProperty()
+  clientExtensionResults: ClientExtensionResults
 
-    @ApiProperty()
-    authenticatorAttachment: string;
+  @ApiProperty()
+  authenticatorAttachment: string
 
-    @ApiProperty()
-    challangeId: string;
+  @ApiProperty()
+  challangeId: string
 }
 
 export interface Response {
-    authenticatorData: string
-    clientDataJSON: string
-    signature: string
-    userHandle: string
+  authenticatorData: string
+  clientDataJSON: string
+  signature: string
+  userHandle: string
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ClientExtensionResults { }
-
-
 export class UpdateFidoUserDetailsDto {
-    @ApiProperty()
-    userName: string;
+  @ApiProperty()
+  userName: string
 
-    @ApiProperty()
-    credentialId: string;
+  @ApiProperty()
+  credentialId: string
 
-    @ApiProperty()
-    deviceFriendlyName: string;
-
+  @ApiProperty()
+  deviceFriendlyName: string
 }
 
 export class GenerateAuthenticationDto {
-    @ApiProperty({ example: 'abc@vomoto.com' })
-    userName: string;
+  @ApiProperty({ example: 'abc@vomoto.com' })
+  userName: string
 }

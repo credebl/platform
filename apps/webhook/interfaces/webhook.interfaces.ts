@@ -1,12 +1,12 @@
 export interface ICreateWebhookUrl {
-  webhookUrl: string;
+  webhookUrl: string
 }
 
 export interface IGetWebhookUrl {
-  webhookUrl: string;
+  webhookUrl: string
 }
 
 export interface IWebhookDto {
-  orgId: string;
-  webhookUrl: string;
+  orgId: string
+  webhookUrl: string
 }

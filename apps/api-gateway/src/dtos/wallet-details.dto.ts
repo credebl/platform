@@ -1,17 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class WalletDetailsDto {
+  @ApiProperty()
+  walletName: string
 
-    @ApiProperty()
-    walletName: string;
+  @ApiProperty()
+  walletPassword: string
 
-    @ApiProperty()
-    walletPassword: string;
+  @ApiProperty()
+  ledgerId: string
 
-    @ApiProperty()
-    ledgerId: string;
-
-    @ApiProperty()
-    transactionApproval?: string;
-    
+  @ApiProperty()
+  transactionApproval?: string
 }

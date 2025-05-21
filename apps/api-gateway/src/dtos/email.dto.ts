@@ -1,18 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class EmailDto {
-    @ApiProperty()
-    emailFrom: string;
+  @ApiProperty()
+  emailFrom: string
 
-    @ApiProperty()
-    emailTo: string;
+  @ApiProperty()
+  emailTo: string
 
-    @ApiProperty()
-    emailSubject: string;
+  @ApiProperty()
+  emailSubject: string
 
-    @ApiProperty()
-    emailText: string;
-  
-    @ApiProperty()
-    emailHtml: string;
+  @ApiProperty()
+  emailText: string
+
+  @ApiProperty()
+  emailHtml: string
 }

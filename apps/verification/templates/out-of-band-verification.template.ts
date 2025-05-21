@@ -1,8 +1,7 @@
 export class OutOfBandVerification {
-
-    public outOfBandVerification(email: string, orgName: string, deepLinkURL: string): string {
-        try {
-            return `<!DOCTYPE html>
+  public outOfBandVerification(email: string, orgName: string, deepLinkURL: string): string {
+    try {
+      return `<!DOCTYPE html>
       <html lang="en">
       
       <head>
@@ -81,9 +80,7 @@ export class OutOfBandVerification {
               </div>
           </div>
       </body>
-      </html>`;
-
-        } catch (error) {
-        }
-    }
+      </html>`
+    } catch (_error) {}
+  }
 }

@@ -23,7 +23,7 @@ export const ResponseMessages = {
       refreshToken: 'Token details fetched successfully',
       countriesVerificationCode: 'All countries has been fetched successfully',
       stateVerificationCode: 'All states has been fetched successfully',
-      cityVerificationCode: 'All cities has been fetched successfully'
+      cityVerificationCode: 'All cities has been fetched successfully',
     },
     error: {
       exists: 'User already exists',
@@ -61,8 +61,8 @@ export const ResponseMessages = {
       invalidResetLink: 'Invalid or expired reset password link',
       invalidAccessToken: 'Authentication failed',
       invalidRefreshToken: 'Invalid refreshToken provided',
-      userOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.'
-    }
+      userOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
+    },
   },
   organisation: {
     success: {
@@ -85,7 +85,7 @@ export const ResponseMessages = {
       orgDids: 'Organization DIDs fetched successfully',
       primaryDid: 'Primary DID updated successfully',
       didDetails: 'DID Details updated sucessfully',
-      getOrganizationActivity: 'Organization activity count fetched successfully'
+      getOrganizationActivity: 'Organization activity count fetched successfully',
     },
     error: {
       exists: 'An organization name is already exist',
@@ -118,8 +118,8 @@ export const ResponseMessages = {
       primaryDid: 'This DID is already set to primary DID',
       didNotFound: 'DID does not exist in organiation',
       organizationNotFound: 'Organization not found',
-      MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.'
-    }
+      MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
+    },
   },
 
   fido: {
@@ -130,7 +130,7 @@ export const ResponseMessages = {
       generateAuthenticationOption: 'Authentication option generated successfully',
       deleteDevice: 'Device deleted successfully',
       updateDeviceName: 'Device name updated successfully',
-      login: 'User login successfully'
+      login: 'User login successfully',
     },
     error: {
       exists: 'User already exists',
@@ -141,15 +141,15 @@ export const ResponseMessages = {
       deviceNotFound: 'Device does not exist or revoked',
       updateFidoUser: 'Error in updating fido user.',
       invalidCredentials: 'Invalid Credentials',
-      registerFido: 'Please complete your fido registration'
-    }
+      registerFido: 'Please complete your fido registration',
+    },
   },
 
   schema: {
     success: {
       fetch: 'Schema retrieved successfully.',
       create: 'Schema created successfully.',
-      update: 'Schema updated successfully'
+      update: 'Schema updated successfully',
     },
     error: {
       invalidSchemaId: 'Please provide valid schema Id',
@@ -175,14 +175,14 @@ export const ResponseMessages = {
       W3CSchemaNotFOund: 'Error while resolving W3C schema',
       storeW3CSchema: 'Error while storing W3C schema',
       networkNotFound: 'Error while fetching network',
-      orgDidAndSchemaType: 'Organization DID and schema type does not match'
-    }
+      orgDidAndSchemaType: 'Organization DID and schema type does not match',
+    },
   },
   credentialDefinition: {
     success: {
       fetch: 'Credential definition fetched successfully.',
       create: 'Credential definition created successfully.',
-      template: 'Credential template fetched successfully.'
+      template: 'Credential template fetched successfully.',
     },
     error: {
       NotFound: 'No credential definitions found.',
@@ -192,18 +192,18 @@ export const ResponseMessages = {
       isRequired: 'Credential definition Id is required',
       OrgDidNotFound: 'OrgDid not found',
       credDefIdNotFound: 'Credential Definition Id not found',
-      InvalidSchemaType: 'Invalid schema type or not supported yet'
-    }
+      InvalidSchemaType: 'Invalid schema type or not supported yet',
+    },
   },
   ledger: {
     success: {
       fetch: 'Ledger details retrieved successfully.',
-      fetchNetworkUrl: 'Network url retrieved successfully'
+      fetchNetworkUrl: 'Network url retrieved successfully',
     },
     error: {
       NotFound: 'No ledgers found.',
-      indyNamespaceisRequired: 'indyNamespace is a required'
-    }
+      indyNamespaceisRequired: 'indyNamespace is a required',
+    },
   },
   agent: {
     success: {
@@ -215,7 +215,7 @@ export const ResponseMessages = {
       webhookUrlRegister: 'Webhook Url registered successfully',
       getWebhookUrl: 'Webhook Url fetched successfully',
       createKeys: 'Key-pair created successfully',
-      walletDelete: 'The wallet has been deleted.'
+      walletDelete: 'The wallet has been deleted.',
     },
     error: {
       exists: 'An agent name is already exist',
@@ -267,8 +267,8 @@ export const ResponseMessages = {
       requiredEndorserDid: 'Role or endorser DID is required',
       requiredPrivateKey: 'Privatekey is required for polygon method',
       privateKeyLength: 'Private key must be exactly 64 characters long',
-      requiredSeed: 'Seed is required'
-    }
+      requiredSeed: 'Seed is required',
+    },
   },
   connection: {
     success: {
@@ -279,7 +279,7 @@ export const ResponseMessages = {
       questionAnswerRecord: 'Question Answer record fetched successfully',
       questionSend: 'Question sent successfully',
       deleteConnectionRecord: 'Connection records deleted',
-      basicMessage: 'Basic message sent successfully'
+      basicMessage: 'Basic message sent successfully',
     },
     error: {
       invalidConnectionId: 'Invalid format for connectionId',
@@ -288,8 +288,8 @@ export const ResponseMessages = {
       agentEndPointNotFound: 'agentEndPoint Not Found',
       agentUrlNotFound: 'agent url not found',
       connectionRecordNotFound: 'Connection records does not exists',
-      removeConnectionReferences: 'First you have to remove credentials data and verification data'
-    }
+      removeConnectionReferences: 'First you have to remove credentials data and verification data',
+    },
   },
   issuance: {
     success: {
@@ -303,7 +303,7 @@ export const ResponseMessages = {
       notFound: 'Schema records not found',
       bulkProcess: 'Process initiated for bulk issuance',
       deleteIssuanceRecords: 'Issuance records deleted',
-      fileDetailsAndFileData: 'File details and File data fetched successfully'
+      fileDetailsAndFileData: 'File details and File data fetched successfully',
     },
     error: {
       invalidCredentialRecordId: 'Please provide valid credential Record Id',
@@ -340,8 +340,8 @@ export const ResponseMessages = {
       storeBulkData: 'Error while storing the bulk deata',
       issuanceRecordsNotFound: 'Issuance records does not exists',
       removeIssuanceData: 'First you have to remove issuance data',
-      ledgerMismatched: `Organization ledger mismatch detected. This template cannot be used. Please use a template created with the organization's specific ledger`
-    }
+      ledgerMismatched: `Organization ledger mismatch detected. This template cannot be used. Please use a template created with the organization's specific ledger`,
+    },
   },
   verification: {
     success: {
@@ -350,7 +350,7 @@ export const ResponseMessages = {
       verifiedProofDetails: 'Proof presentation details fetched successfully.',
       send: 'Proof request send successfully.',
       verified: 'Proof presentation verified successfully.',
-      deleteVerificationRecord: 'Verification records deleted'
+      deleteVerificationRecord: 'Verification records deleted',
     },
     error: {
       notFound: 'Organization agent not found',
@@ -368,14 +368,14 @@ export const ResponseMessages = {
       emailSend: 'Unable to send email to the user',
       verificationRecordsNotFound: 'Verification records does not exists',
       removeVerificationData: 'First you have to remove verification data',
-      uniqueAttributes: 'Please provide unique attribute names'
-    }
+      uniqueAttributes: 'Please provide unique attribute names',
+    },
   },
 
   bulkIssuance: {
     success: {
       create: 'Issuance process initiated successfully',
-      reinitiated: 'Process reinitiated for bulk issuance'
+      reinitiated: 'Process reinitiated for bulk issuance',
     },
     error: {
       PathNotFound: 'Path to export data not found.',
@@ -389,8 +389,8 @@ export const ResponseMessages = {
       fileDetailsNotFound: 'File details not found.',
       emptyFile: 'File data is empty',
       emptyheader: 'File header is empty',
-      invalidEmails: 'Invalid emails found in the chosen file'
-    }
+      invalidEmails: 'Invalid emails found in the chosen file',
+    },
   },
   errorMessages: {
     forbidden: 'Forbidden Resource',
@@ -398,54 +398,54 @@ export const ResponseMessages = {
     conflict: 'Conflict',
     notAcceptable: 'Not Acceptable',
     notFound: 'Not Found',
-    serverError: 'Internal Server error'
+    serverError: 'Internal Server error',
   },
 
   webhook: {
     success: {
       webhookUrlRegister: 'Webhook Url registered successfully',
-      getWebhookUrl: 'Webhook Url fetched successfully'
+      getWebhookUrl: 'Webhook Url fetched successfully',
     },
     error: {
       registerWebhook: 'Unable to register a webhook url',
       webhookResponse: 'Error in sending webhook response to org webhook url',
-      notFound: 'Webhook url not found'
-    }
+      notFound: 'Webhook url not found',
+    },
   },
   shorteningUrl: {
     success: {
       getshorteningUrl: 'Shortening Url fetched successfully',
-      createShorteningUrl: 'Shortening Url created successfully'
+      createShorteningUrl: 'Shortening Url created successfully',
     },
     error: {
-      deepLinkDomainNotFound: 'Deeplink Domain not found. Please make sure to add it in your environment variables'
-    }
+      deepLinkDomainNotFound: 'Deeplink Domain not found. Please make sure to add it in your environment variables',
+    },
   },
   notification: {
     success: {
       register: 'Notification webhook registration process completed successfully',
-      sendNotification: 'Notification sent successfully'
+      sendNotification: 'Notification sent successfully',
     },
     error: {
       notFound: 'Notification record not found.',
-      invalidUrl: 'Invalid URL'
-    }
+      invalidUrl: 'Invalid URL',
+    },
   },
   storeObject: {
     success: {
-      storeObject: 'Data stored successfully'
-    }
+      storeObject: 'Data stored successfully',
+    },
   },
   geolocation: {
     success: {
       countriesVerificationCode: 'All countries has been fetched successfully',
       stateVerificationCode: 'All states has been fetched successfully',
-      cityVerificationCode: 'All cities has been fetched successfully'
+      cityVerificationCode: 'All cities has been fetched successfully',
     },
     error: {
       stateNotFound: 'No states found for provided countryId.Please provide valid countryId',
-      citiesNotFound: 'No cities found for provided stateId and countryId.Please provide valid stateId and countryId'
-    }
+      citiesNotFound: 'No cities found for provided stateId and countryId.Please provide valid stateId and countryId',
+    },
   },
   cloudWallet: {
     success: {
@@ -462,7 +462,7 @@ export const ResponseMessages = {
       credentials: 'Credentials fetched successfully',
       credentialByRecordId: 'Credential fetched successfully',
       connectionList: 'Connection list fetched successfully',
-      basicMessageByConnectionId: 'Basic message fetched successfully'
+      basicMessageByConnectionId: 'Basic message fetched successfully',
     },
     error: {
       baseWalletNotFound: 'Base wallet configuration not found',
@@ -478,15 +478,15 @@ export const ResponseMessages = {
       agentAlreadyExist: 'Agent already exist.',
       platformAdminRecordNotFound: 'Platform admin reocrd not exist.',
       notFoundBaseWallet: 'The base wallet record is missing.',
-      walletRecordNotFound: 'Wallet record not found.'
-    }
+      walletRecordNotFound: 'Wallet record not found.',
+    },
   },
   nats: {
     success: {},
     error: {
       noSubscribers:
         'No subscribers for the requested message. Error while connecting to NATS, service might not be started',
-      natsConnect: 'Empty response. There are no subscribers listening to that message'
-    }
-  }
-};
+      natsConnect: 'Empty response. There are no subscribers listening to that message',
+    },
+  },
+}

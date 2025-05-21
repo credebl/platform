@@ -1,4 +1,13 @@
-import { BadRequestException, PipeTransform } from '@nestjs/common';
+import { BadRequestException, type PipeTransform } from '@nestjs/common'
+import {
+  type ValidationArguments,
+  type ValidationOptions,
+  ValidatorConstraint,
+  type ValidatorConstraintInterface,
+  isBase64,
+  isMimeType,
+  registerDecorator,
+} from 'class-validator'
 import {
   DidMethod,
   JSONSchemaType,
@@ -6,88 +15,79 @@ import {
   TemplateIdentifier,
   W3CSchemaDataType,
   ledgerLessDIDType,
-  schemaRequestType
-} from '../../enum/src/enum';
-import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
-import {
-  ValidationArguments,
-  ValidationOptions,
-  ValidatorConstraint,
-  ValidatorConstraintInterface,
-  isBase64,
-  isMimeType,
-  registerDecorator
-} from 'class-validator';
+  schemaRequestType,
+} from '../../enum/src/enum'
+import type { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface'
 
-import { ISchemaFields } from './interfaces/schema.interface';
-import { ResponseMessages } from './response-messages';
-import { plainToClass } from 'class-transformer';
+import { plainToClass } from 'class-transformer'
+import type { ISchemaFields } from './interfaces/schema.interface'
+import { ResponseMessages } from './response-messages'
 
 interface ToNumberOptions {
-  default?: number;
-  min?: number;
-  max?: number;
+  default?: number
+  min?: number
+  max?: number
 }
 
 export function toLowerCase(value: string): string {
-  return value.toLowerCase();
+  return value.toLowerCase()
 }
 
 export function trim(value: string): string {
-  if ('string' === typeof value) {
-    return value.trim();
+  if (typeof value === 'string') {
+    return value.trim()
   }
 }
 
 export function toDate(value: string): Date {
-  return new Date(value);
+  return new Date(value)
 }
 
 export function toBoolean(value: string): boolean {
   // eslint-disable-next-line no-param-reassign
-  value = value.toLowerCase();
+  const _value = value.toLowerCase()
 
   // return 'true' === value || '1' === value ? true : false;
 
-  return Boolean('true' === value || '1' === value);
+  return Boolean(_value === 'true' || _value === '1')
 }
 
 export function toNumber(value: string, opts: ToNumberOptions = {}): number {
-  let newValue: number = Number.parseInt(value || String(opts.default), 10);
+  let newValue: number = Number.parseInt(value || String(opts.default), 10)
 
   if (Number.isNaN(newValue)) {
-    newValue = opts.default;
+    newValue = opts.default
   }
 
   if (opts.min) {
     if (newValue < opts.min) {
-      newValue = opts.min;
+      newValue = opts.min
     }
 
     if (newValue > opts.max) {
-      newValue = opts.max;
+      newValue = opts.max
     }
   }
 
-  return newValue;
+  return newValue
 }
 
 export function ledgerName(value: string): string {
-  let network;
-  network = value.replace(':', ' ');
-  network = network.charAt(0).toUpperCase() + network.slice(1);
-  const words = network.split(' ');
-  network = `${words[0]} ${words[1].charAt(0).toUpperCase()}${words[1].slice(1)}`;
+  let network: string
+  network = value.replace(':', ' ')
+  network = network.charAt(0).toUpperCase() + network.slice(1)
+  const words = network.split(' ')
+  network = `${words[0]} ${words[1].charAt(0).toUpperCase()}${words[1].slice(1)}`
 
-  return network;
+  return network
 }
 
 export function isSafeString(value: string): boolean {
   // Define a regular expression to allow alphanumeric characters, spaces, and some special characters
-  const safeRegex = /^[a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/;
+  const safeRegex = /^[a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/
 
   // Check if the value matches the safe regex
-  return safeRegex.test(value);
+  return safeRegex.test(value)
 }
 
 export const IsNotSQLInjection =
@@ -101,94 +101,92 @@ export const IsNotSQLInjection =
       validator: {
         validate(value) {
           // Check if the value is a string
-          if ('string' === typeof value) {
+          if (typeof value === 'string') {
             // Regex to check for SQL injection keywords at the start
-            const startInjectionRegex = new RegExp(
-              `^\\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|EXEC|FROM|WHERE|AND|OR)\\b`,
-              'i'
-            );
+            const startInjectionRegex =
+              /^\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|EXEC|FROM|WHERE|AND|OR)\b/i
 
             // Check if the SQL injection pattern is present at the start
             if (startInjectionRegex.test(value)) {
-              return false; // SQL keyword present at the start
+              return false // SQL keyword present at the start
             }
           }
 
-          return true; // Value does not contain any SQL injection keywords
+          return true // Value does not contain any SQL injection keywords
         },
         defaultMessage(args: ValidationArguments) {
-          return `${args.property} contains SQL injection keywords.`;
-        }
-      }
-    });
-  };
+          return `${args.property} contains SQL injection keywords.`
+        },
+      },
+    })
+  }
 
 @ValidatorConstraint({ name: 'customText', async: false })
 export class ImageBase64Validator implements ValidatorConstraintInterface {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
-  validate(value: string, args: ValidationArguments) {
+  validate(value: string, _args: ValidationArguments) {
     // Implement your custom validation logic here
     // Validation to allow option param logo
-    if ('' == value) {
-      return true;
+    if (value === '') {
+      return true
     }
-    if (!value || 'string' !== typeof value) {
-      throw new BadRequestException('Invalid base64 string');
+    if (!value || typeof value !== 'string') {
+      throw new BadRequestException('Invalid base64 string')
     }
-    const parts = value.split(',');
-    if (2 !== parts.length) {
-      throw new BadRequestException('Invalid data URI');
+    const parts = value.split(',')
+    if (parts.length !== 2) {
+      throw new BadRequestException('Invalid data URI')
     }
     // eslint-disable-next-line prefer-destructuring
-    const mimeType = parts[0].split(';')[0].split(':')[1];
+    const mimeType = parts[0].split(';')[0].split(':')[1]
     // eslint-disable-next-line prefer-destructuring
-    const base64Data = parts[1];
+    const base64Data = parts[1]
 
     // Validate MIME type
     if (!isMimeType(mimeType)) {
-      throw new BadRequestException('Please provide valid MIME type');
+      throw new BadRequestException('Please provide valid MIME type')
     }
     // Validate base64 data
-    if (!isBase64(base64Data) || '' == base64Data || null == base64Data) {
-      throw new BadRequestException('Invalid base64 string');
+    if (!isBase64(base64Data) || base64Data === '' || base64Data == null) {
+      throw new BadRequestException('Invalid base64 string')
     }
-    return true;
+    return true
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-unused-vars
   defaultMessage(_args: ValidationArguments) {
-    return 'Default message received from [ImageBase64Validator]';
+    return 'Default message received from [ImageBase64Validator]'
   }
 }
 
 export class TrimStringParamPipe implements PipeTransform {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
   transform(value: string) {
-    return plainToClass(String, value.trim());
+    return plainToClass(String, value.trim())
   }
 }
 
 //TODO: Need to add this logic in `trimstringpipe`
 export class EmptyStringParamPipe implements PipeTransform {
-  private paramName: string;
+  private paramName: string
 
   static forParam(paramName: string): PipeTransform {
-    return new EmptyStringParamPipe(paramName);
+    return new EmptyStringParamPipe(paramName)
   }
 
   private constructor(paramName: string) {
-    this.paramName = paramName;
+    this.paramName = paramName
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
   transform(value: string) {
-    const trimmedValue = value.trim();
+    const trimmedValue = value.trim()
 
     if (!trimmedValue) {
-      throw new BadRequestException(`${this.paramName} is required`);
+      throw new BadRequestException(`${this.paramName} is required`)
     }
 
-    return plainToClass(String, trimmedValue);
+    return plainToClass(String, trimmedValue)
   }
 }
 
@@ -207,141 +205,143 @@ export class EmptyStringParamPipe implements PipeTransform {
 // };
 
 export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: string): void {
-  const errors: string[] = [];
+  const errors: string[] = []
 
   switch (true) {
     case schemaRequestType.INDY === schemaType:
       switch (true) {
         case !schemaPayload?.name:
-          errors.push('name is required for indy schema type');
-          break;
-        case 'string' !== typeof schemaPayload?.name:
-          errors.push('name must be string');
-          break;
+          errors.push('name is required for indy schema type')
+          break
+        case typeof schemaPayload?.name !== 'string':
+          errors.push('name must be string')
+          break
         case !schemaPayload?.version:
-          errors.push('version is required for indy schema type');
-          break;
+          errors.push('version is required for indy schema type')
+          break
         default:
-          break;
+          break
       }
-      if (!Array.isArray(schemaPayload?.attributes) || 0 === schemaPayload?.attributes.length) {
-        errors.push('attributes array must not be empty for indy schema type');
+      if (!Array.isArray(schemaPayload?.attributes) || schemaPayload?.attributes.length === 0) {
+        errors.push('attributes array must not be empty for indy schema type')
       } else {
         schemaPayload?.attributes.forEach((attribute, index) => {
           if (!attribute) {
-            errors.push(`attributes are required at position ${index + 1} in indy schema type`);
+            errors.push(`attributes are required at position ${index + 1} in indy schema type`)
           } else {
             switch (true) {
               case !attribute?.displayName:
-                errors.push(`displayName is required at position ${index + 1} in indy schema type`);
-                break;
+                errors.push(`displayName is required at position ${index + 1} in indy schema type`)
+                break
               case !attribute?.attributeName:
-                errors.push(`attributeName is required at position ${index + 1} in indy schema type`);
-                break;
+                errors.push(`attributeName is required at position ${index + 1} in indy schema type`)
+                break
               case !attribute?.schemaDataType:
-                errors.push(`schemaDataType is required at position ${index + 1} in indy schema type`);
-                break;
+                errors.push(`schemaDataType is required at position ${index + 1} in indy schema type`)
+                break
               default:
-                break;
+                break
             }
           }
-        });
+        })
       }
-      break;
+      break
 
     case schemaRequestType.W3C === schemaType:
       switch (true) {
         case !schemaPayload?.schemaName:
-          errors.push('schemaName is required for w3c schema type');
-          break;
-        case 'string' !== typeof schemaPayload?.schemaName:
-          errors.push('schemaName must be string');
-          break;
+          errors.push('schemaName is required for w3c schema type')
+          break
+        case typeof schemaPayload?.schemaName !== 'string':
+          errors.push('schemaName must be string')
+          break
 
         case !schemaPayload?.did:
-          errors.push('did is required for w3c schema type');
-          break;
-        case 'string' !== typeof schemaPayload?.did:
-          errors.push('did must be string');
-          break;
+          errors.push('did is required for w3c schema type')
+          break
+        case typeof schemaPayload?.did !== 'string':
+          errors.push('did must be string')
+          break
 
         case !schemaPayload?.description:
-          errors.push('description is required for w3c schema type');
-          break;
-        case 'string' !== typeof schemaPayload?.description:
-          errors.push('description must be string');
-          break;
+          errors.push('description is required for w3c schema type')
+          break
+        case typeof schemaPayload?.description !== 'string':
+          errors.push('description must be string')
+          break
         default:
-          break;
+          break
       }
-      if (!Array.isArray(schemaPayload.schemaAttributes) || 0 === schemaPayload.schemaAttributes.length) {
-        errors.push('schemaAttributes array must not be empty for w3c schema type');
+      if (!Array.isArray(schemaPayload.schemaAttributes) || schemaPayload.schemaAttributes.length === 0) {
+        errors.push('schemaAttributes array must not be empty for w3c schema type')
       } else {
         schemaPayload.schemaAttributes.forEach((attribute, index) => {
           if (!attribute) {
-            errors.push(`schemaAttributes are required at position ${index + 1} in w3c schema type`);
+            errors.push(`schemaAttributes are required at position ${index + 1} in w3c schema type`)
           } else {
             switch (true) {
               case !attribute.title:
-                errors.push(`title is required at position ${index + 1} in w3c schema type`);
-                break;
+                errors.push(`title is required at position ${index + 1} in w3c schema type`)
+                break
               case !attribute.type:
-                errors.push(`type is required at position ${index + 1} in w3c schema type`);
-                break;
+                errors.push(`type is required at position ${index + 1} in w3c schema type`)
+                break
               default:
-                break;
+                break
             }
           }
-        });
+        })
       }
-      break;
+      break
 
     default:
-      break;
+      break
   }
 
-  if (0 < errors.length) {
-    throw new BadRequestException(errors);
+  if (errors.length > 0) {
+    throw new BadRequestException(errors)
   }
 }
 
+// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class AgentSpinupValidator {
   private static validateField(value: string, errorMessage: string): void {
     if (!value) {
-      throw new BadRequestException(errorMessage);
+      throw new BadRequestException(errorMessage)
     }
   }
 
   private static validateWalletName(walletName: string): void {
-    const regex = /^[a-zA-Z0-9]+$/;
+    const regex = /^[a-zA-Z0-9]+$/
     if (!regex.test(walletName)) {
       throw new BadRequestException(ResponseMessages.agent.error.seedChar, {
         cause: new Error(),
-        description: 'Please enter a valid wallet name. Only alphanumeric characters are allowed.'
-      });
+        description: 'Please enter a valid wallet name. Only alphanumeric characters are allowed.',
+      })
     }
   }
 
   public static validate(agentSpinupDto): void {
-    this.validateWalletName(agentSpinupDto.walletName);
+    AgentSpinupValidator.validateWalletName(agentSpinupDto.walletName)
   }
 }
 
 export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-  return emailRegex.test(email);
-};
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/
+  return emailRegex.test(email)
+}
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
 export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential, prettyVc: IPrettyVc) => {
-  const { credentialData, orgDid, orgId, schemaLedgerId, schemaName, isReuseConnection } = JsonldCredentialDetails;
-  const credentialSubject = {};
+  const { credentialData, orgDid, orgId, schemaLedgerId, schemaName, isReuseConnection } = JsonldCredentialDetails
+  const credentialSubject = {}
 
-  const proofType = orgDid?.includes(DidMethod.POLYGON) ? ProofType.POLYGON_PROOFTYPE : ProofType.NO_LEDGER_PROOFTYPE;
+  const proofType = orgDid?.includes(DidMethod.POLYGON) ? ProofType.POLYGON_PROOFTYPE : ProofType.NO_LEDGER_PROOFTYPE
 
   for (const key in credentialData) {
+    // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
-      credentialSubject[key] = credentialData[key];
+      credentialSubject[key] = credentialData[key]
     }
   }
 
@@ -353,91 +353,91 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
           '@context': ['https://www.w3.org/2018/credentials/v1', `${schemaLedgerId}`],
           type: ['VerifiableCredential', `${schemaName}`],
           issuer: {
-            id: `${orgDid}`
+            id: `${orgDid}`,
           },
           issuanceDate: new Date().toISOString(),
           credentialSubject,
-          prettyVc
+          prettyVc,
         },
         options: {
           proofType,
-          proofPurpose: 'assertionMethod'
-        }
-      }
+          proofPurpose: 'assertionMethod',
+        },
+      },
     ],
     comment: 'string',
     protocolVersion: 'v2',
     credentialType: 'jsonld',
     orgId,
-    isReuseConnection
-  };
-};
+    isReuseConnection,
+  }
+}
 
 @ValidatorConstraint({ name: 'isHostPortOrDomain', async: false })
 export class IsHostPortOrDomainConstraint implements ValidatorConstraintInterface {
   validate(value: string): boolean {
     // Regular expression for validating URL with host:port or domain
     const hostPortRegex =
-      /^(http:\/\/|https:\/\/)?(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)):(?:\d{1,5})(\/[^\s]*)?$/;
+      /^(http:\/\/|https:\/\/)?(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)):(?:\d{1,5})(\/[^\s]*)?$/
     const domainRegex =
-      /^(http:\/\/|https:\/\/)?(?:localhost|(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})(:\d{1,5})?(\/[^\s]*)?$/;
+      /^(http:\/\/|https:\/\/)?(?:localhost|(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})(:\d{1,5})?(\/[^\s]*)?$/
 
-    return hostPortRegex.test(value) || domainRegex.test(value);
+    return hostPortRegex.test(value) || domainRegex.test(value)
   }
 
   defaultMessage(): string {
-    return 'Invalid host:port or domain format';
+    return 'Invalid host:port or domain format'
   }
 }
 
 export function IsHostPortOrDomain(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string): void {
+  return (object: object, propertyName: string): void => {
     registerDecorator({
       target: object.constructor,
       propertyName,
       options: validationOptions,
       constraints: [],
-      validator: IsHostPortOrDomainConstraint
-    });
-  };
+      validator: IsHostPortOrDomainConstraint,
+    })
+  }
 }
 
 export function checkDidLedgerAndNetwork(schemaType: string, did: string): boolean {
-  const cleanSchemaType = schemaType.trim().toLowerCase();
-  const cleanDid = did.trim().toLowerCase();
+  const cleanSchemaType = schemaType.trim().toLowerCase()
+  const cleanDid = did.trim().toLowerCase()
 
   if (JSONSchemaType.POLYGON_W3C === cleanSchemaType) {
-    return cleanDid.includes(JSONSchemaType.POLYGON_W3C);
+    return cleanDid.includes(JSONSchemaType.POLYGON_W3C)
   }
 
   if (JSONSchemaType.LEDGER_LESS === cleanSchemaType) {
-    return cleanDid.startsWith(ledgerLessDIDType.DID_KEY) || cleanDid.startsWith(ledgerLessDIDType.DID_WEB);
+    return cleanDid.startsWith(ledgerLessDIDType.DID_KEY) || cleanDid.startsWith(ledgerLessDIDType.DID_WEB)
   }
 
-  return false;
+  return false
 }
 
 export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICredentialData[] {
   // Get current date in 'YYYY-MM-DD' format
   // eslint-disable-next-line prefer-destructuring
-  const currentDate = new Date().toISOString().split('T')[0];
+  const currentDate = new Date().toISOString().split('T')[0]
 
   return data.map((item) => {
-    const { issuanceDate } = item.credential;
+    const { issuanceDate } = item.credential
     // eslint-disable-next-line prefer-destructuring
-    const issuanceDateOnly = issuanceDate.split('T')[0];
+    const issuanceDateOnly = issuanceDate.split('T')[0]
 
     // If the date does not match the current date, then update it
     if (issuanceDateOnly !== currentDate) {
-      item.credential.issuanceDate = new Date().toISOString();
+      item.credential.issuanceDate = new Date().toISOString()
     }
 
-    return item;
-  });
+    return item
+  })
 }
 
 export function ValidateNestedStructureFields(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string): void {
+  return (object: object, propertyName: string): void => {
     registerDecorator({
       name: 'validateNestedStructureFields',
       target: object.constructor,
@@ -445,59 +445,59 @@ export function ValidateNestedStructureFields(validationOptions?: ValidationOpti
       options: validationOptions,
       validator: {
         validate(_, args: ValidationArguments) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const obj = args.object as any;
-          const { schemaDataType, properties, items } = obj;
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          const obj = args.object as any
+          const { schemaDataType, properties, items } = obj
 
           // object: must only have properties
           if (W3CSchemaDataType.OBJECT === schemaDataType) {
-            return properties !== undefined && items === undefined;
+            return properties !== undefined && items === undefined
           }
 
           // array: must only have items
           if (W3CSchemaDataType.ARRAY === schemaDataType) {
-            return items !== undefined && properties === undefined;
+            return items !== undefined && properties === undefined
           }
 
           // Others: neither properties nor items should be present
-          return items === undefined && properties === undefined;
+          return items === undefined && properties === undefined
         },
 
         defaultMessage(args: ValidationArguments) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const obj = args.object as any;
-          const { schemaDataType, properties, items } = obj;
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          const obj = args.object as any
+          const { schemaDataType, properties, items } = obj
 
           if (W3CSchemaDataType.OBJECT === schemaDataType) {
             if (items !== undefined) {
-              return `'items' is not allowed when schemaDataType is object`;
+              return `'items' is not allowed when schemaDataType is object`
             }
             if (properties === undefined) {
-              return `'properties' is required when schemaDataType is object`;
+              return `'properties' is required when schemaDataType is object`
             }
           }
 
           if (W3CSchemaDataType.ARRAY === schemaDataType) {
             if (properties !== undefined) {
-              return `'properties' is not allowed when schemaDataType is array`;
+              return `'properties' is not allowed when schemaDataType is array`
             }
             if (items === undefined) {
-              return `'items' is required when schemaDataType is array`;
+              return `'items' is required when schemaDataType is array`
             }
           }
 
           if (W3CSchemaDataType.OBJECT !== schemaDataType && W3CSchemaDataType.ARRAY !== schemaDataType) {
             if (properties !== undefined) {
-              return `'properties' is only allowed when schemaDataType is object`;
+              return `'properties' is only allowed when schemaDataType is object`
             }
             if (items !== undefined) {
-              return `'items' is only allowed when schemaDataType is array`;
+              return `'items' is only allowed when schemaDataType is array`
             }
           }
 
-          return 'Invalid structure based on schemaDataType';
-        }
-      }
-    });
-  };
+          return 'Invalid structure based on schemaDataType'
+        },
+      },
+    })
+  }
 }

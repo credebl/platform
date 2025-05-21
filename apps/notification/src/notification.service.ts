@@ -1,17 +1,13 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import {
-  INotification,
-  IWebhookEndpoint,
-  ISendNotification
-} from '../interfaces/notification.interfaces';
-import { RpcException } from '@nestjs/microservices';
-import { NotificationRepository } from './notification.repository';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { CommonService } from '@credebl/common';
+import type { CommonService } from '@credebl/common'
+import { ResponseMessages } from '@credebl/common/response-messages'
+import { BadRequestException, Injectable, Logger } from '@nestjs/common'
+import { RpcException } from '@nestjs/microservices'
+import type { INotification, ISendNotification, IWebhookEndpoint } from '../interfaces/notification.interfaces'
+import type { NotificationRepository } from './notification.repository'
 
 @Injectable()
 export class NotificationService {
-  private readonly logger = new Logger('NotificationService');
+  private readonly logger = new Logger('NotificationService')
   constructor(
     private readonly commonService: CommonService,
     private readonly notificationRepository: NotificationRepository
@@ -27,11 +23,11 @@ export class NotificationService {
       /**
        * Call the function for store the org webhook endpoint on notification table
        */
-      const storeOrgWebhookEndpoint = await this.notificationRepository.storeOrgWebhookEndpoint(payload);
-      return storeOrgWebhookEndpoint;
+      const storeOrgWebhookEndpoint = await this.notificationRepository.storeOrgWebhookEndpoint(payload)
+      return storeOrgWebhookEndpoint
     } catch (error) {
-      this.logger.error(`[registerEndpoint] - error in register org webhook endpoint: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`[registerEndpoint] - error in register org webhook endpoint: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -42,17 +38,17 @@ export class NotificationService {
    */
   async sendNotification(payload: ISendNotification): Promise<object> {
     try {
-      const orgId = payload.clientCode;
+      const orgId = payload.clientCode
 
       /**
        * Fetch the webhook endpoint by orgId
        */
-      const getWebhookUrl = await this.notificationRepository.getOrgWebhookEndpoint(orgId);
+      const getWebhookUrl = await this.notificationRepository.getOrgWebhookEndpoint(orgId)
 
       const webhookPayload = {
         fcmToken: payload.fcmToken,
-        messageType: payload.messageType
-      };
+        messageType: payload.messageType,
+      }
 
       /**
        * Send notification details with webhook endpoint
@@ -61,23 +57,23 @@ export class NotificationService {
         .httpPost(getWebhookUrl?.notificationWebhook, webhookPayload)
         .then(async (response) => response)
         .catch((error) => {
-          this.logger.error(`Error in sendNotification : ${JSON.stringify(error)}`);
-          throw error;
-        });
+          this.logger.error(`Error in sendNotification : ${JSON.stringify(error)}`)
+          throw error
+        })
 
       if (!this.isValidUrl(getWebhookUrl?.notificationWebhook)) {
-        throw new BadRequestException(ResponseMessages.notification.error.invalidUrl);
+        throw new BadRequestException(ResponseMessages.notification.error.invalidUrl)
       }
 
-      return webhookResponse;
+      return webhookResponse
     } catch (error) {
-      this.logger.error(`[registerEndpoint] - error in send notification: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`[registerEndpoint] - error in send notification: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   private isValidUrl(url: string): boolean {
-    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
-    return urlRegex.test(url);
+    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/
+    return urlRegex.test(url)
   }
 }

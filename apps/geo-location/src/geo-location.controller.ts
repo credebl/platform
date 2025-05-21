@@ -1,7 +1,7 @@
-import { Controller } from '@nestjs/common';
-import { GeoLocationService } from './geo-location.service';
-import { MessagePattern } from '@nestjs/microservices';
-import { CountryInterface, StateInterface, CityInterface } from '@credebl/common/interfaces/geolocation.interface';
+import type { CityInterface, CountryInterface, StateInterface } from '@credebl/common/interfaces/geolocation.interface'
+import { Controller } from '@nestjs/common'
+import { MessagePattern } from '@nestjs/microservices'
+import type { GeoLocationService } from './geo-location.service'
 
 @Controller()
 export class GeoLocationController {
@@ -9,16 +9,16 @@ export class GeoLocationController {
 
   @MessagePattern({ cmd: 'get-all-countries' })
   async getAllCountries(): Promise<CountryInterface[]> {
-    return this.geoLocationService.getAllCountries();
+    return this.geoLocationService.getAllCountries()
   }
 
   @MessagePattern({ cmd: 'get-all-states' })
   async getStatesByCountryId(payload: { countryId: number }): Promise<StateInterface[]> {
-    return this.geoLocationService.getStatesByCountryId(payload.countryId);
+    return this.geoLocationService.getStatesByCountryId(payload.countryId)
   }
 
   @MessagePattern({ cmd: 'get-all-cities' })
   async getCitiesByStateAndCountry(payload: { countryId: number; stateId: number }): Promise<CityInterface[]> {
-    return this.geoLocationService.getCitiesByStateAndCountry(payload.countryId, payload.stateId);
+    return this.geoLocationService.getCitiesByStateAndCountry(payload.countryId, payload.stateId)
   }
 }

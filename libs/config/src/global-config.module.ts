@@ -1,14 +1,14 @@
-import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
-import { Module, Global } from '@nestjs/common';
+import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant'
+import { Global, Module } from '@nestjs/common'
 
 @Global()
 @Module({
   providers: [
     {
       provide: MICRO_SERVICE_NAME,
-      useValue: 'DefaultServiceName'
-    }
+      useValue: 'DefaultServiceName',
+    },
   ],
-  exports: [MICRO_SERVICE_NAME]
+  exports: [MICRO_SERVICE_NAME],
 })
 export class GlobalConfigModule {}

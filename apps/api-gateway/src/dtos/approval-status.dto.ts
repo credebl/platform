@@ -1,7 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class ApprovalStatusDto {
-
-    @ApiProperty()
-    approvalStatus: boolean;
+  @ApiProperty()
+  approvalStatus: boolean
 }

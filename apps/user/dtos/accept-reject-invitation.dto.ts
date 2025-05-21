@@ -1,7 +1,7 @@
-import { Invitation } from '@credebl/enum/enum';
+import type { Invitation } from '@credebl/enum/enum'
 
 export class AcceptRejectInvitationDto {
-    invitationId: string;
-    orgId: string;
-    status: Invitation;
+  invitationId: string
+  orgId: string
+  status: Invitation
 }

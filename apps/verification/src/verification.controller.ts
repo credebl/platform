@@ -1,21 +1,21 @@
-import {
+import type {
+  IProofPresentationDetails,
+  IProofPresentationList,
+  IVerificationRecords,
+} from '@credebl/common/interfaces/verification.interface'
+import type { presentations, user } from '@prisma/client'
+import type {
   IProofPresentation,
   IProofPresentationData,
   IProofRequestData,
   IProofRequests,
-  ISendProofRequestPayload
-} from './interfaces/verification.interface';
-import {
-  IProofPresentationDetails,
-  IProofPresentationList,
-  IVerificationRecords
-} from '@credebl/common/interfaces/verification.interface';
-import { presentations, user } from '@prisma/client';
+  ISendProofRequestPayload,
+} from './interfaces/verification.interface'
 
-import { Controller } from '@nestjs/common';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { MessagePattern } from '@nestjs/microservices';
-import { VerificationService } from './verification.service';
+import type { IUserRequest } from '@credebl/user-request/user-request.interface'
+import { Controller } from '@nestjs/common'
+import { MessagePattern } from '@nestjs/microservices'
+import type { VerificationService } from './verification.service'
 
 @Controller()
 export class VerificationController {
@@ -28,14 +28,14 @@ export class VerificationController {
    */
   @MessagePattern({ cmd: 'get-all-proof-presentations' })
   async getProofPresentations(payload: IProofRequests): Promise<IProofPresentationList> {
-    const { user, orgId, proofRequestsSearchCriteria } = payload;
-    return this.verificationService.getProofPresentations(user, orgId, proofRequestsSearchCriteria);
+    const { user, orgId, proofRequestsSearchCriteria } = payload
+    return this.verificationService.getProofPresentations(user, orgId, proofRequestsSearchCriteria)
   }
 
   @MessagePattern({ cmd: 'get-verification-records' })
   async getVerificationRecordsByOrgId(payload: { orgId: string; userId: string }): Promise<number> {
-    const { orgId } = payload;
-    return this.verificationService.getVerificationRecords(orgId);
+    const { orgId } = payload
+    return this.verificationService.getVerificationRecords(orgId)
   }
 
   /**
@@ -46,7 +46,7 @@ export class VerificationController {
    */
   @MessagePattern({ cmd: 'get-proof-presentations-by-proofId' })
   async getProofPresentationById(payload: { proofId: string; orgId: string; user: IUserRequest }): Promise<string> {
-    return this.verificationService.getProofPresentationById(payload.proofId, payload.orgId);
+    return this.verificationService.getProofPresentationById(payload.proofId, payload.orgId)
   }
 
   /**
@@ -56,7 +56,7 @@ export class VerificationController {
    */
   @MessagePattern({ cmd: 'get-proof-presentation-details-by-issuerId' })
   async getProofPresentationByIssuerId(payload: { issuerId: string; user: IUserRequest }): Promise<number> {
-    return this.verificationService.getProofPresentationByIssuerId(payload.issuerId);
+    return this.verificationService.getProofPresentationByIssuerId(payload.issuerId)
   }
 
   /**
@@ -66,10 +66,10 @@ export class VerificationController {
    */
   @MessagePattern({ cmd: 'send-proof-request' })
   async sendProofRequest(payload: {
-    requestProofDto: IProofRequestData;
-    user: IUserRequest;
+    requestProofDto: IProofRequestData
+    user: IUserRequest
   }): Promise<string | string[]> {
-    return this.verificationService.sendProofRequest(payload.requestProofDto);
+    return this.verificationService.sendProofRequest(payload.requestProofDto)
   }
 
   /**
@@ -80,7 +80,7 @@ export class VerificationController {
    */
   @MessagePattern({ cmd: 'verify-presentation' })
   async verifyPresentation(payload: { proofId: string; orgId: string; user: IUserRequest }): Promise<string> {
-    return this.verificationService.verifyPresentation(payload.proofId, payload.orgId);
+    return this.verificationService.verifyPresentation(payload.proofId, payload.orgId)
   }
 
   /**
@@ -89,26 +89,26 @@ export class VerificationController {
    */
   @MessagePattern({ cmd: 'webhook-proof-presentation' })
   async webhookProofPresentation(payload: IProofPresentation): Promise<presentations> {
-    return this.verificationService.webhookProofPresentation(payload);
+    return this.verificationService.webhookProofPresentation(payload)
   }
 
   @MessagePattern({ cmd: 'send-out-of-band-proof-request' })
   async sendOutOfBandPresentationRequest(payload: {
-    outOfBandRequestProof: ISendProofRequestPayload;
-    user: IUserRequest;
+    outOfBandRequestProof: ISendProofRequestPayload
+    user: IUserRequest
   }): Promise<boolean | object> {
-    return this.verificationService.sendOutOfBandPresentationRequest(payload.outOfBandRequestProof, payload.user);
+    return this.verificationService.sendOutOfBandPresentationRequest(payload.outOfBandRequestProof, payload.user)
   }
 
   @MessagePattern({ cmd: 'get-verified-proof-details' })
   async getVerifiedProofdetails(payload: IProofPresentationData): Promise<IProofPresentationDetails[]> {
-    const { proofId, orgId } = payload;
-    return this.verificationService.getVerifiedProofdetails(proofId, orgId);
+    const { proofId, orgId } = payload
+    return this.verificationService.getVerifiedProofdetails(proofId, orgId)
   }
 
   @MessagePattern({ cmd: 'delete-verification-records' })
   async deleteVerificationRecord(payload: { orgId: string; userDetails: user }): Promise<IVerificationRecords> {
-    const { orgId, userDetails } = payload;
-    return this.verificationService.deleteVerificationRecords(orgId, userDetails);
+    const { orgId, userDetails } = payload
+    return this.verificationService.deleteVerificationRecords(orgId, userDetails)
   }
 }

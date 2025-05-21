@@ -1,19 +1,25 @@
 export class URLUserEmailTemplate {
-  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName:string): string {
-
+  public getUserURLTemplate(
+    email: string,
+    verificationCode: string,
+    redirectUrl: string,
+    clientId: string,
+    brandLogoUrl: string,
+    platformName: string
+  ): string {
     const apiUrl = new URL(
       clientId === process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID ? '/verify-email-success' : '',
       redirectUrl
-    );
+    )
 
-    apiUrl.searchParams.append('verificationCode', verificationCode);
-    apiUrl.searchParams.append('email', encodeURIComponent(email));
+    apiUrl.searchParams.append('verificationCode', verificationCode)
+    apiUrl.searchParams.append('email', encodeURIComponent(email))
 
-    const validUrl = apiUrl.href;
+    const validUrl = apiUrl.href
 
-    const logoUrl = brandLogoUrl || process.env.BRAND_LOGO;
-    const platform = platformName || process.env.PLATFORM_NAME;
-    const poweredBy = platformName || process.env.POWERED_BY;
+    const logoUrl = brandLogoUrl || process.env.BRAND_LOGO
+    const platform = platformName || process.env.PLATFORM_NAME
+    const poweredBy = platformName || process.env.POWERED_BY
     try {
       return `<!DOCTYPE html>
       <html lang="en">
@@ -63,7 +69,7 @@ export class URLUserEmailTemplate {
               </div>
           </div>
       </body>
-      </html>`;
-    } catch (error) {}
+      </html>`
+    } catch (_error) {}
   }
 }

@@ -1,9 +1,9 @@
 export interface IOrgRoles {
-    id: string;
-    name: string;
-    description: string;
-    createDateTime?: Date;
-    createdBy?: string;
-    lastChangedDateTime?: Date;
-    lastChangedBy?: string;
+  id: string
+  name: string
+  description: string
+  createDateTime?: Date
+  createdBy?: string
+  lastChangedDateTime?: Date
+  lastChangedBy?: string
 }

@@ -1,166 +1,169 @@
-/* eslint-disable arrow-body-style */
-/* eslint-disable implicit-arrow-linebreak */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable space-in-parens */
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import * as CryptoJS from 'crypto-js';
+import * as CryptoJS from 'crypto-js'
 
-import { BadRequestException, HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common'
 
-import { CommonConstants } from './common.constant';
-import { HttpService } from '@nestjs/axios';
-import * as dotenv from 'dotenv';
-import { ResponseMessages } from './response-messages';
-import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
-import { OrgAgentType } from '../../enum/src/enum';
-import { RpcException } from '@nestjs/microservices';
-dotenv.config();
+import type { HttpService } from '@nestjs/axios'
+import { RpcException } from '@nestjs/microservices'
+import * as dotenv from 'dotenv'
+import { OrgAgentType } from '../../enum/src/enum'
+import { CommonConstants } from './common.constant'
+import type { IFormattedResponse, IOptionalParams } from './interfaces/interface'
+import { ResponseMessages } from './response-messages'
+dotenv.config()
 
 @Injectable()
 export class CommonService {
-  private readonly logger = new Logger('CommonService');
+  private readonly logger = new Logger('CommonService')
 
   constructor(private readonly httpService: HttpService) {}
 
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   async httpPost(url: string, payload?: any, apiKey?: any) {
     try {
       return await this.httpService
         .post(url, payload, apiKey)
         .toPromise()
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         .then((response: any) => {
-          return response.data;
-        });
+          return response.data
+        })
     } catch (error) {
-      this.logger.error(`ERROR in POST : ${JSON.stringify(error)}`);
-      this.handleCommonErrors(error);
+      this.logger.error(`ERROR in POST : ${JSON.stringify(error)}`)
+      this.handleCommonErrors(error)
     }
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   async httpGet(url: string, config?: any) {
     try {
       return await this.httpService
         .get(url, config)
         .toPromise()
-        .then((data) => data.data);
+        .then((data) => data.data)
     } catch (error) {
-      this.logger.error(`ERROR in GET : ${JSON.stringify(error)}`);
-      this.handleCommonErrors(error);
+      this.logger.error(`ERROR in GET : ${JSON.stringify(error)}`)
+      this.handleCommonErrors(error)
     }
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   async httpPatch(url: string, payload?: any, apiKey?: any) {
     try {
       return await this.httpService
         .patch(url, payload, apiKey)
         .toPromise()
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         .then((response: any) => {
-          return response.data;
-        });
+          return response.data
+        })
     } catch (error) {
-      this.logger.error(`ERROR in PATCH : ${JSON.stringify(error)}`);
-      this.handleCommonErrors(error);
+      this.logger.error(`ERROR in PATCH : ${JSON.stringify(error)}`)
+      this.handleCommonErrors(error)
     }
   }
 
-  async httpDelete(url: string, config?: unknown) {
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  async httpDelete(url: string, config?: unknown): Promise<any> {
     try {
       return await this.httpService
         .delete(url, config)
         .toPromise()
-        .then((data) => {
-          return data;
-        });
+        .then((data) => data)
     } catch (error) {
-      this.logger.error(`ERROR in DELETE : ${JSON.stringify(error.response.data)}`);
-      this.handleCommonErrors(error);
+      this.logger.error(`ERROR in DELETE : ${JSON.stringify(error.response?.data)}`)
+      this.handleCommonErrors(error)
+      throw error // rethrow to keep contract
     }
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   async httpPut(url: string, payload?: any, config?: any): Promise<IFormattedResponse> {
     try {
-      const response = await this.httpService.put(url, payload, config).toPromise();
+      const response = await this.httpService.put(url, payload, config).toPromise()
 
-      return this.filterResponse(response);
+      return this.filterResponse(response) as IFormattedResponse
     } catch (error) {
-      return this.sendError(error);
+      return this.sendError(error)
     }
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   filterResponse(data: any) {
-    let response;
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    let response: { message: string; success: boolean; data: any }
     if (data.data && data.data.message !== undefined && data.data.success !== undefined) {
-      this.logger.debug(`CommonService: data is already a response object, return`);
-      response = data.data;
+      this.logger.debug('CommonService: data is already a response object, return')
+      response = data.data
     } else {
-      this.logger.debug(`CommonService: create response object: ${JSON.stringify(data?.data)}`);
+      this.logger.debug(`CommonService: create response object: ${JSON.stringify(data?.data)}`)
       // TODO: We are not using this response in the parent functions, so we can remove this
       response = {
         message: 'fetched',
         success: true,
-        data: !data.data.results ? (!data.data.result ? data.data : data.data.result) : data.data
-      };
+        data: !data.data.results ? (!data.data.result ? data.data : data.data.result) : data.data,
+      }
     }
 
-    return response;
+    return response
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   sendError(error: any): IFormattedResponse {
-    this.logger.error(`in sendError: ${error} StatusCode: ${error.response?.status}`);
+    this.logger.error(`in sendError: ${error} StatusCode: ${error.response?.status}`)
     if (error.response?.status) {
       throw new HttpException(
         {
           statusCode: error.response.status,
-          error: error.response.data ? error.response.data : error.message
+          error: error.response.data ? error.response.data : error.message,
         },
         error.response.status
-      );
-    } else {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.response.data ? error.response.data : error.message
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      )
     }
+    throw new HttpException(
+      {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        error: error.response.data ? error.response.data : error.message,
+      },
+      HttpStatus.INTERNAL_SERVER_ERROR
+    )
   }
 
   // To validate space in string
   spaceValidate(text, customMessage) {
-    if ('' === text.toString().trim()) {
-      throw new BadRequestException(customMessage);
+    if (text.toString().trim() === '') {
+      throw new BadRequestException(customMessage)
     }
   }
   // To validate password
   passwordValidation(password) {
     const passwordRegEx =
-      /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[-!@$%^*])(?=.*[!"$%*,-.\/:;=@^_])[a-zA-Z0-9!"$%*,-.\/:;=@^_]{8,}$/;
+      /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[-!@$%^*])(?=.*[!"$%*,-.\/:;=@^_])[a-zA-Z0-9!"$%*,-.\/:;=@^_]{8,}$/
     const defaultMessage =
-      'Passwords must contain at least 8 characters, including uppercase, lowercase, numbers and special character.';
+      'Passwords must contain at least 8 characters, including uppercase, lowercase, numbers and special character.'
     if (!passwordRegEx.test(password.trim())) {
-      throw new BadRequestException(defaultMessage);
+      throw new BadRequestException(defaultMessage)
     }
   }
   // To decrypt password
   decryptPassword(encryptedPassword) {
     try {
-      const password = CryptoJS.AES.decrypt(encryptedPassword, process.env.CRYPTO_PRIVATE_KEY);
+      const password = CryptoJS.AES.decrypt(encryptedPassword, process.env.CRYPTO_PRIVATE_KEY)
 
-      const decryptedPassword = JSON.parse(password.toString(CryptoJS.enc.Utf8));
-      return decryptedPassword;
-    } catch (error) {
-      throw new BadRequestException('Invalid Credentials');
+      const decryptedPassword = JSON.parse(password.toString(CryptoJS.enc.Utf8))
+      return decryptedPassword
+    } catch (_error) {
+      throw new BadRequestException('Invalid Credentials')
     }
   }
   dataEncryption(data: string) {
     // eslint-disable-next-line no-useless-catch
     try {
-      const encryptedToken = CryptoJS.AES.encrypt(JSON.stringify(data), process.env.CRYPTO_PRIVATE_KEY).toString();
+      const encryptedToken = CryptoJS.AES.encrypt(JSON.stringify(data), process.env.CRYPTO_PRIVATE_KEY).toString()
 
-      return encryptedToken;
+      return encryptedToken
     } catch (error) {
-      throw error;
+      // biome-ignore lint/complexity/noUselessCatch: <explanation>
+      throw error
     }
   }
 
@@ -172,142 +175,141 @@ export class CommonService {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          error: error.message
+          error: error.message,
         },
         HttpStatus.NOT_FOUND
-      );
+      )
     }
 
     if (error.message.toString().includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          error: error.message
+          error: error.message,
         },
         HttpStatus.NOT_FOUND
-      );
+      )
     }
     if (error.toString().includes(CommonConstants.RESP_ERR_HTTP_INVALID_HEADER_VALUE)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.UNAUTHORIZED,
-          error: CommonConstants.UNAUTH_MSG
+          error: CommonConstants.UNAUTH_MSG,
         },
         HttpStatus.UNAUTHORIZED
-      );
+      )
     }
     if (error.toString().includes(CommonConstants.RESP_ERR_NOT_FOUND)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.NOT_FOUND,
-          error: error.response.data ? error.response.data : error.message
+          error: error.response.data ? error.response.data : error.message,
         },
         HttpStatus.NOT_FOUND
-      );
+      )
     }
     if (error.toString().includes(CommonConstants.RESP_BAD_REQUEST)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.BAD_REQUEST,
           message: error.message,
-          error: error.response.data ? error.response.data : error.message
+          error: error.response.data ? error.response.data : error.message,
         },
         HttpStatus.BAD_REQUEST
-      );
+      )
     }
     if (error.toString().includes(CommonConstants.RESP_ERR_UNPROCESSABLE_ENTITY)) {
       throw new HttpException(
         {
           statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          error: error.response.data ? error.response.data : error.message
+          error: error.response.data ? error.response.data : error.message,
         },
         HttpStatus.UNPROCESSABLE_ENTITY
-      );
+      )
     }
 
     throw new HttpException(
       {
         statusCode: error.response.status,
         message: error.message,
-        error: error.response.data ? error.response.data : error.message
+        error: error.response.data ? error.response.data : error.message,
       },
       error.response.status
-    );
+    )
   }
 
   /**
    * This function is used to handle errors in apps with RpcException
    */
   handleError(error): Promise<void> {
-    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+    if (error?.status?.message?.error) {
       throw new RpcException({
         message: error?.status?.message?.error?.reason
           ? error?.status?.message?.error?.reason
           : error?.status?.message?.error,
-        statusCode: error?.status?.code
-      });
-    } else {
-      throw new RpcException(error.response ? error.response : error);
+        statusCode: error?.status?.code,
+      })
     }
+    throw new RpcException(error.response ? error.response : error)
   }
 
   async checkAgentHealth(baseUrl: string, apiKey: string): Promise<boolean> {
     if (!baseUrl || !apiKey) {
-      throw new BadRequestException(ResponseMessages.cloudWallet.error.agentDetails);
+      throw new BadRequestException(ResponseMessages.cloudWallet.error.agentDetails)
     }
-    const url = `${baseUrl}${CommonConstants.URL_AGENT_GET_ENDPOINT}`;
+    const url = `${baseUrl}${CommonConstants.URL_AGENT_GET_ENDPOINT}`
     try {
       const agentHealthCheck = await this.httpGet(url, {
-        headers: { authorization: apiKey }
-      });
+        headers: { authorization: apiKey },
+      })
       if (agentHealthCheck.isInitialized) {
-        return true;
+        return true
       }
-      return false;
-    } catch (error) {
-      throw new Error();
+      return false
+    } catch (_error) {
+      throw new Error()
     }
   }
 
   async createDynamicUrl(urlOptions: IOptionalParams): Promise<string> {
     try {
-      const { alias, myDid, outOfBandId, state, theirDid, theirLabel, connectionId, threadId } = urlOptions;
+      const { alias, myDid, outOfBandId, state, theirDid, theirLabel, connectionId, threadId } = urlOptions
       // Create the dynamic URL for Search Criteria
-      const criteriaParams = [];
+      const criteriaParams = []
 
       if (alias) {
-        criteriaParams.push(`alias=${alias}`);
+        criteriaParams.push(`alias=${alias}`)
       }
       if (myDid) {
-        criteriaParams.push(`myDid=${myDid}`);
+        criteriaParams.push(`myDid=${myDid}`)
       }
       if (outOfBandId) {
-        criteriaParams.push(`outOfBandId=${outOfBandId}`);
+        criteriaParams.push(`outOfBandId=${outOfBandId}`)
       }
       if (state) {
-        criteriaParams.push(`state=${state}`);
+        criteriaParams.push(`state=${state}`)
       }
       if (theirDid) {
-        criteriaParams.push(`theirDid=${theirDid}`);
+        criteriaParams.push(`theirDid=${theirDid}`)
       }
       if (theirLabel) {
-        criteriaParams.push(`theirLabel=${theirLabel}`);
+        criteriaParams.push(`theirLabel=${theirLabel}`)
       }
       if (threadId) {
-        criteriaParams.push(`threadId=${threadId}`);
+        criteriaParams.push(`threadId=${threadId}`)
       }
       if (connectionId) {
-        criteriaParams.push(`connectionId=${connectionId}`);
+        criteriaParams.push(`connectionId=${connectionId}`)
       }
 
-      if (0 < criteriaParams.length) {
-        const url: string = `?${criteriaParams.join('&')}`;
-        return url;
+      if (criteriaParams.length > 0) {
+        const url: string = `?${criteriaParams.join('&')}`
+        return url
       }
 
-      return '';
+      return ''
     } catch (error) {
-      throw new Error(`Failed to create dynamic URL: ${error.message}`);
+      throw new Error(`Failed to create dynamic URL: ${error.message}`)
     }
   }
 
@@ -319,32 +321,32 @@ export class CommonService {
     connectionId?: string
   ): Promise<string> {
     try {
-      let url;
+      let url: string
       switch (label) {
         case 'send-basic-message': {
           url =
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_SEND_BASIC_MESSAGE}`.replace('#', connectionId)
               : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
-                  .replace('#', connectionId)
-                  .replace('@', tenantId)
-              : null;
-          break;
+                ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
+                    .replace('#', connectionId)
+                    .replace('@', tenantId)
+                : null
+          break
         }
 
         default: {
-          break;
+          break
         }
       }
 
       if (!url) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
+        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound)
       }
-      return url;
+      return url
     } catch (error) {
-      this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`)
+      throw error
     }
   }
 }

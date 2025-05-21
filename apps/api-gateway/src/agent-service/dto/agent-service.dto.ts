@@ -1,9 +1,9 @@
-import { trim } from '@credebl/common/cast.helper';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
-import { CreateDidDto } from './create-did.dto';
-const regex = /^[a-zA-Z0-9 ]*$/;
+import { trim } from '@credebl/common/cast.helper'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { Transform } from 'class-transformer'
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator'
+import { CreateDidDto } from './create-did.dto'
+const regex = /^[a-zA-Z0-9 ]*$/
 export class AgentSpinupDto extends CreateDidDto {
   @ApiProperty()
   @MaxLength(25, { message: 'Maximum length for wallet must be 25 characters.' })
@@ -12,31 +12,31 @@ export class AgentSpinupDto extends CreateDidDto {
   @MinLength(2, { message: 'Minimum length for wallet name must be 2 characters.' })
   @Matches(regex, { message: 'Wallet name must not contain special characters.' })
   @Matches(/^\S*$/, {
-    message: 'Spaces are not allowed in walletName'
+    message: 'Spaces are not allowed in walletName',
   })
-  walletName: string;
+  walletName: string
 
   @ApiProperty()
   @Transform(({ value }) => trim(value))
   @IsOptional()
   @IsString({ message: 'walletPassword must be in string format.' })
   @IsNotEmpty({ message: 'Password is required.' })
-  walletPassword?: string;
+  walletPassword?: string
 
   @ApiPropertyOptional({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
   @IsOptional()
   @Transform(({ value }) => trim(value))
   @IsString({ message: 'did must be in string format.' })
-  did?: string;
+  did?: string
 
   @ApiPropertyOptional({ example: 'ojIckSD2jqNzOqIrAGzL' })
   @IsOptional()
-  clientSocketId?: string;
+  clientSocketId?: string
 
   @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean()
-  tenant?: boolean;
-  
-  orgId: string;
+  tenant?: boolean
+
+  orgId: string
 }

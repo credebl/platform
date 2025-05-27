@@ -512,64 +512,64 @@ export class ClientRegistrationService {
 
     return tokenResponse
   }
+  //TODO: This is an old code which is not used anymore, need to remove it after testing
+  // async CreateConnection(clientId: string, token: string) {
+  //   const payload = {
+  //     name: 'TestConnection1',
+  //     display_name: 'Connectiondisplay',
+  //     strategy: 'auth0',
+  //     options: {
+  //       enabledDatabaseCustomization: true,
+  //       import_mode: false,
+  //       customScripts: {
+  //         login:
+  //           "function login(email, password, callback) {\n  //this example uses the \"pg\" library\n  //more info here: https://github.com/brianc/node-postgres\n\n  const bcrypt = require('bcrypt');\n  const postgres = require('pg');\n\n  const conString = `postgres://${configuration.pg_user}:${configuration.pg_pass}@${configuration.pg_ip}/${configuration.pg_db}`;\n  postgres.connect(conString, function (err, client, done) {\n    if (err) return callback(err);\n\t\t\t\n    const query = 'SELECT id, email, password FROM public.user WHERE email = $1 or username = $1';\n    client.query(query, [email], function (err, result) {\n      // NOTE: always call done() here to close\n      // the connection to the database\n      done();\n\n      if (err || result.rows.length === 0) return callback(err || new WrongUsernameOrPasswordError(email));\n\n      const user = result.rows[0];\n\n      //if(password === user.password) {\n        this.logger.log(email);\n        if (password === user.password) return callback(err || new WrongUsernameOrPasswordError(email));\n\n        return callback(null, {\n          user_id: user.id,\n          email: user.email\n        });\n      });\n      \n    });\n  //});\n}",
+  //         create:
+  //           'function create(user, callback) {\n  // This script should create a user entry in your existing database. It will\n  // be executed when a user attempts to sign up, or when a user is created\n  // through the Auth0 dashboard or API.\n  // When this script has finished executing, the Login script will be\n  // executed immediately afterwards, to verify that the user was created\n  // successfully.\n  //\n  // The user object will always contain the following properties:\n  // * email: the user\'s email\n  // * password: the password entered by the user, in plain text\n  // * tenant: the name of this Auth0 account\n  // * client_id: the client ID of the application where the user signed up, or\n  //              API key if created through the API or Auth0 dashboard\n  // * connection: the name of this database connection\n  //\n  // There are three ways this script can finish:\n  // 1. A user was successfully created\n  //     callback(null);\n  // 2. This user already exists in your database\n  //     callback(new ValidationError("user_exists", "my error message"));\n  // 3. Something went wrong while trying to reach your database\n  //     callback(new Error("my error message"));\n\n  const msg = \'Please implement the Create script for this database connection \' +\n    \'at https://manage.auth0.com/#/connections/database\';\n  return callback(new Error(msg));\n}\n',
+  //         delete:
+  //           "function remove(id, callback) {\n  // This script remove a user from your existing database.\n  // It is executed whenever a user is deleted from the API or Auth0 dashboard.\n  //\n  // There are two ways that this script can finish:\n  // 1. The user was removed successfully:\n  //     callback(null);\n  // 2. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n\n  const msg = 'Please implement the Delete script for this database ' +\n    'connection at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
+  //         verify:
+  //           "function verify(email, callback) {\n  // This script should mark the current user's email address as verified in\n  // your database.\n  // It is executed whenever a user clicks the verification link sent by email.\n  // These emails can be customized at https://manage.auth0.com/#/emails.\n  // It is safe to assume that the user's email already exists in your database,\n  // because verification emails, if enabled, are sent immediately after a\n  // successful signup.\n  //\n  // There are two ways that this script can finish:\n  // 1. The user's email was verified successfully\n  //     callback(null, true);\n  // 2. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n  //\n  // If an error is returned, it will be passed to the query string of the page\n  // where the user is being redirected to after clicking the verification link.\n  // For example, returning `callback(new Error(\"error\"))` and redirecting to\n  // https://example.com would redirect to the following URL:\n  //     https://example.com?email=alice%40example.com&message=error&success=false\n\n  const msg = 'Please implement the Verify script for this database connection ' +\n    'at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
+  //         get_user:
+  //           "function getByEmail(email, callback) {\n  // This script should retrieve a user profile from your existing database,\n  // without authenticating the user.\n  // It is used to check if a user exists before executing flows that do not\n  // require authentication (signup and password reset).\n  //\n  // There are three ways this script can finish:\n  // 1. A user was successfully found. The profile should be in the following\n  // format: https://auth0.com/docs/users/normalized/auth0/normalized-user-profile-schema.\n  //     callback(null, profile);\n  // 2. A user was not found\n  //     callback(null);\n  // 3. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n\n  const msg = 'Please implement the Get User script for this database connection ' +\n    'at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
+  //         change_password:
+  //           "function changePassword(email, newPassword, callback) {\n  // This script should change the password stored for the current user in your\n  // database. It is executed when the user clicks on the confirmation link\n  // after a reset password request.\n  // The content and behavior of password confirmation emails can be customized\n  // here: https://manage.auth0.com/#/emails\n  // The `newPassword` parameter of this function is in plain text. It must be\n  // hashed/salted to match whatever is stored in your database.\n  //\n  // There are three ways that this script can finish:\n  // 1. The user's password was updated successfully:\n  //     callback(null, true);\n  // 2. The user's password was not updated:\n  //     callback(null, false);\n  // 3. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n  //\n  // If an error is returned, it will be passed to the query string of the page\n  // where the user is being redirected to after clicking the confirmation link.\n  // For example, returning `callback(new Error(\"error\"))` and redirecting to\n  // https://example.com would redirect to the following URL:\n  //     https://example.com?email=alice%40example.com&message=error&success=false\n\n  const msg = 'Please implement the Change Password script for this database ' +\n    'connection at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
+  //       },
+  //       passwordPolicy: 'good',
+  //       password_complexity_options: {
+  //         min_length: 8,
+  //       },
+  //       password_history: {
+  //         size: 5,
+  //         enable: false,
+  //       },
+  //       password_no_personal_info: {
+  //         enable: false,
+  //       },
+  //       password_dictionary: {
+  //         enable: false,
+  //         dictionary: [],
+  //       },
 
-  async CreateConnection(clientId: string, token: string) {
-    const payload = {
-      name: 'TestConnection1',
-      display_name: 'Connectiondisplay',
-      strategy: 'auth0',
-      options: {
-        enabledDatabaseCustomization: true,
-        import_mode: false,
-        customScripts: {
-          login:
-            "function login(email, password, callback) {\n  //this example uses the \"pg\" library\n  //more info here: https://github.com/brianc/node-postgres\n\n  const bcrypt = require('bcrypt');\n  const postgres = require('pg');\n\n  const conString = `postgres://${configuration.pg_user}:${configuration.pg_pass}@${configuration.pg_ip}/${configuration.pg_db}`;\n  postgres.connect(conString, function (err, client, done) {\n    if (err) return callback(err);\n\t\t\t\n    const query = 'SELECT id, email, password FROM public.user WHERE email = $1 or username = $1';\n    client.query(query, [email], function (err, result) {\n      // NOTE: always call done() here to close\n      // the connection to the database\n      done();\n\n      if (err || result.rows.length === 0) return callback(err || new WrongUsernameOrPasswordError(email));\n\n      const user = result.rows[0];\n\n      //if(password === user.password) {\n        this.logger.log(email);\n        if (password === user.password) return callback(err || new WrongUsernameOrPasswordError(email));\n\n        return callback(null, {\n          user_id: user.id,\n          email: user.email\n        });\n      });\n      \n    });\n  //});\n}",
-          create:
-            'function create(user, callback) {\n  // This script should create a user entry in your existing database. It will\n  // be executed when a user attempts to sign up, or when a user is created\n  // through the Auth0 dashboard or API.\n  // When this script has finished executing, the Login script will be\n  // executed immediately afterwards, to verify that the user was created\n  // successfully.\n  //\n  // The user object will always contain the following properties:\n  // * email: the user\'s email\n  // * password: the password entered by the user, in plain text\n  // * tenant: the name of this Auth0 account\n  // * client_id: the client ID of the application where the user signed up, or\n  //              API key if created through the API or Auth0 dashboard\n  // * connection: the name of this database connection\n  //\n  // There are three ways this script can finish:\n  // 1. A user was successfully created\n  //     callback(null);\n  // 2. This user already exists in your database\n  //     callback(new ValidationError("user_exists", "my error message"));\n  // 3. Something went wrong while trying to reach your database\n  //     callback(new Error("my error message"));\n\n  const msg = \'Please implement the Create script for this database connection \' +\n    \'at https://manage.auth0.com/#/connections/database\';\n  return callback(new Error(msg));\n}\n',
-          delete:
-            "function remove(id, callback) {\n  // This script remove a user from your existing database.\n  // It is executed whenever a user is deleted from the API or Auth0 dashboard.\n  //\n  // There are two ways that this script can finish:\n  // 1. The user was removed successfully:\n  //     callback(null);\n  // 2. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n\n  const msg = 'Please implement the Delete script for this database ' +\n    'connection at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
-          verify:
-            "function verify(email, callback) {\n  // This script should mark the current user's email address as verified in\n  // your database.\n  // It is executed whenever a user clicks the verification link sent by email.\n  // These emails can be customized at https://manage.auth0.com/#/emails.\n  // It is safe to assume that the user's email already exists in your database,\n  // because verification emails, if enabled, are sent immediately after a\n  // successful signup.\n  //\n  // There are two ways that this script can finish:\n  // 1. The user's email was verified successfully\n  //     callback(null, true);\n  // 2. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n  //\n  // If an error is returned, it will be passed to the query string of the page\n  // where the user is being redirected to after clicking the verification link.\n  // For example, returning `callback(new Error(\"error\"))` and redirecting to\n  // https://example.com would redirect to the following URL:\n  //     https://example.com?email=alice%40example.com&message=error&success=false\n\n  const msg = 'Please implement the Verify script for this database connection ' +\n    'at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
-          get_user:
-            "function getByEmail(email, callback) {\n  // This script should retrieve a user profile from your existing database,\n  // without authenticating the user.\n  // It is used to check if a user exists before executing flows that do not\n  // require authentication (signup and password reset).\n  //\n  // There are three ways this script can finish:\n  // 1. A user was successfully found. The profile should be in the following\n  // format: https://auth0.com/docs/users/normalized/auth0/normalized-user-profile-schema.\n  //     callback(null, profile);\n  // 2. A user was not found\n  //     callback(null);\n  // 3. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n\n  const msg = 'Please implement the Get User script for this database connection ' +\n    'at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
-          change_password:
-            "function changePassword(email, newPassword, callback) {\n  // This script should change the password stored for the current user in your\n  // database. It is executed when the user clicks on the confirmation link\n  // after a reset password request.\n  // The content and behavior of password confirmation emails can be customized\n  // here: https://manage.auth0.com/#/emails\n  // The `newPassword` parameter of this function is in plain text. It must be\n  // hashed/salted to match whatever is stored in your database.\n  //\n  // There are three ways that this script can finish:\n  // 1. The user's password was updated successfully:\n  //     callback(null, true);\n  // 2. The user's password was not updated:\n  //     callback(null, false);\n  // 3. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n  //\n  // If an error is returned, it will be passed to the query string of the page\n  // where the user is being redirected to after clicking the confirmation link.\n  // For example, returning `callback(new Error(\"error\"))` and redirecting to\n  // https://example.com would redirect to the following URL:\n  //     https://example.com?email=alice%40example.com&message=error&success=false\n\n  const msg = 'Please implement the Change Password script for this database ' +\n    'connection at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
-        },
-        passwordPolicy: 'good',
-        password_complexity_options: {
-          min_length: 8,
-        },
-        password_history: {
-          size: 5,
-          enable: false,
-        },
-        password_no_personal_info: {
-          enable: false,
-        },
-        password_dictionary: {
-          enable: false,
-          dictionary: [],
-        },
+  //       gateway_authentication: 'object',
+  //     },
+  //     enabled_clients: [clientId],
+  //     realms: [''],
+  //     metadata: {},
+  //   }
 
-        gateway_authentication: 'object',
-      },
-      enabled_clients: [clientId],
-      realms: [''],
-      metadata: {},
-    }
+  //   const clientConnResponse = await this.commonService.httpPost(
+  //     `${process.env.KEYCLOAK_DOMAIN}${CommonConstants.URL_KEYCLOAK_MANAGEMENT_CONNECTIONS}`,
+  //     payload,
+  //     this.getAuthHeader(token)
+  //   )
+  //   this.logger.debug(`ClientRegistrationService create connection app ${JSON.stringify(clientConnResponse)}`)
 
-    const clientConnResponse = await this.commonService.httpPost(
-      `${process.env.KEYCLOAK_DOMAIN}${CommonConstants.URL_KEYCLOAK_MANAGEMENT_CONNECTIONS}`,
-      payload,
-      this.getAuthHeader(token)
-    )
-    this.logger.debug(`ClientRegistrationService create connection app ${JSON.stringify(clientConnResponse)}`)
-
-    return {
-      name: clientConnResponse.data.name,
-      id: clientConnResponse.data.id,
-    }
-  }
+  //   return {
+  //     name: clientConnResponse.data.name,
+  //     id: clientConnResponse.data.id,
+  //   }
+  // }
 
   async getUserToken(email: string, password: string, clientId: string, clientSecret: string) {
     const payload = new userTokenPayloadDto()

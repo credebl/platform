@@ -1,132 +1,130 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger'
+import { IsArray, IsBoolean, IsOptional, IsString, ValidateNested } from 'class-validator'
 
 export class GenerateRegistrationDto {
-
   @IsOptional()
   @ApiProperty({ example: 'false' })
   @IsBoolean({ message: 'isPasskey should be boolean' })
-  deviceFlag: boolean;
+  deviceFlag: boolean
 }
 
 export class ResponseDto {
   @ApiProperty()
   @IsString()
-  attestationObject: string;
+  attestationObject: string
 
   @ApiProperty()
   @IsString()
-  clientDataJSON: string;
+  clientDataJSON: string
 
   @ApiProperty()
   @IsArray()
-  transports: string[];
+  transports: string[]
 }
 
 export class ClientExtensionResultsDto {
   @ValidateNested()
-  credProps: Record<string, unknown>;
+  credProps: Record<string, unknown>
 }
 
 export class VerifyRegistrationDto {
   @ApiProperty()
   @IsString()
-  id: string;
+  id: string
 
   @ApiProperty()
   @IsString()
-  rawId: string;
+  rawId: string
 
-  @ApiProperty({ type: ResponseDto, nullable: true }) 
+  @ApiProperty({ type: ResponseDto, nullable: true })
   @IsOptional()
-  response: ResponseDto;
+  response: ResponseDto
 
   @ApiProperty()
   @IsString()
-  type: string;
+  type: string
 
-  @ApiProperty() 
-  clientExtensionResults: ClientExtensionResultsDto; 
+  @ApiProperty()
+  clientExtensionResults: ClientExtensionResultsDto
 
   @ApiProperty()
   @IsString()
-  authenticatorAttachment: string;
+  authenticatorAttachment: string
 
   @ApiProperty()
   @IsString()
-  challangeId: string;
+  challangeId: string
 }
 
 export class UpdateFidoUserDetailsDto {
   @ApiProperty()
   @IsString()
-  userName: string;
+  userName: string
 
   @ApiProperty()
   @IsString()
-  credentialId: string;
+  credentialId: string
 
   @ApiProperty()
   @IsString()
-  deviceFriendlyName: string;
+  deviceFriendlyName: string
 }
 
 export class GenerateAuthenticationDto {
   @ApiProperty({ example: 'abc@vomoto.com' })
   @IsString()
-  userName: string;
+  userName: string
 }
 
 class VerifyAuthenticationResponseDto {
-    @ApiProperty()
-    @IsString()
-    authenticatorData: string;
-  
-    @ApiProperty()
-    @IsString()
-    clientDataJSON: string;
-  
-    @ApiProperty()
-    @IsString()
-    signature: string;
-  
-    @ApiProperty()
-    @IsString()
-    userHandle: string;
-  }
-  
+  @ApiProperty()
+  @IsString()
+  authenticatorData: string
 
-  export class VerifyAuthenticationDto {
-    @ApiProperty()
-    @IsString()
-    id: string;
-  
-    @ApiProperty()
-    @IsString()
-    rawId: string;
-  
-    @ApiProperty() 
-    @IsOptional()
-    response: VerifyAuthenticationResponseDto;
-  
-    @ApiProperty()
-    @IsString()
-    type: string;
-  
-    @ApiProperty()
-    clientExtensionResults?: ClientExtensionResultsDto;
-  
-    @ApiProperty()
-    @IsString()
-    authenticatorAttachment: string;
-  
-    @ApiProperty()
-    @IsString()
-    challangeId: string;
-  }
+  @ApiProperty()
+  @IsString()
+  clientDataJSON: string
 
-  export class UserNameDto {
-    @ApiProperty()
-    @IsString()
-    userName: string;
-  }
+  @ApiProperty()
+  @IsString()
+  signature: string
+
+  @ApiProperty()
+  @IsString()
+  userHandle: string
+}
+
+export class VerifyAuthenticationDto {
+  @ApiProperty()
+  @IsString()
+  id: string
+
+  @ApiProperty()
+  @IsString()
+  rawId: string
+
+  @ApiProperty()
+  @IsOptional()
+  response: VerifyAuthenticationResponseDto
+
+  @ApiProperty()
+  @IsString()
+  type: string
+
+  @ApiProperty()
+  clientExtensionResults?: ClientExtensionResultsDto
+
+  @ApiProperty()
+  @IsString()
+  authenticatorAttachment: string
+
+  @ApiProperty()
+  @IsString()
+  challangeId: string
+}
+
+export class UserNameDto {
+  @ApiProperty()
+  @IsString()
+  userName: string
+}

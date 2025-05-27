@@ -1,13 +1,13 @@
-import { ExecutionContext, Global, Module} from '@nestjs/common';
-import { v4 } from 'uuid';
-import { ClsModule } from 'nestjs-cls';
+import { type ExecutionContext, Global, Module } from '@nestjs/common'
+import { ClsModule } from 'nestjs-cls'
+import { v4 } from 'uuid'
 
-import { ContextStorageServiceKey } from './contextStorageService.interface';
-import NestjsClsContextStorageService from './nestjsClsContextStorageService';
+import { ContextStorageServiceKey } from './contextStorageService.interface'
+import NestjsClsContextStorageService from './nestjsClsContextStorageService'
 
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isNullUndefinedOrEmpty = (obj: any): boolean => null === obj || obj === undefined || ('object' === typeof obj && 0 === Object.keys(obj).length);
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+const isNullUndefinedOrEmpty = (obj: any): boolean =>
+  obj === null || obj === undefined || (typeof obj === 'object' && Object.keys(obj).length === 0)
 
 @Global()
 @Module({
@@ -17,29 +17,25 @@ const isNullUndefinedOrEmpty = (obj: any): boolean => null === obj || obj === un
       interceptor: {
         mount: true,
 
-         generateId: true,
-         idGenerator: (context: ExecutionContext) => {
-          const rpcContext = context.switchToRpc().getContext();
-          const headers = rpcContext.getHeaders();    
+        generateId: true,
+        idGenerator: (context: ExecutionContext) => {
+          const rpcContext = context.switchToRpc().getContext()
+          const headers = rpcContext.getHeaders()
           if (!isNullUndefinedOrEmpty(headers)) {
-            return context.switchToRpc().getContext().getHeaders()['_description'];
-          } else {
-            return v4();
+            return context.switchToRpc().getContext().getHeaders()?._description
           }
-         }
-         
-      }
-    })
+          return v4()
+        },
+      },
+    }),
   ],
   controllers: [],
   providers: [
     {
       provide: ContextStorageServiceKey,
-      useClass: NestjsClsContextStorageService
-    }
+      useClass: NestjsClsContextStorageService,
+    },
   ],
-  exports: [ContextStorageServiceKey]
+  exports: [ContextStorageServiceKey],
 })
-
 export class ContextInterceptorModule {}
-

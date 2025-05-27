@@ -1,14 +1,14 @@
 interface IError {
-    error: string
+  error: string
 }
 
 export interface ISocketInterface {
-    token?: string;
-    message?: string;
-    clientSocketId?: string;
-    clientId?: string;
-    error?: string | IError;
-    connectionId?: string;
-    demoFlow?: string;
-    fileUploadId?: string;
+  token?: string
+  message?: string
+  clientSocketId?: string
+  clientId?: string
+  error?: string | IError
+  connectionId?: string
+  demoFlow?: string
+  fileUploadId?: string
 }

@@ -1,5 +1,6 @@
-import DailyRotateFile = require('winston-daily-rotate-file');
+import DailyRotateFile = require('winston-daily-rotate-file')
 
+// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default class FileTransport {
   public static create() {
     return new DailyRotateFile({
@@ -8,7 +9,7 @@ export default class FileTransport {
       datePattern: 'YYYY-MM-DD-HH',
       zippedArchive: true,
       maxSize: '20m',
-      maxFiles: '14d'
-    });
+      maxFiles: '14d',
+    })
   }
 }

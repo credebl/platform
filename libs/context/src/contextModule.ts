@@ -1,9 +1,9 @@
-import { Global, Module } from '@nestjs/common';
-import { v4 } from 'uuid';
-import { ClsModule } from 'nestjs-cls';
+import { Global, Module } from '@nestjs/common'
+import { ClsModule } from 'nestjs-cls'
+import { v4 } from 'uuid'
 
-import { ContextStorageServiceKey } from './contextStorageService.interface';
-import NestjsClsContextStorageService from './nestjsClsContextStorageService';
+import { ContextStorageServiceKey } from './contextStorageService.interface'
+import NestjsClsContextStorageService from './nestjsClsContextStorageService'
 
 @Global()
 @Module({
@@ -13,17 +13,17 @@ import NestjsClsContextStorageService from './nestjsClsContextStorageService';
       middleware: {
         mount: true,
         generateId: true,
-        idGenerator: (req: Request) => req.headers['x-correlation-id'] ?? v4()
-      }
-    })
+        idGenerator: (req: Request) => req.headers['x-correlation-id'] ?? v4(),
+      },
+    }),
   ],
   controllers: [],
   providers: [
     {
       provide: ContextStorageServiceKey,
-      useClass: NestjsClsContextStorageService
-    }
+      useClass: NestjsClsContextStorageService,
+    },
   ],
-  exports: [ContextStorageServiceKey]
+  exports: [ContextStorageServiceKey],
 })
 export class ContextModule {}

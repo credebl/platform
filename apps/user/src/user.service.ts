@@ -2,62 +2,68 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
+  Inject,
   Injectable,
-  Logger,
+  InternalServerErrorException,
+  type Logger,
   NotFoundException,
   UnauthorizedException,
-  InternalServerErrorException,
-  Inject,
-  HttpException
-} from '@nestjs/common';
+} from '@nestjs/common'
 
+import type { AwsService } from '@credebl/aws'
+import type { ClientRegistrationService } from '@credebl/client-registration'
+import type { CommonService } from '@credebl/common'
+import type { NATSClient } from '@credebl/common/NATSClient'
+import { toNumber } from '@credebl/common/cast.helper'
+import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant'
+import { EmailDto } from '@credebl/common/dtos/email.dto'
+import type {
+  IResetPasswordResponse,
+  ISendVerificationEmail,
+  ISignInUser,
+  ISignUpUserResponse,
+  IUserInvitations,
+  IVerifyUserEmail,
+} from '@credebl/common/interfaces/user.interface'
+import { ResponseMessages } from '@credebl/common/response-messages'
+import { sendEmail } from '@credebl/common/send-grid-helper-file'
+import { Invitation, UserRole } from '@credebl/enum/enum'
+import type { OrgRolesService } from '@credebl/org-roles'
+import type { PrismaService } from '@credebl/prisma-service'
+import type { SupabaseService } from '@credebl/supabase'
+import type { UserActivityService } from '@credebl/user-activity'
+import type { UserOrgRolesService } from '@credebl/user-org-roles'
+import { type ClientProxy, RpcException } from '@nestjs/microservices'
 
-import { ClientRegistrationService } from '@credebl/client-registration';
-import { CommonService } from '@credebl/common';
-import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { LoginUserDto } from '../dtos/login-user.dto';
-import { OrgRoles } from 'libs/org-roles/enums';
-import { OrgRolesService } from '@credebl/org-roles';
-import { PrismaService } from '@credebl/prisma-service';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { URLUserEmailTemplate } from '../templates/user-email-template';
-import { UserOrgRolesService } from '@credebl/user-org-roles';
-import { UserRepository } from '../repositories/user.repository';
-import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
-// eslint-disable-next-line camelcase
-import { RecordType, user, user_org_roles } from '@prisma/client';
-import {
+import type { RecordType, user, user_org_roles } from '@prisma/client'
+import type { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto'
+import * as jwt from 'jsonwebtoken'
+import { OrgRoles } from 'libs/org-roles/enums'
+import type { IUsersActivity } from 'libs/user-activity/interface'
+import { v4 as uuidv4 } from 'uuid'
+import validator from 'validator'
+import type { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto'
+import type { LoginUserDto } from '../dtos/login-user.dto'
+import type { VerifyEmailTokenDto } from '../dtos/verify-email.dto'
+import type {
   ICheckUserDetails,
+  IEcosystemConfig,
+  IOrgUsers,
+  IUserDeletedActivity,
+  IUserForgotPassword,
+  IUserInformation,
+  IUserResetPassword,
+  IUsersProfile,
   OrgInvitations,
   PlatformSettings,
-  IOrgUsers,
   UpdateUserProfile,
-   IUserInformation,
-    IUsersProfile,
-    IUserResetPassword,
-    IUserDeletedActivity,
-    UserKeycloakId,
-    IEcosystemConfig,
-    IUserForgotPassword
-} from '../interfaces/user.interface';
-import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
-import { UserActivityService } from '@credebl/user-activity';
-import { SupabaseService } from '@credebl/supabase';
-import { UserDevicesRepository } from '../repositories/user-device.repository';
-import { v4 as uuidv4 } from 'uuid';
-import { Invitation, UserRole } from '@credebl/enum/enum';
-import validator from 'validator';
-import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
-import { AwsService } from '@credebl/aws';
-import { IUsersActivity } from 'libs/user-activity/interface';
-import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse, ISignUpUserResponse } from '@credebl/common/interfaces/user.interface';
-import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
-import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
-import { toNumber } from '@credebl/common/cast.helper';
-import * as jwt from 'jsonwebtoken';
-import { NATSClient } from '@credebl/common/NATSClient';
+  UserKeycloakId,
+} from '../interfaces/user.interface'
+import type { UserDevicesRepository } from '../repositories/user-device.repository'
+import type { UserRepository } from '../repositories/user.repository'
+import { URLUserResetPasswordTemplate } from '../templates/reset-password-template'
+import { URLUserEmailTemplate } from '../templates/user-email-template'
 
 @Injectable()
 export class UserService {
@@ -74,7 +80,7 @@ export class UserService {
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
-    private readonly natsClient : NATSClient
+    private readonly natsClient: NATSClient
   ) {}
 
   /**
@@ -85,78 +91,83 @@ export class UserService {
 
   async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
     try {
-      const { email, brandLogoUrl, platformName, clientId, clientSecret } = userEmailVerification;
-  
-      if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
+      const { email, brandLogoUrl, platformName, clientId, clientSecret } = userEmailVerification
+
+      if (process.env.PLATFORM_PROFILE_MODE === 'PROD') {
         // eslint-disable-next-line prefer-destructuring
-        const domain = email.split('@')[1];
+        const domain = email.split('@')[1]
         if (DISALLOWED_EMAIL_DOMAIN.includes(domain)) {
-          throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain);
+          throw new BadRequestException(ResponseMessages.user.error.InvalidEmailDomain)
         }
       }
-  
-      const userDetails = await this.userRepository.checkUserExist(email);
-  
+
+      const userDetails = await this.userRepository.checkUserExist(email)
+
       if (userDetails) {
         if (userDetails.isEmailVerified) {
-          throw new ConflictException(ResponseMessages.user.error.exists);
-        } else {
-          throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent);
+          throw new ConflictException(ResponseMessages.user.error.exists)
         }
+        throw new ConflictException(ResponseMessages.user.error.verificationAlreadySent)
       }
-  
-      const verifyCode = uuidv4();
-      let sendVerificationMail: boolean;
+
+      const verifyCode = uuidv4()
+      let sendVerificationMail: boolean
 
       try {
+        const token = await this.clientRegistrationService.getManagementToken(clientId, clientSecret)
+        const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token)
 
-        const token = await this.clientRegistrationService.getManagementToken(clientId, clientSecret);
-        const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
+        const [redirectUrl] = getClientData[0]?.redirectUris || []
 
-        const [redirectUrl] = getClientData[0]?.redirectUris || [];
-  
         if (!redirectUrl) {
-          throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
+          throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound)
         }
-  
-        sendVerificationMail = await this.sendEmailForVerification(email, verifyCode, redirectUrl, clientId, brandLogoUrl, platformName);
-      } catch (error) {
-        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+
+        sendVerificationMail = await this.sendEmailForVerification(
+          email,
+          verifyCode,
+          redirectUrl,
+          clientId,
+          brandLogoUrl,
+          platformName
+        )
+      } catch (_error) {
+        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend)
       }
-  
+
       if (sendVerificationMail) {
-        const uniqueUsername = await this.createUsername(email, verifyCode);
-        userEmailVerification.username = uniqueUsername;
-        userEmailVerification.clientId = clientId;
-        userEmailVerification.clientSecret = clientSecret;
-        const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
-        return resUser;
-      } 
+        const uniqueUsername = await this.createUsername(email, verifyCode)
+        userEmailVerification.username = uniqueUsername
+        userEmailVerification.clientId = clientId
+        userEmailVerification.clientSecret = clientSecret
+        const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode)
+        return resUser
+      }
     } catch (error) {
-      this.logger.error(`In Create User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In Create User : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async createUsername(email: string, verifyCode: string): Promise<string> {
     try {
       // eslint-disable-next-line prefer-destructuring
-      const emailTrim = email.split('@')[0];
+      const emailTrim = email.split('@')[0]
 
       // Replace special characters with hyphens
-      const cleanedUsername = emailTrim.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '-');
+      const cleanedUsername = emailTrim.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '-')
 
       // Generate a 5-digit UUID
       // eslint-disable-next-line prefer-destructuring
-      const uuid = verifyCode.split('-')[0];
+      const uuid = verifyCode.split('-')[0]
 
       // Combine cleaned username and UUID
-      const uniqueUsername = `${cleanedUsername}-${uuid}`;
+      const uniqueUsername = `${cleanedUsername}-${uuid}`
 
-      return uniqueUsername;
+      return uniqueUsername
     } catch (error) {
-      this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in createUsername: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -168,28 +179,41 @@ export class UserService {
    * @returns
    */
 
-  async sendEmailForVerification(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName: string): Promise<boolean> {
+  async sendEmailForVerification(
+    email: string,
+    verificationCode: string,
+    redirectUrl: string,
+    clientId: string,
+    brandLogoUrl: string,
+    platformName: string
+  ): Promise<boolean> {
     try {
-      const platformConfigData = await this.prisma.platform_config.findMany();
+      const platformConfigData = await this.prisma.platform_config.findMany()
 
-      const decryptClientId = await this.commonService.decryptPassword(clientId);
-      const urlEmailTemplate = new URLUserEmailTemplate();
-      const emailData = new EmailDto();
-      emailData.emailFrom = platformConfigData[0].emailFrom;
-      emailData.emailTo = email;
-      const platform = platformName || process.env.PLATFORM_NAME;
-      emailData.emailSubject = `[${platform}] Verify your email to activate your account`;
+      const decryptClientId = await this.commonService.decryptPassword(clientId)
+      const urlEmailTemplate = new URLUserEmailTemplate()
+      const emailData = new EmailDto()
+      emailData.emailFrom = platformConfigData[0].emailFrom
+      emailData.emailTo = email
+      const platform = platformName || process.env.PLATFORM_NAME
+      emailData.emailSubject = `[${platform}] Verify your email to activate your account`
 
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(email, verificationCode, redirectUrl, decryptClientId, brandLogoUrl, platformName);
-      const isEmailSent = await sendEmail(emailData);
+      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(
+        email,
+        verificationCode,
+        redirectUrl,
+        decryptClientId,
+        brandLogoUrl,
+        platformName
+      )
+      const isEmailSent = await sendEmail(emailData)
       if (isEmailSent) {
-        return isEmailSent;
-      } else {
-        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+        return isEmailSent
       }
+      throw new InternalServerErrorException(ResponseMessages.user.error.emailSend)
     } catch (error) {
-      this.logger.error(`Error in sendEmailForVerification: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in sendEmailForVerification: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -201,161 +225,166 @@ export class UserService {
 
   async verifyEmail(param: VerifyEmailTokenDto): Promise<IVerifyUserEmail> {
     try {
-      const invalidMessage = ResponseMessages.user.error.invalidEmailUrl;
+      const invalidMessage = ResponseMessages.user.error.invalidEmailUrl
 
       if (!param.verificationCode || !param.email) {
-        throw new UnauthorizedException(invalidMessage);
+        throw new UnauthorizedException(invalidMessage)
       }
 
-      const userDetails = await this.userRepository.getUserDetails(param.email);
+      const userDetails = await this.userRepository.getUserDetails(param.email)
 
       if (!userDetails || param.verificationCode !== userDetails.verificationCode) {
-        throw new UnauthorizedException(invalidMessage);
+        throw new UnauthorizedException(invalidMessage)
       }
 
       if (userDetails.isEmailVerified) {
-        throw new ConflictException(ResponseMessages.user.error.verifiedEmail);
+        throw new ConflictException(ResponseMessages.user.error.verifiedEmail)
       }
 
       if (param.verificationCode === userDetails.verificationCode) {
-        const verifiedEmail = await this.userRepository.verifyUser(param.email);
-        return verifiedEmail;
+        const verifiedEmail = await this.userRepository.verifyUser(param.email)
+        return verifiedEmail
       }
     } catch (error) {
-      this.logger.error(`error in verifyEmail: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`error in verifyEmail: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async createUserForToken(userInfo: IUserInformation): Promise<ISignUpUserResponse> {
     try {
-      const { email } = userInfo;
+      const { email } = userInfo
       if (!userInfo.email) {
-        throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
+        throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail)
       }
-      const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email.toLowerCase());
+      const checkUserDetails = await this.userRepository.getUserDetails(userInfo.email.toLowerCase())
 
       if (!checkUserDetails) {
-        throw new NotFoundException(ResponseMessages.user.error.emailIsNotVerified);
+        throw new NotFoundException(ResponseMessages.user.error.emailIsNotVerified)
       }
       if (checkUserDetails.keycloakUserId || (!checkUserDetails.keycloakUserId && checkUserDetails.supabaseUserId)) {
-        throw new ConflictException(ResponseMessages.user.error.exists);
+        throw new ConflictException(ResponseMessages.user.error.exists)
       }
-      if (false === checkUserDetails.isEmailVerified) {
-        throw new NotFoundException(ResponseMessages.user.error.verifyEmail);
+      if (checkUserDetails.isEmailVerified === false) {
+        throw new NotFoundException(ResponseMessages.user.error.verifyEmail)
       }
-      const resUser = await this.userRepository.updateUserInfo(userInfo.email.toLowerCase(), userInfo);
+      const resUser = await this.userRepository.updateUserInfo(userInfo.email.toLowerCase(), userInfo)
       if (!resUser) {
-        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+        throw new NotFoundException(ResponseMessages.user.error.invalidEmail)
       }
-      const userDetails = await this.userRepository.getUserDetails(userInfo.email.toLowerCase());
+      const userDetails = await this.userRepository.getUserDetails(userInfo.email.toLowerCase())
       if (!userDetails) {
-        throw new NotFoundException(ResponseMessages.user.error.adduser);
+        throw new NotFoundException(ResponseMessages.user.error.adduser)
       }
-   let keycloakDetails = null;
-      
-   const token = await this.clientRegistrationService.getManagementToken(checkUserDetails.clientId, checkUserDetails.clientSecret);
+      let keycloakDetails = null
+
+      const token = await this.clientRegistrationService.getManagementToken(
+        checkUserDetails.clientId,
+        checkUserDetails.clientSecret
+      )
       if (userInfo.isPasskey) {
-        const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
-        const userDetails = await this.userRepository.getUserDetails(email.toLowerCase());
-        const decryptedPassword = await this.commonService.decryptPassword(userDetails.password);
+        const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password)
+        const userDetails = await this.userRepository.getUserDetails(email.toLowerCase())
+        const decryptedPassword = await this.commonService.decryptPassword(userDetails.password)
 
         if (!resUser) {
-          throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+          throw new NotFoundException(ResponseMessages.user.error.invalidEmail)
         }
 
-        userInfo.password = decryptedPassword;
-        try {          
-          keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
-        } catch (error) {
-          throw new InternalServerErrorException('Error while registering user on keycloak');
+        userInfo.password = decryptedPassword
+        try {
+          keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token)
+        } catch (_error) {
+          throw new InternalServerErrorException('Error while registering user on keycloak')
         }
       } else {
-        const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
+        const decryptedPassword = await this.commonService.decryptPassword(userInfo.password)
 
-        userInfo.password = decryptedPassword;
+        userInfo.password = decryptedPassword
 
-        try {          
-          keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token);
-        } catch (error) {
-          throw new InternalServerErrorException('Error while registering user on keycloak');
+        try {
+          keycloakDetails = await this.clientRegistrationService.createUser(userInfo, process.env.KEYCLOAK_REALM, token)
+        } catch (_error) {
+          throw new InternalServerErrorException('Error while registering user on keycloak')
         }
       }
 
-      await this.userRepository.updateUserDetails(userDetails.id,
-        keycloakDetails.keycloakUserId.toString()
-      );
+      await this.userRepository.updateUserDetails(userDetails.id, keycloakDetails.keycloakUserId.toString())
 
       if (userInfo?.isHolder) {
-        const getUserRole = await this.userRepository.getUserRole(UserRole.HOLDER);
+        const getUserRole = await this.userRepository.getUserRole(UserRole.HOLDER)
 
         if (!getUserRole) {
-          throw new NotFoundException(ResponseMessages.user.error.userRoleNotFound);
+          throw new NotFoundException(ResponseMessages.user.error.userRoleNotFound)
         }
-        await this.userRepository.storeUserRole(userDetails.id, getUserRole?.id);
+        await this.userRepository.storeUserRole(userDetails.id, getUserRole?.id)
       }
 
-      const realmRoles = await this.clientRegistrationService.getAllRealmRoles(token);
-      
-      const holderRole = realmRoles.filter(role => role.name === OrgRoles.HOLDER);
-      const holderRoleData =  0 < holderRole.length && holderRole[0];
+      const realmRoles = await this.clientRegistrationService.getAllRealmRoles(token)
+
+      const holderRole = realmRoles.filter((role) => role.name === OrgRoles.HOLDER)
+      const holderRoleData = holderRole.length > 0 && holderRole[0]
 
       const payload = [
         {
           id: holderRoleData.id,
-          name: holderRoleData.name
-        }
-      ];
+          name: holderRoleData.name,
+        },
+      ]
 
-      await this.clientRegistrationService.createUserHolderRole(token,  keycloakDetails.keycloakUserId.toString(), payload);
-      const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER);
-      await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id);
+      await this.clientRegistrationService.createUserHolderRole(
+        token,
+        keycloakDetails.keycloakUserId.toString(),
+        payload
+      )
+      const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER)
+      await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id)
 
-      return { userId: userDetails?.id };
+      return { userId: userDetails?.id }
     } catch (error) {
-      this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async addPasskey(email: string, userInfo: AddPasskeyDetailsDto): Promise<string> {
     try {
       if (!email.toLowerCase()) {
-        throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
+        throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail)
       }
-      const checkUserDetails = await this.userRepository.getUserDetails(email.toLowerCase());
+      const checkUserDetails = await this.userRepository.getUserDetails(email.toLowerCase())
       if (!checkUserDetails) {
-        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+        throw new NotFoundException(ResponseMessages.user.error.invalidEmail)
       }
       if (!checkUserDetails.keycloakUserId) {
-        throw new ConflictException(ResponseMessages.user.error.notFound);
+        throw new ConflictException(ResponseMessages.user.error.notFound)
       }
-      if (false === checkUserDetails.isEmailVerified) {
-        throw new NotFoundException(ResponseMessages.user.error.emailNotVerified);
+      if (checkUserDetails.isEmailVerified === false) {
+        throw new NotFoundException(ResponseMessages.user.error.emailNotVerified)
       }
 
-      const decryptedPassword = await this.commonService.decryptPassword(userInfo.password);
-      const tokenResponse = await this.generateToken(email.toLowerCase(), decryptedPassword, checkUserDetails);
+      const decryptedPassword = await this.commonService.decryptPassword(userInfo.password)
+      const tokenResponse = await this.generateToken(email.toLowerCase(), decryptedPassword, checkUserDetails)
 
       if (!tokenResponse) {
-        throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);
+        throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials)
       }
 
-      const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
+      const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password)
       if (!resUser) {
-        throw new NotFoundException(ResponseMessages.user.error.invalidEmail);
+        throw new NotFoundException(ResponseMessages.user.error.invalidEmail)
       }
 
-      return ResponseMessages.user.success.updateUserProfile;
+      return ResponseMessages.user.success.updateUserProfile
     } catch (error) {
-      this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   private validateEmail(email: string): void {
     if (!validator.isEmail(email.toLowerCase())) {
-      throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail);
+      throw new UnauthorizedException(ResponseMessages.user.error.invalidEmail)
     }
   }
 
@@ -365,412 +394,425 @@ export class UserService {
    * @returns User access token details
    */
   async login(loginUserDto: LoginUserDto): Promise<ISignInUser> {
-    const { email, password, isPasskey } = loginUserDto;
+    const { email, password, isPasskey } = loginUserDto
 
     try {
-
-      this.validateEmail(email.toLowerCase());
-      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      this.validateEmail(email.toLowerCase())
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase())
       if (!userData) {
-        throw new NotFoundException(ResponseMessages.user.error.notFound);
+        throw new NotFoundException(ResponseMessages.user.error.notFound)
       }
 
       if (userData && !userData.isEmailVerified) {
-        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail)
       }
 
-      if (true === isPasskey && false === userData?.isFidoVerified) {
-        throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
+      if (isPasskey === true && userData?.isFidoVerified === false) {
+        throw new UnauthorizedException(ResponseMessages.user.error.registerFido)
       }
 
-      if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
-        const getUserDetails = await this.userRepository.getUserDetails(userData.email.toLowerCase());
-        const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
-      } else {
-
-        const decryptedPassword = await this.commonService.decryptPassword(password);
-        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);        
+      if (isPasskey === true && userData?.username && userData?.isFidoVerified === true) {
+        const getUserDetails = await this.userRepository.getUserDetails(userData.email.toLowerCase())
+        const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password)
+        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData)
       }
+      const decryptedPassword = await this.commonService.decryptPassword(password)
+      return await this.generateToken(email.toLowerCase(), decryptedPassword, userData)
     } catch (error) {
-      this.logger.error(`In Login User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In Login User : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
-
     try {
-        try {
-          const data = jwt.decode(refreshToken) as jwt.JwtPayload;
-          const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
-          const tokenResponse = await this.clientRegistrationService.getAccessToken(refreshToken, userByKeycloakId?.['clientId'], userByKeycloakId?.['clientSecret']);
-          return tokenResponse;
-        } catch (error) {
-          throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken);
-        }
-   
+      try {
+        const data = jwt.decode(refreshToken) as jwt.JwtPayload
+        const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub)
+        const tokenResponse = await this.clientRegistrationService.getAccessToken(
+          refreshToken,
+          userByKeycloakId?.clientId,
+          userByKeycloakId?.clientSecret
+        )
+        return tokenResponse
+      } catch (_error) {
+        throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken)
+      }
     } catch (error) {
-      this.logger.error(`In refreshTokenDetails : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-
+      this.logger.error(`In refreshTokenDetails : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async updateFidoVerifiedUser(email: string, isFidoVerified: boolean, password: string): Promise<boolean> {
     if (isFidoVerified) {
-      await this.userRepository.addUserPassword(email.toLowerCase(), password);
-      return true;
+      await this.userRepository.addUserPassword(email.toLowerCase(), password)
+      return true
     }
   }
 
   /**
    * Forgot password
-   * @param forgotPasswordDto 
-   * @returns 
+   * @param forgotPasswordDto
+   * @returns
    */
   async forgotPassword(forgotPasswordDto: IUserForgotPassword): Promise<IResetPasswordResponse> {
-    const { email, brandLogoUrl, platformName, endpoint } = forgotPasswordDto;
+    const { email, brandLogoUrl, platformName, endpoint } = forgotPasswordDto
     try {
-      this.validateEmail(email.toLowerCase());
-      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      this.validateEmail(email.toLowerCase())
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase())
       if (!userData) {
-        throw new NotFoundException(ResponseMessages.user.error.notFound);
+        throw new NotFoundException(ResponseMessages.user.error.notFound)
       }
 
       if (userData && !userData.isEmailVerified) {
-        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail)
       }
 
-      const token = uuidv4();
-      const expirationTime = new Date();
-      expirationTime.setHours(expirationTime.getHours() + 1); // Set expiration time to 1 hour from now
-  
-      const tokenCreated = await this.userRepository.createTokenForResetPassword(userData.id, token, expirationTime);
+      const token = uuidv4()
+      const expirationTime = new Date()
+      expirationTime.setHours(expirationTime.getHours() + 1) // Set expiration time to 1 hour from now
+
+      const tokenCreated = await this.userRepository.createTokenForResetPassword(userData.id, token, expirationTime)
 
       if (!tokenCreated) {
-        throw new InternalServerErrorException(ResponseMessages.user.error.resetPasswordLink);
+        throw new InternalServerErrorException(ResponseMessages.user.error.resetPasswordLink)
       }
 
       try {
-        await this.sendEmailForResetPassword(email, brandLogoUrl, platformName, endpoint, tokenCreated.token);
-      } catch (error) {
-        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+        await this.sendEmailForResetPassword(email, brandLogoUrl, platformName, endpoint, tokenCreated.token)
+      } catch (_error) {
+        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend)
       }
 
       return {
         id: tokenCreated.id,
-        email: userData.email
-      };
-      
+        email: userData.email,
+      }
     } catch (error) {
-      this.logger.error(`Error In forgotPassword : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error In forgotPassword : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   /**
    * Send email for token verification of reset password
-   * @param email 
-   * @param verificationCode 
-   * @returns 
+   * @param email
+   * @param verificationCode
+   * @returns
    */
-  async sendEmailForResetPassword(email: string, brandLogoUrl: string, platformName: string, endpoint: string, verificationCode: string): Promise<boolean> {
+  async sendEmailForResetPassword(
+    email: string,
+    brandLogoUrl: string,
+    platformName: string,
+    endpoint: string,
+    verificationCode: string
+  ): Promise<boolean> {
     try {
-      const platformConfigData = await this.prisma.platform_config.findMany();
+      const platformConfigData = await this.prisma.platform_config.findMany()
 
-      const urlEmailTemplate = new URLUserResetPasswordTemplate();
-      const emailData = new EmailDto();
-      emailData.emailFrom = platformConfigData[0].emailFrom;
-      emailData.emailTo = email;
+      const urlEmailTemplate = new URLUserResetPasswordTemplate()
+      const emailData = new EmailDto()
+      emailData.emailFrom = platformConfigData[0].emailFrom
+      emailData.emailTo = email
 
-      const platform = platformName || process.env.PLATFORM_NAME;
-      emailData.emailSubject = `[${platform}] Important: Password Reset Request`;
+      const platform = platformName || process.env.PLATFORM_NAME
+      emailData.emailSubject = `[${platform}] Important: Password Reset Request`
 
-      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(email, platform, brandLogoUrl, endpoint, verificationCode);
-      const isEmailSent = await sendEmail(emailData);
+      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(
+        email,
+        platform,
+        brandLogoUrl,
+        endpoint,
+        verificationCode
+      )
+      const isEmailSent = await sendEmail(emailData)
       if (isEmailSent) {
-        return isEmailSent;
-      } else {
-        throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
+        return isEmailSent
       }
+      throw new InternalServerErrorException(ResponseMessages.user.error.emailSend)
     } catch (error) {
-      this.logger.error(`Error in sendEmailForResetPassword: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in sendEmailForResetPassword: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   /**
    * Create reset password token
-   * @param resetPasswordDto 
+   * @param resetPasswordDto
    * @returns user details
    */
   async resetTokenPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
-    
-    const { email, password, token } = resetPasswordDto;
+    const { email, password, token } = resetPasswordDto
 
     try {
-      this.validateEmail(email.toLowerCase());
-      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      this.validateEmail(email.toLowerCase())
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase())
       if (!userData) {
-        throw new NotFoundException(ResponseMessages.user.error.notFound);
+        throw new NotFoundException(ResponseMessages.user.error.notFound)
       }
 
       if (userData && !userData.isEmailVerified) {
-        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
-      }
- 
-      const tokenDetails = await this.userRepository.getResetPasswordTokenDetails(userData.id, token);
-
-      if (!tokenDetails || (new Date() > tokenDetails.expiresAt)) {
-        throw new BadRequestException(ResponseMessages.user.error.invalidResetLink);
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail)
       }
 
-      const decryptedPassword = await this.commonService.decryptPassword(password);
-      try {    
-        
+      const tokenDetails = await this.userRepository.getResetPasswordTokenDetails(userData.id, token)
 
-        const authToken = await this.clientRegistrationService.getManagementToken(userData.clientId, userData.clientSecret);  
-        userData.password = decryptedPassword;
+      if (!tokenDetails || new Date() > tokenDetails.expiresAt) {
+        throw new BadRequestException(ResponseMessages.user.error.invalidResetLink)
+      }
+
+      const decryptedPassword = await this.commonService.decryptPassword(password)
+      try {
+        const authToken = await this.clientRegistrationService.getManagementToken(
+          userData.clientId,
+          userData.clientSecret
+        )
+        userData.password = decryptedPassword
         if (userData.keycloakUserId) {
-          await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken);
-        } else {          
-          const keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, authToken);
-          await this.userRepository.updateUserDetails(userData.id,
-            keycloakDetails.keycloakUserId.toString()
-          );
+          await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, authToken)
+        } else {
+          const keycloakDetails = await this.clientRegistrationService.createUser(
+            userData,
+            process.env.KEYCLOAK_REALM,
+            authToken
+          )
+          await this.userRepository.updateUserDetails(userData.id, keycloakDetails.keycloakUserId.toString())
         }
 
-        await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, password);
-
+        await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, password)
       } catch (error) {
-        this.logger.error(`Error reseting the password`, error);
-        throw new InternalServerErrorException('Error while reseting user password');
+        this.logger.error('Error reseting the password', error)
+        throw new InternalServerErrorException('Error while reseting user password')
       }
 
-      await this.userRepository.deleteResetPasswordToken(tokenDetails.id);
+      await this.userRepository.deleteResetPasswordToken(tokenDetails.id)
 
       return {
         id: userData.id,
-        email: userData.email
-      };
-      
+        email: userData.email,
+      }
     } catch (error) {
-      this.logger.error(`Error In resetTokenPassword : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error In resetTokenPassword : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   findUserByUserId(id: string): Promise<IUsersProfile> {
-    return this.userRepository.getUserById(id);
-
+    return this.userRepository.getUserById(id)
   }
 
   async resetPassword(resetPasswordDto: IUserResetPassword): Promise<IResetPasswordResponse> {
-    const { email, oldPassword, newPassword } = resetPasswordDto;
+    const { email, oldPassword, newPassword } = resetPasswordDto
 
     try {
-      this.validateEmail(email.toLowerCase());
-      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      this.validateEmail(email.toLowerCase())
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase())
       if (!userData) {
-        throw new NotFoundException(ResponseMessages.user.error.notFound);
+        throw new NotFoundException(ResponseMessages.user.error.notFound)
       }
 
       if (userData && !userData.isEmailVerified) {
-        throw new BadRequestException(ResponseMessages.user.error.verifyMail);
+        throw new BadRequestException(ResponseMessages.user.error.verifyMail)
       }
 
-      const oldDecryptedPassword = await this.commonService.decryptPassword(oldPassword);
-      const newDecryptedPassword = await this.commonService.decryptPassword(newPassword);
+      const oldDecryptedPassword = await this.commonService.decryptPassword(oldPassword)
+      const newDecryptedPassword = await this.commonService.decryptPassword(newPassword)
 
       if (oldDecryptedPassword === newDecryptedPassword) {
-        throw new BadRequestException(ResponseMessages.user.error.resetSamePassword);
+        throw new BadRequestException(ResponseMessages.user.error.resetSamePassword)
       }
 
-      const tokenResponse = await this.generateToken(email.toLowerCase(), oldDecryptedPassword, userData);
-      
+      const tokenResponse = await this.generateToken(email.toLowerCase(), oldDecryptedPassword, userData)
+
       if (tokenResponse) {
-        userData.password = newDecryptedPassword;
-        try {    
-          let keycloakDetails = null;    
-          const token = await this.clientRegistrationService.getManagementToken(userData.clientId, userData.clientSecret);  
+        userData.password = newDecryptedPassword
+        try {
+          let keycloakDetails = null
+          const token = await this.clientRegistrationService.getManagementToken(
+            userData.clientId,
+            userData.clientSecret
+          )
 
           if (userData.keycloakUserId) {
-
-            keycloakDetails = await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, token);
-            await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
-
+            keycloakDetails = await this.clientRegistrationService.resetPasswordOfUser(
+              userData,
+              process.env.KEYCLOAK_REALM,
+              token
+            )
+            await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword)
           } else {
-            keycloakDetails = await this.clientRegistrationService.createUser(userData, process.env.KEYCLOAK_REALM, token);
-            await this.userRepository.updateUserDetails(userData.id,
-              keycloakDetails.keycloakUserId.toString()
-            );
-            await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
+            keycloakDetails = await this.clientRegistrationService.createUser(
+              userData,
+              process.env.KEYCLOAK_REALM,
+              token
+            )
+            await this.userRepository.updateUserDetails(userData.id, keycloakDetails.keycloakUserId.toString())
+            await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword)
           }
 
           return {
             id: userData.id,
-            email: userData.email
-          };
-    
-        } catch (error) {
-          throw new InternalServerErrorException('Error while registering user on keycloak');
+            email: userData.email,
+          }
+        } catch (_error) {
+          throw new InternalServerErrorException('Error while registering user on keycloak')
         }
       } else {
-        throw new BadRequestException(ResponseMessages.user.error.invalidCredentials);
+        throw new BadRequestException(ResponseMessages.user.error.invalidCredentials)
       }
-
     } catch (error) {
-      this.logger.error(`In Login User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In Login User : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async generateToken(email: string, password: string, userData: user): Promise<ISignInUser> {
-
-      if (userData.keycloakUserId) {
-
-        try {
-          const tokenResponse = await this.clientRegistrationService.getUserToken(email, password, userData.clientId, userData.clientSecret);
-          tokenResponse.isRegisteredToSupabase = false;
-          return tokenResponse;
-        } catch (error) {
-          throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);
-        }
-       
-      } else {
-        const supaInstance = await this.supabaseService.getClient();  
-        const { data, error } = await supaInstance.auth.signInWithPassword({
+    if (userData.keycloakUserId) {
+      try {
+        const tokenResponse = await this.clientRegistrationService.getUserToken(
           email,
-          password
-        });
-  
-        this.logger.error(`Supa Login Error::`, JSON.stringify(error));
-  
-        if (error) {
-          throw new BadRequestException(error?.message);
-        }
-  
-        const token = data?.session;
-
-        return {
-          // eslint-disable-next-line camelcase
-          access_token: token.access_token,
-          // eslint-disable-next-line camelcase
-          token_type: token.token_type,
-          // eslint-disable-next-line camelcase
-          expires_in: token.expires_in,
-          // eslint-disable-next-line camelcase
-          expires_at: token.expires_at,
-          isRegisteredToSupabase: true
-        };
+          password,
+          userData.clientId,
+          userData.clientSecret
+        )
+        tokenResponse.isRegisteredToSupabase = false
+        return tokenResponse
+      } catch (_error) {
+        throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials)
       }
+    } else {
+      const supaInstance = await this.supabaseService.getClient()
+      const { data, error } = await supaInstance.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      this.logger.error('Supa Login Error::', JSON.stringify(error))
+
+      if (error) {
+        throw new BadRequestException(error?.message)
+      }
+
+      const token = data?.session
+
+      return {
+        access_token: token.access_token,
+
+        token_type: token.token_type,
+
+        expires_in: token.expires_in,
+
+        expires_at: token.expires_at,
+        isRegisteredToSupabase: true,
+      }
+    }
   }
 
   async getProfile(payload: { id }): Promise<IUsersProfile> {
     try {
-      const userData = await this.userRepository.getUserById(payload.id);
+      const userData = await this.userRepository.getUserById(payload.id)
 
-      if ('true' === process.env.IS_ECOSYSTEM_ENABLE) {
-        const ecosystemSettings = await this._getEcosystemConfig();
+      if (process.env.IS_ECOSYSTEM_ENABLE === 'true') {
+        const ecosystemSettings = await this._getEcosystemConfig()
         for (const setting of ecosystemSettings) {
-          userData[setting.key] = 'true' === setting.value;
+          userData[setting.key] = setting.value === 'true'
         }
       }
-    
-      return userData;
+
+      return userData
     } catch (error) {
-      this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get user: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
-  async  _getEcosystemConfig(): Promise<IEcosystemConfig[]> {
-    const pattern = { cmd: 'get-ecosystem-config-details' };
-    const payload = { };
+  async _getEcosystemConfig(): Promise<IEcosystemConfig[]> {
+    const pattern = { cmd: 'get-ecosystem-config-details' }
+    const payload = {}
 
     const getEcosystemConfigDetails = await this.userServiceProxy
       .send(pattern, payload)
       .toPromise()
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error(`catch: ${JSON.stringify(error)}`)
         throw new HttpException(
           {
             status: error.status,
-            error: error.message
+            error: error.message,
           },
           error.status
-        );
-      });
+        )
+      })
 
-    return getEcosystemConfigDetails;
+    return getEcosystemConfigDetails
   }
 
   async getPublicProfile(payload: { username }): Promise<IUsersProfile> {
     try {
-      const userProfile = await this.userRepository.getUserPublicProfile(payload.username);
+      const userProfile = await this.userRepository.getUserPublicProfile(payload.username)
 
       if (!userProfile) {
-        throw new NotFoundException(ResponseMessages.user.error.profileNotFound);
+        throw new NotFoundException(ResponseMessages.user.error.profileNotFound)
       }
 
-      return userProfile;
+      return userProfile
     } catch (error) {
-      this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get user: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async updateUserProfile(updateUserProfileDto: UpdateUserProfile): Promise<user> {
     try {
-      return this.userRepository.updateUserProfile(updateUserProfileDto);
+      return this.userRepository.updateUserProfile(updateUserProfileDto)
     } catch (error) {
-      this.logger.error(`update user profile: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`update user profile: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async findByKeycloakId(payload: { id }): Promise<object> {
     try {
-      return this.userRepository.getUserBySupabaseId(payload.id);
+      return this.userRepository.getUserBySupabaseId(payload.id)
     } catch (error) {
-      this.logger.error(`get user: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get user: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async findSupabaseUser(payload: { id }): Promise<object> {
     try {
-      return await this.userRepository.getUserBySupabaseId(payload.id);
+      return await this.userRepository.getUserBySupabaseId(payload.id)
     } catch (error) {
-      this.logger.error(`Error in findSupabaseUser: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in findSupabaseUser: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async findKeycloakUser(payload: { id }): Promise<object> {
     try {
-      return await this.userRepository.getUserByKeycloakId(payload.id);
+      return await this.userRepository.getUserByKeycloakId(payload.id)
     } catch (error) {
-      this.logger.error(`Error in findKeycloakUser: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in findKeycloakUser: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async findUserByEmail(payload: { email }): Promise<object> {
     try {
-      return await this.userRepository.findUserByEmail(payload.email);
+      return await this.userRepository.findUserByEmail(payload.email)
     } catch (error) {
-      this.logger.error(`findUserByEmail: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`findUserByEmail: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async invitations(payload: { id; status; pageNumber; pageSize; search }): Promise<IUserInvitations> {
     try {
-      const userData = await this.userRepository.getUserById(payload.id);
+      const userData = await this.userRepository.getUserById(payload.id)
       if (!userData) {
-        throw new NotFoundException(ResponseMessages.user.error.notFound);
+        throw new NotFoundException(ResponseMessages.user.error.notFound)
       }
 
       const invitationsData = await this.getOrgInvitations(
@@ -779,16 +821,15 @@ export class UserService {
         payload.pageNumber,
         payload.pageSize,
         payload.search
-        );
-       
-        const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData['invitations']);
-        invitationsData['invitations'] = invitations;
+      )
 
-      return invitationsData;
-      
+      const invitations: OrgInvitations[] = await this.updateOrgInvitations(invitationsData.invitations)
+      invitationsData.invitations = invitations
+
+      return invitationsData
     } catch (error) {
-      this.logger.error(`Error in get invitations: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in get invitations: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -799,41 +840,39 @@ export class UserService {
     pageSize: number,
     search = ''
   ): Promise<IUserInvitations> {
-    const pattern = { cmd: 'fetch-user-invitations' };
+    const pattern = { cmd: 'fetch-user-invitations' }
     const payload = {
       email,
       status,
       pageNumber,
       pageSize,
-      search
-    };
+      search,
+    }
 
     const invitationsData = await this.natsClient
       .send<IUserInvitations>(this.userServiceProxy, pattern, payload)
-      
+
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error(`catch: ${JSON.stringify(error)}`)
         throw new HttpException(
           {
             status: error.status,
-            error: error.message
+            error: error.message,
           },
           error.status
-        );
-      });
+        )
+      })
 
-    return invitationsData;
+    return invitationsData
   }
 
   async updateOrgInvitations(invitations: OrgInvitations[]): Promise<OrgInvitations[]> {
-
-    
-    const updatedInvitations = [];
+    const updatedInvitations = []
 
     for (const invitation of invitations) {
-      const { status, id, organisation, orgId, userId, orgRoles } = invitation;
+      const { status, id, organisation, orgId, userId, orgRoles } = invitation
 
-      const roles = await this.orgRoleService.getOrgRolesByIds(orgRoles as string[]);
+      const roles = await this.orgRoleService.getOrgRolesByIds(orgRoles as string[])
 
       updatedInvitations.push({
         orgRoles: roles,
@@ -841,11 +880,11 @@ export class UserService {
         id,
         orgId,
         organisation,
-        userId
-      });
+        userId,
+      })
     }
 
-    return updatedInvitations;
+    return updatedInvitations
   }
 
   /**
@@ -854,43 +893,46 @@ export class UserService {
    * @param userId
    * @returns Organization invitation status
    */
-  async acceptRejectInvitations(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<IUserInvitations> {
+  async acceptRejectInvitations(
+    acceptRejectInvitation: AcceptRejectInvitationDto,
+    userId: string
+  ): Promise<IUserInvitations> {
     try {
-      const userData = await this.userRepository.getUserById(userId);
-     
+      const userData = await this.userRepository.getUserById(userId)
+
       if (Invitation.ACCEPTED === acceptRejectInvitation.status) {
-        const payload = {userId};
-        const TotalOrgs = await this._getTotalOrgCount(payload);
-  
+        const payload = { userId }
+        const TotalOrgs = await this._getTotalOrgCount(payload)
+
         if (TotalOrgs >= toNumber(`${process.env.MAX_ORG_LIMIT}`)) {
-        throw new BadRequestException(ResponseMessages.user.error.userOrgsLimit);
-         }
+          throw new BadRequestException(ResponseMessages.user.error.userOrgsLimit)
+        }
       }
-      return this.fetchInvitationsStatus(acceptRejectInvitation, userData.keycloakUserId, userData.email, userId);
+      return this.fetchInvitationsStatus(acceptRejectInvitation, userData.keycloakUserId, userData.email, userId)
     } catch (error) {
-      this.logger.error(`acceptRejectInvitations: ${error}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`acceptRejectInvitations: ${error}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
-  async  _getTotalOrgCount(payload): Promise<number> {
-    const pattern = { cmd: 'get-organizations-count' };
+  async _getTotalOrgCount(payload): Promise<number> {
+    const pattern = { cmd: 'get-organizations-count' }
 
     const getOrganizationCount = await this.natsClient
       .send<number>(this.userServiceProxy, pattern, payload)
-      
+
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error(`catch: ${JSON.stringify(error)}`)
         throw new HttpException(
           {
             status: error.status,
-            error: error.message
+            error: error.message,
           },
           error.status
-        );
-      });
+        )
+      })
 
-    return getOrganizationCount;
+    return getOrganizationCount
   }
 
   /**
@@ -907,31 +949,31 @@ export class UserService {
     userId: string
   ): Promise<IUserInvitations> {
     try {
-      const pattern = { cmd: 'update-invitation-status' };
+      const pattern = { cmd: 'update-invitation-status' }
 
-      const { orgId, invitationId, status } = acceptRejectInvitation;
+      const { orgId, invitationId, status } = acceptRejectInvitation
 
-      const payload = { userId, keycloakUserId, orgId, invitationId, status, email };
+      const payload = { userId, keycloakUserId, orgId, invitationId, status, email }
 
       const invitationsData = await this.natsClient
         .send<IUserInvitations>(this.userServiceProxy, pattern, payload)
-        
+
         .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
+          this.logger.error(`catch: ${JSON.stringify(error)}`)
           throw new HttpException(
             {
               statusCode: error.statusCode,
               error: error.error,
-              message: error.message
+              message: error.message,
             },
             error.error
-          );
-        });
+          )
+        })
 
-      return invitationsData;
+      return invitationsData
     } catch (error) {
-      this.logger.error(`Error In fetchInvitationsStatus: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error In fetchInvitationsStatus: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -942,26 +984,25 @@ export class UserService {
    */
   async getOrgUsers(orgId: string, pageNumber: number, pageSize: number, search: string): Promise<IOrgUsers> {
     try {
-  
       const query = {
         userOrgRoles: {
-          some: { orgId }
+          some: { orgId },
         },
         OR: [
           { firstName: { contains: search, mode: 'insensitive' } },
           { lastName: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } }
-        ]
-      };
+          { email: { contains: search, mode: 'insensitive' } },
+        ],
+      }
 
       const filterOptions = {
-        orgId
-      };
+        orgId,
+      }
 
-      return this.userRepository.findOrgUsers(query, pageNumber, pageSize, filterOptions);
+      return this.userRepository.findOrgUsers(query, pageNumber, pageSize, filterOptions)
     } catch (error) {
-      this.logger.error(`get Org Users: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get Org Users: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
@@ -976,162 +1017,174 @@ export class UserService {
         OR: [
           { firstName: { contains: search, mode: 'insensitive' } },
           { lastName: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } }
-        ]
-      };
+          { email: { contains: search, mode: 'insensitive' } },
+        ],
+      }
 
-      return this.userRepository.findUsers(query, pageNumber, pageSize);
+      return this.userRepository.findUsers(query, pageNumber, pageSize)
     } catch (error) {
-      this.logger.error(`get Users: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`get Users: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async checkUserExist(email: string): Promise<ICheckUserDetails> {
     try {
-      const userDetails = await this.userRepository.checkUniqueUserExist(email.toLowerCase());
-     let userVerificationDetails;
+      const userDetails = await this.userRepository.checkUniqueUserExist(email.toLowerCase())
+      // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
+      let userVerificationDetails
       if (userDetails) {
         userVerificationDetails = {
           isEmailVerified: userDetails.isEmailVerified,
           isFidoVerified: userDetails.isFidoVerified,
-          isRegistrationCompleted: null !== userDetails.keycloakUserId && undefined !== userDetails.keycloakUserId,
-          message:'',
-          userId: userDetails.id
-        };
-
+          isRegistrationCompleted: userDetails.keycloakUserId !== null && undefined !== userDetails.keycloakUserId,
+          message: '',
+          userId: userDetails.id,
+        }
       }
       if (userDetails && !userDetails.isEmailVerified) {
-        userVerificationDetails.message = ResponseMessages.user.error.verificationAlreadySent;
-        return userVerificationDetails;
-      } else if (userDetails && userDetails.keycloakUserId) {
-        userVerificationDetails.message = ResponseMessages.user.error.exists;
-        return userVerificationDetails;
-      } else if (userDetails && !userDetails.keycloakUserId && userDetails.supabaseUserId) {
-        userVerificationDetails.message = ResponseMessages.user.error.exists;
-        return userVerificationDetails;
-      } else if (null === userDetails) {
-         return {
-          isRegistrationCompleted: false,
-           isEmailVerified: false,
-           userId:null,
-           message: ResponseMessages.user.error.notFound
-        };
-      } else {
-        return userVerificationDetails;
+        userVerificationDetails.message = ResponseMessages.user.error.verificationAlreadySent
+        return userVerificationDetails
       }
+      if (userDetails?.keycloakUserId) {
+        userVerificationDetails.message = ResponseMessages.user.error.exists
+        return userVerificationDetails
+      }
+      if (userDetails && !userDetails.keycloakUserId && userDetails.supabaseUserId) {
+        userVerificationDetails.message = ResponseMessages.user.error.exists
+        return userVerificationDetails
+      }
+      if (userDetails === null) {
+        return {
+          isRegistrationCompleted: false,
+          isEmailVerified: false,
+          userId: null,
+          message: ResponseMessages.user.error.notFound,
+        }
+      }
+      return userVerificationDetails
     } catch (error) {
-      this.logger.error(`In check User : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In check User : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getUserActivity(userId: string, limit: number): Promise<IUsersActivity[]> {
     try {
-      return this.userActivityService.getUserActivity(userId, limit);
+      return this.userActivityService.getUserActivity(userId, limit)
     } catch (error) {
-      this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`In getUserActivity : ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
-  // eslint-disable-next-line camelcase
   async updatePlatformSettings(platformSettings: PlatformSettings): Promise<string> {
     try {
-      const platformConfigSettings = await this.userRepository.updatePlatformSettings(platformSettings);
+      const platformConfigSettings = await this.userRepository.updatePlatformSettings(platformSettings)
 
       if (!platformConfigSettings) {
-        throw new BadRequestException(ResponseMessages.user.error.notUpdatePlatformSettings);
+        throw new BadRequestException(ResponseMessages.user.error.notUpdatePlatformSettings)
       }
 
-      return ResponseMessages.user.success.platformSettings;
+      return ResponseMessages.user.success.platformSettings
     } catch (error) {
-      this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`update platform settings: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
   async getPlatformSettings(): Promise<object> {
     try {
-      const platformSettings = {};
-      const platformConfigSettings = await this.userRepository.getPlatformSettings();
+      const platformSettings = {}
+      const platformConfigSettings = await this.userRepository.getPlatformSettings()
 
       if (!platformConfigSettings) {
-        throw new BadRequestException(ResponseMessages.user.error.platformSetttingsNotFound);
+        throw new BadRequestException(ResponseMessages.user.error.platformSetttingsNotFound)
       }
 
-      platformSettings['platform_config'] = platformConfigSettings;
+      platformSettings['platform_config'] = platformConfigSettings
 
-      return platformSettings;
+      return platformSettings
     } catch (error) {
-      this.logger.error(`update platform settings: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`update platform settings: ${JSON.stringify(error)}`)
+      throw new RpcException(error.response ? error.response : error)
     }
   }
 
-  async updateOrgDeletedActivity(orgId: string, userId: string, deletedBy: string, recordType: RecordType, userEmail: string, txnMetadata: object): Promise<IUserDeletedActivity> {
+  async updateOrgDeletedActivity(
+    orgId: string,
+    userId: string,
+    deletedBy: string,
+    recordType: RecordType,
+    userEmail: string,
+    txnMetadata: object
+  ): Promise<IUserDeletedActivity> {
     try {
-      return await this.userRepository.updateOrgDeletedActivity(orgId, userId, deletedBy, recordType, userEmail, txnMetadata);
+      return await this.userRepository.updateOrgDeletedActivity(
+        orgId,
+        userId,
+        deletedBy,
+        recordType,
+        userEmail,
+        txnMetadata
+      )
     } catch (error) {
-      this.logger.error(`In updateOrgDeletedActivity : ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`In updateOrgDeletedActivity : ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
   async getUserDetails(userId: string): Promise<string> {
     try {
-      const getUserDetails = await this.userRepository.getUserDetailsByUserId(userId);
-      const userEmail = getUserDetails.email;
-      return userEmail;
+      const getUserDetails = await this.userRepository.getUserDetailsByUserId(userId)
+      const userEmail = getUserDetails.email
+      return userEmail
     } catch (error) {
-      this.logger.error(`In get user details by user Id : ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`In get user details by user Id : ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
   async getUserKeycloakIdByEmail(userEmails: string[]): Promise<UserKeycloakId[]> {
     try {
-     
-      const getkeycloakUserIds = await this.userRepository.getUserKeycloak(userEmails);
-      return getkeycloakUserIds;
+      const getkeycloakUserIds = await this.userRepository.getUserKeycloak(userEmails)
+      return getkeycloakUserIds
     } catch (error) {
-      this.logger.error(`In getUserKeycloakIdByEmail : ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`In getUserKeycloakIdByEmail : ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
   async getUserByUserIdInKeycloak(email: string): Promise<string> {
     try {
-     
-      const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+      const userData = await this.userRepository.checkUserExist(email.toLowerCase())
 
       if (!userData) {
-        throw new NotFoundException(ResponseMessages.user.error.notFound);
+        throw new NotFoundException(ResponseMessages.user.error.notFound)
       }
 
-      const token = await this.clientRegistrationService.getManagementToken(userData?.clientId, userData?.clientSecret);
-      const getClientData = await this.clientRegistrationService.getUserInfoByUserId(userData?.keycloakUserId, token);
+      const token = await this.clientRegistrationService.getManagementToken(userData?.clientId, userData?.clientSecret)
+      const getClientData = await this.clientRegistrationService.getUserInfoByUserId(userData?.keycloakUserId, token)
 
-      return getClientData;
+      return getClientData
     } catch (error) {
-      this.logger.error(`In getUserByUserIdInKeycloak : ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`In getUserByUserIdInKeycloak : ${JSON.stringify(error)}`)
+      throw error
     }
   }
 
-   // eslint-disable-next-line camelcase
-   async getuserOrganizationByUserId(userId: string): Promise<user_org_roles[]> {
+  async getuserOrganizationByUserId(userId: string): Promise<user_org_roles[]> {
     try {
-        const getOrganizationDetails = await this.userRepository.handleGetUserOrganizations(userId);
+      const getOrganizationDetails = await this.userRepository.handleGetUserOrganizations(userId)
 
-        if (!getOrganizationDetails) {
-            throw new NotFoundException(ResponseMessages.ledger.error.NotFound);
-        }
+      if (!getOrganizationDetails) {
+        throw new NotFoundException(ResponseMessages.ledger.error.NotFound)
+      }
 
-        return getOrganizationDetails;
+      return getOrganizationDetails
     } catch (error) {
-        this.logger.error(`Error in getuserOrganizationByUserId: ${error}`);
-        throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`Error in getuserOrganizationByUserId: ${error}`)
+      throw new RpcException(error.response ? error.response : error)
     }
-}
+  }
 }

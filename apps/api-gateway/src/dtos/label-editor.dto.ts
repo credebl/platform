@@ -1,12 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class LabelEditorDto {
-    @ApiProperty()
-    labelId : number;
+  @ApiProperty()
+  labelId: number
 
-    @ApiProperty()
-    labelName?: string;
+  @ApiProperty()
+  labelName?: string
 
-    @ApiProperty()
-    description?: string;
+  @ApiProperty()
+  description?: string
 }

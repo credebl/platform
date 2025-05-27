@@ -3,9 +3,7 @@
   "main": "src/index",
   "types": "src/index",
   "version": "0.0.1",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "pnpm run clean && pnpm run compile",
     "clean": "rimraf ../../dist/libs/aws",

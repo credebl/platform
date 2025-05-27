@@ -1,12 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger'
 
 export class PrintableFormDto {
-    @ApiProperty()
-    credDefId: string;
+  @ApiProperty()
+  credDefId: string
 
-    @ApiProperty()
-    schemaId: string;
+  @ApiProperty()
+  schemaId: string
 
-    @ApiProperty()
-    theirDid: string;
+  @ApiProperty()
+  theirDid: string
 }

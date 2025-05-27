@@ -1,2 +1,2 @@
-export * from './keycloak-url.module';
-export * from './keycloak-url.service';
+export * from './keycloak-url.module'
+export * from './keycloak-url.service'

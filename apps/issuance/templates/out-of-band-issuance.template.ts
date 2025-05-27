@@ -6,10 +6,9 @@ export class OutOfBandIssuance {
     platformName?: string,
     organizationLogoUrl?: string
   ): string {
-    
-    const logoUrl = organizationLogoUrl || process.env.BRAND_LOGO;
-    const platform = platformName || process.env.PLATFORM_NAME;
-    const poweredBy = platformName || process.env.POWERED_BY;
+    const logoUrl = organizationLogoUrl || process.env.BRAND_LOGO
+    const platform = platformName || process.env.PLATFORM_NAME
+    const poweredBy = platformName || process.env.POWERED_BY
 
     try {
       return `<!DOCTYPE html>
@@ -94,7 +93,7 @@ export class OutOfBandIssuance {
               </div>
           </div>
       </body>
-      </html>`;
-    } catch (error) {}
+      </html>`
+    } catch (_error) {}
   }
 }

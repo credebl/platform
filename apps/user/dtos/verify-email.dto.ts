@@ -1,4 +1,4 @@
 export class VerifyEmailTokenDto {
-    email: string;
-    verificationCode: string;
+  email: string
+  verificationCode: string
 }

@@ -1,7 +1,6 @@
 export class OnBoardVerificationRequest {
-
   public getOnBoardUserRequest(name: string, email: string): string {
-    const year: number = new Date().getFullYear();
+    const year: number = new Date().getFullYear()
 
     try {
       return `<!DOCTYPE html>
@@ -82,8 +81,7 @@ export class OnBoardVerificationRequest {
                   </div>
                 </div>
               </body>
-            </html>`;
-    } catch (error) {
-    }
+            </html>`
+    } catch (_error) {}
   }
 }

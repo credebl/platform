@@ -1,12 +1,6 @@
 export class DeleteOrgInvitationsEmail {
-
-    public sendDeleteOrgMemberEmailTemplate(
-        email: string,
-        orgName: string,
-        orgRoles: string[]
-    ): string {
-          
-    const orgRoleNames = 0 < orgRoles.length ? orgRoles.join(', ') : '';
+  public sendDeleteOrgMemberEmailTemplate(email: string, orgName: string, orgRoles: string[]): string {
+    const orgRoleNames = orgRoles.length > 0 ? orgRoles.join(', ') : ''
     return `<!DOCTYPE html>
         <html lang="en">
         
@@ -43,9 +37,6 @@ export class DeleteOrgInvitationsEmail {
       </div>
         </body>
         
-        </html>`;
-
-    }
-
-
+        </html>`
+  }
 }

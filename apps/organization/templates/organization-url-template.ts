@@ -1,21 +1,24 @@
-import * as url from 'url';
+import * as url from 'url'
 
 export class URLOrganizationEmailTemplate {
+  public getOrganizationURLTemplate(orgName: string, email: string, verificationCode: string, type: string): string {
+    const endpoint = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}`
+    const year: number = new Date().getFullYear()
+    let apiUrl: url.UrlWithStringQuery
 
-    public getOrganizationURLTemplate(orgName: string, email: string, verificationCode: string, type: string): string {
-        const endpoint = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}`;
-        const year: number = new Date().getFullYear();
-        let apiUrl;
+    if (type === 'ADMIN') {
+      apiUrl = url.parse(
+        `${endpoint}/email/tenant/verify?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
+      )
+    } else {
+      apiUrl = url.parse(
+        `${endpoint}/email/non-admin-user/verify?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
+      )
+    }
 
-        if ('ADMIN' === type) {
-            apiUrl = url.parse(`${endpoint}/email/tenant/verify?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`);
-        } else {
-            apiUrl = url.parse(`${endpoint}/email/non-admin-user/verify?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`);
-        }
-
-        const validUrl = apiUrl.href.replace('/:', ':');
-        try {
-            return `<!DOCTYPE html>
+    const validUrl = apiUrl.href.replace('/:', ':')
+    try {
+      return `<!DOCTYPE html>
             <html lang="en">
             
             <head>
@@ -69,10 +72,7 @@ export class URLOrganizationEmailTemplate {
                     </div>
                 </div>
             </body>
-            </html>`;
-
-        } catch (error) {
-        }
-    }
+            </html>`
+    } catch (_error) {}
+  }
 }
-

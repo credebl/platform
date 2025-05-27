@@ -1,150 +1,150 @@
+import { ApiPropertyOptional } from '@nestjs/swagger'
+import { Type } from 'class-transformer'
 import {
-  IsString,
-  IsBoolean,
   IsArray,
-  IsOptional,
+  IsBoolean,
+  IsISO8601,
   IsNumber,
   IsObject,
-  ValidateNested,
+  IsOptional,
+  IsString,
   IsUrl,
-  IsISO8601
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+  ValidateNested,
+} from 'class-validator'
 
 class Thread {
   @IsString()
   @IsOptional()
-  pthid: string;
+  pthid: string
 
   @IsString()
   @IsOptional()
-  thid: string;
+  thid: string
 }
 
 class Message {
   @IsString()
   @IsOptional()
-  '@type': string;
+  '@type': string
 
   @IsString()
   @IsOptional()
-  '@id': string;
+  '@id': string
 
   @ValidateNested()
   @IsOptional()
   @Type(() => Thread)
-  '~thread': Thread;
+  '~thread': Thread
 
   @IsString()
   @IsOptional()
-  messageType: string;
+  messageType: string
 }
 
 class Data {
   @IsOptional()
   @IsString()
-  base64?: string;
+  base64?: string
 
   @IsOptional()
   @IsString()
-  json?: string;
+  json?: string
 
   @IsOptional()
   @IsArray()
   @IsUrl({}, { each: true })
-  links?: string[];
+  links?: string[]
 
   @IsOptional()
   @IsObject()
   jws?: {
-    header: object;
-    signature: string;
-    protected: string;
-  };
+    header: object
+    signature: string
+    protected: string
+  }
 
   @IsOptional()
   @IsString()
-  sha256?: string;
+  sha256?: string
 }
 
 class AppendedAttachment {
   @IsString()
   @IsOptional()
-  id: string;
+  id: string
 
   @IsString()
   @IsOptional()
-  description: string;
+  description: string
 
   @IsString()
   @IsOptional()
-  filename: string;
+  filename: string
 
   @IsString()
   @IsOptional()
-  mimeType: string;
+  mimeType: string
 
   @IsISO8601()
   @IsOptional()
-  lastmodTime: string;
+  lastmodTime: string
 
   @IsNumber()
   @IsOptional()
-  byteCount: number;
+  byteCount: number
 
   @ValidateNested()
   @IsOptional()
   @Type(() => Data)
-  data: Data;
+  data: Data
 }
 
 export class CreateConnectionDto {
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  label: string;
+  label: string
 
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  alias: string;
+  alias: string
 
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  imageUrl: string;
+  imageUrl: string
 
   @ApiPropertyOptional({ example: true })
   @IsBoolean()
   @IsOptional()
-  multiUseInvitation: boolean;
+  multiUseInvitation: boolean
 
   @ApiPropertyOptional({ example: true })
   @IsBoolean()
   @IsOptional()
-  autoAcceptConnection: boolean;
+  autoAcceptConnection: boolean
 
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  goalCode: string;
+  goalCode: string
 
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  goal: string;
+  goal: string
 
   @ApiPropertyOptional({ example: true })
   @IsBoolean()
   @IsOptional()
-  handshake: boolean;
+  handshake: boolean
 
   @ApiPropertyOptional({ example: ['https://didcomm.org/didexchange/1.x'] })
   @IsOptional()
   @IsArray()
   @IsUrl({}, { each: true })
-  handshakeProtocols: string[];
+  handshakeProtocols: string[]
 
   @ApiPropertyOptional({
     example: [
@@ -153,20 +153,20 @@ export class CreateConnectionDto {
         '@id': 'string',
         '~thread': {
           pthid: 'string',
-          thid: 'string'
+          thid: 'string',
         },
         messageType: 'string',
         additionalProp1: 'string',
         additionalProp2: 'string',
-        additionalProp3: 'string'
-      }
-    ]
+        additionalProp3: 'string',
+      },
+    ],
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => Message)
-  messages: Message[];
+  messages: Message[]
 
   @ApiPropertyOptional({
     example: [
@@ -184,29 +184,29 @@ export class CreateConnectionDto {
           jws: {
             header: {},
             signature: 'string',
-            protected: 'string'
+            protected: 'string',
           },
-          sha256: 'string'
-        }
-      }
-    ]
+          sha256: 'string',
+        },
+      },
+    ],
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => AppendedAttachment)
-  appendedAttachments: AppendedAttachment[];
+  appendedAttachments: AppendedAttachment[]
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  invitationDid: string;
+  invitationDid: string
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  recipientKey: string;
+  recipientKey: string
 
-  userId: string;
-  email: string;
+  userId: string
+  email: string
 }

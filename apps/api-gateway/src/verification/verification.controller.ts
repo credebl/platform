@@ -1,57 +1,58 @@
+import { TrimStringParamPipe } from '@credebl/common/cast.helper'
+import type IResponseType from '@credebl/common/interfaces/response.interface'
+import type { IResponse } from '@credebl/common/interfaces/response.interface'
+import { ResponseMessages } from '@credebl/common/response-messages'
+import { Validator } from '@credebl/common/validator'
+import type { IUserRequest } from '@credebl/user-request/user-request.interface'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Logger,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  Res,
+  UseFilters,
+  UseGuards,
+  Version,
+} from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-param-reassign */
 /* eslint-disable camelcase */
 import {
   ApiBearerAuth,
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiUnauthorizedResponse,
-  ApiForbiddenResponse,
   ApiBody,
+  ApiExcludeEndpoint,
+  ApiForbiddenResponse,
+  ApiOperation,
   ApiQuery,
-  ApiExcludeEndpoint
-} from '@nestjs/swagger';
-import {
-  Controller,
-  Logger,
-  Post,
-  Body,
-  Get,
-  Query,
-  HttpStatus,
-  Res,
-  UseGuards,
-  Param,
-  UseFilters,
-  BadRequestException,
-  ParseUUIDPipe,
-  Delete,
-  Version
-} from '@nestjs/common';
-import { ApiResponseDto } from '../dtos/apiResponse.dto';
-import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
-import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { SendProofRequestPayload, RequestProofDtoV1, RequestProofDtoV2 } from './dto/request-proof.dto';
-import { VerificationService } from './verification.service';
-import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
-import { Response } from 'express';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from 'libs/org-roles/enums';
-import { AuthGuard } from '@nestjs/passport';
-import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { User } from '../authz/decorators/user.decorator';
-import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
-import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
-import { API_Version, ProofRequestType, SortFields } from './enum/verification.enum';
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { user } from '@prisma/client';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
-import { Validator } from '@credebl/common/validator';
+import type { user } from '@prisma/client'
+import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler'
+import type { Response } from 'express'
+import { OrgRoles } from 'libs/org-roles/enums'
+import { Roles } from '../authz/decorators/roles.decorator'
+import { User } from '../authz/decorators/user.decorator'
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard'
+import { ApiResponseDto } from '../dtos/apiResponse.dto'
+import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto'
+import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto'
+import type { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto'
+import { RequestProofDtoV1, RequestProofDtoV2, SendProofRequestPayload } from './dto/request-proof.dto'
+import type { WebhookPresentationProofDto } from './dto/webhook-proof.dto'
+import { API_Version, ProofRequestType, SortFields } from './enum/verification.enum'
+import type { IProofRequestSearchCriteria } from './interfaces/verification.interface'
+import type { VerificationService } from './verification.service'
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -59,7 +60,7 @@ import { Validator } from '@credebl/common/validator';
 export class VerificationController {
   constructor(private readonly verificationService: VerificationService) {}
 
-  private readonly logger = new Logger('VerificationController');
+  private readonly logger = new Logger('VerificationController')
 
   /**
    * Get verified proof details
@@ -70,7 +71,7 @@ export class VerificationController {
   @Get('/orgs/:orgId/verified-proofs/:proofId')
   @ApiOperation({
     summary: 'Get verified proof details',
-    description: 'Retrieve the details of a verified proof for a specific organization.'
+    description: 'Retrieve the details of a verified proof for a specific organization.',
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -84,13 +85,13 @@ export class VerificationController {
     @Param('proofId') proofId: string,
     @Param('orgId') orgId: string
   ): Promise<Response> {
-    const sendProofRequest = await this.verificationService.getVerifiedProofDetails(proofId, orgId, user);
+    const sendProofRequest = await this.verificationService.getVerifiedProofDetails(proofId, orgId, user)
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.verification.success.verifiedProofDetails,
-      data: sendProofRequest
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      data: sendProofRequest,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 
   /**
@@ -102,7 +103,7 @@ export class VerificationController {
   @Get('/orgs/:orgId/proofs/:proofId')
   @ApiOperation({
     summary: 'Get proof presentation by proof Id',
-    description: 'Retrieve the details of a proof presentation by its proof ID for a specific organization.'
+    description: 'Retrieve the details of a proof presentation by its proof ID for a specific organization.',
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -118,8 +119,8 @@ export class VerificationController {
       TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.verification.error.invalidProofId);
-        }
+          throw new BadRequestException(ResponseMessages.verification.error.invalidProofId)
+        },
       })
     )
     proofId: string,
@@ -127,19 +128,19 @@ export class VerificationController {
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-        }
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId)
+        },
       })
     )
     orgId: string
   ): Promise<Response> {
-    const getProofPresentationById = await this.verificationService.getProofPresentationById(proofId, orgId, user);
+    const getProofPresentationById = await this.verificationService.getProofPresentationById(proofId, orgId, user)
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.verification.success.fetch,
-      data: getProofPresentationById
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      data: getProofPresentationById,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 
   /**
@@ -151,7 +152,7 @@ export class VerificationController {
   @Get('/orgs/proofs')
   @ApiOperation({
     summary: 'Get verified proof presentation details by issuer Id',
-    description: 'Retrieve the details of a proof presentation by its issuer Id'
+    description: 'Retrieve the details of a proof presentation by its issuer Id',
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -163,14 +164,14 @@ export class VerificationController {
     @User() user: IUserRequest,
     @Query('issuerId') issuerId: string
   ): Promise<Response> {
-    const verifiedProofDetails = await this.verificationService.getPresentationDetailsByIssuerId(issuerId, user);
+    const verifiedProofDetails = await this.verificationService.getPresentationDetailsByIssuerId(issuerId, user)
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.verification.success.fetch,
-      data: verifiedProofDetails
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      data: verifiedProofDetails,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 
   /**
@@ -182,12 +183,12 @@ export class VerificationController {
   @Get('/orgs/:orgId/proofs')
   @ApiOperation({
     summary: 'Get all proof presentations by orgId',
-    description: 'Retrieve all proof presentations for a the organization. Supports pagination and sorting.'
+    description: 'Retrieve all proof presentations for a the organization. Supports pagination and sorting.',
   })
   @ApiQuery({
     name: 'sortField',
     enum: SortFields,
-    required: false
+    required: false,
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -203,32 +204,32 @@ export class VerificationController {
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for orgId`);
-        }
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId)
+        },
       })
     )
     orgId: string
   ): Promise<Response> {
-    const { pageSize, search, pageNumber, sortField, sortBy } = getAllProofRequests;
+    const { pageSize, search, pageNumber, sortField, sortBy } = getAllProofRequests
     const proofRequestsSearchCriteria: IProofRequestSearchCriteria = {
       pageNumber,
       search,
       pageSize,
       sortField,
-      sortBy
-    };
+      sortBy,
+    }
 
     const proofPresentationDetails = await this.verificationService.getProofPresentations(
       proofRequestsSearchCriteria,
       user,
       orgId
-    );
+    )
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.verification.success.fetch,
-      data: proofPresentationDetails
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      data: proofPresentationDetails,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 
   /**
@@ -239,7 +240,7 @@ export class VerificationController {
   @Post('/orgs/:orgId/proofs')
   @ApiOperation({
     summary: 'Sends a proof request',
-    description: 'Send a proof request to a specific organization.'
+    description: 'Send a proof request to a specific organization.',
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -247,7 +248,7 @@ export class VerificationController {
   @ApiBody({ type: RequestProofDtoV1 })
   @ApiQuery({
     name: 'requestType',
-    enum: ProofRequestType
+    enum: ProofRequestType,
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -259,8 +260,8 @@ export class VerificationController {
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for orgId`);
-        }
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId)
+        },
       })
     )
     orgId: string,
@@ -268,27 +269,27 @@ export class VerificationController {
     @Query('requestType') requestType: ProofRequestType = ProofRequestType.INDY
   ): Promise<Response> {
     if (requestType === ProofRequestType.INDY && !requestProof.proofFormats) {
-      throw new BadRequestException(`type: ${requestType} requires proofFormats`);
+      throw new BadRequestException(`type: ${requestType} requires proofFormats`)
     }
 
     if (requestType === ProofRequestType.PRESENTATIONEXCHANGE && !requestProof.presentationDefinition) {
-      throw new BadRequestException(`type: ${requestType} requires presentationDefinition`);
+      throw new BadRequestException(`type: ${requestType} requires presentationDefinition`)
     }
 
     if (requestType === ProofRequestType.INDY) {
-      Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes);
+      Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes)
     }
-    const version = API_Version.version_neutral;
-    requestProof.version = version;
-    requestProof.orgId = orgId;
-    requestProof.type = requestType;
-    const proofData = await this.verificationService.sendProofRequest(requestProof, user);
+    const version = API_Version.version_neutral
+    requestProof.version = version
+    requestProof.orgId = orgId
+    requestProof.type = requestType
+    const proofData = await this.verificationService.sendProofRequest(requestProof, user)
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.verification.success.send,
-      data: proofData
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+      data: proofData,
+    }
+    return res.status(HttpStatus.CREATED).json(finalResponse)
   }
 
   /**
@@ -300,7 +301,7 @@ export class VerificationController {
   @Post('/orgs/:orgId/proofs')
   @ApiOperation({
     summary: 'Sends a proof request',
-    description: 'Send a proof request on multiple connections for a the organization.'
+    description: 'Send a proof request on multiple connections for a the organization.',
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -308,7 +309,7 @@ export class VerificationController {
   @ApiBody({ type: RequestProofDtoV2 })
   @ApiQuery({
     name: 'requestType',
-    enum: ProofRequestType
+    enum: ProofRequestType,
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -320,8 +321,8 @@ export class VerificationController {
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for orgId`);
-        }
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId)
+        },
       })
     )
     orgId: string,
@@ -329,28 +330,28 @@ export class VerificationController {
     @Query('requestType') requestTypeV1: ProofRequestType = ProofRequestType.INDY
   ): Promise<Response> {
     if (requestTypeV1 === ProofRequestType.INDY && !requestProof.proofFormats) {
-      throw new BadRequestException(`type: ${requestTypeV1} requires proofFormats`);
+      throw new BadRequestException(`type: ${requestTypeV1} requires proofFormats`)
     }
 
     if (requestTypeV1 === ProofRequestType.PRESENTATIONEXCHANGE && !requestProof.presentationDefinition) {
-      throw new BadRequestException(`type: ${requestTypeV1} requires presentationDefinition`);
+      throw new BadRequestException(`type: ${requestTypeV1} requires presentationDefinition`)
     }
 
     if (requestTypeV1 === ProofRequestType.INDY) {
-      Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes);
+      Validator.validateIndyProofAttributes(requestProof.proofFormats.indy.attributes)
     }
 
-    const version = API_Version.VERSION_1;
-    requestProof.version = version;
-    requestProof.orgId = orgId;
-    requestProof.type = requestTypeV1;
-    const proofData = await this.verificationService.sendProofRequest(requestProof, user);
+    const version = API_Version.VERSION_1
+    requestProof.version = version
+    requestProof.orgId = orgId
+    requestProof.type = requestTypeV1
+    const proofData = await this.verificationService.sendProofRequest(requestProof, user)
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.verification.success.send,
-      data: proofData
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+      data: proofData,
+    }
+    return res.status(HttpStatus.CREATED).json(finalResponse)
   }
 
   /**
@@ -362,7 +363,7 @@ export class VerificationController {
   @Post('/orgs/:orgId/proofs/:proofId/verify')
   @ApiOperation({
     summary: 'Verify presentation',
-    description: 'Verify the proof presentation for a the organization.'
+    description: 'Verify the proof presentation for a the organization.',
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -376,13 +377,13 @@ export class VerificationController {
     @Param('proofId') proofId: string,
     @Param('orgId') orgId: string
   ): Promise<Response> {
-    const verifyData = await this.verificationService.verifyPresentation(proofId, orgId, user);
+    const verifyData = await this.verificationService.verifyPresentation(proofId, orgId, user)
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.verification.success.verified,
-      data: verifyData
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+      data: verifyData,
+    }
+    return res.status(HttpStatus.CREATED).json(finalResponse)
   }
 
   /**
@@ -393,7 +394,7 @@ export class VerificationController {
   @Post('/orgs/:orgId/proofs/oob')
   @ApiOperation({
     summary: 'Sends a out-of-band proof request',
-    description: 'Send an out-of-band proof request for a specific organization.'
+    description: 'Send an out-of-band proof request for a specific organization.',
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
@@ -401,7 +402,7 @@ export class VerificationController {
   @ApiBody({ type: SendProofRequestPayload })
   @ApiQuery({
     name: 'requestType',
-    enum: ProofRequestType
+    enum: ProofRequestType,
   })
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.VERIFIER)
   @ApiBearerAuth()
@@ -413,15 +414,15 @@ export class VerificationController {
     @Param('orgId') orgId: string,
     @Query('requestType') requestType: ProofRequestType = ProofRequestType.INDY
   ): Promise<Response> {
-    user.orgId = orgId;
-    outOfBandRequestProof.type = requestType;
-    const result = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user);
+    user.orgId = orgId
+    outOfBandRequestProof.type = requestType
+    const result = await this.verificationService.sendOutOfBandPresentationRequest(outOfBandRequestProof, user)
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.verification.success.send,
-      data: result
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+      data: result,
+    }
+    return res.status(HttpStatus.CREATED).json(finalResponse)
   }
 
   /**
@@ -432,7 +433,7 @@ export class VerificationController {
   @Post('wh/:orgId/proofs')
   @ApiOperation({
     summary: 'Receive webhook proof presentation',
-    description: 'Handle proof presentations for a specified organization via a webhook.'
+    description: 'Handle proof presentations for a specified organization via a webhook.',
   })
   @ApiExcludeEndpoint()
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
@@ -443,37 +444,37 @@ export class VerificationController {
     @Body() proofPresentationPayload: WebhookPresentationProofDto,
     @Res() res: Response
   ): Promise<Response> {
-    proofPresentationPayload.type = 'Verification';
+    proofPresentationPayload.type = 'Verification'
 
-    if (orgId && 'default' === proofPresentationPayload.contextCorrelationId) {
-      proofPresentationPayload.orgId = orgId;
+    if (orgId && proofPresentationPayload.contextCorrelationId === 'default') {
+      proofPresentationPayload.orgId = orgId
     }
 
     const webhookProofPresentation = await this.verificationService
       .webhookProofPresentation(orgId, proofPresentationPayload)
       .catch((error) => {
-        this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`);
-      });
+        this.logger.debug(`error in saving verification webhook ::: ${JSON.stringify(error)}`)
+      })
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.verification.success.create,
-      data: webhookProofPresentation
-    };
+      data: webhookProofPresentation,
+    }
 
     const webhookUrl = await this.verificationService
       ._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId)
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-      });
+        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`)
+      })
 
     if (webhookUrl) {
       await this.verificationService
         ._postWebhookResponse(webhookUrl, { data: proofPresentationPayload })
         .catch((error) => {
-          this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
-        });
+          this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`)
+        })
     }
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.CREATED).json(finalResponse)
   }
 
   /**
@@ -487,7 +488,7 @@ export class VerificationController {
   @ApiOperation({
     summary: 'Delete verification record',
     description:
-      'Delete all verification records associated with a specific organization by its orgId. This operation is restricted to users with the OWNER role.'
+      'Delete all verification records associated with a specific organization by its orgId. This operation is restricted to users with the OWNER role.',
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
@@ -498,19 +499,19 @@ export class VerificationController {
       'orgId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-        }
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId)
+        },
       })
     )
     orgId: string,
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    await this.verificationService.deleteVerificationRecords(orgId, user);
+    await this.verificationService.deleteVerificationRecords(orgId, user)
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.verification.success.deleteVerificationRecord
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
+      message: ResponseMessages.verification.success.deleteVerificationRecord,
+    }
+    return res.status(HttpStatus.OK).json(finalResponse)
   }
 }

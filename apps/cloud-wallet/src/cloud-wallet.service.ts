@@ -1,46 +1,46 @@
 /* eslint-disable camelcase */
-import { CommonService } from '@credebl/common';
+import type { CommonService } from '@credebl/common'
+import { CommonConstants } from '@credebl/common/common.constant'
+import type {
+  CloudWallet,
+  GetAllCloudWalletConnections,
+  IAcceptOffer,
+  IAcceptProofRequest,
+  IBasicMessage,
+  IBasicMessageDetails,
+  ICloudBaseWalletConfigure,
+  ICloudWalletDetails,
+  IConnectionDetailsById,
+  IConnectionInvitationResponse,
+  ICreateCloudWallet,
+  ICreateCloudWalletDid,
+  ICreateConnection,
+  ICredentialDetails,
+  IGetProofPresentation,
+  IGetProofPresentationById,
+  IGetStoredWalletInfo,
+  IProofRequestRes,
+  IReceiveInvitation,
+  IStoreWalletInfo,
+  IStoredWalletDetails,
+  ITenantDetail,
+  IWalletDetailsForDidList,
+} from '@credebl/common/interfaces/cloud-wallet.interface'
+import { ResponseMessages } from '@credebl/common/response-messages'
+import { CloudWalletType } from '@credebl/enum/enum'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
   BadRequestException,
   ConflictException,
   Inject,
   Injectable,
   InternalServerErrorException,
-  Logger,
-  NotFoundException
-} from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { Cache } from 'cache-manager';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import {
-  IAcceptOffer,
-  ICreateCloudWalletDid,
-  IReceiveInvitation,
-  IAcceptProofRequest,
-  IProofRequestRes,
-  ICloudBaseWalletConfigure,
-  ICloudWalletDetails,
-  ICreateCloudWallet,
-  IGetProofPresentation,
-  IGetProofPresentationById,
-  IGetStoredWalletInfo,
-  IStoredWalletDetails,
-  CloudWallet,
-  IStoreWalletInfo,
-  IWalletDetailsForDidList,
-  IConnectionDetailsById,
-  ITenantDetail,
-  ICredentialDetails,
-  ICreateConnection, 
-  IConnectionInvitationResponse,
-  GetAllCloudWalletConnections,
-  IBasicMessage,
-  IBasicMessageDetails
-} from '@credebl/common/interfaces/cloud-wallet.interface';
-import { CloudWalletRepository } from './cloud-wallet.repository';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { CloudWalletType } from '@credebl/enum/enum';
-import { CommonConstants } from '@credebl/common/common.constant';
+  type Logger,
+  NotFoundException,
+} from '@nestjs/common'
+import type { ClientProxy } from '@nestjs/microservices'
+import type { Cache } from 'cache-manager'
+import type { CloudWalletRepository } from './cloud-wallet.repository'
 
 @Injectable()
 export class CloudWalletService {
@@ -58,25 +58,23 @@ export class CloudWalletService {
    * @returns cloud base wallet
    */
   async configureBaseWallet(configureBaseWalletPayload: ICloudBaseWalletConfigure): Promise<IGetStoredWalletInfo> {
-    const { agentEndpoint, apiKey, email, walletKey, userId } = configureBaseWalletPayload;
+    const { agentEndpoint, apiKey, email, walletKey, userId } = configureBaseWalletPayload
 
     try {
-      const getAgentInfo = await this.commonService.httpGet(
-        `${agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`
-      );
+      const getAgentInfo = await this.commonService.httpGet(`${agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`)
       if (!getAgentInfo?.isInitialized) {
-        throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
+        throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable)
       }
 
-      const existingWalletInfo = await this.cloudWalletRepository.getCloudWalletInfo(email);
+      const existingWalletInfo = await this.cloudWalletRepository.getCloudWalletInfo(email)
       if (existingWalletInfo) {
-        throw new ConflictException(ResponseMessages.cloudWallet.error.agentAlreadyExist);
+        throw new ConflictException(ResponseMessages.cloudWallet.error.agentAlreadyExist)
       }
 
       const [encryptionWalletKey, encryptionApiKey] = await Promise.all([
         this.commonService.dataEncryption(walletKey),
-        this.commonService.dataEncryption(apiKey)
-      ]);
+        this.commonService.dataEncryption(apiKey),
+      ])
 
       const walletInfoToStore: IStoreWalletInfo = {
         agentEndpoint,
@@ -86,40 +84,41 @@ export class CloudWalletService {
         userId,
         key: encryptionWalletKey,
         createdBy: userId,
-        lastChangedBy: userId
-      };
+        lastChangedBy: userId,
+      }
 
-      const storedWalletInfo = await this.cloudWalletRepository.storeCloudWalletInfo(walletInfoToStore);
-      return storedWalletInfo;
+      const storedWalletInfo = await this.cloudWalletRepository.storeCloudWalletInfo(walletInfoToStore)
+      return storedWalletInfo
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 
   /**
    * Create connection
-   * @param createConnection 
+   * @param createConnection
    * @returns connection details
    */
   async createConnection(createConnection: ICreateConnection): Promise<IConnectionInvitationResponse> {
     try {
+      const { userId, ...connectionPayload } = createConnection
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const { userId, ...connectionPayload } = createConnection;
-        const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      connectionPayload.email = undefined
 
-        delete connectionPayload.email;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
 
-        const { tenantId } = getTenant;
-        const { agentEndpoint } = baseWalletDetails;
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CREATE_CONNECTION_INVITATION}/${tenantId}`
 
-        const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CREATE_CONNECTION_INVITATION}/${tenantId}`;
-        
-        const createConnectionDetails = await this.commonService.httpPost(url, connectionPayload, { headers: { authorization: decryptedApiKey } });       
-        return createConnectionDetails;
+      const createConnectionDetails = await this.commonService.httpPost(url, connectionPayload, {
+        headers: { authorization: decryptedApiKey },
+      })
+      return createConnectionDetails
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 
@@ -130,27 +129,27 @@ export class CloudWalletService {
    */
   async acceptProofRequest(acceptProofRequest: IAcceptProofRequest): Promise<IProofRequestRes> {
     const { proofRecordId, comment, filterByNonRevocationRequirements, filterByPresentationPreview, userId } =
-      acceptProofRequest;
+      acceptProofRequest
     try {
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const { tenantId } = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
 
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${proofRecordId}${CommonConstants.CLOUD_WALLET_ACCEPT_PROOF_REQUEST}${tenantId}`;
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${proofRecordId}${CommonConstants.CLOUD_WALLET_ACCEPT_PROOF_REQUEST}${tenantId}`
       const proofAcceptRequestPayload = {
         comment,
         filterByNonRevocationRequirements,
-        filterByPresentationPreview
-      };
+        filterByPresentationPreview,
+      }
 
       const acceptProofRequest = await this.commonService.httpPost(url, proofAcceptRequestPayload, {
-        headers: { authorization: decryptedApiKey }
-      });
-      return acceptProofRequest;
+        headers: { authorization: decryptedApiKey },
+      })
+      return acceptProofRequest
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 
@@ -161,19 +160,19 @@ export class CloudWalletService {
    */
   async getProofById(proofPrsentationByIdPayload: IGetProofPresentationById): Promise<IProofRequestRes> {
     try {
-      const { proofRecordId, userId } = proofPrsentationByIdPayload;
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { proofRecordId, userId } = proofPrsentationByIdPayload
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const { tenantId } = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
 
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${proofRecordId}/${tenantId}`;
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${proofRecordId}/${tenantId}`
 
-      const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
-      return getProofById;
+      const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } })
+      return getProofById
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 
@@ -184,22 +183,22 @@ export class CloudWalletService {
    */
   async getProofPresentation(proofPresentationPayload: IGetProofPresentation): Promise<IProofRequestRes[]> {
     try {
-      const { threadId, userId } = proofPresentationPayload;
+      const { threadId, userId } = proofPresentationPayload
 
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const { tenantId } = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
 
       const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${tenantId}${
         threadId ? `?threadId=${threadId}` : ''
-      }`;
+      }`
 
-      const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
-      return getProofById;
+      const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } })
+      return getProofById
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 
@@ -209,28 +208,28 @@ export class CloudWalletService {
    * @returns cloud wallet info
    */
   async _commonCloudWalletInfo(userId: string): Promise<[CloudWallet, CloudWallet, string]> {
-    const baseWalletDetails = await this.cloudWalletRepository.getCloudWalletDetails(CloudWalletType.BASE_WALLET);
+    const baseWalletDetails = await this.cloudWalletRepository.getCloudWalletDetails(CloudWalletType.BASE_WALLET)
 
     if (!baseWalletDetails) {
-      throw new NotFoundException(ResponseMessages.cloudWallet.error.notFoundBaseWallet);
+      throw new NotFoundException(ResponseMessages.cloudWallet.error.notFoundBaseWallet)
     }
 
     const getAgentDetails = await this.commonService.httpGet(
       `${baseWalletDetails?.agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`
-    );
+    )
     if (!getAgentDetails?.isInitialized) {
-      throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
+      throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable)
     }
 
-    const getTenant = await this.cloudWalletRepository.getCloudSubWallet(userId);
-  
+    const getTenant = await this.cloudWalletRepository.getCloudSubWallet(userId)
+
     if (!getTenant || !getTenant?.tenantId) {
-      throw new NotFoundException(ResponseMessages.cloudWallet.error.walletRecordNotFound);
+      throw new NotFoundException(ResponseMessages.cloudWallet.error.walletRecordNotFound)
     }
 
-    const decryptedApiKey = await this.commonService.decryptPassword(getTenant?.agentApiKey);
+    const decryptedApiKey = await this.commonService.decryptPassword(getTenant?.agentApiKey)
 
-    return [baseWalletDetails, getTenant, decryptedApiKey];
+    return [baseWalletDetails, getTenant, decryptedApiKey]
   }
 
   /**
@@ -240,49 +239,49 @@ export class CloudWalletService {
    */
   async createCloudWallet(cloudWalletDetails: ICreateCloudWallet): Promise<IStoredWalletDetails> {
     try {
-      const { label, connectionImageUrl, email, userId } = cloudWalletDetails;
+      const { label, connectionImageUrl, email, userId } = cloudWalletDetails
       const agentPayload = {
         config: {
           label,
-          connectionImageUrl
-        }
-      };
+          connectionImageUrl,
+        },
+      }
 
-      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email);
+      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email)
 
       if (checkUserExist) {
-        throw new ConflictException(ResponseMessages.cloudWallet.error.userExist);
+        throw new ConflictException(ResponseMessages.cloudWallet.error.userExist)
       }
-  
-      const baseWalletDetails = await this.cloudWalletRepository.getCloudWalletDetails(CloudWalletType.BASE_WALLET);
 
-      const { agentEndpoint, agentApiKey } = baseWalletDetails;
-      const url = `${agentEndpoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`;
-      const decryptedApiKey = await this.commonService.decryptPassword(agentApiKey);
+      const baseWalletDetails = await this.cloudWalletRepository.getCloudWalletDetails(CloudWalletType.BASE_WALLET)
 
-      const checkCloudWalletAgentHealth = await this.commonService.checkAgentHealth(agentEndpoint, decryptedApiKey);
+      const { agentEndpoint, agentApiKey } = baseWalletDetails
+      const url = `${agentEndpoint}${CommonConstants.URL_SHAGENT_CREATE_TENANT}`
+      const decryptedApiKey = await this.commonService.decryptPassword(agentApiKey)
+
+      const checkCloudWalletAgentHealth = await this.commonService.checkAgentHealth(agentEndpoint, decryptedApiKey)
 
       if (!checkCloudWalletAgentHealth) {
-        throw new NotFoundException(ResponseMessages.cloudWallet.error.agentNotRunning);
+        throw new NotFoundException(ResponseMessages.cloudWallet.error.agentNotRunning)
       }
       const createCloudWalletResponse = await this.commonService.httpPost(url, agentPayload, {
-        headers: { authorization: decryptedApiKey }
-      });
+        headers: { authorization: decryptedApiKey },
+      })
 
       if (!createCloudWalletResponse && !createCloudWalletResponse.id) {
         throw new InternalServerErrorException(ResponseMessages.cloudWallet.error.createCloudWallet, {
           cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
+          description: ResponseMessages.errorMessages.serverError,
+        })
       }
 
-      const walletKey = await this.commonService.dataEncryption(createCloudWalletResponse.config.walletConfig.key);
+      const walletKey = await this.commonService.dataEncryption(createCloudWalletResponse.config.walletConfig.key)
 
       if (!walletKey) {
         throw new BadRequestException(ResponseMessages.cloudWallet.error.encryptCloudWalletKey, {
           cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
+          description: ResponseMessages.errorMessages.serverError,
+        })
       }
 
       const cloudWalletResponse: ICloudWalletDetails = {
@@ -296,13 +295,13 @@ export class CloudWalletService {
         agentEndpoint,
         email,
         key: walletKey,
-        connectionImageUrl
-      };
-      const storeCloudWalletDetails = await this.cloudWalletRepository.storeCloudWalletDetails(cloudWalletResponse);
-      return storeCloudWalletDetails;
+        connectionImageUrl,
+      }
+      const storeCloudWalletDetails = await this.cloudWalletRepository.storeCloudWalletDetails(cloudWalletResponse)
+      return storeCloudWalletDetails
     } catch (error) {
-      this.logger.error(`[createCloudWallet] - error in create cloud wallet: ${error}`);
-      await this.commonService.handleError(error);
+      this.logger.error(`[createCloudWallet] - error in create cloud wallet: ${error}`)
+      await this.commonService.handleError(error)
     }
   }
 
@@ -314,40 +313,40 @@ export class CloudWalletService {
   async receiveInvitationByUrl(ReceiveInvitationDetails: IReceiveInvitation): Promise<Response> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { email, userId, ...invitationDetails } = ReceiveInvitationDetails;
+      const { email, userId, ...invitationDetails } = ReceiveInvitationDetails
 
-      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email);
+      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email)
 
       if (!checkUserExist) {
-        throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist);
+        throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist)
       }
 
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const { tenantId } = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
-      const url = `${agentEndpoint}${CommonConstants.RECEIVE_INVITATION_BY_URL}${tenantId}`;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
+      const url = `${agentEndpoint}${CommonConstants.RECEIVE_INVITATION_BY_URL}${tenantId}`
 
-      const checkCloudWalletAgentHealth = await this.commonService.checkAgentHealth(agentEndpoint, decryptedApiKey);
+      const checkCloudWalletAgentHealth = await this.commonService.checkAgentHealth(agentEndpoint, decryptedApiKey)
 
       if (!checkCloudWalletAgentHealth) {
-        throw new NotFoundException(ResponseMessages.cloudWallet.error.agentNotRunning);
+        throw new NotFoundException(ResponseMessages.cloudWallet.error.agentNotRunning)
       }
       const receiveInvitationResponse = await this.commonService.httpPost(url, invitationDetails, {
-        headers: { authorization: decryptedApiKey }
-      });
+        headers: { authorization: decryptedApiKey },
+      })
 
       if (!receiveInvitationResponse) {
         throw new InternalServerErrorException(ResponseMessages.cloudWallet.error.receiveInvitation, {
           cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
+          description: ResponseMessages.errorMessages.serverError,
+        })
       }
 
-      return receiveInvitationResponse;
+      return receiveInvitationResponse
     } catch (error) {
-      this.logger.error(`[createCloudWallet] - error in receive invitation: ${error}`);
-      await this.commonService.handleError(error);
+      this.logger.error(`[createCloudWallet] - error in receive invitation: ${error}`)
+      await this.commonService.handleError(error)
     }
   }
 
@@ -359,40 +358,40 @@ export class CloudWalletService {
   async acceptOffer(acceptOfferDetails: IAcceptOffer): Promise<Response> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { email, userId, ...offerDetails } = acceptOfferDetails;
+      const { email, userId, ...offerDetails } = acceptOfferDetails
 
-      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email);
+      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email)
 
       if (!checkUserExist) {
-        throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist);
+        throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist)
       }
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const { tenantId } = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
 
-      const url = `${agentEndpoint}${CommonConstants.ACCEPT_OFFER}${tenantId}`;
+      const url = `${agentEndpoint}${CommonConstants.ACCEPT_OFFER}${tenantId}`
 
-      const checkCloudWalletAgentHealth = await this.commonService.checkAgentHealth(agentEndpoint, decryptedApiKey);
+      const checkCloudWalletAgentHealth = await this.commonService.checkAgentHealth(agentEndpoint, decryptedApiKey)
 
       if (!checkCloudWalletAgentHealth) {
-        throw new NotFoundException(ResponseMessages.cloudWallet.error.agentNotRunning);
+        throw new NotFoundException(ResponseMessages.cloudWallet.error.agentNotRunning)
       }
       const acceptOfferResponse = await this.commonService.httpPost(url, offerDetails, {
-        headers: { authorization: decryptedApiKey }
-      });
+        headers: { authorization: decryptedApiKey },
+      })
 
       if (!acceptOfferResponse) {
         throw new InternalServerErrorException(ResponseMessages.cloudWallet.error.receiveInvitation, {
           cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
+          description: ResponseMessages.errorMessages.serverError,
+        })
       }
 
-      return acceptOfferResponse;
+      return acceptOfferResponse
     } catch (error) {
-      this.logger.error(`[receiveInvitationByUrl] - error in accept offer: ${error}`);
-      await this.commonService.handleError(error);
+      this.logger.error(`[receiveInvitationByUrl] - error in accept offer: ${error}`)
+      await this.commonService.handleError(error)
     }
   }
 
@@ -404,40 +403,40 @@ export class CloudWalletService {
   async createDid(createDidDetails: ICreateCloudWalletDid): Promise<Response> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { email, userId, ...didDetails } = createDidDetails;
+      const { email, userId, ...didDetails } = createDidDetails
 
-      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email);
+      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email)
 
       if (!checkUserExist) {
-        throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist);
+        throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist)
       }
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const { tenantId } = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
 
-      const url = `${agentEndpoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${tenantId}`;
+      const url = `${agentEndpoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${tenantId}`
 
-      const checkCloudWalletAgentHealth = await this.commonService.checkAgentHealth(agentEndpoint, decryptedApiKey);
+      const checkCloudWalletAgentHealth = await this.commonService.checkAgentHealth(agentEndpoint, decryptedApiKey)
 
       if (!checkCloudWalletAgentHealth) {
-        throw new NotFoundException(ResponseMessages.cloudWallet.error.agentNotRunning);
+        throw new NotFoundException(ResponseMessages.cloudWallet.error.agentNotRunning)
       }
       const didDetailsResponse = await this.commonService.httpPost(url, didDetails, {
-        headers: { authorization: decryptedApiKey }
-      });
+        headers: { authorization: decryptedApiKey },
+      })
 
       if (!didDetailsResponse) {
         throw new InternalServerErrorException(ResponseMessages.cloudWallet.error.receiveInvitation, {
           cause: new Error(),
-          description: ResponseMessages.errorMessages.serverError
-        });
+          description: ResponseMessages.errorMessages.serverError,
+        })
       }
 
-      return didDetailsResponse;
+      return didDetailsResponse
     } catch (error) {
-      this.logger.error(`[createDid] - error in create DID: ${error}`);
-      await this.commonService.handleError(error);
+      this.logger.error(`[createDid] - error in create DID: ${error}`)
+      await this.commonService.handleError(error)
     }
   }
 
@@ -448,19 +447,19 @@ export class CloudWalletService {
    */
   async getDidList(walletDetails: IWalletDetailsForDidList): Promise<Response> {
     try {
-      const { userId } = walletDetails;
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { userId } = walletDetails
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const { tenantId } = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
 
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_DID_LIST}${tenantId}`;
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_DID_LIST}${tenantId}`
 
-      const didList = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
-      return didList;
+      const didList = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } })
+      return didList
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 
@@ -471,51 +470,55 @@ export class CloudWalletService {
    */
   async getconnectionById(connectionDetails: IConnectionDetailsById): Promise<Response> {
     try {
-      const { userId, connectionId } = connectionDetails;
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { userId, connectionId } = connectionDetails
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const { tenantId } = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
 
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CONNECTION_BY_ID}${connectionId}/${tenantId}`;
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CONNECTION_BY_ID}${connectionId}/${tenantId}`
 
-      const connectionDetailResponse = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
-      return connectionDetailResponse;
+      const connectionDetailResponse = await this.commonService.httpGet(url, {
+        headers: { authorization: decryptedApiKey },
+      })
+      return connectionDetailResponse
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 
-    /**
+  /**
    * Get connection list by tenant id
    * @param connectionDetails
    * @returns Connection Details
    */
-    async getAllconnectionById(connectionDetails: GetAllCloudWalletConnections): Promise<Response> {
-      try {
-        const { userId, alias, myDid, outOfBandId, theirDid, theirLabel } = connectionDetails;
-        const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
-        const urlOptions = {
-          alias,
-          myDid,
-          outOfBandId,
-          theirDid,
-          theirLabel
-        };
-        const optionalParameter = await this.commonService.createDynamicUrl(urlOptions);
-        const { tenantId } = getTenant;
-        const { agentEndpoint } = baseWalletDetails;
-  
-        const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CONNECTION_BY_ID}${tenantId}${optionalParameter}`;
-  
-        const connectionDetailList = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
-        return connectionDetailList;
-      } catch (error) {
-        await this.commonService.handleError(error);
-        throw error;
+  async getAllconnectionById(connectionDetails: GetAllCloudWalletConnections): Promise<Response> {
+    try {
+      const { userId, alias, myDid, outOfBandId, theirDid, theirLabel } = connectionDetails
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
+      const urlOptions = {
+        alias,
+        myDid,
+        outOfBandId,
+        theirDid,
+        theirLabel,
       }
+      const optionalParameter = await this.commonService.createDynamicUrl(urlOptions)
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
+
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CONNECTION_BY_ID}${tenantId}${optionalParameter}`
+
+      const connectionDetailList = await this.commonService.httpGet(url, {
+        headers: { authorization: decryptedApiKey },
+      })
+      return connectionDetailList
+    } catch (error) {
+      await this.commonService.handleError(error)
+      throw error
     }
+  }
 
   /**
    * Get credential list by tenant id
@@ -524,25 +527,27 @@ export class CloudWalletService {
    */
   async getCredentialListById(tenantDetails: ITenantDetail): Promise<Response> {
     try {
-      const { userId, connectionId, state, threadId } = tenantDetails;
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { userId, connectionId, state, threadId } = tenantDetails
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
       const urlOptions = {
         connectionId,
         state,
-        threadId
-      };
-      const {tenantId} = getTenant;
-     const optionalParameter = await this.commonService.createDynamicUrl(urlOptions);
-  
-      const { agentEndpoint } = baseWalletDetails;
+        threadId,
+      }
+      const { tenantId } = getTenant
+      const optionalParameter = await this.commonService.createDynamicUrl(urlOptions)
 
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CREDENTIAL}/${tenantId}${optionalParameter}`;
+      const { agentEndpoint } = baseWalletDetails
 
-      const credentialDetailResponse = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
-      return credentialDetailResponse;
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CREDENTIAL}/${tenantId}${optionalParameter}`
+
+      const credentialDetailResponse = await this.commonService.httpGet(url, {
+        headers: { authorization: decryptedApiKey },
+      })
+      return credentialDetailResponse
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 
@@ -553,19 +558,21 @@ export class CloudWalletService {
    */
   async getCredentialByRecord(credentialDetails: ICredentialDetails): Promise<Response> {
     try {
-      const { userId, credentialRecordId } = credentialDetails;
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
-     
-      const {tenantId} = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
+      const { userId, credentialRecordId } = credentialDetails
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CREDENTIAL}/${credentialRecordId}${tenantId}`;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
 
-      const credentialDetailResponse = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
-      return credentialDetailResponse;
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_CREDENTIAL}/${credentialRecordId}${tenantId}`
+
+      const credentialDetailResponse = await this.commonService.httpGet(url, {
+        headers: { authorization: decryptedApiKey },
+      })
+      return credentialDetailResponse
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 
@@ -576,43 +583,49 @@ export class CloudWalletService {
    */
   async getBasicMessageByConnectionId(connectionDetails: IBasicMessage): Promise<Response> {
     try {
-      const { userId, connectionId } = connectionDetails;
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
-     
-      const {tenantId} = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
+      const { userId, connectionId } = connectionDetails
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_BASIC_MESSAGE}${connectionId}/${tenantId}`;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
 
-      const basicMessageResponse = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
-      return basicMessageResponse;
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_BASIC_MESSAGE}${connectionId}/${tenantId}`
+
+      const basicMessageResponse = await this.commonService.httpGet(url, {
+        headers: { authorization: decryptedApiKey },
+      })
+      return basicMessageResponse
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 
-   /**
+  /**
    * Send basic-message by connection id
    * @param messageDetails
    * @returns Basic message Details
    */
-   async sendBasicMessage(messageDetails: IBasicMessageDetails): Promise<Response> {
+  async sendBasicMessage(messageDetails: IBasicMessageDetails): Promise<Response> {
     try {
-      const { userId, connectionId, content } = messageDetails;
-      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
-     
-      const {tenantId} = getTenant;
-      const { agentEndpoint } = baseWalletDetails;
+      const { userId, connectionId, content } = messageDetails
+      const [baseWalletDetails, getTenant, decryptedApiKey] = await this._commonCloudWalletInfo(userId)
 
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_BASIC_MESSAGE}${connectionId}/${tenantId}`;
-      const basicMessageResponse = await this.commonService.httpPost(url, {content}, {
-        headers: { authorization: decryptedApiKey }
-      });
-      return basicMessageResponse;
+      const { tenantId } = getTenant
+      const { agentEndpoint } = baseWalletDetails
+
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_BASIC_MESSAGE}${connectionId}/${tenantId}`
+      const basicMessageResponse = await this.commonService.httpPost(
+        url,
+        { content },
+        {
+          headers: { authorization: decryptedApiKey },
+        }
+      )
+      return basicMessageResponse
     } catch (error) {
-      await this.commonService.handleError(error);
-      throw error;
+      await this.commonService.handleError(error)
+      throw error
     }
   }
 }

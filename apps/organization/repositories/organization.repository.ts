@@ -483,7 +483,7 @@ export class OrganizationRepository {
                   multiUse: true
                 },
                 orderBy: {
-                  lastChangedDateTime: 'desc'
+                  lastChangedDateTime: SortValue.DESC
                 },
                 take: 1,
                 select: {

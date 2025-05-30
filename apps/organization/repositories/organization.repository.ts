@@ -1,45 +1,45 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable camelcase */
 
-import { ConflictException, Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  IDeleteOrganization,
+  IOrganization,
+  IOrganizationDashboard,
+  IOrganizationInvitations
+} from '@credebl/common/interfaces/organization.interface';
+import {
+  IDidDetails,
+  IDidList,
+  IGetDids,
+  IGetOrgById,
+  IGetOrganization,
+  ILedgerDetails,
+  ILedgerNameSpace,
+  IOrgDetails,
+  IOrgRoleDetails,
+  IPrimaryDidDetails,
+  IUpdateOrganization,
+  OrgInvitation
+} from '../interfaces/organization.interface';
+import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
 import {
   Prisma,
   agent_invitations,
   org_agents,
   org_invitations,
-  user,
-  user_org_roles,
+  org_roles,
   organisation,
-  org_roles
+  user,
+  user_org_roles
 } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import {
-  IGetDids,
-  IDidDetails,
-  IDidList,
-  IGetOrgById,
-  IGetOrganization,
-  IPrimaryDidDetails,
-  IUpdateOrganization,
-  ILedgerNameSpace,
-  OrgInvitation,
-  ILedgerDetails,
-  IOrgRoleDetails,
-  IOrgDetails
-} from '../interfaces/organization.interface';
-import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
-import { PrismaService } from '@credebl/prisma-service';
-import { UserOrgRolesService } from '@credebl/user-org-roles';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import {
-  IOrganizationInvitations,
-  IOrganization,
-  IOrganizationDashboard,
-  IDeleteOrganization
-} from '@credebl/common/interfaces/organization.interface';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { PrismaService } from '@credebl/prisma-service';
+import { ResponseMessages } from '@credebl/common/response-messages';
+import { UserOrgRolesService } from '@credebl/user-org-roles';
 
 @Injectable()
 export class OrganizationRepository {
@@ -479,6 +479,13 @@ export class OrganizationRepository {
               createDateTime: true,
               tenantId: true,
               agent_invitations: {
+                where: {
+                  multiUse: true
+                },
+                orderBy: {
+                  lastChangedDateTime: 'desc'
+                },
+                take: 1,
                 select: {
                   id: true,
                   connectionInvitation: true,

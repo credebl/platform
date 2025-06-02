@@ -81,6 +81,7 @@ import { SchemaType } from '@credebl/enum/enum';
 import { CommonConstants } from '../../../../libs/common/src/common.constant';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
+
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')

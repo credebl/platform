@@ -217,7 +217,7 @@ export class VerificationController {
       sortField,
       sortBy
     };
-
+      
     const proofPresentationDetails = await this.verificationService.getProofPresentations(
       proofRequestsSearchCriteria,
       user,

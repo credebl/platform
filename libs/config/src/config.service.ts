@@ -1,10 +1,10 @@
-import { DevelopmentEnvironment } from '@credebl/enum/enum';
+import { DevelopmentEnvironment } from '../../enum/src/enum';
 import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ConfigService {
-  constructor(private readonly configService: NestConfigService) {}
+  constructor(private readonly configService: NestConfigService) { }
 
   get isProduction(): boolean {
     return DevelopmentEnvironment.PRODUCTION === this.environment;

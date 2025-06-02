@@ -2,13 +2,13 @@ import { Inject, Injectable, Scope } from '@nestjs/common';
 import { INQUIRER } from '@nestjs/core';
 import Logger, {
   LoggerBaseKey
-} from '@credebl/logger/logger.interface';
-import { LogData, LogLevel } from '@credebl/logger/log';
+} from './logger.interface';
+import { LogData, LogLevel } from './log';
 import { ConfigService } from '@nestjs/config';
 import ContextStorageService, {
   ContextStorageServiceKey
-} from '@credebl/context/contextStorageService.interface';
-import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+} from '../../context/src/contextStorageService.interface';
+import { MICRO_SERVICE_NAME } from '@credebl/common/src/common.constant';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export default class LoggerService implements Logger {
@@ -42,27 +42,27 @@ export default class LoggerService implements Logger {
     return this.logger.log(level, message, this.getLogData(data), profile);
   }
 
-  public debug(message: string, data?: LogData, profile?: string) : void {
+  public debug(message: string, data?: LogData, profile?: string): void {
     return this.logger.debug(message, this.getLogData(data), profile);
   }
 
-  public info(message: string, data?: LogData, profile?: string) : void {
+  public info(message: string, data?: LogData, profile?: string): void {
     return this.logger.info(message, this.getLogData(data), profile);
   }
 
-  public warn(message: string | Error, data?: LogData, profile?: string) : void {
+  public warn(message: string | Error, data?: LogData, profile?: string): void {
     return this.logger.warn(message, this.getLogData(data), profile);
   }
 
-  public error(message: string | Error, data?: LogData, profile?: string) : void {
+  public error(message: string | Error, data?: LogData, profile?: string): void {
     return this.logger.error(message, this.getLogData(data), profile);
   }
 
-  public fatal(message: string | Error, data?: LogData, profile?: string) : void {
+  public fatal(message: string | Error, data?: LogData, profile?: string): void {
     return this.logger.fatal(message, this.getLogData(data), profile);
   }
 
-  public emergency(message: string | Error, data?: LogData, profile?: string) : void {
+  public emergency(message: string | Error, data?: LogData, profile?: string): void {
     return this.logger.emergency(message, this.getLogData(data), profile);
   }
 
@@ -78,7 +78,7 @@ export default class LoggerService implements Logger {
     };
   }
 
-  public startProfile(id: string) : void {
+  public startProfile(id: string): void {
     this.logger.startProfile(id);
   }
 }

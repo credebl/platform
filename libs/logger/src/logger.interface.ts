@@ -1,4 +1,4 @@
-import { LogData, LogLevel } from '@credebl/logger/log';
+import { LogData, LogLevel } from './log';
 
 export const LoggerBaseKey = Symbol();
 export const LoggerKey = Symbol();
@@ -18,3 +18,4 @@ export default interface Logger {
   emergency(message: string | Error, data?: LogData, profile?: string): void;
   startProfile(id: string): void;
 };
+

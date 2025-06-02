@@ -445,7 +445,6 @@ export class IssuanceController {
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<Response> {
-    const { requestId } = { ...query, requestId: query.requestId.trim() };
     const previewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -513,7 +512,7 @@ export class IssuanceController {
   )
   async issueBulkCredentials(
     @Body() clientDetails: ClientDetails,
-    @Param('requestId') requestId: string,
+    @Param(new ValidationPipe({ transform: true })) params: RequestIdQuery,
     @Param('orgId') orgId: string,
     @User() user: user,
     @Query(new ValidationPipe({ transform: true })) query: CredentialQuery,
@@ -522,6 +521,7 @@ export class IssuanceController {
     @Body() fileDetails?: object,
     @UploadedFile() file?: Express.Multer.File
   ): Promise<Response> {
+    const { requestId } = params;
     const { credDefId } = query;
     clientDetails.userId = user.id;
     let reqPayload;

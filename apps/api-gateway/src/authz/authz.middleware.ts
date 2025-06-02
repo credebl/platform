@@ -54,63 +54,66 @@ export class AuthzMiddleware implements NestMiddleware {
       }
 
       const requestor = new RequestingUser()
-
       const tenant = (await this.authService.getUserByKeycloakUserId(payload['sub']))?.response
+      if (!tenant) {
+        req['requestor'] = requestor
+        return next()
+      }
 
-      if (tenant) {
-        this.logger.log(`tenant this.authService.getUserByKeycloakUserId: ${tenant.keycloakUserId}`)
-        this.logger.log(`tenant id: ${tenant.id}`)
-
-        requestor.tenant_name = `${tenant.firstName} ${tenant.lastName}`
-        requestor.tenant_id = tenant.id
-        requestor.userRoleOrgPermissions = tenant.userRoleOrgMap
-        requestor.orgId = tenant.userRoleOrgMap[0].organization.id
-        requestor.apiKey = tenant.userRoleOrgMap[0].organization.apiKey
-        requestor.agentEndPoint = tenant.userRoleOrgMap[0].organization.agentEndPoint
-
-        let tenantOrgInfo: { id: string }
-
-        for (const item of tenant.userRoleOrgMap) {
-          this.logger.log(`${JSON.stringify(item.organization.orgRole)}`)
-
-          if (item.organization.orgRole.id === CommonConstants.ORG_TENANT_ROLE) {
-            this.logger.log(`In Tenant Org matched id : ${item.organization.id}`)
-            tenantOrgInfo = item.organization
-          }
-        }
-
-        if (tenantOrgInfo != null) {
-          requestor.tenantOrgId = tenantOrgInfo.id
-        }
-
-        // biome-ignore lint/suspicious/noPrototypeBuiltins: <explanation>
-        if (payload.hasOwnProperty('clientId')) {
-          this.logger.log(`tenant requestor.permissions: ${JSON.stringify(requestor)}`)
-        } else {
-          requestor.email = payload['email']
-
-          const userData = (await this.authService.getUserByKeycloakUserId(payload['sub']))?.response
-
-          this.logger.debug(`User by keycloak ID ${userData.id}`)
-
-          requestor.userId = userData?.id
-          requestor.name = `${userData.firstName} ${userData.lastName}`
-
-          if (userData?.organization != null) {
-            this.logger.log(`Org Not Null: ${userData?.organization.Id} `)
-            requestor.orgId = userData?.organization.id
-          }
-
-          this.logger.log(` user id ${userData.id}`)
-        }
+      this.populateRequestorFromTenant(tenant, requestor)
+      // biome-ignore lint: Not able to replace 'using Object.hasOwn() instead of using Object.hasOwnProperty()'
+      if (!payload.hasOwnProperty('clientId')) {
+        await this.populateRequestorFromUser(payload, requestor)
+      } else {
+        this.logger.log(`tenant requestor.permissions: ${JSON.stringify(requestor)}`)
       }
 
       req['requestor'] = requestor
-
       next()
     } catch (error) {
       this.logger.error(`RequestorMiddleware Error in middleware: ${error} ${JSON.stringify(error)}`)
       next(new HttpException(error, 500))
     }
+  }
+
+  // biome-ignore lint: This is temporary fix need to define type for 'tenant'
+  private populateRequestorFromTenant(tenant: any, requestor: RequestingUser): void {
+    this.logger.log(`tenant this.authService.getUserByKeycloakUserId: ${tenant.keycloakUserId}`)
+    this.logger.log(`tenant id: ${tenant.id}`)
+
+    requestor.tenant_name = `${tenant.firstName} ${tenant.lastName}`
+    requestor.tenant_id = tenant.id
+    requestor.userRoleOrgPermissions = tenant.userRoleOrgMap
+    requestor.orgId = tenant.userRoleOrgMap[0].organization.id
+    requestor.apiKey = tenant.userRoleOrgMap[0].organization.apiKey
+    requestor.agentEndPoint = tenant.userRoleOrgMap[0].organization.agentEndPoint
+
+    const tenantOrg = tenant.userRoleOrgMap.find(
+      (item) => item.organization.orgRole.id === CommonConstants.ORG_TENANT_ROLE
+    )?.organization
+
+    if (tenantOrg) {
+      this.logger.log(`In Tenant Org matched id : ${tenantOrg.id}`)
+      requestor.tenantOrgId = tenantOrg.id
+    }
+  }
+
+  // biome-ignore lint: This is temporary fix need to define type for 'payload'
+  private async populateRequestorFromUser(payload: any, requestor: RequestingUser): Promise<void> {
+    requestor.email = payload['email']
+    const userData = (await this.authService.getUserByKeycloakUserId(payload['sub']))?.response
+
+    if (!userData) return
+
+    this.logger.debug(`User by keycloak ID ${userData.id}`)
+    requestor.userId = userData.id
+    requestor.name = `${userData.firstName} ${userData.lastName}`
+
+    if (userData.organization != null) {
+      this.logger.log(`Org Not Null: ${userData.organization.id}`)
+      requestor.orgId = userData.organization.id
+    }
+
+    this.logger.log(` user id ${userData.id}`)
   }
 }

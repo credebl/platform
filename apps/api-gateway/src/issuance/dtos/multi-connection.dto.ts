@@ -1,13 +1,11 @@
 import { trim } from '@credebl/common/cast.helper'
-import { AutoAccept } from '@credebl/enum/enum'
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
+import { ApiProperty } from '@nestjs/swagger'
 import { Transform, Type } from 'class-transformer'
 import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsBoolean,
-  IsEnum,
   IsNotEmpty,
   IsObject,
   IsOptional,
@@ -98,15 +96,6 @@ export class IssueCredentialDto extends CredentialsIssuanceDto {
   @IsNotEmpty({ message: 'credentialData is required' })
   @Type(() => ConnectionAttributes)
   credentialData: ConnectionAttributes[]
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString({ message: 'auto accept proof must be in string' })
-  @IsNotEmpty({ message: 'please provide valid auto accept proof' })
-  @IsEnum(AutoAccept, {
-    message: `Invalid auto accept credential. It should be one of: ${Object.values(AutoAccept).join(', ')}`,
-  })
-  autoAcceptCredential?: string
 
   @ApiProperty({
     example: false,

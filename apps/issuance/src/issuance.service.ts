@@ -129,7 +129,7 @@ export class IssuanceService {
       this.logger.error(
         `[getIssuanceRecords ] [NATS call]- error in get issuance records count : ${JSON.stringify(error)}`
       )
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -197,7 +197,7 @@ export class IssuanceService {
       const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId)
 
       if (payload.credentialType === IssueCredentialType.JSONLD) {
-        await validateAndUpdateIssuanceDates(credentialData)
+        validateAndUpdateIssuanceDates(credentialData)
       }
 
       const issuancePromises = credentialData.map(async (credentials) => {
@@ -779,7 +779,7 @@ export class IssuanceService {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId)
 
       if (IssueCredentialType.JSONLD === credentialType) {
-        await validateAndUpdateIssuanceDates(credentialOffer)
+        validateAndUpdateIssuanceDates(credentialOffer)
 
         const schemaIds = credentialOffer?.map((item) => {
           const context: string[] = item?.credential?.['@context']
@@ -1783,7 +1783,7 @@ export class IssuanceService {
 
       return ResponseMessages.bulkIssuance.success.reinitiated
     } catch (error) {
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1863,7 +1863,7 @@ export class IssuanceService {
           width: jobDetails?.width,
         }
 
-        oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails, prettyVc)
+        oobIssuancepayload = createOobJsonldIssuancePayload(JsonldCredentialDetails, prettyVc)
         oobIssuancepayload.isValidateSchema = jobDetails?.isValidateSchema
       }
 

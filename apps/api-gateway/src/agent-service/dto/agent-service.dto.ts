@@ -23,12 +23,6 @@ export class AgentSpinupDto extends CreateDidDto {
   @IsNotEmpty({ message: 'Password is required.' })
   walletPassword?: string
 
-  @ApiPropertyOptional({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })
-  @IsOptional()
-  @Transform(({ value }) => trim(value))
-  @IsString({ message: 'did must be in string format.' })
-  did?: string
-
   @ApiPropertyOptional({ example: 'ojIckSD2jqNzOqIrAGzL' })
   @IsOptional()
   clientSocketId?: string

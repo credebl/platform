@@ -519,7 +519,7 @@ export class OrganizationService {
         throw new ConflictException(ResponseMessages.organisation.error.exists)
       }
 
-      const orgSlug = await this.createOrgSlug(updateOrgDto.name)
+      const orgSlug = this.createOrgSlug(updateOrgDto.name)
       updateOrgDto.orgSlug = orgSlug
       updateOrgDto.userId = userId
 
@@ -779,7 +779,7 @@ export class OrganizationService {
       return organizationDetails
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -802,14 +802,14 @@ export class OrganizationService {
         pageSize,
         search
       )
-      for await (const item of getOrganization.invitations) {
+      for (const item of getOrganization.invitations) {
         const getOrgRoles = await this.orgRoleService.getOrgRolesByIds(item.orgRoles)
         ;(item.orgRoles as object) = getOrgRoles
       }
       return getOrganization
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1661,7 +1661,7 @@ export class OrganizationService {
     emailData.emailTo = email
     emailData.emailSubject = `Removal of participation of “${orgName}”`
 
-    emailData.emailHtml = await urlEmailTemplate.sendDeleteOrgMemberEmailTemplate(email, orgName, orgRole)
+    emailData.emailHtml = urlEmailTemplate.sendDeleteOrgMemberEmailTemplate(email, orgName, orgRole)
 
     //Email is sent to user for the verification through emailData
     const isEmailSent = await sendEmail(emailData)

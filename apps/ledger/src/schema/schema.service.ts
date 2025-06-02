@@ -35,7 +35,7 @@ import type { Prisma, schema } from '@prisma/client'
 import { w3cSchemaBuilder } from 'apps/ledger/libs/helpers/w3c.schema.builder'
 import type { Cache } from 'cache-manager'
 import { BaseService } from 'libs/service/base.service'
-import { from } from 'rxjs'
+import { firstValueFrom, from } from 'rxjs'
 import { map } from 'rxjs/operators'
 import { v4 as uuidv4 } from 'uuid'
 import { W3CSchemaVersion } from './enum/schema.enum'
@@ -269,7 +269,7 @@ export class SchemaService extends BaseService {
     } catch (error) {
       this.logger.error(`[createSchema] - outer Error: ${JSON.stringify(error)}`)
 
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -293,7 +293,7 @@ export class SchemaService extends BaseService {
       }
       const { agentEndPoint } = agentDetails
 
-      const ledgerAndNetworkDetails = await checkDidLedgerAndNetwork(schemaPayload.schemaType, agentDetails.orgDid)
+      const ledgerAndNetworkDetails = checkDidLedgerAndNetwork(schemaPayload.schemaType, agentDetails.orgDid)
       if (!ledgerAndNetworkDetails) {
         throw new BadRequestException(ResponseMessages.schema.error.orgDidAndSchemaType, {
           cause: new Error(),
@@ -311,7 +311,7 @@ export class SchemaService extends BaseService {
         url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`
       }
 
-      const schemaObject = await w3cSchemaBuilder(attributes, schemaName, description)
+      const schemaObject = w3cSchemaBuilder(attributes, schemaName, description)
       if (!schemaObject) {
         throw new BadRequestException(ResponseMessages.schema.error.schemaBuilder, {
           cause: new Error(),
@@ -392,7 +392,7 @@ export class SchemaService extends BaseService {
         description: ResponseMessages.errorMessages.notFound,
       })
     }
-    const indyNamespace = await networkNamespace(schemaDetails?.did)
+    const indyNamespace = networkNamespace(schemaDetails?.did)
     if (indyNamespace === LedgerLessMethods.WEB || indyNamespace === LedgerLessMethods.KEY) {
       ledgerDetails = await this.schemaRepository.getLedgerByNamespace(LedgerLessConstant.NO_LEDGER)
     } else {
@@ -431,24 +431,23 @@ export class SchemaService extends BaseService {
     const pattern = {
       cmd: 'agent-create-schema',
     }
-    const schemaResponse = await from(this.natsClient.send<string>(this.schemaServiceProxy, pattern, payload))
-      .pipe(
+    const schemaResponse = firstValueFrom(
+      from(this.natsClient.send<string>(this.schemaServiceProxy, pattern, payload)).pipe(
         map((response) => ({
           response,
         }))
       )
-      .toPromise()
-      .catch((error) => {
-        this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`)
-        throw new HttpException(
-          {
-            status: error.statusCode,
-            error: error.error,
-            message: error.message,
-          },
-          error.error
-        )
-      })
+    ).catch((error) => {
+      this.logger.error(`Error in creating schema : ${JSON.stringify(error)}`)
+      throw new HttpException(
+        {
+          status: error.statusCode,
+          error: error.error,
+          message: error.message,
+        },
+        error.error
+      )
+    })
     return schemaResponse
   }
 

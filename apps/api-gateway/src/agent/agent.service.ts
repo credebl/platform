@@ -41,7 +41,7 @@ export class AgentService extends BaseService {
     return this.natsClient.sendNats(this.agentServiceProxy, 'create-local-did', user)
   }
 
-  async walletProvision(walletUserDetails: WalletDetailsDto, user: user) {
+  async walletProvision(walletUserDetails: WalletDetailsDto, user: IUserRequestInterface) {
     this.logger.log(`**** walletProvision called...${JSON.stringify(walletUserDetails)}`)
     const payload = { walletUserDetails, user }
     return await this.natsClient.sendNats(this.agentServiceProxy, 'wallet-provision', payload)
@@ -59,7 +59,7 @@ export class AgentService extends BaseService {
    * Description: Calling agent service for assign-public-did
    * @param did
    */
-  assignPublicDid(id: number, user: user) {
+  assignPublicDid(id: number, user: IUserRequestInterface) {
     this.logger.log('**** assignPublicDid called...')
     const payload = { id, user }
     return this.natsClient.sendNats(this.agentServiceProxy, 'assign-public-did-org', payload)

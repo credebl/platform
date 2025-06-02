@@ -28,8 +28,6 @@ import type { InvitationMessage } from '@credebl/common/interfaces/agent-service
 import { ResponseMessages } from '@credebl/common/response-messages'
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum'
 import type { PrismaService } from '@credebl/prisma-service'
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
-import { WebSocketGateway } from '@nestjs/websockets'
 import {
   RecordType,
   type ledgers,
@@ -41,10 +39,9 @@ import {
 import type { ConnectionService } from 'apps/connection/src/connection.service'
 import type { GetSchemaAgentRedirection } from 'apps/ledger/src/schema/schema.interface'
 import * as retry from 'async-retry'
-import type { Cache } from 'cache-manager'
 import * as CryptoJS from 'crypto-js'
 import type { UserActivityRepository } from 'libs/user-activity/repositories'
-import { from } from 'rxjs'
+import { firstValueFrom, from } from 'rxjs'
 import { type Socket, io } from 'socket.io-client'
 import {
   type AgentHealthData,
@@ -93,7 +90,6 @@ export class AgentServiceService {
     private readonly commonService: CommonService,
     private readonly connectionService: ConnectionService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
-    @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly natsClient: NATSClient
   ) {}
@@ -494,7 +490,7 @@ export class AgentServiceService {
     try {
       if (agentSpinupDto.method !== DidMethod.KEY && agentSpinupDto.method !== DidMethod.WEB) {
         const { network } = agentSpinupDto
-        const ledger = await ledgerName(network)
+        const ledger = ledgerName(network)
         const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse
         const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger)
         if (!isLedgerExist) {
@@ -614,7 +610,7 @@ export class AgentServiceService {
       /**
        * Organization storage data
        */
-      const storeOrgAgentData = await this._buildStoreOrgAgentData(payload, getDidMethod, `${orgAgentTypeId}`)
+      const storeOrgAgentData = this._buildStoreOrgAgentData(payload, getDidMethod, `${orgAgentTypeId}`)
       /**
        * Store org agent details
        */
@@ -678,7 +674,7 @@ export class AgentServiceService {
 
   private async _handleError(payload: IStoreOrgAgentDetails, error: Error): Promise<void> {
     if (payload.clientSocketId) {
-      const socket = await io(`${process.env.SOCKET_HOST}`, {
+      const socket = io(`${process.env.SOCKET_HOST}`, {
         reconnection: true,
         reconnectionDelay: 5000,
         reconnectionAttempts: Number.POSITIVE_INFINITY,
@@ -810,7 +806,7 @@ export class AgentServiceService {
       return agentStatusResponse
     } catch (error) {
       this.logger.error(`error in create tenant : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -827,7 +823,7 @@ export class AgentServiceService {
       let ledger: string | string[]
       const { network } = payload
       if (network) {
-        ledger = await ledgerName(network)
+        ledger = ledgerName(network)
       } else {
         ledger = Ledgers.Not_Applicable
       }
@@ -950,7 +946,7 @@ export class AgentServiceService {
       return tenantDetails
     } catch (error) {
       this.logger.error(`error in create wallet : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -985,7 +981,7 @@ export class AgentServiceService {
       const didDetails = await this.getDidDetails(url, payload, getApiKey)
       const getDidByOrg = await this.agentServiceRepository.getOrgDid(orgId)
 
-      await this.checkDidExistence(getDidByOrg, didDetails)
+      this.checkDidExistence(getDidByOrg, didDetails)
 
       if (isPrimaryDid) {
         await this.updateAllDidsToNonPrimary(orgId, getDidByOrg)
@@ -1017,7 +1013,7 @@ export class AgentServiceService {
           error: error?.response?.error?.message,
         })
       }
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1115,7 +1111,7 @@ export class AgentServiceService {
       return createKeyPairResponse
     } catch (error) {
       this.logger.error(`error in createSecp256k1KeyPair : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1295,7 +1291,7 @@ export class AgentServiceService {
       return schemaResponse
     } catch (error) {
       this.logger.error(`Error in creating schema: ${error}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1455,7 +1451,7 @@ export class AgentServiceService {
       return getProofPresentationById
     } catch (error) {
       this.logger.error(`Error in proof presentation by id in agent service : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1499,7 +1495,7 @@ export class AgentServiceService {
       return verifyPresentation
     } catch (error) {
       this.logger.error(`Error in verify proof presentation in agent service : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1522,7 +1518,7 @@ export class AgentServiceService {
       return getConnectionsByconnectionId
     } catch (error) {
       this.logger.error(`Error in getConnectionsByconnectionId in agent service : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1564,7 +1560,7 @@ export class AgentServiceService {
       return agentHealthData
     } catch (error) {
       this.logger.error(`Agent health details : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1601,7 +1597,7 @@ export class AgentServiceService {
       return getVerifiedProofDetails
     } catch (error) {
       this.logger.error(`Error in get verified proof details in agent service : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1757,7 +1753,7 @@ export class AgentServiceService {
       })
     } catch (error) {
       this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 
@@ -1769,19 +1765,16 @@ export class AgentServiceService {
     const payload = {
       did,
     }
-    const updatedSchemaInfo = await this.agentServiceProxy
-      .send(pattern, payload)
-      .toPromise()
-      .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`)
-        throw new HttpException(
-          {
-            status: error.status,
-            error: error.message,
-          },
-          error.status
-        )
-      })
+    const updatedSchemaInfo = firstValueFrom(this.agentServiceProxy.send(pattern, payload)).catch((error) => {
+      this.logger.error(`catch: ${JSON.stringify(error)}`)
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.message,
+        },
+        error.status
+      )
+    })
     return updatedSchemaInfo
   }
 
@@ -1882,7 +1875,7 @@ export class AgentServiceService {
       return getQuestionAnswersRecord
     } catch (error) {
       this.logger.error(`Error in getQuestionAnswersRecord in agent service : ${JSON.stringify(error)}`)
-      throw new RpcException(error.response ? error.response : error)
+      throw new RpcException(error.response ?? error)
     }
   }
 

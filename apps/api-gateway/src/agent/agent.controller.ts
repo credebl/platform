@@ -111,7 +111,7 @@ export class AgentController {
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
   @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-  walletProvision(@Body() walletUserDetails: WalletDetailsDto, @User() user: object): Promise<object> {
+  walletProvision(@Body() walletUserDetails: WalletDetailsDto, @User() user: IUserRequestInterface): Promise<object> {
     this.logger.log(`**** Spin up the agent...${JSON.stringify(walletUserDetails)}`)
 
     const regex = /^[a-zA-Z0-9]+$/

@@ -198,7 +198,7 @@ export class UserService {
       const platform = platformName || process.env.PLATFORM_NAME
       emailData.emailSubject = `[${platform}] Verify your email to activate your account`
 
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(
+      emailData.emailHtml = urlEmailTemplate.getUserURLTemplate(
         email,
         verificationCode,
         redirectUrl,
@@ -519,7 +519,7 @@ export class UserService {
       const platform = platformName || process.env.PLATFORM_NAME
       emailData.emailSubject = `[${platform}] Important: Password Reset Request`
 
-      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(
+      emailData.emailHtml = urlEmailTemplate.getUserResetPasswordTemplate(
         email,
         platform,
         brandLogoUrl,

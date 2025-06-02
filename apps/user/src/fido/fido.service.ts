@@ -96,7 +96,8 @@ export class FidoService {
       })
       if (response?.verified && email.toLowerCase()) {
         await this.fidoUserRepository.updateUserDetails(email.toLowerCase(), [{ isFidoVerified: true }])
-        const credentialID = response.newDevice.credentialID.replace(/=*$/, '')
+        // TODO: Test below changes from (/=*$/, '') to (/=+$/, '')
+        const credentialID = response.newDevice.credentialID.replace(/=+$/, '')
         response.newDevice.credentialID = credentialID
         const getUser = await this.fidoUserRepository.checkFidoUserExist(email.toLowerCase())
         await this.userDevicesRepository.createMultiDevice(response?.newDevice, getUser.id)

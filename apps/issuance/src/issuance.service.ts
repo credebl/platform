@@ -135,6 +135,11 @@ export class IssuanceService {
     }
 
     const getSchemaDetails = await this.issuanceRepository.getSchemaDetails(schemaUrl);
+
+    if (!getSchemaDetails) {
+      throw new NotFoundException(ResponseMessages.schema.error.notFound);
+    }
+
     const schemaAttributes = JSON.parse(getSchemaDetails?.attributes);
 
     return schemaAttributes;
@@ -142,11 +147,12 @@ export class IssuanceService {
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
     try {
-      const { orgId, credentialDefinitionId, comment, credentialData } = payload || {};
+      const { orgId, credentialDefinitionId, comment, credentialData, isValidateSchema } = payload || {};
 
       if (payload.credentialType === IssueCredentialType.INDY) {
-        const schemaResponse: SchemaDetails =
-          await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
         if (schemaResponse?.attributes) {
           const schemaResponseError = [];
           const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
@@ -206,6 +212,21 @@ export class IssuanceService {
             comment
           };
         } else if (payload.credentialType === IssueCredentialType.JSONLD) {
+          const schemaIds = credentialData?.map((item) => {
+            const context: string[] = item?.credential?.['@context'];
+            return Array.isArray(context) && 1 < context.length ? context[1] : undefined;
+          });
+
+          const schemaDetails = await this._getSchemaDetails(schemaIds);
+
+          const ledgerIds = schemaDetails?.map((item) => item?.ledgerId);
+
+          for (const ledgerId of ledgerIds) {
+            if (agentDetails?.ledgerId !== ledgerId) {
+              throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+            }
+          }
+
           issueData = {
             protocolVersion: payload.protocolVersion || 'v2',
             connectionId,
@@ -226,7 +247,10 @@ export class IssuanceService {
           const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
 
           const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
-          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+
+          if (isValidateSchema) {
+            validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+          }
         }
 
         await this.delay(500);
@@ -308,8 +332,9 @@ export class IssuanceService {
         isValidateSchema
       } = payload;
       if (credentialType === IssueCredentialType.INDY) {
-        const schemadetailsResponse: SchemaDetails =
-          await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+        const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
 
         if (schemadetailsResponse?.attributes) {
           const schemadetailsResponseError = [];
@@ -376,6 +401,20 @@ export class IssuanceService {
       }
 
       if (credentialType === IssueCredentialType.JSONLD) {
+        const context = credential?.['@context'][1];
+
+        const schemaDetails = await this.issuanceRepository.getSchemaDetails(String(context));
+
+        if (!schemaDetails) {
+          throw new NotFoundException(ResponseMessages.schema.error.notFound);
+        }
+
+        const ledgerId = schemaDetails?.ledgerId;
+
+        if (agentDetails?.ledgerId !== ledgerId) {
+          throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+        }
+
         issueData = {
           protocolVersion: protocolVersion || 'v2',
           credentialFormats: {
@@ -442,7 +481,9 @@ export class IssuanceService {
       return message.response;
     } catch (error) {
       this.logger.error(
-        `[storeIssuanceObjectReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(error)}`
+        `[storeIssuanceObjectReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
+          error
+        )}`
       );
       throw error;
     }
@@ -714,8 +755,7 @@ export class IssuanceService {
     outOfBandCredential: OutOfBandCredentialOfferPayload,
     platformName?: string,
     organizationLogoUrl?: string,
-    prettyVc?: IPrettyVc,
-    isValidateSchema?: boolean
+    prettyVc?: IPrettyVc
   ): Promise<boolean> {
     try {
       const {
@@ -727,16 +767,35 @@ export class IssuanceService {
         attributes,
         emailId,
         credentialType,
-        isReuseConnection
+        isReuseConnection,
+        isValidateSchema
       } = outOfBandCredential;
+
+      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       if (IssueCredentialType.JSONLD === credentialType) {
         await validateAndUpdateIssuanceDates(credentialOffer);
+
+        const schemaIds = credentialOffer?.map((item) => {
+          const context: string[] = item?.credential?.['@context'];
+          return Array.isArray(context) && 1 < context.length ? context[1] : undefined;
+        });
+
+        const schemaDetails = await this._getSchemaDetails(schemaIds);
+
+        const ledgerIds = schemaDetails?.map((item) => item?.ledgerId);
+
+        for (const ledgerId of ledgerIds) {
+          if (agentDetails?.ledgerId !== ledgerId) {
+            throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+          }
+        }
       }
 
       if (IssueCredentialType.INDY === credentialType) {
-        const schemaResponse: SchemaDetails =
-          await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
 
         let attributesArray: IAttributes[] = [];
         if (schemaResponse?.attributes) {
@@ -777,7 +836,6 @@ export class IssuanceService {
           }
         }
       }
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       const { organisation } = agentDetails;
       if (!agentDetails) {
@@ -1098,8 +1156,8 @@ export class IssuanceService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
               : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER}`.replace('#', tenantId)
-                : null;
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER}`.replace('#', tenantId)
+              : null;
           break;
         }
 
@@ -1108,8 +1166,8 @@ export class IssuanceService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
               : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND}`.replace('#', tenantId)
-                : null;
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND}`.replace('#', tenantId)
+              : null;
           break;
         }
 
@@ -1118,8 +1176,8 @@ export class IssuanceService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
               : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS}`.replace('#', tenantId)
-                : null;
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS}`.replace('#', tenantId)
+              : null;
           break;
         }
 
@@ -1128,10 +1186,10 @@ export class IssuanceService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
               : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`
-                    .replace('#', credentialRecordId)
-                    .replace('@', tenantId)
-                : null;
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`
+                  .replace('#', credentialRecordId)
+                  .replace('@', tenantId)
+              : null;
           break;
         }
 
@@ -1151,10 +1209,12 @@ export class IssuanceService {
     }
   }
 
-  async downloadBulkIssuanceCSVTemplate(templateDetails: TemplateDetailsInterface): Promise<object> {
+  async downloadBulkIssuanceCSVTemplate(orgId: string, templateDetails: TemplateDetailsInterface): Promise<object> {
     try {
       let schemaResponse: SchemaDetails;
       let fileName: string;
+
+      const orgDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       const { schemaType, templateId } = templateDetails;
 
@@ -1165,17 +1225,34 @@ export class IssuanceService {
 
       if (schemaType === SchemaType.INDY) {
         schemaResponse = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
+
         if (!schemaResponse) {
           throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
         }
+
+        const schemaDetails = await this.issuanceRepository.getSchemaDetails(schemaResponse.schemaLedgerId);
+
+        if (!schemaDetails) {
+          throw new NotFoundException(ResponseMessages.schema.error.notFound);
+        }
+
+        if (orgDetails?.ledgerId !== schemaDetails?.ledgerId) {
+          throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+        }
+
         fileName = `${schemaResponse.tag}-${timestamp}.csv`;
       } else if (schemaType === SchemaType.W3C_Schema) {
         const schemaDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
-        const { attributes, schemaLedgerId, name } = schemaDetails;
-        schemaResponse = { attributes, schemaLedgerId, name };
-        if (!schemaResponse) {
+
+        if (orgDetails?.ledgerId !== schemaDetails?.ledgerId) {
+          throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+        }
+
+        if (!schemaDetails) {
           throw new NotFoundException(ResponseMessages.bulkIssuance.error.invalidIdentifier);
         }
+        const { attributes, schemaLedgerId, name } = schemaDetails;
+        schemaResponse = { attributes, schemaLedgerId, name };
         fileName = `${schemaResponse.name}-${timestamp}.csv`;
       }
 
@@ -1208,11 +1285,12 @@ export class IssuanceService {
         fileName
       };
     } catch (error) {
-      throw new Error(ResponseMessages.bulkIssuance.error.exportFile);
+      this.logger.error(`error in downloading csv : ${JSON.stringify(error.response)}`);
+      throw new RpcException(error?.response ? error?.response : error);
     }
   }
 
-  async uploadCSVTemplate(importFileDetails: ImportFileDetails, requestId?: string): Promise<string> {
+  async uploadCSVTemplate(importFileDetails: ImportFileDetails, orgId: string, requestId?: string): Promise<string> {
     try {
       let credentialDetails;
       const credentialPayload: ICredentialPayload = {
@@ -1223,15 +1301,33 @@ export class IssuanceService {
         credentialType: '',
         schemaName: ''
       };
+
+      const orgDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+
       const { fileName, templateId, type, isValidateSchema } = importFileDetails;
       if (type === SchemaType.W3C_Schema) {
         credentialDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
+
+        if (orgDetails?.ledgerId !== credentialDetails?.ledgerId) {
+          throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+        }
+
         credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
         credentialPayload.credentialDefinitionId = SchemaType.W3C_Schema;
         credentialPayload.credentialType = SchemaType.W3C_Schema;
         credentialPayload.schemaName = credentialDetails.name;
       } else if (type === SchemaType.INDY) {
         credentialDetails = await this.issuanceRepository.getCredentialDefinitionDetails(templateId);
+        const schemaDetails = await this.issuanceRepository.getSchemaDetails(credentialDetails.schemaLedgerId);
+
+        if (!schemaDetails) {
+          throw new NotFoundException(ResponseMessages.schema.error.notFound);
+        }
+
+        if (orgDetails?.ledgerId !== schemaDetails?.ledgerId) {
+          throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
+        }
+
         credentialPayload.schemaLedgerId = credentialDetails.schemaLedgerId;
         credentialPayload.credentialDefinitionId = credentialDetails.credentialDefinitionId;
         credentialPayload.credentialType = SchemaType.INDY;
@@ -1764,14 +1860,14 @@ export class IssuanceService {
         };
 
         oobIssuancepayload = await createOobJsonldIssuancePayload(JsonldCredentialDetails, prettyVc);
+        oobIssuancepayload.isValidateSchema = jobDetails?.isValidateSchema;
       }
 
       const oobCredentials = await this.outOfBandCredentialOffer(
         oobIssuancepayload,
         jobDetails?.platformName,
         jobDetails?.organizationLogoUrl,
-        prettyVc,
-        jobDetails?.isValidateSchema
+        prettyVc
       );
       if (oobCredentials) {
         await this.issuanceRepository.deleteFileDataByJobId(jobDetails.id);

@@ -445,6 +445,7 @@ export class IssuanceController {
     @Query() previewFileDetails: PreviewFileDetails,
     @Res() res: Response
   ): Promise<Response> {
+    const { requestId } = query;
     const previewCSVDetails = await this.issueCredentialService.previewCSVDetails(requestId, orgId, previewFileDetails);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,

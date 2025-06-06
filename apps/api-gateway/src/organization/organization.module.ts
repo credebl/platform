@@ -7,7 +7,7 @@ import { Module } from '@nestjs/common';
 import { OrganizationController } from './organization.controller';
 import { OrganizationService } from './organization.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
 @Module({
@@ -24,6 +24,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ])
   ],
   controllers: [OrganizationController],
-  providers: [OrganizationService, CommonService, AwsService, NATSClient]
+  providers: [OrganizationService, CommonService, StorageService, NATSClient]
 })
 export class OrganizationModule {}

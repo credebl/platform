@@ -5,7 +5,7 @@ import { IssuanceService } from './issuance.service';
 import { CommonService } from '@credebl/common';
 import { HttpModule } from '@nestjs/axios';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
 
@@ -21,6 +21,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ])
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, CommonService, AwsService, NATSClient]
+  providers: [IssuanceService, CommonService, StorageService, NATSClient, StorageService]
 })
 export class IssuanceModule {}

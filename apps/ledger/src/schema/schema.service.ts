@@ -360,6 +360,7 @@ export class SchemaService extends BaseService {
   }
 
   private async storeW3CSchemas(schemaDetails, user, orgId, attributes, alias): Promise<schema> {
+
     let ledgerDetails;
     const schemaServerUrl = `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
     const schemaRequest = await this.commonService.httpGet(schemaServerUrl).then(async (response) => response);

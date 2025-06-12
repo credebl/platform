@@ -22,7 +22,9 @@ import {
   ApiOperation,
   ApiUnauthorizedResponse,
   ApiForbiddenResponse,
-  ApiBearerAuth
+  ApiBearerAuth,
+  ApiBody,
+  ApiParam
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -72,11 +74,116 @@ export class AgentController {
     description: 'Get the agent health details for the organization'
   })
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER, OrgRoles.VERIFIER)
-  
-  async getAgentHealth(@Param('orgId') orgId: string, @User() reqUser: user, @Res() res: Response): Promise<Response> {    
+  @Roles(
+    OrgRoles.OWNER,
+    OrgRoles.ADMIN,
+    OrgRoles.HOLDER,
+    OrgRoles.ISSUER,
+    OrgRoles.SUPER_ADMIN,
+    OrgRoles.MEMBER,
+    OrgRoles.VERIFIER
+  )
+  async getAgentHealth(@Param('orgId') orgId: string, @User() reqUser: user, @Res() res: Response): Promise<Response> {
     const agentData = await this.agentService.getAgentHealth(reqUser, orgId);
 
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.agent.success.health,
+      data: agentData
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Get Organization agent health
+   * @param orgId The ID of the organization
+   * @param reqUser The user making the request
+   * @param res The response object
+   * @returns Get agent details
+   */
+  @ApiBody({
+    description:
+      'Enter the data you would like to sign. It can be of type w3c jsonld credential or any type that needs to be signed'
+  })
+  @ApiParam({
+    name: 'dataType',
+    type: String,
+    required: false,
+    description:
+      'dataType of the data you are signing. It can be a credential or a random object of any data type. For credentials, currently only w3c-jsonld credentials are supported to be signed'
+  })
+  @Post('/orgs/:orgId/agents/sign')
+  @ApiOperation({
+    summary: 'Signs data from agent',
+    description: 'Signs data from agent'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(
+    OrgRoles.OWNER,
+    OrgRoles.ADMIN,
+    OrgRoles.HOLDER,
+    OrgRoles.ISSUER,
+    OrgRoles.SUPER_ADMIN,
+    OrgRoles.MEMBER,
+    OrgRoles.VERIFIER
+  )
+  async signData(
+    @Param('orgId') orgId: string,
+    @Body() data: unknown,
+    @Param('dataType') dataType: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const agentData = await this.agentService.signData(data, orgId);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.agent.success.health,
+      data: agentData
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Get Organization agent health
+   * @param orgId The ID of the organization
+   * @param reqUser The user making the request
+   * @param res The response object
+   * @returns Get agent details
+   */
+  @ApiBody({
+    description:
+      'Enter the data you would like to verify the signature for. It can be of type w3c jsonld credential or any type that needs to be verified'
+  })
+  @ApiParam({
+    name: 'dataType',
+    type: String,
+    required: false,
+    description:
+      'dataType of the data you are sverifying the signature. It can be a credential or a random object of any data type. For credentials, currently only w3c-jsonld credentials are supported to be verified'
+  })
+  @Post('/orgs/:orgId/agents/verify-signature')
+  @ApiOperation({
+    summary: 'Validates signed data from agent, including credentials',
+    description: 'Credentials or any other data signed by the organisation is validated'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(
+    OrgRoles.OWNER,
+    OrgRoles.ADMIN,
+    OrgRoles.HOLDER,
+    OrgRoles.ISSUER,
+    OrgRoles.SUPER_ADMIN,
+    OrgRoles.MEMBER,
+    OrgRoles.VERIFIER
+  )
+  async verifysignature(
+    @Param('orgId') orgId: string,
+    @Body() data: unknown,
+    @Param('dataType') dataType: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const agentData = await this.agentService.signData(data, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.agent.success.health,
@@ -335,7 +442,16 @@ export class AgentController {
   @Roles(OrgRoles.OWNER)
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async deleteWallet(
-    @Param('orgId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string, 
+    @Param(
+      'orgId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {

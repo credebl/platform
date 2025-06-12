@@ -328,16 +328,20 @@ export enum CommonConstants {
   LIVENET = 'livenet',
 
   // Features Id
-  SCHEMA_CREATION = 101,
-  CREATE_CREDENTIAL_DEFINITION = 102,
-  CREATION_OF_ATTRIBUTE = 103,
-  CREDENTIAL_ISSUANCE = 104,
-  REVOCATION_REGISTRY = 105,
-  REVOCATION_UPDATE = 106,
-  VERIFY_PROOF = 107,
-  ENDORSER_DID = 108,
-  ORGANIZATION_CREATION = 109,
-  ADD_USER = 110,
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  SCHEMA_CREATION = 1,
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  CREATE_CREDENTIAL_DEFINITION = 2,
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  CREATION_OF_ATTRIBUTE = 3,
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  CREDENTIAL_ISSUANCE = 4,
+  REVOCATION_REGISTRY = 5,
+  REVOCATION_UPDATE = 6,
+  VERIFY_PROOF = 7,
+  ENDORSER_DID = 8,
+  ORGANIZATION_CREATION = 9,
+  ADD_USER = 10,
 
   // Static values to up platform Agent
   SEED = '101111110111101100111100000Seed1',

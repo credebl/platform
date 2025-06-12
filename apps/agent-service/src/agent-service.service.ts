@@ -69,8 +69,6 @@ import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
-import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { ledgerName } from '@credebl/common/cast.helper';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import * as CryptoJS from 'crypto-js';
@@ -78,6 +76,7 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { PrismaService } from '@credebl/prisma-service';
 import { from } from 'rxjs';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
 
 @Injectable()
 @WebSocketGateway()
@@ -1563,7 +1562,7 @@ export class AgentServiceService {
    * @param orgId
    * @returns agent status
    */
-  async signDataFromAgent(data: unknown, orgId: string): Promise<IAgentStatus> {
+  async signDataFromAgent(data: SignDataDto, orgId: string): Promise<IAgentStatus> {
     try {
       // Get organization agent details
       const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
@@ -1594,11 +1593,19 @@ export class AgentServiceService {
         orgAgentDetails.tenantId
       );
 
+      const { dataTypeToSign, credentialPayload, rawPayload, storeCredential } = data;
+
+      const dataToSign = dataTypeToSign === 'jsonLd' ? credentialPayload : rawPayload;
+
       // Invoke an API request from the agent to assess its current status
       const signedDataFromAgent = await this.commonService
-        .httpPost(`${url}?storeCredential=false`, data, {
-          headers: { authorization: agentApiKey }
-        })
+        .httpPost(
+          `${url}?dataTypeToSign=${dataTypeToSign}&storeCredential=${storeCredential}`,
+          { ...dataToSign },
+          {
+            headers: { authorization: agentApiKey }
+          }
+        )
         .then(async (response) => response);
 
       return signedDataFromAgent;

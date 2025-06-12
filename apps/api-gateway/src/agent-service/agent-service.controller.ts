@@ -20,20 +20,19 @@ import {
   ApiTags,
   ApiResponse,
   ApiOperation,
-  ApiUnauthorizedResponse,
   ApiForbiddenResponse,
-  ApiBearerAuth,
   ApiBody,
-  ApiParam
+  ApiParam,
+  ApiBearerAuth,
+  ApiUnauthorizedResponse
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentService } from './agent-service.service';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
-import { AgentSpinupDto } from './dto/agent-service.dto';
+import { AgentSpinupDto, SignDataDto } from './dto/agent-service.dto';
 import { Response } from 'express';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
@@ -48,6 +47,7 @@ import { CreateWalletDto } from './dto/create-wallet.dto';
 import { CreateNewDidDto } from './dto/create-new-did.dto';
 import { AgentSpinupValidator, TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
+import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 
 const seedLength = 32;
 
@@ -104,14 +104,9 @@ export class AgentController {
    */
   @ApiBody({
     description:
-      'Enter the data you would like to sign. It can be of type w3c jsonld credential or any type that needs to be signed'
-  })
-  @ApiParam({
-    name: 'dataType',
-    type: String,
-    required: false,
-    description:
-      'dataType of the data you are signing. It can be a credential or a random object of any data type. For credentials, currently only w3c-jsonld credentials are supported to be signed'
+      'Enter the data you would like to sign. It can be of type w3c jsonld credential or any type that needs to be signed',
+    type: SignDataDto,
+    required: true
   })
   @Post('/orgs/:orgId/agents/sign')
   @ApiOperation({
@@ -128,12 +123,7 @@ export class AgentController {
     OrgRoles.MEMBER,
     OrgRoles.VERIFIER
   )
-  async signData(
-    @Param('orgId') orgId: string,
-    @Body() data: unknown,
-    @Param('dataType') dataType: string,
-    @Res() res: Response
-  ): Promise<Response> {
+  async signData(@Param('orgId') orgId: string, @Body() data: SignDataDto, @Res() res: Response): Promise<Response> {
     const agentData = await this.agentService.signData(data, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,

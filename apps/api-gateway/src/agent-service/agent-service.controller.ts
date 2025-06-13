@@ -22,7 +22,6 @@ import {
   ApiOperation,
   ApiForbiddenResponse,
   ApiBody,
-  ApiParam,
   ApiBearerAuth,
   ApiUnauthorizedResponse
 } from '@nestjs/swagger';
@@ -32,7 +31,7 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { AgentService } from './agent-service.service';
 import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
-import { AgentSpinupDto, SignDataDto } from './dto/agent-service.dto';
+import { AgentSpinupDto, SignDataDto, VerifySignatureDto } from './dto/agent-service.dto';
 import { Response } from 'express';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
@@ -48,6 +47,7 @@ import { CreateNewDidDto } from './dto/create-new-did.dto';
 import { AgentSpinupValidator, TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
+import { IVerifySignature } from './interface/agent-service.interface';
 
 const seedLength = 32;
 
@@ -143,14 +143,8 @@ export class AgentController {
    */
   @ApiBody({
     description:
-      'Enter the data you would like to verify the signature for. It can be of type w3c jsonld credential or any type that needs to be verified'
-  })
-  @ApiParam({
-    name: 'dataType',
-    type: String,
-    required: false,
-    description:
-      'dataType of the data you are sverifying the signature. It can be a credential or a random object of any data type. For credentials, currently only w3c-jsonld credentials are supported to be verified'
+      'Enter the data you would like to verify the signature for. It can be of type w3c jsonld credential or any type that needs to be verified',
+    type: VerifySignatureDto
   })
   @Post('/orgs/:orgId/agents/verify-signature')
   @ApiOperation({
@@ -169,8 +163,7 @@ export class AgentController {
   )
   async verifysignature(
     @Param('orgId') orgId: string,
-    @Body() data: unknown,
-    @Param('dataType') dataType: string,
+    @Body() data: IVerifySignature,
     @Res() res: Response
   ): Promise<Response> {
     const agentData = await this.agentService.verifysignature(data, orgId);

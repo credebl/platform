@@ -118,9 +118,10 @@ export class W3cJsonLdSignCredentialDto {
   @Type(() => W3cCredentialDto)
   credential: W3cCredentialDto;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  verificationMethod: string;
+  verificationMethod?: string;
 
   @ApiProperty()
   @IsString()

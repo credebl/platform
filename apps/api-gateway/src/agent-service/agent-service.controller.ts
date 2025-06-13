@@ -127,7 +127,7 @@ export class AgentController {
     const agentData = await this.agentService.signData(data, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.agent.success.health,
+      message: ResponseMessages.agent.success.sign,
       data: agentData
     };
 
@@ -173,10 +173,10 @@ export class AgentController {
     @Param('dataType') dataType: string,
     @Res() res: Response
   ): Promise<Response> {
-    const agentData = await this.agentService.signData(data, orgId);
+    const agentData = await this.agentService.verifysignature(data, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.agent.success.health,
+      message: ResponseMessages.agent.success.verify,
       data: agentData
     };
 

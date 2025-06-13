@@ -77,6 +77,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { from } from 'rxjs';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
+import { IVerificationMethod } from 'apps/organization/interfaces/organization.interface';
 
 @Injectable()
 @WebSocketGateway()
@@ -1594,6 +1595,15 @@ export class AgentServiceService {
       );
 
       const { dataTypeToSign, credentialPayload, rawPayload, storeCredential } = data;
+
+      if (dataTypeToSign === 'jsonLd' && credentialPayload) {
+        // Currently, get only primary did for issuance
+        const diddoc = await this.agentServiceRepository.getOrgDid(orgId, true);
+        const verificationMethod = diddoc[0].didDocument['verificationMethod'] as IVerificationMethod[];
+        // For now, we are strictly restricting dids and verification method associated with the primary did
+        // We can optionally modify it to be taken from the payload itself
+        credentialPayload.verificationMethod = verificationMethod[0].id;
+      }
 
       const dataToSign = dataTypeToSign === 'jsonLd' ? credentialPayload : rawPayload;
 

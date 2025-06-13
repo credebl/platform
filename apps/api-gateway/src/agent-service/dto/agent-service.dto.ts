@@ -23,6 +23,7 @@ import {
 import { CreateDidDto } from './create-did.dto';
 import { KeyType } from '@credebl/enum/enum';
 import { RewriteValidationOptions } from '@credebl/common/custom-overrideable-validation-pipe';
+import { BadRequestException } from '@nestjs/common';
 const regex = /^[a-zA-Z0-9 ]*$/;
 export class AgentSpinupDto extends CreateDidDto {
   @ApiProperty()
@@ -150,7 +151,7 @@ class AtLeastOneKeyConstraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage(): string {
-    return 'At least one of publicKeyBase58, did, or method must be provided.';
+    throw new BadRequestException('At least one of publicKeyBase58, did, or method must be provided in SignRawDataDto');
   }
 }
 

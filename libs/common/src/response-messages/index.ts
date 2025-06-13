@@ -212,6 +212,8 @@ export const ResponseMessages = {
       createDid: 'Did created successfully',
       health: 'Agent health details retrieved successfully.',
       ledgerConfig: 'Ledger config details fetched successfully.',
+      sign: 'Payload signed successfully.',
+      verify: 'Payload verified successfully.',
       webhookUrlRegister: 'Webhook Url registered successfully',
       getWebhookUrl: 'Webhook Url fetched successfully',
       createKeys: 'Key-pair created successfully',

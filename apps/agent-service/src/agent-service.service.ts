@@ -78,7 +78,6 @@ import { from } from 'rxjs';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
 import { IVerificationMethod } from 'apps/organization/interfaces/organization.interface';
-
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {

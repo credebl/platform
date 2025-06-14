@@ -62,11 +62,11 @@ export class AgentSpinupDto extends CreateDidDto {
   orgId: string;
 }
 
-class W3cIssuerDto {
-  @ApiProperty()
-  @IsString()
-  id: string;
-}
+// class W3cIssuerDto {
+//   @ApiProperty()
+//   @IsString()
+//   id: string;
+// }
 
 class W3cCredentialSubjectDto {
   @ApiPropertyOptional()
@@ -91,10 +91,10 @@ export class W3cCredentialDto {
   @IsArray()
   type: string[];
 
-  @ApiProperty({ type: () => W3cIssuerDto })
-  @ValidateNested()
-  @Type(() => W3cIssuerDto)
-  issuer: W3cIssuerDto | string;
+  // TODO: Add or W3cIssuerDto
+  @ApiProperty({ type: String, example: 'did:key:z6Mkpz1qHuoMamuHj8YXJNBDu2GrLz3LzinA5t4GiYtYKSv8' })
+  @IsString()
+  issuer: string;
 
   @ApiProperty()
   @IsISO8601()

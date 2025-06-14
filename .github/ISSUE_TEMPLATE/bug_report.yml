@@ -1,0 +1,90 @@
+name: "🐛 Bug Report"
+description: Report a bug or unexpected behavior in the project
+labels: [bug]
+title: "fix: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Reporting a bug on CREDEBL
+        
+        Thank you for taking time to report the bug on CREDEBL, your contribution will help
+        make the product better for everyone.
+
+        Make sure your issue has a generous description that will help others understand and fix it at earliest.
+  - type: checkboxes
+    id: agreement
+    attributes:
+      label: Preliminary Checks
+      options:
+        - label: I have read the contributions guide [contibution guide](https://docs.credebl.id/docs/contribute/how-to-contribute) and agree to it
+          required: true
+        - label: I have searched [existing issues](https://github.com/credebl/platform/issues) and [pull requests](https://github.com/credebl/platform/pulls) to avoid duplicates.
+          required: true
+        - label: "I'm willing to create a PR for this feature. (if applicable)."
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: "🧪 Steps to Reproduce"
+      description: "Provide clear steps to reproduce the bug."
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: "✅ Expected Behavior"
+      description: "What did you expect to happen?"
+      placeholder: |
+        Ex: After clicking 'Submit', I expected a confirmation modal to appear.
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: "❌ Current Behavior"
+      description: "What is currently happening instead?"
+      placeholder: |
+        Ex: The page crashed with a 500 error when clicking 'Submit'.
+    validations:
+      required: true
+
+  - type: input
+    id: affected-version
+    attributes:
+      label: "📌 Affected Version/Commit"
+      description: "Version number, branch name, or commit hash where the bug occurs."
+      placeholder: "e.g., v1.2.3, main, 4f3e2d1"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: environment
+    attributes:
+      label: "💻 Environment"
+      description: "Where did the issue occur?"
+      options:
+        - label: "Local development"
+        - label: "Production"
+        - label: "CI/CD"
+        - label: "Other"
+
+  - type: textarea
+    id: logs-and-screenshots
+    attributes:
+      label: "🧾 Relevant Logs, Screenshots, or Stack Traces"
+      description: "Paste any error messages or screenshots that can help diagnose the issue."
+      placeholder: |
+        Please include:
+        - Error logs
+        - Screenshots
+        - Console output
+        - Stack traces
+    validations:
+      required: false

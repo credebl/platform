@@ -257,7 +257,7 @@ interface IDidDocument {
   verificationMethod: IVerificationMethod[];
 }
 
-interface IVerificationMethod {
+export interface IVerificationMethod {
   id: string;
   type: string;
   controller: string;

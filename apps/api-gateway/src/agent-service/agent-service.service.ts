@@ -13,80 +13,92 @@ import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class AgentService extends BaseService {
-    constructor(
-        @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
-        private readonly natsClient : NATSClient
-    ) {
-        super('AgentService');
-    }
+  constructor(
+    @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
+    private readonly natsClient: NATSClient
+  ) {
+    super('AgentService');
+  }
 
-    /**
-     * Spinup the agent by organization
-     * @param agentSpinupDto 
-     * @param user 
-     * @returns Get agent status
-     */
-    async agentSpinup(agentSpinupDto: AgentSpinupDto, user: user): Promise<AgentSpinUpSatus> {
-        const payload = { agentSpinupDto, user };
+  /**
+   * Spinup the agent by organization
+   * @param agentSpinupDto
+   * @param user
+   * @returns Get agent status
+   */
+  async agentSpinup(agentSpinupDto: AgentSpinupDto, user: user): Promise<AgentSpinUpSatus> {
+    const payload = { agentSpinupDto, user };
 
-        // NATS call
-        return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'agent-spinup', payload);
-    }
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'agent-spinup', payload);
+  }
 
-    async createTenant(createTenantDto: CreateTenantDto, user: user): Promise<AgentSpinUpSatus> {
-        const payload = { createTenantDto, user };
+  async createTenant(createTenantDto: CreateTenantDto, user: user): Promise<AgentSpinUpSatus> {
+    const payload = { createTenantDto, user };
 
-        // NATS call
-        return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'create-tenant', payload);
-    }
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'create-tenant', payload);
+  }
 
-    async createDid(createDidDto: CreateDidDto, orgId:string, user: user): Promise<object> {
-        const payload = { createDidDto, orgId, user };
+  async createDid(createDidDto: CreateDidDto, orgId: string, user: user): Promise<object> {
+    const payload = { createDidDto, orgId, user };
 
-        // NATS call
-        return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'create-did', payload);
-    }
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'create-did', payload);
+  }
 
-    async createWallet(createWalletDto: CreateWalletDto, user: user): Promise<IWalletRecord> {
-        const payload = { createWalletDto, user };
-        // NATS call
-        return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'create-wallet', payload);
-    }
+  async createWallet(createWalletDto: CreateWalletDto, user: user): Promise<IWalletRecord> {
+    const payload = { createWalletDto, user };
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'create-wallet', payload);
+  }
 
-    async getAgentHealth(user: user, orgId:string): Promise<AgentStatus> {
-        const payload = { user, orgId };
+  async getAgentHealth(user: user, orgId: string): Promise<AgentStatus> {
+    const payload = { user, orgId };
 
-        // NATS call
-        return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'agent-health', payload);
-        
-    }
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'agent-health', payload);
+  }
 
-    async getLedgerConfig(user: user): Promise<object> {
-        const payload = { user };
+  async signData(data: unknown, orgId: string): Promise<AgentStatus> {
+    const payload = { data, orgId };
 
-        // NATS call
-        return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'get-ledger-config', payload);
-    }
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'sign-data-from-agent', payload);
+  }
 
-    async createSecp256k1KeyPair(orgId:string): Promise<object> {
-        const payload = {orgId};
-        // NATS call
-        
-        return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'polygon-create-keys', payload);
-    }
+  async verifysignature(data: unknown, orgId: string): Promise<AgentStatus> {
+    const payload = { data, orgId };
 
-    async agentConfigure(agentConfigureDto: AgentConfigureDto, user: user): Promise<object> {
-        const payload = { agentConfigureDto, user };
-        // NATS call
-        
-        return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'agent-configure', payload);
-    }
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'verify-signature-from-agent', payload);
+  }
 
-    async deleteWallet(orgId: string, user: user): Promise<object> {
-        const payload = { orgId, user };
-        // NATS call
-        
-        return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'delete-wallet', payload);
-    }
+  async getLedgerConfig(user: user): Promise<object> {
+    const payload = { user };
 
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'get-ledger-config', payload);
+  }
+
+  async createSecp256k1KeyPair(orgId: string): Promise<object> {
+    const payload = { orgId };
+    // NATS call
+
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'polygon-create-keys', payload);
+  }
+
+  async agentConfigure(agentConfigureDto: AgentConfigureDto, user: user): Promise<object> {
+    const payload = { agentConfigureDto, user };
+    // NATS call
+
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'agent-configure', payload);
+  }
+
+  async deleteWallet(orgId: string, user: user): Promise<object> {
+    const payload = { orgId, user };
+    // NATS call
+
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'delete-wallet', payload);
+  }
 }

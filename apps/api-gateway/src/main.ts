@@ -2,10 +2,10 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger, ValidationPipe, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
+import { Logger, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
 
 import { AppModule } from './app.module';
-import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { AllExceptionsFilter } from '@credebl/common/exception-handler';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
@@ -14,6 +14,7 @@ import helmet from 'helmet';
 import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import { NatsInterceptor } from '@credebl/common';
+import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-validation-pipe';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -90,7 +91,9 @@ async function bootstrap(): Promise<void> {
   app.use(express.static('invoice-pdf'));
   app.use(express.static('uploadedFiles/bulk-verification-templates'));
   app.use(express.static('uploadedFiles/import'));
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  // Use custom updatable global pipes
+  const reflector = app.get(Reflector);
+  app.useGlobalPipes(new UpdatableValidationPipe(reflector, { whitelist: true, transform: true }));
   app.use(
     helmet({
       xssFilter: true

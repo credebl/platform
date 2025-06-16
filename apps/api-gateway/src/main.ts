@@ -17,6 +17,11 @@ import { NatsInterceptor } from '@credebl/common';
 import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-validation-pipe';
 dotenv.config();
 
+/**
+ * Bootstraps and starts the NestJS API Gateway application with microservice integration, middleware, API documentation, security, and global configuration.
+ *
+ * Initializes the application, connects to a NATS microservice, sets up middleware for request parsing and URL validation, configures Swagger API documentation, applies global exception filters, enables CORS based on environment configuration, serves static files, applies a custom global validation pipe, enables security middleware, and starts listening on the configured host and port.
+ */
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 

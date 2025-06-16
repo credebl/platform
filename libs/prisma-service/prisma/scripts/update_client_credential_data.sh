@@ -5,7 +5,20 @@ DB_URL=$1
 CLIENT_ID=$2
 CLIENT_SECRET=$3
 
-# Function to update clientId and clientSecret
+# Updates the clientId and clientSecret fields in the "user" table where both are NULL.
+#
+# Globals:
+#   DB_URL: The database connection URL.
+#   CLIENT_ID: The new clientId value to set.
+#   CLIENT_SECRET: The new clientSecret value to set.
+#
+# Outputs:
+#   Prints the result of the SQL update operation to STDOUT, including success or failure messages.
+#
+# Example:
+#
+#   update_client_credentials
+#   # Updates all users with NULL clientId and clientSecret, setting them to the provided values.
 update_client_credentials() {
     local update_query="UPDATE \"user\" SET \"clientId\" = '${CLIENT_ID}', \"clientSecret\" = '${CLIENT_SECRET}' WHERE \"clientId\" IS NULL AND \"clientSecret\" IS NULL;"
 

@@ -20,6 +20,8 @@ dotenv.config();
 
 async function bootstrap(): Promise<void> {
   await otelSDK.start();
+  // eslint-disable-next-line no-console
+  console.log('OpenTelemetry SDK started successfully');
   const app = await NestFactory.create(AppModule);
 
   app.useLogger(app.get(NestjsLoggerServiceAdapter));

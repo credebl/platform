@@ -68,40 +68,43 @@ export default class LoggerService implements Logger {
   }
 
   private emitToOtel(severityText: string, message: string | Error, data?: LogData): void {
-    const correlationId = data?.correlationId || this.contextStorageService.getContextId();
-    otelLogger.emit({
-      body: `${correlationId} ${'string' === typeof message ? message : message.message}`,
-      severityText,
-      attributes: {
+    try {
+      const correlationId = data?.correlationId || this.contextStorageService.getContextId();
+
+      const attributes = {
         app: data?.app || this.app,
         organization: data?.organization || this.organization,
         context: data?.context || this.context,
         sourceClass: data?.sourceClass || this.sourceClass,
         correlationId,
         microservice: this.microserviceName,
-        ...(data
-          ? {
-              ...data,
-              ...(data.error
-                ? {
-                    error:
-                      'string' === typeof data.error
-                        ? data.error
-                        : data.error instanceof Error
-                          ? {
-                              name: data.error.name,
-                              message: data.error.message,
-                              stack: data.error.stack
-                            }
-                          : 'object' === typeof data.error
-                            ? JSON.parse(JSON.stringify(data.error))
-                            : String(data.error)
-                  }
-                : {})
-            }
-          : {})
+        ...(data ?? {})
+      };
+
+      if (data?.error) {
+        attributes.error =
+          'string' === typeof data.error
+            ? data.error
+            : data.error instanceof Error
+              ? {
+                  name: data.error.name,
+                  message: data.error.message,
+                  stack: data.error.stack
+                }
+              : 'object' === typeof data.error
+                ? JSON.parse(JSON.stringify(data.error))
+                : String(data.error);
       }
-    });
+
+      otelLogger.emit({
+        body: `${correlationId} ${'string' === typeof message ? message : message.message}`,
+        severityText,
+        attributes
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to emit log to OpenTelemetry:', err);
+    }
   }
 
   private getLogData(data?: LogData): LogData {

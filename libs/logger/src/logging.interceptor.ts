@@ -25,7 +25,7 @@ export class LoggingInterceptor implements NestInterceptor {
       const rpcContext = context.switchToRpc().getContext();
       const headers = rpcContext.getHeaders();
 
-      if (!isNullUndefinedOrEmpty(headers)) {
+      if (!isNullUndefinedOrEmpty(headers) && headers._description) {
         this.contextStorageService.set('x-correlation-id', headers._description);
         this.contextStorageService.setContextId(headers._description);
       } else {

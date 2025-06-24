@@ -10,6 +10,7 @@ import { v4 } from 'uuid';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isNullUndefinedOrEmpty = (obj: any): boolean =>
   null === obj || obj === undefined || ('object' === typeof obj && 0 === Object.keys(obj).length);
+
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   constructor(

@@ -1,5 +1,5 @@
 /* eslint-disable quotes */
-import { AgentType } from "@credebl/enum/enum";
+import { AgentType } from "@credebl/common/enum/enum";
 
 export interface IWalletProvision {
     orgId: string;

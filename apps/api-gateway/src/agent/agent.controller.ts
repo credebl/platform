@@ -22,7 +22,7 @@ import { WalletDetailsDto } from '../dtos/wallet-details.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { AgentActions } from '../dtos/enums';
 import { RolesGuard } from '../authz/roles.guard';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { CommonConstants } from '@credebl/common';
 import { booleanStatus, sortValue } from '../enum';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';

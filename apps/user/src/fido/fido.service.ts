@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common'; //InternalServerErrorException
 import { CommonService } from '@credebl/common';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { RpcException } from '@nestjs/microservices';
 import { FidoUserRepository } from '../../repositories/fido-user.repository';
 import { GenerateRegistrationDto, VerifyRegistrationPayloadDto, VerifyAuthenticationPayloadDto, UpdateFidoUserDetailsDto, credentialDto, updateDeviceDto } from './dtos/fido-user.dto';

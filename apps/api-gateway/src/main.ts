@@ -5,14 +5,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
 
 import { AppModule } from './app.module';
-import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
-import { AllExceptionsFilter } from '@credebl/common/exception-handler';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import { AllExceptionsFilter } from '@credebl/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common';
 
 import helmet from 'helmet';
-import { CommonConstants } from '@credebl/common/common.constant';
-import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
+import { CommonConstants } from '@credebl/common';
+import {NestjsLoggerServiceAdapter} from '@credebl/logger';
 import { NatsInterceptor } from '@credebl/common';
 import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-validation-pipe';
 dotenv.config();

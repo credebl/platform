@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { SortValue } from '../../enum';
 import { Transform, Type } from 'class-transformer';
 import {  IsOptional, Max, Min } from 'class-validator';
-import { toNumber } from '@credebl/common/cast.helper';
+import { toNumber } from '@credebl/common/utils/helpers/cast.helper';
 
 export class GetAllCredDefsDto {
     @ApiProperty({ required: false, default: 1 })

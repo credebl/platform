@@ -56,28 +56,33 @@ import {
   OrgDid,
   IBasicMessage
 } from './interface/agent-service.interface';
-import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
+import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/common/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { Prisma, RecordType, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
-import { GetSchemaAgentRedirection } from 'apps/ledger/src/schema/schema.interface';
+import { GetSchemaAgentRedirection } from '@credebl/ledger/src/schema/schema.interface';
 import { ConnectionService } from 'apps/connection/src/connection.service';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { Socket, io } from 'socket.io-client';
 import { WebSocketGateway } from '@nestjs/websockets';
-import * as retry from 'async-retry';
+import retry from 'async-retry';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ledgerName } from '@credebl/common/cast.helper';
+import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+import { ledgerName } from '@credebl/common/utils/helpers/cast.helper';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import * as CryptoJS from 'crypto-js';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { UserActivityRepository } from '@credebl/user-activity/repositories';
 import { PrismaService } from '@credebl/prisma-service';
 import { from } from 'rxjs';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
 import { IVerificationMethod } from 'apps/organization/interfaces/organization.interface';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
+
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {

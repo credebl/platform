@@ -4,7 +4,6 @@
   "monorepo": true,
   "root": "apps/api-gateway",
   "compilerOptions": {
-    "webpack": true,
     "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
   },
   "projects": {

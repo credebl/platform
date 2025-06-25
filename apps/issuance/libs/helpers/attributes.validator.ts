@@ -1,4 +1,4 @@
-import { W3CSchemaDataType } from '@credebl/enum/enum';
+import { W3CSchemaDataType } from '@credebl/common/enum/enum';
 import { BadRequestException } from '@nestjs/common';
 import { IIssuanceAttributes, ISchemaAttributes } from 'apps/issuance/interfaces/issuance.interfaces';
 

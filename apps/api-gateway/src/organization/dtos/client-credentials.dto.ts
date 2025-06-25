@@ -2,7 +2,7 @@ import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 import { Transform } from 'class-transformer';
-import { trim } from '@credebl/common/cast.helper';
+import { trim } from '@credebl/common/utils/helpers/cast.helper';
 
 @ApiExtraModels()
 export class ClientCredentialsDto {

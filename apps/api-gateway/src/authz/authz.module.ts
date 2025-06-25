@@ -16,10 +16,10 @@ import { SupabaseService } from '@credebl/supabase';
 import { UserModule } from '../user/user.module';
 import { UserService } from '../user/user.service';
 import { VerificationService } from '../verification/verification.service';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common/nats/nats.config';
 import { OrganizationService } from '../organization/organization.service';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 
 @Module({
   imports: [

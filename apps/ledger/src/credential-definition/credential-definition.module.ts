@@ -8,9 +8,9 @@ import { CredentialDefinitionService } from './credential-definition.service';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaService } from '@credebl/prisma-service';
 import { CacheModule } from '@nestjs/cache-manager';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common/nats/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 @Module({
   imports: [
     ClientsModule.register([

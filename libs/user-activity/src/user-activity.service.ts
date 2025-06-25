@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
 import { Injectable } from '@nestjs/common';
-import { UserActivityRepository } from '../repositories';
+import { UserActivityRepository } from './repositories';
 import { user_activity } from '@prisma/client';
-import { IUsersActivity } from '../interface';
+import { IUsersActivity } from './interface';
 
 @Injectable()
 export class UserActivityService {

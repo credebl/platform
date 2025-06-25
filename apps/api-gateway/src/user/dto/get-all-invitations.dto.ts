@@ -2,7 +2,7 @@ import { IsOptional, IsString} from 'class-validator';
 
 
 import { ApiProperty } from '@nestjs/swagger';
-import { Invitation } from '@credebl/enum/enum';
+import { Invitation } from '@credebl/common/enum/enum';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 export class GetAllInvitationsDto extends PaginationDto {

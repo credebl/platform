@@ -19,19 +19,19 @@ import { SchemaModule } from './schema/schema.module';
 // import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
 import { WebhookModule } from './webhook/webhook.module';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { NotificationModule } from './notification/notification.module';
 import { GeoLocationModule } from './geo-location/geo-location.module';
-import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common';
 import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
-import { ContextModule } from '@credebl/context/contextModule';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { ContextModule } from '@credebl/common';
+import { LoggerModule } from '@credebl/logger';
+import { GlobalConfigModule } from '@credebl/config';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 
 @Module({
   imports: [

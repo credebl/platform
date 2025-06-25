@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { AutoAccept } from '@credebl/enum/enum';
-import { trim } from '@credebl/common/cast.helper';
+import { AutoAccept } from '@credebl/common/enum/enum';
+import { trim } from '@credebl/common/utils/helpers/cast.helper';
 import { Attribute, Credential, CredentialsIssuanceDto, JsonLdCredentialDetailOptions } from './issuance.dto';
 
 class ConnectionAttributes {

@@ -1,11 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { LedgerModule } from './ledger.module';
-import { HttpExceptionFilter } from 'libs/http-exception.filter';
+import { HttpExceptionFilter } from '@credebl/common/utils/handlers/http-exception.filter';
 import { Logger } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common/nats/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
+import {NestjsLoggerServiceAdapter} from '@credebl/logger/nestjsLoggerServiceAdapter';
 
 
 async function bootstrap(): Promise<void> {

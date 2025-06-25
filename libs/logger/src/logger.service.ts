@@ -2,13 +2,13 @@ import { Inject, Injectable, Scope } from '@nestjs/common';
 import { INQUIRER } from '@nestjs/core';
 import Logger, {
   LoggerBaseKey
-} from '@credebl/logger/logger.interface';
-import { LogData, LogLevel } from '@credebl/logger/log';
+} from './logger.interface';
+import { LogData, LogLevel } from './log';
 import { ConfigService } from '@nestjs/config';
-import ContextStorageService, {
+import { ContextStorageService,
   ContextStorageServiceKey
-} from '@credebl/context/contextStorageService.interface';
-import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+} from '@credebl/common';
+import { MICRO_SERVICE_NAME } from '@credebl/common';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export default class LoggerService implements Logger {

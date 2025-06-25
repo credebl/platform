@@ -1,12 +1,12 @@
 import { Injectable, Logger, ConflictException } from '@nestjs/common';
-import { PrismaService } from '@credebl/prisma-service';
+import { PrismaService } from '@credebl/prisma-service/dist/src/index';
 // eslint-disable-next-line camelcase
-import { agent_invitations, org_agents, platform_config, shortening_url } from '@prisma/client';
+import { agent_invitations, org_agents, platform_config, shortening_url } from '@credebl/prisma-service';
 import { IConnectionSearchCriteria, ICreateConnection, OrgAgent } from './interfaces/connection.interfaces';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IConnectionsListCount, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
-import { PrismaTables, SortValue } from '@credebl/enum/enum';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { IUserRequest } from '@credebl/user-request';
+import { IConnectionsListCount, IDeletedConnectionsRecord } from '@credebl/common';
+import { PrismaTables, SortValue } from '@credebl/common';
+import { ResponseMessages } from '@credebl/common';
 // import { OrgAgent } from './interfaces/connection.interfaces';
 @Injectable()
 export class ConnectionRepository {

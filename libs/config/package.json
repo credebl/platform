@@ -1,0 +1,29 @@
+{
+  "name": "@credebl/config",
+  "version": "2.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "access": "public"
+  },
+  "scripts": {
+    "build": "pnpm run clean && pnpm run compile",
+    "clean": "rimraf ./dist",
+    "compile": "tsc -p tsconfig.lib.json",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@credebl/common": "file:../../credebl-common-2.0.0.tgz",
+    "@nestjs/common": "^10.4.19",
+    "@nestjs/config": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "reflect-metadata": "^0.1.14",
+    "rimraf": "^4.4.1",
+    "typescript": "^5.8.3"
+  }
+}

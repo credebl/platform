@@ -31,16 +31,16 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { Response } from 'express';
 import { CommonService } from '@credebl/common';
 import IResponse from '@credebl/common/interfaces/response.interface';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { user } from '@prisma/client';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
-import { Invitation } from '@credebl/enum/enum';
+import { Invitation } from '@credebl/common/enum/enum';
 import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { EmailValidator } from '../dtos/email-validator.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
@@ -50,7 +50,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { AwsService } from '@credebl/aws/aws.service';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { TrimStringParamPipe } from '@credebl/common/utils/helpers/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')

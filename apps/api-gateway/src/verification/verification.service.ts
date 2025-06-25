@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common/service/base.service';
 import { SendProofRequestPayload, RequestProofDtoV1, RequestProofDtoV2 } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
@@ -13,7 +13,7 @@ import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './int
 import { IProofPresentation } from './interfaces/verification.interface';
 // To do make a similar interface in API-gateway
 import { user } from '@prisma/client';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 
 @Injectable()
 export class VerificationService extends BaseService {

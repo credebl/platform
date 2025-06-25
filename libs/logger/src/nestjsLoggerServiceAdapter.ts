@@ -1,9 +1,9 @@
 import { ConsoleLogger } from '@nestjs/common';
-import Logger from '@credebl/logger/logger.interface';
+import Logger from './logger.interface';
 import { LoggerService } from '@nestjs/common/services/logger.service';
-import { LogData } from '@credebl/logger/log';
+import { LogData } from './log';
 
-export default class NestjsLoggerServiceAdapter
+export class NestjsLoggerServiceAdapter
   extends ConsoleLogger
   implements LoggerService
 {

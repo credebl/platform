@@ -3,7 +3,7 @@ import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagge
 import { IsEmail, IsNotEmpty, IsNumberString, IsString, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
-import { toLowerCase, trim } from '@credebl/common/cast.helper';
+import { toLowerCase, trim } from '@credebl/common/utils/helpers/cast.helper';
 
 
 @ApiExtraModels()

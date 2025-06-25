@@ -20,14 +20,14 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { OrgRolesService } from '@credebl/org-roles';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { OrganizationInviteTemplate } from '../templates/organization-invitation.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { sendEmail } from '@credebl/common/utils/helpers/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum';
+import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/common/enum/enum';
 import { IGetOrgById, IGetOrganization, IUpdateOrganization, IClientCredentials, ICreateConnectionUrl, IOrgRole, IDidList, IPrimaryDidDetails, IEcosystemOrgStatus, IOrgDetails } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -47,11 +47,11 @@ import {
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
-import { toNumber } from '@credebl/common/cast.helper';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { toNumber } from '@credebl/common/utils/helpers/cast.helper';
+import { UserActivityRepository } from '@credebl/user-activity/repositories';
 import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 @Injectable()
 export class OrganizationService {
   constructor(

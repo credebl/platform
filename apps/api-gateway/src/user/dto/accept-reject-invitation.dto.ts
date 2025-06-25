@@ -1,9 +1,9 @@
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
-import { Invitation } from '@credebl/enum/enum';
+import { Invitation } from '@credebl/common/enum/enum';
 import { Transform } from 'class-transformer';
-import { trim } from '@credebl/common/cast.helper';
+import { trim } from '@credebl/common/utils/helpers/cast.helper';
 
 export class AcceptRejectInvitationDto {
     invitationId: string;

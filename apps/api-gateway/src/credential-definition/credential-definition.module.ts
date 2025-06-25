@@ -3,9 +3,9 @@ import { Logger, Module } from '@nestjs/common';
 
 import { CredentialDefinitionController } from './credential-definition.controller';
 import { CredentialDefinitionService } from './credential-definition.service';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common/nats/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 
 @Module({
   imports:[

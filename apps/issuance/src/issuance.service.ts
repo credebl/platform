@@ -16,7 +16,7 @@ import {
 import { IssuanceRepository } from './issuance.repository';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
@@ -52,7 +52,7 @@ import {
   SchemaType,
   TemplateIdentifier,
   W3CSchemaDataType
-} from '@credebl/enum/enum';
+} from '@credebl/common/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -63,7 +63,7 @@ import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { convertUrlToDeepLinkUrl, paginator } from '@credebl/common/common.utils';
+import { convertUrlToDeepLinkUrl, paginator } from '@credebl/common/utils/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
@@ -84,14 +84,14 @@ import {
   createOobJsonldIssuancePayload,
   validateAndUpdateIssuanceDates,
   validateEmail
-} from '@credebl/common/cast.helper';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
-import * as pLimit from 'p-limit';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+} from '@credebl/common/utils/helpers/cast.helper';
+import { sendEmail } from '@credebl/common/utils/helpers/send-grid-helper-file';
+import pLimit from 'p-limit';
+import { UserActivityRepository } from '@credebl/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
-import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
-import { NATSClient } from '@credebl/common/NATSClient';
+import {ContextStorageService, ContextStorageServiceKey } from '@credebl/common/utils/context/contextStorageService.interface';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
 @Injectable()
 export class IssuanceService {

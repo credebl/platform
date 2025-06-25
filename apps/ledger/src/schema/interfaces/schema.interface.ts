@@ -1,4 +1,4 @@
-import { JSONSchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
+import { JSONSchemaType, SchemaTypeEnum } from '@credebl/common/enum/enum';
 import { UserRoleOrgPermsDto } from '../dtos/user-role-org-perms.dto';
 import { IW3CAttributeValue } from '@credebl/common/interfaces/interface';
 

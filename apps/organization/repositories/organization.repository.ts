@@ -36,6 +36,30 @@ import {
 } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
+import {
+  IGetDids,
+  IDidDetails,
+  IDidList,
+  IGetOrgById,
+  IGetOrganization,
+  IPrimaryDidDetails,
+  IUpdateOrganization,
+  ILedgerNameSpace,
+  OrgInvitation,
+  ILedgerDetails,
+  IOrgRoleDetails,
+  IOrgDetails
+} from '../interfaces/organization.interface';
+import { Invitation, PrismaTables, SortValue } from '@credebl/common/enum/enum';
+import { PrismaService } from '@credebl/prisma-service';
+import { UserOrgRolesService } from '@credebl/user-org-roles';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
+import {
+  IOrganizationInvitations,
+  IOrganization,
+  IOrganizationDashboard,
+  IDeleteOrganization
+} from '@credebl/common/interfaces/organization.interface';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';

@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
-import { toLowerCase, trim } from '@credebl/common/cast.helper';
+import { toLowerCase, trim } from '@credebl/common/utils/helpers/cast.helper';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';

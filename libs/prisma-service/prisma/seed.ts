@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { CommonConstants } from '../../common/src/common.constant';
+import { CommonConstants } from '@credebl/common';
 import * as CryptoJS from 'crypto-js';
 import { exec } from 'child_process';
 import * as util from 'util';

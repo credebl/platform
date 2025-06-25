@@ -1,7 +1,7 @@
 // eslint-disable-next-line camelcase
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { organisation } from '@prisma/client';
-import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
+import { IUserRequest } from '@credebl/user-request';
+import { organisation } from '@credebl/prisma-service';
+// import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IConnection {
   user: IUserRequestInterface;
@@ -27,7 +27,7 @@ export interface IUserRequestInterface {
   tenantId?: string;
   tenantName?: string;
   tenantOrgId?: string;
-  userRoleOrgPermissions?: UserRoleOrgPermsDto[];
+  userRoleOrgPermissions?: any[];
   orgName?: string;
   selectedOrg: ISelectedOrgInterface;
 }
@@ -291,4 +291,20 @@ export interface ICreateConnectionInvitation {
 export interface ICreateOutOfbandConnectionInvitation {
   user: IUserRequestInterface,
   createOutOfBandConnectionInvitation: ICreateConnectionInvitation,
+}
+
+
+export interface IConnectionDetailsById {
+  id: string;
+  createdAt: string;
+  did: string;
+  theirDid: string;
+  theirLabel: string;
+  state: string;
+  role: string;
+  autoAcceptConnection: boolean;
+  threadId: string;
+  protocol: string;
+  outOfBandId: string;
+  updatedAt: string;
 }

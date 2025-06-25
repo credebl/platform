@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { CountryInterface, StateInterface, CityInterface } from '@credebl/common/interfaces/geolocation.interface';
 import { GeoLocationRepository } from './geo-location.repository';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 
 @Injectable()
 export class GeoLocationService {

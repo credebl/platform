@@ -6,8 +6,8 @@ import { ClientsModule } from '@nestjs/microservices';
 import { CommonModule } from '../../../../libs/common/src/common.module';
 import { CommonService } from '../../../../libs/common/src/common.service';
 import { ConfigModule } from '@nestjs/config';
-import { commonNatsOptions } from 'libs/service/nats.options';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { commonNatsOptions } from '@credebl/common';
+import { NATSClient } from '@credebl/common';
 
 @Module({
   imports: [

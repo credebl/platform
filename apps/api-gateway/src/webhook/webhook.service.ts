@@ -1,11 +1,11 @@
 /* eslint-disable camelcase */
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { RegisterWebhookDto } from './dtos/register-webhook-dto';
 import { ICreateWebhookUrl, IGetWebhookUrl } from 'apps/webhook/interfaces/webhook.interfaces';
 import { GetWebhookDto } from './dtos/get-webhoook-dto';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common';
 
 @Injectable()
 export class WebhookService extends BaseService {

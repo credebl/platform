@@ -1,5 +1,5 @@
 import { IResponse } from '@credebl/common/interfaces/response.interface';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { Controller, Post, Logger, Body, UseGuards, HttpStatus, Res, Get, Param, UseFilters, Query, Inject, ParseUUIDPipe, BadRequestException, Delete } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
@@ -11,7 +11,7 @@ import { ConnectionDto, CreateOutOfBandConnectionInvitation, ReceiveInvitationDt
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
@@ -22,8 +22,8 @@ import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { ClientProxy} from '@nestjs/microservices';
 import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto} from './dtos/question-answer.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { user } from '@prisma/client';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { user } from '@credebl/prisma-service';
+import { TrimStringParamPipe } from '@credebl/common/utils/helpers/cast.helper';
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('connections')

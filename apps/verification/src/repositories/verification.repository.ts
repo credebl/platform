@@ -7,8 +7,8 @@ import { agent_invitations, org_agents, organisation, platform_config, presentat
 import { CommonService } from '@credebl/common';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { SortValue } from '@credebl/enum/enum';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
+import { SortValue } from '@credebl/common/enum/enum';
 
 @Injectable()
 export class VerificationRepository {

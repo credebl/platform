@@ -9,7 +9,7 @@ import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { OrgRolesRepository } from 'libs/org-roles/repositories';
 import { PrismaService } from '@credebl/prisma-service';
 import { SupabaseService } from '@credebl/supabase';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { UserActivityRepository } from '@credebl/user-activity/repositories';
 import { UserActivityService } from '@credebl/user-activity';
 import { UserController } from './user.controller';
 import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
@@ -17,14 +17,14 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { UserService } from './user.service';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common/nats/nats.config';
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 
 @Module({
   imports: [
@@ -59,7 +59,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
     UserActivityService,
     UserActivityRepository,
     UserDevicesRepository,
-    NATSClient
+    {provide: 'NatsClient', useClass: SovioNATSClient}
   ]
 })
 export class UserModule {}

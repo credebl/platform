@@ -8,13 +8,13 @@ import { OrganizationController } from './organization.controller';
 import { OrganizationRepository } from '../repositories/organization.repository';
 import { OrganizationService } from './organization.service';
 import { PrismaService } from '@credebl/prisma-service';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { UserActivityRepository } from '@credebl/user-activity/repositories';
 import { UserActivityService } from '@credebl/user-activity';
 import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import { CacheModule } from '@nestjs/cache-manager';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common/nats/nats.config';
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 
@@ -23,8 +23,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 @Module({
   imports: [
     ClientsModule.register([

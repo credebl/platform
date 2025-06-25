@@ -1,12 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
-import { BaseService } from '../../../../libs/service/base.service';
+import { BaseService } from '../../../../libs/common/src/service/base.service';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { GetAllCredDefsDto } from '../dtos/get-cred-defs.dto';
 import { ICredDef, ICredDefs } from './interfaces';
 import { ICredDefData } from '@credebl/common/interfaces/cred-def.interface';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 
 @Injectable()
 export class CredentialDefinitionService extends BaseService {

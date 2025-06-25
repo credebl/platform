@@ -1,4 +1,4 @@
-import { SchemaType, SortValue } from '@credebl/enum/enum';
+import { SchemaType, SortValue } from '@credebl/common/enum/enum';
 import { IUserRequestInterface } from './schema.interface';
 
 export interface ISchema {

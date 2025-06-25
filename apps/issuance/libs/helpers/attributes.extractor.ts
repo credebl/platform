@@ -1,5 +1,5 @@
 import { CommonConstants } from '@credebl/common/common.constant';
-import { TemplateIdentifier } from '@credebl/enum/enum';
+import { TemplateIdentifier } from '@credebl/common/enum/enum';
 
 // Function for extracting attributes from nested structure
 export function extractAttributeNames(

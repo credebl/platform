@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Reflector } from '@nestjs/core';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { validate as isValidUUID } from 'uuid';
 @Injectable()
 export class OrgRolesGuard implements CanActivate {

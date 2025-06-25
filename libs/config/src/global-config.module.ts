@@ -1,4 +1,4 @@
-import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { MICRO_SERVICE_NAME } from '@credebl/common';
 import { Module, Global } from '@nestjs/common';
 
 @Global()

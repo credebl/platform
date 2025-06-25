@@ -5,10 +5,10 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Injectable,  Inject  } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 
 import { WalletDetailsDto } from '../dtos/wallet-details.dto';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common';
 
 @Injectable()
 export class AgentService extends BaseService {
@@ -37,7 +37,8 @@ export class AgentService extends BaseService {
      */
     createLocalDid(user: any) {
         this.logger.log('**** createLocalDid called...');
-        return this.natsClient.sendNats(this.agentServiceProxy, 'create-local-did', user);
+        // return this.natsClient.sendNats(this.agentServiceProxy, 'create-local-did', user);
+        return this.natsClient.sendNats(this.agentServiceProxy, 'check-limit', { forwardTo: 'create-local-did' ,user});
     }
 
     async walletProvision(walletUserDetails: WalletDetailsDto, user: any) {

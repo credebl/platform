@@ -1,4 +1,4 @@
-import { trim } from '@credebl/common/cast.helper';
+import { trim } from '@credebl/common/utils/helpers/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';

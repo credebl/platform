@@ -1,5 +1,6 @@
-import { Prisma } from '@prisma/client';
-
+export type BatchPayload = {
+  count: number
+}
 export interface IProofPresentationsListCount {
   proofRequestsCount: number;
   proofRequestsList: IProofPresentationItem[];
@@ -32,7 +33,7 @@ export interface IProofPresentationDetails {
   certificateTemplate?: string;
 }
 export interface IVerificationRecords {
-  deleteResult: Prisma.BatchPayload;
+  deleteResult: BatchPayload;
   recordsToDelete: IRecords[];
 }
 

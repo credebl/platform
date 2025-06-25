@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import {
   ClientDetails,
@@ -27,7 +27,7 @@ import {
 } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { user } from '@prisma/client';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 @Injectable()
 export class IssuanceService extends BaseService {
   constructor(

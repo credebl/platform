@@ -1,4 +1,4 @@
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { PrismaService } from '@credebl/prisma-service';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { INotification, IWebhookEndpoint } from '../interfaces/notification.interfaces';

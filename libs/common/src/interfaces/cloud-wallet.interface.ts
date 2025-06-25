@@ -1,5 +1,4 @@
-import { CloudWalletType } from '../../../enum/src/enum';
-import { $Enums } from '@prisma/client';
+import { CloudWalletType } from '../enum/enum';
 
 export class ICreateCloudWallet {
   label: string;
@@ -73,7 +72,7 @@ export interface IGetStoredWalletInfo {
   email: string;
   userId: string;
   id: string;
-  type: $Enums.CloudWalletType;
+  type: CloudWalletType;
   agentEndpoint: string;
 }
 
@@ -104,7 +103,7 @@ export interface IGetStoredWalletInfo {
   email: string;
   userId: string;
   id: string;
-  type: $Enums.CloudWalletType;
+  type: CloudWalletType;
   agentEndpoint: string;
 }
 
@@ -177,7 +176,7 @@ export interface CloudWallet {
   label: string;
   tenantId: string;
   email: string;
-  type: $Enums.CloudWalletType;
+  type: CloudWalletType;
   createDateTime: Date;
   createdBy: string;
   lastChangedDateTime: Date;
@@ -265,7 +264,7 @@ export interface ICreateConnection {
   email: string;
 }
 
-export interface Invitation {
+export interface ICloudWalletInvitation {
   '@type': string;
   '@id': string;
   label: string;
@@ -288,7 +287,7 @@ export interface OutOfBandRecord {
   metadata: Record<string, object>;
   id: string;
   createdAt: string;
-  outOfBandInvitation: Invitation;
+  outOfBandInvitation: ICloudWalletInvitation;
   role: string;
   state: string;
   alias: string;
@@ -303,7 +302,7 @@ export interface Tags {
 
 export interface IConnectionInvitationResponse {
   invitationUrl: string;
-  invitation: Invitation;
+  invitation: ICloudWalletInvitation;
   outOfBandRecord: OutOfBandRecord;
   invitationDid: string;
 }

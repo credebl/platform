@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
-import { trim } from '@credebl/common/cast.helper';
+import { trim } from '@credebl/common/utils/helpers/cast.helper';
 import { Transform } from 'class-transformer';
 
 export class UpdateProfileDto {

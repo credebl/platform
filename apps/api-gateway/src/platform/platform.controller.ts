@@ -8,13 +8,13 @@ import { User } from '../authz/decorators/user.decorator';
 import { Response } from 'express';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { AuthGuard } from '@nestjs/passport';
 import * as QRCode from 'qrcode';
-import { CredDefSortFields, SchemaType, SortFields } from '@credebl/enum/enum';
+import { CredDefSortFields, SchemaType, SortFields } from '@credebl/common/enum/enum';
 import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { TrimStringParamPipe } from '@credebl/common/utils/helpers/cast.helper';
 
 @Controller('')
 @UseFilters(CustomExceptionFilter)

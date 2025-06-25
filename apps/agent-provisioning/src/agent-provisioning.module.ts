@@ -3,11 +3,11 @@ import { AgentProvisioningController } from './agent-provisioning.controller';
 import { AgentProvisioningService } from './agent-provisioning.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common/nats/nats.config';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 @Module({
   imports: [

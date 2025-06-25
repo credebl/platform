@@ -1,9 +1,9 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "declaration": true,
-    "outDir": "../../dist/libs/prisma-service"
+    // "declaration": true,
+    "outDir": "./dist", // per-package output
   },
-  "include": ["src/**/*"],
+  "include": ["src", "cli.ts", "index.ts"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

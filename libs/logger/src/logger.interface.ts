@@ -1,4 +1,4 @@
-import { LogData, LogLevel } from '@credebl/logger/log';
+import { LogData, LogLevel } from './log';
 
 export const LoggerBaseKey = Symbol();
 export const LoggerKey = Symbol();

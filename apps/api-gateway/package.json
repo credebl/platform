@@ -1,0 +1,17 @@
+{
+    "name": "@credebl/api-gateway",
+    "version": "2.0.0",
+    "main": "dist/api-gateway/index.js",
+    "types": "dist/api-gateway/index.d.ts",
+    "scripts": {
+        "start": "ts-node src/main.ts",
+        "build": "tsc -p tsconfig.app.json"
+    },
+    "dependencies": {
+        "@credebl/common": "workspace:*",
+        "@nestjs/common": "^10.4.19",
+        "@nestjs/core": "^10.4.19",
+        "@nestjs/microservices": "^10.4.19",
+        "nats": "^2.29.3"
+    }
+}

@@ -11,10 +11,11 @@ import { BadRequestException, HttpException, HttpStatus, Injectable, Logger, Not
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios';
 import * as dotenv from 'dotenv';
-import { ResponseMessages } from './response-messages';
+import { ResponseMessages } from './utils/response-messages';
 import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
-import { OrgAgentType } from '../../enum/src/enum';
+import { OrgAgentType } from './enum/enum';
 import { RpcException } from '@nestjs/microservices';
+import { AxiosResponse } from 'axios';
 dotenv.config();
 
 @Injectable()
@@ -63,7 +64,7 @@ export class CommonService {
     }
   }
 
-  async httpDelete(url: string, config?: unknown) {
+  async httpDelete(url: string, config?: unknown): Promise<AxiosResponse<any>> {
     try {
       return await this.httpService
         .delete(url, config)

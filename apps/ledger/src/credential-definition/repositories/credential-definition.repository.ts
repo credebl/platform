@@ -3,10 +3,10 @@ import { CredDefPayload, GetAllCredDefsDto, IPlatformCredDefs, ISaveCredDef } fr
 import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { Injectable, Logger } from '@nestjs/common';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { BulkCredDefSchema, CredDefSchema } from '../interfaces/credential-definition.interface';
 import { ICredDefData, IPlatformCredDefDetails } from '@credebl/common/interfaces/cred-def.interface';
-import { SchemaType, SortValue } from '@credebl/enum/enum';
+import { SchemaType, SortValue } from '@credebl/common/enum/enum';
 import { ISchemaResponse } from '../interfaces';
 
 @Injectable()

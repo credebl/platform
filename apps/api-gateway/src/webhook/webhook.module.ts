@@ -4,10 +4,10 @@ import { WebhookController } from './webhook.controller';
 import { WebhookService } from './webhook.service';
 import { CommonService } from '@credebl/common';
 import { HttpModule } from '@nestjs/axios';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common';
 import { AwsService } from '@credebl/aws';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { CommonConstants } from '@credebl/common';
+import { NATSClient } from '@credebl/common';
 
 @Module({
   imports: [

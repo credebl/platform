@@ -1,7 +1,7 @@
 import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
+import { IsNotSQLInjection, trim } from '@credebl/common/utils/helpers/cast.helper';
 import { Transform } from 'class-transformer';
 
 export class CreateCloudWalletDto {

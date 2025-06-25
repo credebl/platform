@@ -1,4 +1,4 @@
-import { SchemaType } from '@credebl/enum/enum';
+import { SchemaType } from '@credebl/common/enum/enum';
 import { JsonLdCredentialDetailCredentialStatus } from '../dtos/issuance.dto';
 import { JsonValue } from '../utils/helper';
 

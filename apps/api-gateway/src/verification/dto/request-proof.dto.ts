@@ -1,8 +1,8 @@
 import { ArrayNotEmpty, IsArray, IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsNumberString, IsObject, IsOptional, IsString, ValidateIf, ValidateNested, IsUUID, ArrayUnique, ArrayMaxSize, ArrayMinSize } from 'class-validator';
-import { trim } from '@credebl/common/cast.helper';
+import { trim } from '@credebl/common/utils/helpers/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { AutoAccept } from '@credebl/enum/enum';
+import { AutoAccept } from '@credebl/common/enum/enum';
 import { IProofFormats } from '../interfaces/verification.interface';
 import { ProofRequestType } from '../enum/verification.enum';
 

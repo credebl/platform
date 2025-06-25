@@ -4,9 +4,9 @@ import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { SchemaController } from './schema.controller';
 import { SchemaService } from './schema.service';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common/nats/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 
 @Module({
   imports: [

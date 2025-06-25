@@ -7,7 +7,7 @@ import { ForbiddenErrorDto } from 'apps/api-gateway/src/dtos/forbidden-error.dto
 import { User } from '../authz/decorators/user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { Response } from 'express';
 import { GetAllCredDefsDto } from './dto/get-all-cred-defs.dto';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
@@ -15,8 +15,8 @@ import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { EmptyStringParamPipe, TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { EmptyStringParamPipe, TrimStringParamPipe } from '@credebl/common/utils/helpers/cast.helper';
 
 
 @ApiBearerAuth()

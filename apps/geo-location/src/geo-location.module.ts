@@ -4,14 +4,14 @@ import { GeoLocationService } from './geo-location.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonModule } from '@credebl/common';
 import { CacheModule } from '@nestjs/cache-manager';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common/nats/nats.config';
 import { PrismaService } from '@credebl/prisma-service';
 import { GeoLocationRepository } from './geo-location.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
 
 @Module({
   imports: [

@@ -38,14 +38,14 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { user } from '@prisma/client';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
@@ -53,7 +53,7 @@ import { validate as isValidUUID } from 'uuid';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { TrimStringParamPipe } from '@credebl/common/utils/helpers/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')

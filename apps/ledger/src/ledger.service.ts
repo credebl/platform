@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common/service/base.service';
 import { LedgerRepository } from './repositories/ledger.repository';
 import { RpcException } from '@nestjs/microservices';
 // eslint-disable-next-line camelcase
 import { ledgers } from '@prisma/client';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { LedgerDetails } from './interfaces/ledgers.interface';
 import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
 import { ISchemasList } from './schema/interfaces/schema.interface';

@@ -14,8 +14,8 @@ import {
   ValidateIf,
   ValidateNested
 } from 'class-validator';
-import { IndySchemaDataType, JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
-import { IsNotSQLInjection, ValidateNestedStructureFields, trim } from '@credebl/common/cast.helper';
+import { IndySchemaDataType, JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/common/enum/enum';
+import { IsNotSQLInjection, ValidateNestedStructureFields, trim } from '@credebl/common/utils/helpers/cast.helper';
 import { Transform, Type, plainToClass } from 'class-transformer';
 
 export class W3CAttributeValue {

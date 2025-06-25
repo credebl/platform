@@ -1,7 +1,7 @@
 import * as winston from 'winston';
 import { Inject, Injectable } from '@nestjs/common';
-import { LogData, LogLevel } from '@credebl/logger/log';
-import Logger from '@credebl/logger/logger.interface';
+import { LogData, LogLevel } from './log';
+import Logger from './logger.interface';
 import * as Elasticsearch from 'winston-elasticsearch';
 import * as ecsFormat from '@elastic/ecs-winston-format';
 

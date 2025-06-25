@@ -1,6 +1,6 @@
 import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { toLowerCase, trim } from '@credebl/common/cast.helper';
+import { toLowerCase, trim } from '@credebl/common/utils/helpers/cast.helper';
 import { Transform } from 'class-transformer';
 
 interface attribute {

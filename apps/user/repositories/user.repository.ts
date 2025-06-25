@@ -18,7 +18,7 @@ import {
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
 import { RecordType, schema, token, user, user_org_roles } from '@prisma/client';
-import { UserRole } from '@credebl/enum/enum';
+import { UserRole } from '@credebl/common/enum/enum';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model

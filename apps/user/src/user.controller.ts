@@ -6,7 +6,7 @@ import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 // eslint-disable-next-line camelcase
 import { user, user_org_roles } from '@prisma/client';
-import { IUsersActivity } from 'libs/user-activity/interface';
+import { IUsersActivity } from '@credebl/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse, ISignUpUserResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 

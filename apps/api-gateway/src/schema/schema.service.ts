@@ -1,12 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from '../../../../libs/service/base.service';
+import { BaseService } from '../../../../libs/common/src/service/base.service';
 import { GenericSchemaDTO } from '../dtos/create-schema.dto';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { ISchemaInfo, IUserRequestInterface } from './interfaces';
 import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination } from '@credebl/common/interfaces/schema.interface';
 import { GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 
 import { UpdateSchemaResponse } from 'apps/ledger/src/schema/interfaces/schema.interface';
 import { UpdateSchemaDto } from './dtos/update-schema-dto';

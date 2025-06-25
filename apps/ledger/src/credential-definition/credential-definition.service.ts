@@ -7,18 +7,18 @@ import {
     NotFoundException
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common/service/base.service';
 import { CredentialDefinitionRepository } from './repositories/credential-definition.repository';
 import { CreateCredDefPayload, CredDefPayload, GetAllCredDefsPayload, GetCredDefBySchemaId, GetCredDefPayload, IPlatformCredDefs, ISaveCredDef } from './interfaces/create-credential-definition.interface';
 import { credential_definition } from '@prisma/client';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { CreateCredDefAgentRedirection, CredDefSchema, GetCredDefAgentRedirection } from './interfaces/credential-definition.interface';
 import { map } from 'rxjs/operators';
-import { OrgAgentType, SchemaType, SortValue } from '@credebl/enum/enum';
+import { OrgAgentType, SchemaType, SortValue } from '@credebl/common/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ICredDefDetails, IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 import { from } from 'rxjs';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 @Injectable()

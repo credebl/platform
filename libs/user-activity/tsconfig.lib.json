@@ -1,9 +1,12 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "declaration": true,
-    "outDir": "../../dist/libs/user-activity"
+    // "declaration": true,
+    "outDir": "./dist", // per-package output
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+  "include": [
+    "src/",
+    "index.ts"
+  ],
+  // "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

@@ -6,12 +6,12 @@ import { GenerateAuthenticationDto, GenerateRegistrationDto, UpdateFidoUserDetai
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { FidoService } from './fido.service';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('auth')

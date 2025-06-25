@@ -11,7 +11,7 @@ import { passportJwtSecret } from 'jwks-rsa';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { OrganizationService } from '../organization/organization.service';
 import { IOrganization } from '@credebl/common/interfaces/organization.interface';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 
 dotenv.config();
 

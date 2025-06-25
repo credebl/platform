@@ -16,7 +16,7 @@ import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { accessTokenPayloadDto } from './dtos/accessTokenPayloadDto';
 import { userTokenPayloadDto } from './dtos/userTokenPayloadDto';
 import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { IClientRoles } from './interfaces/client.interface';
 import { IFormattedResponse } from '@credebl/common/interfaces/interface';
 
@@ -215,7 +215,8 @@ export class ClientRegistrationService {
     }
   }
 
-  async deleteClient(idpId: string, token: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteClient(idpId: string, token: string): Promise<any> {
     const realmName = process.env.KEYCLOAK_REALM;
 
     const getClientDeleteResponse = await this.commonService.httpDelete(

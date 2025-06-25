@@ -19,13 +19,13 @@ import { LoginUserDto } from '../dtos/login-user.dto';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesService } from '@credebl/org-roles';
 import { PrismaService } from '@credebl/prisma-service';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { URLUserEmailTemplate } from '../templates/user-email-template';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { sendEmail } from '@credebl/common/utils/helpers/send-grid-helper-file';
 // eslint-disable-next-line camelcase
 import { RecordType, user, user_org_roles } from '@prisma/client';
 import {
@@ -47,17 +47,17 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { Invitation, UserRole } from '@credebl/enum/enum';
+import { Invitation, UserRole } from '@credebl/common/enum/enum';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 import { AwsService } from '@credebl/aws';
-import { IUsersActivity } from 'libs/user-activity/interface';
+import { IUsersActivity } from '@credebl/user-activity/interface';
 import { ISendVerificationEmail, ISignInUser, IVerifyUserEmail, IUserInvitations, IResetPasswordResponse, ISignUpUserResponse } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
-import { toNumber } from '@credebl/common/cast.helper';
+import { toNumber } from '@credebl/common/utils/helpers/cast.helper';
 import * as jwt from 'jsonwebtoken';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 
 @Injectable()
 export class UserService {

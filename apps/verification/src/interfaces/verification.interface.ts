@@ -1,4 +1,4 @@
-import { AutoAccept } from '@credebl/enum/enum';
+import { AutoAccept } from '@credebl/common/enum/enum';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 
 export interface IProofRequestAttribute {

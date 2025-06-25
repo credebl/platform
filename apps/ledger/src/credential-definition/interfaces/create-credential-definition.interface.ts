@@ -1,4 +1,4 @@
-import { SortValue } from '@credebl/enum/enum';
+import { SortValue } from '@credebl/common/enum/enum';
 import { CreateCredentialDefinitionDto } from 'apps/api-gateway/src/credential-definition/dto/create-cred-defs.dto';
 import { IUserRequestInterface } from '.';
 

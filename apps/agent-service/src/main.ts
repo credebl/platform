@@ -1,14 +1,14 @@
-import { HttpExceptionFilter } from 'libs/http-exception.filter';
+import { HttpExceptionFilter } from '@credebl/common/utils/handlers/http-exception.filter';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AgentServiceModule } from './agent-service.module';
 import { AgentServiceService } from './agent-service.service';
 import { IAgentSpinupDto, IUserRequestInterface } from './interface/agent-service.interface';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { getNatsOptions } from '@credebl/common/nats/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { Ledgers } from '@credebl/enum/enum';
-import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
+import { Ledgers } from '@credebl/common/enum/enum';
+import { NestjsLoggerServiceAdapter } from '@credebl/logger/nestjsLoggerServiceAdapter';
 
 const logger = new Logger();
 

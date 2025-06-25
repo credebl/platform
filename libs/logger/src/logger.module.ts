@@ -8,17 +8,17 @@ import {
 
 import WinstonLogger, {
   WinstonLoggerTransportsKey
-} from '@credebl/logger/winstonLogger';
+} from './winstonLogger';
 import Logger, {
   LoggerBaseKey,
   LoggerKey
-} from '@credebl/logger/logger.interface';
-import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
-import ConsoleTransport from '@credebl/logger/transports/consoleTransport';
+} from './logger.interface';
+import {NestjsLoggerServiceAdapter} from './nestjsLoggerServiceAdapter';
+import ConsoleTransport from './transports/consoleTransport';
 import * as morgan from 'morgan';
-import { ConfigService } from '../../config/src/config.service';
-import LoggerService from '@credebl/logger/logger.service';
-import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { ConfigService } from '@credebl/config';
+import LoggerService from './logger.service';
+import { MICRO_SERVICE_NAME } from '@credebl/common';
 
 @Global()
 @Module({

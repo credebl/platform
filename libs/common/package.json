@@ -1,38 +1,43 @@
 {
   "name": "@credebl/common",
-  "main": "src/index",
-  "types": "src/index",
-  "version": "0.0.1",
-  "files": [
-    "dist"
-  ],
+  "version": "2.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "access": "public"
+  },
   "scripts": {
     "build": "pnpm run clean && pnpm run compile",
-    "clean": "rimraf ../../dist/libs/common",
-    "compile": "tsc -p tsconfig.build.json",
+    "clean": "rimraf ./dist",
+    "compile": "tsc -p tsconfig.lib.json",
     "test": "jest"
   },
   "dependencies": {
-    "@nestjs/axios": "^3.0.0",
-    "@nestjs/common": "^10.2.7",
-    "@nestjs/core": "^10.1.3",
-    "@nestjs/testing": "^10.1.3",
-    "@nestjs/microservices": "^10.1.3",
-    "@nestjs/swagger": "^7.1.6",
-    "@prisma/client": "^5.1.1",
+    "@nestjs/axios": "^3.1.3",
+    "@nestjs/common": "^10.4.19",
+    "@nestjs/core": "^10.4.19",
+    "@nestjs/microservices": "^10.4.19",
+    "@nestjs/swagger": "^7.4.2",
+    "@nestjs/testing": "^10.4.19",
     "@sendgrid/mail": "^7.7.0",
+    "@credebl/prisma-service": "file:../../credebl-prisma-service-2.0.0.tgz",
+    "axios": "^1.10.0",
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.0",
-    "crypto-js": "^4.1.1",
-    "dotenv": "^16.0.3",
-    "nats": "^2.15.1",
-    "rxjs": "^7.8.1",
-    "uuid": "^9.0.0"
+    "class-validator": "^0.14.2",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.5.0",
+    "nats": "^2.29.3",
+    "rxjs": "^7.8.2",
+    "uuid": "^9.0.1",
+    "nestjs-cls": "^4.5.0"
   },
   "devDependencies": {
-    "@types/crypto-js": "^4.1.1",
-    "reflect-metadata": "^0.1.13",
-    "rimraf": "^4.4.0",
-    "typescript": "^5.1.6"
+    "@types/crypto-js": "^4.2.2",
+    "reflect-metadata": "^0.1.14",
+    "rimraf": "^4.4.1",
+    "typescript": "^5.8.3"
   }
 }

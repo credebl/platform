@@ -6,7 +6,7 @@ import {
 } from '../interfaces/notification.interfaces';
 import { RpcException } from '@nestjs/microservices';
 import { NotificationRepository } from './notification.repository';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { CommonService } from '@credebl/common';
 
 @Injectable()

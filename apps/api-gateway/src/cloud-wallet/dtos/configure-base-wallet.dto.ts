@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
-import { IsHostPortOrDomain } from '@credebl/common/cast.helper';
+import { IsHostPortOrDomain } from '@credebl/common/utils/helpers/cast.helper';
 
 export class CloudBaseWalletConfigureDto {
   @ApiProperty({ example: 'xxx-xxxx-xxxx' })

@@ -5,34 +5,69 @@ import { ConnectionService } from './connection.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonModule } from '@credebl/common';
 import { ConnectionRepository } from './connection.repository';
-import { PrismaService } from '@credebl/prisma-service';
+import { PrismaService } from '@credebl/prisma-service/dist/src/index';
 import { CacheModule } from '@nestjs/cache-manager';
-import { getNatsOptions } from '@credebl/common/nats.config';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { getNatsOptions,  } from '@credebl/common';
+import { UserActivityRepository } from '@credebl/user-activity';
+import { CommonConstants } from '@credebl/common';
 // import { nkeyAuthenticator } from 'nats';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { GlobalConfigModule } from '@credebl/config';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
+import { LoggerModule } from '@credebl/logger';
+import { ContextInterceptorModule } from '@credebl/common';
+import { NATSClient } from '@credebl/common';
+import { DynamicModule } from '@nestjs/common';
 
-@Module({
-  imports: [
-    ClientsModule.register([
-      {
-        name: 'NATS_CLIENT',
-        transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.CONNECTION_SERVICE, process.env.CONNECTION_NKEY_SEED)
-      }
-    ]),
+// @Module({
+//   imports: [
+//     ClientsModule.register([
+//       {
+//         name: 'NATS_CLIENT',
+//         transport: Transport.NATS,
+//         options: getNatsOptions(CommonConstants.CONNECTION_SERVICE, process.env.CONNECTION_NKEY_SEED)
+//       }
+//     ]),
 
-     CommonModule,
-     GlobalConfigModule,
-     LoggerModule, PlatformConfig, ContextInterceptorModule,
-     CacheModule.register()
-  ],
-  controllers: [ConnectionController],
-  providers: [ConnectionService, ConnectionRepository, UserActivityRepository, PrismaService, Logger, NATSClient]
-})
-export class ConnectionModule { }
+//      CommonModule,
+//      GlobalConfigModule,
+//      LoggerModule, PlatformConfig, ContextInterceptorModule,
+//      CacheModule.register()
+//   ],
+//   controllers: [ConnectionController],
+//   providers: [ConnectionService, ConnectionRepository, UserActivityRepository, PrismaService, Logger, NATSClient]
+// })
+
+@Module({})
+export class ConnectionModule {
+  static register(overrides: any[] = []): DynamicModule {
+    return {
+      module: ConnectionModule,
+      imports: [
+        ClientsModule.register([
+          {
+            name: 'NATS_CLIENT',
+            transport: Transport.NATS,
+            options: getNatsOptions(CommonConstants.CONNECTION_SERVICE, process.env.CONNECTION_NKEY_SEED)
+          }
+        ]),
+        CommonModule,
+        GlobalConfigModule,
+        LoggerModule,
+        PlatformConfig,
+        ContextInterceptorModule,
+        CacheModule.register()
+      ],
+      controllers: [ConnectionController],
+      providers: [
+        ConnectionService,
+        ConnectionRepository,
+        UserActivityRepository,
+        PrismaService,
+        Logger,
+        NATSClient,
+        ...overrides,
+      ],
+      exports: [ConnectionService]
+    };
+  }
+}

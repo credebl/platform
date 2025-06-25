@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { CommonService } from '@credebl/common';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { CommonConstants } from '@credebl/common';
 import { HttpException, HttpStatus, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { from, map } from 'rxjs';
@@ -14,20 +14,21 @@ import {
   IReceiveInvitationUrl,
   ICreateOutOfbandConnectionInvitation,
   ICreateConnectionInvitation
-} from './interfaces/connection.interfaces';
+} from './interfaces';
 import { ConnectionRepository } from './connection.repository';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { OrgAgentType, ConnectionProcessState } from '@credebl/enum/enum';
+import { ResponseMessages } from '@credebl/common';
+import { IUserRequest } from '@credebl/user-request';
+import { OrgAgentType, ConnectionProcessState } from '@credebl/common';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
-import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
-import { IBasicMessage, IQuestionPayload } from './interfaces/messaging.interfaces';
-import { RecordType, user } from '@prisma/client';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { agent_invitations } from '@prisma/client';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from '@credebl/common';
+// import { IConnectionDetailsById } from '../../api-gateway/src/interfaces/IConnectionSearch.interface';
+import { IBasicMessage, IQuestionPayload, IConnectionDetailsById } from './interfaces';
+import { UserActivityRepository } from '@credebl/user-activity';
+import { agent_invitations, RecordType } from '@credebl/prisma-service';
+import type { user } from '@credebl/prisma-service';
+import { NATSClient } from '@credebl/common';
+
 @Injectable()
 export class ConnectionService {
   constructor(
@@ -39,6 +40,12 @@ export class ConnectionService {
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly natsClient : NATSClient
   ) {}
+
+  getSomelogs() {
+    const msg = "This is from @credebl/connection-service"
+    console.log(msg)
+    return msg
+  }
 
   /**
    * Description: Catch connection webhook responses and save details in connection table

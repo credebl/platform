@@ -1,4 +1,4 @@
-import { DevelopmentEnvironment } from '@credebl/enum/enum';
+import { DevelopmentEnvironment } from '@credebl/common';
 import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 

@@ -11,13 +11,21 @@ import {
   IReceiveInvitationByUrlOrg,
   IReceiveInvitationResponse
 } from './interfaces/connection.interfaces';
-import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
-import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
-import { IQuestionPayload } from './interfaces/messaging.interfaces';
-import { user } from '@prisma/client';
+import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common';
+// import { IConnectionDetailsById } from '../../api-gateway/src/interfaces/IConnectionSearch.interface';
+import { IQuestionPayload, IConnectionDetailsById } from './interfaces';
+import { user } from '@credebl/prisma-service';
 @Controller()
 export class ConnectionController {
   constructor(private readonly connectionService: ConnectionService) {}
+
+  /**
+   * Receive hello message
+   */
+  @MessagePattern('get-hello')
+  async getHello(): Promise<string> {
+    return this.connectionService.getSomelogs();
+  }
 
   /**
    * Receive connection webhook responses and save details in connection table

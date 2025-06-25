@@ -9,7 +9,7 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { Prisma, schema } from '@prisma/client';
 import {
@@ -20,7 +20,7 @@ import {
   ISchemaSearchCriteria,
   W3CCreateSchema
 } from './interfaces/schema-payload.interface';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import {
   ICreateSchema,
   ICreateW3CSchema,
@@ -38,7 +38,7 @@ import {
   OrgAgentType,
   SchemaType,
   SchemaTypeEnum
-} from '@credebl/enum/enum';
+} from '@credebl/common/enum/enum';
 import {
   ICredDefWithPagination,
   ISchemaData,
@@ -51,9 +51,9 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
 import { W3CSchemaVersion } from './enum/schema.enum';
 import { v4 as uuidv4 } from 'uuid';
-import { networkNamespace } from '@credebl/common/common.utils';
-import { checkDidLedgerAndNetwork } from '@credebl/common/cast.helper';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { networkNamespace } from '@credebl/common/utils/common.utils';
+import { checkDidLedgerAndNetwork } from '@credebl/common/utils/helpers/cast.helper';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 import { from } from 'rxjs';
 import { w3cSchemaBuilder } from 'apps/ledger/libs/helpers/w3c.schema.builder';
 

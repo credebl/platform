@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { IWalletProvision } from './interface/agent-provisioning.interfaces';
 import * as dotenv from 'dotenv';
-import { AgentType } from '@credebl/enum/enum';
+import { AgentType } from '@credebl/common/enum/enum';
 import * as fs from 'fs';
 import { exec } from 'child_process';
 dotenv.config();

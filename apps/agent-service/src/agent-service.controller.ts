@@ -25,8 +25,8 @@ import {
 } from './interface/agent-service.interface';
 import { user } from '@prisma/client';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
-import { AgentSpinUpStatus } from '@credebl/enum/enum';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
+import { AgentSpinUpStatus } from '@credebl/common/enum/enum';
 
 @Controller()
 export class AgentServiceController {

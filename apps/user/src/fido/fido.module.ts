@@ -12,7 +12,7 @@ import { OrgRolesRepository } from 'libs/org-roles/repositories';
 import { OrgRolesService } from '@credebl/org-roles';
 import { PrismaService } from '@credebl/prisma-service';
 import { SupabaseService } from '@credebl/supabase';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { UserActivityRepository } from '@credebl/user-activity/repositories';
 import { UserActivityService } from '@credebl/user-activity';
 import { UserDevicesRepository } from '../../repositories/user-device.repository';
 import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
@@ -20,7 +20,7 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../../repositories/user.repository';
 import { UserService } from '../user.service';
 import { AwsService } from '@credebl/aws';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 
 @Module({
   imports: [

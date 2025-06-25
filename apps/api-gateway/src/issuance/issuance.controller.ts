@@ -58,11 +58,11 @@ import {
 } from './dtos/issuance.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { User } from '../authz/decorators/user.decorator';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import {
   FileExportResponse,
   IIssuedCredentialSearchParams,
@@ -77,9 +77,9 @@ import { RpcException } from '@nestjs/microservices';
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
-import { SchemaType } from '@credebl/enum/enum';
+import { SchemaType } from '@credebl/common/enum/enum';
 import { CommonConstants } from '../../../../libs/common/src/common.constant';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { TrimStringParamPipe } from '@credebl/common/utils/helpers/cast.helper';
 import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)

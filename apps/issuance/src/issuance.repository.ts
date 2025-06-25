@@ -9,7 +9,7 @@ import {
   PreviewRequest,
   SchemaDetails
 } from '../interfaces/issuance.interfaces';
-import { PrismaTables, SortValue } from '@credebl/enum/enum';
+import { PrismaTables, SortValue } from '@credebl/common/enum/enum';
 // eslint-disable-next-line camelcase
 import {
   agent_invitations,
@@ -27,7 +27,7 @@ import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.int
 import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 
 @Injectable()
 export class IssuanceRepository {

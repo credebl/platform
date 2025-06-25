@@ -3,9 +3,9 @@ import { ConflictException, Injectable, InternalServerErrorException, Logger } f
 import { PrismaService } from '@credebl/prisma-service';
 import { ledgers, org_agents, org_agents_type, organisation, Prisma, schema } from '@prisma/client';
 import { ISchema, ISchemaExist, ISchemaSearchCriteria, ISaveSchema } from '../interfaces/schema-payload.interface';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { AgentDetails, ISchemasWithCount, IUpdateSchema, UpdateSchemaResponse } from '../interfaces/schema.interface';
-import { SchemaType, SortValue } from '@credebl/enum/enum';
+import { SchemaType, SortValue } from '@credebl/common/enum/enum';
 import { ICredDefWithCount, IPlatformSchemas } from '@credebl/common/interfaces/schema.interface';
 import { ISchemaId } from '../schema.interface';
 

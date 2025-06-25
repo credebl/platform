@@ -1,4 +1,4 @@
-import { SchemaType } from '@credebl/enum/enum';
+import { SchemaType } from '@credebl/common/enum/enum';
 import { IUserRequestInterface } from '../schema/interfaces';
 
 export interface ISchemaSearchPayload {

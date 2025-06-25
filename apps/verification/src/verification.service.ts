@@ -26,12 +26,12 @@ import {
 import { VerificationRepository } from './repositories/verification.repository';
 import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
 import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
-import { AutoAccept, OrgAgentType, VerificationProcessState } from '@credebl/enum/enum';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { AutoAccept, OrgAgentType, VerificationProcessState } from '@credebl/common/enum/enum';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
+import { sendEmail } from '@credebl/common/utils/helpers/send-grid-helper-file';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -49,10 +49,10 @@ import {
   VerificationMethodLabel
 } from 'apps/api-gateway/src/verification/enum/verification.enum';
 import { UserActivityService } from '@credebl/user-activity';
-import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { convertUrlToDeepLinkUrl } from '@credebl/common/utils/common.utils';
+import { UserActivityRepository } from '@credebl/user-activity/repositories';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { NATSClient } from '@credebl/common/nats/NATSClient';
 import { from } from 'rxjs';
 
 @Injectable()

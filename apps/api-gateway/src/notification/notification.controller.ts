@@ -1,4 +1,4 @@
-import { CustomExceptionFilter } from '@credebl/common/exception-handler';
+import { CustomExceptionFilter } from '@credebl/common/utils/handlers/exception-handler';
 import { Body, Controller, HttpStatus, Logger, Post, Res, UseFilters } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -7,7 +7,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { RegisterOrgWebhhookEndpointDto, SendNotificationDto } from './dtos/notification.dto';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from '@credebl/common/utils/response-messages';
 import { NotificationService } from './notification.service';
 
 

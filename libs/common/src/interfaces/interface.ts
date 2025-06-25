@@ -1,4 +1,4 @@
-import { W3CSchemaDataType } from '@credebl/enum/enum';
+import { W3CSchemaDataType } from '../enum';
 
 export interface ResponseType {
   statusCode: number;

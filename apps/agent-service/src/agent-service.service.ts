@@ -414,7 +414,7 @@ export class AgentServiceService {
       walletStoragePassword: process.env.WALLET_STORAGE_PASSWORD || '',
       inboundEndpoint,
       containerName: orgData.name.split(' ').join('_'),
-      agentType: AgentType.AFJ,
+      agentType: AgentType.Credo,
       orgName: orgData?.name,
       indyLedger: escapedJsonString,
       credoImage: process.env.AFJ_VERSION || '',
@@ -862,7 +862,7 @@ export class AgentServiceService {
       // Get shared agent type
       const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
       // Get agent type details
-      const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
+      const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.Credo);
 
       const storeOrgAgentData: IStoreOrgAgentDetails = {
         did: tenantDetails.DIDCreationOption.did,

@@ -26,7 +26,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 // eslint-disable-next-line camelcase
-import { RecordType, user, user_org_roles } from '@prisma/client';
+import { client_aliases, RecordType, user, user_org_roles } from '@prisma/client';
 import {
   ICheckUserDetails,
   OrgInvitations,
@@ -86,6 +86,22 @@ export class UserService {
 
   /**
    *
+   * @returns client alias and its url
+   */
+
+  // eslint-disable-next-line camelcase
+  async getClientAliases(): Promise<client_aliases[]> {
+    try {
+      const clientAliases = await this.userRepository.fetchClientAliases();
+      return clientAliases;
+    } catch (error) {
+      this.logger.error(`In Create User : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   *
    * @param userEmailVerification
    * @returns
    */
@@ -136,7 +152,8 @@ export class UserService {
           clientDetails.clientId,
           brandLogoUrl,
           platformName,
-          clientDetails.domain
+          clientDetails.domain,
+          clientAlias
         );
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
@@ -193,7 +210,8 @@ export class UserService {
     clientId: string,
     brandLogoUrl: string,
     platformName: string,
-    redirectTo?: string
+    redirectTo?: string,
+    clientAlias?: string
   ): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
@@ -213,7 +231,8 @@ export class UserService {
         decryptedClientId,
         brandLogoUrl,
         platformName,
-        redirectTo
+        redirectTo,
+        clientAlias
       );
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {

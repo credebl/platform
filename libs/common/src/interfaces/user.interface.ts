@@ -60,3 +60,11 @@ export interface IResetPasswordResponse {
 export interface ISignUpUserResponse {
   userId: string;
 }
+
+export interface IClientAliases {
+  id: string;
+  createDateTime: string;
+  lastChangedDateTime: string;
+  clientAlias: string;
+  clientUrl: string;
+}

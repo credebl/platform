@@ -1,9 +1,9 @@
-import { encryptClientCredential } from '@credebl/common/cast.helper';
 import { IClientDetailsSSO } from '@credebl/common/interfaces/user.interface';
+import { encryptClientCredential } from '@credebl/common/cast.helper';
 
 export const getDefaultClient = async (): Promise<IClientDetailsSSO> => ({
   alias: process.env.PLATFORM_NAME?.toUpperCase(),
-  domain: process.env.DEFAULT_DOMAIN,
+  domain: process.env.FRONT_END_URL,
   clientId: await encryptClientCredential(process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID),
   clientSecret: await encryptClientCredential(process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET)
 });

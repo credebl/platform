@@ -1,38 +1,50 @@
 import {
-  IOrgUsers,
-  Payload,
   ICheckUserDetails,
+  IOrgUsers,
+  IUserDeletedActivity,
+  IUserForgotPassword,
+  IUserInformation,
+  IUserResetPassword,
+  IUserSignIn,
+  IUsersProfile,
+  Payload,
   PlatformSettings,
   UpdateUserProfile,
-  IUsersProfile,
-  IUserInformation,
-  IUserSignIn,
-  IUserResetPassword,
-  IUserDeletedActivity,
-  UserKeycloakId,
-  IUserForgotPassword
+  UserKeycloakId
 } from '../interfaces/user.interface';
+import {
+  IResetPasswordResponse,
+  ISendVerificationEmail,
+  ISignInUser,
+  ISignUpUserResponse,
+  IUserInvitations,
+  IVerifyUserEmail
+} from '@credebl/common/interfaces/user.interface';
+// eslint-disable-next-line camelcase
+import { client_aliases, user, user_org_roles } from '@prisma/client';
+
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
+import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { Controller } from '@nestjs/common';
+import { IUsersActivity } from 'libs/user-activity/interface';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-// eslint-disable-next-line camelcase
-import { user, user_org_roles } from '@prisma/client';
-import { IUsersActivity } from 'libs/user-activity/interface';
-import {
-  ISendVerificationEmail,
-  ISignInUser,
-  IVerifyUserEmail,
-  IUserInvitations,
-  IResetPasswordResponse,
-  ISignUpUserResponse
-} from '@credebl/common/interfaces/user.interface';
-import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  /**
+   * Description: Fetch client aliases are its url
+   * @param email
+   * @returns Client alias and its url
+   */
+  @MessagePattern({ cmd: 'get-client-alias-and-url' })
+  // eslint-disable-next-line camelcase
+  async getClientAliases(): Promise<client_aliases[]> {
+    return this.userService.getClientAliases();
+  }
 
   /**
    * Description: Registers new user

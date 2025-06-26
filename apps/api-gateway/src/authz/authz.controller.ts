@@ -43,6 +43,28 @@ export class AuthzController {
   ) {}
 
   /**
+   * Fetch client aliase.
+   *
+   * @returns Returns client alias and its url.
+   */
+  @Get('/clientAliases')
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({
+    summary: 'Get client aliases',
+    description: 'Fetch client aliases and itr url'
+  })
+  async getClientAlias(@Res() res: Response): Promise<Response> {
+    const clientAliases = await this.authzService.getClientAlias();
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchClientAlises,
+      data: clientAliases
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
    * Verify user’s email address.
    *
    * @param email  The email address of the user.

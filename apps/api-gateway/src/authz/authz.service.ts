@@ -6,6 +6,7 @@ import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AddUserDetailsDto } from '../user/dto/add-user.dto';
 import {
+  IClientAliases,
   IResetPasswordResponse,
   ISignInUser,
   ISignUpUserResponse,
@@ -27,6 +28,10 @@ export class AuthzService extends BaseService {
     private readonly natsClient: NATSClient
   ) {
     super('AuthzService');
+  }
+
+  getClientAlias(): Promise<IClientAliases[]> {
+    return this.natsClient.sendNatsMessage(this.authServiceProxy, 'get-client-alias-and-url', '');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

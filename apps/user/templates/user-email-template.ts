@@ -6,14 +6,20 @@ export class URLUserEmailTemplate {
     clientId: string,
     brandLogoUrl: string,
     platformName: string,
-    redirectTo?: string
+    redirectTo?: string,
+    clientAlias?: string
   ): string {
-    const apiUrl = new URL(clientId ? '/verify-email-success' : '', redirectUrl);
+    const apiUrl = new URL(clientId ? '/auth/verify-email-success' : '', redirectUrl);
 
     apiUrl.searchParams.append('verificationCode', verificationCode);
     apiUrl.searchParams.append('email', encodeURIComponent(email));
+
     if (redirectTo) {
-      apiUrl.searchParams.append('redirectTo', encodeURIComponent(redirectTo));
+      apiUrl.searchParams.append('redirectTo', redirectTo);
+    }
+
+    if (clientAlias) {
+      apiUrl.searchParams.append('clientAlias', clientAlias);
     }
 
     const validUrl = apiUrl.href;

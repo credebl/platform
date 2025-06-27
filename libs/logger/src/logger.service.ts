@@ -69,6 +69,9 @@ export default class LoggerService implements Logger {
 
   private emitToOtel(severityText: string, message: string | Error, data?: LogData): void {
     try {
+      if (!otelLogger) {
+        return;
+      }
       const correlationId = data?.correlationId || this.contextStorageService.getContextId();
 
       const attributes = {

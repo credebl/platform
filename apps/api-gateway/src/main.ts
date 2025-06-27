@@ -20,9 +20,14 @@ dotenv.config();
 
 async function bootstrap(): Promise<void> {
   try {
-    await otelSDK.start();
-    // eslint-disable-next-line no-console
-    console.log('OpenTelemetry SDK started successfully');
+    if (otelSDK) {
+      await otelSDK.start();
+      // eslint-disable-next-line no-console
+      console.log('OpenTelemetry SDK started successfully');
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('OpenTelemetry SDK disabled for this environment');
+    }
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Failed to start OpenTelemetry SDK:', error);

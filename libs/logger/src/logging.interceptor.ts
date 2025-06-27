@@ -34,18 +34,6 @@ export class LoggingInterceptor implements NestInterceptor {
         this.contextStorageService.set('x-correlation-id', newContextId);
         this.contextStorageService.setContextId(newContextId);
       }
-      //TODO: Uncomment this when user context needs to be set
-      // const userDetails =
-      //   context.switchToHttp?.().getRequest?.().user ||
-      //   rpcContext?.user ||
-      //   rpcContext?.getUser?.();
-      // if (testUser) {
-      //   this.contextStorageService.set('user', testUser);
-      //   console.log('✅ Set user in contextStorageService:', testUser);
-      // } else {
-      //   console.log('⚠️ No user found in context');
-      // }
-
       return next.handle().pipe(
         catchError((err) => {
           this._logger.error(err);

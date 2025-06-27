@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ConsoleLogger, Injectable, Scope } from '@nestjs/common';
+import { ConsoleLogger } from '@nestjs/common';
 import Logger from '@credebl/logger/logger.interface';
 import { LoggerService } from '@nestjs/common/services/logger.service';
 import { LogData } from '@credebl/logger/log';
-import api from '@opentelemetry/api';
 
 export default class NestjsLoggerServiceAdapter extends ConsoleLogger implements LoggerService {
   public constructor(private readonly logger: Logger) {
@@ -38,16 +37,5 @@ export default class NestjsLoggerServiceAdapter extends ConsoleLogger implements
     return {
       sourceClass: optionalParams[0] ? optionalParams[0] : undefined
     };
-  }
-}
-
-@Injectable({ scope: Scope.TRANSIENT })
-export class MyLoggerService extends ConsoleLogger {
-  customLog(message: string): void {
-    const activeSpan = api.trace.getSpan(api.context.active());
-    if (activeSpan) {
-      activeSpan.addEvent(message);
-    }
-    this.log(message);
   }
 }

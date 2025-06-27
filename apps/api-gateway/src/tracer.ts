@@ -1,5 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck TODO: Facing issues with types, need to fix later
+// tracer.ts
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import * as process from 'process';
 
@@ -16,46 +20,52 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { LoggerProvider, BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { DiagConsoleLogger, DiagLogLevel, diag } from '@opentelemetry/api';
 import type { Logger } from '@opentelemetry/api-logs';
-import * as dotenv from 'dotenv';
-dotenv.config();
 
-diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
+let otelSDK: NodeSDK | null = null;
+let otelLogger: Logger | null = null;
+let otelLoggerProviderInstance: LoggerProvider | null = null;
+if ('true' === process.env.IS_ENABLE_OTEL) {
+  diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
 
-const resource = new resourceFromAttributes({
-  [SemanticResourceAttributes.SERVICE_NAME]: process.env.OTEL_SERVICE_NAME,
-  [SemanticResourceAttributes.SERVICE_VERSION]: process.env.OTEL_SERVICE_VERSION,
-  [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: process.env.HOSTNAME || 'localhost'
-});
+  const resource = resourceFromAttributes({
+    [SemanticResourceAttributes.SERVICE_NAME]: process.env.OTEL_SERVICE_NAME,
+    [SemanticResourceAttributes.SERVICE_VERSION]: process.env.OTEL_SERVICE_VERSION,
+    [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: process.env.HOSTNAME
+  });
 
-const traceExporter = new OTLPTraceExporter({
-  url: process.env.OTEL_TRACES_OTLP_ENDPOINT,
-  headers: {
-    Authorization: `Api-Key ${process.env.OTEL_HEADERS_KEY}`
-  }
-});
+  const traceExporter = new OTLPTraceExporter({
+    url: process.env.OTEL_TRACES_OTLP_ENDPOINT,
+    headers: {
+      Authorization: `Api-Key ${process.env.OTEL_HEADERS_KEY}`
+    }
+  });
 
-const logExporter = new OTLPLogExporter({
-  url: process.env.OTEL_LOGS_OTLP_ENDPOINT,
-  headers: {
-    Authorization: `Api-Key ${process.env.OTEL_HEADERS_KEY}`
-  }
-});
-const logProvider = new LoggerProvider({ resource });
-logProvider.addLogRecordProcessor(new BatchLogRecordProcessor(logExporter));
-export const otelLogger: Logger = logProvider.getLogger('nestjs-otel');
-export const otelLoggerProviderInstance = logProvider;
+  const logExporter = new OTLPLogExporter({
+    url: process.env.OTEL_LOGS_OTLP_ENDPOINT,
+    headers: {
+      Authorization: `Api-Key ${process.env.OTEL_HEADERS_KEY}`
+    }
+  });
 
-export const otelSDK = new NodeSDK({
-  traceExporter,
-  resource,
-  instrumentations: [new HttpInstrumentation(), new ExpressInstrumentation(), new NestInstrumentation()]
-});
+  const logProvider = new LoggerProvider({ resource });
+  logProvider.addLogRecordProcessor(new BatchLogRecordProcessor(logExporter));
+  otelLogger = logProvider.getLogger(process.env.OTEL_LOGGER_NAME);
+  otelLoggerProviderInstance = logProvider;
 
-process.on('SIGTERM', () => {
-  Promise.all([otelSDK.shutdown(), logProvider.shutdown()])
-    // eslint-disable-next-line no-console
-    .then(() => console.log('SDK and Logger shut down successfully'))
-    // eslint-disable-next-line no-console
-    .catch((err) => console.log('Error during shutdown', err))
-    .finally(() => process.exit(0));
-});
+  otelSDK = new NodeSDK({
+    traceExporter,
+    resource,
+    instrumentations: [new HttpInstrumentation(), new ExpressInstrumentation(), new NestInstrumentation()]
+  });
+
+  process.on('SIGTERM', () => {
+    Promise.all([otelSDK!.shutdown(), logProvider.shutdown()])
+      // eslint-disable-next-line no-console
+      .then(() => console.log('SDK and Logger shut down successfully'))
+      // eslint-disable-next-line no-console
+      .catch((err) => console.log('Error during shutdown', err))
+      .finally(() => process.exit(0));
+  });
+}
+
+export { otelSDK, otelLogger, otelLoggerProviderInstance };

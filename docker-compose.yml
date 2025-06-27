@@ -61,6 +61,7 @@ services:
   issuance:
     depends_on:
       - nats  # Use depends_on instead of needs
+      - redis
       - api-gateway
       - user
       - connection
@@ -165,7 +166,7 @@ services:
   webhook:
     depends_on:
       - nats
-      - api-gateway
+      - api-gateway 
     image: ghcr.io/credebl/webhook:latest
     env_file:
       - ./.env

@@ -1,17 +1,6 @@
-import { PrismaService } from '@credebl/prisma-service';
+/* eslint-disable camelcase */
+import { AgentType, PrismaTables } from '@credebl/enum/enum';
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
-// eslint-disable-next-line camelcase
-import {
-  Prisma,
-  ledgerConfig,
-  ledgers,
-  org_agents,
-  org_agents_type,
-  org_dids,
-  organisation,
-  platform_config,
-  user
-} from '@prisma/client';
 import {
   ICreateOrgAgent,
   ILedgers,
@@ -24,7 +13,19 @@ import {
   LedgerNameSpace,
   OrgDid
 } from '../interface/agent-service.interface';
-import { AgentType, PrismaTables } from '@credebl/enum/enum';
+import {
+  Prisma,
+  ledgerConfig,
+  ledgers,
+  org_agents,
+  org_agents_type,
+  org_dids,
+  organisation,
+  platform_config,
+  user
+} from '@prisma/client';
+
+import { PrismaService } from '@credebl/prisma-service';
 
 @Injectable()
 export class AgentServiceRepository {

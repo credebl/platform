@@ -520,3 +520,11 @@ enum CloudWalletType {
   CLOUD_BASE_WALLET
   CLOUD_SUB_WALLET
 }
+
+model client_aliases {
+  id                   String        @id @default(uuid()) @db.Uuid
+  createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
+  clientAlias          String?
+  clientUrl            String        
+}

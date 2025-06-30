@@ -18,6 +18,11 @@ import helmet from 'helmet';
 
 dotenv.config();
 
+/**
+ * Initializes and starts the API Gateway application with OpenTelemetry, microservices, Swagger documentation, security, middleware, and static file serving.
+ *
+ * Configures the NestJS application with custom logging, NATS microservice connection, request validation, global exception handling, CORS, API versioning, and global interceptors. Serves static files from multiple directories and sets up Swagger documentation at the `/api` endpoint. Starts the application on the host and port specified by environment variables.
+ */
 async function bootstrap(): Promise<void> {
   try {
     if (otelSDK) {

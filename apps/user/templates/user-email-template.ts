@@ -9,7 +9,7 @@ export class URLUserEmailTemplate {
     redirectTo?: string,
     clientAlias?: string
   ): string {
-    const apiUrl = new URL(clientId ? '/auth/verify-email-success' : '', redirectUrl);
+    const apiUrl = new URL(clientId ? '/verify-email-success' : '', redirectUrl);
 
     apiUrl.searchParams.append('verificationCode', verificationCode);
     apiUrl.searchParams.append('email', encodeURIComponent(email));

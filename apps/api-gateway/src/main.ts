@@ -2,19 +2,19 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
-
-import { AppModule } from './app.module';
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
-import { AllExceptionsFilter } from '@credebl/common/exception-handler';
+import { Logger, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { getNatsOptions } from '@credebl/common/nats.config';
 
-import helmet from 'helmet';
+import { AllExceptionsFilter } from '@credebl/common/exception-handler';
+import { AppModule } from './app.module';
 import { CommonConstants } from '@credebl/common/common.constant';
-import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import { NatsInterceptor } from '@credebl/common';
+import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-validation-pipe';
+import { getNatsOptions } from '@credebl/common/nats.config';
+import helmet from 'helmet';
+
 dotenv.config();
 
 async function bootstrap(): Promise<void> {

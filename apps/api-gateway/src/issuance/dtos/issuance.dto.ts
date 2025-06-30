@@ -15,7 +15,6 @@ import {
   IsString,
   IsUUID,
   IsUrl,
-  IsUUID,
   MaxLength,
   ValidateNested
 } from 'class-validator';

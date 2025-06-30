@@ -449,6 +449,11 @@ const updateClientCredential = async (): Promise<void> => {
   }
 };
 
+/**
+ * Executes the full database seeding and initialization process.
+ *
+ * Runs all seeding and setup functions in sequence to populate configuration, master data, and perform required migrations and updates.
+ */
 async function main(): Promise<void> {
   await createPlatformConfig();
   await createOrgRoles();

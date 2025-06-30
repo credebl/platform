@@ -421,6 +421,12 @@ export function checkDidLedgerAndNetwork(schemaType: string, did: string): boole
   return false;
 }
 
+/**
+ * Updates the issuance date of each credential in the array to the current date if it differs from today.
+ *
+ * @param data - Array of credential data objects to check and update
+ * @returns The updated array of credential data objects
+ */
 export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICredentialData[] {
   // Get current date in 'YYYY-MM-DD' format
   // eslint-disable-next-line prefer-destructuring
@@ -456,6 +462,16 @@ export const encryptClientCredential = async (clientCredential: string): Promise
   }
 };
 
+/**
+ * Decorator that validates the structure of nested schema fields based on the `schemaDataType` property.
+ *
+ * Ensures that:
+ * - For `object` types, only `properties` is defined and `items` is not.
+ * - For `array` types, only `items` is defined and `properties` is not.
+ * - For other types, neither `properties` nor `items` are present.
+ *
+ * Provides detailed error messages when the structure does not match the expected format for the given `schemaDataType`.
+ */
 export function ValidateNestedStructureFields(validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string): void {
     registerDecorator({

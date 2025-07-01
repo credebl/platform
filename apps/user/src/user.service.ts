@@ -26,7 +26,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 // eslint-disable-next-line camelcase
-import { RecordType, user, user_org_roles } from '@prisma/client';
+import { client_aliases, RecordType, user, user_org_roles } from '@prisma/client';
 import {
   ICheckUserDetails,
   OrgInvitations,
@@ -63,6 +63,7 @@ import { URLUserResetPasswordTemplate } from '../templates/reset-password-templa
 import { toNumber } from '@credebl/common/cast.helper';
 import * as jwt from 'jsonwebtoken';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { getCredentialsByAlias } from 'apps/api-gateway/src/user/utils';
 
 @Injectable()
 export class UserService {
@@ -82,13 +83,29 @@ export class UserService {
 
   /**
    *
+   * @returns client alias and its url
+   */
+
+  // eslint-disable-next-line camelcase
+  async getClientAliases(): Promise<client_aliases[]> {
+    try {
+      const clientAliases = await this.userRepository.fetchClientAliases();
+      return clientAliases;
+    } catch (error) {
+      this.logger.error(`In Create User : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   *
    * @param userEmailVerification
    * @returns
    */
 
   async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
     try {
-      const { email, brandLogoUrl, platformName, clientId, clientSecret } = userEmailVerification;
+      const { email, brandLogoUrl, platformName, clientAlias } = userEmailVerification;
 
       if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
         // eslint-disable-next-line prefer-destructuring
@@ -111,9 +128,14 @@ export class UserService {
       const verifyCode = uuidv4();
       let sendVerificationMail: boolean;
 
+      const clientDetails = await getCredentialsByAlias(clientAlias);
+
       try {
-        const token = await this.clientRegistrationService.getManagementToken(clientId, clientSecret);
-        const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientId, token);
+        const token = await this.clientRegistrationService.getManagementToken(
+          clientDetails.clientId,
+          clientDetails.clientSecret
+        );
+        const getClientData = await this.clientRegistrationService.getClientRedirectUrl(clientDetails.clientId, token);
 
         const [redirectUrl] = getClientData[0]?.redirectUris || [];
 
@@ -125,9 +147,11 @@ export class UserService {
           email,
           verifyCode,
           redirectUrl,
-          clientId,
+          clientDetails.clientId,
           brandLogoUrl,
-          platformName
+          platformName,
+          clientDetails.domain,
+          clientAlias
         );
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
@@ -136,8 +160,8 @@ export class UserService {
       if (sendVerificationMail) {
         const uniqueUsername = await this.createUsername(email, verifyCode);
         userEmailVerification.username = uniqueUsername;
-        userEmailVerification.clientId = clientId;
-        userEmailVerification.clientSecret = clientSecret;
+        userEmailVerification.clientId = clientDetails.clientId;
+        userEmailVerification.clientSecret = clientDetails.clientSecret;
         const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
         return resUser;
       }
@@ -183,12 +207,14 @@ export class UserService {
     redirectUrl: string,
     clientId: string,
     brandLogoUrl: string,
-    platformName: string
+    platformName: string,
+    redirectTo?: string,
+    clientAlias?: string
   ): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
 
-      const decryptClientId = await this.commonService.decryptPassword(clientId);
+      const decryptedClientId = await this.commonService.decryptPassword(clientId);
       const urlEmailTemplate = new URLUserEmailTemplate();
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData[0].emailFrom;
@@ -200,9 +226,11 @@ export class UserService {
         email,
         verificationCode,
         redirectUrl,
-        decryptClientId,
+        decryptedClientId,
         brandLogoUrl,
-        platformName
+        platformName,
+        redirectTo,
+        clientAlias
       );
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {

@@ -1,23 +1,24 @@
 /* eslint-disable prefer-destructuring */
 
-import { Injectable, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import {
   IOrgUsers,
-  PlatformSettings,
-  IShareUserCertificate,
-  UpdateUserProfile,
   ISendVerificationEmail,
-  IUsersProfile,
-  IUserInformation,
-  IVerifyUserEmail,
+  IShareUserCertificate,
   IUserDeletedActivity,
+  IUserInformation,
+  IUsersProfile,
+  IVerifyUserEmail,
+  PlatformSettings,
+  UpdateUserProfile,
   UserKeycloakId,
-  UserRoleMapping,
-  UserRoleDetails
+  UserRoleDetails,
+  UserRoleMapping
 } from '../interfaces/user.interface';
-import { PrismaService } from '@credebl/prisma-service';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { RecordType, schema, token, user, user_org_roles } from '@prisma/client';
+import { RecordType, client_aliases, schema, token, user, user_org_roles } from '@prisma/client';
+
+import { PrismaService } from '@credebl/prisma-service';
 import { UserRole } from '@credebl/enum/enum';
 
 interface UserQueryOptions {
@@ -33,6 +34,21 @@ export class UserRepository {
     private readonly prisma: PrismaService,
     private readonly logger: Logger
   ) {}
+
+  /**
+   *
+   * @returns Client alias and its url
+   */
+
+  // eslint-disable-next-line camelcase
+  async fetchClientAliases(): Promise<client_aliases[]> {
+    try {
+      return this.prisma.client_aliases.findMany();
+    } catch (error) {
+      this.logger.error(`checkUserExist: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 
   /**
    *
@@ -700,7 +716,14 @@ export class UserRepository {
     }
   }
 
-  async updateOrgDeletedActivity(orgId: string, userId: string, deletedBy: string, recordType: RecordType, userEmail: string, txnMetadata: object): Promise<IUserDeletedActivity> {
+  async updateOrgDeletedActivity(
+    orgId: string,
+    userId: string,
+    deletedBy: string,
+    recordType: RecordType,
+    userEmail: string,
+    txnMetadata: object
+  ): Promise<IUserDeletedActivity> {
     try {
       const orgDeletedActivity = await this.prisma.user_org_delete_activity.create({
         data: {
@@ -754,10 +777,12 @@ export class UserRepository {
       });
 
       // Create a map for quick lookup of keycloakUserId, id, and email by email
-      const userMap = new Map(users.map(user => [user.email, { id: user.id, keycloakUserId: user.keycloakUserId, email: user.email }]));
+      const userMap = new Map(
+        users.map((user) => [user.email, { id: user.id, keycloakUserId: user.keycloakUserId, email: user.email }])
+      );
 
       // Collect the keycloakUserId, id, and email in the order of input emails
-      const result = userEmails.map(email => {
+      const result = userEmails.map((email) => {
         const user = userMap.get(email);
         return { id: user?.id || null, keycloakUserId: user?.keycloakUserId || null, email };
       });
@@ -768,7 +793,7 @@ export class UserRepository {
       throw error;
     }
   }
-  
+
   async storeUserRole(userId: string, userRoleId: string): Promise<UserRoleMapping> {
     try {
       const userRoleMapping = await this.prisma.user_role_mapping.create({
@@ -798,20 +823,18 @@ export class UserRepository {
     }
   }
 
-   // eslint-disable-next-line camelcase
-   async handleGetUserOrganizations(userId: string): Promise<user_org_roles[]> {
-    try {  
+  // eslint-disable-next-line camelcase
+  async handleGetUserOrganizations(userId: string): Promise<user_org_roles[]> {
+    try {
       const getUserOrgs = await this.prisma.user_org_roles.findMany({
         where: {
           userId
         }
       });
-  
+
       return getUserOrgs;
     } catch (error) {
-      this.logger.error(
-        `Error in handleGetUserOrganizations: ${error.message}`
-      );
+      this.logger.error(`Error in handleGetUserOrganizations: ${error.message}`);
       throw error;
     }
   }

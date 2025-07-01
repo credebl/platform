@@ -682,7 +682,8 @@ export class OrganizationRepository {
             },
             org_agents: {
               select: {
-                orgDid: true
+                orgDid: true,
+                tenantId: true
               }
             }
           },

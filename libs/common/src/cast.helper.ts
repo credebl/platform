@@ -1,4 +1,6 @@
-import { BadRequestException, PipeTransform } from '@nestjs/common';
+import * as CryptoJS from 'crypto-js';
+
+import { BadRequestException, Logger, PipeTransform } from '@nestjs/common';
 import {
   DidMethod,
   JSONSchemaType,
@@ -23,6 +25,7 @@ import { ISchemaFields } from './interfaces/schema.interface';
 import { ResponseMessages } from './response-messages';
 import { plainToClass } from 'class-transformer';
 
+const logger = new Logger();
 interface ToNumberOptions {
   default?: number;
   min?: number;
@@ -435,6 +438,22 @@ export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICreden
     return item;
   });
 }
+
+export const encryptClientCredential = async (clientCredential: string): Promise<string> => {
+  try {
+    const encryptedToken = CryptoJS.AES.encrypt(
+      JSON.stringify(clientCredential),
+      process.env.CRYPTO_PRIVATE_KEY
+    ).toString();
+
+    logger.debug('Client credentials encrypted successfully');
+
+    return encryptedToken;
+  } catch (error) {
+    logger.error('An error occurred during encryptClientCredential:', error);
+    throw error;
+  }
+};
 
 export function ValidateNestedStructureFields(validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string): void {

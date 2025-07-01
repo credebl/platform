@@ -1,13 +1,26 @@
 export class URLUserEmailTemplate {
-  public getUserURLTemplate(email: string, verificationCode: string, redirectUrl: string, clientId: string, brandLogoUrl:string, platformName:string): string {
-
-    const apiUrl = new URL(
-      clientId === process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID ? '/verify-email-success' : '',
-      redirectUrl
-    );
+  public getUserURLTemplate(
+    email: string,
+    verificationCode: string,
+    redirectUrl: string,
+    clientId: string,
+    brandLogoUrl: string,
+    platformName: string,
+    redirectTo?: string,
+    clientAlias?: string
+  ): string {
+    const apiUrl = new URL(clientId ? '/verify-email-success' : '', redirectUrl);
 
     apiUrl.searchParams.append('verificationCode', verificationCode);
     apiUrl.searchParams.append('email', encodeURIComponent(email));
+
+    if (redirectTo) {
+      apiUrl.searchParams.append('redirectTo', redirectTo);
+    }
+
+    if (clientAlias) {
+      apiUrl.searchParams.append('clientAlias', clientAlias);
+    }
 
     const validUrl = apiUrl.href;
 
@@ -64,6 +77,8 @@ export class URLUserEmailTemplate {
           </div>
       </body>
       </html>`;
-    } catch (error) {}
+    } catch (error) {
+      throw new Error('Error creating email verification template');
+    }
   }
 }

@@ -9,7 +9,8 @@ export class URLUserEmailTemplate {
     redirectTo?: string,
     clientAlias?: string
   ): string {
-    const apiUrl = new URL(clientId ? '/verify-email-success' : '', redirectUrl);
+    const baseDomain = `${process.env.FRONT_END_URL}`;
+    const apiUrl = new URL('/verify-email-success', baseDomain);
 
     apiUrl.searchParams.append('verificationCode', verificationCode);
     apiUrl.searchParams.append('email', encodeURIComponent(email));

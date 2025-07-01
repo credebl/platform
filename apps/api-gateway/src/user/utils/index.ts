@@ -36,7 +36,7 @@ export async function getCredentialsByAlias(alias: string): Promise<IClientDetai
     return defaultClient;
   }
 
-  const clientDetails = getClientDetails(alias);
+  const clientDetails = await getClientDetails(alias);
 
   if (!clientDetails.clientId || !clientDetails.clientSecret || !clientDetails.domain) {
     throw new Error(`Missing configuration for SSO client: ${alias}`);

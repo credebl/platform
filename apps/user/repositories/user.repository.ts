@@ -46,7 +46,7 @@ export class UserRepository {
       return this.prisma.client_aliases.findMany();
     } catch (error) {
       this.logger.error(`checkUserExist: ${JSON.stringify(error)}`);
-      throw new error();
+      throw error;
     }
   }
 

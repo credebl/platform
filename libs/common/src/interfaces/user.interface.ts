@@ -18,7 +18,7 @@ export interface ISendVerificationEmail {
   brandLogoUrl?: string;
   platformName?: string;
   redirectTo?: string;
-  clientAlias: string;
+  clientAlias?: string;
 }
 
 export interface IClientDetailsSSO {

@@ -33,5 +33,9 @@ export class UserEmailVerificationDto {
   @IsString({ message: 'platformName should be string' })
   platformName?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString({ message: 'clientAlias should be string' })
+  @Transform(({ value }) => trim(value))
   clientAlias?: string;
 }

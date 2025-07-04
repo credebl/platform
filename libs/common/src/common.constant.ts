@@ -32,8 +32,8 @@ export enum CommonConstants {
   // WALLET SERVICES
   URL_WALLET_CREATE_DID = '/wallet/did/create',
   URL_WALLET_LIST_DID = '/wallet/did',
-  URL_WALLET_CURR_PUB_DID = '/wallet/did/public',
-  URL_WALLET_TAGGING_POLICY = '/wallet/tag-policy/#',
+  URL_WALLET_FETCH_OR_ASSIGN_CURR_PUB_DID = '/wallet/did/public',
+  URL_WALLET_GET_OR_SET_TAGGING_POLICY = '/wallet/tag-policy/#',
   URL_WALLET_PROVISION = '/wallet/provision',
 
   // LEDGER SERVICES
@@ -70,6 +70,8 @@ export enum CommonConstants {
   URL_ISSUE_CREATE_CRED_OFFER_AFJ = '/credentials/create-offer',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   URL_ISSUE_GET_CREDS_AFJ = '/credentials',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID = '/credentials',
   URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/credentials/create-offer-oob',
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
   URL_SEND_QUESTION = '/question-answer/question/#',
@@ -119,6 +121,8 @@ export enum CommonConstants {
   URL_SHAGENT_DELETE_SUB_WALLET = '/multi-tenancy/#',
   URL_SHARED_SEND_BASIC_MESSAGE = '/multi-tenancy/basic-messages/#/@',
   URL_SHAGENT_ACCEPT_PROOF_REQUEST = '/multi-tenancy/proofs/#/accept-request/@',
+  URL_SHARED_AGENT_SIGN_DATA = '/multi-tenancy/credential/sign/#',
+  URL_SHARED_AGENT_VERIFY_SIGNED_DATA = '/multi-tenancy/credential/verify/#',
 
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/proofs/request-proof',
@@ -134,6 +138,10 @@ export enum CommonConstants {
   URL_AGENT_GET_DID = '/dids',
   // agent status
   URL_AGENT_GET_ENDPOINT = '/agent',
+
+  // sign data from agent
+  URL_AGENT_SIGN_DATA = '/credential/sign',
+  URL_AGENT_VERIFY_SIGNED_DATA = '/credential/verify',
 
   // CREATE KEYS
   CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
@@ -181,6 +189,7 @@ export enum CommonConstants {
   // Roles And Permissions
   PERMISSION_PLATFORM_MANAGEMENT = 'Platform Management',
   PERMISSION_USER_MANAGEMENT = 'User Management',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   PERMISSION_ROLE_MANAGEMENT = 'Role Management',
 
   PERMISSION_CONNECTIONS = 'Connections',
@@ -218,7 +227,10 @@ export enum CommonConstants {
   URL_UPDATE_FILE = '/revocation/registry/#',
   URL_REVOC_PUBLISH = '/revocation/registry/#/publish',
   URL_REVOC_GETBY_CREDDEF = '/revocation/active-registry/#',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  URL_REVOC_REG_BYID = '/revocation/registry/#',
 
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   DEFAULT_CACHE_TTL = 60000,
   DEFAULT_FIELD_UPLOAD_SIZE = 10485760,
 
@@ -248,6 +260,12 @@ export enum CommonConstants {
 
   // delete wallet
   URL_DELETE_WALLET = '/agent/wallet',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  URL_DELETE_SHARED_WALLET = '/multi-tenancy/#',
+
+  // agent status
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  URL_AGENT_STATUS = '/agent',
 
   // Tenant Status
   PENDING_STATE = 0,
@@ -351,7 +369,7 @@ export enum CommonConstants {
   ISSUANCE_BATCH_SIZE = 2000,
   ISSUANCE_MAX_CONCURRENT_OPERATIONS = 1000,
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  ISSUANCE_BATCH_DELAY = 60000, //Initially 60000
+  ISSUANCE_BATCH_DELAY = 60000, //Intially 60000
 
   // MICROSERVICES NAMES
   API_GATEWAY_SERVICE = 'api-gateway',
@@ -359,7 +377,7 @@ export enum CommonConstants {
   USER_SERVICE = 'user',
   AUTH_SERVICE = 'authz',
   FIDO_SERVICE = 'fido',
-  UTILITY_SERVICE = 'utilities',
+  UTILITY_SERVICE = 'utilitites',
   CONNECTION_SERVICE = 'connection',
   LEDGER_SERVICE = 'ledger',
   PLATFORM_SERVICE = 'platform',
@@ -377,8 +395,7 @@ export enum CommonConstants {
   //CLOUD WALLET
   RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
   ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
-  SEED_LENGTH = 32,
-  ENCODING = 'base64'
+  SEED_LENGTH = 32
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

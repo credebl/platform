@@ -7,7 +7,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { UtilitiesController } from './utilities.controller';
 import { UtilitiesService } from './utilities.service';
 import { UtilitiesRepository } from './utilities.repository';
-import { StorageService } from '@credebl/storage';
+import { StorageModule } from '@credebl/storage';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
@@ -28,9 +28,10 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
     LoggerModule,
     PlatformConfig,
     ContextInterceptorModule,
-    CacheModule.register()
+    CacheModule.register(),
+    StorageModule
   ],
   controllers: [UtilitiesController],
-  providers: [UtilitiesService, Logger, PrismaService, UtilitiesRepository, StorageService]
+  providers: [UtilitiesService, Logger, PrismaService, UtilitiesRepository]
 })
 export class UtilitiesModule {}

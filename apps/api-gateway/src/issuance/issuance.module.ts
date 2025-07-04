@@ -21,6 +21,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ])
   ],
   controllers: [IssuanceController],
-  providers: [IssuanceService, CommonService, StorageService, NATSClient, StorageService]
+  providers: [IssuanceService, CommonService, NATSClient, StorageService]
 })
 export class IssuanceModule {}

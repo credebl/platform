@@ -1169,7 +1169,7 @@ export class IssuanceService {
         case 'get-issue-credentials': {
           url =
             orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
+              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS}`
               : orgAgentType === OrgAgentType.SHARED
                 ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS}`.replace('#', tenantId)
                 : null;
@@ -1179,7 +1179,7 @@ export class IssuanceService {
         case 'get-issue-credential-by-credential-id': {
           url =
             orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
+              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS}/${credentialRecordId}`
               : orgAgentType === OrgAgentType.SHARED
                 ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`
                     .replace('#', credentialRecordId)

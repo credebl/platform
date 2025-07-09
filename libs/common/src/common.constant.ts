@@ -14,6 +14,8 @@ export enum CommonConstants {
   DATA_ALREADY_PRESENT = 'RECORD ALREADY EXIST',
   RESP_CONFLICT = 409,
   // URL constants for various GET/POST calls
+
+  // Routes
   // CONNECTION SERVICES
   URL_CONN_GET_CONNECTIONS = '/connections',
   URL_CONN_GET_CONNECTION_BY_ID = '/connections/#',
@@ -30,11 +32,13 @@ export enum CommonConstants {
   URL_CONN_INVITATION = '/url',
 
   // WALLET SERVICES
+  URL_AGENT_STATUS = '/agent',
   URL_WALLET_CREATE_DID = '/wallet/did/create',
   URL_WALLET_LIST_DID = '/wallet/did',
   URL_WALLET_FETCH_OR_ASSIGN_CURR_PUB_DID = '/wallet/did/public',
   URL_WALLET_GET_OR_SET_TAGGING_POLICY = '/wallet/tag-policy/#',
   URL_WALLET_PROVISION = '/wallet/provision',
+  URL_DELETE_WALLET = '/agent/wallet',
 
   // LEDGER SERVICES
   URL_LEDG_GET_DID_VERKEY = '/ledger/did-verkey?did=#',
@@ -52,8 +56,6 @@ export enum CommonConstants {
   URL_ISSUE_GET_CREDS = '/credentials',
   URL_ISSUE_GET_CREDEX_RECS = '/issue-credential/records',
   URL_ISSUE_GET_CRED_REC_BY_ID = '/credentials/#',
-  URL_ISSUE_SEND_CRED = '/credentials/offer-credential',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   URL_ISSUE_SEND_CRED_OFFER = '/credentials/offer-credential',
   URL_ISSUE_CREATE_SEND_PROPOSAL = '/issue-credential/send-proposal',
   URL_ISSUE_CREATE_CRED_OFFER = '/issue-credential/send-offer',
@@ -68,10 +70,6 @@ export enum CommonConstants {
   URL_CREATE_ISSUE_CREDENTIAL_OUT_OF_BAND = '/issue-credential/create',
   URL_CREATE_OUT_OF_BAND_INVITATION = '/out-of-band/create-invitation',
   URL_ISSUE_CREATE_CRED_OFFER_AFJ = '/credentials/create-offer',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  URL_ISSUE_GET_CREDS_AFJ = '/credentials',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID = '/credentials',
   URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/credentials/create-offer-oob',
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
   URL_SEND_QUESTION = '/question-answer/question/#',
@@ -132,11 +130,21 @@ export enum CommonConstants {
   URL_SEND_OUT_OF_BAND_CREATE_REQUEST = '/proofs/create-request-oob',
   URL_PROOF_FORM_DATA = '/proofs/#/form-data',
 
+  //CLOUD WALLET
+  CLOUD_WALLET_GET_PROOF_REQUEST = '/multi-tenancy/proofs',
+  CLOUD_WALLET_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation',
+  CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
+  CLOUD_WALLET_DID_LIST = '/multi-tenancy/dids/',
+  CLOUD_WALLET_CONNECTION_BY_ID = '/multi-tenancy/connections/',
+  CLOUD_WALLET_CREDENTIAL = '/multi-tenancy/credentials',
+  CLOUD_WALLET_BASIC_MESSAGE = '/multi-tenancy/basic-messages/',
+  CLOUD_WALLET_RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
+  CLOUD_WALLET_ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
+
   // server or agent
   URL_SERVER_STATUS = '/status',
   URL_AGENT_WRITE_DID = '/dids/write',
   URL_AGENT_GET_DID = '/dids',
-  URL_AGENT_GET_ENDPOINT = '/agent',
 
   // sign data from agent
   URL_AGENT_SIGN_DATA = '/credential/sign',
@@ -144,6 +152,20 @@ export enum CommonConstants {
 
   // CREATE KEYS
   CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
+
+  //REVOCATION
+  URL_REVOC_REG_CREATE = '/revocation/create-registry',
+  URL_GET_REVOC_REG_DATA = '/revocation/registry/#/tails-file',
+  URL_REVOC_PUBLISH = '/revocation/registry/#/publish',
+  URL_REVOC_GETBY_CREDDEF = '/revocation/active-registry/#',
+  URL_REVOC_REG_BY_ID = '/revocation/registry/#',
+
+  // Transactions
+  SET_TRANSACTION_ROLE = '/transactions/#/set-endorser-role',
+  SET_TRANSACTION_INFO = '/transactions/#/set-endorser-info',
+  TRANSACTION_CREATE_REQUEST = '/transactions/create-request',
+  ENDORSE_TRANSACTION = '/transactions/#/endorse',
+  WRITE_TRANSACTION = '/transactions/#/write',
 
   // Nested attribute separator
   NESTED_ATTRIBUTE_SEPARATOR = '~',
@@ -208,8 +230,6 @@ export enum CommonConstants {
 
   PERMISSION_VERIFY_PROOF = 'Verify Proof',
 
-  GENERATE_PRESENTATION_PROOF_REQUEST = '/present-proof/create-request',
-
   ROLE_TRUST_ANCHOR = 'TRUST_ANCHOR',
   ROLE_ENDORSER = 'ENDORSER',
 
@@ -221,15 +241,6 @@ export enum CommonConstants {
   PROOF_REQUEST = 'Proof Request',
   VERIFY = 'Verify',
 
-  //REVOCATION
-  URL_REVOC_REG_CREATE = '/revocation/create-registry',
-  URL_GET_REVOC_REG_DATA = '/revocation/registry/#/tails-file',
-  URL_UPDATE_FILE = '/revocation/registry/#',
-  URL_REVOC_PUBLISH = '/revocation/registry/#/publish',
-  URL_REVOC_GETBY_CREDDEF = '/revocation/active-registry/#',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  URL_REVOC_REG_BYID = '/revocation/registry/#',
-
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   DEFAULT_CACHE_TTL = 60000,
   DEFAULT_FIELD_UPLOAD_SIZE = 10485760,
@@ -240,6 +251,7 @@ export enum CommonConstants {
   SUBSCRIPTION_ISSUER = 'Issuer',
   SUBSCRIPTION_VERIFIER = 'Verifier',
 
+  // Keycloak routes
   URL_KEYCLOAK_MANAGEMENT_AUDIENCE = '/api/v2/',
   URL_KEYCLOAK_MANAGEMENT_APPLICATIONS = '/api/v2/clients',
   URL_KEYCLOAK_MANAGEMENT_APPLICATIONS_SEARCH = '/api/v2/clients/{id}',
@@ -252,20 +264,6 @@ export enum CommonConstants {
   URL_KEYCLOAK_CLIENT_SECRET = 'admin/realms/credebl-platform/clients/{id}/client-secret',
   URL_KEYCLOAK_JWKS = '/protocol/openid-connect/certs',
   URL_KEYCLOAK_MANAGEMENT_CONNECTIONS = '/api/v2/connections',
-  SET_TRANSACTION_ROLE = '/transactions/#/set-endorser-role',
-  SET_TRANSACTION_INFO = '/transactions/#/set-endorser-info',
-  TRANSACTION_CREATE_REQUEST = '/transactions/create-request',
-  ENDORSE_TRANSACTION = '/transactions/#/endorse',
-  WRITE_TRANSACTION = '/transactions/#/write',
-
-  // delete wallet
-  URL_DELETE_WALLET = '/agent/wallet',
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  URL_DELETE_SHARED_WALLET = '/multi-tenancy/#',
-
-  // agent status
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  URL_AGENT_STATUS = '/agent',
 
   // Tenant Status
   PENDING_STATE = 0,
@@ -355,14 +353,6 @@ export enum CommonConstants {
   CACHE_APIKEY_KEY = 'sharedApiKey',
   CACHE_TTL_SECONDS = 604800,
 
-  CLOUD_WALLET_GET_PROOF_REQUEST = '/multi-tenancy/proofs',
-  CLOUD_WALLET_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation',
-  CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
-  CLOUD_WALLET_DID_LIST = '/multi-tenancy/dids/',
-  CLOUD_WALLET_CONNECTION_BY_ID = '/multi-tenancy/connections/',
-  CLOUD_WALLET_CREDENTIAL = '/multi-tenancy/credentials',
-  CLOUD_WALLET_BASIC_MESSAGE = '/multi-tenancy/basic-messages/',
-
   // Bulk-issuance
   BATCH_SIZE = 100,
   MAX_CONCURRENT_OPERATIONS = 50,
@@ -392,9 +382,6 @@ export enum CommonConstants {
   GEO_LOCATION_SERVICE = 'geo-location',
   CLOUD_WALLET_SERVICE = 'cloud-wallet',
 
-  //CLOUD WALLET
-  RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
-  ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
   SEED_LENGTH = 32
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');

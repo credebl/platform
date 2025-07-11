@@ -8,6 +8,7 @@ export * from './interface';
 export * from './issuance.interface';
 export * from './organization.interface';
 export * from './response.interface';
+export * from './schema.interface';
 export * from './user.interface';
 export * from './verification.interface';
 export * from './webhook.interface';

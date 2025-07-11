@@ -12,9 +12,9 @@ import { getNatsOptions } from '@credebl/common';
 
 import helmet from 'helmet';
 import { CommonConstants } from '@credebl/common';
-import {NestjsLoggerServiceAdapter} from '@credebl/logger';
+import { NestjsLoggerServiceAdapter } from '@credebl/logger';
 import { NatsInterceptor } from '@credebl/common';
-import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-validation-pipe';
+import { UpdatableValidationPipe } from '@credebl/common';
 dotenv.config();
 
 async function bootstrap(): Promise<void> {

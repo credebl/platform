@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsOptional, Max, Min } from 'class-validator';
 import { SortValue } from '../../enum';
-import { toNumber, trim } from '@credebl/common/utils/helpers/cast.helper';
+import { toNumber, trim } from '@credebl/common';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 
 export class GetAllConnectionsDto {

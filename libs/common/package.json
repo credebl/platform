@@ -1,8 +1,8 @@
 {
   "name": "@credebl/common",
   "version": "2.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "license": "Apache-2.0",
   "publishConfig": {
     "main": "dist/index.js",
@@ -16,6 +16,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@credebl/prisma-service": "file:../../credebl-prisma-service-2.0.0.tgz",
     "@nestjs/axios": "^3.1.3",
     "@nestjs/common": "^10.4.19",
     "@nestjs/core": "^10.4.19",
@@ -23,16 +24,15 @@
     "@nestjs/swagger": "^7.4.2",
     "@nestjs/testing": "^10.4.19",
     "@sendgrid/mail": "^7.7.0",
-    "@credebl/prisma-service": "file:../../credebl-prisma-service-2.0.0.tgz",
     "axios": "^1.10.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "crypto-js": "^4.2.0",
-    "dotenv": "^16.5.0",
+    "dotenv": "^16.6.1",
     "nats": "^2.29.3",
+    "nestjs-cls": "^4.5.0",
     "rxjs": "^7.8.2",
-    "uuid": "^9.0.1",
-    "nestjs-cls": "^4.5.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",

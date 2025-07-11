@@ -41,7 +41,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { Response } from 'express';
-import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
+import { IResponse } from '@credebl/common';
 import { IssuanceService } from './issuance.service';
 import {
   ClientDetails,
@@ -56,9 +56,9 @@ import {
   TemplateDetails,
   TemplateQuery
 } from './dtos/issuance.dto';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { IUserRequest } from '@credebl/user-request';
 import { User } from '../authz/decorators/user.decorator';
-import { ResponseMessages } from '@credebl/common/utils/response-messages';
+import { ResponseMessages } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
@@ -77,10 +77,11 @@ import { RpcException } from '@nestjs/microservices';
 import { user } from '@prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
-import { SchemaType } from '@credebl/common/enum/enum';
-import { CommonConstants } from '../../../../libs/common/src/common.constant';
-import { TrimStringParamPipe } from '@credebl/common/utils/helpers/cast.helper';
+import { SchemaType } from '@credebl/common';
+import { TrimStringParamPipe, CommonConstants } from '@credebl/common';
 import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
+import { ResponseType } from '@credebl/common';
+import { IResponseType } from 'libs/common/dist/src/interfaces/response.interface';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')

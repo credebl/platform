@@ -2,12 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional } from 'class-validator';
 import { SortValue } from '../../enum';
-import { trim } from '@credebl/common/utils/helpers/cast.helper';
+import { trim } from '@credebl/common';
 import { SortFields } from 'apps/issuance/enum/issuance.enum';
-import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { PaginationDto } from '@credebl/common';
 
 export class IGetAllIssuedCredentialsDto extends PaginationDto {
-
   @ApiProperty({ required: false, enum: SortFields })
   @Transform(({ value }) => trim(value))
   @IsOptional()

@@ -28,9 +28,9 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { ResponseMessages } from '@credebl/common/utils/response-messages';
+import { ResponseMessages } from '@credebl/common';
 import { AgentService } from './agent-service.service';
-import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
+import { IResponseType, IResponse } from '@credebl/common';
 import { AgentSpinupDto, SignDataDto, VerifySignatureDto } from './dto/agent-service.dto';
 import { Response } from 'express';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -39,12 +39,12 @@ import { CreateTenantDto } from './dto/create-tenant.dto';
 import { User } from '../authz/decorators/user.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/org-roles';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { Validator } from '@credebl/common/utils/validations/validator';
+import { Validator } from '@credebl/common';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { CreateNewDidDto } from './dto/create-new-did.dto';
-import { AgentSpinupValidator, TrimStringParamPipe } from '@credebl/common/utils/helpers/cast.helper';
+import { AgentSpinupValidator, TrimStringParamPipe } from '@credebl/common';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { IVerifySignature } from './interface/agent-service.interface';

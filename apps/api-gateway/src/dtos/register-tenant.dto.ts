@@ -3,12 +3,10 @@ import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagge
 import { IsEmail, IsNotEmpty, IsNumberString, IsString, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
-import { toLowerCase, trim } from '@credebl/common/utils/helpers/cast.helper';
-
+import { toLowerCase, trim } from '@credebl/common';
 
 @ApiExtraModels()
 export class RegisterTenantDto {
-
   @ApiProperty({ example: 'awqx@yopmail.com' })
   @Transform(({ value }) => toLowerCase(value))
   @IsNotEmpty({ message: 'Email is required.' })
@@ -54,7 +52,6 @@ export class RegisterTenantDto {
 
   @ApiPropertyOptional()
   logoUri?: string;
-
 
   @ApiPropertyOptional()
   @Transform(({ value }) => trim(value))

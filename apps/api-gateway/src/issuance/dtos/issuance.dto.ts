@@ -18,7 +18,7 @@ import {
   MaxLength,
   ValidateNested
 } from 'class-validator';
-import { AutoAccept, SchemaType, SortValue } from '@credebl/common/enum/enum';
+import { AutoAccept, SchemaType, SortValue } from '@credebl/common';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import {
   IssueCredentialType,
@@ -29,7 +29,7 @@ import {
 import { Transform, Type } from 'class-transformer';
 
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
-import { trim } from '@credebl/common/utils/helpers/cast.helper';
+import { trim } from '@credebl/common';
 
 class Issuer {
   @ApiProperty()

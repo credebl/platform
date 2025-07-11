@@ -2,8 +2,8 @@ import { Controller, Get, HttpStatus, Logger, Param, Res, UseFilters } from '@ne
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GeoLocationService } from './geo-location.service';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
-import IResponseType from '@credebl/common/interfaces/response.interface';
-import { ResponseMessages } from '@credebl/common/utils/response-messages';
+import { IResponseType } from '@credebl/common';
+import { ResponseMessages } from '@credebl/common';
 import { Response } from 'express';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 
@@ -21,7 +21,10 @@ export class GeoLocationController {
    * @returns A list of all available countries
    */
   @Get('countries')
-  @ApiOperation({ summary: 'Retrieve a list of all countries', description: 'Fetches and returns the details of all available countries.' })
+  @ApiOperation({
+    summary: 'Retrieve a list of all countries',
+    description: 'Fetches and returns the details of all available countries.'
+  })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getAllCountries(@Res() res: Response): Promise<Response> {
     const countriesDetails = await this.geolocationService.getAllCountries();
@@ -39,7 +42,10 @@ export class GeoLocationController {
    * @returns A list of all states associated with the given countryId
    */
   @Get('countries/:countryId/states')
-  @ApiOperation({ summary: 'Retrieve a list of all states within a specified country', description: 'Fetches and returns the details of all states associated with a given countryId.' })
+  @ApiOperation({
+    summary: 'Retrieve a list of all states within a specified country',
+    description: 'Fetches and returns the details of all states associated with a given countryId.'
+  })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async getStatesByCountryId(@Param('countryId') countryId: number, @Res() res: Response): Promise<Response> {
     const statesDetails = await this.geolocationService.getStatesByCountryId(countryId);
@@ -58,9 +64,16 @@ export class GeoLocationController {
    * @returns A list of all cities associated with the given countryId and stateId
    */
   @Get('countries/:countryId/states/:stateId/cities')
-  @ApiOperation({ summary: 'Retrieve a list of all cities within a specified state and country', description: 'Fetches and returns the details of all cities associated with a given countryId and stateId.' })
+  @ApiOperation({
+    summary: 'Retrieve a list of all cities within a specified state and country',
+    description: 'Fetches and returns the details of all cities associated with a given countryId and stateId.'
+  })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  async getCitiesByStateAndCountry(@Param('countryId') countryId: number, @Param('stateId') stateId: number, @Res() res: Response): Promise<Response> {
+  async getCitiesByStateAndCountry(
+    @Param('countryId') countryId: number,
+    @Param('stateId') stateId: number,
+    @Res() res: Response
+  ): Promise<Response> {
     const citiesDetails = await this.geolocationService.getCitiesByStateAndCountry(countryId, stateId);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

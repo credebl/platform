@@ -1,14 +1,8 @@
 /* eslint-disable camelcase */
-import {
-  HttpException,
-  Injectable,
-  Logger,
-  NestMiddleware,
-  UnauthorizedException
-} from '@nestjs/common';
+import { HttpException, Injectable, Logger, NestMiddleware, UnauthorizedException } from '@nestjs/common';
 
 import { AuthzService } from './authz.service';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { CommonConstants } from '@credebl/common';
 import { ExtractJwt } from 'passport-jwt';
 import { JwtService } from '@nestjs/jwt';
 import { NextFunction } from 'express';
@@ -16,7 +10,7 @@ import { RequestingUser } from './dtos/requesting-user.dto';
 
 @Injectable()
 export class AuthzMiddleware implements NestMiddleware {
-  constructor(private readonly authService: AuthzService) { }
+  constructor(private readonly authService: AuthzService) {}
   private readonly logger = new Logger('AuthzMiddleware');
 
   /**
@@ -27,11 +21,8 @@ export class AuthzMiddleware implements NestMiddleware {
    * @throws UnauthorizedException If the token is not found
    */
   getPayload = (token: string): unknown => {
-
     if (!token) {
-      throw new UnauthorizedException(
-        'Authorization header does not contain a token'
-      );
+      throw new UnauthorizedException('Authorization header does not contain a token');
     }
 
     // ignore options since we don't need to verify here
@@ -39,9 +30,7 @@ export class AuthzMiddleware implements NestMiddleware {
     const decoded = jwtService.decode(token, { complete: true });
 
     if (!decoded) {
-      throw new UnauthorizedException(
-        'Authorization header contains an invalid token'
-      );
+      throw new UnauthorizedException('Authorization header contains an invalid token');
     }
 
     return decoded['payload'];
@@ -64,7 +53,7 @@ export class AuthzMiddleware implements NestMiddleware {
 
       const requestor = new RequestingUser();
       const tenant = (await this.authService.getUserByKeycloakUserId(payload['sub']))?.response;
-      
+
       if (tenant) {
         this.logger.log(`tenant this.authService.getUserByKeycloakUserId: ${tenant.keycloakUserId}`);
         this.logger.log(`tenant id: ${tenant.id}`);
@@ -84,7 +73,6 @@ export class AuthzMiddleware implements NestMiddleware {
           if (item.organization.orgRole.id == CommonConstants.ORG_TENANT_ROLE) {
             this.logger.log(`In Tenant Org matched id : ${item.organization.id}`);
             tenantOrgInfo = item.organization;
-
           }
         }
 
@@ -97,10 +85,7 @@ export class AuthzMiddleware implements NestMiddleware {
         } else {
           requestor.email = payload['email'];
 
-          const userData
-           = (
-            await this.authService.getUserByKeycloakUserId(payload['sub'])
-          )?.response;
+          const userData = (await this.authService.getUserByKeycloakUserId(payload['sub']))?.response;
 
           this.logger.debug(`User by keycloak ID ${userData.id}`);
 
@@ -120,11 +105,7 @@ export class AuthzMiddleware implements NestMiddleware {
 
       next();
     } catch (error) {
-      this.logger.error(
-        `RequestorMiddleware Error in middleware: ${error} ${JSON.stringify(
-          error
-        )}`
-      );
+      this.logger.error(`RequestorMiddleware Error in middleware: ${error} ${JSON.stringify(error)}`);
       next(new HttpException(error, 500));
     }
   }

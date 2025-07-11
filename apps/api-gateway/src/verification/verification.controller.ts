@@ -34,10 +34,10 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { SendProofRequestPayload, RequestProofDtoV1, RequestProofDtoV2 } from './dto/request-proof.dto';
 import { VerificationService } from './verification.service';
-import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
+import { IResponseType, IResponse } from '@credebl/common';
 import { Response } from 'express';
-import { ResponseMessages } from '@credebl/common/utils/response-messages';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { ResponseMessages } from '@credebl/common';
+import { IUserRequest } from '@credebl/user-request';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { AuthGuard } from '@nestjs/passport';
@@ -50,8 +50,8 @@ import { IProofRequestSearchCriteria } from './interfaces/verification.interface
 import { API_Version, ProofRequestType, SortFields } from './enum/verification.enum';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
-import { TrimStringParamPipe } from '@credebl/common/utils/helpers/cast.helper';
-import { Validator } from '@credebl/common/utils/validations/validator';
+import { TrimStringParamPipe } from '@credebl/common';
+import { Validator } from '@credebl/common';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()

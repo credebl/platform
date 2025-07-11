@@ -1,11 +1,9 @@
-
-import { trim } from '@credebl/common/utils/helpers/cast.helper';
+import { trim } from '@credebl/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class EmailValidator {
-
   @ApiProperty({ example: 'awqx@yopmail.com' })
   @IsEmail({}, { message: 'Please provide a valid email' })
   @IsNotEmpty({ message: 'Email is required' })

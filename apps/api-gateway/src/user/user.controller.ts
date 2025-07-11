@@ -30,13 +30,13 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { Response } from 'express';
 import { CommonService } from '@credebl/common';
-import IResponse from '@credebl/common/interfaces/response.interface';
-import { ResponseMessages } from '@credebl/common/utils/response-messages';
+import { IResponse } from '@credebl/common';
+import { ResponseMessages } from '@credebl/common';
 import { user } from '@prisma/client';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
-import { Invitation } from '@credebl/common/enum/enum';
+import { Invitation } from '@credebl/common';
 import { IUserRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
@@ -47,10 +47,10 @@ import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
-import { AwsService } from '@credebl/aws/aws.service';
-import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { AwsService } from '@credebl/aws';
+import { PaginationDto } from '@credebl/common';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
-import { TrimStringParamPipe } from '@credebl/common/utils/helpers/cast.helper';
+import { TrimStringParamPipe } from '@credebl/common';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('users')
@@ -62,7 +62,7 @@ export class UserController {
     private readonly userService: UserService,
     private readonly commonService: CommonService,
     private readonly awsService: AwsService
-  ) { }
+  ) {}
 
   /**
    *
@@ -105,9 +105,9 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-    /**
+  /**
    * Get public profile details of a user by username.
-   * 
+   *
    * @param username The username of the user.
    * @returns Public profile information.
    */
@@ -134,7 +134,6 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-
   /**
    * Retrieves the profile details of the currently logged-in user.
    *
@@ -149,7 +148,7 @@ export class UserController {
   @ApiBearerAuth()
   async getProfile(@User() reqUser: user, @Res() res: Response): Promise<Response> {
     const userData = await this.userService.getProfile(reqUser.id);
-    
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.fetchProfile,
@@ -159,9 +158,9 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
- /**
+  /**
    * Retrieves all platform settings.
-   * 
+   *
    * @returns  The platform settings.
    */
   @Get('/platform-settings')
@@ -185,11 +184,11 @@ export class UserController {
   }
 
   /**
- * Fetch user activities.
- * 
- * @param limit - Number of activities to fetch.
- * @returns A response containing user activity data.
- */
+   * Fetch user activities.
+   *
+   * @param limit - Number of activities to fetch.
+   * @returns A response containing user activity data.
+   */
   @Get('/activity')
   @ApiOperation({
     summary: 'Fetch users activity',
@@ -214,12 +213,11 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-
- /**
- * Fetch organization invitations.
- *
- * @returns A paginated list of organization invitations.
- */
+  /**
+   * Fetch organization invitations.
+   *
+   * @returns A paginated list of organization invitations.
+   */
   @Get('/org-invitations')
   @ApiOperation({
     summary: 'organization invitations',
@@ -248,7 +246,7 @@ export class UserController {
     required: false
   })
   async invitations(
-  @Query() getAllInvitationsDto: GetAllInvitationsDto,
+    @Query() getAllInvitationsDto: GetAllInvitationsDto,
     @User() reqUser: user,
     @Res() res: Response
   ): Promise<Response> {
@@ -271,14 +269,17 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
- /**
- * Checks if a user is registered and verifies email existence.
- *
- * @param email The email address to check.
- * @returns Returns user registration and email verification status.
- */
+  /**
+   * Checks if a user is registered and verifies email existence.
+   *
+   * @param email The email address to check.
+   * @returns Returns user registration and email verification status.
+   */
   @Get('/:email')
-  @ApiOperation({ summary: 'Check user registration and email verification status', description: 'Check if a user is already registered and if their email already exists.' })
+  @ApiOperation({
+    summary: 'Check user registration and email verification status',
+    description: 'Check if a user is already registered and if their email already exists.'
+  })
   async checkUserExist(@Param() emailParam: EmailValidator, @Res() res: Response): Promise<Response> {
     const userDetails = await this.userService.checkUserExist(emailParam.email);
 
@@ -292,12 +293,12 @@ export class UserController {
   }
 
   /**
- * Accept or reject an organization invitation.
- *
- * @param invitationId The ID of the organization invitation.
- * @body AcceptRejectInvitationDto
- * @returns The status of the organization invitation response.
- */
+   * Accept or reject an organization invitation.
+   *
+   * @param invitationId The ID of the organization invitation.
+   * @body AcceptRejectInvitationDto
+   * @returns The status of the organization invitation response.
+   */
   @Post('/org-invitations/:invitationId')
   @ApiOperation({
     summary: 'accept/reject organization invitation',
@@ -306,8 +307,17 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'), UserAccessGuard)
   @ApiBearerAuth()
   async acceptRejectInvitaion(
-      @Body() acceptRejectInvitation: AcceptRejectInvitationDto,
-      @Param('invitationId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(`Invalid format for InvitationId`); }})) invitationId: string,
+    @Body() acceptRejectInvitation: AcceptRejectInvitationDto,
+    @Param(
+      'invitationId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(`Invalid format for InvitationId`);
+        }
+      })
+    )
+    invitationId: string,
     @User() reqUser: user,
     @Res() res: Response
   ): Promise<Response> {
@@ -320,13 +330,13 @@ export class UserController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-  
+
   /**
- * Updates the user profile.
- *
- * @body UpdateUserProfileDto
- * @returns A response indicating the success of the update operation.
- */
+   * Updates the user profile.
+   *
+   * @body UpdateUserProfileDto
+   * @returns A response indicating the success of the update operation.
+   */
   @Put('/')
   @ApiOperation({
     summary: 'Update user profile',
@@ -343,7 +353,7 @@ export class UserController {
     const userId = reqUser.id;
     updateUserProfileDto.id = userId;
     await this.userService.updateUserProfile(updateUserProfileDto);
-     
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.update
@@ -351,40 +361,40 @@ export class UserController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
- /**
+  /**
    * @body AddPasskeyDetailsDto
    * @returns User's profile update status
    */
-  
 
- @Put('/password/:email')
- @ApiOperation({ summary: 'Store user password details', description: 'Securely store and update the user’s password details.' })
- @ApiExcludeEndpoint()
- @ApiBearerAuth()
- @UseGuards(AuthGuard('jwt'), UserAccessGuard)
- 
- async addPasskey(
-   @Body() userInfo: AddPasskeyDetailsDto,
-   @User() reqUser: user,
-   @Res() res: Response
- ): Promise<Response> {
+  @Put('/password/:email')
+  @ApiOperation({
+    summary: 'Store user password details',
+    description: 'Securely store and update the user’s password details.'
+  })
+  @ApiExcludeEndpoint()
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), UserAccessGuard)
+  async addPasskey(
+    @Body() userInfo: AddPasskeyDetailsDto,
+    @User() reqUser: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    const userDetails = await this.userService.addPasskey(reqUser.email, userInfo);
+    const finalResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.update,
+      data: userDetails
+    };
 
-   const userDetails = await this.userService.addPasskey(reqUser.email, userInfo);
-   const finalResponse = {
-     statusCode: HttpStatus.OK,
-     message: ResponseMessages.user.success.update,
-     data: userDetails
-   };
-
-   return res.status(HttpStatus.OK).json(finalResponse);
- }
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
   /**
- * Updates platform settings.
- * @body UpdatePlatformSettingsDto
- * 
- * @returns Status of the update operation.
- */
+   * Updates platform settings.
+   * @body UpdatePlatformSettingsDto
+   *
+   * @returns Status of the update operation.
+   */
   @Put('/platform-settings')
   @ApiOperation({
     summary: 'Update platform settings',

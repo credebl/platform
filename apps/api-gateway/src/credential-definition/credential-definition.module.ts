@@ -3,12 +3,12 @@ import { Logger, Module } from '@nestjs/common';
 
 import { CredentialDefinitionController } from './credential-definition.controller';
 import { CredentialDefinitionService } from './credential-definition.service';
-import { getNatsOptions } from '@credebl/common/nats/nats.config';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/nats/NATSClient';
+import { getNatsOptions } from '@credebl/common';
+import { CommonConstants } from '@credebl/common';
+import { NATSClient } from '@credebl/common';
 
 @Module({
-  imports:[
+  imports: [
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -23,6 +23,5 @@ import { NATSClient } from '@credebl/common/nats/NATSClient';
 export class CredentialDefinitionModule {
   constructor() {
     Logger.log('API Gateway - CredDef loaded...');
-
   }
 }

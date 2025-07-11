@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from '@credebl/common/service/base.service';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { BaseService } from '@credebl/common';
+import { IUserRequest } from '@credebl/user-request';
 import {
   ClientDetails,
   FileParameter,
@@ -20,14 +20,10 @@ import {
   IssueCredentialType,
   UploadedFileDetails
 } from './interfaces';
-import {
-  ICredentialOfferResponse,
-  IDeletedIssuanceRecords,
-  IIssuedCredential
-} from '@credebl/common/interfaces/issuance.interface';
+import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { user } from '@prisma/client';
-import { NATSClient } from '@credebl/common/nats/NATSClient';
+import { NATSClient } from '@credebl/common';
 @Injectable()
 export class IssuanceService extends BaseService {
   constructor(

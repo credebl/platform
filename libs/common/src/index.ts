@@ -7,3 +7,4 @@ export * from './dtos';
 export * from './enum';
 export * from './interfaces';
 export * from './service';
+export * from './custom-overrideable-validation-pipe';

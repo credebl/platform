@@ -9,7 +9,7 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { BaseService } from '@credebl/common/service/base.service';
+import { BaseService } from '@credebl/common';
 import { SchemaRepository } from './repositories/schema.repository';
 import { Prisma, schema } from '@prisma/client';
 import {
@@ -360,7 +360,6 @@ export class SchemaService extends BaseService {
   }
 
   private async storeW3CSchemas(schemaDetails, user, orgId, attributes, alias): Promise<schema> {
-
     let ledgerDetails;
     const schemaServerUrl = `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
     const schemaRequest = await this.commonService.httpGet(schemaServerUrl).then(async (response) => response);

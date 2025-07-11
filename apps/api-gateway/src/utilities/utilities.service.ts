@@ -1,12 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from '@credebl/common/service/base.service';
+import { BaseService } from '@credebl/common';
 import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
-import { NATSClient } from '@credebl/common/nats/NATSClient';
+import { NATSClient } from '@credebl/common';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
-  constructor(@Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy, private readonly natsClient : NATSClient) {
+  constructor(
+    @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
+    private readonly natsClient: NATSClient
+  ) {
     super('OrganizationService');
   }
 
@@ -16,7 +19,7 @@ export class UtilitiesService extends BaseService {
 
   async storeObject(persistent: boolean, storeObjectDto: StoreObjectDto): Promise<string> {
     const storeObj = storeObjectDto.data;
-    const payload = {persistent, storeObj};
+    const payload = { persistent, storeObj };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'store-object-return-url', payload);
   }
 }

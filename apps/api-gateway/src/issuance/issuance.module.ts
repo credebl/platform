@@ -4,10 +4,10 @@ import { IssuanceController } from './issuance.controller';
 import { IssuanceService } from './issuance.service';
 import { CommonService } from '@credebl/common';
 import { HttpModule } from '@nestjs/axios';
-import { getNatsOptions } from '@credebl/common/nats/nats.config';
+import { getNatsOptions } from '@credebl/common';
 import { AwsService } from '@credebl/aws';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/nats/NATSClient';
+import { CommonConstants } from '@credebl/common';
+import { NATSClient } from '@credebl/common';
 
 @Module({
   imports: [

@@ -6,10 +6,10 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { OrganizationController } from './organization.controller';
 import { OrganizationService } from './organization.service';
-import { getNatsOptions } from '@credebl/common/nats/nats.config';
+import { getNatsOptions } from '@credebl/common';
 import { AwsService } from '@credebl/aws';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/nats/NATSClient';
+import { CommonConstants } from '@credebl/common';
+import { NATSClient } from '@credebl/common';
 @Module({
   imports: [
     HttpModule,

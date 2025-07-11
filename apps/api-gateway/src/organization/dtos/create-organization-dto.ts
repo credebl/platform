@@ -2,7 +2,7 @@ import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagge
 import { IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
 
 import { Transform } from 'class-transformer';
-import { IsNotSQLInjection, trim } from '@credebl/common/utils/helpers/cast.helper';
+import { IsNotSQLInjection, trim } from '@credebl/common';
 import { GeoLocationDto } from '../../dtos/geo-location-dto';
 
 @ApiExtraModels()

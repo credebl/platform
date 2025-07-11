@@ -1,15 +1,18 @@
 {
   "name": "@credebl/aws",
-  "main": "src/index",
-  "types": "src/index",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "version": "2.0.0",
-  "files": [
-    "dist"
-  ],
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "access": "public"
+  },
   "scripts": {
     "build": "pnpm run clean && pnpm run compile",
-    "clean": "rimraf ../../dist/libs/aws",
-    "compile": "tsc -p tsconfig.build.json",
+    "clean": "rimraf ./dist",
+    "compile": "tsc -p tsconfig.lib.json",
     "test": "jest"
   },
   "dependencies": {

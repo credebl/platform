@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CommonModule } from '../../../../libs/common/src/common.module';
-import { CommonService } from '../../../../libs/common/src/common.service';
 import { ConfigModule } from '@nestjs/config';
 import { AgentController } from './agent-service.controller';
 import { AgentService } from './agent-service.service';
-import { getNatsOptions } from '@credebl/common/nats/nats.config';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/nats/NATSClient';
+import { CommonModule, CommonService, getNatsOptions } from '@credebl/common';
+import { CommonConstants } from '@credebl/common';
+import { NATSClient } from '@credebl/common';
 
 @Module({
   imports: [
@@ -19,7 +17,6 @@ import { NATSClient } from '@credebl/common/nats/NATSClient';
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
         options: getNatsOptions(CommonConstants.AGENT_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
-
       },
       CommonModule
     ])
@@ -27,4 +24,4 @@ import { NATSClient } from '@credebl/common/nats/NATSClient';
   controllers: [AgentController],
   providers: [AgentService, CommonService, NATSClient]
 })
-export class AgentModule { }
+export class AgentModule {}

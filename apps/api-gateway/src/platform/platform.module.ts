@@ -3,9 +3,9 @@ import { PlatformController } from './platform.controller';
 import { PlatformService } from './platform.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
-import { getNatsOptions } from '@credebl/common/nats/nats.config';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/nats/NATSClient';
+import { getNatsOptions } from '@credebl/common';
+import { CommonConstants } from '@credebl/common';
+import { NATSClient } from '@credebl/common';
 @Module({
   imports: [
     ConfigModule.forRoot(),

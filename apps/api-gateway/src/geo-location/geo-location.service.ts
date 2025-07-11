@@ -1,12 +1,15 @@
-import { CountryInterface, StateInterface, CityInterface } from '@credebl/common/interfaces/geolocation.interface';
+import { CountryInterface, StateInterface, CityInterface } from '@credebl/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from '@credebl/common/service/base.service';
-import { NATSClient } from '@credebl/common/nats/NATSClient';
+import { BaseService } from '@credebl/common';
+import { NATSClient } from '@credebl/common';
 
 @Injectable()
 export class GeoLocationService extends BaseService {
-  constructor(@Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy, private readonly natsClient : NATSClient) {
+  constructor(
+    @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
+    private readonly natsClient: NATSClient
+  ) {
     super('GeoLocationService');
   }
 

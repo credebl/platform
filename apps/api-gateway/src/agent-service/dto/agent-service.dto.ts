@@ -1,4 +1,4 @@
-import { trim } from '@credebl/common/utils/helpers/cast.helper';
+import { trim } from '@credebl/common';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
@@ -21,8 +21,8 @@ import {
   ValidatorConstraintInterface
 } from 'class-validator';
 import { CreateDidDto } from './create-did.dto';
-import { KeyType } from '@credebl/enum/enum';
-import { RewriteValidationOptions } from '@credebl/common/custom-overrideable-validation-pipe';
+import { KeyType } from '@credebl/common';
+import { RewriteValidationOptions } from '@credebl/common/dist';
 import { BadRequestException } from '@nestjs/common';
 const regex = /^[a-zA-Z0-9 ]*$/;
 export class AgentSpinupDto extends CreateDidDto {

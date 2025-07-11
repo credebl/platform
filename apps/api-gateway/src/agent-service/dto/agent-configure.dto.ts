@@ -1,4 +1,4 @@
-import { IsHostPortOrDomain, trim } from '@credebl/common/utils/helpers/cast.helper';
+import { IsHostPortOrDomain, trim } from '@credebl/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsString, Matches, MaxLength, MinLength } from 'class-validator';

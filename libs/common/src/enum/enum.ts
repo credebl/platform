@@ -18,6 +18,12 @@ export enum SortFields {
   ISSUER_ID = 'issuerId'
 }
 
+export enum ConnectionSortFields {
+  CREATED_DATE_TIME = 'createDateTime',
+  USER_LABEL = 'theirLabel',
+  CONNECTION_ID = 'connectionId'
+}
+
 export enum CredDefSortFields {
   CREATED_DATE_TIME = 'createDateTime',
   TAG = 'tag',

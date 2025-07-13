@@ -284,7 +284,7 @@ export const ResponseMessages = {
       basicMessage: 'Basic message sent successfully'
     },
     error: {
-      invalidConnectionId: 'Please provide a valid for connection Id',
+      invalidConnectionId: 'Please provide a valid connection Id',
       exists: 'Connection is already exist',
       connectionNotFound: 'Connection not found',
       agentEndPointNotFound: 'agentEndPoint Not Found',

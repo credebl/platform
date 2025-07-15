@@ -87,7 +87,7 @@ export class VerificationRepository {
     proofRequestsSearchCriteria: IProofRequestSearchCriteria
   ): Promise<IProofPresentationsListCount> {
     try {
-      const proofRequestsList = await this.prisma.presentations.findMany({
+      const proofRequestsListData = await this.prisma.presentations.findMany({
         where: {
           orgId,
           OR: [
@@ -115,6 +115,23 @@ export class VerificationRepository {
         take: Number(proofRequestsSearchCriteria.pageSize),
         skip: (proofRequestsSearchCriteria.pageNumber - 1) * proofRequestsSearchCriteria.pageSize
       });
+
+      const proofRequestsList = await Promise.all(
+        proofRequestsListData.map(async (presentation) => {
+          if (!presentation.connectionId) {
+            return { ...presentation, theirLabel: null };
+          }
+          const connection = await this.prisma.connections.findUnique({
+            where: { connectionId: presentation.connectionId },
+            select: { theirLabel: true }
+          });
+          return {
+            ...presentation,
+            theirLabel: connection?.theirLabel ?? null
+          };
+        })
+      );
+
       const proofRequestsCount = await this.prisma.presentations.count({
         where: {
           orgId,

@@ -46,7 +46,7 @@ import { EmailValidator } from '../dtos/email-validator.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/org-roles';
 import { AwsService } from '@credebl/aws';
 import { PaginationDto } from '@credebl/common';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';

@@ -1,11 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from '../../../../libs/common/src/service/base.service';
 import { ILedgers, ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { INetworkUrl, ISchemaDetails } from '@credebl/common';
 import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
-import { IPlatformCredDefsData } from '@credebl/common';
+import { IPlatformCredDefsData, BaseService } from '@credebl/common';
 import { NATSClient } from '@credebl/common';
 
 @Injectable()

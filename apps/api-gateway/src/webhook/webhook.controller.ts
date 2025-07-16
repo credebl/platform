@@ -36,7 +36,7 @@ import { RegisterWebhookDto } from './dtos/register-webhook-dto';
 import { ResponseMessages } from '@credebl/common';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/org-roles';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { GetWebhookDto } from './dtos/get-webhoook-dto';
 
@@ -46,9 +46,7 @@ import { GetWebhookDto } from './dtos/get-webhoook-dto';
 @ApiUnauthorizedResponse({ status: 401, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: 403, description: 'Forbidden', type: ForbiddenErrorDto })
 export class WebhookController {
-  constructor(
-    private readonly webhookService: WebhookService
-  ) {}
+  constructor(private readonly webhookService: WebhookService) {}
   private readonly logger = new Logger('WebhookController');
   private readonly PAGE: number = 1;
 
@@ -69,7 +67,15 @@ export class WebhookController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Webhook URL registered successfully', type: ApiResponseDto })
   async registerWebhook(
-    @Param('orgId', new ParseUUIDPipe({ exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId); }})) orgId: string,
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
     @Body() registerWebhookDto: RegisterWebhookDto,
     @Res() res: Response
   ): Promise<Response> {
@@ -100,11 +106,12 @@ export class WebhookController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Roles(OrgRoles.OWNER, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.ADMIN)
-  @ApiResponse({ status: HttpStatus.OK, description: 'Webhook URL details retrieved successfully', type: ApiResponseDto })
-  async getWebhookUrl(
-    @Query() getWebhook: GetWebhookDto,
-    @Res() res: Response
-  ): Promise<Response> {
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Webhook URL details retrieved successfully',
+    type: ApiResponseDto
+  })
+  async getWebhookUrl(@Query() getWebhook: GetWebhookDto, @Res() res: Response): Promise<Response> {
     const webhookUrlData = await this.webhookService.getWebhookUrl(getWebhook);
 
     const finalResponse: IResponse = {

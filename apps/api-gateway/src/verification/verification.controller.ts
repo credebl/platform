@@ -39,7 +39,7 @@ import { Response } from 'express';
 import { ResponseMessages } from '@credebl/common';
 import { IUserRequest } from '@credebl/user-request';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/org-roles';
 import { AuthGuard } from '@nestjs/passport';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';

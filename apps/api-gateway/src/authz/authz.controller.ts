@@ -121,7 +121,7 @@ export class AuthzController {
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.user.success.login,
-        data: userData
+        data: userData as unknown as Record<string, unknown>
       };
 
       return res.status(HttpStatus.OK).json(finalResponse);
@@ -147,7 +147,7 @@ export class AuthzController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.resetPassword,
-      data: userData
+      data: userData as unknown as Record<string, unknown>
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -169,7 +169,7 @@ export class AuthzController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.resetPasswordLink,
-      data: userData
+      data: userData as unknown as Record<string, unknown>
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);
@@ -198,7 +198,7 @@ export class AuthzController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.resetPassword,
-      data: userData
+      data: userData as unknown as Record<string, unknown>
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -220,7 +220,7 @@ export class AuthzController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.refreshToken,
-      data: tokenData
+      data: tokenData as unknown as Record<string, unknown>
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

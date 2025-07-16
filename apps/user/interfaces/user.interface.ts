@@ -1,41 +1,42 @@
 import { $Enums, Prisma, RecordType } from '@prisma/client';
 
-export interface IUsersProfile {
-  id: string;
-  username?: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  supabaseUserId?: string;
-  keycloakUserId?: string;
-  userOrgRoles?: IUserOrgRole[];
-}
+// Added to common
+// export interface IUsersProfile {
+//   id: string;
+//   username?: string;
+//   email?: string;
+//   firstName?: string;
+//   lastName?: string;
+//   supabaseUserId?: string;
+//   keycloakUserId?: string;
+//   userOrgRoles?: IUserOrgRole[];
+// }
 
-interface IUserOrgRole {
-  id:  string;
-  userId:  string;
-  orgRoleId:  string;
-  orgId:  string;
-  orgRole :IOrgRole;
-  organisation:IOrganisation;
-}
-  export interface IOrgRole{
-    id:  string;
-  name: string;
-  description: string;
-  };
-  export interface IOrganisation{
-    id:  string;
-  name: string;
-  description: string;
-  orgSlug: string;
-  logoUrl: string;
-  website: string;
-  publicProfile: boolean;
-  countryId: number;
-  stateId: number;
-  cityId: number;
-}
+// interface IUserOrgRole {
+//   id:  string;
+//   userId:  string;
+//   orgRoleId:  string;
+//   orgId:  string;
+//   orgRole :IOrgRole;
+//   organisation:IOrganisation;
+// }
+//   export interface IOrgRole{
+//     id:  string;
+//   name: string;
+//   description: string;
+//   };
+//   export interface IOrganisation{
+//     id:  string;
+//   name: string;
+//   description: string;
+//   orgSlug: string;
+//   logoUrl: string;
+//   website: string;
+//   publicProfile: boolean;
+//   countryId: number;
+//   stateId: number;
+//   cityId: number;
+// }
 
 export interface OrgInvitations {
   id: string;
@@ -101,18 +102,20 @@ export interface Attribute {
   label: string;
 }
 
-export interface ICheckUserDetails {
-  isEmailVerified?: boolean;
-  isFidoVerified?: boolean;
-  isRegistrationCompleted?: boolean;
-  userId?: number;
-  message?:string;
-}
+// Added in common
+// export interface ICheckUserDetails {
+//   isEmailVerified?: boolean;
+//   isFidoVerified?: boolean;
+//   isRegistrationCompleted?: boolean;
+//   userId?: number;
+//   message?:string;
+// }
 
-export interface IOrgUsers {
-    totalPages: number,
-    users: OrgUser[]
-}
+// Added in common
+// export interface IOrgUsers {
+//     totalPages: number,
+//     users: OrgUser[]
+// }
 
 export interface IDidList {
   id: string;
@@ -122,77 +125,35 @@ export interface IDidList {
   isPrimaryDid: boolean;
 }
 
-interface OrgUser {
-  id: string;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  isEmailVerified: boolean;
-  userOrgRoles: UserOrgRoles[];
-}
-
-interface UserOrgRoles {
-  id: string;
-  orgId: string;
-  orgRoleId: string;
-  orgRole: OrgRole;
-    organisation: Organization
-}
-interface OrgRole {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface Organization {
-    id: string,
-    name: string,
-    description: string,
-    orgSlug: string,
-    logoUrl: string,
-  org_agents: OrgAgents[];
-}
-
-interface OrgAgents {
-    id: string,
-    orgDid: string,
-    walletName: string,
-    agentSpinUpStatus: number,
-    agentsTypeId: string,
-    createDateTime: Date,
-    orgAgentTypeId:string
-}
-
 export interface Payload {
   pageNumber: number;
   pageSize: number;
   search: string;
 }
 
-export interface IVerifyUserEmail{
+export interface IVerifyUserEmail {
   email: string;
   verificationCode: string;
 }
 
-export interface  IUserSignIn{
+export interface IUserSignIn {
   email: string;
   password: string;
   isPasskey?: boolean;
 }
 
-export interface IUserResetPassword{
+export interface IUserResetPassword {
   email: string;
   oldPassword?: string;
   newPassword?: string;
   token?: string;
   password?: string;
 }
-export interface IUserForgotPassword{
+export interface IUserForgotPassword {
   email: string;
-  brandLogoUrl?: string,
-  platformName?: string,
-  endpoint?: string
+  brandLogoUrl?: string;
+  platformName?: string;
+  endpoint?: string;
 }
 export interface IIssueCertificate {
   courseCode: string;
@@ -202,7 +163,7 @@ export interface IIssueCertificate {
   practicalGradeCredits: string;
   practicalObtainedEarned: string;
 }
-export  interface IPuppeteerOption{
+export interface IPuppeteerOption {
   width: number;
   height: number;
 }
@@ -229,7 +190,7 @@ export interface UserRoleMapping {
   userRoleId: string;
 }
 
-export interface UserRoleDetails{
+export interface UserRoleDetails {
   id: string;
   role: $Enums.UserRole;
 }

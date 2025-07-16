@@ -132,6 +132,7 @@ export interface IUpdateSchema {
   orgId?: string;
 }
 
-export interface UpdateSchemaResponse {
-  count: number;
-}
+// Added to common
+// export interface UpdateSchemaResponse {
+//   count: number;
+// }

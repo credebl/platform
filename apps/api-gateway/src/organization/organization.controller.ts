@@ -42,7 +42,7 @@ import { ResponseMessages } from '@credebl/common';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/org-roles';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';

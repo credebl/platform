@@ -1,0 +1,25 @@
+{
+    "name": "@credebl/org-roles",
+    "version": "2.0.0",
+    "main": "dist/src/index.js",
+    "types": "dist/src/index.d.ts",
+    "license": "Apache-2.0",
+    "publishConfig": {
+      "main": "dist/index.js",
+      "types": "dist/index.d.ts",
+      "access": "public"
+    },
+    "scripts": {
+      "build": "pnpm run clean && pnpm run compile",
+      "clean": "rimraf ./dist",
+      "compile": "tsc -p tsconfig.lib.json",
+      "test": "jest",
+      "generate": "npx prisma generate --schema=node_modules/@credebl/prisma-service/prisma/schema.prisma",
+      "cleanup": "rm -rf node_modules dist pnpm-lock.yaml && rm -rf ~/.cache/prisma ~/.pnpm-store"
+    },
+    "dependencies": {
+      "@credebl/prisma-service": "file:../../credebl-prisma-service-2.0.0.tgz",
+      "@nestjs/common": "^10.4.19"
+    }
+  }
+  

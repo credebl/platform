@@ -42,7 +42,7 @@ import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
 import { IUserRequest } from '@credebl/user-request';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/org-roles';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GetAllAgentConnectionsDto, GetAllConnectionsDto } from './dtos/get-all-connections.dto';

@@ -12,6 +12,10 @@ export interface ISchemaDetails extends IPaginationDetails {
   data: ISchema[];
 }
 
+export interface UpdateSchemaResponse {
+  count: number;
+}
+
 export interface IW3CSchema {
   response: {
     did: string;
@@ -64,22 +68,22 @@ export interface IPlatformSchemas {
   schemasResult: ISchemaData[];
 }
 
-// export interface ICredDefData {
-//   tag: string;
-//   credentialDefinitionId: string;
-//   schemaLedgerId: string;
-//   revocable: boolean;
-//   createDateTime?: Date;
-// }
+export interface ICredDefData {
+  tag: string;
+  credentialDefinitionId: string;
+  schemaLedgerId: string;
+  revocable: boolean;
+  createDateTime?: Date;
+}
 
-// export interface ICredDefWithPagination extends IPaginationDetails{
-//     data: ICredDefData[];
-// }
+export interface ICredDefWithPagination extends IPaginationDetails {
+  data: ICredDefData[];
+}
 
-// export interface ICredDefWithCount {
-//   credDefCount: number;
-//   credDefResult: ICredDefData[];
-// }
+export interface ICredDefWithCount {
+  credDefCount: number;
+  credDefResult: ICredDefData[];
+}
 
 export interface INetworkUrl {
   networkUrl: string;

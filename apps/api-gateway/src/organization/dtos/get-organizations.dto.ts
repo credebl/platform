@@ -3,7 +3,7 @@ import { PaginationDto } from '@credebl/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional } from 'class-validator';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/org-roles';
 
 export class GetAllOrganizationsDto extends PaginationDto {
   @ApiProperty({ required: false, enum: OrgRoles })

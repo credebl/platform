@@ -1,14 +1,13 @@
 import { Inject } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from '@credebl/common';
+import { BaseService, IOrgUsers } from '@credebl/common';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { organisation, user } from '@prisma/client';
-import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
-import { IOrgUsers } from 'apps/user/interfaces/user.interface';
+import { IDidList, IGetOrgById, IGetOrganization } from '@credebl/common';
 import {
   IOrgCredentials,
   IOrganization,

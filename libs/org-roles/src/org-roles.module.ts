@@ -1,7 +1,7 @@
-import { PrismaService } from '@credebl/prisma-service';
+import { PrismaService } from '@credebl/prisma-service/dist/src/prisma-service.service';
 import { Logger } from '@nestjs/common';
 import { Module } from '@nestjs/common';
-import { OrgRolesRepository } from '../repositories';
+import { OrgRolesRepository } from './repositories';
 import { OrgRolesService } from './org-roles.service';
 
 @Module({

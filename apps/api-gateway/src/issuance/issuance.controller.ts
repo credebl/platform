@@ -60,7 +60,7 @@ import { IUserRequest } from '@credebl/user-request';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/org-roles';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import {

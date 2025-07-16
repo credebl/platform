@@ -45,78 +45,80 @@ export interface IOrgAgent {
   apiKey: string;
 }
 
-export interface IGetOrgById {
-  id: string;
-  name: string;
-  description: string;
-  orgSlug: string;
-  logoUrl: string;
-  website: string;
-  publicProfile: boolean;
-  schema: ISchema[];
-  org_agents: IOrgAgents[];
-}
+// Added in common
+// export interface IGetOrgById {
+//   id: string;
+//   name: string;
+//   description: string;
+//   orgSlug: string;
+//   logoUrl: string;
+//   website: string;
+//   publicProfile: boolean;
+//   schema: ISchema[];
+//   org_agents: IOrgAgents[];
+// }
 
-interface ISchema {
-  id: string;
-  name: string;
-}
+// interface ISchema {
+//   id: string;
+//   name: string;
+// }
 
-interface IOrgAgents {
-  agent_invitations: IAgentInvitation[];
-  ledgers: ILedgers;
-  org_agent_type: IOrgAgentType;
-}
+// interface IOrgAgents {
+//   agent_invitations: IAgentInvitation[];
+//   ledgers: ILedgers;
+//   org_agent_type: IOrgAgentType;
+// }
 
-interface IAgentInvitation {
-  id: string;
-  connectionInvitation: string;
-  multiUse: boolean;
-}
+// interface IAgentInvitation {
+//   id: string;
+//   connectionInvitation: string;
+//   multiUse: boolean;
+// }
 
 export interface IUserOrgRole {
   user: string;
   orgRole: string;
 }
 
-interface IOrgAgentType {
-  id: string;
-  createDateTime: Date;
-  lastChangedDateTime: Date;
-  agent: string;
-}
+// interface IOrgAgentType {
+//   id: string;
+//   createDateTime: Date;
+//   lastChangedDateTime: Date;
+//   agent: string;
+// }
 
-interface ILedgers {
-  id: string;
-  name: string;
-  networkType: string;
-}
+// interface ILedgers {
+//   id: string;
+//   name: string;
+//   networkType: string;
+// }
 
-export interface IGetOrganization {
-  totalCount: number;
-  totalPages: number;
-  organizations: IGetAllOrganizations[];
-}
+// Added to common
+// export interface IGetOrganization {
+//   totalCount: number;
+//   totalPages: number;
+//   organizations: IGetAllOrganizations[];
+// }
 
-interface IGetAllOrganizations {
-  id: string;
-  name: string;
-  description: string;
-  logoUrl: string;
-  orgSlug: string;
-  userOrgRoles: IUserOrganizationRoles[];
-}
+// interface IGetAllOrganizations {
+//   id: string;
+//   name: string;
+//   description: string;
+//   logoUrl: string;
+//   orgSlug: string;
+//   userOrgRoles: IUserOrganizationRoles[];
+// }
 
-interface IUserOrganizationRoles {
-  id: string;
-  orgRole: IOrgRole;
-}
+// interface IUserOrganizationRoles {
+//   id: string;
+//   orgRole: IOrgRole;
+// }
 
-export interface IOrgRole {
-  id: string;
-  name: string;
-  description: string;
-}
+// export interface IOrgRole {
+//   id: string;
+//   name: string;
+//   description: string;
+// }
 
 export interface IOrgInvitationsPagination {
   totalPages: number;
@@ -148,13 +150,14 @@ export interface Payload {
   role?: string;
 }
 
-export interface IDidList {
-  id: string;
-  createDateTime: Date;
-  did: string;
-  lastChangedDateTime: Date;
-  isPrimaryDid: boolean;
-}
+// Included in common
+// export interface IDidList {
+//   id: string;
+//   createDateTime: Date;
+//   did: string;
+//   lastChangedDateTime: Date;
+//   isPrimaryDid: boolean;
+// }
 
 export interface IPrimaryDid {
   orgId: string;

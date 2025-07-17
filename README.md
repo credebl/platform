@@ -1,109 +1,62 @@
 # CREDEBL SSI Platform
 
-This repository host codebase for CREDEBL SSI Platform backend.
+Welcome to CREDEBL — a Linux Foundation Decentralized Trust Project.
 
-## Pre-requisites
+CREDEBL is a fully open-source Decentralized Identity & Verifiable Credentials platform, designed for scalable, privacy-preserving digital ID solutions.
 
-Install Docker and docker-compose
-</br>See: https://docs.docker.com/engine/install/
+It is used to build the Decentralized National Digital ID for Bhutan & Papua New Guinea and Sovio.id by AYANWORKS.
 
-Install Node: >= 18.17.0
-</br>See: https://nodejs.dev/en/learn/how-to-install-nodejs/
+🔗 Learn more at [https://docs.credebl.id](https://docs.credebl.id)
 
-**Install NestJS**
-```bash
-npm i @nestjs/cli@latest 
-```
+---
 
-**Setup & run postgres**
-Start the postgresql service using the docker:
+## ⚙️ Minimal Setup Instructions
+
+### 1. Clone the Repository
 
 ```bash
-docker run --name some-postgres -p 5432:5432 -e POSTGRES_PASSWORD=<secretpassword> -e POSTGRES_USER=credebl -d postgres
-```
+git clone https://github.com/credebl/platform.git
+cd platform
 
-**Run prisma to generate db schema**
+### 2. Install Dependencies:
 
-```bash
-cd ./libs/prisma-service/prisma
-npx prisma generate
-npx prisma db push
-```
-
-**Seed initial data**
-
-```bash
-cd ./libs/prisma-service
-npx prisma db seed
-```
-
-# Install NATS Message Broker
-## Pull NATS docker image
-
-NATS is used for inter-service communication. The only pre-requisite here is to install docker.
-
-```
-docker pull nats:latest
-```
-
-## Run NATS using `docker-compose`
-The `docker-compose.yml` file is available in the root folder.
-
-```
-docker-compose up
-```
-
-
-## Run CREDEBL Micro-services
-
-```bash
 npm install
-```
 
-## Configure environment variables in `.env` before you start the API Gateway
+### 3.Start the API Gateway (Development Mode):
 
-## Running the API Gateway app
-You can optionally use the `--watch` flag during development / testing.
+nest start --watch
+
+You can optionally start individual microservices using:
+
+nest start <service-name> --watch
+
+📚 Full Documentation
+Find the complete setup guide, API references, architecture, and advanced configurations here:
+➡️ https://docs.credebl.id
+
+🤝 Contributing
+We welcome PRs! Please read our Contribution Guide before submitting.
+
+🔏 DCO signing is required for all commits.
+
+
+📄 License
+Apache License 2.0
+
+---
+
+## 🛠️ Steps After Editing README
+
+### ✅ STEP 1: Save the file
+
+Make sure you replaced the old README content with the new one shown above.
+
+---
+
+### ✅ STEP 2: Add and Commit the Changes
+
+In your terminal:
 
 ```bash
-nest start [--watch]
-```
-
-## Starting the individual Micro-services
-
-### e.g. for starting `organization service` micro-service run below command in a separate terminal window
-
-```bash
-nest start organization [--watch]
-```
-
-### Likewise you can start all the micro-services one after another in separate terminal window
-
-```bash
-nest start user [--watch]
-nest start ledger [--watch]
-nest start connection [--watch]
-nest start issuance [--watch]
-nest start verification [--watch]
-nest start agent-provisioning [--watch]
-nest start agent-service [--watch]
-```
-
-## To access micro-service endpoints using the API Gateway. Navigate to
-
-```
-http://localhost:5000/api
-```
-
-## Credit
-
-The CREDEBL platform is built by AYANWORKS team. 
-For the core SSI capabilities, it leverages the great work from multiple open-source projects such as Hyperledger Aries, Bifold, Asker, Indy, etc.
-
-## Contributing
-
-Pull requests are welcome! Please read our [contributions guide](https://github.com/credebl/platform/blob/main/CONTRIBUTING.md) and submit your PRs. We enforce [developer certificate of origin](https://developercertificate.org/) (DCO) commit signing — [guidance](https://github.com/apps/dco) on this is available. We also welcome issues submitted about problems you encounter in using CREDEBL.
-
-## License
-
-[Apache License Version 2.0](https://github.com/credebl/platform/blob/main/LICENSE)
+git add README.md
+git commit -m "fix: updated README with minimal setup and doc link"

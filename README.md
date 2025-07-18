@@ -1,62 +1,61 @@
 # CREDEBL SSI Platform
 
-Welcome to CREDEBL — a Linux Foundation Decentralized Trust Project.
+Welcome to **CREDEBL** — an open-source Decentralized Identity & Verifiable Credentials platform, and part of the [Linux Foundation Decentralized Trust Project](https://lftprojects.org/).
 
-CREDEBL is a fully open-source Decentralized Identity & Verifiable Credentials platform, designed for scalable, privacy-preserving digital ID solutions.
-
-It is used to build the Decentralized National Digital ID for Bhutan & Papua New Guinea and Sovio.id by AYANWORKS.
-
-🔗 Learn more at [https://docs.credebl.id](https://docs.credebl.id)
+CREDEBL enables scalable, privacy-preserving digital identity systems. It powers real-world solutions like the **Decentralized National Digital ID for Bhutan and Papua New Guinea**, and **Sovio.id by AYANWORKS**.
 
 ---
 
-## ⚙️ Minimal Setup Instructions
+## ⚙️ Minimal Setup
 
-### 1. Clone the Repository
+This section provides the absolute minimum steps to get the CREDEBL API Gateway running for development. For comprehensive setup instructions, API reference, and architectural details, please refer to our official documentation.
 
-```bash
-git clone https://github.com/credebl/platform.git
-cd platform
+### Prerequisites
 
-### 2. Install Dependencies:
+* **Node.js**: We recommend using Node.js version 18 LTS.
+* **npm**: Node Package Manager (comes with Node.js).
+* **Git**: For cloning the repository.
+* **(One-time) Nest CLI**: If you don't have it installed globally, run:
+    ```bash
+    npm i -g @nestjs/cli
+    ```
 
-npm install
+### Steps to Run
 
-### 3.Start the API Gateway (Development Mode):
+1.  **Clone the Repository**
+    ```bash
+    git clone [https://github.com/credebl/platform.git](https://github.com/credebl/platform.git)
+    cd platform
+    ```
 
-nest start --watch
+2.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
 
-You can optionally start individual microservices using:
-
-nest start <service-name> --watch
-
-📚 Full Documentation
-Find the complete setup guide, API references, architecture, and advanced configurations here:
-➡️ https://docs.credebl.id
-
-🤝 Contributing
-We welcome PRs! Please read our Contribution Guide before submitting.
-
-🔏 DCO signing is required for all commits.
-
-
-📄 License
-Apache License 2.0
-
----
-
-## 🛠️ Steps After Editing README
-
-### ✅ STEP 1: Save the file
-
-Make sure you replaced the old README content with the new one shown above.
+3.  **Start the API Gateway (Development Mode)**
+    This command will start the API Gateway in watch mode, which is suitable for development.
+    ```bash
+    npm run start:gateway:dev
+    ```
 
 ---
 
-### ✅ STEP 2: Add and Commit the Changes
+## 📚 Documentation
 
-In your terminal:
+For a full setup guide, detailed API reference, advanced configurations, and architectural documentation, please visit:
+➡️ [https://docs.credebl.id](https://docs.credebl.id)
 
-```bash
-git add README.md
-git commit -m "fix: updated README with minimal setup and doc link"
+---
+
+## 🤝 Contributing
+
+We welcome contributions to CREDEBL! Please read our [Contribution Guide](CONTRIBUTING.md) before submitting a pull request.
+
+**Note**: All commits must be signed (Developer Certificate of Origin - DCO required).
+
+---
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0.

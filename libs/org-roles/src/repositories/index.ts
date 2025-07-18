@@ -1,8 +1,6 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 
 import { PrismaService } from '@credebl/prisma-service/dist/src/prisma-service.service';
-// eslint-disable-next-line camelcase
-import type { org_roles } from '@credebl/prisma-service';
 import { OrgRoles } from '../enums';
 import { IOrgRoles } from '../interfaces/org-roles.interface';
 
@@ -14,7 +12,7 @@ export class OrgRolesRepository {
   ) {}
 
   // eslint-disable-next-line camelcase
-  async getRole(roleName: string): Promise<org_roles> {
+  async getRole(roleName: string): Promise<object> {
     try {
       const roleDetails = await this.prisma.org_roles.findFirst({
         where: {

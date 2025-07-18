@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
 import { OrgRolesRepository } from './repositories';
 // eslint-disable-next-line camelcase
-import { org_roles } from '@credebl/prisma-service';
 import { IOrgRoles } from './interfaces';
 @Injectable()
 export class OrgRolesService {
@@ -12,7 +11,7 @@ export class OrgRolesService {
   ) {}
 
   // eslint-disable-next-line camelcase
-  async getRole(roleName: string): Promise<org_roles> {
+  async getRole(roleName: string): Promise<object> {
     return this.orgRoleRepository.getRole(roleName);
   }
 

@@ -354,6 +354,9 @@ importers:
       '@credebl/logger':
         specifier: file:../../credebl-logger-2.0.0.tgz
         version: file:credebl-logger-2.0.0.tgz(@nestjs/platform-express@10.4.19)(@nestjs/websockets@10.4.19)(@prisma/client@6.10.1(prisma@5.22.0)(typescript@5.8.3))(axios@1.10.0)(cache-manager@5.7.6)(class-transformer@0.5.1)(class-validator@0.14.2)(ioredis@5.6.1)(nats@2.29.3)(reflect-metadata@0.1.14)
+      '@credebl/org-roles':
+        specifier: file:../../credebl-org-roles-2.0.0.tgz
+        version: file:credebl-org-roles-2.0.0.tgz(@nestjs/platform-express@10.4.19)(@nestjs/websockets@10.4.19)(@prisma/client@6.10.1(prisma@5.22.0)(typescript@5.8.3))(cache-manager@5.7.6)(class-transformer@0.5.1)(class-validator@0.14.2)(ioredis@5.6.1)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       '@credebl/prisma-service':
         specifier: file:../../credebl-prisma-service-2.0.0.tgz
         version: file:credebl-prisma-service-2.0.0.tgz(@nestjs/platform-express@10.4.19)(@nestjs/websockets@10.4.19)(@prisma/client@6.10.1(prisma@5.22.0)(typescript@5.8.3))(cache-manager@5.7.6)(class-transformer@0.5.1)(class-validator@0.14.2)(ioredis@5.6.1)(reflect-metadata@0.1.14)(rxjs@7.8.2)
@@ -905,8 +908,12 @@ packages:
     resolution: {integrity: sha512-AeSHAiL8p0to3uCMYphOIr8MKPTQ+Mz0OA0Fz1ZsGe2IKCo6zww/Yaw1TR518z2T3+kfoPrXHfFKNVTmHwtVVw==, tarball: file:credebl-logger-2.0.0.tgz}
     version: 2.0.0
 
+  '@credebl/org-roles@file:credebl-org-roles-2.0.0.tgz':
+    resolution: {integrity: sha512-vXuJlxSXSwHsY8Ga9OmFeaO5taoSGCjAetThrEkFGiub/0NQzCtSreBftBcDhNXzEkUYwkSqzD52vw/H8MsI4w==, tarball: file:credebl-org-roles-2.0.0.tgz}
+    version: 2.0.0
+
   '@credebl/prisma-service@file:credebl-prisma-service-2.0.0.tgz':
-    resolution: {integrity: sha512-6M4E82R5prAs+MmuYqxsi5ZeoCijKUUa2oG+UhvzUwyutBqESO/9rCguYWqgeHWvgRiQJBpZXXNRk9nG2hSrsQ==, tarball: file:credebl-prisma-service-2.0.0.tgz}
+    resolution: {integrity: sha512-9l3A1aZHxsFaXQC2YdEvdkPtKg/MCTHopQIX+hjk1sWoZojeX7ZfUk1v9Lu57bxyrhAAP4TJfsNvkYai2ABZpA==, tarball: file:credebl-prisma-service-2.0.0.tgz}
     version: 2.0.0
     peerDependencies:
       '@prisma/client': ^5.22.0
@@ -2733,8 +2740,8 @@ packages:
     resolution: {integrity: sha512-NVFthDcoBOpTwtppF7b+BIeIu4Xon3RBNpddIaJv+DtjL6Q61x4j7ClYdiXjv3XKgyp7yUlOnLjU6PY/EYXwLQ==}
     engines: {node: '>=8.6.0'}
 
-  electron-to-chromium@1.5.183:
-    resolution: {integrity: sha512-vCrDBYjQCAEefWGjlK3EpoSKfKbT10pR4XXPdn65q7snuNOZnthoVpBfZPykmDapOKfoD+MMIPG8ZjKyyc9oHA==}
+  electron-to-chromium@1.5.186:
+    resolution: {integrity: sha512-lur7L4BFklgepaJxj4DqPk7vKbTEl0pajNlg2QjE5shefmlmBLm2HvQ7PMf1R/GvlevT/581cop33/quQcfX3A==}
 
   emittery@0.13.1:
     resolution: {integrity: sha512-DeWwawk6r5yR9jFgnDKYt4sLS0LmHJJi3ZOnb5/JdbYwj3nW+FxQnHIjhBKz8YLC7oRNPVM9NQ47I3CVx34eqQ==}
@@ -3187,8 +3194,8 @@ packages:
     resolution: {integrity: sha512-1lLKB2Mu3aGP1Q/2eCOx0fNbRMe7XdwktwOruhfqqd0rIJWwN4Dh+E3hrPSlDCXnSR7UtZ1N38rVXm+6+MEhJQ==}
     engines: {node: '>= 0.12'}
 
-  form-data@4.0.3:
-    resolution: {integrity: sha512-qsITQPfmvMOSAdeyZ+12I1c+CKSstAFAwu+97zrnWAbIr5u8wfsExUzCesVLC8NgHuRUqNN4Zy6UPWUTRGslcA==}
+  form-data@4.0.4:
+    resolution: {integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==}
     engines: {node: '>= 6'}
 
   formidable@2.1.5:
@@ -4319,8 +4326,8 @@ packages:
     resolution: {integrity: sha512-P0efT1C9jIdVRefqjzOQ9Xml57zpOXnIuS+csaB4MdZbTdmGDLo8XhzBG1N7aO11gKDDkJvBLULeFTo46wwreA==}
     hasBin: true
 
-  msgpackr@1.11.4:
-    resolution: {integrity: sha512-uaff7RG9VIC4jacFW9xzL3jc0iM32DNHe4jYVycBcjUePT/Klnfj7pqtWJt9khvDFizmjN2TlYniYmSS2LIaZg==}
+  msgpackr@1.11.5:
+    resolution: {integrity: sha512-UjkUHN0yqp9RWKy0Lplhh+wlpdt9oQBYgULZOiFhV3VclSF1JnSQWZ5r9gORQlNYaUKQoR8itv7g7z1xDDuACA==}
 
   multer@1.4.5-lts.1:
     resolution: {integrity: sha512-ywPWvcDMeH+z9gQq5qYHCCy+ethsk4goepZ45GLD63fOu0YcNecQxi64nDs3qluZB+murG3/D4dJ7+dGctcCQQ==}
@@ -5368,8 +5375,8 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
-  strtok3@10.3.1:
-    resolution: {integrity: sha512-3JWEZM6mfix/GCJBBUrkA8p2Id2pBkyTkVCJKto55w080QBKZ+8R171fGrbiSp+yMO/u6F8/yUh7K4V9K+YCnw==}
+  strtok3@10.3.2:
+    resolution: {integrity: sha512-or9w505RhhY66+uoe5YOC5QO/bRuATaoim3XTh+pGKx5VMWi/HDhMKuCjDLsLJouU2zg9Hf1nLPcNW7IHv80kQ==}
     engines: {node: '>=18'}
 
   superagent@7.1.6:
@@ -5402,8 +5409,8 @@ packages:
   swagger-ui-dist@5.17.14:
     resolution: {integrity: sha512-CVbSfaLpstV65OnSjbXfVd6Sta3q3F7Cj/yYuvHMp1P90LztOLs6PfUnKEVAeiIVQt9u2SaPwv0LiH/OyMjHRw==}
 
-  swagger-ui-dist@5.26.2:
-    resolution: {integrity: sha512-WmMS9iMlHQejNm/Uw5ZTo4e3M2QMmEavRz7WLWVsq7Mlx4PSHJbY+VCrLsAz9wLxyHVgrJdt7N8+SdQLa52Ykg==}
+  swagger-ui-dist@5.27.0:
+    resolution: {integrity: sha512-tS6LRyBhY6yAqxrfsA9IYpGWPUJOri6sclySa7TdC7XQfGLvTwDY531KLgfQwHEtQsn+sT4JlUspbeQDBVGWig==}
 
   swagger-ui-express@5.0.1:
     resolution: {integrity: sha512-SrNU3RiBGTLLmFU8GIJdOdanJTl4TOmT27tt3bWWHppqYmAZ6IDuEuBvMU6nZq0zLEe6b/1rACXCgLZqO6ZfrA==}
@@ -6486,6 +6493,32 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@credebl/org-roles@file:credebl-org-roles-2.0.0.tgz(@nestjs/platform-express@10.4.19)(@nestjs/websockets@10.4.19)(@prisma/client@6.10.1(prisma@5.22.0)(typescript@5.8.3))(cache-manager@5.7.6)(class-transformer@0.5.1)(class-validator@0.14.2)(ioredis@5.6.1)(reflect-metadata@0.1.14)(rxjs@7.8.2)':
+    dependencies:
+      '@credebl/prisma-service': file:credebl-prisma-service-2.0.0.tgz(@nestjs/platform-express@10.4.19)(@nestjs/websockets@10.4.19)(@prisma/client@6.10.1(prisma@5.22.0)(typescript@5.8.3))(cache-manager@5.7.6)(class-transformer@0.5.1)(class-validator@0.14.2)(ioredis@5.6.1)(reflect-metadata@0.1.14)(rxjs@7.8.2)
+      '@nestjs/common': 10.4.19(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2)
+    transitivePeerDependencies:
+      - '@fastify/static'
+      - '@grpc/grpc-js'
+      - '@nestjs/platform-express'
+      - '@nestjs/websockets'
+      - '@prisma/client'
+      - amqp-connection-manager
+      - amqplib
+      - bufferutil
+      - cache-manager
+      - class-transformer
+      - class-validator
+      - debug
+      - encoding
+      - ioredis
+      - kafkajs
+      - mqtt
+      - reflect-metadata
+      - rxjs
+      - supports-color
+      - utf-8-validate
+
   '@credebl/prisma-service@file:credebl-prisma-service-2.0.0.tgz(@nestjs/platform-express@10.4.19)(@nestjs/websockets@10.4.19)(@prisma/client@5.22.0(prisma@5.22.0))(cache-manager@5.7.6)(class-transformer@0.5.1)(class-validator@0.14.2)(ioredis@5.6.1)(reflect-metadata@0.1.14)(rxjs@7.8.2)':
     dependencies:
       '@credebl/common': file:credebl-common-2.0.0.tgz(@nestjs/platform-express@10.4.19)(@nestjs/websockets@10.4.19)(@prisma/client@5.22.0(prisma@5.22.0))(cache-manager@5.7.6)(ioredis@5.6.1)(reflect-metadata@0.1.14)
@@ -7532,7 +7565,7 @@ snapshots:
       '@types/cookiejar': 2.1.5
       '@types/methods': 1.1.4
       '@types/node': 20.19.8
-      form-data: 4.0.3
+      form-data: 4.0.4
 
   '@types/supertest@2.0.16':
     dependencies:
@@ -8035,7 +8068,7 @@ snapshots:
   axios@1.10.0:
     dependencies:
       follow-redirects: 1.15.9
-      form-data: 4.0.3
+      form-data: 4.0.4
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
@@ -8197,7 +8230,7 @@ snapshots:
   browserslist@4.25.1:
     dependencies:
       caniuse-lite: 1.0.30001727
-      electron-to-chromium: 1.5.183
+      electron-to-chromium: 1.5.186
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.25.1)
 
@@ -8245,7 +8278,7 @@ snapshots:
       get-port: 5.1.1
       ioredis: 5.6.1
       lodash: 4.17.21
-      msgpackr: 1.11.4
+      msgpackr: 1.11.5
       semver: 7.7.2
       uuid: 8.3.2
     transitivePeerDependencies:
@@ -8794,7 +8827,7 @@ snapshots:
       - supports-color
     optional: true
 
-  electron-to-chromium@1.5.183: {}
+  electron-to-chromium@1.5.186: {}
 
   emittery@0.13.1: {}
 
@@ -9339,7 +9372,7 @@ snapshots:
   file-type@20.4.1:
     dependencies:
       '@tokenizer/inflate': 0.2.7
-      strtok3: 10.3.1
+      strtok3: 10.3.2
       token-types: 6.0.3
       uint8array-extras: 1.4.0
     transitivePeerDependencies:
@@ -9438,7 +9471,7 @@ snapshots:
       mime-types: 2.1.35
     optional: true
 
-  form-data@4.0.3:
+  form-data@4.0.4:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
@@ -10842,7 +10875,7 @@ snapshots:
       '@msgpackr-extract/msgpackr-extract-win32-x64': 3.0.3
     optional: true
 
-  msgpackr@1.11.4:
+  msgpackr@1.11.5:
     optionalDependencies:
       msgpackr-extract: 3.0.3
 
@@ -12046,7 +12079,7 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  strtok3@10.3.1:
+  strtok3@10.3.2:
     dependencies:
       '@tokenizer/token': 0.3.0
 
@@ -12056,7 +12089,7 @@ snapshots:
       cookiejar: 2.1.4
       debug: 4.4.1
       fast-safe-stringify: 2.1.1
-      form-data: 4.0.3
+      form-data: 4.0.4
       formidable: 2.1.5
       methods: 1.1.2
       mime: 2.6.0
@@ -12072,7 +12105,7 @@ snapshots:
       cookiejar: 2.1.4
       debug: 4.4.1
       fast-safe-stringify: 2.1.1
-      form-data: 4.0.3
+      form-data: 4.0.4
       formidable: 2.1.5
       methods: 1.1.2
       mime: 2.6.0
@@ -12100,14 +12133,14 @@ snapshots:
 
   swagger-ui-dist@5.17.14: {}
 
-  swagger-ui-dist@5.26.2:
+  swagger-ui-dist@5.27.0:
     dependencies:
       '@scarf/scarf': 1.4.0
 
   swagger-ui-express@5.0.1(express@4.21.2):
     dependencies:
       express: 4.21.2
-      swagger-ui-dist: 5.26.2
+      swagger-ui-dist: 5.27.0
 
   symbol-observable@4.0.0: {}
 

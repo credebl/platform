@@ -10,24 +10,6 @@ export type Validator<T> = (input: T | undefined) => Issue | undefined;
  * STRING VALIDATORS (GENERIC)
  * -------------------------------------------------------------------------------- */
 
-export function _enum(inputs: string[]): Validator<string> {
-  return (input) => {
-    const success = _STR._includes(inputs, input);
-
-    if (!success) {
-      const expected = inputs.map((v) => `'${v}'`).join(' | ');
-
-      return {
-        expected,
-        received: input,
-        message: `Expected one of ${expected}`
-      };
-    }
-  };
-}
-
-// --------------------------------------------------------------------------------
-
 export function boolean(): Validator<string> {
   return (input) => {
     const success = _STR._includes(['true', 'false'], input);
@@ -228,9 +210,9 @@ export function localhost(): Validator<string> {
 
     if (!success) {
       return {
-        expected: 'A valid localhost (e.g., http://localhost:aPortNumber, 127.0.0.1:aPortNumber)',
+        expected: 'A valid localhost (e.g., http://localhost:3000, http://127.0.0.1:3000, http://[::1]:3000)',
         received: input,
-        message: 'Invalid Localhost.'
+        message: 'Invalid localhost.'
       };
     }
   };
@@ -262,12 +244,26 @@ export function postgresUrl(): Validator<string> {
     if (!success) {
       return {
         expected:
-          'A valid postgresURL with the format: postgresql://{postgres.user}:{postgres.password}@{your-ip}:{postgres.port}/{database-name}/schema={}',
+          'A valid Postgres URL with the format: postgresql://{postgres.user}:{postgres.password}@{your-ip}:{postgres.port}/{database-name}/schema={}',
         received: input,
-        message: 'Invalid collection of URLs.'
+        message: 'Invalid PostgreSQL URL format.'
       };
     }
   };
 }
 
 // --------------------------------------------------------------------------------
+
+export function path(): Validator<string> {
+  return (input) => {
+    const success = _STR._isPath(input);
+
+    if (!success) {
+      return {
+        expected: 'A valid path. E.g: folder/anotherFolder',
+        received: input,
+        message: 'Invalid path.'
+      };
+    }
+  };
+}

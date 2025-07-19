@@ -3,8 +3,7 @@ import validator from 'validator';
 // --------------------------------------------------------------------------------
 
 function _isDomain(input: string | undefined): boolean {
-  const regex = /^[a-zA-Z0-9.-]+$/;
-  return regex.test(input || '');
+  return validator.isFQDN(input);
 }
 
 function _isIP(input: string | undefined): boolean {
@@ -17,19 +16,26 @@ function _isPort(input: string | undefined): boolean {
 }
 
 function _isLocalhost(input: string | undefined): boolean {
-  const regex = /^(http:\/\/)?(localhost|127\.0\.0\.1|::1)(:\d{1,5})?(\/)?$/;
+  const regex = /^(http:\/\/)?(\[?::1\]?|localhost|127\.0\.0\.1)(:\d{1,5})?(\/)?$/;
 
   if (!regex.test(input || '')) {
     return false;
   }
 
-  const port = input.split(':').at(-1).split('/').at(0);
+  const bracketlessInput = input.replace(/^\[?(.+?)\]?$/, '$1');
+  const port = bracketlessInput.split(':').at(-1).split('/').at(0);
 
   return _isPort(port);
 }
 
+function _isLocalhostHost(input: string | undefined): boolean {
+  // Está bien??
+  const regex = /^(http:\/\/)?(\[?::1\]?|localhost|127\.0\.0\.1)(:\d{1,5})?(\/)?$/;
+  return regex.test(input || '');
+}
+
 function _isHost(input: string | undefined): boolean {
-  return _isIP(input) || _isDomain(input) || _isLocalhost(input);
+  return _isIP(input) || _isDomain(input) || _isLocalhostHost(input);
 }
 
 function _isEndpoint(input: string | undefined): boolean {

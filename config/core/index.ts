@@ -1,5 +1,5 @@
 import {
-  _enum,
+  path,
   domain,
   email,
   endpoint,
@@ -30,11 +30,13 @@ export type SafeParseReturnType<T> =
 class StringBuilder {
   readonly #validators: Validator<string>[] = [];
 
-  enum(inputs: string[]): this {
-    this.#validators.push(_enum(inputs));
-    return this;
-  }
-
+  /**
+   * Adds a validator that checks if the string is not empty.
+   *
+   * This validator will fail if the string is `undefined`, `null`, or an empty string.
+   *
+   * This validator is meant to be used when there are no other validations being used, since all other validations have null/undefined/"" checks in them.
+   */
   notEmpty(): this {
     this.#validators.push(notEmpty());
     return this;
@@ -105,17 +107,30 @@ class StringBuilder {
     return this;
   }
 
-  // --
+  path(): this {
+    this.#validators.push(path());
+    return this;
+  }
 
+  /**
+   * Adds a validator that allows the string to be optional.
+   *
+   * This validator prevent failure if the string is undefined.
+   *
+   * This is useful when you want to validate something that you know it can or can't be there,
+   * adding other validators on top to validate when there actually is something.
+   */
   optional(): this {
     this.#validators.push(optional());
     return this;
   }
 
-  // --
-
   safeParse(input: string): SafeParseReturnType<string> {
     const issues: Issue[] = [];
+
+    if (input === undefined && this.#validators.includes(optional())) {
+      return { data: input, error: null, success: true };
+    }
 
     for (const validator of this.#validators) {
       const issue = validator(input);

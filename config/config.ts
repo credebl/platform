@@ -131,10 +131,10 @@ const envDemoSchema = v.schema({
   GEO_LOCATION_MASTER_DATA_IMPORT_SCRIPT: v.str().notEmpty(),
   UPDATE_CLIENT_CREDENTIAL_SCRIPT: v.str().notEmpty(),
 
-  // AFJ_AGENT IN CASE OF DOCKER
-  AFJ_AGENT_TOKEN_PATH: v.str().optional(),
-  AFJ_AGENT_SPIN_UP: v.str().optional(),
-  AFJ_AGENT_ENDPOINT_PATH: v.str().optional(),
+  // AFJ_AGENT
+  AFJ_AGENT_TOKEN_PATH: v.str().path(),
+  AFJ_AGENT_SPIN_UP: v.str().path(),
+  AFJ_AGENT_ENDPOINT_PATH: v.str().path(),
 
   // AGENT_PROTOCOL
   AGENT_PROTOCOL: v.str().protocol(),

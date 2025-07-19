@@ -1,5 +1,5 @@
 function _includes(inputs: string[], value: string | undefined): boolean {
-  return !Boolean(value) || inputs?.includes(value); // SIRVE?
+  return !value || inputs?.includes(value);
 }
 
 function _isNumber(input: string | undefined): boolean {

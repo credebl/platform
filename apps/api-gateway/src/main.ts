@@ -1,3 +1,4 @@
+import { otelSDK } from './tracer';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
 
@@ -7,7 +8,7 @@ import { Logger, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { AllExceptionsFilter } from '@credebl/common/exception-handler';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { type MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 
 import helmet from 'helmet';
@@ -18,6 +19,19 @@ import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-val
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
+  try {
+    if (otelSDK) {
+      await otelSDK.start();
+      // eslint-disable-next-line no-console
+      console.log('OpenTelemetry SDK started successfully');
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('OpenTelemetry SDK disabled for this environment');
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to start OpenTelemetry SDK:', error);
+  }
   const app = await NestFactory.create(AppModule);
 
   app.useLogger(app.get(NestjsLoggerServiceAdapter));
@@ -32,7 +46,7 @@ async function bootstrap(): Promise<void> {
   app.use(express.json({ limit: '100mb' }));
   app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
-  app.use(function (req, res, next) {
+  app.use((req, res, next) => {
     let err = null;
     try {
       decodeURIComponent(req.path);

@@ -360,7 +360,6 @@ export class SchemaService extends BaseService {
   }
 
   private async storeW3CSchemas(schemaDetails, user, orgId, attributes, alias): Promise<schema> {
-
     let ledgerDetails;
     const schemaServerUrl = `${process.env.SCHEMA_FILE_SERVER_URL}${schemaDetails.schemaId}`;
     const schemaRequest = await this.commonService.httpGet(schemaServerUrl).then(async (response) => response);
@@ -658,10 +657,9 @@ export class SchemaService extends BaseService {
   async getAllSchema(schemaSearchCriteria: ISchemaSearchCriteria): Promise<ISchemaDetails> {
     try {
       const response = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
-
       const schemasDetails = response?.schemasResult.map((schemaAttributeItem) => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
-        return { ...schemaAttributeItem, attributes };
+        return { ...schemaAttributeItem, attributes, organizationName: schemaAttributeItem.organisation.name };
       });
 
       const schemasResponse = {

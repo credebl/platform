@@ -77,6 +77,12 @@ export class UserController {
     return loginRes;
   }
 
+  @MessagePattern({ cmd: 'fetch-session-details' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getSession(sessionId: string): Promise<any> {
+    return this.userService.getSession(sessionId);
+  }
+
   @MessagePattern({ cmd: 'refresh-token-details' })
   async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
     return this.userService.refreshTokenDetails(refreshToken);

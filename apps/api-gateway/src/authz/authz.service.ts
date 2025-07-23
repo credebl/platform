@@ -53,6 +53,12 @@ export class AuthzService extends BaseService {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-holder-login', payload);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getSession(sessionId: string): Promise<any> {
+    const payload = { sessionId };
+    return this.natsClient.sendNatsMessage(this.authServiceProxy, 'fetch-session-details', payload);
+  }
+
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<IResetPasswordResponse> {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-reset-password', resetPasswordDto);
   }

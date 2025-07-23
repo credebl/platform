@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Query,
+  Req,
   Res,
   UnauthorizedException,
   UseFilters
@@ -30,6 +31,7 @@ import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { RefreshTokenDto } from './dtos/refresh-token.dto';
 import { getDefaultClient } from '../user/utils';
 import { ClientAliasValidationPipe } from './decorators/user-auth-client';
+import { Request } from 'express';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -162,10 +164,42 @@ export class AuthzController {
         data: userData
       };
 
+      res.cookie('session_id', userData.sessionId, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: false,
+        maxAge: 30 * 24 * 60 * 60 * 1000
+      });
+
       return res.status(HttpStatus.OK).json(finalResponse);
     } else {
       throw new UnauthorizedException(`Please provide valid credentials`);
     }
+  }
+
+  /**
+   * Fetch session details
+   *
+   * @returns User's access token details
+   */
+  @Get('/sessionDetails')
+  @ApiOperation({
+    summary: 'Fetch session details',
+    description: 'Fetch session details against logged in user'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
+  async sessionDetails(@Req() req: Request, @Res() res: Response): Promise<Response> {
+    const sessionId = req.cookies['session_id'];
+
+    const sessionDetails = await this.authzService.getSession(sessionId);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchSession,
+      data: sessionDetails
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   /**

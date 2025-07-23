@@ -46,7 +46,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { Invitation, UserRole } from '@credebl/enum/enum';
+import { Invitation, ProviderType, TokenType, UserRole } from '@credebl/enum/enum';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 import { AwsService } from '@credebl/aws';
@@ -378,6 +378,16 @@ export class UserService {
       const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id);
 
+      const userAccountDetails = {
+        userId: userDetails?.id,
+        provider: ProviderType.KEYCLOAK,
+        providerAccountId: keycloakDetails.keycloakUserId.toString(),
+        // eslint-disable-next-line camelcase
+        token_type: TokenType.USER_TOKEN
+      };
+
+      await this.userRepository.storeUserAccountDetails(userAccountDetails);
+
       return { userId: userDetails?.id };
     } catch (error) {
       this.logger.error(`Error in createUserForToken: ${JSON.stringify(error)}`);
@@ -455,10 +465,38 @@ export class UserService {
         return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(password);
-        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
+        const tokenDetails = await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
+
+        const sessionData = {
+          sessionToken: tokenDetails?.access_token,
+          userId: userData?.id,
+          expires: tokenDetails?.expires_in,
+          refreshToken: tokenDetails?.refresh_token
+        };
+        const addSessionDetails = await this.userRepository.createSession(sessionData);
+
+        // await this.userRepository.updateAccountDetails(sessionData);
+
+        const finalResponse = {
+          ...tokenDetails,
+          seesionId: addSessionDetails.id
+        };
+
+        return finalResponse;
       }
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getSession(sessionId: string): Promise<any> {
+    try {
+      const sessionDetails = await this.userRepository.getSession(sessionId);
+      return sessionDetails;
+    } catch (error) {
+      this.logger.error(`In fetching session details : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

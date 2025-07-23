@@ -6,6 +6,7 @@ export const ResponseMessages = {
       emaiVerified: 'Email verified successfully',
       fetchClientAliases: 'Client aliases fetched successfully',
       login: 'User login successfully',
+      fetchSession: 'Session details fetched successfully',
       fetchProfile: 'User fetched successfully',
       fetchInvitations: 'Org invitations fetched successfully',
       invitationReject: 'Organization invitation rejected',

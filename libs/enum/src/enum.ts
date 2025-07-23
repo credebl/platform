@@ -257,3 +257,13 @@ export enum ProofType {
   POLYGON_PROOFTYPE = 'EcdsaSecp256k1Signature2019',
   NO_LEDGER_PROOFTYPE = 'Ed25519Signature2018'
 }
+
+export enum TokenType {
+  USER_TOKEN = 'user-token',
+  ORG_TOKEN = 'organization-token'
+}
+
+export enum ProviderType {
+  KEYCLOAK = 'keycloak',
+  SUPABASE = 'supabase'
+}

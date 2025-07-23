@@ -1,8 +1,10 @@
 /* eslint-disable prefer-destructuring */
 
 import {
+  IAccountDetails,
   IOrgUsers,
   ISendVerificationEmail,
+  ISession,
   IShareUserCertificate,
   IUserDeletedActivity,
   IUserInformation,
@@ -16,7 +18,7 @@ import {
 } from '../interfaces/user.interface';
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { RecordType, client_aliases, schema, token, user, user_org_roles } from '@prisma/client';
+import { RecordType, account, client_aliases, schema, session, token, user, user_org_roles } from '@prisma/client';
 
 import { PrismaService } from '@credebl/prisma-service';
 import { UserRole } from '@credebl/enum/enum';
@@ -111,6 +113,24 @@ export class UserRepository {
       return this.prisma.user.findFirst({
         where: {
           email
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Not Found: ${JSON.stringify(error)}`);
+      throw new NotFoundException(error);
+    }
+  }
+
+  /**
+   *
+   * @param sessionId
+   * @returns Session details
+   */
+  async getSession(sessionId: string): Promise<session> {
+    try {
+      return this.prisma.session.findUnique({
+        where: {
+          id: sessionId
         }
       });
     } catch (error) {
@@ -638,6 +658,56 @@ export class UserRepository {
     }
   }
 
+  async createSession(tokenDetails: ISession): Promise<session> {
+    try {
+      const { sessionToken, userId, expires, refreshToken } = tokenDetails;
+      const sessionResponse = await this.prisma.session.upsert({
+        where: {
+          userId
+        },
+        create: {
+          sessionToken,
+          userId,
+          expires,
+          // eslint-disable-next-line camelcase
+          refresh_token: refreshToken
+        },
+        update: {
+          sessionToken,
+          expires,
+          // eslint-disable-next-line camelcase
+          refresh_token: refreshToken
+        }
+      });
+      return sessionResponse;
+    } catch (error) {
+      this.logger.error(`Error in createTokenForResetPassword: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // async updateAccountDetails(accountDetails: ISession): Promise<account> {
+  //   try {
+  //     const userAccountDetails = await this.prisma.account.update({
+  //       where: {
+  //         userId: accountDetails?.userId
+  //       },
+  //       data: {
+  //         // eslint-disable-next-line camelcase
+  //         access_token: accountDetails?.sessionToken,
+  //         // eslint-disable-next-line camelcase
+  //         refresh_token: accountDetails?.refreshToken,
+  //         // eslint-disable-next-line camelcase
+  //         expires_at: accountDetails?.expires
+  //       }
+  //     });
+  //     return userAccountDetails;
+  //   } catch (error) {
+  //     this.logger.error(`Error in createTokenForResetPassword: ${error.message} `);
+  //     throw error;
+  //   }
+  // }
+
   /**
    *
    * @param userId
@@ -805,6 +875,24 @@ export class UserRepository {
       return userRoleMapping;
     } catch (error) {
       this.logger.error(`Error in storeUserRole: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async storeUserAccountDetails(accountDetails: IAccountDetails): Promise<account> {
+    try {
+      const userAccountDetails = await this.prisma.account.create({
+        data: {
+          userId: accountDetails?.userId,
+          provider: accountDetails?.provider,
+          providerAccountId: accountDetails?.providerAccountId,
+          // eslint-disable-next-line camelcase
+          token_type: accountDetails?.token_type
+        }
+      });
+      return userAccountDetails;
+    } catch (error) {
+      this.logger.error(`Error in storing account details: ${error.message} `);
       throw error;
     }
   }

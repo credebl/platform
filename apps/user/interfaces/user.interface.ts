@@ -188,6 +188,12 @@ export interface ISession {
   refreshToken?: string;
 }
 
+export interface ISessionDetails extends ISession {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IUserResetPassword {
   email: string;
   oldPassword?: string;

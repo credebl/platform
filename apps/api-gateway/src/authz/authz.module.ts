@@ -1,25 +1,27 @@
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { Logger, Module } from '@nestjs/common';
 
 import { AgentService } from '../agent/agent.service';
 import { AuthzController } from './authz.controller';
 import { AuthzService } from './authz.service';
+import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonModule } from '../../../../libs/common/src/common.module';
 import { CommonService } from '../../../../libs/common/src/common.service';
 import { ConnectionService } from '../connection/connection.service';
 import { HttpModule } from '@nestjs/axios';
 import { JwtStrategy } from './jwt.strategy';
 import { MobileJwtStrategy } from './mobile-jwt.strategy';
-import { Module } from '@nestjs/common';
+import { NATSClient } from '@credebl/common/NATSClient';
+import { OrganizationService } from '../organization/organization.service';
 import { PassportModule } from '@nestjs/passport';
+import { PrismaServiceModule } from '@credebl/prisma-service';
 import { SocketGateway } from './socket.gateway';
 import { SupabaseService } from '@credebl/supabase';
 import { UserModule } from '../user/user.module';
+import { UserRepository } from 'apps/user/repositories/user.repository';
 import { UserService } from '../user/user.service';
 import { VerificationService } from '../verification/verification.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { OrganizationService } from '../organization/organization.service';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [
@@ -36,7 +38,8 @@ import { NATSClient } from '@credebl/common/NATSClient';
       },
       CommonModule
     ]),
-    UserModule
+    UserModule,
+    PrismaServiceModule
   ],
   providers: [
     JwtStrategy,
@@ -50,12 +53,11 @@ import { NATSClient } from '@credebl/common/NATSClient';
     CommonService,
     UserService,
     SupabaseService,
-    OrganizationService
+    OrganizationService,
+    UserRepository,
+    Logger
   ],
-  exports: [
-    PassportModule,
-    AuthzService
-  ],
+  exports: [PassportModule, AuthzService],
   controllers: [AuthzController]
 })
-export class AuthzModule { }
+export class AuthzModule {}

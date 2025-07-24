@@ -1,6 +1,7 @@
 import {
   ICheckUserDetails,
   IOrgUsers,
+  ISessionDetails,
   IUserDeletedActivity,
   IUserForgotPassword,
   IUserInformation,
@@ -78,8 +79,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'fetch-session-details' })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getSession(payload: { sessionId: string }): Promise<any> {
+  async getSession(payload: { sessionId: string }): Promise<ISessionDetails> {
     return this.userService.getSession(payload?.sessionId);
   }
 

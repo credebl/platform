@@ -17,6 +17,7 @@ import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { user } from '@prisma/client';
+import { ISessionDetails } from 'apps/user/interfaces/user.interface';
 @Injectable()
 @WebSocketGateway()
 export class AuthzService extends BaseService {
@@ -53,9 +54,8 @@ export class AuthzService extends BaseService {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-holder-login', payload);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getSession(sessionId: string): Promise<any> {
-    const payload = { sessionId };
+  async getSession(sessionId): Promise<ISessionDetails> {
+    const payload = { ...sessionId };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'fetch-session-details', payload);
   }
 

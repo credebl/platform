@@ -696,6 +696,20 @@ export class UserRepository {
     }
   }
 
+  async checkAccountDetails(userId: string): Promise<account> {
+    try {
+      const accountDetails = await this.prisma.account.findUnique({
+        where: {
+          userId
+        }
+      });
+      return accountDetails;
+    } catch (error) {
+      this.logger.error(`Error in getting account details: ${error.message} `);
+      throw error;
+    }
+  }
+
   // async updateAccountDetails(accountDetails: ISession): Promise<account> {
   //   try {
   //     const userAccountDetails = await this.prisma.account.update({

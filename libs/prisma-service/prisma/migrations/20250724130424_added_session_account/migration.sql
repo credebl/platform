@@ -32,6 +32,9 @@ CREATE TABLE "session" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "account_userId_key" ON "account"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "account_refresh_token_key" ON "account"("refresh_token");
 
 -- CreateIndex

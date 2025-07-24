@@ -27,14 +27,41 @@ export function validateW3CSchemaAttributes(
     }
 
     if (attributeValue !== undefined) {
-      const actualType = typeof attributeValue;
-
-      // Check if the schemaDataType is 'datetime-local' and treat it as a string
-      if ((W3CSchemaDataType.DATE_TIME === schemaDataType && W3CSchemaDataType.STRING !== actualType) || 
-          (W3CSchemaDataType.DATE_TIME !== schemaDataType && actualType !== schemaDataType)) {
-
+      // All values in IIssuanceAttributes are strings, so we need to validate
+      // if the string value can be converted to the expected type
+      let isValidType = true;
+      
+      switch (schemaDataType) {
+        case W3CSchemaDataType.STRING:
+          // String is always valid
+          break;
+        case W3CSchemaDataType.NUMBER:
+        case W3CSchemaDataType.INTEGER:
+          // Check if string can be converted to number
+          if (isNaN(Number(attributeValue))) {
+            isValidType = false;
+          }
+          break;
+        case W3CSchemaDataType.BOOLEAN:
+          // Check if string represents a valid boolean
+          if (attributeValue !== 'true' && attributeValue !== 'false') {
+            isValidType = false;
+          }
+          break;
+        case W3CSchemaDataType.DATE_TIME:
+          // Check if string is a valid ISO date
+          if (isNaN(Date.parse(attributeValue))) {
+            isValidType = false;
+          }
+          break;
+        default:
+          // For other types like ARRAY, OBJECT, assume string is valid
+          break;
+      }
+      
+      if (!isValidType) {
         mismatchedAttributes.push(
-          `Attribute ${attributeName} has type ${actualType} but expected type ${schemaDataType}`
+          `Attribute ${attributeName} has invalid value "${attributeValue}" for expected type ${schemaDataType}`
         );
       }
     }

@@ -79,8 +79,8 @@ export class UserController {
 
   @MessagePattern({ cmd: 'fetch-session-details' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getSession(sessionId: string): Promise<any> {
-    return this.userService.getSession(sessionId);
+  async getSession(payload: { sessionId: string }): Promise<any> {
+    return this.userService.getSession(payload?.sessionId);
   }
 
   @MessagePattern({ cmd: 'refresh-token-details' })

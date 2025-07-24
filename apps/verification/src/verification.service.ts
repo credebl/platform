@@ -570,7 +570,7 @@ export class VerificationService {
       }
       if (emailId) {
         const emailResponse = await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization);
-        await this.verificationRepository.addEmailAfterVerification(emailResponse as IEmailResponse[]);
+        await this.verificationRepository.saveEmail(emailResponse as IEmailResponse[]);
         return emailResponse;
       } else {
         const presentationProof: IInvitation = await this.generateOOBProofReq(payload);

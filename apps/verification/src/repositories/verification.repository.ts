@@ -87,7 +87,7 @@ export class VerificationRepository {
     proofRequestsSearchCriteria: IProofRequestSearchCriteria
   ): Promise<IProofPresentationsListCount> {
     try {
-      const proofRequestsListData = await this.prisma.presentations.findMany({
+      const proofRequestsList = await this.prisma.presentations.findMany({
         where: {
           orgId,
           OR: [
@@ -106,7 +106,12 @@ export class VerificationRepository {
           presentationId: true,
           schemaId: true,
           emailId: true,
-          errorMessage: true
+          errorMessage: true,
+          connections: {
+            select: {
+              theirLabel: true
+            }
+          }
         },
         orderBy: {
           [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc'
@@ -115,22 +120,6 @@ export class VerificationRepository {
         take: Number(proofRequestsSearchCriteria.pageSize),
         skip: (proofRequestsSearchCriteria.pageNumber - 1) * proofRequestsSearchCriteria.pageSize
       });
-
-      const proofRequestsList = await Promise.all(
-        proofRequestsListData.map(async (presentation) => {
-          if (!presentation.connectionId) {
-            return { ...presentation, theirLabel: null };
-          }
-          const connection = await this.prisma.connections.findUnique({
-            where: { connectionId: presentation.connectionId },
-            select: { theirLabel: true }
-          });
-          return {
-            ...presentation,
-            theirLabel: connection?.theirLabel ?? null
-          };
-        })
-      );
 
       const proofRequestsCount = await this.prisma.presentations.count({
         where: {
@@ -309,7 +298,7 @@ export class VerificationRepository {
     }
   }
 
-  async addEmailAfterVerification(emailList: IEmailResponse[]): Promise<void> {
+  async saveEmail(emailList: IEmailResponse[]): Promise<void> {
     try {
       for (const { proofRecordThId, email } of emailList) {
         await this.prisma.presentations.updateMany({
@@ -317,9 +306,8 @@ export class VerificationRepository {
           data: { emailId: email }
         });
       }
-      // return this.prisma.organisation.findFirst({ where: { id: orgId } });
     } catch (error) {
-      this.logger.error(`[getOrganization] - error: ${JSON.stringify(error)}`);
+      this.logger.error(`[Verification Save Email] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

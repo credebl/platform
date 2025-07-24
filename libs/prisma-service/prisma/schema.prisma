@@ -326,6 +326,7 @@ model connections {
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
   presentations       presentations[]
+  credentials         credentials[]
 }
 
 model credentials {
@@ -342,6 +343,7 @@ model credentials {
   credDefId            String        @default("")
   orgId                String?       @db.Uuid
   organisation         organisation? @relation(fields: [orgId], references: [id])
+  connections          connections?  @relation(fields: [connectionId], references: [connectionId])
 }
 
 model presentations {

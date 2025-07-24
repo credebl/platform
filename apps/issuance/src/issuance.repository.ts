@@ -121,6 +121,9 @@ export class IssuanceRepository {
       schemaId: string;
       state: string;
       orgId: string;
+      connections: {
+        theirLabel: string;
+      };
     }[];
   }> {
     try {
@@ -144,7 +147,12 @@ export class IssuanceRepository {
           orgId: true,
           state: true,
           schemaId: true,
-          connectionId: true
+          connectionId: true,
+          connections: {
+            select: {
+              theirLabel: true
+            }
+          }
         },
         orderBy: {
           [issuedCredentialsSearchCriteria?.sortField]:

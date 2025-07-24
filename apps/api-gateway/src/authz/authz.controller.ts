@@ -7,11 +7,9 @@ import {
   Param,
   Post,
   Query,
-  Req,
   Res,
   UnauthorizedException,
-  UseFilters,
-  UseGuards
+  UseFilters
 } from '@nestjs/common';
 import { AuthzService } from './authz.service';
 import { CommonService } from '../../../../libs/common/src/common.service';
@@ -20,7 +18,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AuthTokenResponse } from './dtos/auth-token-res.dto';
 import { LoginUserDto } from '../user/dto/login-user.dto';
@@ -32,7 +30,6 @@ import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { RefreshTokenDto } from './dtos/refresh-token.dto';
 import { getDefaultClient } from '../user/utils';
 import { ClientAliasValidationPipe } from './decorators/user-auth-client';
-import { SessionGuard } from './guards/session.guard';
 @Controller('auth')
 @ApiTags('auth')
 @UseFilters(CustomExceptionFilter)
@@ -141,6 +138,7 @@ export class AuthzController {
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
   /**
    * Authenticates a user and returns an access token.
    *
@@ -164,12 +162,6 @@ export class AuthzController {
         data: userData
       };
 
-      res.cookie('session_id', userData.sessionId, {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: false,
-        maxAge: 30 * 24 * 60 * 60 * 1000
-      });
       return res.status(HttpStatus.OK).json(finalResponse);
     } else {
       throw new UnauthorizedException(`Please provide valid credentials`);
@@ -186,15 +178,13 @@ export class AuthzController {
     summary: 'Fetch session details',
     description: 'Fetch session details against logged in user'
   })
-  @UseGuards(SessionGuard)
-  // @ApiQuery({
-  //   name: 'sessionId',
-  //   type: String,
-  //   required: true
-  // })
+  @ApiQuery({
+    name: 'sessionId',
+    type: String,
+    required: true
+  })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
-  async sessionDetails(@Req() req: Request, @Res() res: Response): Promise<Response> {
-    const sessionId = req.cookies['session_id'];
+  async sessionDetails(@Query() sessionId: string, @Res() res: Response): Promise<Response> {
     const sessionDetails = await this.authzService.getSession(sessionId);
 
     const finalResponse: IResponseType = {

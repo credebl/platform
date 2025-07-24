@@ -21,7 +21,8 @@ import {
   IVerifyPresentation,
   IVerifiedProofData,
   IInvitation,
-  IProofRequestData
+  IProofRequestData,
+  IEmailResponse
 } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
@@ -88,7 +89,6 @@ export class VerificationService {
         orgId,
         proofRequestsSearchCriteria
       );
-
       const schemaIds = getProofRequestsList?.proofRequestsList?.map((schema) => schema?.schemaId).filter(Boolean);
 
       const getSchemaDetails = await this._getSchemaAndOrganizationDetails(schemaIds);
@@ -243,7 +243,9 @@ export class VerificationService {
       const getProofPresentationById = await this._getProofPresentationById(payload);
       return getProofPresentationById?.response;
     } catch (error) {
-      this.logger.error(`[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`
+      );
       const errorMessage = error?.response?.error?.reason || error?.message;
 
       if (errorMessage?.includes('not found')) {
@@ -566,9 +568,9 @@ export class VerificationService {
           }
         };
       }
-
       if (emailId) {
         const emailResponse = await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization);
+        await this.verificationRepository.saveEmail(emailResponse as IEmailResponse[]);
         return emailResponse;
       } else {
         const presentationProof: IInvitation = await this.generateOOBProofReq(payload);

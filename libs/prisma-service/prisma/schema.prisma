@@ -40,7 +40,7 @@ model user {
 
 model account {
   id                String      @id @default(uuid()) @db.Uuid
-  userId            String      @db.Uuid
+  userId            String      @unique @db.Uuid
   type              String?
   provider          String
   providerAccountId String

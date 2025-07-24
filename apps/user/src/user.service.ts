@@ -39,7 +39,8 @@ import {
   IUserDeletedActivity,
   UserKeycloakId,
   IEcosystemConfig,
-  IUserForgotPassword
+  IUserForgotPassword,
+  ISessionDetails
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -471,6 +472,8 @@ export class UserService {
           refreshToken: tokenDetails?.refresh_token
         };
         const addSessionDetails = await this.userRepository.createSession(sessionData);
+        // const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
+        // console.log("🚀 ~ UserService ~ login ~ fetchAccountDetails:", fetchAccountDetails)
 
         // await this.userRepository.updateAccountDetails(sessionData);
 
@@ -487,10 +490,10 @@ export class UserService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getSession(sessionId: string): Promise<any> {
+  async getSession(sessionId: string): Promise<ISessionDetails> {
     try {
-      const sessionDetails = await this.userRepository.getSession(sessionId);
+      const decryptedSessionId = await this.commonService.decryptPassword(sessionId);
+      const sessionDetails = await this.userRepository.getSession(decryptedSessionId);
       return sessionDetails;
     } catch (error) {
       this.logger.error(`In fetching session details : ${JSON.stringify(error)}`);

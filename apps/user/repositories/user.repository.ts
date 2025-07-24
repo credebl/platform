@@ -139,6 +139,16 @@ export class UserRepository {
     }
   }
 
+  async validateSession(sessionId: string): Promise<object> {
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+      include: { user: true }
+    });
+
+    // if (!session || new Date() > session.expires) return null;
+    return session.user;
+  }
+
   /**
    *
    * @param id

@@ -476,7 +476,7 @@ export class UserService {
 
         const finalResponse = {
           ...tokenDetails,
-          seesionId: addSessionDetails.id
+          sessionId: addSessionDetails.id
         };
 
         return finalResponse;

@@ -38,6 +38,8 @@ export const ResponseMessages = {
       invalidEmailUrl: 'Invalid verification code or EmailId!',
       verifiedEmail: 'Email already verified',
       notFound: 'User not found',
+      sessionLimitReached:
+        'You have reached the maximum number of allowed sessions. Please remove an existing session to add a new one',
       verifyMail: 'Please verify your email',
       invalidCredentials: 'Invalid Credentials',
       registerFido: 'Please complete your fido registration',

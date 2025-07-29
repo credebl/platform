@@ -182,10 +182,12 @@ export interface IUserSignIn {
 }
 
 export interface ISession {
-  sessionToken: string;
-  userId: string;
+  sessionToken?: string;
+  userId?: string;
   expires?: number;
   refreshToken?: string;
+  keycloakUserId?: string;
+  type?: string;
 }
 
 export interface ISessionDetails extends ISession {

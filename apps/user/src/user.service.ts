@@ -384,7 +384,7 @@ export class UserService {
         token_type: TokenType.USER_TOKEN
       };
 
-      await this.userRepository.storeUserAccountDetails(userAccountDetails);
+      await this.userRepository.addAccountDetails(userAccountDetails);
 
       return { userId: userDetails?.id };
     } catch (error) {
@@ -445,6 +445,13 @@ export class UserService {
     try {
       this.validateEmail(email.toLowerCase());
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+
+      const userSessionDetails = await this.userRepository.fetchUserSessions(userData?.id);
+
+      if (3 <= userSessionDetails?.length) {
+        throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
+      }
+
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
@@ -471,11 +478,33 @@ export class UserService {
           expires: tokenDetails?.expires_in,
           refreshToken: tokenDetails?.refresh_token
         };
-        const addSessionDetails = await this.userRepository.createSession(sessionData);
-        // const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
-        // console.log("🚀 ~ UserService ~ login ~ fetchAccountDetails:", fetchAccountDetails)
 
-        // await this.userRepository.updateAccountDetails(sessionData);
+        const addSessionDetails = await this.userRepository.createSession(sessionData);
+
+        const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
+
+        let accountData;
+        if (null === fetchAccountDetails) {
+          accountData = {
+            sessionToken: tokenDetails?.access_token,
+            userId: userData?.id,
+            expires: tokenDetails?.expires_in,
+            refreshToken: tokenDetails?.refresh_token,
+            keycloakUserId: userData?.keycloakUserId,
+            type: TokenType.USER_TOKEN
+          };
+
+          await this.userRepository.addAccountDetails(accountData);
+        } else {
+          accountData = {
+            sessionToken: tokenDetails?.access_token,
+            userId: userData?.id,
+            expires: tokenDetails?.expires_in,
+            refreshToken: tokenDetails?.refresh_token
+          };
+
+          await this.userRepository.updateAccountDetails(accountData);
+        }
 
         const finalResponse = {
           ...tokenDetails,

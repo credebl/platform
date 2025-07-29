@@ -60,16 +60,15 @@ model account {
 model session {
   id               String      @id @default(uuid()) @db.Uuid
   sessionToken     String      @unique
-  userId           String      @unique @db.Uuid
+  userId           String      @db.Uuid
   expires          Int
   refresh_token    String?     @unique
   user             user        @relation(fields: [userId], references: [id])
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
-  accountId        String?      @unique @db.Uuid
-  account          account?     @relation(fields: [accountId], references:[id])
+  accountId        String?     @unique @db.Uuid
+  account          account?    @relation(fields: [accountId], references:[id])
 }
-
 
 model token {
   id        String   @id @default(uuid()) @db.Uuid

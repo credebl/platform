@@ -37,7 +37,7 @@ import { User } from '../authz/decorators/user.decorator';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { ResponseMessages } from '@credebl/common';
 import { GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
-import { OrgRoles } from '@credebl/org-roles';
+import { OrgRoles } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';

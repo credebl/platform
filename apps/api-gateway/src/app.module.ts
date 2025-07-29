@@ -16,7 +16,6 @@ import { VerificationModule } from './verification/verification.module';
 import { RevocationController } from './revocation/revocation.controller';
 import { RevocationModule } from './revocation/revocation.module';
 import { SchemaModule } from './schema/schema.module';
-// import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
 import { getNatsOptions } from '@credebl/common';
@@ -30,8 +29,9 @@ import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common';
 import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
 import { ContextModule } from '@credebl/common';
 import { LoggerModule } from '@credebl/logger';
-import { GlobalConfigModule } from '@credebl/config';
-import { ConfigModule as PlatformConfig } from '@credebl/config';
+import { GlobalConfigModule } from '@credebl/logger';
+import { ConfigModule as PlatformConfig } from '@credebl/logger';
+import { UserManagementModule } from '@credebl/user-management';
 
 @Module({
   imports: [
@@ -64,7 +64,8 @@ import { ConfigModule as PlatformConfig } from '@credebl/config';
     GlobalConfigModule,
     CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
     GeoLocationModule,
-    CloudWalletModule
+    CloudWalletModule,
+    UserManagementModule
   ],
   controllers: [AppController],
   providers: [

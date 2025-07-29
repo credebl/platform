@@ -56,11 +56,11 @@ import {
   TemplateDetails,
   TemplateQuery
 } from './dtos/issuance.dto';
-import { IUserRequest } from '@credebl/user-request';
+import { IUserRequest } from '@credebl/user-management';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from '@credebl/org-roles';
+import { OrgRoles } from '@credebl/common';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import {
@@ -74,7 +74,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
 import { RpcException } from '@nestjs/microservices';
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma-service';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { SchemaType } from '@credebl/common';

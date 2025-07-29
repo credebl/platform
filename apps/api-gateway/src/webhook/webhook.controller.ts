@@ -36,7 +36,7 @@ import { RegisterWebhookDto } from './dtos/register-webhook-dto';
 import { ResponseMessages } from '@credebl/common';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { OrgRoles } from '@credebl/org-roles';
+import { OrgRoles } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { GetWebhookDto } from './dtos/get-webhoook-dto';
 

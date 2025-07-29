@@ -7,16 +7,20 @@ import { getNatsOptions } from '@credebl/common';
 import { CommonConstants } from '@credebl/common';
 import { NestjsLoggerServiceAdapter } from '@credebl/logger';
 import type { Provider } from '@nestjs/common';
-import { Controller } from '@nestjs/common/interfaces';
 
 const logger = new Logger();
 
-export async function bootstrapConnectionService(overrides: Provider[] = [], controllers: Controller[] = []): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function bootstrapConnectionService(
+  providers: Provider[] = [],
+  controllers: any[] = [],
+  imports: any[] = []
+): Promise<void> {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    ConnectionModule.register(overrides),
+    ConnectionModule.register(providers, controllers, imports),
     {
       transport: Transport.NATS,
-      options: getNatsOptions(CommonConstants.CONNECTION_SERVICE, process.env.CONNECTION_NKEY_SEED),
+      options: getNatsOptions(CommonConstants.CONNECTION_SERVICE, process.env.CONNECTION_NKEY_SEED)
     }
   );
 

@@ -16,9 +16,9 @@
     "test": "jest"
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.19",
-    "@nestjs/microservices": "^10.4.19",
-    "@nestjs/testing": "^10.4.19",
+    "@nestjs/common": "^10.4.20",
+    "@nestjs/microservices": "^10.4.20",
+    "@nestjs/testing": "^10.4.20",
     "aws-sdk": "^2.1692.0"
   },
   "devDependencies": {

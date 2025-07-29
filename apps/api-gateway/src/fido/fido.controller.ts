@@ -40,7 +40,7 @@ import { ResponseMessages } from '@credebl/common';
 import { IResponseType } from '@credebl/common';
 import { Response } from 'express';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from '@credebl/org-roles';
+import { OrgRoles } from '@credebl/common';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 
 @UseFilters(CustomExceptionFilter)

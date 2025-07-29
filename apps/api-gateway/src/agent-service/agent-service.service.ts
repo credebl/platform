@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma-service';
 import { BaseService } from '@credebl/common';
 import { AgentSpinupDto } from './dto/agent-service.dto';
 import { CreateTenantDto } from './dto/create-tenant.dto';

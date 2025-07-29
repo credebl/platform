@@ -1,4 +1,4 @@
-import { IUserRequest } from '@credebl/user-request';
+import { IUserRequest } from '@credebl/user-management';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from '@credebl/common';

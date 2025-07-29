@@ -6,7 +6,7 @@ import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { organisation, user } from '@prisma/client';
+import { organisation, user } from '@credebl/prisma-service';
 import { IDidList, IGetOrgById, IGetOrganization } from '@credebl/common';
 import {
   IOrgCredentials,
@@ -19,7 +19,7 @@ import {
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common';
 import { PaginationDto } from '@credebl/common';
-import { IClientRoles } from '@credebl/client-registration';
+import { IClientRoles } from '@credebl/user-management';
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 import { NATSClient } from '@credebl/common';

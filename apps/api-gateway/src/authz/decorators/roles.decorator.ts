@@ -1,5 +1,5 @@
 import { CustomDecorator } from '@nestjs/common';
-import { OrgRoles } from '@credebl/org-roles';
+import { OrgRoles } from '@credebl/common';
 import { SetMetadata } from '@nestjs/common';
 
 export const ROLES_KEY = 'roles';

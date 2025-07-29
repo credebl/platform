@@ -2,7 +2,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from '@credebl/common';
-import { IUserRequest } from '@credebl/user-request';
+import { IUserRequest } from '@credebl/user-management';
 import {
   ClientDetails,
   FileParameter,
@@ -22,7 +22,7 @@ import {
 } from './interfaces';
 import { ICredentialOfferResponse, IDeletedIssuanceRecords, IIssuedCredential } from '@credebl/common';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma-service';
 import { NATSClient } from '@credebl/common';
 @Injectable()
 export class IssuanceService extends BaseService {

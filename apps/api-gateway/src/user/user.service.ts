@@ -6,9 +6,9 @@ import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
-import { IUsersActivity } from '@credebl/user-activity';
+import { IUsersActivity } from '@credebl/user-management';
 import { IUserInvitations, IUsersProfile, ICheckUserDetails } from '@credebl/common';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma-service';
 import { PaginationDto } from '@credebl/common';
 import { NATSClient } from '@credebl/common';
 

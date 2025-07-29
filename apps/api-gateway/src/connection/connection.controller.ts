@@ -40,9 +40,9 @@ import {
 } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
-import { IUserRequest } from '@credebl/user-request';
+import { IUserRequest } from '@credebl/user-management';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
-import { OrgRoles } from '@credebl/org-roles';
+import { OrgRoles } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GetAllAgentConnectionsDto, GetAllConnectionsDto } from './dtos/get-all-connections.dto';
@@ -51,7 +51,6 @@ import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.inter
 import { ClientProxy } from '@nestjs/microservices';
 import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto } from './dtos/question-answer.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { user } from '@credebl/prisma-service';
 import { TrimStringParamPipe } from '@credebl/common';
 @UseFilters(CustomExceptionFilter)
 @Controller()

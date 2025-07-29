@@ -34,12 +34,12 @@ import { IResponseType, IResponse } from '@credebl/common';
 import { AgentSpinupDto, SignDataDto, VerifySignatureDto } from './dto/agent-service.dto';
 import { Response } from 'express';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma-service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { User } from '../authz/decorators/user.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from '@credebl/org-roles';
+import { OrgRoles } from '@credebl/common';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { Validator } from '@credebl/common';
 import { CreateWalletDto } from './dto/create-wallet.dto';

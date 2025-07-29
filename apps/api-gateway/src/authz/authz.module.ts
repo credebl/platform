@@ -10,7 +10,7 @@ import { MobileJwtStrategy } from './mobile-jwt.strategy';
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { SocketGateway } from './socket.gateway';
-import { SupabaseService } from '@credebl/supabase';
+import { SupabaseService } from '@credebl/user-management';
 import { UserModule } from '../user/user.module';
 import { UserService } from '../user/user.service';
 import { VerificationService } from '../verification/verification.service';

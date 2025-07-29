@@ -34,7 +34,7 @@ import { GetAllCredDefsDto } from './dto/get-all-cred-defs.dto';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
-import { OrgRoles } from '@credebl/org-roles';
+import { OrgRoles } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { EmptyStringParamPipe, TrimStringParamPipe } from '@credebl/common';

@@ -270,3 +270,14 @@ export enum ProofType {
   POLYGON_PROOFTYPE = 'EcdsaSecp256k1Signature2019',
   NO_LEDGER_PROOFTYPE = 'Ed25519Signature2018'
 }
+
+export enum OrgRoles {
+  OWNER = 'owner',
+  SUPER_ADMIN = 'super_admin',
+  ADMIN = 'admin',
+  ISSUER = 'issuer',
+  VERIFIER = 'verifier',
+  HOLDER = 'holder',
+  MEMBER = 'member',
+  PLATFORM_ADMIN = 'platform_admin'
+}

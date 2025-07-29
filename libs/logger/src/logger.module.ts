@@ -1,24 +1,13 @@
-import {
-  Global,
-  Inject,
-  MiddlewareConsumer,
-  Module,
-  NestModule
-} from '@nestjs/common';
+import { Global, Inject, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 
-import WinstonLogger, {
-  WinstonLoggerTransportsKey
-} from './winstonLogger';
-import Logger, {
-  LoggerBaseKey,
-  LoggerKey
-} from './logger.interface';
-import {NestjsLoggerServiceAdapter} from './nestjsLoggerServiceAdapter';
+import WinstonLogger, { WinstonLoggerTransportsKey } from './utils/winstonLogger';
+import { Logger, LoggerBaseKey, LoggerKey } from './logger.interface';
+import { NestjsLoggerServiceAdapter } from './utils/nestjsLoggerServiceAdapter';
 import ConsoleTransport from './transports/consoleTransport';
 import * as morgan from 'morgan';
-import { ConfigService } from '@credebl/config';
-import LoggerService from './logger.service';
+import LoggerService from './services/logger.service';
 import { MICRO_SERVICE_NAME } from '@credebl/common';
+import { ConfigService } from './services';
 
 @Global()
 @Module({

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as winston from 'winston';
-import { LogLevel } from '../log';
+import { LogLevel } from '../logger.enum';
 
 enum LogColors {
   red = '\x1b[31m',
@@ -9,7 +9,7 @@ enum LogColors {
   blue = '\x1b[34m',
   magenta = '\x1b[35m',
   cyan = '\x1b[36m',
-  pink = '\x1b[38;5;206m',
+  pink = '\x1b[38;5;206m'
 }
 interface LogData {
   label?: string;
@@ -40,13 +40,9 @@ export default class ConsoleTransport {
             : '';
           const message = ConsoleTransport.colorize(color, `${log.message}`);
           const error = data.error ? ` - ${data.error}` : '';
-          const duration = data.durationMs !== undefined
-            ? ` +${data.durationMs}ms`
-            : '';
+          const duration = data.durationMs !== undefined ? ` +${data.durationMs}ms` : '';
           const stack = data.stack ? ` - ${data.stack}` : '';
-          const props = data.props
-            ? `\n  - Props: ${JSON.stringify(data.props, null, 4)}`
-            : '';
+          const props = data.props ? `\n  - Props: ${JSON.stringify(data.props, null, 4)}` : '';
 
           return `${ConsoleTransport.colorize(color, `${prefix} -`)} ${timestamp} ${correlationId} ${level} ${sourceClass} ${message}${error}${duration}${stack}${props}`;
         })

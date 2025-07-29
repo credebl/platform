@@ -43,7 +43,7 @@ model account {
   userId            String      @unique @db.Uuid
   type              String?
   provider          String
-  providerAccountId String
+  providerAccountId String      
   refresh_token     String?     @unique
   access_token      String?     @unique
   expires_at        Int?
@@ -54,6 +54,7 @@ model account {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt 
   user              user         @relation(fields: [userId], references: [id])
+  sessions          session[]
  }
 
 model session {
@@ -65,6 +66,8 @@ model session {
   user             user        @relation(fields: [userId], references: [id])
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
+  accountId        String?      @unique @db.Uuid
+  account          account?     @relation(fields: [accountId], references:[id])
 }
 
 

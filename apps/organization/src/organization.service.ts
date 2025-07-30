@@ -27,7 +27,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum';
+import { DidMethod, Invitation, Ledgers, PrismaTables, TokenType, transition } from '@credebl/enum/enum';
 import {
   IGetOrgById,
   IGetOrganization,
@@ -64,6 +64,7 @@ import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invi
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { UserRepository } from 'apps/user/repositories/user.repository';
 @Injectable()
 export class OrganizationService {
   private readonly IMG_EXT = 'png';
@@ -82,7 +83,8 @@ export class OrganizationService {
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly clientRegistrationService: ClientRegistrationService,
     private readonly userActivityRepository: UserActivityRepository,
-    private readonly natsClient: NATSClient
+    private readonly natsClient: NATSClient,
+    private readonly userRepository: UserRepository
   ) {}
 
   async getPlatformConfigDetails(): Promise<object> {
@@ -700,7 +702,54 @@ export class OrganizationService {
 
   async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
     const { clientId, clientSecret } = clientCredentials;
-    return this.authenticateClientKeycloak(clientId, clientSecret);
+    const authenticationResult = await this.authenticateClientKeycloak(clientId, clientSecret);
+    let addSessionDetails;
+    // Fetch organization details for getting the user id
+    const orgRoleDetails = await this.organizationRepository.getOrgAndAdminUser(clientId);
+    this.logger.debug(`orgRoleDetails::::${JSON.stringify(orgRoleDetails)}`);
+    // check seesion details
+    const userSessionDetails = await this.userRepository.fetchUserSessions(orgRoleDetails['user'].id);
+    if (10 <= userSessionDetails?.length) {
+      throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
+    }
+    // Creation sessison and account
+    const sessionData = {
+      sessionToken: authenticationResult?.access_token,
+      userId: orgRoleDetails['user'].id,
+      expires: authenticationResult?.expires_in
+    };
+
+    const fetchAccountDetails = await this.userRepository.checkAccountDetails(orgRoleDetails['user'].id);
+    if (fetchAccountDetails) {
+      const accountData = {
+        sessionToken: authenticationResult?.access_token,
+        userId: orgRoleDetails['user'].id,
+        expires: authenticationResult?.expires_in
+      };
+
+      await this.userRepository.updateAccountDetails(accountData).then(async () => {
+        addSessionDetails = await this.userRepository.createSession(sessionData);
+      });
+    } else {
+      const accountData = {
+        sessionToken: authenticationResult?.access_token,
+        userId: orgRoleDetails['user'].id,
+        expires: authenticationResult?.expires_in,
+        keycloakUserId: orgRoleDetails['user'].keycloakUserId,
+        type: TokenType.ORG_TOKEN
+      };
+
+      await this.userRepository.addAccountDetails(accountData).then(async () => {
+        addSessionDetails = await this.userRepository.createSession(sessionData);
+      });
+    }
+    // Response: add session id as cookies
+    const finalResponse = {
+      ...authenticationResult,
+      sessionId: addSessionDetails.id
+    };
+    // In fetch session API need to handle the conditon for session is comes from cookies or query parameter
+    return finalResponse;
   }
 
   async authenticateClientKeycloak(clientId: string, clientSecret: string): Promise<IAccessTokenData> {
@@ -1566,8 +1615,7 @@ export class OrganizationService {
       this.logger.log('Keycloak User Ids');
 
       // Delete user client roles in parallel
-      const deleteUserRolesPromises = keycloakUserIds.map((keycloakUserId) =>
-        this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, keycloakUserId)
+      const deleteUserRolesPromises = keycloakUserIds.map((keycloakUserId) => this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, keycloakUserId)
       );
       deleteUserRolesPromises.push(
         this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, getUser?.keycloakUserId)
@@ -1614,9 +1662,7 @@ export class OrganizationService {
           deletedOrgInvitationInfo.push(newInvitation);
 
           this.logger.log(
-            `email: ${userDetails.email}, orgName: ${organizationDetails?.name}, orgRoles: ${JSON.stringify(
-              orgRoleNames
-            )}, sendEmail: ${sendEmail}`
+            `email: ${userDetails.email}, orgName: ${organizationDetails?.name}, orgRoles: ${JSON.stringify(orgRoleNames)}, sendEmail: ${sendEmail}`
           );
         })
       );

@@ -550,11 +550,18 @@ export class OrganizationController {
     }
 
     const orgCredentials = await this.organizationService.clientLoginCredentials(clientCredentialsDto);
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.clientCredentials,
       data: orgCredentials
     };
+    res.cookie('session_id', orgCredentials.sessionId, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: false
+    });
+
     return res.status(HttpStatus.OK).json(finalResponse);
   }
   /**

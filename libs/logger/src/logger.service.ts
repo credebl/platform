@@ -89,14 +89,14 @@ export default class LoggerService implements Logger {
           'string' === typeof data.error
             ? data.error
             : data.error instanceof Error
-              ? {
-                  name: data.error.name,
-                  message: data.error.message,
-                  stack: data.error.stack
-                }
-              : 'object' === typeof data.error
-                ? JSON.parse(JSON.stringify(data.error))
-                : String(data.error);
+            ? {
+                name: data.error.name,
+                message: data.error.message,
+                stack: data.error.stack
+              }
+            : 'object' === typeof data.error
+            ? JSON.parse(JSON.stringify(data.error))
+            : String(data.error);
       }
 
       otelLogger.emit({

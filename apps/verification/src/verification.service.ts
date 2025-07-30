@@ -807,15 +807,12 @@ export class VerificationService {
             orgAgentType === OrgAgentType.DEDICATED && threadId
               ? `${agentEndPoint}${CommonConstants.URL_GET_PROOF_PRESENTATIONS}?threadId=${threadId}`
               : orgAgentType === OrgAgentType.SHARED && threadId
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS}?threadId=${threadId}`.replace(
-                    '#',
-                    tenantId
-                  )
-                : orgAgentType === OrgAgentType.DEDICATED
-                  ? `${agentEndPoint}${CommonConstants.URL_GET_PROOF_PRESENTATIONS}`
-                  : orgAgentType === OrgAgentType.SHARED
-                    ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS}`.replace('#', tenantId)
-                    : null;
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS}?threadId=${threadId}`.replace('#', tenantId)
+              : orgAgentType === OrgAgentType.DEDICATED
+              ? `${agentEndPoint}${CommonConstants.URL_GET_PROOF_PRESENTATIONS}`
+              : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS}`.replace('#', tenantId)
+              : null;
           break;
         }
 
@@ -824,10 +821,10 @@ export class VerificationService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID}`.replace('#', proofPresentationId)
               : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS_BY_PRESENTATION_ID}`
-                    .replace('#', proofPresentationId)
-                    .replace('@', tenantId)
-                : null;
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS_BY_PRESENTATION_ID}`
+                  .replace('#', proofPresentationId)
+                  .replace('@', tenantId)
+              : null;
           break;
         }
 
@@ -836,8 +833,8 @@ export class VerificationService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_SEND_PROOF_REQUEST}`
               : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_REQUEST_PROOF}`.replace('#', tenantId)
-                : null;
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_REQUEST_PROOF}`.replace('#', tenantId)
+              : null;
           break;
         }
 
@@ -846,10 +843,10 @@ export class VerificationService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_VERIFY_PRESENTATION}`.replace('#', proofPresentationId)
               : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_ACCEPT_PRESENTATION}`
-                    .replace('@', proofPresentationId)
-                    .replace('#', tenantId)
-                : null;
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_ACCEPT_PRESENTATION}`
+                  .replace('@', proofPresentationId)
+                  .replace('#', tenantId)
+              : null;
           break;
         }
 
@@ -858,8 +855,8 @@ export class VerificationService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_SEND_OUT_OF_BAND_CREATE_REQUEST}`
               : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_OUT_OF_BAND_CREATE_REQUEST}`.replace('#', tenantId)
-                : null;
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_OUT_OF_BAND_CREATE_REQUEST}`.replace('#', tenantId)
+              : null;
           break;
         }
 
@@ -868,10 +865,10 @@ export class VerificationService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_PROOF_FORM_DATA}`.replace('#', proofPresentationId)
               : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_PROOF_FORM_DATA}`
-                    .replace('@', proofPresentationId)
-                    .replace('#', tenantId)
-                : null;
+              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_PROOF_FORM_DATA}`
+                  .replace('@', proofPresentationId)
+                  .replace('#', tenantId)
+              : null;
           break;
         }
 

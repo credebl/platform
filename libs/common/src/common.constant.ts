@@ -136,6 +136,7 @@ export enum CommonConstants {
   URL_SERVER_STATUS = '/status',
   URL_AGENT_WRITE_DID = '/dids/write',
   URL_AGENT_GET_DID = '/dids',
+  // agent status
   URL_AGENT_GET_ENDPOINT = '/agent',
 
   // sign data from agent
@@ -178,7 +179,6 @@ export enum CommonConstants {
 
   // (Platform) admin permissions
   PERMISSION_TENANT_MGMT = 'Tenant Management',
-  PERMISSION_ROLE_MGMT = 'Role Management',
   PERMISSION_ORG_REPORTS = 'Organization Reports',
   PERMISSION_TENANT_REPORTS = 'Tenant Reports',
 

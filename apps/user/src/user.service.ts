@@ -482,10 +482,8 @@ export class UserService {
           refreshToken: tokenDetails?.refresh_token
         };
 
-        const addSessionDetails = await this.userRepository.createSession(sessionData);
-
         const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
-
+        let addSessionDetails;
         let accountData;
         if (null === fetchAccountDetails) {
           accountData = {
@@ -497,7 +495,9 @@ export class UserService {
             type: TokenType.USER_TOKEN
           };
 
-          await this.userRepository.addAccountDetails(accountData);
+          await this.userRepository.addAccountDetails(accountData).then(async () => {
+            addSessionDetails = await this.userRepository.createSession(sessionData);
+          });
         } else {
           accountData = {
             sessionToken: tokenDetails?.access_token,
@@ -506,7 +506,9 @@ export class UserService {
             refreshToken: tokenDetails?.refresh_token
           };
 
-          await this.userRepository.updateAccountDetails(accountData);
+          await this.userRepository.updateAccountDetails(accountData).then(async () => {
+            addSessionDetails = await this.userRepository.createSession(sessionData);
+          });
         }
 
         const finalResponse = {

@@ -7,9 +7,11 @@ import {
   Param,
   Post,
   Query,
+  Req,
   Res,
   UnauthorizedException,
-  UseFilters
+  UseFilters,
+  UseGuards
 } from '@nestjs/common';
 import { AuthzService } from './authz.service';
 import { CommonService } from '../../../../libs/common/src/common.service';
@@ -18,7 +20,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AuthTokenResponse } from './dtos/auth-token-res.dto';
 import { LoginUserDto } from '../user/dto/login-user.dto';
@@ -30,6 +32,10 @@ import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { RefreshTokenDto } from './dtos/refresh-token.dto';
 import { getDefaultClient } from '../user/utils';
 import { ClientAliasValidationPipe } from './decorators/user-auth-client';
+import { SessionGuard } from './guards/session.guard';
+interface SessionDetails {
+  sessionId: string;
+}
 @Controller('auth')
 @ApiTags('auth')
 @UseFilters(CustomExceptionFilter)
@@ -174,18 +180,30 @@ export class AuthzController {
    * @returns User's access token details
    */
   @Get('/sessionDetails')
+  @UseGuards(SessionGuard)
   @ApiOperation({
     summary: 'Fetch session details',
     description: 'Fetch session details against logged in user'
   })
   @ApiQuery({
     name: 'sessionId',
-    type: String,
-    required: true
+    required: false
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
-  async sessionDetails(@Query() sessionId: string, @Res() res: Response): Promise<Response> {
-    const sessionDetails = await this.authzService.getSession(sessionId);
+  async sessionDetails(
+    @Res() res: Response,
+    @Req() req: Request,
+    @Query() sessionId: SessionDetails
+  ): Promise<Response> {
+    this.logger.debug(`in authz controller`);
+
+    let sessionDetails;
+    if (0 < Object.keys(sessionId).length) {
+      sessionDetails = await this.authzService.getSession(sessionId);
+    }
+    if (req.user) {
+      sessionDetails = req.user;
+    }
 
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

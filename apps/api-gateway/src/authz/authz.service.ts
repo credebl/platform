@@ -18,6 +18,7 @@ import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { user } from '@prisma/client';
 import { ISessionDetails } from 'apps/user/interfaces/user.interface';
+import { UserLogoutDto } from './dtos/user-logout.dto';
 @Injectable()
 @WebSocketGateway()
 export class AuthzService extends BaseService {
@@ -78,5 +79,9 @@ export class AuthzService extends BaseService {
   async addUserDetails(userInfo: AddUserDetailsDto): Promise<ISignUpUserResponse> {
     const payload = { userInfo };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'add-user', payload);
+  }
+
+  async logout(logoutUserDto: UserLogoutDto): Promise<string> {
+    return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-logout', logoutUserDto);
   }
 }

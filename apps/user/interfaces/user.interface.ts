@@ -188,6 +188,7 @@ export interface ISession {
   refreshToken?: string;
   keycloakUserId?: string;
   type?: string;
+  accountId?: string;
 }
 
 export interface ISessionDetails extends ISession {

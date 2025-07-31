@@ -496,8 +496,9 @@ export class UserService {
             type: TokenType.USER_TOKEN
           };
 
-          await this.userRepository.addAccountDetails(accountData).then(async () => {
-            addSessionDetails = await this.userRepository.createSession(sessionData);
+          await this.userRepository.addAccountDetails(accountData).then(async (response) => {
+            const finalSessionData = { ...sessionData, accountId: response.id };
+            addSessionDetails = await this.userRepository.createSession(finalSessionData);
           });
         } else {
           accountData = {
@@ -507,8 +508,9 @@ export class UserService {
             refreshToken: tokenDetails?.refresh_token
           };
 
-          await this.userRepository.updateAccountDetails(accountData).then(async () => {
-            addSessionDetails = await this.userRepository.createSession(sessionData);
+          await this.userRepository.updateAccountDetails(accountData).then(async (response) => {
+            const finalSessionData = { ...sessionData, accountId: response.id };
+            addSessionDetails = await this.userRepository.createSession(finalSessionData);
           });
         }
 

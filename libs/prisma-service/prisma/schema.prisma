@@ -360,6 +360,8 @@ model connections {
   state               String
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
+  presentations       presentations[]
+  credentials         credentials[]
 }
 
 model credentials {
@@ -376,6 +378,7 @@ model credentials {
   credDefId            String        @default("")
   orgId                String?       @db.Uuid
   organisation         organisation? @relation(fields: [orgId], references: [id])
+  connections          connections?  @relation(fields: [connectionId], references: [connectionId])
 }
 
 model presentations {
@@ -384,7 +387,7 @@ model presentations {
   createdBy           String        @db.Uuid
   lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
   lastChangedBy       String        @db.Uuid
-  connectionId        String?
+  connectionId        String?       
   state               String?
   threadId            String        @unique
   isVerified          Boolean?
@@ -394,6 +397,8 @@ model presentations {
   emailId             String?
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
+  connections         connections?  @relation(fields: [connectionId], references: [connectionId])
+
 }
 
 model file_upload {

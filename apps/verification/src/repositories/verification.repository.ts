@@ -1,4 +1,4 @@
-import { IProofPresentation, IProofRequestSearchCriteria } from '../interfaces/verification.interface';
+import { IEmailResponse, IProofPresentation, IProofRequestSearchCriteria } from '../interfaces/verification.interface';
 import { IProofPresentationsListCount, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
@@ -106,7 +106,12 @@ export class VerificationRepository {
           presentationId: true,
           schemaId: true,
           emailId: true,
-          errorMessage: true
+          errorMessage: true,
+          connections: {
+            select: {
+              theirLabel: true
+            }
+          }
         },
         orderBy: {
           [proofRequestsSearchCriteria.sortField]: SortValue.ASC === proofRequestsSearchCriteria.sortBy ? 'asc' : 'desc'
@@ -115,6 +120,7 @@ export class VerificationRepository {
         take: Number(proofRequestsSearchCriteria.pageSize),
         skip: (proofRequestsSearchCriteria.pageNumber - 1) * proofRequestsSearchCriteria.pageSize
       });
+
       const proofRequestsCount = await this.prisma.presentations.count({
         where: {
           orgId,
@@ -156,7 +162,6 @@ export class VerificationRepository {
       let encryptEmailId;
       let organisationId: string;
       let schemaId;
-
       const { proofPresentationPayload, orgId } = payload;
 
       //For Educreds
@@ -182,7 +187,6 @@ export class VerificationRepository {
       } else {
         organisationId = orgId;
       }
-
       const proofPresentationsDetails = await this.prisma.presentations.upsert({
         where: {
           threadId: proofPresentationPayload?.threadId
@@ -290,6 +294,20 @@ export class VerificationRepository {
       });
     } catch (error) {
       this.logger.error(`Error in deleting verification records: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async saveEmail(emailList: IEmailResponse[]): Promise<void> {
+    try {
+      for (const { proofRecordThId, email } of emailList) {
+        await this.prisma.presentations.updateMany({
+          where: { threadId: proofRecordThId },
+          data: { emailId: email }
+        });
+      }
+    } catch (error) {
+      this.logger.error(`[Verification Save Email] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

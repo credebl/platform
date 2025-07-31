@@ -66,7 +66,7 @@ model session {
   user             user        @relation(fields: [userId], references: [id])
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
-  accountId        String?     @unique @db.Uuid
+  accountId        String?     @db.Uuid
   account          account?    @relation(fields: [accountId], references:[id])
 }
 

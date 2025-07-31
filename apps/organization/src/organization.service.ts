@@ -727,8 +727,9 @@ export class OrganizationService {
         expires: authenticationResult?.expires_in
       };
 
-      await this.userRepository.updateAccountDetails(accountData).then(async () => {
-        addSessionDetails = await this.userRepository.createSession(sessionData);
+      await this.userRepository.updateAccountDetails(accountData).then(async (response) => {
+        const finalSessionData = { ...sessionData, accountId: response.id };
+        addSessionDetails = await this.userRepository.createSession(finalSessionData);
       });
     } else {
       const accountData = {
@@ -739,8 +740,9 @@ export class OrganizationService {
         type: TokenType.ORG_TOKEN
       };
 
-      await this.userRepository.addAccountDetails(accountData).then(async () => {
-        addSessionDetails = await this.userRepository.createSession(sessionData);
+      await this.userRepository.addAccountDetails(accountData).then(async (response) => {
+        const finalSessionData = { ...sessionData, accountId: response.id };
+        addSessionDetails = await this.userRepository.createSession(finalSessionData);
       });
     }
     // Response: add session id as cookies

@@ -678,14 +678,15 @@ export class UserRepository {
 
   async createSession(tokenDetails: ISession): Promise<session> {
     try {
-      const { sessionToken, userId, expires, refreshToken } = tokenDetails;
+      const { sessionToken, userId, expires, refreshToken, accountId } = tokenDetails;
       const sessionResponse = await this.prisma.session.create({
         data: {
           sessionToken,
           expires,
           userId,
           // eslint-disable-next-line camelcase
-          refresh_token: refreshToken
+          refresh_token: refreshToken,
+          accountId
         }
       });
       return sessionResponse;

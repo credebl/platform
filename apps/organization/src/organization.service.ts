@@ -696,26 +696,34 @@ export class OrganizationService {
     return response;
   }
 
+  /**
+   * Method used for generate access token based on client-id and client secret
+   * @param clientCredentials
+   * @returns session and access token both
+   */
   async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
     const { clientId, clientSecret } = clientCredentials;
+    // This method used to authenticate the requested user on keycloak
     const authenticationResult = await this.authenticateClientKeycloak(clientId, clientSecret);
     let addSessionDetails;
-    // Fetch organization details for getting the user id
-    const orgRoleDetails = await this.organizationRepository.getOrgAndAdminUser(clientId);
-    this.logger.debug(`orgRoleDetails::::${JSON.stringify(orgRoleDetails)}`);
-    // check seesion details
+    // Fetch owner organization details for getting the user id
+    const orgRoleDetails = await this.organizationRepository.getOrgAndOwnerUser(clientId);
+    // Fetch the total number of sessions for the requested user to check and restrict the creation of multiple sessions.
     const userSessionDetails = await this.userRepository.fetchUserSessions(orgRoleDetails['user'].id);
     if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
       throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
     }
-    // Creation sessison and account
+    // Session payload
     const sessionData = {
       sessionToken: authenticationResult?.access_token,
       userId: orgRoleDetails['user'].id,
       expires: authenticationResult?.expires_in,
       sessionType: SessionType.ORG_SESSION
     };
-
+    // Note:
+    // Fetch account details to check whether the requested user account exists
+    // If the account exists, update it with the latest details and create a new session
+    // Otherwise, create a new account and also create the new session
     const fetchAccountDetails = await this.userRepository.checkAccountDetails(orgRoleDetails['user'].id);
     if (fetchAccountDetails) {
       const accountData = {
@@ -729,6 +737,9 @@ export class OrganizationService {
         addSessionDetails = await this.userRepository.createSession(finalSessionData);
       });
     } else {
+      // Note:
+      // This else block is mostly used for already registered users on the platform to create their account & session in the database.
+      // Once all users are migrated or created their accounts and sessions in the DB, this code can be removed.
       const accountData = {
         sessionToken: authenticationResult?.access_token,
         userId: orgRoleDetails['user'].id,
@@ -742,12 +753,11 @@ export class OrganizationService {
         addSessionDetails = await this.userRepository.createSession(finalSessionData);
       });
     }
-    // Response: add session id as cookies
+    // Response: add session id
     const finalResponse = {
       ...authenticationResult,
       sessionId: addSessionDetails.id
     };
-    // In fetch session API need to handle the conditon for session is comes from cookies or query parameter
     return finalResponse;
   }
 

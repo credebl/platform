@@ -189,6 +189,7 @@ export interface ISession {
   keycloakUserId?: string;
   type?: string;
   accountId?: string;
+  sessionType?: string;
 }
 
 export interface ISessionDetails extends ISession {

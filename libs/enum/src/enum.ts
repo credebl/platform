@@ -259,8 +259,12 @@ export enum ProofType {
 }
 
 export enum TokenType {
-  USER_TOKEN = 'user-token',
-  ORG_TOKEN = 'organization-token'
+  BEARER_TOKEN = 'Bearer'
+}
+
+export enum SessionType {
+  USER_SESSION = 'user-session',
+  ORG_SESSION = 'organization-session'
 }
 
 export enum ProviderType {

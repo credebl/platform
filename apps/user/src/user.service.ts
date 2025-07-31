@@ -48,7 +48,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { Invitation, ProviderType, TokenType, UserRole } from '@credebl/enum/enum';
+import { Invitation, ProviderType, SessionType, TokenType, UserRole } from '@credebl/enum/enum';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 import { IUsersActivity } from 'libs/user-activity/interface';
@@ -382,7 +382,7 @@ export class UserService {
         provider: ProviderType.KEYCLOAK,
         providerAccountId: keycloakDetails.keycloakUserId.toString(),
         // eslint-disable-next-line camelcase
-        token_type: TokenType.USER_TOKEN
+        token_type: TokenType.BEARER_TOKEN
       };
 
       await this.userRepository.addAccountDetails(userAccountDetails);
@@ -477,7 +477,8 @@ export class UserService {
           sessionToken: tokenDetails?.access_token,
           userId: userData?.id,
           expires: tokenDetails?.expires_in,
-          refreshToken: tokenDetails?.refresh_token
+          refreshToken: tokenDetails?.refresh_token,
+          sessionType: SessionType.USER_SESSION
         };
 
         const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
@@ -490,7 +491,7 @@ export class UserService {
             expires: tokenDetails?.expires_in,
             refreshToken: tokenDetails?.refresh_token,
             keycloakUserId: userData?.keycloakUserId,
-            type: TokenType.USER_TOKEN
+            type: TokenType.BEARER_TOKEN
           };
 
           await this.userRepository.addAccountDetails(accountData).then(async (response) => {

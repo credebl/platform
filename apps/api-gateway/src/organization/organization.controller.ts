@@ -558,8 +558,8 @@ export class OrganizationController {
     };
     res.cookie('session_id', orgCredentials.sessionId, {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: false
+      sameSite: 'none',
+      secure: 'http' !== process.env.NEXTAUTH_PROTOCOL
     });
 
     return res.status(HttpStatus.OK).json(finalResponse);

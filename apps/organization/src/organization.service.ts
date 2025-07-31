@@ -709,7 +709,7 @@ export class OrganizationService {
     this.logger.debug(`orgRoleDetails::::${JSON.stringify(orgRoleDetails)}`);
     // check seesion details
     const userSessionDetails = await this.userRepository.fetchUserSessions(orgRoleDetails['user'].id);
-    if (10 <= userSessionDetails?.length) {
+    if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
       throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
     }
     // Creation sessison and account

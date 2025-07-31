@@ -21,13 +21,18 @@ import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { OrgAgentType, ConnectionProcessState } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { IConnectionList, ICreateConnectionUrl, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
+import {
+  IConnectionList,
+  ICreateConnectionUrl,
+  IDeletedConnectionsRecord
+} from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IBasicMessage, IQuestionPayload } from './interfaces/messaging.interfaces';
 import { RecordType, user } from '@prisma/client';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { agent_invitations } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { getAgentUrl } from '@credebl/common/common.utils';
 @Injectable()
 export class ConnectionService {
   constructor(
@@ -37,7 +42,7 @@ export class ConnectionService {
     private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
-    private readonly natsClient : NATSClient
+    private readonly natsClient: NATSClient
   ) {}
 
   /**
@@ -98,7 +103,6 @@ export class ConnectionService {
     try {
       return await this.connectionRepository.getConnectionRecordsCount(orgId);
     } catch (error) {
-                    
       this.logger.error(
         `[getConnectionRecords ] [NATS call]- error in get connection records count : ${JSON.stringify(error)}`
       );
@@ -332,43 +336,6 @@ export class ConnectionService {
     return this.natsCall(pattern, payload);
   }
 
-  /**
-   * Description: Fetch agent url
-   * @param referenceId
-   * @returns agent URL
-   */
-  async getAgentUrl(
-    orgAgentType: string,
-    agentEndPoint: string,
-    tenantId?: string,
-    connectionInvitationFlag?: string
-  ): Promise<string> {
-    try {
-      let url;
-      if ('connection-invitation' === connectionInvitationFlag) {
-        if (orgAgentType === OrgAgentType.DEDICATED) {
-          url = `${agentEndPoint}${CommonConstants.URL_CONN_INVITE}`;
-        } else if (orgAgentType === OrgAgentType.SHARED) {
-          url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_CONNECTION_INVITATION}`.replace('#', tenantId);
-        } else {
-          throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
-        }
-      } else {
-        if (orgAgentType === OrgAgentType.DEDICATED) {
-          url = `${agentEndPoint}${CommonConstants.URL_CONN_LEGACY_INVITE}`;
-        } else if (orgAgentType === OrgAgentType.SHARED) {
-          url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_INVITATION}`.replace('#', tenantId);
-        } else {
-          throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
-        }
-      }
-      return url;
-    } catch (error) {
-      this.logger.error(`Error in get agent url: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
   async getQuestionAnswerAgentUrl(
     label: string,
     orgAgentType: string,
@@ -384,10 +351,10 @@ export class ConnectionService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_SEND_QUESTION}`.replace('#', connectionId)
               : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_SEND_QUESTION}`
-                  .replace('#', connectionId)
-                  .replace('@', tenantId)
-              : null;
+                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_SEND_QUESTION}`
+                    .replace('#', connectionId)
+                    .replace('@', tenantId)
+                : null;
           break;
         }
 
@@ -396,8 +363,8 @@ export class ConnectionService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_QUESTION_ANSWER_RECORD}`
               : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_QUESTION_ANSWER_RECORD}`.replace('#', tenantId)
-              : null;
+                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_QUESTION_ANSWER_RECORD}`.replace('#', tenantId)
+                : null;
           break;
         }
 
@@ -475,8 +442,7 @@ export class ConnectionService {
           message: customErrorMessage,
           error: ResponseMessages.errorMessages.conflict
         });
-      } else 
-      if (error?.response?.error?.reason) {
+      } else if (error?.response?.error?.reason) {
         throw new RpcException({
           message: ResponseMessages.connection.error.connectionNotFound,
           statusCode: error?.response?.status,
@@ -495,7 +461,6 @@ export class ConnectionService {
   ): Promise<{
     response;
   }> {
-
     const pattern = { cmd: 'agent-receive-invitation-url' };
     const payload = { url, orgId, receiveInvitationUrl };
 
@@ -644,7 +609,6 @@ export class ConnectionService {
    */
   async createConnectionInvitation(payload: ICreateOutOfbandConnectionInvitation): Promise<ICreateConnectionUrl> {
     try {
-      
       const {
         alias,
         appendedAttachments,
@@ -676,18 +640,17 @@ export class ConnectionService {
       let legacyinvitationDid;
       if (IsReuseConnection) {
         const data: agent_invitations[] = await this.connectionRepository.getInvitationDidByOrgId(orgId);
-           if (data && 0 < data.length) {
-            const [firstElement] = data;
-            legacyinvitationDid = firstElement?.invitationDid ?? undefined;
-            
-            this.logger.log('legacyinvitationDid:', legacyinvitationDid);
+        if (data && 0 < data.length) {
+          const [firstElement] = data;
+          legacyinvitationDid = firstElement?.invitationDid ?? undefined;
+
+          this.logger.log('legacyinvitationDid:', legacyinvitationDid);
         }
       }
       const connectionInvitationDid = invitationDid ? invitationDid : legacyinvitationDid;
 
       this.logger.log('connectionInvitationDid:', connectionInvitationDid);
 
-      
       this.logger.log(`logoUrl:::, ${organisation.logoUrl}`);
       const connectionPayload = {
         multiUseInvitation: multiUseInvitation ?? true,
@@ -705,15 +668,8 @@ export class ConnectionService {
         recipientKey: recipientKey || undefined,
         invitationDid: connectionInvitationDid || undefined
       };
-
-      const createConnectionInvitationFlag = 'connection-invitation';
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      const url = await this.getAgentUrl(
-        orgAgentType,
-        agentEndPoint,
-        agentDetails?.tenantId,
-        createConnectionInvitationFlag
-      );
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.CONNECTION_INVITATION);
+      console.log('url:::::::::::::::::::', url);
       const createConnectionInvitation = await this._createOutOfBandConnectionInvitation(connectionPayload, url, orgId);
       const connectionInvitationUrl = createConnectionInvitation?.response?.invitationUrl;
       const shortenedUrl = await this.storeConnectionObjectAndReturnUrl(
@@ -726,7 +682,7 @@ export class ConnectionService {
         shortenedUrl,
         agentId,
         orgId,
-        invitationsDid 
+        invitationsDid
       );
       const connectionStorePayload: ConnectionResponseDetail = {
         id: saveConnectionDetails.id,
@@ -785,8 +741,7 @@ export class ConnectionService {
     response: string;
   }> {
     try {
-      return from(this.natsClient
-        .send<string>(this.connectionServiceProxy, pattern, payload))
+      return from(this.natsClient.send<string>(this.connectionServiceProxy, pattern, payload))
         .pipe(
           map((response) => ({
             response
@@ -824,49 +779,47 @@ export class ConnectionService {
 
   async deleteConnectionRecords(orgId: string, user: user): Promise<IDeletedConnectionsRecord> {
     try {
-        const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
+      const deleteConnections = await this.connectionRepository.deleteConnectionRecordsByOrgId(orgId);
 
-        if (0 === deleteConnections?.deleteConnectionRecords?.count) {
-            throw new NotFoundException(ResponseMessages.connection.error.connectionRecordNotFound);
-        }
+      if (0 === deleteConnections?.deleteConnectionRecords?.count) {
+        throw new NotFoundException(ResponseMessages.connection.error.connectionRecordNotFound);
+      }
 
-        const statusCounts = {
-            [ConnectionProcessState.START]: 0,
-            [ConnectionProcessState.COMPLETE]: 0,
-            [ConnectionProcessState.ABANDONED]: 0,
-            [ConnectionProcessState.INVITATION_SENT]: 0,
-            [ConnectionProcessState.INVITATION_RECEIVED]: 0,
-            [ConnectionProcessState.REQUEST_SENT]: 0,
-            [ConnectionProcessState.DECLIEND]: 0,
-            [ConnectionProcessState.REQUEST_RECEIVED]: 0,
-            [ConnectionProcessState.RESPONSE_SENT]: 0,
-            [ConnectionProcessState.RESPONSE_RECEIVED]: 0
-        };
+      const statusCounts = {
+        [ConnectionProcessState.START]: 0,
+        [ConnectionProcessState.COMPLETE]: 0,
+        [ConnectionProcessState.ABANDONED]: 0,
+        [ConnectionProcessState.INVITATION_SENT]: 0,
+        [ConnectionProcessState.INVITATION_RECEIVED]: 0,
+        [ConnectionProcessState.REQUEST_SENT]: 0,
+        [ConnectionProcessState.DECLIEND]: 0,
+        [ConnectionProcessState.REQUEST_RECEIVED]: 0,
+        [ConnectionProcessState.RESPONSE_SENT]: 0,
+        [ConnectionProcessState.RESPONSE_RECEIVED]: 0
+      };
 
-        await Promise.all(deleteConnections.getConnectionRecords.map(async (record) => {
-            statusCounts[record.state]++;
-        }));
+      await Promise.all(
+        deleteConnections.getConnectionRecords.map(async (record) => {
+          statusCounts[record.state]++;
+        })
+      );
 
-        const filteredStatusCounts = Object.fromEntries(
-          Object.entries(statusCounts).filter(entry => 0 < entry[1])
-        );
+      const filteredStatusCounts = Object.fromEntries(Object.entries(statusCounts).filter((entry) => 0 < entry[1]));
 
-        const deletedConnectionData = {
-            deletedConnectionsRecordsCount: deleteConnections?.deleteConnectionRecords?.count,
-            deletedRecordsStatusCount: filteredStatusCounts
-        };
+      const deletedConnectionData = {
+        deletedConnectionsRecordsCount: deleteConnections?.deleteConnectionRecords?.count,
+        deletedRecordsStatusCount: filteredStatusCounts
+      };
 
-        await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedConnectionData, RecordType.CONNECTION);
+      await this.userActivityRepository._orgDeletedActivity(orgId, user, deletedConnectionData, RecordType.CONNECTION);
 
-        return deleteConnections;
-
+      return deleteConnections;
     } catch (error) {
-        this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
-        throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
- 
   async sendBasicMesage(payload: IBasicMessage): Promise<object> {
     const { content, orgId, connectionId } = payload;
     try {
@@ -915,5 +868,4 @@ export class ConnectionService {
     // eslint-disable-next-line no-return-await
     return await this.natsCall(pattern, payload);
   }
-
 }

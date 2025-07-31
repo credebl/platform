@@ -270,7 +270,8 @@ export const ResponseMessages = {
       requiredEndorserDid: 'Role or endorser DID is required',
       requiredPrivateKey: 'Privatekey is required for polygon method',
       privateKeyLength: 'Private key must be exactly 64 characters long',
-      requiredSeed: 'Seed is required'
+      requiredSeed: 'Seed is required',
+      baseWalletToken: 'Error while fetching base wallet token'
     }
   },
   connection: {
@@ -490,6 +491,12 @@ export const ResponseMessages = {
       noSubscribers:
         'No subscribers for the requested message. Error while connecting to NATS, service might not be started',
       natsConnect: 'Empty response. There are no subscribers listening to that message'
+    }
+  },
+  common: {
+    error: {
+      invalidUrl: 'Please check the url suffix.',
+      invalidEndpoint: 'Invalid agent endpoint provided'
     }
   }
 };

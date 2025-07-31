@@ -23,8 +23,8 @@ export enum CommonConstants {
   URL_CONN_ACCEPT_CONNECTION_REQUEST = '/connections/#/accept-request',
   URL_CONN_REMOVE_CONNECTION_BY_ID = '/connections/#/remove',
   URL_CONN_METADATA = '/connections/#/metadata',
-  URL_CONN_LEGACY_INVITE = '/oob/create-legacy-invitation',
-  URL_CONN_INVITE = '/oob/create-invitation',
+  URL_CONN_LEGACY_INVITE = '/didcomm/oob/create-legacy-invitation',
+  URL_CONN_INVITE = '/didcomm/oob/create-invitation',
   URL_RECEIVE_INVITATION_URL = '/oob/receive-invitation-url',
   URL_RECEIVE_INVITATION = '/oob/receive-invitation',
   URL_CONN_INVITATION = '/url',
@@ -67,12 +67,12 @@ export enum CommonConstants {
   URL_PUBLISH_REVOCATION = '/issue-credential/publish-revocations',
   URL_CREATE_ISSUE_CREDENTIAL_OUT_OF_BAND = '/issue-credential/create',
   URL_CREATE_OUT_OF_BAND_INVITATION = '/out-of-band/create-invitation',
-  URL_ISSUE_CREATE_CRED_OFFER_AFJ = '/credentials/create-offer',
+  URL_ISSUANCE_CREATE_OFFER = '/didcomm/credentials/create-offer',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   URL_ISSUE_GET_CREDS_AFJ = '/credentials',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID = '/credentials',
-  URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/credentials/create-offer-oob',
+  URL_ISSUE_GET_CREDS_BY_CRED_REC_ID = '/didcomm/credentials/#',
+  URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/didcomm/credentials/create-offer-oob',
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
   URL_SEND_QUESTION = '/question-answer/question/#',
   URL_QUESTION_ANSWER_RECORD = '/question-answer',
@@ -125,12 +125,12 @@ export enum CommonConstants {
   URL_SHARED_AGENT_VERIFY_SIGNED_DATA = '/multi-tenancy/credential/verify/#',
 
   // PROOF SERVICES
-  URL_SEND_PROOF_REQUEST = '/proofs/request-proof',
+  URL_SEND_PROOF_REQUEST = '/didcomm/proofs/request-proof',
   URL_GET_PROOF_PRESENTATIONS = '/proofs',
-  URL_GET_PROOF_PRESENTATION_BY_ID = '/proofs/#',
-  URL_VERIFY_PRESENTATION = '/proofs/#/accept-presentation',
-  URL_SEND_OUT_OF_BAND_CREATE_REQUEST = '/proofs/create-request-oob',
-  URL_PROOF_FORM_DATA = '/proofs/#/form-data',
+  URL_GET_PROOF_PRESENTATION_BY_ID = '/didcomm/proofs/#',
+  URL_ACCEPT_PRESENTATION = '/didcomm/proofs/#/accept-presentation',
+  URL_CREATE_OUT_OF_BAND_CREATE_REQUEST = '/didcomm/proofs/create-request-oob',
+  URL_PROOF_FORM_DATA = '/didcomm//proofs/#/form-data',
 
   // server or agent
   URL_SERVER_STATUS = '/status',
@@ -139,8 +139,8 @@ export enum CommonConstants {
   URL_AGENT_GET_ENDPOINT = '/agent',
 
   // sign data from agent
-  URL_AGENT_SIGN_DATA = '/credential/sign',
-  URL_AGENT_VERIFY_SIGNED_DATA = '/credential/verify',
+  URL_AGENT_SIGN_DATA = '/agent/credential/sign/#',
+  URL_AGENT_VERIFY_SIGNED_DATA = '/agent/credential/verify',
 
   // CREATE KEYS
   CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
@@ -395,7 +395,21 @@ export enum CommonConstants {
   //CLOUD WALLET
   RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
   ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
-  SEED_LENGTH = 32
+  SEED_LENGTH = 32,
+
+  //Agent URL flags
+  CONNECTION_INVITATION = 'connection-invitation',
+  LEGACY_INVITATION = 'legacy-invitation',
+  SIGN_DATA_FROM_AGENT = 'sign-data-from-agent',
+  VERIFY_SIGNED_DATA_FROM_AGENT = 'verify-signed-data-from-agent',
+  CREATE_OFFER = 'create-offer',
+  CREATE_OFFER_OUT_OF_BAND = 'create-offer-oob',
+  GET_OFFER_BY_CRED_ID = 'get-offer-by-cred-id',
+  URL_GET_PROOF_PRESENTATION_BY_ID_FLAG = 'get-proof-presentation-by-id',
+  REQUEST_PROOF = 'request-proof',
+  ACCEPT_PRESENTATION = 'accept-presentation',
+  CREATE_OUT_OF_BAND_PROOF_PRESENTATION = 'create-request-out-of-band',
+  GET_VERIFIED_PROOF = 'get-verified-proof'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

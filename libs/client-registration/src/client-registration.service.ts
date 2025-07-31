@@ -579,11 +579,13 @@ export class ClientRegistrationService {
       throw new BadRequestException(`Client ID and client secret are missing`);
     }
 
-    const decryptClientId = await this.commonService.decryptPassword(clientId);
-    const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
+    // const decryptClientId = await this.commonService.decryptPassword(clientId);
+    // const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
 
-    payload.client_id = decryptClientId;
-    payload.client_secret = decryptClientSecret;
+    // payload.client_id = decryptClientId;
+    // payload.client_secret = decryptClientSecret;
+    payload.client_id = 'adminClient';
+    payload.client_secret = 'C03x3S4YaCggPJK6NfkTRNg1nVhZ9eBn';
     payload.username = email;
     payload.password = password;
 

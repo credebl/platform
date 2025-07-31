@@ -259,7 +259,7 @@ export class AgentController {
     @Res() res: Response
   ): Promise<Response> {
     createTenantDto.orgId = orgId;
-
+    console.log(`**** Create tenant...${JSON.stringify(createTenantDto)}`);
     const tenantDetails = await this.agentService.createTenant(createTenantDto, user);
 
     const finalResponse: IResponse = {

@@ -116,6 +116,10 @@ fi
 echo "-----$AGENT_ENDPOINT----"
 CONFIG_FILE="${PWD}/apps/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json"
 
+echo "CONFIG_FILE = $CONFIG_FILE"
+echo "AGENCY = $AGENCY"
+echo "CONTAINER_NAME = $CONTAINER_NAME"
+
 # Check if the file exists
 if [ -f "$CONFIG_FILE" ]; then
   # If it exists, remove the file
@@ -154,7 +158,8 @@ cat <<EOF >${CONFIG_FILE}
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
   "adminPort": $ADMIN_PORT,
   "tenancy": $TENANT,
-  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
+  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL",
+  "apiKey": "supersecret-that-too-16chars"
 }
 EOF
 
@@ -238,7 +243,7 @@ if [ $? -eq 0 ]; then
     container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
 
     # Extract the token from the logs using sed
-    token=$(echo "$container_logs" | sed -nE 's/.*API Token: ([^ ]+).*/\1/p')
+    token=$(echo "$container_logs" | sed -nE 's/.*** API Key: ([^ ]+).*/\1/p')
 
     # Print the extracted token
     echo "Token: $token"

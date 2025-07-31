@@ -27,7 +27,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { DidMethod, Invitation, Ledgers, PrismaTables, TokenType, transition } from '@credebl/enum/enum';
+import { DidMethod, Invitation, Ledgers, PrismaTables, SessionType, TokenType, transition } from '@credebl/enum/enum';
 import {
   IGetOrgById,
   IGetOrganization,
@@ -712,7 +712,8 @@ export class OrganizationService {
     const sessionData = {
       sessionToken: authenticationResult?.access_token,
       userId: orgRoleDetails['user'].id,
-      expires: authenticationResult?.expires_in
+      expires: authenticationResult?.expires_in,
+      sessionType: SessionType.ORG_SESSION
     };
 
     const fetchAccountDetails = await this.userRepository.checkAccountDetails(orgRoleDetails['user'].id);
@@ -723,8 +724,9 @@ export class OrganizationService {
         expires: authenticationResult?.expires_in
       };
 
-      await this.userRepository.updateAccountDetails(accountData).then(async () => {
-        addSessionDetails = await this.userRepository.createSession(sessionData);
+      await this.userRepository.updateAccountDetails(accountData).then(async (response) => {
+        const finalSessionData = { ...sessionData, accountId: response.id };
+        addSessionDetails = await this.userRepository.createSession(finalSessionData);
       });
     } else {
       const accountData = {
@@ -732,11 +734,12 @@ export class OrganizationService {
         userId: orgRoleDetails['user'].id,
         expires: authenticationResult?.expires_in,
         keycloakUserId: orgRoleDetails['user'].keycloakUserId,
-        type: TokenType.ORG_TOKEN
+        type: TokenType.BEARER_TOKEN
       };
 
-      await this.userRepository.addAccountDetails(accountData).then(async () => {
-        addSessionDetails = await this.userRepository.createSession(sessionData);
+      await this.userRepository.addAccountDetails(accountData).then(async (response) => {
+        const finalSessionData = { ...sessionData, accountId: response.id };
+        addSessionDetails = await this.userRepository.createSession(finalSessionData);
       });
     }
     // Response: add session id as cookies

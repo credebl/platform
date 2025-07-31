@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable prefer-destructuring */
 
 import {
@@ -678,14 +679,15 @@ export class UserRepository {
 
   async createSession(tokenDetails: ISession): Promise<session> {
     try {
-      const { sessionToken, userId, expires, refreshToken } = tokenDetails;
+      const { sessionToken, userId, expires, refreshToken, accountId, sessionType } = tokenDetails;
       const sessionResponse = await this.prisma.session.create({
         data: {
           sessionToken,
           expires,
           userId,
-          // eslint-disable-next-line camelcase
-          refresh_token: refreshToken
+          refreshToken,
+          accountId,
+          sessionType
         }
       });
       return sessionResponse;
@@ -730,12 +732,9 @@ export class UserRepository {
           userId: accountDetails.userId
         },
         data: {
-          // eslint-disable-next-line camelcase
-          access_token: accountDetails.sessionToken,
-          // eslint-disable-next-line camelcase
-          refresh_token: accountDetails.refreshToken,
-          // eslint-disable-next-line camelcase
-          expires_at: accountDetails.expires
+          accessToken: accountDetails.sessionToken,
+          refreshToken: accountDetails.refreshToken,
+          expiresAt: accountDetails.expires
         }
       });
       return userAccountDetails;
@@ -752,14 +751,10 @@ export class UserRepository {
           userId: accountDetails.userId,
           provider: ProviderType.KEYCLOAK,
           providerAccountId: accountDetails.keycloakUserId,
-          // eslint-disable-next-line camelcase
-          access_token: accountDetails.sessionToken,
-          // eslint-disable-next-line camelcase
-          refresh_token: accountDetails.refreshToken,
-          // eslint-disable-next-line camelcase
-          expires_at: accountDetails.expires,
-          // eslint-disable-next-line camelcase
-          token_type: accountDetails.type
+          accessToken: accountDetails.sessionToken,
+          refreshToken: accountDetails.refreshToken,
+          expiresAt: accountDetails.expires,
+          tokenType: accountDetails.type
         }
       });
       return userAccountDetails;

@@ -147,9 +147,12 @@ export class AgentServiceService {
       ]);
 
       let orgData;
+      console.log('agentSpinupDto::::::', agentSpinupDto);
+      console.log(user?.userId, 'userId:::::::::::::::', user?.userId);
       if (!user?.userId && agentSpinupDto?.platformAdminEmail) {
         // Get Platform admin user by platform admin email
         platformAdminUser = await this.agentServiceRepository.getPlatfomAdminUser(agentSpinupDto?.platformAdminEmail);
+        console.log('platformAdminUser:::::::::::::::', platformAdminUser);
 
         userId = platformAdminUser?.id;
       } else {
@@ -222,6 +225,8 @@ export class AgentServiceService {
         ledgerDetails,
         orgData
       );
+
+      console.log('walletProvisionPayload:::::::::::::: prepareWalletProvisionPayload', walletProvisionPayload);
 
       // Socket connection
       const socket: Socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
@@ -422,7 +427,7 @@ export class AgentServiceService {
       credoImage: process.env.AFJ_VERSION || '',
       protocol: process.env.AGENT_PROTOCOL || '',
       tenant: agentSpinupDto.tenant || false,
-      apiKey: agentSpinupDto.apiKey
+      apiKey: process.env.AGENT_API_KEY
     };
     return walletProvisionPayload;
   }

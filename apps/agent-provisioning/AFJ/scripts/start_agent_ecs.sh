@@ -312,7 +312,7 @@ for attempt in $(seq 1 $RETRIES); do
     --log-group-name "$log_group" \
     --log-stream-name "$log_stream" \
     --region ap-southeast-1 \
-    | grep -o 'API Token: [^ ]*' \
+    | grep -o '*** API Key: [^ ]*' \
     | cut -d ' ' -f 3
 )
    # echo "token=$token"

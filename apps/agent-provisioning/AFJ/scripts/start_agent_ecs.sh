@@ -37,7 +37,7 @@ random_string=$(generate_random_string)
 # Print the generated random string
 echo "Random String: $random_string"
 
-SERVICE_NAME="${AGENCY}-${CONTAINER_NAME}-service-${random_string}"
+SERVICE_NAME="${CONTAINER_NAME}-service"
 EXTERNAL_IP=$(echo "$2" | tr -d '[:space:]')
 ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
@@ -194,6 +194,14 @@ CONTAINER_DEFINITIONS=$(
                 }
             ],
     "volumesFrom": [],
+    "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/$TESKDEFINITION_FAMILY",
+          "awslogs-create-group": "true",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        },
     "ulimits": []
   }
 ]
@@ -262,6 +270,67 @@ if [ $? -eq 0 ]; then
       sleep 10
     fi
   done
+# Describe the ECS service and filter by service name
+service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluster $CLUSTER_NAME --region $AWS_PUBLIC_REGION)
+echo "service_description=$service_description"
+
+
+# Extract Task ID from the service description events
+task_id=$(echo "$service_description" | jq -r '.services[0].events[] | select(.message | test("has started 1 tasks")) | .message | capture("\\(task (?<id>[^)]+)\\)") | .id')
+#echo "task_id=$task_id"
+
+# to fetch log group of container 
+.............................................................
+log_group=/ecs/$TESKDEFINITION_FAMILY
+echo "log_group=$log_group"
+
+# Get Log Stream Name
+log_stream=ecs/$CONTAINER_NAME/$task_id
+
+echo "logstrem=$log_stream"
+
+
+# Fetch logs
+#echo "$(aws logs get-log-events --log-group-name "/ecs/$TESKDEFINITION_FAMILY/$CONTAINER_NAME" --log-stream-name "$log_stream" --region $AWS_PUBLIC_REGION)"
+
+# Check if the token folder exists, and create it if it doesn't
+token_folder="$PWD/agent-provisioning/AFJ/token"
+if [ ! -d "$token_folder" ]; then
+    mkdir -p "$token_folder"
+fi
+
+# Set maximum retry attempts
+RETRIES=3
+
+# Loop to attempt retrieving token from logs
+# Loop to attempt retrieving token from logs
+for attempt in $(seq 1 $RETRIES); do
+    echo "Attempt $attempt: Checking service logs for token..."
+    
+    # Fetch logs and grep for API token
+    token=$(aws logs get-log-events \
+    --log-group-name "$log_group" \
+    --log-stream-name "$log_stream" \
+    --region ap-southeast-1 \
+    | grep -o 'API Token: [^ ]*' \
+    | cut -d ' ' -f 3
+)
+   # echo "token=$token"
+    if [ -n "$token" ]; then
+        echo "Token found: $token"
+        # Write token to a file
+        echo "{\"token\": \"$token\"}" > "$PWD/agent-provisioning/AFJ/token/${AGENCY}_${CONTAINER_NAME}.json"
+        break  # Exit loop if token is found
+    else
+        echo "Token not found in logs. Retrying..."
+        if [ $attempt -eq $RETRIES ]; then
+            echo "Reached maximum retry attempts. Token not found."
+        fi
+    fi
+    # Add a delay of 10 seconds between retries
+    sleep 10
+done
+
 
   echo "Creating agent config"
   cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
@@ -273,7 +342,7 @@ EOF
 
   cat <<EOF >${PWD}/agent-provisioning/AFJ/token/${AGENCY}_${CONTAINER_NAME}.json
     {
-        "token" : ""
+        "token" : "$token"
     }
 EOF
 

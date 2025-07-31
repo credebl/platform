@@ -44,13 +44,13 @@ model account {
   type              String?
   provider          String
   providerAccountId String      
-  refresh_token     String?     @unique
-  access_token      String?     @unique
-  expires_at        Int?
-  token_type        String?
+  refreshToken      String?     @unique
+  accessToken       String?     @unique
+  expiresAt         Int?
+  tokenType         String?
   scope             String?
-  id_token          String?
-  session_state     String?
+  idToken           String?
+  sessionState      String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt 
   user              user         @relation(fields: [userId], references: [id])
@@ -62,11 +62,12 @@ model session {
   sessionToken     String      @unique
   userId           String      @db.Uuid
   expires          Int
-  refresh_token    String?     @unique
+  refreshToken     String?     @unique
   user             user        @relation(fields: [userId], references: [id])
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
   accountId        String?     @db.Uuid
+  sessionType      String?
   account          account?    @relation(fields: [accountId], references:[id])
 }
 

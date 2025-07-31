@@ -244,6 +244,9 @@ export interface UserRoleMapping {
   userRoleId: string;
 }
 
+export interface ISessions {
+  sessions: string[];
+}
 export interface UserRoleDetails {
   id: string;
   role: $Enums.UserRole;
@@ -272,4 +275,7 @@ export interface IAccountDetails {
   token_type?: string;
   id_token?: string;
   session_state?: string;
+}
+export interface ISessionData {
+  sessionId: string;
 }

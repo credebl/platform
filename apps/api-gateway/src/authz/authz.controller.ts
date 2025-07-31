@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { AuthzService } from './authz.service';
 import { CommonService } from '../../../../libs/common/src/common.service';
-import { ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
@@ -33,9 +33,9 @@ import { RefreshTokenDto } from './dtos/refresh-token.dto';
 import { getDefaultClient } from '../user/utils';
 import { ClientAliasValidationPipe } from './decorators/user-auth-client';
 import { SessionGuard } from './guards/session.guard';
-interface SessionDetails {
-  sessionId: string;
-}
+import { UserLogoutDto } from './dtos/user-logout.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { ISessionData } from 'apps/user/interfaces/user.interface';
 @Controller('auth')
 @ApiTags('auth')
 @UseFilters(CustomExceptionFilter)
@@ -190,11 +190,7 @@ export class AuthzController {
     required: false
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
-  async sessionDetails(
-    @Res() res: Response,
-    @Req() req: Request,
-    @Query() sessionId: SessionDetails
-  ): Promise<Response> {
+  async sessionDetails(@Res() res: Response, @Req() req: Request, @Query() sessionId: ISessionData): Promise<Response> {
     this.logger.debug(`in authz controller`);
 
     let sessionDetails;
@@ -305,6 +301,32 @@ export class AuthzController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.user.success.refreshToken,
       data: tokenData
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Log out user.
+   *
+   * @body LogoutUserDto
+   * @returns Logged out user from current session
+   */
+  @Post('/signout')
+  @ApiOperation({
+    summary: 'Logout user',
+    description: 'Logout user from current session.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiBody({ type: UserLogoutDto })
+  async logout(@Body() logoutUserDto: UserLogoutDto, @Res() res: Response): Promise<Response> {
+    await this.authzService.logout(logoutUserDto);
+
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.logout
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

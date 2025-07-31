@@ -40,7 +40,8 @@ import {
   UserKeycloakId,
   IEcosystemConfig,
   IUserForgotPassword,
-  ISessionDetails
+  ISessionDetails,
+  ISessions
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -451,7 +452,7 @@ export class UserService {
 
       const userSessionDetails = await this.userRepository.fetchUserSessions(userData?.id);
 
-      if (3 <= userSessionDetails?.length) {
+      if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
         throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
       }
 
@@ -1297,6 +1298,19 @@ export class UserService {
       return getOrganizationDetails;
     } catch (error) {
       this.logger.error(`Error in getuserOrganizationByUserId: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async logout(logoutUserDto: ISessions): Promise<string> {
+    try {
+      if (logoutUserDto?.sessions) {
+        await this.userRepository.destroySession(logoutUserDto?.sessions);
+      }
+
+      return 'user logged out successfully';
+    } catch (error) {
+      this.logger.error(`Error in logging out session: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

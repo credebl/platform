@@ -16,9 +16,19 @@ import {
   UserRoleMapping
 } from '../interfaces/user.interface';
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { ProviderType, UserRole } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
-import { RecordType, account, client_aliases, schema, session, token, user, user_org_roles } from '@prisma/client';
+import {
+  Prisma,
+  RecordType,
+  account,
+  client_aliases,
+  schema,
+  session,
+  token,
+  user,
+  user_org_roles
+} from '@prisma/client';
+import { ProviderType, UserRole } from '@credebl/enum/enum';
 
 import { PrismaService } from '@credebl/prisma-service';
 
@@ -956,6 +966,23 @@ export class UserRepository {
       return getUserOrgs;
     } catch (error) {
       this.logger.error(`Error in handleGetUserOrganizations: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async destroySession(sessions: string[]): Promise<Prisma.BatchPayload> {
+    try {
+      const userSessions = await this.prisma.session.deleteMany({
+        where: {
+          id: {
+            in: sessions
+          }
+        }
+      });
+
+      return userSessions;
+    } catch (error) {
+      this.logger.error(`Error in logging out user: ${error.message}`);
       throw error;
     }
   }

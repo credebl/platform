@@ -2,6 +2,7 @@ import {
   ICheckUserDetails,
   IOrgUsers,
   ISessionDetails,
+  ISessions,
   IUserDeletedActivity,
   IUserForgotPassword,
   IUserInformation,
@@ -262,5 +263,10 @@ export class UserController {
   // eslint-disable-next-line camelcase
   async getuserOrganizationByUserId(payload: { userId: string }): Promise<user_org_roles[]> {
     return this.userService.getuserOrganizationByUserId(payload.userId);
+  }
+
+  @MessagePattern({ cmd: 'user-logout' })
+  async logout(logoutUserDto: ISessions): Promise<string> {
+    return this.userService.logout(logoutUserDto);
   }
 }

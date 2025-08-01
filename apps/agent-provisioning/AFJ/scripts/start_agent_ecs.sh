@@ -41,8 +41,8 @@ SERVICE_NAME="${CONTAINER_NAME}-service-test"
 EXTERNAL_IP=$(echo "$2" | tr -d '[:space:]')
 ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
-ADMIN_PORT=8001
-INBOUND_PORT=9001
+ADMIN_PORT=8005
+INBOUND_PORT=9005
 
 increment_port() {
     local port="$1"

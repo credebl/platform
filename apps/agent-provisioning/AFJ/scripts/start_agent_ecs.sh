@@ -238,6 +238,7 @@ echo "$TASK_DEFINITION" >task_definition.json
 
 # Register the task definition and retrieve the ARN
 TASK_DEFINITION_ARN=$(aws ecs register-task-definition --cli-input-json file://task_definition.json --query 'taskDefinition.taskDefinitionArn' --output text)
+echo "Task Definition ARN: $TASK_DEFINITION_ARN"
 
 # Create the service
 aws ecs create-service \

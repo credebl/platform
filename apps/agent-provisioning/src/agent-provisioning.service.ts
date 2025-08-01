@@ -19,7 +19,6 @@ export class AgentProvisioningService {
    */
   async walletProvision(payload: IWalletProvision): Promise<object> {
     try {
-      console.log('walletProvision payload:', payload);
       const {
         containerName,
         externalIp,
@@ -37,11 +36,12 @@ export class AgentProvisioningService {
         credoImage,
         tenant,
         indyLedger,
-        inboundEndpoint
+        inboundEndpoint,
+        apiKey
       } = payload;
       if (agentType === AgentType.AFJ) {
         // The wallet provision command is used to invoke a shell script
-        const walletProvision = `${process.cwd() + process.env.AFJ_AGENT_SPIN_UP} ${orgId} "${externalIp}" "${walletName}" "${walletPassword}" ${seed} ${webhookEndpoint} ${walletStorageHost} ${walletStoragePort} ${walletStorageUser} ${walletStoragePassword} ${containerName} ${protocol} ${tenant} ${credoImage} "${indyLedger}" ${inboundEndpoint} ${process.env.SCHEMA_FILE_SERVER_URL} ${process.env.AGENT_HOST} ${process.env.AWS_ACCOUNT_ID} ${process.env.S3_BUCKET_ARN} ${process.env.CLUSTER_NAME} ${process.env.TESKDEFINITION_FAMILY}`;
+        const walletProvision = `${process.cwd() + process.env.AFJ_AGENT_SPIN_UP} ${orgId} "${externalIp}" "${walletName}" "${walletPassword}" ${seed} ${webhookEndpoint} ${walletStorageHost} ${walletStoragePort} ${walletStorageUser} ${walletStoragePassword} ${containerName} ${protocol} ${tenant} ${credoImage} "${indyLedger}" ${inboundEndpoint} ${process.env.SCHEMA_FILE_SERVER_URL} ${apiKey} ${process.env.AGENT_HOST} ${process.env.AWS_ACCOUNT_ID} ${process.env.S3_BUCKET_ARN} ${process.env.CLUSTER_NAME} ${process.env.TESKDEFINITION_FAMILY}`;
         const spinUpResponse: object = new Promise(async (resolve) => {
           await exec(walletProvision, async (err, stdout, stderr) => {
             this.logger.log(`shell script output: ${stdout}`);

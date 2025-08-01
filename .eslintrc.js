@@ -14,7 +14,7 @@ module.exports = {
   ignorePatterns: ['.eslintrc.js'],
   rules: {
     'prettier/prettier': 0,
-    // 'no-console': 'error', //TODO: Uncomment this after testing
+    'no-console': 'error',
     //  "@typescript-eslint/consistent-type-imports": "error",
     '@typescript-eslint/no-unused-vars': [
       'error'

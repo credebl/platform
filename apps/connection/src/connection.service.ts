@@ -669,7 +669,6 @@ export class ConnectionService {
         invitationDid: connectionInvitationDid || undefined
       };
       const url = await getAgentUrl(agentEndPoint, CommonConstants.CONNECTION_INVITATION);
-      console.log('url:::::::::::::::::::', url);
       const createConnectionInvitation = await this._createOutOfBandConnectionInvitation(connectionPayload, url, orgId);
       const connectionInvitationUrl = createConnectionInvitation?.response?.invitationUrl;
       const shortenedUrl = await this.storeConnectionObjectAndReturnUrl(

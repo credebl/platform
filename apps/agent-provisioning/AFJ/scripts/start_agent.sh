@@ -19,7 +19,7 @@ AFJ_VERSION=${14}
 INDY_LEDGER=${15}
 INBOUND_ENDPOINT=${16}
 SCHEMA_FILE_SERVER_URL=${17}
-
+AGENT_API_KEY="${18}"
 ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
@@ -119,6 +119,7 @@ CONFIG_FILE="${PWD}/apps/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAIN
 echo "CONFIG_FILE = $CONFIG_FILE"
 echo "AGENCY = $AGENCY"
 echo "CONTAINER_NAME = $CONTAINER_NAME"
+echo "AGENT_API_KEY= $AGENT_API_KEY"
 
 # Check if the file exists
 if [ -f "$CONFIG_FILE" ]; then
@@ -126,7 +127,7 @@ if [ -f "$CONFIG_FILE" ]; then
   rm "$CONFIG_FILE"
 fi
 
-cat <<EOF >${CONFIG_FILE}
+cat <<EOF >"$CONFIG_FILE"
 {
   "label": "${AGENCY}_${CONTAINER_NAME}",
   "walletId": "$WALLET_NAME",
@@ -159,7 +160,7 @@ cat <<EOF >${CONFIG_FILE}
   "adminPort": $ADMIN_PORT,
   "tenancy": $TENANT,
   "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL",
-  "apiKey": "supersecret-that-too-16chars"
+  "apiKey": "$AGENT_API_KEY"
 }
 EOF
 

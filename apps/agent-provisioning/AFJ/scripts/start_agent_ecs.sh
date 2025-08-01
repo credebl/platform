@@ -201,6 +201,7 @@ CONTAINER_DEFINITIONS=$(
           "awslogs-create-group": "true",
           "awslogs-region": "ap-south-1",
           "awslogs-stream-prefix": "ecs"
+          }
         },
     "ulimits": []
   }

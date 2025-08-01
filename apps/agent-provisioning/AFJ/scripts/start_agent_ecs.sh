@@ -133,20 +133,20 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "inboundTransport": [
     {
       "transport": "$PROTOCOL",
-      "port": $INBOUND_PORT
+      "port": 9005
     }
   ],
   "outboundTransport": [
     "$PROTOCOL"
   ],
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
-  "adminPort": $ADMIN_PORT,
+  "adminPort": 8005,
   "tenancy": $TENANT,
   "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
 }
 EOF
 # scp ${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json ${AGENT_HOST}:/home/ec2-user/config/
-
+cat /app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json
 # Construct the container definitions dynamically
 CONTAINER_DEFINITIONS=$(
   cat <<EOF
@@ -158,13 +158,13 @@ CONTAINER_DEFINITIONS=$(
     "memory": 307,
     "portMappings": [
       {
-        "containerPort": $ADMIN_PORT,
-        "hostPort": $ADMIN_PORT,
+        "containerPort": 8005,
+        "hostPort": 8005,
         "protocol": "tcp"
       },
       {
-        "containerPort": $INBOUND_PORT,
-        "hostPort": $INBOUND_PORT,
+        "containerPort": 9005,
+        "hostPort": 9005,
         "protocol": "tcp"
       }
     ],
@@ -278,11 +278,18 @@ echo "service_description=$service_description"
 
 
 # Extract Task ID from the service description events
-task_id=$(echo "$service_description" | jq -r '.services[0].events[] | select(.message | test("has started 1 tasks")) | .message | capture("\\(task (?<id>[^)]+)\\)") | .id')
+  # task_id=$(echo "$service_description" | jq -r '.services[0].events[] | select(.message | test("has started 1 tasks")) | .message | capture("\\(task (?<id>[^)]+)\\)") | .id')
+
+task_id=$(echo "$service_description" | jq -r '
+  .services[0].events[] 
+  | select(.message | test("has started 1 tasks")) 
+  | .message 
+  | capture("\\(task (?<id>[^)]+)\\)") 
+  | .id
+')
 #echo "task_id=$task_id"
 
 # to fetch log group of container 
-.............................................................
 log_group=/ecs/$TESKDEFINITION_FAMILY
 echo "log_group=$log_group"
 

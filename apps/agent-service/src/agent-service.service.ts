@@ -581,9 +581,6 @@ export class AgentServiceService {
           socket.emit('did-publish-process-completed', { clientId: agentSpinupDto.clientSocketId });
         }
 
-        const getOrganization = await this.agentServiceRepository.getOrgDetails(orgData?.id);
-
-        // await this._createConnectionInvitation(orgData?.id, user, getOrganization.name);
         if (agentSpinupDto.clientSocketId) {
           socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
         }

@@ -41,7 +41,8 @@ import {
   IEcosystemConfig,
   IUserForgotPassword,
   ISessionDetails,
-  ISessions
+  ISessions,
+  IUpdateAccountDetails
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -542,11 +543,50 @@ export class UserService {
       try {
         const data = jwt.decode(refreshToken) as jwt.JwtPayload;
         const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
+        this.logger.debug(`User details::;${JSON.stringify(userByKeycloakId)}`);
         const tokenResponse = await this.clientRegistrationService.getAccessToken(
           refreshToken,
           userByKeycloakId?.['clientId'],
           userByKeycloakId?.['clientSecret']
         );
+        this.logger.debug(`tokenResponse::::${JSON.stringify(tokenResponse)}`);
+        // Fetch the details from account table based on userid and refresh token
+        const userAccountDetails = await this.userRepository.fetchAccountByRefreshToken(
+          userByKeycloakId?.['id'],
+          refreshToken
+        );
+        // Update the account details with latest access token, refresh token and exp date
+        if (!userAccountDetails) {
+          throw new NotFoundException(ResponseMessages.user.error.userAccountNotFound);
+        }
+        const updateAccountDetails: IUpdateAccountDetails = {
+          accessToken: tokenResponse.access_token,
+          // refreshToken: tokenResponse.refresh_token,
+          expiresAt: tokenResponse.expires_in,
+          accountId: userAccountDetails.id
+        };
+        const updateAccountDetailsResponse = await this.userRepository.updateAccountDetailsById(updateAccountDetails);
+        // Delete the preveious session record and create new one
+        if (!updateAccountDetailsResponse) {
+          throw new InternalServerErrorException(ResponseMessages.user.error.errorInUpdateAccountDetails);
+        }
+        const deletePreviousSession = await this.userRepository.deleteSessionRecordByRefreshToken(refreshToken);
+        if (!deletePreviousSession) {
+          throw new InternalServerErrorException(ResponseMessages.user.error.errorInDeleteSession);
+        }
+        const sessionData = {
+          sessionToken: tokenResponse.access_token,
+          userId: userByKeycloakId?.['id'],
+          expires: tokenResponse.expires_in,
+          // refreshToken: tokenResponse.refresh_token,
+          sessionType: SessionType.USER_SESSION,
+          accountId: updateAccountDetailsResponse.id
+        };
+        const addSessionDetails = await this.userRepository.createSession(sessionData);
+        if (!addSessionDetails) {
+          throw new InternalServerErrorException(ResponseMessages.user.error.errorInSessionCreation);
+        }
+
         return tokenResponse;
       } catch (error) {
         throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken);

@@ -54,7 +54,8 @@ import {
   IAgentStore,
   IAgentConfigure,
   OrgDid,
-  IBasicMessage
+  IBasicMessage,
+  WalletDetails
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -79,6 +80,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
 import { IVerificationMethod } from 'apps/organization/interfaces/organization.interface';
 import { getAgentUrl } from '@credebl/common/common.utils';
+import e = require('express');
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {
@@ -1870,12 +1872,12 @@ export class AgentServiceService {
 
   async getOrgAgentApiKey(orgId: string): Promise<string> {
     try {
-      const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
+      const orgAgentDetails = await this.agentServiceRepository.getAgentApiKey(orgId);
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-      let apiKey;
+      let agentApiKey;
       if (
-        orgAgentApiKey?.orgAgentTypeId === orgAgentId &&
-        (orgAgentApiKey.apiKey === '' || orgAgentApiKey.apiKey === null)
+        orgAgentDetails?.orgAgentTypeId === orgAgentId &&
+        (orgAgentDetails.apiKey === '' || orgAgentDetails.apiKey === null)
       ) {
         const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
           CommonConstants.PLATFORM_ADMIN_ORG
@@ -1883,21 +1885,29 @@ export class AgentServiceService {
         if (!platformAdminSpinnedUp) {
           throw new InternalServerErrorException(ResponseMessages.agent.error.notConfigured);
         }
-        const tenantToken = await this.commonService.getTenantWalletToken(
-          orgAgentApiKey.agentEndPoint,
-          platformAdminSpinnedUp.org_agents[0]?.apiKey,
-          orgAgentApiKey.tenantId
-        );
-        apiKey = tenantToken;
+        const walletDetails: WalletDetails = {
+          agentEndPoint: platformAdminSpinnedUp.org_agents[0]?.agentEndPoint,
+          apiKey: platformAdminSpinnedUp.org_agents[0]?.apiKey,
+          tenantId: orgAgentDetails.tenantId,
+          orgId: orgAgentDetails.orgId
+        };
+        const { apiKey } = await this.getTenantToken(walletDetails);
+        if (apiKey) {
+          throw new NotFoundException(ResponseMessages.agent.error.tenantWalletToken, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.notFound
+          });
+        }
+        agentApiKey = apiKey;
       } else {
-        apiKey = orgAgentApiKey?.apiKey;
+        agentApiKey = orgAgentDetails?.apiKey;
       }
 
-      if (!apiKey) {
+      if (!agentApiKey) {
         throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
       }
 
-      const decryptedToken = await this.commonService.decryptPassword(apiKey);
+      const decryptedToken = await this.commonService.decryptPassword(agentApiKey);
       return decryptedToken;
     } catch (error) {
       this.logger.error(`Agent api key details : ${JSON.stringify(error)}`);
@@ -1905,9 +1915,10 @@ export class AgentServiceService {
     }
   }
 
-  async getTenantToken(agentEndPoint: string, apiKey: string, tenantId: string): Promise<string> {
+  async getTenantToken(walletDetails: WalletDetails): Promise<org_agents> {
     try {
-      if (!agentEndPoint || !apiKey || !tenantId) {
+      const { agentEndPoint, apiKey, tenantId, orgId } = walletDetails;
+      if (!agentEndPoint || !apiKey || !tenantId || !orgId) {
         throw new BadRequestException(ResponseMessages.agent.error.invalidTenantDetails, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.badRequest
@@ -1920,9 +1931,9 @@ export class AgentServiceService {
           description: ResponseMessages.errorMessages.notFound
         });
       }
-
-      //Add tenant wallet token to the database
-      return tenantWalletToken;
+      const EncryptedTenantToken = await this.tokenEncryption(tenantWalletToken);
+      const updatedTenantDetails = await this.agentServiceRepository.updateTenantToken(orgId, EncryptedTenantToken);
+      return updatedTenantDetails;
     } catch (error) {
       this.logger.error(`Error in getting org agent type : ${JSON.stringify(error)}`);
       throw error;

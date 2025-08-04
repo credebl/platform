@@ -68,46 +68,39 @@ export const networkNamespace = (did: string): string => {
 };
 
 export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramId?: string): Promise<string> => {
-  try {
-    if (!agentEndPoint) {
-      throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
-    }
-
-    const agentUrlMap: Map<string, string> = new Map<string, string>([
-      [String(CommonConstants.CONNECTION_INVITATION), String(CommonConstants.URL_CONN_INVITE)],
-      [String(CommonConstants.LEGACY_INVITATION), String(CommonConstants.URL_CONN_LEGACY_INVITE)],
-      [String(CommonConstants.SIGN_DATA_FROM_AGENT), String(CommonConstants.URL_AGENT_SIGN_DATA)],
-      [String(CommonConstants.VERIFY_SIGNED_DATA_FROM_AGENT), String(CommonConstants.URL_AGENT_VERIFY_SIGNED_DATA)],
-      [String(CommonConstants.CREATE_OFFER), String(CommonConstants.URL_ISSUANCE_CREATE_OFFER)],
-      [String(CommonConstants.CREATE_OFFER_OUT_OF_BAND), String(CommonConstants.URL_ISSUANCE_CREATE_OFFER)],
-      [String(CommonConstants.GET_OFFER_BY_CRED_ID), String(CommonConstants.URL_ISSUE_GET_CREDS_BY_CRED_REC_ID)],
-      [
-        String(CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID_FLAG),
-        String(CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID)
-      ],
-      [String(CommonConstants.REQUEST_PROOF), String(CommonConstants.URL_SEND_PROOF_REQUEST)],
-      [String(CommonConstants.ACCEPT_PRESENTATION), String(CommonConstants.URL_ACCEPT_PRESENTATION)],
-      [
-        String(CommonConstants.CREATE_OUT_OF_BAND_PROOF_PRESENTATION),
-        String(CommonConstants.URL_CREATE_OUT_OF_BAND_CREATE_REQUEST)
-      ],
-      [String(CommonConstants.GET_VERIFIED_PROOF), String(CommonConstants.URL_PROOF_FORM_DATA)]
-    ]);
-
-    const urlSuffix = agentUrlMap.get(urlFlag);
-
-    if (!urlSuffix) {
-      throw new NotFoundException(ResponseMessages.common.error.invalidUrl);
-    }
-    // Add paramId as a path parameter if provided
-    const resolvedUrlPath = paramId ? urlSuffix.replace('#', paramId) : urlSuffix;
-
-    const url = `${agentEndPoint}${resolvedUrlPath}`;
-
-    console.debug(`Generated agent URL: ${url}`);
-    return url;
-  } catch (error) {
-    console.error(`Error in getAgentUrl: ${error instanceof Error ? error.message : JSON.stringify(error)}`);
-    throw error;
+  if (!agentEndPoint) {
+    throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
   }
+
+  const agentUrlMap: Map<string, string> = new Map<string, string>([
+    [String(CommonConstants.CONNECTION_INVITATION), String(CommonConstants.URL_CONN_INVITE)],
+    [String(CommonConstants.LEGACY_INVITATION), String(CommonConstants.URL_CONN_LEGACY_INVITE)],
+    [String(CommonConstants.SIGN_DATA_FROM_AGENT), String(CommonConstants.URL_AGENT_SIGN_DATA)],
+    [String(CommonConstants.VERIFY_SIGNED_DATA_FROM_AGENT), String(CommonConstants.URL_AGENT_VERIFY_SIGNED_DATA)],
+    [String(CommonConstants.CREATE_OFFER), String(CommonConstants.URL_ISSUANCE_CREATE_OFFER)],
+    [String(CommonConstants.CREATE_OFFER_OUT_OF_BAND), String(CommonConstants.URL_ISSUANCE_CREATE_OFFER)],
+    [String(CommonConstants.GET_OFFER_BY_CRED_ID), String(CommonConstants.URL_ISSUE_GET_CREDS_BY_CRED_REC_ID)],
+    [
+      String(CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID_FLAG),
+      String(CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID)
+    ],
+    [String(CommonConstants.REQUEST_PROOF), String(CommonConstants.URL_SEND_PROOF_REQUEST)],
+    [String(CommonConstants.ACCEPT_PRESENTATION), String(CommonConstants.URL_ACCEPT_PRESENTATION)],
+    [
+      String(CommonConstants.CREATE_OUT_OF_BAND_PROOF_PRESENTATION),
+      String(CommonConstants.URL_CREATE_OUT_OF_BAND_CREATE_REQUEST)
+    ],
+    [String(CommonConstants.GET_VERIFIED_PROOF), String(CommonConstants.URL_PROOF_FORM_DATA)]
+  ]);
+
+  const urlSuffix = agentUrlMap.get(urlFlag);
+
+  if (!urlSuffix) {
+    throw new NotFoundException(ResponseMessages.common.error.invalidUrl);
+  }
+  // Add paramId as a path parameter if provided
+  const resolvedUrlPath = paramId ? urlSuffix.replace('#', paramId) : urlSuffix;
+
+  const url = `${agentEndPoint}${resolvedUrlPath}`;
+  return url;
 };

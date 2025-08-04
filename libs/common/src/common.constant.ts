@@ -132,7 +132,7 @@ export enum CommonConstants {
   URL_GET_PROOF_PRESENTATION_BY_ID = '/didcomm/proofs/#',
   URL_ACCEPT_PRESENTATION = '/didcomm/proofs/#/accept-presentation',
   URL_CREATE_OUT_OF_BAND_CREATE_REQUEST = '/didcomm/proofs/create-request-oob',
-  URL_PROOF_FORM_DATA = '/didcomm//proofs/#/form-data',
+  URL_PROOF_FORM_DATA = '/didcomm/proofs/#/form-data',
 
   // server or agent
   URL_SERVER_STATUS = '/status',
@@ -357,13 +357,11 @@ export enum CommonConstants {
   CACHE_APIKEY_KEY = 'sharedApiKey',
   CACHE_TTL_SECONDS = 604800,
 
-  CLOUD_WALLET_GET_PROOF_REQUEST = '/multi-tenancy/proofs',
-  CLOUD_WALLET_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation',
-  CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request/',
-  CLOUD_WALLET_DID_LIST = '/multi-tenancy/dids/',
-  CLOUD_WALLET_CONNECTION_BY_ID = '/multi-tenancy/connections/',
-  CLOUD_WALLET_CREDENTIAL = '/multi-tenancy/credentials',
-  CLOUD_WALLET_BASIC_MESSAGE = '/multi-tenancy/basic-messages/',
+  CLOUD_WALLET_GET_PROOF_REQUEST = '/didcomm/proofs',
+  CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request',
+  CLOUD_WALLET_CONNECTION_BY_ID = '/didcomm/connections',
+  CLOUD_WALLET_CREDENTIAL = '/didcomm/credentials',
+  CLOUD_WALLET_BASIC_MESSAGE = '/didcomm/basic-messages/',
 
   // Bulk-issuance
   BATCH_SIZE = 100,
@@ -395,8 +393,8 @@ export enum CommonConstants {
   CLOUD_WALLET_SERVICE = 'cloud-wallet',
 
   //CLOUD WALLET
-  RECEIVE_INVITATION_BY_URL = '/multi-tenancy/receive-invitation-url/',
-  ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/',
+  RECEIVE_INVITATION_BY_URL = '/didcomm/oob/receive-invitation-url',
+  ACCEPT_OFFER = '/didcomm/credentials/accept-offer',
   SEED_LENGTH = 32,
 
   //Agent URL flags

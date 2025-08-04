@@ -274,7 +274,7 @@ export const ResponseMessages = {
       requiredSeed: 'Seed is required',
       baseWalletToken: 'Error while fetching base wallet token',
       tenantWalletToken: 'Error while fetching tenant wallet token',
-      invalidTenantDetails: 'Invalid tenant details provided'
+      invalidTenantDetails: 'Invalid wallet details provided'
     }
   },
   connection: {

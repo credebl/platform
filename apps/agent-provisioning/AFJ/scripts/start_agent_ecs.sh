@@ -353,7 +353,7 @@ for attempt in $(seq 1 $RETRIES); do
     --output text \
     | tr -d '\033' \
     | grep 'API Key:' \
-    | sed -E 's/.*API Key:[[:space:]]*//g' \
+    | sed -E 's/.*API Key:[[:space:]]*([a-zA-Z0-9._:-]*).*/\1/' \
     | head -n 1
 )
    # echo "token=$token"

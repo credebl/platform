@@ -175,7 +175,7 @@ CONTAINER_DEFINITIONS=$(
     "command": [
                 "--auto-accept-connections",
                 "--config",
-                "/config.json"
+                "/config/${AGENCY}_${CONTAINER_NAME}.json"
             ],
     "environment": [
       {
@@ -192,7 +192,7 @@ CONTAINER_DEFINITIONS=$(
     "mountPoints": [
                 {
                     "sourceVolume": "config",
-                    "containerPath": "/config.json",
+                    "containerPath": "/config",
                     "readOnly": true
                 }
             ],

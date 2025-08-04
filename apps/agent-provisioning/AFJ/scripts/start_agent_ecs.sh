@@ -205,7 +205,7 @@ CONTAINER_DEFINITIONS=$(
         "options": {
           "awslogs-group": "/ecs/$TESKDEFINITION_FAMILY",
           "awslogs-create-group": "true",
-          "awslogs-region": "ap-south-1",
+          "awslogs-region": "$AWS_PUBLIC_REGION",
           "awslogs-stream-prefix": "ecs"
           }
         },
@@ -348,7 +348,7 @@ for attempt in $(seq 1 $RETRIES); do
     token=$(aws logs get-log-events \
     --log-group-name "$log_group" \
     --log-stream-name "$log_stream" \
-    --region ap-southeast-1 \
+    --region $AWS_PUBLIC_REGION \
     | grep -o '*** API Key: [^ ]*' \
     | cut -d ' ' -f 3
 )

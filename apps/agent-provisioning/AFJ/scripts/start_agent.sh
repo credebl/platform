@@ -116,11 +116,6 @@ fi
 echo "-----$AGENT_ENDPOINT----"
 CONFIG_FILE="${PWD}/apps/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json"
 
-echo "CONFIG_FILE = $CONFIG_FILE"
-echo "AGENCY = $AGENCY"
-echo "CONTAINER_NAME = $CONTAINER_NAME"
-echo "AGENT_API_KEY= $AGENT_API_KEY"
-
 # Check if the file exists
 if [ -f "$CONFIG_FILE" ]; then
   # If it exists, remove the file

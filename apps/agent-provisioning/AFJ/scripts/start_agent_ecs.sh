@@ -25,6 +25,8 @@ S3_BUCKET_ARN=${20}
 CLUSTER_NAME=${21}
 TESKDEFINITION_FAMILY=${22}
 FILESYSTEMID=${23}
+AGENT_TG=${24}
+AGENT_INBOUND_TG=${25}
 
 DESIRED_COUNT=1
 
@@ -249,6 +251,22 @@ echo "$TASK_DEFINITION" >task_definition.json
 TASK_DEFINITION_ARN=$(aws ecs register-task-definition --cli-input-json file://task_definition.json --query 'taskDefinition.taskDefinitionArn' --output text)
 echo "Task Definition ARN: $TASK_DEFINITION_ARN"
 
+LOAD_BALANCERS_JSON=$(cat <<EOF
+[
+  {
+    "targetGroupArn": "${AGENT_TG}",
+    "containerName": "${CONTAINER_NAME}",
+    "containerPort": 8005
+  },
+  {
+    "targetGroupArn": "${AGENT_INBOUND_TG}",
+    "containerName": "${CONTAINER_NAME}",
+    "containerPort": 9005
+  }
+]
+EOF
+)
+
 # Create the service
 aws ecs create-service \
   --cluster $CLUSTER_NAME \
@@ -256,7 +274,9 @@ aws ecs create-service \
   --task-definition $TASK_DEFINITION_ARN \
   --desired-count $DESIRED_COUNT \
   --launch-type EC2 \
-  --deployment-configuration "maximumPercent=200,minimumHealthyPercent=100"
+  --health-check-grace-period-seconds 300 \
+  --deployment-configuration "maximumPercent=200,minimumHealthyPercent=100" \
+  --load-balancers "$LOAD_BALANCERS_JSON"
 
 if [ $? -eq 0 ]; then
 

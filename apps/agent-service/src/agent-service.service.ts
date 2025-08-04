@@ -525,23 +525,17 @@ export class AgentServiceService {
         socket.emit('did-publish-process-initiated', { clientId: agentSpinupDto.clientSocketId });
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
-      const agentBaseWalletDetils = await this.commonService.httpPost(
-        `${process.env.API_GATEWAY_PROTOCOL}://${agentDetails.agentEndPoint}/agent/token`,
-        '',
-        {
-          headers: {
-            Accept: 'application/json',
-            Authorization: agentDetails?.agentToken
-          }
-        }
+      const agentBaseWalletToken = await this.commonService.getBaseAgentToken(
+        agentDetails.gentEndPoint,
+        agentDetails?.agentToken
       );
-      if (!agentBaseWalletDetils.token) {
+      if (!agentBaseWalletToken) {
         throw new BadRequestException(ResponseMessages.agent.error.baseWalletToken, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.badRequest
         });
       }
-      const encryptedToken = await this.tokenEncryption(agentBaseWalletDetils.token);
+      const encryptedToken = await this.tokenEncryption(agentBaseWalletToken);
       const agentPayload: IStoreOrgAgentDetails = {
         agentEndPoint,
         seed: agentSpinupDto.seed,
@@ -835,10 +829,6 @@ export class AgentServiceService {
       const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
       // Get agent type details
       const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
-      this.logger.log(
-        'tenantDetails.walletResponseDetails::::::::::::::',
-        tenantDetails.walletResponseDetails['token']
-      );
       const storeOrgAgentData: IStoreOrgAgentDetails = {
         did: tenantDetails.DIDCreationOption.did,
         isDidPublic: true,
@@ -1881,28 +1871,60 @@ export class AgentServiceService {
   async getOrgAgentApiKey(orgId: string): Promise<string> {
     try {
       const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
-      // const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-      // let apiKey;
-      // if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
-      //   const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
-      //     CommonConstants.PLATFORM_ADMIN_ORG
-      //   );
-      //   if (!platformAdminSpinnedUp) {
-      //     throw new InternalServerErrorException('Agent not able to spin-up');
-      //   }
-      //   apiKey = platformAdminSpinnedUp.org_agents[0]?.apiKey;
-      // } else {
-      //   apiKey = orgAgentApiKey?.apiKey;
-      // }
+      const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
+      let apiKey;
+      if (
+        orgAgentApiKey?.orgAgentTypeId === orgAgentId &&
+        (orgAgentApiKey.apiKey === '' || orgAgentApiKey.apiKey === null)
+      ) {
+        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
+          CommonConstants.PLATFORM_ADMIN_ORG
+        );
+        if (!platformAdminSpinnedUp) {
+          throw new InternalServerErrorException(ResponseMessages.agent.error.notConfigured);
+        }
+        const tenantToken = await this.commonService.getTenantWalletToken(
+          orgAgentApiKey.agentEndPoint,
+          platformAdminSpinnedUp.org_agents[0]?.apiKey,
+          orgAgentApiKey.tenantId
+        );
+        apiKey = tenantToken;
+      } else {
+        apiKey = orgAgentApiKey?.apiKey;
+      }
 
-      if (!orgAgentApiKey?.apiKey) {
+      if (!apiKey) {
         throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
       }
 
-      const decryptedToken = await this.commonService.decryptPassword(orgAgentApiKey?.apiKey);
+      const decryptedToken = await this.commonService.decryptPassword(apiKey);
       return decryptedToken;
     } catch (error) {
       this.logger.error(`Agent api key details : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getTenantToken(agentEndPoint: string, apiKey: string, tenantId: string): Promise<string> {
+    try {
+      if (!agentEndPoint || !apiKey || !tenantId) {
+        throw new BadRequestException(ResponseMessages.agent.error.invalidTenantDetails, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.badRequest
+        });
+      }
+      const tenantWalletToken = await this.commonService.getTenantWalletToken(agentEndPoint, apiKey, tenantId);
+      if (!tenantWalletToken) {
+        throw new NotFoundException(ResponseMessages.agent.error.tenantWalletToken, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
+        });
+      }
+
+      //Add tenant wallet token to the database
+      return tenantWalletToken;
+    } catch (error) {
+      this.logger.error(`Error in getting org agent type : ${JSON.stringify(error)}`);
       throw error;
     }
   }

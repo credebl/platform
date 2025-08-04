@@ -28,6 +28,8 @@ export enum CommonConstants {
   URL_RECEIVE_INVITATION_URL = '/oob/receive-invitation-url',
   URL_RECEIVE_INVITATION = '/oob/receive-invitation',
   URL_CONN_INVITATION = '/url',
+  URL_AGENT_TOKEN = '/agent/token',
+  URL_SHARED_WALLET_TOKEN = '/multi-tenancy/get-token/',
 
   // WALLET SERVICES
   URL_WALLET_CREATE_DID = '/wallet/did/create',

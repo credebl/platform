@@ -240,6 +240,7 @@ export const ResponseMessages = {
       ledgerNotFound: 'Ledgers not found',
       agentNotExists: 'Agent not spun up for this organization',
       agentDown: 'Agent is down or not spun up',
+      notConfigured: 'Agent is not configured properly',
       walletAlreadyCreated: 'Your wallet is already been created',
       walletAlreadyProcessing: 'Your wallet is already processing',
       notAbleToSpinp: 'Agent not able to spun up',
@@ -271,7 +272,9 @@ export const ResponseMessages = {
       requiredPrivateKey: 'Privatekey is required for polygon method',
       privateKeyLength: 'Private key must be exactly 64 characters long',
       requiredSeed: 'Seed is required',
-      baseWalletToken: 'Error while fetching base wallet token'
+      baseWalletToken: 'Error while fetching base wallet token',
+      tenantWalletToken: 'Error while fetching tenant wallet token',
+      invalidTenantDetails: 'Invalid tenant details provided'
     }
   },
   connection: {

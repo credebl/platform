@@ -5,6 +5,7 @@ import {
   ISendVerificationEmail,
   ISession,
   IShareUserCertificate,
+  IUpdateAccountDetails,
   IUserDeletedActivity,
   IUserInformation,
   IUsersProfile,
@@ -724,6 +725,38 @@ export class UserRepository {
     }
   }
 
+  async fetchAccountByRefreshToken(userId: string, refreshToken: string): Promise<account> {
+    try {
+      return await this.prisma.account.findUnique({
+        where: {
+          userId,
+          refreshToken
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getting account details: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async updateAccountDetailsById(accountDetails: IUpdateAccountDetails): Promise<account> {
+    try {
+      return await this.prisma.account.update({
+        where: {
+          id: accountDetails.accountId
+        },
+        data: {
+          accessToken: accountDetails.accessToken,
+          refreshToken: accountDetails.refreshToken,
+          expiresAt: accountDetails.expiresAt
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getting account details: ${error.message} `);
+      throw error;
+    }
+  }
+
   async updateAccountDetails(accountDetails: ISession): Promise<account> {
     try {
       const userAccountDetails = await this.prisma.account.update({
@@ -975,6 +1008,20 @@ export class UserRepository {
       });
 
       return userSessions;
+    } catch (error) {
+      this.logger.error(`Error in logging out user: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteSessionRecordByRefreshToken(refreshToken: string): Promise<session> {
+    try {
+      const userSession = await this.prisma.session.delete({
+        where: {
+          refreshToken
+        }
+      });
+      return userSession;
     } catch (error) {
       this.logger.error(`Error in logging out user: ${error.message}`);
       throw error;

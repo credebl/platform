@@ -161,7 +161,7 @@ CONTAINER_DEFINITIONS=$(
     "name": "$CONTAINER_NAME",
     "image": "${AFJ_VERSION}",
     "cpu": 154,
-    "memory": 307,
+    "memory": 358,
     "portMappings": [
       {
         "containerPort": 8005,
@@ -235,7 +235,7 @@ TASK_DEFINITION=$(
     "EC2"
   ],
   "cpu": "154",
-  "memory": "307",
+  "memory": "358",
   "runtimePlatform": {
       "cpuArchitecture": "ARM64",
       "operatingSystemFamily": "LINUX"

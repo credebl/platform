@@ -138,14 +138,14 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "inboundTransport": [
     {
       "transport": "$PROTOCOL",
-      "port": 9005
+      "port": $INBOUND_PORT
     }
   ],
   "outboundTransport": [
     "$PROTOCOL"
   ],
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
-  "adminPort": 8005,
+  "adminPort": $ADMIN_PORT,
   "tenancy": $TENANT,
   "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL",
   "apiKey": "supersecret-that-too-16chars"
@@ -164,13 +164,13 @@ CONTAINER_DEFINITIONS=$(
     "memory": 358,
     "portMappings": [
       {
-        "containerPort": 8005,
-        "hostPort": 8005,
+        "containerPort": $ADMIN_PORT,
+        "hostPort": $ADMIN_PORT,
         "protocol": "tcp"
       },
       {
-        "containerPort": 9005,
-        "hostPort": 9005,
+        "containerPort": $INBOUND_PORT,
+        "hostPort": $INBOUND_PORT,
         "protocol": "tcp"
       }
     ],
@@ -256,12 +256,12 @@ LOAD_BALANCERS_JSON=$(cat <<EOF
   {
     "targetGroupArn": "${AGENT_TG}",
     "containerName": "${CONTAINER_NAME}",
-    "containerPort": 8005
+    "containerPort": ${ADMIN_PORT}
   },
   {
     "targetGroupArn": "${AGENT_INBOUND_TG}",
     "containerName": "${CONTAINER_NAME}",
-    "containerPort": 9005
+    "containerPort": ${INBOUND_PORT}
   }
 ]
 EOF
@@ -349,8 +349,12 @@ for attempt in $(seq 1 $RETRIES); do
     --log-group-name "$log_group" \
     --log-stream-name "$log_stream" \
     --region $AWS_PUBLIC_REGION \
-    | grep -o '*** API Key: [^ ]*' \
-    | cut -d ' ' -f 3
+    --query 'events[*].message' \
+    --output text \
+    | tr -d '\033' \
+    | grep 'API Key:' \
+    | sed -E 's/.*API Key:[[:space:]]*//g' \
+    | head -n 1
 )
    # echo "token=$token"
     if [ -n "$token" ]; then

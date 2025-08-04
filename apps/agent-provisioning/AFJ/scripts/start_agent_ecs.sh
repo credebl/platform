@@ -24,6 +24,7 @@ AWS_ACCOUNT_ID=${19}
 S3_BUCKET_ARN=${20}
 CLUSTER_NAME=${21}
 TESKDEFINITION_FAMILY=${22}
+FILESYSTEMID=${23}
 
 DESIRED_COUNT=1
 
@@ -219,17 +220,21 @@ TASK_DEFINITION=$(
   "volumes": [
         {
             "name": "config",
-            "host": {
-                "sourcePath": "/home/ec2-user/config/${AGENCY}_${CONTAINER_NAME}.json"
-            }
+            "efsVolumeConfiguration": {
+              "fileSystemId": "$FILESYSTEMID",
+              "rootDirectory": "/"
+      }
         }
     ],
-  "networkMode": "host",
   "requiresCompatibilities": [
     "EC2"
   ],
   "cpu": "154",
-  "memory": "307"
+  "memory": "307",
+  "runtimePlatform": {
+      "cpuArchitecture": "ARM64",
+      "operatingSystemFamily": "LINUX"
+  }
 }
 EOF
 )

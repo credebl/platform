@@ -45,6 +45,8 @@ INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8005
 INBOUND_PORT=9005
 
+echo "FILESYSTEMID is : $FILESYSTEMID"
+
 increment_port() {
     local port="$1"
     local lower_limit="$2"
@@ -125,7 +127,7 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "walletScheme": "DatabasePerWallet",
   "indyLedger": $INDY_LEDGER,
   "endpoint": [
-    "$AGENT_ENDPOINT"
+    "$INBOUND_ENDPOINT"
   ],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",

@@ -115,6 +115,16 @@ else
   fi
 fi
 
+
+# Check if EXTERNAL_IP is domain or IP address
+if [[ $EXTERNAL_IP =~ $IP_REGEX ]]; then
+  # It's an IP address
+  CONTROLLER_ENDPOINT="${EXTERNAL_IP}:${ADMIN_PORT}"
+else
+  # It's a domain (or something else)
+  CONTROLLER_ENDPOINT="$EXTERNAL_IP"
+fi
+
 cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json
 {
   "label": "${AGENCY}_${CONTAINER_NAME}",
@@ -376,8 +386,7 @@ done
   echo "Creating agent config"
   cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
-        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",
-        "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
+        "CONTROLLER_ENDPOINT":"${CONTROLLER_ENDPOINT}"
     }
 EOF
 

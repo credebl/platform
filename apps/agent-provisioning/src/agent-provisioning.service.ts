@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { IWalletProvision } from './interface/agent-provisioning.interfaces';

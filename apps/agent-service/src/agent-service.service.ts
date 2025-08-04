@@ -621,8 +621,8 @@ export class AgentServiceService {
 
   private _buildStoreOrgAgentData(payload: IStoreOrgAgentDetails, orgAgentTypeId: string): IStoreOrgAgentDetails {
     return {
-      did: 'NA',
-      verkey: 'NA',
+      did: '',
+      verkey: '',
       isDidPublic: true,
       agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
       walletName: payload.walletName,

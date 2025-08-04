@@ -145,7 +145,8 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
   "adminPort": 8005,
   "tenancy": $TENANT,
-  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
+  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL",
+  "apiKey": "supersecret-that-too-16chars"
 }
 EOF
 # scp ${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json ${AGENT_HOST}:/home/ec2-user/config/

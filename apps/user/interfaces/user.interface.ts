@@ -192,6 +192,13 @@ export interface ISession {
   sessionType?: string;
 }
 
+export interface IUpdateAccountDetails {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: number;
+  accountId: string;
+}
+
 export interface ISessionDetails extends ISession {
   id: string;
   createdAt: Date;

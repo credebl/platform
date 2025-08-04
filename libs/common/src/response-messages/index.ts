@@ -66,7 +66,11 @@ export const ResponseMessages = {
       invalidResetLink: 'Invalid or expired reset password link',
       invalidAccessToken: 'Authentication failed',
       invalidRefreshToken: 'Invalid refreshToken provided',
-      userOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.'
+      userOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
+      errorInUpdateAccountDetails: 'Error in updating the account details',
+      errorInDeleteSession: 'Error in deleting the session',
+      errorInSessionCreation: 'Error in create session',
+      userAccountNotFound: 'User account not found'
     }
   },
   organisation: {

@@ -1899,13 +1899,11 @@ export class AgentServiceService {
         }
         agentApiKey = apiKey;
       } else {
+        if (!orgAgentDetails?.apiKey) {
+          throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
+        }
         agentApiKey = orgAgentDetails?.apiKey;
       }
-
-      if (!agentApiKey) {
-        throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
-      }
-
       const decryptedToken = await this.commonService.decryptPassword(agentApiKey);
       return decryptedToken;
     } catch (error) {

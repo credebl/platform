@@ -1,6 +1,6 @@
-/* eslint-disable camelcase */
 import { PrismaService } from '@credebl/prisma-service';
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
+/* eslint-disable camelcase */
 import {
   Prisma,
   ledgerConfig,
@@ -578,7 +578,7 @@ export class AgentServiceRepository {
   // eslint-disable-next-line camelcase
   async updateTenantToken(orgId: string, token: string): Promise<org_agents> {
     try {
-      return await this.prisma.org_agents.update({
+      const updatedAgent = await this.prisma.org_agents.update({
         where: {
           orgId
         },
@@ -586,6 +586,8 @@ export class AgentServiceRepository {
           apiKey: token
         }
       });
+
+      return updatedAgent;
     } catch (error) {
       this.logger.error(`[updateTenantToken] - Update tenant records details: ${JSON.stringify(error)}`);
       throw error;

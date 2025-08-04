@@ -80,7 +80,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
 import { IVerificationMethod } from 'apps/organization/interfaces/organization.interface';
 import { getAgentUrl } from '@credebl/common/common.utils';
-import e = require('express');
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {
@@ -1892,7 +1891,7 @@ export class AgentServiceService {
           orgId: orgAgentDetails.orgId
         };
         const { apiKey } = await this.getTenantToken(walletDetails);
-        if (apiKey) {
+        if (!apiKey) {
           throw new NotFoundException(ResponseMessages.agent.error.tenantWalletToken, {
             cause: new Error(),
             description: ResponseMessages.errorMessages.notFound

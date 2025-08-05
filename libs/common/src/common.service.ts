@@ -371,7 +371,7 @@ export class CommonService {
       {
         headers: {
           Accept: 'application/json',
-          Authorization: apiKey
+          Authorization: `Bearer ${apiKey}`
         }
       }
     );

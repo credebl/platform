@@ -359,8 +359,8 @@ export class CommonService {
         }
       }
     );
-    if (HttpStatus.OK !== agentBaseWalletDetils?.status) {
-      throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
+    if (!agentBaseWalletDetils.token) {
+      throw new NotFoundException(ResponseMessages.common.error.fetchBaseWalletToken);
     }
     return agentBaseWalletDetils.token;
   }
@@ -376,8 +376,8 @@ export class CommonService {
         }
       }
     );
-    if (HttpStatus.OK !== tenantWalletDetails?.status) {
-      throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
+    if (!tenantWalletDetails) {
+      throw new NotFoundException(ResponseMessages.common.error.fetchTenantWalletToken);
     }
     return tenantWalletDetails.token;
   }

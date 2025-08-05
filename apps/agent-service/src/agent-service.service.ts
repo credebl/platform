@@ -1886,7 +1886,7 @@ export class AgentServiceService {
         }
         const walletDetails: WalletDetails = {
           agentEndPoint: platformAdminSpinnedUp.org_agents[0]?.agentEndPoint,
-          apiKey: platformAdminSpinnedUp.org_agents[0]?.apiKey,
+          apiKey: await this.commonService.decryptPassword(platformAdminSpinnedUp.org_agents[0]?.apiKey),
           tenantId: orgAgentDetails.tenantId,
           orgId: orgAgentDetails.orgId
         };

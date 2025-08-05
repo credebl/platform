@@ -368,6 +368,7 @@ export class CommonService {
   async getTenantWalletToken(agentEndPoint: string, apiKey: string, tenantId: string): Promise<string> {
     const tenantWalletDetails = await this.httpPost(
       `${agentEndPoint}${CommonConstants.URL_SHARED_WALLET_TOKEN}${tenantId}`,
+      {},
       {
         headers: {
           Accept: 'application/json',

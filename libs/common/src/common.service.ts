@@ -326,10 +326,10 @@ export class CommonService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_SEND_BASIC_MESSAGE}`.replace('#', connectionId)
               : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
-                  .replace('#', connectionId)
-                  .replace('@', tenantId)
-              : null;
+                ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
+                    .replace('#', connectionId)
+                    .replace('@', tenantId)
+                : null;
           break;
         }
 
@@ -346,5 +346,38 @@ export class CommonService {
       this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);
       throw error;
     }
+  }
+
+  async getBaseAgentToken(agentEndPoint: string, apiKey: string): Promise<string> {
+    const agentBaseWalletDetils = await this.httpPost(
+      `${process.env.API_GATEWAY_PROTOCOL}://${agentEndPoint}${CommonConstants.URL_AGENT_TOKEN}`,
+      '',
+      {
+        headers: {
+          Accept: 'application/json',
+          Authorization: apiKey
+        }
+      }
+    );
+    if (HttpStatus.OK !== agentBaseWalletDetils?.status) {
+      throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
+    }
+    return agentBaseWalletDetils.token;
+  }
+
+  async getTenantWalletToken(agentEndPoint: string, apiKey: string, tenantId: string): Promise<string> {
+    const tenantWalletDetails = await this.httpPost(
+      `${process.env.API_GATEWAY_PROTOCOL}://${agentEndPoint}${CommonConstants.URL_SHARED_WALLET_TOKEN}${tenantId}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          Authorization: apiKey
+        }
+      }
+    );
+    if (HttpStatus.OK !== tenantWalletDetails?.status) {
+      throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
+    }
+    return tenantWalletDetails.token;
   }
 }

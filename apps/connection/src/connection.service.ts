@@ -32,6 +32,7 @@ import { RecordType, user } from '@prisma/client';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { agent_invitations } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { getAgentUrl } from '@credebl/common/common.utils';
 @Injectable()
 export class ConnectionService {
   constructor(
@@ -335,43 +336,6 @@ export class ConnectionService {
     return this.natsCall(pattern, payload);
   }
 
-  /**
-   * Description: Fetch agent url
-   * @param referenceId
-   * @returns agent URL
-   */
-  async getAgentUrl(
-    orgAgentType: string,
-    agentEndPoint: string,
-    tenantId?: string,
-    connectionInvitationFlag?: string
-  ): Promise<string> {
-    try {
-      let url;
-      if ('connection-invitation' === connectionInvitationFlag) {
-        if (orgAgentType === OrgAgentType.DEDICATED) {
-          url = `${agentEndPoint}${CommonConstants.URL_CONN_INVITE}`;
-        } else if (orgAgentType === OrgAgentType.SHARED) {
-          url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_CONNECTION_INVITATION}`.replace('#', tenantId);
-        } else {
-          throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
-        }
-      } else {
-        if (orgAgentType === OrgAgentType.DEDICATED) {
-          url = `${agentEndPoint}${CommonConstants.URL_CONN_LEGACY_INVITE}`;
-        } else if (orgAgentType === OrgAgentType.SHARED) {
-          url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_INVITATION}`.replace('#', tenantId);
-        } else {
-          throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
-        }
-      }
-      return url;
-    } catch (error) {
-      this.logger.error(`Error in get agent url: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
   async getQuestionAnswerAgentUrl(
     label: string,
     orgAgentType: string,
@@ -387,10 +351,10 @@ export class ConnectionService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_SEND_QUESTION}`.replace('#', connectionId)
               : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_SEND_QUESTION}`
-                  .replace('#', connectionId)
-                  .replace('@', tenantId)
-              : null;
+                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_SEND_QUESTION}`
+                    .replace('#', connectionId)
+                    .replace('@', tenantId)
+                : null;
           break;
         }
 
@@ -399,8 +363,8 @@ export class ConnectionService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_QUESTION_ANSWER_RECORD}`
               : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_QUESTION_ANSWER_RECORD}`.replace('#', tenantId)
-              : null;
+                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_QUESTION_ANSWER_RECORD}`.replace('#', tenantId)
+                : null;
           break;
         }
 
@@ -700,15 +664,7 @@ export class ConnectionService {
         recipientKey: recipientKey || undefined,
         invitationDid: connectionInvitationDid || undefined
       };
-
-      const createConnectionInvitationFlag = 'connection-invitation';
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      const url = await this.getAgentUrl(
-        orgAgentType,
-        agentEndPoint,
-        agentDetails?.tenantId,
-        createConnectionInvitationFlag
-      );
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.CONNECTION_INVITATION);
       const createConnectionInvitation = await this._createOutOfBandConnectionInvitation(connectionPayload, url, orgId);
       const connectionInvitationUrl = createConnectionInvitation?.response?.invitationUrl;
       const shortenedUrl = await this.storeConnectionObjectAndReturnUrl(

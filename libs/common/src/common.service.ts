@@ -12,6 +12,7 @@ import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios';
 import * as dotenv from 'dotenv';
 import { ResponseMessages } from './response-messages';
+import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
 import { RpcException } from '@nestjs/microservices';
 dotenv.config();
 

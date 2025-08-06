@@ -1251,14 +1251,27 @@ export class AgentServiceService {
 
   async getSchemaById(payload: GetSchemaAgentRedirection): Promise<object> {
     try {
+      let schemaResponse;
+
       const getApiKey = await this.getOrgAgentApiKey(payload.orgId);
-      const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID.replace(
-        '#',
-        `${payload.schemaId}`
-      )}`;
-      const schemaResponse = await this.commonService
-        .httpGet(url, { headers: { authorization: getApiKey } })
-        .then(async (schema) => schema);
+      if (OrgAgentType.DEDICATED === payload.agentType) {
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID.replace(
+          '#',
+          `${payload.schemaId}`
+        )}`;
+        schemaResponse = await this.commonService
+          .httpGet(url, { headers: { authorization: getApiKey } })
+          .then(async (schema) => schema);
+      } else if (OrgAgentType.SHARED === payload.agentType) {
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID}`.replace(
+          '#',
+          `${payload.payload.schemaId}`
+        );
+
+        schemaResponse = await this.commonService
+          .httpGet(url, { headers: { authorization: getApiKey } })
+          .then(async (schema) => schema);
+      }
       return schemaResponse;
     } catch (error) {
       this.logger.error(`Error in getting schema: ${error}`);

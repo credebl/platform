@@ -762,7 +762,7 @@ export class VerificationService {
       let credDefId;
       let schemaId;
       let certificate;
-      const url = await getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.GET_VERIFIED_PROOF);
+      const url = await getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.GET_VERIFIED_PROOF, proofId);
 
       const payload = { orgId, url };
 

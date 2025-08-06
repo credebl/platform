@@ -499,7 +499,9 @@ export const ResponseMessages = {
   common: {
     error: {
       invalidUrl: 'Please check the url suffix.',
-      invalidEndpoint: 'Invalid agent endpoint provided'
+      invalidEndpoint: 'Invalid agent endpoint provided',
+      fetchBaseWalletToken: 'Error while fetching base wallet token',
+      fetchTenantWalletToken: 'Error while fetching tenant wallet token'
     }
   }
 };

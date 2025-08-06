@@ -185,6 +185,7 @@ export class IssuanceService {
       }
 
       const url = await getAgentUrl(agentEndPoint, CommonConstants.CREATE_OFFER);
+      this.logger.log(`[sendCredentialCreateOffer] - agentEndPoint: ${agentEndPoint}, url: ${url}`);
 
       if (payload.credentialType === IssueCredentialType.JSONLD) {
         await validateAndUpdateIssuanceDates(credentialData);
@@ -370,6 +371,7 @@ export class IssuanceService {
       }
 
       const url = await getAgentUrl(agentEndPoint, CommonConstants.CREATE_OFFER_OUT_OF_BAND);
+      this.logger.log(`[sendCredentialOutOfBand] - agentEndPoint: ${agentEndPoint}, url: ${url}`);
 
       let issueData;
       if (credentialType === IssueCredentialType.INDY) {
@@ -825,6 +827,7 @@ export class IssuanceService {
       }
 
       const url = await getAgentUrl(agentDetails.agentEndPoint, CommonConstants.CREATE_OFFER_OUT_OF_BAND);
+      this.logger.log(`[outOfBoundCredentialOffer] - agentEndPoint: ${agentDetails.agentEndPoint}, url: ${url}`);
       const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
 
       if (!organizationDetails) {

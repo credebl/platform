@@ -528,7 +528,8 @@ export class UserService {
 
   async getSession(sessionId: string): Promise<ISessionDetails> {
     try {
-      const decodedSessionId = decodeURIComponent(sessionId);
+      const onceDecoded = decodeURIComponent(sessionId);
+      const decodedSessionId = decodeURIComponent(onceDecoded);
       const decryptedSessionId = await this.commonService.decryptPassword(decodedSessionId);
       const sessionDetails = await this.userRepository.getSession(decryptedSessionId);
       return sessionDetails;

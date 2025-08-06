@@ -13,7 +13,6 @@ import { HttpService } from '@nestjs/axios';
 import * as dotenv from 'dotenv';
 import { ResponseMessages } from './response-messages';
 import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
-import { OrgAgentType } from '../../enum/src/enum';
 import { RpcException } from '@nestjs/microservices';
 dotenv.config();
 
@@ -311,43 +310,6 @@ export class CommonService {
     }
   }
 
-  async sendBasicMessageAgentUrl(
-    label: string,
-    orgAgentType: string,
-    agentEndPoint: string,
-    tenantId?: string,
-    connectionId?: string
-  ): Promise<string> {
-    try {
-      let url;
-      switch (label) {
-        case 'send-basic-message': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_SEND_BASIC_MESSAGE}`.replace('#', connectionId)
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
-                    .replace('#', connectionId)
-                    .replace('@', tenantId)
-                : null;
-          break;
-        }
-
-        default: {
-          break;
-        }
-      }
-
-      if (!url) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
-      }
-      return url;
-    } catch (error) {
-      this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
   async getBaseAgentToken(agentEndPoint: string, apiKey: string): Promise<string> {
     const agentBaseWalletDetils = await this.httpPost(
       `${process.env.API_GATEWAY_PROTOCOL}://${agentEndPoint}${CommonConstants.URL_AGENT_TOKEN}`,
@@ -359,8 +321,8 @@ export class CommonService {
         }
       }
     );
-    if (HttpStatus.OK !== agentBaseWalletDetils?.status) {
-      throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
+    if (!agentBaseWalletDetils) {
+      throw new NotFoundException(ResponseMessages.common.error.fetchBaseWalletToken);
     }
     return agentBaseWalletDetils.token;
   }
@@ -368,6 +330,7 @@ export class CommonService {
   async getTenantWalletToken(agentEndPoint: string, apiKey: string, tenantId: string): Promise<string> {
     const tenantWalletDetails = await this.httpPost(
       `${process.env.API_GATEWAY_PROTOCOL}://${agentEndPoint}${CommonConstants.URL_SHARED_WALLET_TOKEN}${tenantId}`,
+      {},
       {
         headers: {
           Accept: 'application/json',
@@ -375,8 +338,8 @@ export class CommonService {
         }
       }
     );
-    if (HttpStatus.OK !== tenantWalletDetails?.status) {
-      throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
+    if (!tenantWalletDetails) {
+      throw new NotFoundException(ResponseMessages.common.error.fetchTenantWalletToken);
     }
     return tenantWalletDetails.token;
   }

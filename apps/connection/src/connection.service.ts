@@ -18,7 +18,7 @@ import {
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { OrgAgentType, ConnectionProcessState } from '@credebl/enum/enum';
+import { ConnectionProcessState } from '@credebl/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
@@ -188,23 +188,13 @@ export class ConnectionService {
     try {
       const { alias, myDid, outOfBandId, state, theirDid, theirLabel } = connectionSearchCriteria;
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
       let url: string;
-      if (orgAgentType === OrgAgentType.DEDICATED) {
-        url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
-      } else if (orgAgentType === OrgAgentType.SHARED) {
-        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATIONS}`.replace(
-          '#',
-          agentDetails.tenantId
-        );
-      } else {
-        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
-      }
+      url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTIONS}`;
 
       //Create the dynamic URL for Search Criteria
       const criteriaParams = [];
@@ -263,24 +253,11 @@ export class ConnectionService {
   async getConnectionsById(user: IUserRequest, connectionId: string, orgId: string): Promise<IConnectionDetailsById> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-
-      let url;
-      if (orgAgentType === OrgAgentType.DEDICATED) {
-        url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTION_BY_ID}`.replace('#', connectionId);
-      } else if (orgAgentType === OrgAgentType.SHARED) {
-        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID}`
-          .replace('#', connectionId)
-          .replace('@', agentDetails.tenantId);
-      } else {
-        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
-      }
-
+      const url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTION_BY_ID}`.replace('#', connectionId);
       const createConnectionInvitation = await this._getConnectionsByConnectionId(url, orgId);
       return createConnectionInvitation?.response;
     } catch (error) {
@@ -301,14 +278,11 @@ export class ConnectionService {
   async getQuestionAnswersRecord(orgId: string): Promise<object> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-
-      const label = 'get-question-answer-record';
-      const url = await this.getQuestionAnswerAgentUrl(label, orgAgentType, agentEndPoint, agentDetails?.tenantId);
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.GET_QUESTION_ANSWER_RECORD);
 
       const record = await this._getQuestionAnswersRecord(url, orgId);
       return record;
@@ -334,54 +308,6 @@ export class ConnectionService {
     const pattern = { cmd: 'agent-get-question-answer-record' };
     const payload = { url, orgId };
     return this.natsCall(pattern, payload);
-  }
-
-  async getQuestionAnswerAgentUrl(
-    label: string,
-    orgAgentType: string,
-    agentEndPoint: string,
-    tenantId?: string,
-    connectionId?: string
-  ): Promise<string> {
-    try {
-      let url;
-      switch (label) {
-        case 'send-question': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_SEND_QUESTION}`.replace('#', connectionId)
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_SEND_QUESTION}`
-                    .replace('#', connectionId)
-                    .replace('@', tenantId)
-                : null;
-          break;
-        }
-
-        case 'get-question-answer-record': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_QUESTION_ANSWER_RECORD}`
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_QUESTION_ANSWER_RECORD}`.replace('#', tenantId)
-                : null;
-          break;
-        }
-
-        default: {
-          break;
-        }
-      }
-
-      if (!url) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
-      }
-
-      return url;
-    } catch (error) {
-      this.logger.error(`Error get question answer agent Url: ${JSON.stringify(error)}`);
-      throw error;
-    }
   }
 
   async _getOrgAgentApiKey(orgId: string): Promise<{
@@ -411,25 +337,11 @@ export class ConnectionService {
   ): Promise<IReceiveInvitationResponse> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-
-      let url;
-      if (orgAgentType === OrgAgentType.DEDICATED) {
-        url = `${agentEndPoint}${CommonConstants.URL_RECEIVE_INVITATION_URL}`;
-      } else if (orgAgentType === OrgAgentType.SHARED) {
-        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_RECEIVE_INVITATION_URL}`.replace(
-          '#',
-          agentDetails.tenantId
-        );
-      } else {
-        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
-      }
-
+      const url = `${agentEndPoint}${CommonConstants.URL_RECEIVE_INVITATION_URL}`;
       const createConnectionInvitation = await this._receiveInvitationUrl(url, orgId, receiveInvitationUrl);
       return createConnectionInvitation.response;
     } catch (error) {
@@ -485,22 +397,11 @@ export class ConnectionService {
   ): Promise<IReceiveInvitationResponse> {
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-
       const { agentEndPoint } = agentDetails;
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-
-      let url;
-      if (orgAgentType === OrgAgentType.DEDICATED) {
-        url = `${agentEndPoint}${CommonConstants.URL_RECEIVE_INVITATION}`;
-      } else if (orgAgentType === OrgAgentType.SHARED) {
-        url = `${agentEndPoint}${CommonConstants.URL_SHAGENT_RECEIVE_INVITATION}`.replace('#', agentDetails.tenantId);
-      } else {
-        throw new NotFoundException(ResponseMessages.connection.error.agentUrlNotFound);
-      }
-
+      const url = `${agentEndPoint}${CommonConstants.URL_RECEIVE_INVITATION}`;
       const createConnectionInvitation = await this._receiveInvitation(url, orgId, receiveInvitation);
       return createConnectionInvitation?.response;
     } catch (error) {
@@ -553,15 +454,7 @@ export class ConnectionService {
         question
       };
 
-      const orgAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      const label = 'send-question';
-      const url = await this.getQuestionAnswerAgentUrl(
-        label,
-        orgAgentType,
-        agentEndPoint,
-        agentDetails?.tenantId,
-        connectionId
-      );
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.SEND_QUESTION, connectionId);
 
       const createQuestion = await this._sendQuestion(questionPayload, url, orgId);
       return createQuestion;
@@ -833,16 +726,7 @@ export class ConnectionService {
       const questionPayload = {
         content
       };
-
-      const organizationAgentType = await this.connectionRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      const label = 'send-basic-message';
-      const agentUrl = await this.commonService.sendBasicMessageAgentUrl(
-        label,
-        organizationAgentType,
-        agentEndPoint,
-        agentDetails?.tenantId,
-        connectionId
-      );
+      const agentUrl = await getAgentUrl(agentEndPoint, CommonConstants.SEND_BASIC_MESSAGE, connectionId);
 
       const sendBasicMessage = await this._sendBasicMessageToAgent(questionPayload, agentUrl, orgId);
       return sendBasicMessage;

@@ -12,8 +12,6 @@ import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios';
 import * as dotenv from 'dotenv';
 import { ResponseMessages } from './response-messages';
-import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
-import { OrgAgentType } from '../../enum/src/enum';
 import { RpcException } from '@nestjs/microservices';
 dotenv.config();
 
@@ -308,43 +306,6 @@ export class CommonService {
       return '';
     } catch (error) {
       throw new Error(`Failed to create dynamic URL: ${error.message}`);
-    }
-  }
-
-  async sendBasicMessageAgentUrl(
-    label: string,
-    orgAgentType: string,
-    agentEndPoint: string,
-    tenantId?: string,
-    connectionId?: string
-  ): Promise<string> {
-    try {
-      let url;
-      switch (label) {
-        case 'send-basic-message': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_SEND_BASIC_MESSAGE}`.replace('#', connectionId)
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
-                    .replace('#', connectionId)
-                    .replace('@', tenantId)
-                : null;
-          break;
-        }
-
-        default: {
-          break;
-        }
-      }
-
-      if (!url) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
-      }
-      return url;
-    } catch (error) {
-      this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);
-      throw error;
     }
   }
 

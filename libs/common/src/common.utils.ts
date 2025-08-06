@@ -90,7 +90,10 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
       String(CommonConstants.CREATE_OUT_OF_BAND_PROOF_PRESENTATION),
       String(CommonConstants.URL_CREATE_OUT_OF_BAND_CREATE_REQUEST)
     ],
-    [String(CommonConstants.GET_VERIFIED_PROOF), String(CommonConstants.URL_PROOF_FORM_DATA)]
+    [String(CommonConstants.GET_VERIFIED_PROOF), String(CommonConstants.URL_PROOF_FORM_DATA)],
+    [String(CommonConstants.GET_QUESTION_ANSWER_RECORD), String(CommonConstants.URL_QUESTION_ANSWER_RECORD)],
+    [String(CommonConstants.SEND_QUESTION), String(CommonConstants.URL_SEND_QUESTION)],
+    [String(CommonConstants.SEND_BASIC_MESSAGE), String(CommonConstants.URL_SEND_BASIC_MESSAGE)]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);

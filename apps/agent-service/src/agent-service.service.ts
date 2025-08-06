@@ -527,8 +527,8 @@ export class AgentServiceService {
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
       const agentBaseWalletToken = await this.commonService.getBaseAgentToken(
-        agentDetails.gentEndPoint,
-        agentDetails?.agentToken
+        agentDetails.agentEndPoint,
+        agentDetails.agentToken
       );
       if (!agentBaseWalletToken) {
         throw new BadRequestException(ResponseMessages.agent.error.baseWalletToken, {
@@ -930,9 +930,7 @@ export class AgentServiceService {
       }
 
       const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-
-      const url = this.constructUrl(agentDetails, getOrgAgentType);
+      const url = this.constructUrl(agentDetails);
 
       if (createDidPayload.method === DidMethod.POLYGON) {
         createDidPayload.endpoint = agentDetails.agentEndPoint;
@@ -977,12 +975,8 @@ export class AgentServiceService {
     }
   }
 
-  private constructUrl(agentDetails, getOrgAgentType): string {
-    if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
-      return `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
-    } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
-      return `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
-    }
+  private constructUrl(agentDetails): string {
+    return `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
   }
 
   private async getDidDetails(url, payload, apiKey): Promise<object> {
@@ -1226,10 +1220,7 @@ export class AgentServiceService {
             });
           });
       } else if (OrgAgentType.SHARED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_SCHEMA}`.replace(
-          '#',
-          `${payload.tenantId}`
-        );
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_CREATE_SCHEMA}`;
         const schemaPayload = {
           attributes: payload.payload.attributes,
           version: payload.payload.version,
@@ -1267,10 +1258,10 @@ export class AgentServiceService {
           .httpGet(url, { headers: { authorization: getApiKey } })
           .then(async (schema) => schema);
       } else if (OrgAgentType.SHARED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`
-          .replace('@', `${payload.payload.schemaId}`)
-          .replace('#', `${payload.tenantId}`);
-
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID}`.replace(
+          '#',
+          `${payload.payload.schemaId}`
+        );
         schemaResponse = await this.commonService
           .httpGet(url, { headers: { authorization: getApiKey } })
           .then(async (schema) => schema);
@@ -1299,10 +1290,7 @@ export class AgentServiceService {
           .httpPost(url, credDefPayload, { headers: { authorization: getApiKey } })
           .then(async (credDef) => credDef);
       } else if (OrgAgentType.SHARED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_CRED_DEF}`.replace(
-          '#',
-          `${payload.tenantId}`
-        );
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_CREATE_CRED_DEF}`;
         const credDefPayload = {
           tag: payload.payload.tag,
           schemaId: payload.payload.schemaId,
@@ -1334,9 +1322,10 @@ export class AgentServiceService {
           .httpGet(url, { headers: { authorization: getApiKey } })
           .then(async (credDef) => credDef);
       } else if (OrgAgentType.SHARED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`
-          .replace('@', `${payload.payload.credentialDefinitionId}`)
-          .replace('#', `${payload.tenantId}`);
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_CRED_DEF_BY_ID}`.replace(
+          '#',
+          `${payload.payload.credentialDefinitionId}`
+        );
         credDefResponse = await this.commonService
           .httpGet(url, { headers: { authorization: getApiKey } })
           .then(async (credDef) => credDef);

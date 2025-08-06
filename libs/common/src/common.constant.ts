@@ -15,8 +15,8 @@ export enum CommonConstants {
   RESP_CONFLICT = 409,
   // URL constants for various GET/POST calls
   // CONNECTION SERVICES
-  URL_CONN_GET_CONNECTIONS = '/connections',
-  URL_CONN_GET_CONNECTION_BY_ID = '/connections/#',
+  URL_CONN_GET_CONNECTIONS = '/didcomm/connections',
+  URL_CONN_GET_CONNECTION_BY_ID = '/didcomm/connections/#',
   URL_CONN_CREATE_CONNECTION_INVITE = '/connections/create-invitation',
   URL_CONN_RECEIVE_CONNECTION_INVITE = '/connections/receive-invitation',
   URL_CONN_ACCEPT_CONNECTION_INVITE = '/connections/#/accept-invitation',
@@ -25,8 +25,8 @@ export enum CommonConstants {
   URL_CONN_METADATA = '/connections/#/metadata',
   URL_CONN_LEGACY_INVITE = '/didcomm/oob/create-legacy-invitation',
   URL_CONN_INVITE = '/didcomm/oob/create-invitation',
-  URL_RECEIVE_INVITATION_URL = '/oob/receive-invitation-url',
-  URL_RECEIVE_INVITATION = '/oob/receive-invitation',
+  URL_RECEIVE_INVITATION_URL = '/didcomm/oob/receive-invitation-url',
+  URL_RECEIVE_INVITATION = '/didcomm/oob/receive-invitation',
   URL_CONN_INVITATION = '/url',
   URL_AGENT_TOKEN = '/agent/token',
   URL_SHARED_WALLET_TOKEN = '/multi-tenancy/get-token/',
@@ -76,16 +76,15 @@ export enum CommonConstants {
   URL_ISSUE_GET_CREDS_BY_CRED_REC_ID = '/didcomm/credentials/#',
   URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/didcomm/credentials/create-offer-oob',
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
-  URL_SEND_QUESTION = '/question-answer/question/#',
-  URL_QUESTION_ANSWER_RECORD = '/question-answer',
-  URL_SEND_BASIC_MESSAGE = '/basic-messages/#',
+  URL_SEND_QUESTION = '/didcomm/question-answer/question/#',
+  URL_QUESTION_ANSWER_RECORD = '/didcomm/question-answer',
+  URL_SEND_BASIC_MESSAGE = '/didcomm/basic-messages/#',
 
   // SCHEMA & CRED DEF SERVICES
-  URL_SCHM_CREATE_SCHEMA = '/schemas',
-  URL_SCHM_GET_SCHEMA_BY_ID = '/schemas/#',
-  URL_SCHM_GET_SCHEMA_BY_ATTRB = '/schemas/created',
-  URL_SCHM_CREATE_CRED_DEF = '/credential-definitions',
-  URL_SCHM_GET_CRED_DEF_BY_ID = '/credential-definitions/#',
+  URL_SCHM_CREATE_SCHEMA = '/anoncreds/schemas',
+  URL_SCHM_GET_SCHEMA_BY_ID = '/anoncreds/schemas/#',
+  URL_SCHM_CREATE_CRED_DEF = '/anoncreds/credential-definitions',
+  URL_SCHM_GET_CRED_DEF_BY_ID = '/anoncreds/credential-definitions/#',
   URL_SCHM_GET_CRED_DEF_BY_ATTRB = '/credential-definitions/created',
 
   // POLYGON BASED W3C SCHEMAS
@@ -94,37 +93,7 @@ export enum CommonConstants {
 
   // SHARED AGENT
   URL_SHAGENT_CREATE_TENANT = '/multi-tenancy/create-tenant',
-  URL_SHAGENT_CREATE_DID = '/multi-tenancy/create-did/',
-  URL_SHAGENT_WITH_TENANT_AGENT = '/multi-tenancy/with-tenant-agent',
-  URL_SHAGENT_CREATE_SCHEMA = '/multi-tenancy/schema/#',
-  URL_SHAGENT_GET_SCHEMA = '/multi-tenancy/schema/@/#',
-  URL_SHAGENT_CREATE_CRED_DEF = '/multi-tenancy/credential-definition/#',
-  URL_SHAGENT_GET_CRED_DEF = '/multi-tenancy/credential-definition/@/#',
-  URL_SHAGENT_CREATE_INVITATION = '/multi-tenancy/create-legacy-invitation/#',
-  URL_SHAGENT_CREATE_CONNECTION_INVITATION = '/multi-tenancy/create-invitation/#',
-  URL_SHAGENT_GET_CREATEED_INVITATIONS = '/multi-tenancy/connections/#',
-  URL_SHAGENT_GET_CREATEED_INVITATION_BY_CONNECTIONID = '/multi-tenancy/connections/#/@',
-  URL_SHAGENT_CREATE_OFFER = '/multi-tenancy/credentials/create-offer/#',
-  URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND = '/multi-tenancy/credentials/create-offer-oob/#',
-  URL_SHAGENT_GET_CREDENTIALS = '/multi-tenancy/credentials/#',
-  URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID = '/multi-tenancy/credentials/#/@',
-  URL_SHAGENT_GET_PROOFS = '/multi-tenancy/proofs/#',
-  URL_SHAGENT_GET_PROOFS_BY_PRESENTATION_ID = '/multi-tenancy/proofs/#/@',
-  URL_SHAGENT_REQUEST_PROOF = '/multi-tenancy/proofs/request-proof/#',
-  URL_SHAGENT_ACCEPT_PRESENTATION = '/multi-tenancy/proofs/@/accept-presentation/#',
-  URL_SHAGENT_OUT_OF_BAND_CREATE_REQUEST = '/multi-tenancy/proofs/create-request-oob/#',
-  URL_SHAGENT_PROOF_FORM_DATA = '/multi-tenancy/form-data/#/@',
-  URL_SHAGENT_ACCEPT_OFFER = '/multi-tenancy/credentials/accept-offer/#',
-  URL_SHAGENT_RECEIVE_INVITATION_URL = '/multi-tenancy/receive-invitation-url/#',
-  URL_SHAGENT_RECEIVE_INVITATION = '/multi-tenancy/receive-invitation/#',
-  URL_SHAGENT_SEND_QUESTION = '/multi-tenancy/question-answer/question/#/@',
-  URL_SHAGENT_SEND_ANSWER = '/multi-tenancy/question-answer/answer/#/@',
-  URL_SHAGENT_QUESTION_ANSWER_RECORD = '/multi-tenancy/question-answer/#',
   URL_SHAGENT_DELETE_SUB_WALLET = '/multi-tenancy/#',
-  URL_SHARED_SEND_BASIC_MESSAGE = '/multi-tenancy/basic-messages/#/@',
-  URL_SHAGENT_ACCEPT_PROOF_REQUEST = '/multi-tenancy/proofs/#/accept-request/@',
-  URL_SHARED_AGENT_SIGN_DATA = '/multi-tenancy/credential/sign/#',
-  URL_SHARED_AGENT_VERIFY_SIGNED_DATA = '/multi-tenancy/credential/verify/#',
 
   // PROOF SERVICES
   URL_SEND_PROOF_REQUEST = '/didcomm/proofs/request-proof',
@@ -359,7 +328,10 @@ export enum CommonConstants {
 
   CLOUD_WALLET_GET_PROOF_REQUEST = '/didcomm/proofs',
   CLOUD_WALLET_ACCEPT_PROOF_REQUEST = '/accept-request',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   CLOUD_WALLET_CONNECTION_BY_ID = '/didcomm/connections',
+  /* eslint-disable @typescript-eslint/no-duplicate-enum-values */
+  RECEIVE_INVITATION_BY_URL = '/didcomm/oob/receive-invitation-url',
   CLOUD_WALLET_CREDENTIAL = '/didcomm/credentials',
   CLOUD_WALLET_BASIC_MESSAGE = '/didcomm/basic-messages/',
 
@@ -393,7 +365,6 @@ export enum CommonConstants {
   CLOUD_WALLET_SERVICE = 'cloud-wallet',
 
   //CLOUD WALLET
-  RECEIVE_INVITATION_BY_URL = '/didcomm/oob/receive-invitation-url',
   ACCEPT_OFFER = '/didcomm/credentials/accept-offer',
   SEED_LENGTH = 32,
 
@@ -409,7 +380,10 @@ export enum CommonConstants {
   REQUEST_PROOF = 'request-proof',
   ACCEPT_PRESENTATION = 'accept-presentation',
   CREATE_OUT_OF_BAND_PROOF_PRESENTATION = 'create-request-out-of-band',
-  GET_VERIFIED_PROOF = 'get-verified-proof'
+  GET_VERIFIED_PROOF = 'get-verified-proof',
+  GET_QUESTION_ANSWER_RECORD = 'get-question-answer-record',
+  SEND_QUESTION = 'send-question',
+  SEND_BASIC_MESSAGE = 'send-basic-message'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

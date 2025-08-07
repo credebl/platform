@@ -311,16 +311,14 @@ export class CommonService {
   }
 
   async getBaseAgentToken(agentEndPoint: string, apiKey: string): Promise<string> {
-    const agentBaseWalletDetils = await this.httpPost(
-      `${process.env.API_GATEWAY_PROTOCOL}://${agentEndPoint}${CommonConstants.URL_AGENT_TOKEN}`,
-      '',
-      {
-        headers: {
-          Accept: 'application/json',
-          Authorization: apiKey
-        }
+    const normalizedBaseUrl = this.normalizeUrlWithProtocol(agentEndPoint);
+    this.logger.log(`Fetching base agent token from ${normalizedBaseUrl}`);
+    const agentBaseWalletDetils = await this.httpPost(`${normalizedBaseUrl}${CommonConstants.URL_AGENT_TOKEN}`, '', {
+      headers: {
+        Accept: 'application/json',
+        Authorization: apiKey
       }
-    );
+    });
     if (!agentBaseWalletDetils) {
       throw new NotFoundException(ResponseMessages.common.error.fetchBaseWalletToken);
     }
@@ -328,8 +326,10 @@ export class CommonService {
   }
 
   async getTenantWalletToken(agentEndPoint: string, apiKey: string, tenantId: string): Promise<string> {
+    const normalizedBaseUrl = this.normalizeUrlWithProtocol(agentEndPoint);
+    this.logger.log(`Fetching tenant wallet token for tenantId: ${tenantId} from ${normalizedBaseUrl}`);
     const tenantWalletDetails = await this.httpPost(
-      `${process.env.API_GATEWAY_PROTOCOL}://${agentEndPoint}${CommonConstants.URL_SHARED_WALLET_TOKEN}${tenantId}`,
+      `${normalizedBaseUrl}${CommonConstants.URL_SHARED_WALLET_TOKEN}${tenantId}`,
       {},
       {
         headers: {
@@ -342,5 +342,12 @@ export class CommonService {
       throw new NotFoundException(ResponseMessages.common.error.fetchTenantWalletToken);
     }
     return tenantWalletDetails.token;
+  }
+
+  async normalizeUrlWithProtocol(baseUrl: string): Promise<string> {
+    if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
+      return baseUrl;
+    }
+    return `${process.env.API_GATEWAY_PROTOCOL}://${baseUrl}`;
   }
 }

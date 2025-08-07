@@ -311,7 +311,7 @@ export class CommonService {
   }
 
   async getBaseAgentToken(agentEndPoint: string, apiKey: string): Promise<string> {
-    const normalizedBaseUrl = this.normalizeUrlWithProtocol(agentEndPoint);
+    const normalizedBaseUrl = await this.normalizeUrlWithProtocol(agentEndPoint);
     this.logger.log(`Fetching base agent token from ${normalizedBaseUrl}`);
     const agentBaseWalletDetils = await this.httpPost(`${normalizedBaseUrl}${CommonConstants.URL_AGENT_TOKEN}`, '', {
       headers: {
@@ -326,7 +326,7 @@ export class CommonService {
   }
 
   async getTenantWalletToken(agentEndPoint: string, apiKey: string, tenantId: string): Promise<string> {
-    const normalizedBaseUrl = this.normalizeUrlWithProtocol(agentEndPoint);
+    const normalizedBaseUrl = await this.normalizeUrlWithProtocol(agentEndPoint);
     this.logger.log(`Fetching tenant wallet token for tenantId: ${tenantId} from ${normalizedBaseUrl}`);
     const tenantWalletDetails = await this.httpPost(
       `${normalizedBaseUrl}${CommonConstants.URL_SHARED_WALLET_TOKEN}${tenantId}`,

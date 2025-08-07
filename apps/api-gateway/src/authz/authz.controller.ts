@@ -151,6 +151,47 @@ export class AuthzController {
    * @body LoginUserDto
    * @returns User's access token details
    */
+  // @Post('/signin')
+  // @ApiOperation({
+  //   summary: 'Authenticate the user for the access',
+  //   description: 'Allows registered user to sign.'
+  // })
+  // @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
+  // @ApiBody({ type: LoginUserDto })
+  // async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
+  //   console.log('🚀 ~ AuthzController ~ login ~ loginUserDto:11111111111111111', loginUserDto);
+  //   if ('google' === loginUserDto.provider) {
+  //     const userData = await this.authzService.login({
+  //       provider: 'google',
+  //       idToken: loginUserDto.idToken
+  //     });
+
+  //     return res.status(HttpStatus.OK).json({
+  //       success: true,
+  //       message: 'Google login successful',
+  //       data: userData
+  //     });
+  //   }
+
+  //   if (loginUserDto.email) {
+  //     const userData = await this.authzService.login({
+  //       email: loginUserDto.email,
+  //       password: loginUserDto.password,
+  //       provider: 'credentials'
+  //     });
+
+  //     const finalResponse: IResponseType = {
+  //       statusCode: HttpStatus.OK,
+  //       message: ResponseMessages.user.success.login,
+  //       data: userData
+  //     };
+
+  //     return res.status(HttpStatus.OK).json(finalResponse);
+  //   } else {
+  //     throw new UnauthorizedException(`Please provide valid credentials`);
+  //   }
+  // }
+
   @Post('/signin')
   @ApiOperation({
     summary: 'Authenticate the user for the access',
@@ -159,6 +200,9 @@ export class AuthzController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
   @ApiBody({ type: LoginUserDto })
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
+    // eslint-disable-next-line no-console
+    console.log('loginUserDto', loginUserDto);
+
     if (loginUserDto.email) {
       const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password);
 

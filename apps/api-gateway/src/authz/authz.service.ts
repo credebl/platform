@@ -50,6 +50,18 @@ export class AuthzService extends BaseService {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-email-verification', payload);
   }
 
+  // async login(payload: {
+  //   email?: string;
+  //   password?: string;
+  //   provider?: 'google' | 'credentials';
+  //   idToken?: string;
+  //   isPasskey?: boolean;
+  // }): Promise<ISignInUser> {
+  //   console.log('payload2222', payload);
+
+  //   return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-holder-login', payload);
+  // }
+
   async login(email: string, password?: string, isPasskey = false): Promise<ISignInUser> {
     const payload = { email, password, isPasskey };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-holder-login', payload);

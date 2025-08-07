@@ -55,6 +55,17 @@ export interface ISendVerificationEmail {
   clientSecret?: string;
 }
 
+// export interface IUserInformation {
+//   email: string;
+//   password?: string;
+//   firstName: string;
+//   lastName: string;
+//   isPasskey: boolean;
+//   isHolder?: boolean;
+//   provider?: 'google' | 'credentials';
+//   idToken?: string;
+// }
+
 export interface IUserInformation {
   email: string;
   password: string;
@@ -174,6 +185,13 @@ export interface IVerifyUserEmail {
   email: string;
   verificationCode: string;
 }
+// export interface IUserSignIn {
+//   email: string;
+//   password?: string;
+//   isPasskey?: boolean;
+//   provider?: 'google' | 'credentials';
+//   idToken?: string;
+// }
 
 export interface IUserSignIn {
   email: string;

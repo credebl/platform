@@ -44,6 +44,8 @@ import {
   ISessions,
   IUpdateAccountDetails
 } from '../interfaces/user.interface';
+// import { OAuth2Client } from 'google-auth-library';
+
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
@@ -68,9 +70,12 @@ import { toNumber } from '@credebl/common/cast.helper';
 import * as jwt from 'jsonwebtoken';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { getCredentialsByAlias } from 'apps/api-gateway/src/user/utils';
+// import { CreateUserDto } from '../dtos/create-user.dto';
 
 @Injectable()
 export class UserService {
+  // private oauthClient: OAuth2Client;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly clientRegistrationService: ClientRegistrationService,
@@ -85,7 +90,9 @@ export class UserService {
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
-  ) {}
+  ) {
+    // this.oauthClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
 
   /**
    *
@@ -327,6 +334,7 @@ export class UserService {
         userInfo.password = decryptedPassword;
         try {
           keycloakDetails = await this.clientRegistrationService.createUser(
+            // userInfo as CreateUserDto,
             userInfo,
             process.env.KEYCLOAK_REALM,
             token
@@ -341,6 +349,7 @@ export class UserService {
 
         try {
           keycloakDetails = await this.clientRegistrationService.createUser(
+            // userInfo as CreateUserDto,
             userInfo,
             process.env.KEYCLOAK_REALM,
             token
@@ -528,6 +537,32 @@ export class UserService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  // async verifyGoogleToken(idToken: string): Promise<{
+  //   email: string;
+  //   firstName: string;
+  //   lastName: string;
+  //   email_verified: boolean;
+  // }> {
+  //   const ticket = await this.oauthClient.verifyIdToken({
+  //     idToken,
+  //     audience: process.env.GOOGLE_CLIENT_ID
+  //   });
+
+  //   const payload = ticket.getPayload();
+
+  //   if (!payload?.email_verified) {
+  //     throw new UnauthorizedException('Google account is not verified');
+  //   }
+
+  //   return {
+  //     email: payload.email,
+  //     firstName: payload.given_name || '',
+  //     lastName: payload.family_name || '',
+  //     // eslint-disable-next-line camelcase
+  //     email_verified: payload.email_verified
+  //   };
+  // }
 
   async getSession(sessionId: string): Promise<ISessionDetails> {
     try {

@@ -1265,7 +1265,7 @@ export class AgentServiceService {
       } else if (OrgAgentType.SHARED === payload.agentType) {
         const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID}`.replace(
           '#',
-          `${payload.tenantId}`
+          `${payload.payload.schemaId}`
         );
 
         schemaResponse = await this.commonService

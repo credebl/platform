@@ -76,6 +76,11 @@ export class UserController {
   @MessagePattern({ cmd: 'user-holder-login' })
   async login(payload: IUserSignIn): Promise<ISignInUser> {
     const loginRes = await this.userService.login(payload);
+    // if ('google' === payload.provider) {
+    //   console.log('google4444444');
+
+    //   return this.userService.login(payload);
+    // }
     return loginRes;
   }
 

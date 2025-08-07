@@ -297,17 +297,7 @@ export class SchemaService extends BaseService {
           description: ResponseMessages.errorMessages.badRequest
         });
       }
-
-      const getAgentDetails = await this.schemaRepository.getAgentType(orgId);
-      const orgAgentType = await this.schemaRepository.getOrgAgentType(getAgentDetails.org_agents[0].orgAgentTypeId);
-      let url;
-      if (OrgAgentType.DEDICATED === orgAgentType) {
-        url = `${agentEndPoint}${CommonConstants.DEDICATED_CREATE_POLYGON_W3C_SCHEMA}`;
-      } else if (OrgAgentType.SHARED === orgAgentType) {
-        const { tenantId } = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
-        url = `${agentEndPoint}${CommonConstants.SHARED_CREATE_POLYGON_W3C_SCHEMA}${tenantId}`;
-      }
-
+      const url = `${agentEndPoint}${CommonConstants.CREATE_POLYGON_W3C_SCHEMA}`;
       const schemaObject = await w3cSchemaBuilder(attributes, schemaName, description);
       if (!schemaObject) {
         throw new BadRequestException(ResponseMessages.schema.error.schemaBuilder, {

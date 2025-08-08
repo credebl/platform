@@ -87,8 +87,7 @@ export enum CommonConstants {
   URL_SCHM_GET_CRED_DEF_BY_ID = '/anoncreds/credential-definitions/#',
 
   // POLYGON BASED W3C SCHEMAS
-  DEDICATED_CREATE_POLYGON_W3C_SCHEMA = '/polygon/create-schema',
-  SHARED_CREATE_POLYGON_W3C_SCHEMA = '/multi-tenancy/polygon-w3c/schema/',
+  CREATE_POLYGON_W3C_SCHEMA = '/polygon/create-schema',
 
   // SHARED AGENT
   URL_SHAGENT_CREATE_TENANT = '/multi-tenancy/create-tenant',

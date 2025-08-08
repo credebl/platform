@@ -1047,17 +1047,15 @@ export class AgentServiceService {
    */
   async createSecp256k1KeyPair(orgId: string): Promise<object> {
     try {
-      const orgAgentDetails = await this.agentServiceRepository.getAgentApiKey(orgId);
-      if (!orgAgentDetails) {
-        throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.notFound
-        });
-      }
-      const getDcryptedToken = await this.commonService.decryptPassword(orgAgentDetails.apiKey);
+      const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
+        CommonConstants.PLATFORM_ADMIN_ORG
+      );
 
-      const url = `${orgAgentDetails.agentEndPoint}${CommonConstants.CREATE_POLYGON_SECP256k1_KEY}`;
+      const getPlatformAgentEndPoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
+      const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
 
+      const url = `${getPlatformAgentEndPoint}${CommonConstants.CREATE_POLYGON_SECP256k1_KEY}`;
+      this.logger.log(`Creating Secp256k1 key pair at URL: ${url}`);
       const createKeyPairResponse = await this.commonService.httpPost(
         url,
         {},
@@ -1881,7 +1879,7 @@ export class AgentServiceService {
         }
         const walletDetails: WalletDetails = {
           agentEndPoint: platformAdminSpinnedUp.org_agents[0]?.agentEndPoint,
-          apiKey: platformAdminSpinnedUp.org_agents[0]?.apiKey,
+          apiKey: await this.commonService.decryptPassword(platformAdminSpinnedUp.org_agents[0]?.apiKey),
           tenantId: orgAgentDetails.tenantId,
           orgId: orgAgentDetails.orgId
         };

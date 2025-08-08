@@ -23,13 +23,6 @@ export interface ISelectedOrgInterface {
   organisation: object;
 }
 
-export interface IOrganizationInterface {
-  name: string;
-  description: string;
-  org_agents: IOrgAgentInterface[]
-
-}
-
 export interface IOrgAgentInterface {
   orgDid: string;
   verkey: string;
@@ -39,7 +32,6 @@ export interface IOrgAgentInterface {
   agentsTypeId: string;
   orgId: string;
 }
-
 
 export class IConnectionInterface {
   tag: object;
@@ -71,8 +63,8 @@ interface IOutOfBandInvitationService {
 }
 
 interface IOutOfBandInvitation {
-  "@type": string;
-  "@id": string;
+  '@type': string;
+  '@id': string;
   label: string;
   accept: string[];
   handshake_protocols: string[];

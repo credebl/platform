@@ -1,14 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
 import { OrgRolesRepository } from '../repositories';
 // eslint-disable-next-line camelcase
 import { IOrgRoles } from '@credebl/common';
 @Injectable()
 export class OrgRolesService {
-  constructor(
-    private readonly orgRoleRepository: OrgRolesRepository,
-    private readonly logger: Logger
-  ) {}
+  constructor(private readonly orgRoleRepository: OrgRolesRepository) {}
 
   // eslint-disable-next-line camelcase
   async getRole(roleName: string): Promise<object> {

@@ -1,6 +1,6 @@
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { DynamicModule, MiddlewareConsumer, Module, Provider, RequestMethod } from '@nestjs/common';
 import { AgentController } from './agent/agent.controller';
-import { AgentModule } from './agent-service/agent-service.module';
+import { AgentServiceModule } from './agent-service/agent-service.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthzMiddleware } from './authz/authz.middleware';
@@ -33,52 +33,70 @@ import { GlobalConfigModule } from '@credebl/logger';
 import { ConfigModule as PlatformConfig } from '@credebl/logger';
 import { UserManagementModule } from '@credebl/user-management';
 
-@Module({
-  imports: [
-    ConfigModule.forRoot(),
-    ContextModule,
-    PlatformConfig,
-    LoggerModule,
-    ClientsModule.register([
-      {
-        name: 'NATS_CLIENT',
-        transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
-      }
-    ]),
-    AgentModule,
-    PlatformModule,
-    AuthzModule,
-    CredentialDefinitionModule,
-    SchemaModule,
-    RevocationModule,
-    VerificationModule,
-    FidoModule,
-    OrganizationModule,
-    UserModule,
-    ConnectionModule,
-    IssuanceModule,
-    UtilitiesModule,
-    WebhookModule,
-    NotificationModule,
-    GlobalConfigModule,
-    CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
-    GeoLocationModule,
-    CloudWalletModule,
-    UserManagementModule
-  ],
-  controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: MICRO_SERVICE_NAME,
-      useValue: 'APIGATEWAY'
-    }
-  ]
-})
-export class AppModule {
-  configure(userContext: MiddlewareConsumer): void {
-    userContext
+@Module({})
+export class APIGatewayModule {
+  static register(
+    overrides: Provider[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    controllerOverrides: any[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    importedModules: any[] = []
+  ): DynamicModule {
+    return {
+      module: APIGatewayModule,
+      imports: [
+        ConfigModule.forRoot(),
+        UserManagementModule,
+        ContextModule,
+        PlatformConfig,
+        LoggerModule,
+        GlobalConfigModule,
+        ClientsModule.register([
+          {
+            name: 'NATS_CLIENT',
+            transport: Transport.NATS,
+            options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+          }
+        ]),
+        AgentServiceModule,
+        PlatformModule,
+        AuthzModule,
+        CredentialDefinitionModule,
+        SchemaModule,
+        RevocationModule,
+        VerificationModule,
+        FidoModule,
+        OrganizationModule,
+        UserModule,
+        ConnectionModule,
+        IssuanceModule,
+        UtilitiesModule,
+        WebhookModule,
+        NotificationModule,
+        CloudWalletModule,
+        GeoLocationModule,
+        CacheModule.register({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          store: redisStore as any,
+          host: process.env.REDIS_HOST,
+          port: process.env.REDIS_PORT
+        }),
+        ...importedModules
+      ],
+      controllers: controllerOverrides.length ? controllerOverrides : [AppController],
+      providers: [
+        AppService,
+        {
+          provide: MICRO_SERVICE_NAME,
+          useValue: 'APIGATEWAY'
+        },
+        ...overrides
+      ]
+    };
+  }
+
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
       .apply(AuthzMiddleware)
       .exclude(
         { path: 'authz', method: RequestMethod.ALL },

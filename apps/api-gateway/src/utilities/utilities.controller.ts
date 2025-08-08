@@ -13,7 +13,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ResponseMessages } from '@credebl/common';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common';
 import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
 import { UtilitiesService } from './utilities.service';
 import { AuthGuard } from '@nestjs/passport';

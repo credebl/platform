@@ -104,13 +104,13 @@ export class CreateConnectionDto {
   @IsString({ message: 'imageUrl must be a string' })
   imageUrl: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: true })
   @IsBoolean()
   @IsOptional()
   @IsNotEmpty({ message: 'please provide multiUseInvitation' })
   multiUseInvitation: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: true })
   @IsBoolean()
   @IsOptional()
   @IsNotEmpty({ message: 'Please provide autoAcceptConnection' })
@@ -134,7 +134,7 @@ export class CreateConnectionDto {
   @IsNotEmpty({ message: 'Please provide handshake' })
   handshake: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: ['https://didcomm.org/didexchange/1.x'] })
   @IsArray()
   @ArrayNotEmpty()
   @IsOptional()

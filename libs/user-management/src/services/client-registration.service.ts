@@ -12,19 +12,18 @@ import { CommonConstants } from '@credebl/common';
 import { CommonService } from '@credebl/common';
 import { CreateUserDto } from '../dtos';
 import { JwtService } from '@nestjs/jwt';
-import { KeycloakUrlService } from './';
+import { KeycloakUrlService } from './keycloak-url.service';
 import { accessTokenPayloadDto, userTokenPayloadDto, KeycloakUserRegistrationDto } from '../dtos';
 import { ResponseMessages, IFormattedResponse } from '@credebl/common';
 import { IClientRoles } from '../interfaces';
 
 @Injectable()
 export class ClientRegistrationService {
-  constructor(
-    private readonly commonService: CommonService,
-    private readonly keycloakUrlService: KeycloakUrlService
-  ) {}
-
   private readonly logger = new Logger('ClientRegistrationService');
+  constructor(
+    private readonly keycloakUrlService: KeycloakUrlService,
+    private readonly commonService: CommonService
+  ) {}
 
   async registerKeycloakUser(userDetails: KeycloakUserRegistrationDto, realm: string, token: string) {
     try {

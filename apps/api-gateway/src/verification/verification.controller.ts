@@ -43,7 +43,7 @@ import { OrgRoles } from '@credebl/common';
 import { AuthGuard } from '@nestjs/passport';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common';
 import { User } from '../authz/decorators/user.decorator';
 import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';

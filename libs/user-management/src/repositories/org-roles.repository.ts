@@ -1,14 +1,14 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 
-import { PrismaService } from '@credebl/prisma-service/dist/src/prisma-service.service';
+import { PrismaService } from '@credebl/prisma-service';
 import { OrgRoles, IOrgRoles } from '@credebl/common';
 
 @Injectable()
 export class OrgRolesRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly logger: Logger
-  ) {}
+  private readonly logger: Logger;
+  constructor(private readonly prisma: PrismaService) {
+    this.logger = new Logger('OrgRolesRepository');
+  }
 
   // eslint-disable-next-line camelcase
   async getRole(roleName: string): Promise<object> {

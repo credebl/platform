@@ -6,30 +6,45 @@ import {
   KeycloakUrlService,
   OrgRolesService,
   SupabaseService,
-  UserActivityService
+  UserActivityService,
+  UserOrgRolesService
 } from './services';
+import { CommonConstants, CommonModule, getNatsOptions } from '@credebl/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
-  imports: [PrismaServiceModule],
+  imports: [
+    PrismaServiceModule,
+    CommonModule,
+    ClientsModule.register([
+      {
+        name: 'NATS_CLIENT',
+        transport: Transport.NATS,
+        options: getNatsOptions(CommonConstants.CLOUD_WALLET_SERVICE, process.env.USER_MANAGEMENT_NKEY_SEED)
+      }
+    ])
+  ],
   providers: [
+    KeycloakUrlService,
     OrgRolesService,
     OrgRolesRepository,
     UserActivityService,
     SupabaseService,
-    KeycloakUrlService,
     ClientRegistrationService,
     UserOrgRolesRepository,
-    UserActivityRepository
+    UserActivityRepository,
+    UserOrgRolesService
   ],
   exports: [
+    KeycloakUrlService,
     OrgRolesService,
     OrgRolesRepository,
     UserActivityService,
     SupabaseService,
-    KeycloakUrlService,
     ClientRegistrationService,
     UserOrgRolesRepository,
-    UserActivityRepository
+    UserActivityRepository,
+    UserOrgRolesService
   ]
 })
 export class UserManagementModule {}

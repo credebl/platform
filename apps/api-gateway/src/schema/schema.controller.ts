@@ -42,7 +42,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GenericSchemaDTO } from '../dtos/create-schema.dto';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common';
 import { CredDefSortFields, SortFields } from '@credebl/common';
 import { TrimStringParamPipe } from '@credebl/common';
 import { UpdateSchemaDto } from './dtos/update-schema-dto';

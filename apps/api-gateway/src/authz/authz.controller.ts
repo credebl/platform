@@ -22,7 +22,7 @@ import { EmailVerificationDto } from '../user/dto/email-verify.dto';
 import { AuthTokenResponse } from './dtos/auth-token-res.dto';
 import { LoginUserDto } from '../user/dto/login-user.dto';
 import { AddUserDetailsDto } from '../user/dto/add-user.dto';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';

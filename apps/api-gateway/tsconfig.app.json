@@ -1,21 +1,9 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "outDir": "../../dist/api-gateway", // per-package output
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true
+    "outDir": "./dist",
   },
   "include": [
-    "src/",
-    "index.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "test",
-    "dist",
-    "**/*.spec.ts",
-    "scripts"
+    "src/"
   ]
 }

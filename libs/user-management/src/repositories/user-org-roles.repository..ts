@@ -8,10 +8,10 @@ type UserOrgRolesWhereUniqueInput = Prisma.user_org_rolesWhereUniqueInput;
 
 @Injectable()
 export class UserOrgRolesRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly logger: Logger
-  ) {}
+  private readonly logger: Logger;
+  constructor(private readonly prisma: PrismaService) {
+    this.logger = new Logger('UserOrgRolesRepository');
+  }
 
   /**
    *

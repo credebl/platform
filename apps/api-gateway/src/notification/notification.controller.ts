@@ -1,4 +1,4 @@
-import { CustomExceptionFilter } from '@credebl/common';
+import { CustomExceptionFilter } from '../common';
 import { Body, Controller, HttpStatus, Logger, Post, Res, UseFilters } from '@nestjs/common';
 import {
   ApiExcludeEndpoint,

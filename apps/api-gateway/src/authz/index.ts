@@ -6,4 +6,7 @@ export * from './jwt-payload.interface';
 export * from './jwt.strategy';
 export * from './mobile-jwt.strategy';
 export * from './roles.guard';
+export * from './guards';
+export * from './dtos';
+export * from './decorators';
 export * from './socket.gateway';

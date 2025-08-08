@@ -45,7 +45,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from '@credebl/common';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { PaginationDto } from '@credebl/common';

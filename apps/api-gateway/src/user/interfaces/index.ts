@@ -1,4 +1,4 @@
-export interface IUserRequestInterface {
+export interface IUserControllerRequestInterface {
   userId: string;
   email: string;
   orgId: string;
@@ -9,15 +9,15 @@ export interface IUserRequestInterface {
 }
 
 export interface ISelectedOrgInterface {
-    id: string;
-    userId: string;
-    orgRoleId: string;
-    orgId: string;
-    orgRole: object;
-    organisation: IOrganizationInterface;
+  id: string;
+  userId: string;
+  orgRoleId: string;
+  orgId: string;
+  orgRole: object;
+  organisation: IOrganizationInterface;
 }
 
 export interface IOrganizationInterface {
-    name: string;
-    description: string;
+  name: string;
+  description: string;
 }

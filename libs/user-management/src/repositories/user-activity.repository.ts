@@ -9,11 +9,13 @@ import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class UserActivityRepository {
+  private readonly logger: Logger;
   constructor(
     private readonly prisma: PrismaService,
-    private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userActivityServiceProxy: ClientProxy
-  ) {}
+  ) {
+    this.logger = new Logger('UserActivityRepository');
+  }
 
   async logActivity(userId: string, orgId: string, action: string, details: string): Promise<user_activity> {
     return this.prisma.user_activity.create({

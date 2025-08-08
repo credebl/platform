@@ -24,13 +24,6 @@ export interface ISelectedOrgInterface {
   organisation: object;
 }
 
-export interface IOrganizationInterface {
-  name: string;
-  description: string;
-  org_agents: IOrgAgentInterface[]
-  
-}
-
 export interface IOrgAgentInterface {
   orgDid: string;
   verkey: string;

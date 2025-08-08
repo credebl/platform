@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional } from 'class-validator';
-import { SortValue } from '../../enum';
-import { trim } from '@credebl/common';
+import { trim, SortValue } from '@credebl/common';
 import { SortFields } from '../enum/verification.enum';
 import { PaginationDto } from '@credebl/common';
 

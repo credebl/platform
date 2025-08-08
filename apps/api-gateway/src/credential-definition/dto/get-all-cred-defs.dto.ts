@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 /* eslint-disable camelcase */
 import { ApiProperty } from '@nestjs/swagger';
-import { SortValue } from '../../enum';
 import { Transform, Type } from 'class-transformer';
 import { IsOptional, Max, Min } from 'class-validator';
-import { toNumber } from '@credebl/common';
+import { toNumber, SortValue } from '@credebl/common';
 
 export class GetAllCredDefsDto {
   @ApiProperty({ required: false, default: 1 })

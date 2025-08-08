@@ -8,7 +8,8 @@ interface attribute {
   value: string;
 }
 
-export class IssueCredentialDto {
+// TODO: remove DTO
+export class UnusedIssueCredentialDto {
   @ApiProperty({ example: 'v1' })
   @Transform(({ value }) => trim(value))
   @Transform(({ value }) => toLowerCase(value))

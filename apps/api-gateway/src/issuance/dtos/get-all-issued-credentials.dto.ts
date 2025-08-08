@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional } from 'class-validator';
-import { SortValue } from '../../enum';
-import { SortFields, trim } from '@credebl/common';
+import { SortFields, trim, SortValue } from '@credebl/common';
 import { PaginationDto } from '@credebl/common';
 
 export class IGetAllIssuedCredentialsDto extends PaginationDto {

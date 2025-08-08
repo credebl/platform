@@ -29,7 +29,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ResponseMessages } from '@credebl/common';
-import { AgentService } from './agent-service.service';
+import { AgentServiceService } from './agent-service.service';
 import { IResponseType, IResponse } from '@credebl/common';
 import { AgentSpinupDto, SignDataDto, VerifySignatureDto } from './dto/agent-service.dto';
 import { Response } from 'express';
@@ -37,7 +37,7 @@ import { Response } from 'express';
 import { user } from '@credebl/prisma-service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { User } from '../authz/decorators/user.decorator';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from '@credebl/common';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
@@ -57,8 +57,8 @@ const seedLength = 32;
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-export class AgentController {
-  constructor(private readonly agentService: AgentService) {}
+export class AgentServiceController {
+  constructor(private readonly agentService: AgentServiceService) {}
   private readonly logger = new Logger();
 
   /**

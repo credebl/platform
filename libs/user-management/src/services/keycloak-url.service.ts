@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 @Injectable()
 export class KeycloakUrlService {
   private readonly logger = new Logger('KeycloakUrlService');
+  constructor() {}
 
   async createUserURL(realm: string): Promise<string> {
     return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/users`;

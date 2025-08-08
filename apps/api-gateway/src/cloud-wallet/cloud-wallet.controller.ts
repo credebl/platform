@@ -36,7 +36,7 @@ import {
   ReceiveInvitationUrlDTO
 } from './dtos/cloudWallet.dto';
 import { Response } from 'express';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { CloudBaseWalletConfigureDto } from './dtos/configure-base-wallet.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -55,7 +55,7 @@ import {
   IGetProofPresentationById,
   IWalletDetailsForDidList
 } from '@credebl/common';
-import { CreateConnectionDto } from './dtos/create-connection.dto';
+import { ClouWalletCreateConnectionDto } from './dtos/create-connection.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -391,7 +391,7 @@ export class CloudWalletController {
   @UseGuards(AuthGuard('jwt'), UserRoleGuard)
   async createConnection(
     @Res() res: Response,
-    @Body() createConnection: CreateConnectionDto,
+    @Body() createConnection: ClouWalletCreateConnectionDto,
     @User() user: user
   ): Promise<Response> {
     const { id, email } = user;

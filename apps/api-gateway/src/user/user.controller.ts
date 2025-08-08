@@ -37,10 +37,10 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { Invitation } from '@credebl/common';
-import { IUserRequestInterface } from './interfaces';
+import { IUserControllerRequestInterface } from './interfaces';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common';
 import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { EmailValidator } from '../dtos/email-validator.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
@@ -91,7 +91,7 @@ export class UserController {
     required: false
   })
   async get(
-    @User() user: IUserRequestInterface,
+    @User() user: IUserControllerRequestInterface,
     @Query() paginationDto: PaginationDto,
     @Res() res: Response
   ): Promise<Response> {

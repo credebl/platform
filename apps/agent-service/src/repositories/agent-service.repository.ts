@@ -297,7 +297,7 @@ export class AgentServiceRepository {
     try {
       const { id } = await this.prisma.agents_type.findFirstOrThrow({
         where: {
-          agent: AgentType.AFJ
+          agent: AgentType.Credo
         }
       });
       return id;

@@ -39,7 +39,7 @@ import { ResponseMessages } from '@credebl/common';
 import { GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 import { OrgRoles } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { IUserRequestInterface } from './interfaces';
+import { IUserRequestSelectedOrgsInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GenericSchemaDTO } from '../dtos/create-schema.dto';
 import { CustomExceptionFilter } from '../common';
@@ -125,7 +125,7 @@ export class SchemaController {
     @Param('schemaId', TrimStringParamPipe) schemaId: string,
     @Query() getCredentialDefinitionBySchemaIdDto: GetCredentialDefinitionBySchemaIdDto,
     @Res() res: Response,
-    @User() user: IUserRequestInterface
+    @User() user: IUserRequestSelectedOrgsInterface
   ): Promise<Response> {
     if (!schemaId) {
       throw new BadRequestException(ResponseMessages.schema.error.invalidSchemaId);
@@ -179,7 +179,7 @@ export class SchemaController {
     )
     orgId: string,
     @Res() res: Response,
-    @User() user: IUserRequestInterface
+    @User() user: IUserRequestSelectedOrgsInterface
   ): Promise<Response> {
     const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllSchemaDto;
     const schemaSearchCriteria: ISchemaSearchPayload = {
@@ -227,7 +227,7 @@ export class SchemaController {
       })
     )
     orgId: string,
-    @User() user: IUserRequestInterface
+    @User() user: IUserRequestSelectedOrgsInterface
   ): Promise<Response> {
     const schemaResponse = await this.appService.createSchema(schemaDetails, user, orgId);
     const finalResponse: IResponse = {

@@ -2,20 +2,6 @@ import { SchemaType } from '@credebl/common';
 import { JsonLdCredentialDetailCredentialStatus } from '../dtos/issuance.dto';
 import { JsonValue } from '../utils/helper';
 
-// export interface IUserRequestInterface {
-//   userId: string;
-//   email: string;
-//   orgId: string;
-//   agentEndPoint?: string;
-//   apiKey?: string;
-//   tenantId?: string;
-//   tenantName?: string;
-//   tenantOrgId?: string;
-//   userRoleOrgPermissions?: IUserRoleOrgPerms[];
-//   orgName?: string;
-//   selectedOrg: ISelectedOrg;
-// }
-
 export interface ISelectedOrg {
   id: string;
   userId: string;

@@ -38,7 +38,6 @@ import {
   ReceiveInvitationDto,
   ReceiveInvitationUrlDto
 } from './dtos/connection.dto';
-import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
 import { IUserRequest } from '@credebl/user-management';
 import { CustomExceptionFilter } from '../common';
@@ -53,6 +52,7 @@ import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto } from './dtos/q
 import { TrimStringParamPipe } from '@credebl/common';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@credebl/prisma-service';
+import { IUserRequestSelectedOrgsInterface } from '../schema/interfaces';
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('connections')
@@ -235,7 +235,7 @@ export class ConnectionController {
   async createConnectionInvitation(
     @Param('orgId') orgId: string,
     @Body() createOutOfBandConnectionInvitation: CreateOutOfBandConnectionInvitation,
-    @User() reqUser: IUserRequestInterface,
+    @User() reqUser: IUserRequestSelectedOrgsInterface,
     @Res() res: Response
   ): Promise<Response> {
     createOutOfBandConnectionInvitation.orgId = orgId;
@@ -278,7 +278,7 @@ export class ConnectionController {
     @Param('orgId') orgId: string,
     @Param('connectionId', TrimStringParamPipe) connectionId: string,
     @Body() questionDto: QuestionDto,
-    @User() reqUser: IUserRequestInterface,
+    @User() reqUser: IUserRequestSelectedOrgsInterface,
     @Res() res: Response
   ): Promise<Response> {
     questionDto.orgId = orgId;
@@ -307,7 +307,7 @@ export class ConnectionController {
   async receiveInvitationUrl(
     @Param('orgId') orgId: string,
     @Body() receiveInvitationUrl: ReceiveInvitationUrlDto,
-    @User() user: IUserRequestInterface,
+    @User() user: IUserRequestSelectedOrgsInterface,
     @Res() res: Response
   ): Promise<Response> {
     const connectionData = await this.connectionService.receiveInvitationUrl(receiveInvitationUrl, orgId, user);
@@ -337,7 +337,7 @@ export class ConnectionController {
   async receiveInvitation(
     @Param('orgId') orgId: string,
     @Body() receiveInvitation: ReceiveInvitationDto,
-    @User() user: IUserRequestInterface,
+    @User() user: IUserRequestSelectedOrgsInterface,
     @Res() res: Response
   ): Promise<Response> {
     const connectionData = await this.connectionService.receiveInvitation(receiveInvitation, orgId, user);
@@ -508,7 +508,7 @@ export class ConnectionController {
     )
     connectionId: string,
     @Body() basicMessageDto: BasicMessageDto,
-    @User() reqUser: IUserRequestInterface,
+    @User() reqUser: IUserRequestSelectedOrgsInterface,
     @Res() res: Response
   ): Promise<Response> {
     basicMessageDto.orgId = orgId;

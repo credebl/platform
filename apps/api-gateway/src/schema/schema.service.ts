@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { GenericSchemaDTO } from '../dtos/create-schema.dto';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
-import { ISchemaInfo, IUserRequestInterface } from './interfaces';
+import { ISchemaInfo, IUserRequestSelectedOrgsInterface } from './interfaces';
 import { ICredDefWithPagination, ISchemaData, ISchemasWithPagination, BaseService } from '@credebl/common';
 import { GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
 import { NATSClient, UpdateSchemaResponse } from '@credebl/common';
@@ -18,7 +18,11 @@ export class SchemaService extends BaseService {
     super(`Schema Service`);
   }
 
-  createSchema(schemaDetails: GenericSchemaDTO, user: IUserRequestInterface, orgId: string): Promise<ISchemaData> {
+  createSchema(
+    schemaDetails: GenericSchemaDTO,
+    user: IUserRequestSelectedOrgsInterface,
+    orgId: string
+  ): Promise<ISchemaData> {
     const payload = { schemaDetails, user, orgId };
     return this.natsClient.sendNatsMessage(this.schemaServiceProxy, 'create-schema', payload);
   }
@@ -30,7 +34,7 @@ export class SchemaService extends BaseService {
 
   getSchemas(
     schemaSearchCriteria: ISchemaSearchPayload,
-    user: IUserRequestInterface,
+    user: IUserRequestSelectedOrgsInterface,
     orgId: string
   ): Promise<ISchemasWithPagination> {
     const schemaSearch = { schemaSearchCriteria, user, orgId };
@@ -39,7 +43,7 @@ export class SchemaService extends BaseService {
 
   getcredDefListBySchemaId(
     schemaSearchCriteria: GetCredentialDefinitionBySchemaIdDto,
-    user: IUserRequestInterface
+    user: IUserRequestSelectedOrgsInterface
   ): Promise<ICredDefWithPagination> {
     const payload = { schemaSearchCriteria, user };
     return this.natsClient.sendNatsMessage(this.schemaServiceProxy, 'get-cred-def-list-by-schemas-id', payload);

@@ -1,5 +1,5 @@
 import { SchemaType } from '@credebl/common';
-import { IUserRequestInterface } from '../schema/interfaces';
+import { IUserRequestSelectedOrgsInterface } from '../schema/interfaces';
 
 export interface ISchemaSearchPayload {
   ledgerId?: string;
@@ -9,7 +9,7 @@ export interface ISchemaSearchPayload {
   sortBy: string;
   searchByText?: string;
   schemaType?: SchemaType;
-  user?: IUserRequestInterface;
+  user?: IUserRequestSelectedOrgsInterface;
 }
 
 export interface W3CSchemaPayload {

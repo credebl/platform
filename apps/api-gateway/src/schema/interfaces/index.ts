@@ -1,27 +1,8 @@
-import { UserRoleOrgPermsDto } from '../../dtos/user-role-org-perms.dto';
+import { IUserRequestInterface } from '../../interfaces/IUserRequestInterface';
+import { ISelectedOrgInterface } from '../../user/interfaces';
 
-export interface IUserRequestInterface {
-  id: string;
-  userId: string;
-  email: string;
-  orgId: string;
-  agentEndPoint?: string;
-  apiKey?: string;
-  tenantId?: string;
-  tenantName?: string;
-  tenantOrgId?: string;
-  userRoleOrgPermissions?: UserRoleOrgPermsDto[];
-  orgName?: string;
+export interface IUserRequestSelectedOrgsInterface extends IUserRequestInterface {
   selectedOrg: ISelectedOrgInterface;
-}
-
-export interface ISelectedOrgInterface {
-  id: string;
-  userId: string;
-  orgRoleId: string;
-  orgId: string;
-  orgRole: object;
-  organisation: object;
 }
 
 export interface IOrgAgentInterface {

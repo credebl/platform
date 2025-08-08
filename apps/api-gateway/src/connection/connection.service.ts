@@ -8,7 +8,7 @@ import {
   ReceiveInvitationDto,
   ReceiveInvitationUrlDto
 } from './dtos/connection.dto';
-import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
+import { IReceiveInvitationRes } from './interfaces';
 import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common';
 import {
   AgentConnectionSearchCriteria,
@@ -18,6 +18,7 @@ import {
 import { BasicMessageDto, QuestionDto } from './dtos/question-answer.dto';
 import { user } from '@credebl/prisma-service';
 import { NATSClient } from '@credebl/common';
+import { IUserRequestSelectedOrgsInterface } from '../schema/interfaces';
 @Injectable()
 export class ConnectionService extends BaseService {
   constructor(
@@ -96,7 +97,7 @@ export class ConnectionService extends BaseService {
   receiveInvitationUrl(
     receiveInvitationUrl: ReceiveInvitationUrlDto,
     orgId: string,
-    user: IUserRequestInterface
+    user: IUserRequestSelectedOrgsInterface
   ): Promise<IReceiveInvitationRes> {
     const payload = { user, receiveInvitationUrl, orgId };
     return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation-url', payload);
@@ -105,7 +106,7 @@ export class ConnectionService extends BaseService {
   receiveInvitation(
     receiveInvitation: ReceiveInvitationDto,
     orgId: string,
-    user: IUserRequestInterface
+    user: IUserRequestSelectedOrgsInterface
   ): Promise<IReceiveInvitationRes> {
     const payload = { user, receiveInvitation, orgId };
     return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation', payload);
@@ -142,7 +143,7 @@ export class ConnectionService extends BaseService {
 
   createConnectionInvitation(
     createOutOfBandConnectionInvitation: CreateOutOfBandConnectionInvitation,
-    user: IUserRequestInterface
+    user: IUserRequestSelectedOrgsInterface
   ): Promise<IReceiveInvitationRes> {
     const payload = { user, createOutOfBandConnectionInvitation };
     return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'create-connection-invitation', payload);

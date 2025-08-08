@@ -12,20 +12,20 @@ export interface IUsersProfile {
 }
 
 interface IUserOrgRole {
-  id:  string;
-  userId:  string;
-  orgRoleId:  string;
-  orgId:  string;
-  orgRole :IOrgRole;
-  organisation:IOrganisation;
+  id: string;
+  userId: string;
+  orgRoleId: string;
+  orgId: string;
+  orgRole: IOrgRole;
+  organisation: IOrganisation;
 }
-  export interface IOrgRole{
-    id:  string;
+export interface IOrgRole {
+  id: string;
   name: string;
   description: string;
-  };
-  export interface IOrganisation{
-    id:  string;
+}
+export interface IOrganisation {
+  id: string;
   name: string;
   description: string;
   orgSlug: string;
@@ -106,12 +106,12 @@ export interface ICheckUserDetails {
   isFidoVerified?: boolean;
   isRegistrationCompleted?: boolean;
   userId?: number;
-  message?:string;
+  message?: string;
 }
 
 export interface IOrgUsers {
-    totalPages: number,
-    users: OrgUser[]
+  totalPages: number;
+  users: OrgUser[];
 }
 
 export interface IDidList {
@@ -137,7 +137,7 @@ interface UserOrgRoles {
   orgId: string;
   orgRoleId: string;
   orgRole: OrgRole;
-    organisation: Organization
+  organisation: Organization;
 }
 interface OrgRole {
   id: string;
@@ -146,22 +146,22 @@ interface OrgRole {
 }
 
 interface Organization {
-    id: string,
-    name: string,
-    description: string,
-    orgSlug: string,
-    logoUrl: string,
+  id: string;
+  name: string;
+  description: string;
+  orgSlug: string;
+  logoUrl: string;
   org_agents: OrgAgents[];
 }
 
 interface OrgAgents {
-    id: string,
-    orgDid: string,
-    walletName: string,
-    agentSpinUpStatus: number,
-    agentsTypeId: string,
-    createDateTime: Date,
-    orgAgentTypeId:string
+  id: string;
+  orgDid: string;
+  walletName: string;
+  agentSpinUpStatus: number;
+  agentsTypeId: string;
+  createDateTime: Date;
+  orgAgentTypeId: string;
 }
 
 export interface Payload {
@@ -170,29 +170,53 @@ export interface Payload {
   search: string;
 }
 
-export interface IVerifyUserEmail{
+export interface IVerifyUserEmail {
   email: string;
   verificationCode: string;
 }
 
-export interface  IUserSignIn{
+export interface IUserSignIn {
   email: string;
   password: string;
   isPasskey?: boolean;
 }
 
-export interface IUserResetPassword{
+export interface ISession {
+  sessionToken?: string;
+  userId?: string;
+  expires?: number;
+  refreshToken?: string;
+  keycloakUserId?: string;
+  type?: string;
+  accountId?: string;
+  sessionType?: string;
+}
+
+export interface IUpdateAccountDetails {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: number;
+  accountId: string;
+}
+
+export interface ISessionDetails extends ISession {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IUserResetPassword {
   email: string;
   oldPassword?: string;
   newPassword?: string;
   token?: string;
   password?: string;
 }
-export interface IUserForgotPassword{
+export interface IUserForgotPassword {
   email: string;
-  brandLogoUrl?: string,
-  platformName?: string,
-  endpoint?: string
+  brandLogoUrl?: string;
+  platformName?: string;
+  endpoint?: string;
 }
 export interface IIssueCertificate {
   courseCode: string;
@@ -202,7 +226,7 @@ export interface IIssueCertificate {
   practicalGradeCredits: string;
   practicalObtainedEarned: string;
 }
-export  interface IPuppeteerOption{
+export interface IPuppeteerOption {
   width: number;
   height: number;
 }
@@ -229,7 +253,10 @@ export interface UserRoleMapping {
   userRoleId: string;
 }
 
-export interface UserRoleDetails{
+export interface ISessions {
+  sessions: string[];
+}
+export interface UserRoleDetails {
   id: string;
   role: $Enums.UserRole;
 }
@@ -243,4 +270,21 @@ export interface IEcosystemConfig {
   lastChangedDateTime: Date;
   lastChangedBy: string;
   deletedAt: Date | null;
+}
+
+export interface IAccountDetails {
+  userId: string;
+  type?: string;
+  provider?: string;
+  providerAccountId?: string;
+  refresh_token?: string;
+  access_token?: string;
+  expires_at?: string;
+  scope?: string;
+  token_type?: string;
+  id_token?: string;
+  session_state?: string;
+}
+export interface ISessionData {
+  sessionId: string;
 }

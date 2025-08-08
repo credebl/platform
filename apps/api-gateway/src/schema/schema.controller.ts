@@ -143,10 +143,10 @@ export class SchemaController {
     @User() user: IUserRequestInterface
   ): Promise<Response> {
 
-    const { pageSize, searchByText, pageNumber, sortField, sortBy } = getAllSchemaDto;
+    const { pageSize, search, pageNumber, sortField, sortBy } = getAllSchemaDto;
     const schemaSearchCriteria: ISchemaSearchPayload = {
       pageNumber,
-      searchByText,
+      search,
       pageSize,
       sortField,
       sortBy

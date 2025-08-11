@@ -380,13 +380,12 @@ export class UserService {
       );
       const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id);
-
       const userAccountDetails = {
         userId: userDetails?.id,
         provider: ProviderType.KEYCLOAK,
-        providerAccountId: keycloakDetails.keycloakUserId.toString(),
+        keycloakUserId: keycloakDetails.keycloakUserId,
         // eslint-disable-next-line camelcase
-        token_type: TokenType.BEARER_TOKEN
+        type: TokenType.BEARER_TOKEN
       };
 
       await this.userRepository.addAccountDetails(userAccountDetails);
@@ -565,7 +564,7 @@ export class UserService {
         }
         const updateAccountDetails: IUpdateAccountDetails = {
           accessToken: tokenResponse.access_token,
-          // refreshToken: tokenResponse.refresh_token,
+          refreshToken: tokenResponse.refresh_token,
           expiresAt: tokenResponse.expires_in,
           accountId: userAccountDetails.id
         };
@@ -582,7 +581,7 @@ export class UserService {
           sessionToken: tokenResponse.access_token,
           userId: userByKeycloakId?.['id'],
           expires: tokenResponse.expires_in,
-          // refreshToken: tokenResponse.refresh_token,
+          refreshToken: tokenResponse.refresh_token,
           sessionType: SessionType.USER_SESSION,
           accountId: updateAccountDetailsResponse.id
         };

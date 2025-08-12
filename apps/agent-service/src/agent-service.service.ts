@@ -1748,13 +1748,23 @@ export class AgentServiceService {
         throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
       }
 
-      const getApiKey = getApiKeyResult?.value;
       const orgAgent = orgAgentResult?.value;
 
       const orgAgentTypeResult = await this.agentServiceRepository.getOrgAgentType(orgAgent.orgAgentTypeId);
 
       if (!orgAgentTypeResult) {
         throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
+      }
+
+      let getApiKey;
+      if (OrgAgentType.SHARED) {
+        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
+          CommonConstants.PLATFORM_ADMIN_ORG
+        );
+
+        getApiKey = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
+      } else {
+        getApiKey = getApiKeyResult?.value;
       }
 
       // Determine the URL based on the agent type

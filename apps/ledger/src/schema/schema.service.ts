@@ -649,7 +649,7 @@ export class SchemaService extends BaseService {
       const response = await this.schemaRepository.getAllSchemaDetails(schemaSearchCriteria);
       const schemasDetails = response?.schemasResult.map((schemaAttributeItem) => {
         const attributes = JSON.parse(schemaAttributeItem.attributes);
-        return { ...schemaAttributeItem, attributes, organizationName: schemaAttributeItem.organisation.name };
+        return { ...schemaAttributeItem, attributes, organizationName: schemaAttributeItem.organisation?.name || '' };
       });
 
       const schemasResponse = {

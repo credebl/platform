@@ -80,8 +80,7 @@ import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { SchemaType } from '@credebl/common';
 import { TrimStringParamPipe, CommonConstants } from '@credebl/common';
 import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
-import { ResponseType } from '@credebl/common';
-import { IResponseType } from 'libs/common/dist/src/interfaces/response.interface';
+import { IResponseType } from '@credebl/common';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')

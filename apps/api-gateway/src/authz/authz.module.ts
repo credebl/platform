@@ -7,7 +7,7 @@ import { ConnectionService } from '../connection/connection.service';
 import { HttpModule } from '@nestjs/axios';
 import { JwtStrategy } from './jwt.strategy';
 import { MobileJwtStrategy } from './mobile-jwt.strategy';
-import { Module } from '@nestjs/common';
+import { Module, DynamicModule, Provider } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { SocketGateway } from './socket.gateway';
 import { SupabaseService } from '@credebl/user-management';
@@ -36,6 +36,7 @@ import { NATSClient } from '@credebl/common';
     ]),
     UserModule
   ],
+  controllers: [AuthzController],
   providers: [
     JwtStrategy,
     AuthzService,
@@ -50,7 +51,52 @@ import { NATSClient } from '@credebl/common';
     SupabaseService,
     OrganizationService
   ],
-  exports: [PassportModule, AuthzService],
-  controllers: [AuthzController]
+  exports: [PassportModule, AuthzService]
 })
-export class AuthzModule {}
+export class AuthzModule {
+  static register(
+    overrides: Provider[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    controllerOverrides: any[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    importedModules: any[] = []
+  ): DynamicModule {
+    return {
+      module: AuthzModule,
+      imports: [
+        HttpModule,
+        PassportModule.register({
+          defaultStrategy: 'jwt',
+          mobileStrategy: 'mobile-jwt'
+        }),
+        ClientsModule.register([
+          {
+            name: 'NATS_CLIENT',
+            transport: Transport.NATS,
+            options: getNatsOptions(CommonConstants.AUTH_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+          },
+          CommonModule
+        ]),
+        UserModule,
+        ...importedModules
+      ],
+      controllers: controllerOverrides.length ? controllerOverrides : [AuthzController],
+      providers: [
+        JwtStrategy,
+        AuthzService,
+        MobileJwtStrategy,
+        SocketGateway,
+        NATSClient,
+        VerificationService,
+        ConnectionService,
+        AgentService,
+        CommonService,
+        UserService,
+        SupabaseService,
+        OrganizationService,
+        ...overrides
+      ],
+      exports: [PassportModule, AuthzService]
+    };
+  }
+}

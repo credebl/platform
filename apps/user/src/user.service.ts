@@ -39,14 +39,17 @@ import {
   IUserDeletedActivity,
   UserKeycloakId,
   IEcosystemConfig,
-  IUserForgotPassword
+  IUserForgotPassword,
+  ISessionDetails,
+  ISessions,
+  IUpdateAccountDetails
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { Invitation, UserRole } from '@credebl/enum/enum';
+import { Invitation, ProviderType, SessionType, TokenType, UserRole } from '@credebl/enum/enum';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 import { AwsService } from '@credebl/aws';
@@ -377,6 +380,15 @@ export class UserService {
       );
       const holderOrgRole = await this.orgRoleService.getRole(OrgRoles.HOLDER);
       await this.userOrgRoleService.createUserOrgRole(userDetails.id, holderOrgRole.id, null, holderRoleData.id);
+      const userAccountDetails = {
+        userId: userDetails?.id,
+        provider: ProviderType.KEYCLOAK,
+        keycloakUserId: keycloakDetails.keycloakUserId,
+        // eslint-disable-next-line camelcase
+        type: TokenType.BEARER_TOKEN
+      };
+
+      await this.userRepository.addAccountDetails(userAccountDetails);
 
       return { userId: userDetails?.id };
     } catch (error) {
@@ -437,6 +449,13 @@ export class UserService {
     try {
       this.validateEmail(email.toLowerCase());
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());
+
+      const userSessionDetails = await this.userRepository.fetchUserSessions(userData?.id);
+
+      if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
+        throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
+      }
+
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
@@ -455,10 +474,69 @@ export class UserService {
         return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(password);
-        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
+        const tokenDetails = await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
+
+        const sessionData = {
+          sessionToken: tokenDetails?.access_token,
+          userId: userData?.id,
+          expires: tokenDetails?.expires_in,
+          refreshToken: tokenDetails?.refresh_token,
+          sessionType: SessionType.USER_SESSION
+        };
+
+        const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
+        let addSessionDetails;
+        let accountData;
+        if (null === fetchAccountDetails) {
+          accountData = {
+            sessionToken: tokenDetails?.access_token,
+            userId: userData?.id,
+            expires: tokenDetails?.expires_in,
+            refreshToken: tokenDetails?.refresh_token,
+            keycloakUserId: userData?.keycloakUserId,
+            type: TokenType.BEARER_TOKEN
+          };
+
+          await this.userRepository.addAccountDetails(accountData).then(async (response) => {
+            const finalSessionData = { ...sessionData, accountId: response.id };
+            addSessionDetails = await this.userRepository.createSession(finalSessionData);
+          });
+        } else {
+          accountData = {
+            sessionToken: tokenDetails?.access_token,
+            userId: userData?.id,
+            expires: tokenDetails?.expires_in,
+            refreshToken: tokenDetails?.refresh_token
+          };
+
+          await this.userRepository.updateAccountDetails(accountData).then(async (response) => {
+            const finalSessionData = { ...sessionData, accountId: response.id };
+            addSessionDetails = await this.userRepository.createSession(finalSessionData);
+          });
+        }
+
+        const finalResponse = {
+          ...tokenDetails,
+          sessionId: addSessionDetails.id
+        };
+
+        return finalResponse;
       }
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getSession(sessionId: string): Promise<ISessionDetails> {
+    try {
+      const onceDecoded = decodeURIComponent(sessionId);
+      const decodedSessionId = decodeURIComponent(onceDecoded);
+      const decryptedSessionId = await this.commonService.decryptPassword(decodedSessionId);
+      const sessionDetails = await this.userRepository.getSession(decryptedSessionId);
+      return sessionDetails;
+    } catch (error) {
+      this.logger.error(`In fetching session details : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -468,11 +546,50 @@ export class UserService {
       try {
         const data = jwt.decode(refreshToken) as jwt.JwtPayload;
         const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
+        this.logger.debug(`User details::;${JSON.stringify(userByKeycloakId)}`);
         const tokenResponse = await this.clientRegistrationService.getAccessToken(
           refreshToken,
           userByKeycloakId?.['clientId'],
           userByKeycloakId?.['clientSecret']
         );
+        this.logger.debug(`tokenResponse::::${JSON.stringify(tokenResponse)}`);
+        // Fetch the details from account table based on userid and refresh token
+        const userAccountDetails = await this.userRepository.fetchAccountByRefreshToken(
+          userByKeycloakId?.['id'],
+          refreshToken
+        );
+        // Update the account details with latest access token, refresh token and exp date
+        if (!userAccountDetails) {
+          throw new NotFoundException(ResponseMessages.user.error.userAccountNotFound);
+        }
+        const updateAccountDetails: IUpdateAccountDetails = {
+          accessToken: tokenResponse.access_token,
+          refreshToken: tokenResponse.refresh_token,
+          expiresAt: tokenResponse.expires_in,
+          accountId: userAccountDetails.id
+        };
+        const updateAccountDetailsResponse = await this.userRepository.updateAccountDetailsById(updateAccountDetails);
+        // Delete the preveious session record and create new one
+        if (!updateAccountDetailsResponse) {
+          throw new InternalServerErrorException(ResponseMessages.user.error.errorInUpdateAccountDetails);
+        }
+        const deletePreviousSession = await this.userRepository.deleteSessionRecordByRefreshToken(refreshToken);
+        if (!deletePreviousSession) {
+          throw new InternalServerErrorException(ResponseMessages.user.error.errorInDeleteSession);
+        }
+        const sessionData = {
+          sessionToken: tokenResponse.access_token,
+          userId: userByKeycloakId?.['id'],
+          expires: tokenResponse.expires_in,
+          refreshToken: tokenResponse.refresh_token,
+          sessionType: SessionType.USER_SESSION,
+          accountId: updateAccountDetailsResponse.id
+        };
+        const addSessionDetails = await this.userRepository.createSession(sessionData);
+        if (!addSessionDetails) {
+          throw new InternalServerErrorException(ResponseMessages.user.error.errorInSessionCreation);
+        }
+
         return tokenResponse;
       } catch (error) {
         throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken);
@@ -1224,6 +1341,19 @@ export class UserService {
       return getOrganizationDetails;
     } catch (error) {
       this.logger.error(`Error in getuserOrganizationByUserId: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async logout(logoutUserDto: ISessions): Promise<string> {
+    try {
+      if (logoutUserDto?.sessions) {
+        await this.userRepository.destroySession(logoutUserDto?.sessions);
+      }
+
+      return 'user logged out successfully';
+    } catch (error) {
+      this.logger.error(`Error in logging out session: ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

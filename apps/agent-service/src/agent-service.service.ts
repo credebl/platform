@@ -1164,11 +1164,28 @@ export class AgentServiceService {
   private async _createDID(didCreateOption): Promise<ICreateTenant> {
     const { didPayload, agentEndpoint, apiKey } = didCreateOption;
     // Invoke an API request from the agent to create multi-tenant agent
-    const didDetails = await this.commonService.httpPost(
-      `${agentEndpoint}${CommonConstants.URL_AGENT_WRITE_DID}`,
-      didPayload,
-      { headers: { authorization: apiKey } }
-    );
+    const requiredPayload = {
+      keyType: didPayload.keyType,
+      method: didPayload.method,
+      privatekey: didPayload.privatekey,
+      seed: didPayload.seed,
+      network: didPayload.network,
+      domain: didPayload.domain,
+      role: didPayload.role,
+      did: didPayload.did,
+      endorserDid: didPayload.endorserDid
+    };
+    let didDetails;
+    for (let i = 0; i < 2; i++) {
+      didDetails = await this.commonService.httpPost(
+        `${agentEndpoint}${CommonConstants.URL_AGENT_WRITE_DID}`,
+        requiredPayload,
+        { headers: { authorization: apiKey } }
+      );
+      if (didDetails?.didDocument || didDetails?.didDoc) {
+        break;
+      }
+    }
     return didDetails;
   }
   private async createSocketInstance(): Promise<Socket> {

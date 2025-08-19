@@ -1,6 +1,8 @@
 import {
   ICheckUserDetails,
   IOrgUsers,
+  ISessionDetails,
+  ISessions,
   IUserDeletedActivity,
   IUserForgotPassword,
   IUserInformation,
@@ -75,6 +77,11 @@ export class UserController {
   async login(payload: IUserSignIn): Promise<ISignInUser> {
     const loginRes = await this.userService.login(payload);
     return loginRes;
+  }
+
+  @MessagePattern({ cmd: 'fetch-session-details' })
+  async getSession(payload: { sessionId: string }): Promise<ISessionDetails> {
+    return this.userService.getSession(payload?.sessionId);
   }
 
   @MessagePattern({ cmd: 'refresh-token-details' })
@@ -256,5 +263,10 @@ export class UserController {
   // eslint-disable-next-line camelcase
   async getuserOrganizationByUserId(payload: { userId: string }): Promise<user_org_roles[]> {
     return this.userService.getuserOrganizationByUserId(payload.userId);
+  }
+
+  @MessagePattern({ cmd: 'user-logout' })
+  async logout(logoutUserDto: ISessions): Promise<string> {
+    return this.userService.logout(logoutUserDto);
   }
 }

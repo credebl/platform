@@ -3,7 +3,9 @@
 import {
   IOrgUsers,
   ISendVerificationEmail,
+  ISession,
   IShareUserCertificate,
+  IUpdateAccountDetails,
   IUserDeletedActivity,
   IUserInformation,
   IUsersProfile,
@@ -16,10 +18,20 @@ import {
 } from '../interfaces/user.interface';
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { RecordType, client_aliases, schema, token, user, user_org_roles } from '@prisma/client';
+import {
+  Prisma,
+  RecordType,
+  account,
+  client_aliases,
+  schema,
+  session,
+  token,
+  user,
+  user_org_roles
+} from '@prisma/client';
+import { ProviderType, UserRole } from '@credebl/enum/enum';
 
 import { PrismaService } from '@credebl/prisma-service';
-import { UserRole } from '@credebl/enum/enum';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model
@@ -117,6 +129,33 @@ export class UserRepository {
       this.logger.error(`Not Found: ${JSON.stringify(error)}`);
       throw new NotFoundException(error);
     }
+  }
+
+  /**
+   *
+   * @param sessionId
+   * @returns Session details
+   */
+  async getSession(sessionId: string): Promise<session> {
+    try {
+      return this.prisma.session.findUnique({
+        where: {
+          id: sessionId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Not Found: ${JSON.stringify(error)}`);
+      throw new NotFoundException(error);
+    }
+  }
+
+  async validateSession(sessionId: string): Promise<object> {
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+      include: { user: true }
+    });
+    // if (!session || new Date() > session.expires) return null;
+    return session;
   }
 
   /**
@@ -638,6 +677,125 @@ export class UserRepository {
     }
   }
 
+  async createSession(tokenDetails: ISession): Promise<session> {
+    try {
+      const { sessionToken, userId, expires, refreshToken, accountId, sessionType } = tokenDetails;
+      const sessionResponse = await this.prisma.session.create({
+        data: {
+          sessionToken,
+          expires,
+          userId,
+          refreshToken,
+          accountId,
+          sessionType
+        }
+      });
+      return sessionResponse;
+    } catch (error) {
+      this.logger.error(`Error in creating session: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async fetchUserSessions(userId: string): Promise<session[]> {
+    try {
+      const userSessionCount = await this.prisma.session.findMany({
+        where: {
+          userId
+        }
+      });
+      return userSessionCount;
+    } catch (error) {
+      this.logger.error(`Error in getting user session details: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async checkAccountDetails(userId: string): Promise<account> {
+    try {
+      const accountDetails = await this.prisma.account.findUnique({
+        where: {
+          userId
+        }
+      });
+      return accountDetails;
+    } catch (error) {
+      this.logger.error(`Error in getting account details: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async fetchAccountByRefreshToken(userId: string, refreshToken: string): Promise<account> {
+    try {
+      return await this.prisma.account.findUnique({
+        where: {
+          userId,
+          refreshToken
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getting account details: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async updateAccountDetailsById(accountDetails: IUpdateAccountDetails): Promise<account> {
+    try {
+      return await this.prisma.account.update({
+        where: {
+          id: accountDetails.accountId
+        },
+        data: {
+          accessToken: accountDetails.accessToken,
+          refreshToken: accountDetails.refreshToken,
+          expiresAt: accountDetails.expiresAt
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getting account details: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async updateAccountDetails(accountDetails: ISession): Promise<account> {
+    try {
+      const userAccountDetails = await this.prisma.account.update({
+        where: {
+          userId: accountDetails.userId
+        },
+        data: {
+          accessToken: accountDetails.sessionToken,
+          refreshToken: accountDetails.refreshToken,
+          expiresAt: accountDetails.expires
+        }
+      });
+      return userAccountDetails;
+    } catch (error) {
+      this.logger.error(`Error in updateAccountDetails: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async addAccountDetails(accountDetails: ISession): Promise<account> {
+    try {
+      const userAccountDetails = await this.prisma.account.create({
+        data: {
+          userId: accountDetails.userId,
+          provider: ProviderType.KEYCLOAK,
+          providerAccountId: accountDetails.keycloakUserId,
+          accessToken: accountDetails.sessionToken,
+          refreshToken: accountDetails.refreshToken,
+          expiresAt: accountDetails.expires,
+          tokenType: accountDetails.type
+        }
+      });
+      return userAccountDetails;
+    } catch (error) {
+      this.logger.error(`Error in creating account: ${error.message}`);
+      throw error;
+    }
+  }
+
   /**
    *
    * @param userId
@@ -835,6 +993,37 @@ export class UserRepository {
       return getUserOrgs;
     } catch (error) {
       this.logger.error(`Error in handleGetUserOrganizations: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async destroySession(sessions: string[]): Promise<Prisma.BatchPayload> {
+    try {
+      const userSessions = await this.prisma.session.deleteMany({
+        where: {
+          id: {
+            in: sessions
+          }
+        }
+      });
+
+      return userSessions;
+    } catch (error) {
+      this.logger.error(`Error in logging out user: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteSessionRecordByRefreshToken(refreshToken: string): Promise<session> {
+    try {
+      const userSession = await this.prisma.session.delete({
+        where: {
+          refreshToken
+        }
+      });
+      return userSession;
+    } catch (error) {
+      this.logger.error(`Error in logging out user: ${error.message}`);
       throw error;
     }
   }

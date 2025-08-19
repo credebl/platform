@@ -4,7 +4,7 @@ import * as express from 'express';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
-
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { AllExceptionsFilter } from '@credebl/common/exception-handler';
@@ -45,6 +45,7 @@ async function bootstrap(): Promise<void> {
   expressApp.set('x-powered-by', false);
   app.use(express.json({ limit: '100mb' }));
   app.use(express.urlencoded({ limit: '100mb', extended: true }));
+  app.use(cookieParser());
 
   app.use((req, res, next) => {
     let err = null;

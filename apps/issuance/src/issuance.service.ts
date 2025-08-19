@@ -281,6 +281,18 @@ export class IssuanceService {
 
       if (allSuccessful) {
         finalStatusCode = HttpStatus.CREATED;
+        const context = payload?.credentialData[0]?.credential?.['@context'] as string[];
+
+        if (Array.isArray(context) && context.includes('https://www.w3.org/2018/credentials/v1')) {
+          const filterData = context.filter((item) => 'https://www.w3.org/2018/credentials/v1' !== item);
+          const [schemaId] = filterData;
+          results.forEach((val) => {
+            if ('fulfilled' === val.status && val?.value?.threadId) {
+              this.issuanceRepository.saveSchemaIdIssuance(val?.value?.threadId, schemaId);
+            }
+          });
+        }
+
         finalMessage = ResponseMessages.issuance.success.create;
       } else if (allFailed) {
         finalStatusCode = HttpStatus.BAD_REQUEST;
@@ -890,7 +902,6 @@ export class IssuanceService {
 
           await this.delay(500); // Wait for 0.5 seconds
           const sendOobOffer = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
-
           arraycredentialOfferResponse.push(sendOobOffer);
         }
         if (0 < errors.length) {
@@ -1063,6 +1074,20 @@ export class IssuanceService {
       if (!isEmailSent) {
         errors.push(new InternalServerErrorException(ResponseMessages.issuance.error.emailSend));
         return false;
+      }
+
+      if (isEmailSent) {
+        const w3cSchemaId = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.['@context'] as string[];
+        if (w3cSchemaId && w3cSchemaId.includes('https://www.w3.org/2018/credentials/v1')) {
+          const filterData = w3cSchemaId.filter((item) => 'https://www.w3.org/2018/credentials/v1' !== item);
+          const [schemaId] = filterData;
+          if (credentialCreateOfferDetails.response.credentialRequestThId) {
+            this.issuanceRepository.saveSchemaIdIssuance(
+              credentialCreateOfferDetails.response.credentialRequestThId,
+              schemaId
+            );
+          }
+        }
       }
 
       return isEmailSent;

@@ -741,4 +741,18 @@ export class IssuanceRepository {
       throw error;
     }
   }
+
+  async saveSchemaIdIssuance(threadId: string, schemaId: string): Promise<void> {
+    try {
+      await this.prisma.credentials.update({
+        where: { threadId },
+        data: {
+          schemaId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`[saveSchemaIdIssuance] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

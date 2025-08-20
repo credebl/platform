@@ -283,11 +283,11 @@ export class IssuanceService {
         finalStatusCode = HttpStatus.CREATED;
         const context = payload?.credentialData[0]?.credential?.['@context'] as string[];
 
-        if (Array.isArray(context) && context.includes('https://www.w3.org/2018/credentials/v1')) {
-          const filterData = context.filter((item) => 'https://www.w3.org/2018/credentials/v1' !== item);
+        if (Array.isArray(context) && context.includes(CommonConstants.W3C_SCHEMA_URL)) {
+          const filterData = context.filter((item) => CommonConstants.W3C_SCHEMA_URL !== item);
           const [schemaId] = filterData;
           results.forEach((val) => {
-            if ('fulfilled' === val.status && val?.value?.threadId) {
+            if (PromiseResult.FULFILLED === val.status && val?.value?.threadId) {
               this.issuanceRepository.saveSchemaIdIssuance(val?.value?.threadId, schemaId);
             }
           });
@@ -1077,8 +1077,8 @@ export class IssuanceService {
 
       if (isEmailSent) {
         const w3cSchemaId = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.['@context'] as string[];
-        if (w3cSchemaId && w3cSchemaId.includes('https://www.w3.org/2018/credentials/v1')) {
-          const filterData = w3cSchemaId.filter((item) => 'https://www.w3.org/2018/credentials/v1' !== item);
+        if (w3cSchemaId && w3cSchemaId.includes(CommonConstants.W3C_SCHEMA_URL)) {
+          const filterData = w3cSchemaId.filter((item) => CommonConstants.W3C_SCHEMA_URL !== item);
           const [schemaId] = filterData;
           if (credentialCreateOfferDetails.response.credentialRequestThId) {
             this.issuanceRepository.saveSchemaIdIssuance(

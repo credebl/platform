@@ -230,8 +230,8 @@ export class IssuanceRepository {
           threadId: issueCredentialDto?.threadId,
           connectionId: issueCredentialDto?.connectionId,
           state: issueCredentialDto?.state,
-          schemaId,
-          credDefId
+          credDefId,
+          ...(schemaId ? { schemaId } : {})
         },
         create: {
           createDateTime: issueCredentialDto?.createDateTime,

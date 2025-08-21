@@ -45,6 +45,9 @@ export enum CommonConstants {
   URL_LEDG_GET_TAA = '/ledger/taa',
   URL_LEDG_POST_TAA_ACCEPT = '/ledger/taa/accept',
 
+  //W3cSCHEMA
+  W3C_SCHEMA_URL = 'https://www.w3.org/2018/credentials/v1',
+
   // MESSAGING SERVICES
   URL_MSG_SEND_MESSAGE = '/connections/#/send-message',
   URL_MSG_TRUST_PING = '/connections/#/send-ping',

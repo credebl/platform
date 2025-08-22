@@ -54,7 +54,13 @@ export interface IGetOrgById {
   website: string;
   publicProfile: boolean;
   schema: ISchema[];
+  didDetails?: IDidCreationData;
   org_agents: IOrgAgents[];
+}
+
+interface IDidCreationData {
+  createDateTime: Date;
+  lastChangedDateTime: Date;
 }
 
 interface ISchema {
@@ -66,6 +72,7 @@ interface IOrgAgents {
   agent_invitations: IAgentInvitation[];
   ledgers: ILedgers;
   org_agent_type: IOrgAgentType;
+  orgDid: string;
 }
 
 interface IAgentInvitation {

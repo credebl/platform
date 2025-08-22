@@ -841,6 +841,9 @@ export class OrganizationService {
       };
 
       const organizationDetails = await this.organizationRepository.getOrganization(query);
+      const didDetails = await this.organizationRepository.getDidDetailsByDid(organizationDetails.org_agents[0].orgDid);
+      const { lastChangedDateTime, createDateTime } = didDetails;
+      organizationDetails.didDetails = { lastChangedDateTime, createDateTime };
       return organizationDetails;
     } catch (error) {
       this.logger.error(`In create organization : ${JSON.stringify(error)}`);

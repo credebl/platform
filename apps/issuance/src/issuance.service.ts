@@ -286,9 +286,9 @@ export class IssuanceService {
         if (Array.isArray(context) && context.includes(CommonConstants.W3C_SCHEMA_URL)) {
           const filterData = context.filter((item) => CommonConstants.W3C_SCHEMA_URL !== item);
           const [schemaId] = filterData;
-          results.forEach((val) => {
-            if (PromiseResult.FULFILLED === val.status && val?.value?.threadId) {
-              this.issuanceRepository.saveSchemaIdIssuance(val?.value?.threadId, schemaId);
+          results.forEach((record) => {
+            if (PromiseResult.FULFILLED === record.status && record?.value?.threadId) {
+              this.issuanceRepository.updateSchemaIdByThreadId(record?.value?.threadId, schemaId);
             }
           });
         }
@@ -1081,7 +1081,7 @@ export class IssuanceService {
           const filterData = w3cSchemaId.filter((item) => CommonConstants.W3C_SCHEMA_URL !== item);
           const [schemaId] = filterData;
           if (credentialCreateOfferDetails.response.credentialRequestThId) {
-            this.issuanceRepository.saveSchemaIdIssuance(
+            this.issuanceRepository.updateSchemaIdByThreadId(
               credentialCreateOfferDetails.response.credentialRequestThId,
               schemaId
             );

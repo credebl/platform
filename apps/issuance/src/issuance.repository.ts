@@ -742,7 +742,7 @@ export class IssuanceRepository {
     }
   }
 
-  async saveSchemaIdIssuance(threadId: string, schemaId: string): Promise<void> {
+  async updateSchemaIdByThreadId(threadId: string, schemaId: string): Promise<void> {
     try {
       await this.prisma.credentials.update({
         where: { threadId },

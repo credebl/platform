@@ -751,7 +751,7 @@ export class IssuanceRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`[saveSchemaIdIssuance] - error: ${JSON.stringify(error)}`);
+      this.logger.error(`[updateSchemaIdByThreadId] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

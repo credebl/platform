@@ -83,6 +83,13 @@ model user_org_roles {
   user         user          @relation(fields: [userId], references: [id])
 }
 
+enum CredentialExchangeProtocol {
+  OIDC
+  DIDCOMM
+}
+
+
+
 model organisation {
   id                    String                  @id @default(uuid()) @db.Uuid
   createDateTime        DateTime                @default(now()) @db.Timestamptz(6)
@@ -116,7 +123,13 @@ model organisation {
   agent_invitations     agent_invitations[]
   credential_definition credential_definition[]
   file_upload           file_upload[]
+  supported_protocol    CredentialExchangeProtocol[]    @default([DIDCOMM])
 }
+
+// model supported_protocol {
+//   id                  String       @id @default(uuid()) @db.Uuid
+//   name                String
+// }
 
 model org_invitations {
   id                  String       @id @default(uuid()) @db.Uuid
@@ -194,6 +207,34 @@ model org_agents {
   organisation        organisation?       @relation(fields: [orgId], references: [id])
   webhookUrl          String?             @db.VarChar
   org_dids            org_dids[]
+  oidc_issuer         oidc_issuer[]
+}
+
+model oidc_issuer {
+  id                  String     @id @default(uuid()) @db.Uuid
+  createDateTime      DateTime   @default(now()) @db.Timestamptz(6)
+  createdBy           String     @db.Uuid
+  agentIssuerId       String
+  metadata            Json
+  org_agents          org_agents @relation(fields: [createdBy], references: [id])
+  templates           credential_templates[] // relation: issuer can issue many templates
+}
+
+model credential_templates {
+  id            String      @id @default(uuid())
+  name          String
+  description   String?
+  format        String      // e.g. "sd_jwt", "mso_mdoc"
+  canBeRevoked  Boolean     @default(false)
+
+  attributes    Json        // schema for claims (typed via DTO/validator layer)
+  appearance    Json        // display metadata (localized text, logo, etc.)
+
+  issuerId      String      @db.Uuid
+  issuer        oidc_issuer @relation(fields: [issuerId], references: [id])
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 model org_dids {
@@ -240,6 +281,7 @@ model ledgers {
   networkUrl          String?      @db.VarChar
   org_agents          org_agents[]
   schema              schema[]
+  supported_protocol    CredentialExchangeProtocol[]    @default([DIDCOMM])
 }
 
 model agents {

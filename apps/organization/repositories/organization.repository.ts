@@ -25,6 +25,7 @@ import {
 import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
 import {
+  CredentialExchangeProtocol,
   Prisma,
   agent_invitations,
   org_agents,
@@ -112,7 +113,8 @@ export class OrganizationRepository {
           cityId: createOrgDto.cityId,
           stateId: createOrgDto.stateId,
           createdBy: createOrgDto.createdBy,
-          lastChangedBy: createOrgDto.lastChangedBy
+          lastChangedBy: createOrgDto.lastChangedBy,
+          supported_protocol: [createOrgDto.supported_protocol]
         }
       });
       return orgData;
@@ -128,24 +130,36 @@ export class OrganizationRepository {
    * @returns update Organization
    */
 
-  async updateOrganization(updateOrgDto: IUpdateOrganization): Promise<organisation> {
+  async updateOrganization(
+    updateOrgDto: IUpdateOrganization,
+    supported_protocol?: CredentialExchangeProtocol[]
+  ): Promise<organisation> {
     try {
+      // Build initial data object
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let data: Record<string, any> = {
+        name: updateOrgDto.name,
+        logoUrl: updateOrgDto.logo,
+        description: updateOrgDto.description,
+        website: updateOrgDto.website,
+        orgSlug: updateOrgDto.orgSlug,
+        publicProfile: updateOrgDto.isPublic,
+        lastChangedBy: updateOrgDto.userId,
+        countryId: updateOrgDto.countryId,
+        stateId: updateOrgDto.stateId,
+        cityId: updateOrgDto.cityId,
+        supported_protocol: supported_protocol ?? undefined
+      };
+
+      // Remove undefined keys in one pass
+      data = Object.fromEntries(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        Object.entries(data).filter(([_, v]) => v !== undefined)
+      );
+
       return this.prisma.organisation.update({
-        where: {
-          id: String(updateOrgDto.orgId)
-        },
-        data: {
-          name: updateOrgDto.name,
-          logoUrl: updateOrgDto.logo,
-          description: updateOrgDto.description,
-          website: updateOrgDto.website,
-          orgSlug: updateOrgDto.orgSlug,
-          publicProfile: updateOrgDto.isPublic,
-          lastChangedBy: updateOrgDto.userId,
-          countryId: updateOrgDto.countryId,
-          stateId: updateOrgDto.stateId,
-          cityId: updateOrgDto.cityId
-        }
+        where: { id: String(updateOrgDto.orgId) },
+        data
       });
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
@@ -155,9 +169,9 @@ export class OrganizationRepository {
 
   async getAgentInvitationDetails(orgId: string): Promise<agent_invitations> {
     try {
-      const response = await this.prisma.agent_invitations.findUnique({
+      const response = await this.prisma.agent_invitations.findFirst({
         where: {
-          id: orgId
+          orgId
         }
       });
       return response;

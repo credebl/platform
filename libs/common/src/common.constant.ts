@@ -114,6 +114,11 @@ export enum CommonConstants {
   // CREATE KEYS
   CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
 
+  // OIDC URLs
+  URL_OIDC_ISSUER_CREATE = '/openid4vc/issuer',
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
+  OIDC_ISSUER_GET = '/openid4vc/issuer',
+
   // Nested attribute separator
   NESTED_ATTRIBUTE_SEPARATOR = '~',
 
@@ -380,7 +385,10 @@ export enum CommonConstants {
   GET_VERIFIED_PROOF = 'get-verified-proof',
   GET_QUESTION_ANSWER_RECORD = 'get-question-answer-record',
   SEND_QUESTION = 'send-question',
-  SEND_BASIC_MESSAGE = 'send-basic-message'
+  SEND_BASIC_MESSAGE = 'send-basic-message',
+
+  // OIDC
+  OIDC_ISSUER_CREATE = 'create-oidc-issuer'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

@@ -25,6 +25,7 @@ import {
   OrgDid
 } from '../interface/agent-service.interface';
 import { AgentType, PrismaTables } from '@credebl/enum/enum';
+import { OrgAgentWithProtocol } from '@credebl/common/interfaces/agent-service.interface';
 
 @Injectable()
 export class AgentServiceRepository {
@@ -398,12 +399,19 @@ export class AgentServiceRepository {
    * @returns Agent health details
    */
   // eslint-disable-next-line camelcase
-  async getOrgAgentDetails(orgId: string): Promise<org_agents> {
+  async getOrgAgentDetails(orgId: string): Promise<OrgAgentWithProtocol> {
     try {
       if (orgId) {
         const oranizationAgentDetails = await this.prisma.org_agents.findUnique({
           where: {
             orgId
+          },
+          include: {
+            organisation: {
+              select: {
+                supported_protocol: true
+              }
+            }
           }
         });
         return oranizationAgentDetails;

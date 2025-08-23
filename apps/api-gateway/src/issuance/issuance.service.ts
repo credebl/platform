@@ -1,4 +1,8 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
@@ -28,6 +32,8 @@ import {
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { IssuerCreationDto } from './dtos/oidc-issuer.dto';
+import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oidc-issuer-template.dto';
 @Injectable()
 export class IssuanceService extends BaseService {
   constructor(
@@ -269,5 +275,45 @@ export class IssuanceService extends BaseService {
       fileId
     };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'issued-file-data-and-file-details', payload);
+  }
+
+  async oidcIssuerCreate(
+    issueCredentialDto: IssuerCreationDto,
+    orgId: string,
+    userDetails: user
+  ): Promise<IDeletedIssuanceRecords> {
+    const payload = { issueCredentialDto, orgId, userDetails };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-issuer-create', payload);
+  }
+
+  async deleteTemplate(userDetails: user, orgId: string, templateId: string, issuerId: string) {
+    const payload = { templateId, orgId, userDetails };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-delete', payload);
+  }
+
+  async updateTemplate(
+    userDetails: user,
+    orgId: string,
+    templateId: string,
+    dto: UpdateCredentialTemplateDto,
+    issuerId: string
+  ) {
+    const payload = { templateId, orgId, userDetails };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-update', payload);
+  }
+
+  async findByIdTemplate(userDetails: user, orgId: string, templateId: string, issuerId: string) {
+    const payload = { templateId, orgId, userDetails };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-find-id', payload);
+  }
+
+  async findAllTemplate(userDetails: user, orgId: string, issuerId: string) {
+    const payload = { orgId, userDetails };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-find-all', payload);
+  }
+
+  async createTemplate(dto: CreateCredentialTemplateDto, userDetails: user, orgId: string, issuerId: string) {
+    const payload = { dto, orgId, userDetails, issuerId };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-create', payload);
   }
 }

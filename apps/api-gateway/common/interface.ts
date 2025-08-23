@@ -6,7 +6,12 @@ export interface ResponseType {
 }
 
 export interface ExceptionResponse {
-  message: string | string[]
-  error: string
-  statusCode: number
+  message: string | string[];
+  error: string;
+  statusCode: number;
+}
+
+export enum CredentialExchangeProtocol {
+  OIDC,
+  DIDCOMM
 }

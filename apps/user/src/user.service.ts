@@ -454,7 +454,9 @@ export class UserService {
         const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
         return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       } else {
+        // console.log("Reached here, password", password)
         const decryptedPassword = await this.commonService.decryptPassword(password);
+        // console.log(`This is decryptedPassword:: ${decryptedPassword}, userData:::: ${userData}, email.toLowerCase()::::: ${email.toLowerCase()}`)
         return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       }
     } catch (error) {

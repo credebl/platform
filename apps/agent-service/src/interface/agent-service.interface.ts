@@ -1,5 +1,5 @@
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
-import { Prisma } from '@prisma/client';
+import { CredentialExchangeProtocol, Prisma } from '@prisma/client';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {
@@ -627,6 +627,7 @@ export interface LedgerNameSpace {
   nymTxnEndpoint: string;
   indyNamespace: string;
   networkUrl: string;
+  supported_protocol: CredentialExchangeProtocol[];
 }
 
 export interface OrgDid {

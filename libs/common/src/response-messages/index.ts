@@ -488,6 +488,36 @@ export const ResponseMessages = {
       walletRecordNotFound: 'Wallet record not found.'
     }
   },
+  oidcIssuer: {
+    success: {
+      create: 'OIDC issuer created successfully.',
+      update: 'OIDC issuer updated successfully.',
+      delete: 'OIDC issuer deleted successfully.',
+      fetch: 'OIDC issuer(s) fetched successfully.'
+    },
+    error: {
+      notFound: 'OIDC issuer not found.',
+      invalidId: 'Invalid OIDC issuer ID.',
+      createFailed: 'Failed to create OIDC issuer.',
+      updateFailed: 'Failed to update OIDC issuer.',
+      deleteFailed: 'Failed to delete OIDC issuer.'
+    }
+  },
+  oidcTemplate: {
+    success: {
+      create: 'OIDC template created successfully.',
+      update: 'OIDC template updated successfully.',
+      delete: 'OIDC template deleted successfully.',
+      fetch: 'OIDC template(s) fetched successfully.'
+    },
+    error: {
+      notFound: 'OIDC template not found.',
+      invalidId: 'Invalid OIDC template ID.',
+      createFailed: 'Failed to create OIDC template.',
+      updateFailed: 'Failed to update OIDC template.',
+      deleteFailed: 'Failed to delete OIDC template.'
+    }
+  },
   nats: {
     success: {},
     error: {

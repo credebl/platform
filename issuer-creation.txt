@@ -1,0 +1,387 @@
+{
+    "issuerId": "abc-gov",
+    "accessTokenSignerKeyType": "ed25519",
+    "display": [
+        {
+            "name": "ABC Gov",
+            "locale": "en",
+            "logo": {
+                "uri": "https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg",
+                "alt_text": "abc_logo"
+            }
+        },
+        {
+            "name": "حكومة ABC",
+            "locale": "ar",
+            "logo": {
+                "uri": "https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg",
+                "alt_text": "شعار abc"
+            }
+        }
+    ],
+    "dpopSigningAlgValuesSupported": [
+        "RS256",
+        "ES256",
+        "EdDSA"
+    ],
+    "credentialConfigurationsSupported": {
+        "BirthCertificateCredential-sdjwt": {
+            "format": "vc+sd-jwt",
+            "vct": "BirthCertificateCredential",
+            "scope": "openid4vc:credential:BirthCertificateCredential-sdjwt",
+            "claims": {
+                "full_name": {
+                    "mandatory": true,
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Full Name",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "birth_date": {
+                    "mandatory": true,
+                    "value_type": "date",
+                    "display": [
+                        {
+                            "name": "Date of Birth",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "birth_place": {
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Place of Birth",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "parent_names": {
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Parents' Names",
+                            "locale": "en"
+                        }
+                    ]
+                }
+            },
+            "credential_signing_alg_values_supported": [
+                "ES256",
+                "EdDSA"
+            ],
+            "cryptographic_binding_methods_supported": [
+                "did:key",
+                "did:web",
+                "did:cheqd"
+            ],
+            "display": [
+                {
+                    "name": "Birth Certificate",
+                    "description": "Official record of birth",
+                    "locale": "en"
+                },
+                {
+                    "name": "شهادة الميلاد",
+                    "description": "سجل رسمي للولادة",
+                    "locale": "ar"
+                }
+            ]
+        },
+        "DrivingLicenseCredential-mdoc": {
+            "format": "mso_mdoc",
+            "doctype": "org.iso.18013.5.1",
+            "scope": "openid4vc:credential:DrivingLicenseCredential-mdoc",
+            "claims": {
+                "family_name": {
+                    "mandatory": true,
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Surname",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "given_name": {
+                    "mandatory": true,
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Given Name",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "birth_date": {
+                    "value_type": "date",
+                    "display": [
+                        {
+                            "name": "Date of Birth",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "issue_date": {
+                    "value_type": "date",
+                    "display": [
+                        {
+                            "name": "Issued On",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "expiry_date": {
+                    "value_type": "date",
+                    "display": [
+                        {
+                            "name": "Expires On",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "issuing_country": {
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Issuing Country",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "license_number": {
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "License Number",
+                            "locale": "en"
+                        },
+                        {
+                            "name": "hii",
+                            "locale": "ar"
+                        }
+                    ]
+                },
+                "categories_of_vehicles": {
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Authorized Vehicle Types",
+                            "locale": "en"
+                        }
+                    ]
+                }
+            },
+            "credential_signing_alg_values_supported": [
+                "ES256",
+                "EdDSA"
+            ],
+            "cryptographic_binding_methods_supported": [
+                "did:key",
+                "did:web",
+                "did:cheqd"
+            ],
+            "display": [
+                {
+                    "name": "Driving License",
+                    "description": "Mobile Driving License (mDL)",
+                    "locale": "en"
+                },
+                {
+                    "name": "رخصة قيادة",
+                    "description": "رخصة قيادة متنقلة",
+                    "locale": "ar"
+                }
+            ]
+        },
+        "NationalIDCredential-mdoc": {
+            "format": "mso_mdoc",
+            "doctype": "org.iso.18013.5.1",
+            "scope": "openid4vc:credential:NationalIDCredential-mdoc",
+            "claims": {
+                "family_name": {
+                    "mandatory": true,
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Last Name",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "given_name": {
+                    "mandatory": true,
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "First Name",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "birth_date": {
+                    "value_type": "date",
+                    "display": [
+                        {
+                            "name": "Date of Birth",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "nationality": {
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Nationality",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "document_number": {
+                    "mandatory": true,
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Document Number",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "expiry_date": {
+                    "value_type": "date",
+                    "display": [
+                        {
+                            "name": "Expiry Date",
+                            "locale": "en"
+                        }
+                    ]
+                }
+            },
+            "credential_signing_alg_values_supported": [
+                "ES256",
+                "EdDSA"
+            ],
+            "cryptographic_binding_methods_supported": [
+                "did:key",
+                "did:web",
+                "Did:cheqd",
+                "Jwk",
+                "cose_key"
+            ],
+            "display": [
+                {
+                    "name": "National ID (mDL)",
+                    "description": "Mobile Digital National Identity",
+                    "locale": "en"
+                },
+                {
+                    "name": "الهوية الوطنية (mDL)",
+                    "description": "هوية وطنية رقمية متنقلة",
+                    "locale": "ar"
+                }
+            ]
+        },
+        "NationalIDCredential-sdjwt": {
+            "format": "vc+sd-jwt",
+            "vct": "NationalIDCredential",
+            "scope": "openid4vc:credential:NationalIDCredential-sdjwt",
+            "claims": {
+                "full_name": {
+                    "mandatory": true,
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Full Name",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "birth_date": {
+                    "value_type": "date",
+                    "display": [
+                        {
+                            "name": "Date of Birth",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "nationality": {
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Nationality",
+                            "locale": "en"
+                        }
+                    ]
+                },
+                "document_number": {
+                    "mandatory": true,
+                    "value_type": "string",
+                    "display": [
+                        {
+                            "name": "Document Number",
+                            "locale": "en"
+                        }
+                    ]
+                }
+            },
+            "credential_signing_alg_values_supported": [
+                "ES256",
+                "EdDSA"
+            ],
+            "cryptographic_binding_methods_supported": [
+                "did:key",
+                "did:web",
+                "did:cheqd"
+            ],
+            "display": [
+                {
+                    "name": "National ID (VC)",
+                    "description": "Verifiable Credential for National Identity",
+                    "locale": "en"
+                },
+                {
+                    "name": "الهوية الوطنية (VC)",
+                    "description": "شهادة رقمية للتحقق من الهوية الوطنية",
+                    "locale": "ar"
+                }
+            ]
+        }
+    },
+    "authorizationServerConfigs": [
+        {
+            "issuer": "https://id.t4trust.ae:8443/realms/trustid",
+            "clientAuthentication": {
+                "clientId": "issuer-server",
+                "clientSecret": "1qKMWulZpMBzXIdfPO5AEs0xaTaKs1ym"
+            }
+        }
+    ]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

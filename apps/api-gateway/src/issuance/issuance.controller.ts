@@ -1,6 +1,7 @@
 /* eslint-disable default-param-last */
 /* eslint-disable no-param-reassign */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 /* eslint-disable camelcase */
 import {
   Controller,
@@ -21,7 +22,8 @@ import {
   NotFoundException,
   ParseUUIDPipe,
   Delete,
-  ValidationPipe
+  ValidationPipe,
+  Patch
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -81,6 +83,8 @@ import { SchemaType } from '@credebl/enum/enum';
 import { CommonConstants } from '../../../../libs/common/src/common.constant';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
+import { IssuerCreationDto } from './dtos/oidc-issuer.dto';
+import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oidc-issuer-template.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -1022,6 +1026,265 @@ export class IssuanceController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.issuance.success.deleteIssuanceRecords
     };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Create issuer against a org(tenant)
+   * @param orgId The ID of the organization
+   * @param user The user making the request
+   * @param res The response object
+   * @returns The status of the deletion operation
+   */
+  @Post('/orgs/:orgId/oidc/issuers')
+  @ApiOperation({ summary: 'Create OIDC issuer', description: 'Create OIDC issuer by orgId' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async oidcIssuerCreate(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @User() user: user,
+    @Body() issueCredentialDto: IssuerCreationDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.issueCredentialService.oidcIssuerCreate(issueCredentialDto, orgId, user);
+    console.log('THis is dto', JSON.stringify(issueCredentialDto, null, 2));
+    console.log('Received the request body', JSON.stringify(issueCredentialDto, null, 2));
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.deleteIssuanceRecords
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/oidc/:issuerId/template')
+  @ApiOperation({ summary: 'Create credential template' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Template created successfully' })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async createTemplate(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Param(
+      'issuerId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    issuerId: string,
+    @User() user: user,
+    @Body() dto: CreateCredentialTemplateDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    dto.issuerId = issuerId;
+    console.log('THis is dto', JSON.stringify(dto, null, 2));
+    const template = await this.issueCredentialService.createTemplate(dto, user, orgId, issuerId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.oidcTemplate.success.create,
+      data: template
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Get('/orgs/:orgId/oidc/:issuerId/template')
+  @ApiOperation({ summary: 'List credential templates' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'List of templates' })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async listTemplates(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Param(
+      'issuerId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    issuerId: string,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    const templates = await this.issueCredentialService.findAllTemplate(user, orgId, issuerId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.oidcTemplate.success.fetch,
+      data: templates
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/orgs/:orgId/oidc/:issuerId/template/:templateId')
+  @ApiOperation({ summary: 'Get credential template by ID' })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getTemplateById(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Param(
+      'issuerId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    issuerId: string,
+    @Param(
+      'templateId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    templateId: string,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    const template = await this.issueCredentialService.findByIdTemplate(user, orgId, templateId, issuerId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.oidcTemplate.success.fetch,
+      data: template
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Patch('/orgs/:orgId/oidc/:issuerId/template/:templateId')
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiOperation({ summary: 'Update credential template' })
+  async updateTemplate(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Param(
+      'issuerId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    issuerId: string,
+    @Param(
+      'templateId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    templateId: string,
+    @User() user: user,
+    @Body() dto: UpdateCredentialTemplateDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    const updated = await this.issueCredentialService.updateTemplate(user, orgId, templateId, dto, issuerId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.oidcTemplate.success.update,
+      data: updated
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Delete('/orgs/:orgId/oidc/:issuerId/template/:templateId')
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiOperation({ summary: 'Delete credential template' })
+  async deleteTemplate(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Param(
+      'issuerId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    issuerId: string,
+    @Param(
+      'templateId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    templateId: string,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.issueCredentialService.deleteTemplate(user, orgId, templateId, issuerId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.oidcTemplate.success.delete
+    };
+
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

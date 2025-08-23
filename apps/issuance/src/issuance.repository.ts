@@ -13,9 +13,11 @@ import { PrismaTables, SortValue } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
 import {
   agent_invitations,
+  credential_templates,
   credentials,
   file_data,
   file_upload,
+  oidc_issuer,
   org_agents,
   organisation,
   platform_config,
@@ -738,6 +740,109 @@ export class IssuanceRepository {
       return fileDetails;
     } catch (error) {
       this.logger.error(`[getFileDetailsAndFileDataByFileId] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getOidcIssuerByOrg(orgId: string): Promise<oidc_issuer[]> {
+    try {
+      return await this.prisma.oidc_issuer.findMany({
+        where: { createdBy: orgId },
+        include: {
+          templates: true
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getOidcIssuerByOrg: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async addOidcIssuerDetails(issuerId: string, credatedById: string, issuerJson: any): Promise<object> {
+    try {
+      const fileDetails = await this.prisma.oidc_issuer.create({
+        data: {
+          ...issuerJson,
+          createdBy: credatedById, // FK
+          agentIssuerId: issuerId
+        },
+        include: {
+          org_agents: true // bring back agent info
+        }
+      });
+
+      return fileDetails;
+    } catch (error) {
+      this.logger.error(`[addOidcIssuerDetails] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async createTemplate(
+    issuerId: string,
+    data: Omit<credential_templates, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<credential_templates> {
+    try {
+      return await this.prisma.credential_templates.create({
+        data: {
+          ...data
+          // issuerId: issuerId,
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in createTemplate: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getTemplateById(templateId: string): Promise<credential_templates | null> {
+    try {
+      return await this.prisma.credential_templates.findUnique({
+        where: { id: templateId }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getTemplateById: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getTemplatesByIssuer(issuerId: string): Promise<credential_templates[]> {
+    try {
+      return await this.prisma.credential_templates.findMany({
+        where: { issuerId },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getTemplatesByIssuer: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateTemplate(templateId: string, data: Partial<credential_templates>): Promise<credential_templates> {
+    try {
+      return await this.prisma.credential_templates.update({
+        where: { id: templateId },
+        data
+      });
+    } catch (error) {
+      this.logger.error(`Error in updateTemplate: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteTemplate(templateId: string): Promise<credential_templates> {
+    try {
+      return await this.prisma.credential_templates.delete({
+        where: { id: templateId }
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleteTemplate: ${error.message}`);
       throw error;
     }
   }

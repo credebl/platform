@@ -1,5 +1,6 @@
-import { Prisma } from '@prisma/client';
+import { CredentialExchangeProtocol, Prisma } from '@prisma/client';
 import { JsonValue } from '@prisma/client/runtime/library';
+import { SingleOrArray } from 'apps/api-gateway/src/issuance/utils/helper';
 
 export interface IUserOrgRoles {
   id: string;
@@ -14,8 +15,8 @@ export interface IClientCredentials {
   clientSecret: string;
 }
 
-export interface IUpdateOrganization {
-  name: string;
+export interface IUpdateOrganization<T = SingleOrArray<CredentialExchangeProtocol>> {
+  name?: string;
   description?: string;
   orgId: string;
   logo?: string;
@@ -26,6 +27,7 @@ export interface IUpdateOrganization {
   countryId?: number;
   cityId?: number;
   stateId?: number;
+  supported_protocol?: T;
 }
 
 export interface ICreateConnectionUrl {

@@ -20,10 +20,16 @@ import { IssuanceService } from './issuance.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { user } from '@prisma/client';
+import { IssuerCreation } from '../interfaces/oidc-issuance.interfaces';
+import { OIDCIssuanceService } from './oidc-issuance.service';
+import { CreateCredentialTemplate, UpdateCredentialTemplate } from '../interfaces/oidc-template.interface';
 
 @Controller()
 export class IssuanceController {
-  constructor(private readonly issuanceService: IssuanceService) {}
+  constructor(
+    private readonly issuanceService: IssuanceService,
+    private readonly oidcIssuanceService: OIDCIssuanceService
+  ) {}
 
   @MessagePattern({ cmd: 'get-issuance-records' })
   async getIssuanceRecordsByOrgId(payload: { orgId: string; userId: string }): Promise<number> {
@@ -132,5 +138,72 @@ export class IssuanceController {
   @MessagePattern({ cmd: 'issued-file-data-and-file-details' })
   async getFileDetailsAndFileDataByFileId(payload: { fileId: string; orgId: string }): Promise<object> {
     return this.issuanceService.getFileDetailsAndFileDataByFileId(payload.fileId, payload.orgId);
+  }
+
+  // oidc-issuer-create
+  @MessagePattern({ cmd: 'oidc-issuer-create' })
+  async oidcIssuerCreate(payload: {
+    issuerCreation: IssuerCreation;
+    orgId: string;
+    userDetails: user;
+  }): Promise<IDeletedIssuanceRecords> {
+    const { orgId, userDetails } = payload;
+    return this.oidcIssuanceService.oidcIssuerCreate(payload.issuerCreation, orgId, userDetails);
+  }
+
+  @MessagePattern({ cmd: 'oidc-template-create' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcTemplateCreate(payload: {
+    dto: CreateCredentialTemplate;
+    orgId: string;
+    userDetails: user;
+    issuerId: string;
+  }): Promise<any> {
+    const { dto, orgId, userDetails, issuerId } = payload;
+    return this.oidcIssuanceService.createTemplate(dto, orgId, userDetails, issuerId);
+  }
+
+  @MessagePattern({ cmd: 'oidc-template-update' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcTemplateUpdate(payload: {
+    templateId: string;
+    dto: UpdateCredentialTemplate;
+    orgId: string;
+    userDetails: user;
+    issuerId: string;
+  }): Promise<any> {
+    const { templateId, dto, orgId, userDetails, issuerId } = payload;
+    return this.oidcIssuanceService.updateTemplate(templateId, dto, orgId, userDetails, issuerId);
+  }
+
+  @MessagePattern({ cmd: 'oidc-template-delete' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcTemplateDelete(payload: {
+    templateId: string;
+    orgId: string;
+    userDetails: user;
+    issuerId: string;
+  }): Promise<any> {
+    const { templateId, orgId, userDetails, issuerId } = payload;
+    return this.oidcIssuanceService.deleteTemplate(templateId, orgId, userDetails, issuerId);
+  }
+
+  @MessagePattern({ cmd: 'oidc-template-find-id' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcTemplateFindById(payload: {
+    templateId: string;
+    orgId: string;
+    userDetails: user;
+    issuerId: string;
+  }): Promise<any> {
+    const { templateId, orgId, userDetails, issuerId } = payload;
+    return this.oidcIssuanceService.findByIdTemplate(templateId, orgId, userDetails, issuerId);
+  }
+
+  @MessagePattern({ cmd: 'oidc-template-find-all' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcTemplateFindAll(payload: { orgId: string; userDetails: user; issuerId: string }): Promise<any> {
+    const { orgId, userDetails, issuerId } = payload;
+    return this.oidcIssuanceService.findAllTemplate(orgId, userDetails, issuerId);
   }
 }

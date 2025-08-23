@@ -27,6 +27,7 @@ import { user } from '@prisma/client';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
+import { IssuerCreation } from 'apps/issuance/interfaces/oidc-issuance.interfaces';
 
 @Controller()
 export class AgentServiceController {
@@ -322,5 +323,11 @@ export class AgentServiceController {
   @MessagePattern({ cmd: 'get-agent-details-by-org-id' })
   async agentdetailsByOrgId(payload: { orgId: string }): Promise<IStoreAgent> {
     return this.agentServiceService.getAgentDetails(payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-create-oidc-issuer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcIssuerCreate(payload: { issuerCreation: IssuerCreation; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcIssuerCreate(payload.issuerCreation, payload.url, payload.orgId);
   }
 }

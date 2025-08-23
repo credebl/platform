@@ -1,9 +1,10 @@
 import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, IsBoolean, MaxLength, MinLength, Validate } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsBoolean, MaxLength, MinLength, Validate, IsEnum } from 'class-validator';
 
 import { Transform } from 'class-transformer';
 import { ImageBase64Validator, IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 import { GeoLocationDto } from '../../dtos/geo-location-dto';
+import { CredentialExchangeProtocol } from '@prisma/client';
 
 @ApiExtraModels()
 export class UpdateOrganizationDto extends GeoLocationDto {
@@ -43,4 +44,10 @@ export class UpdateOrganizationDto extends GeoLocationDto {
   @IsBoolean({ message: 'isPublic should be boolean' })
   @IsOptional()
   isPublic?: boolean = false;
+
+  @ApiPropertyOptional({ enum: CredentialExchangeProtocol })
+  @IsOptional()
+  @IsEnum(CredentialExchangeProtocol)
+  // eslint-disable-next-line camelcase
+  supported_protocol?: CredentialExchangeProtocol;
 }

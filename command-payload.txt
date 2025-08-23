@@ -1,0 +1,75 @@
+OrgId: fae38a18-ff32-4f9d-9b18-a695416b53e6
+
+curl -X 'POST' \
+  'http://localhost:5000/v1/auth/signin' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "email": "awqx111@yopmail.com",
+  "password": "U2FsdGVkX1/RSycDbbp2X6N6WjbmhHv1jQ/AT1xSD24="
+}'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+OrgId: 47d4c9e9-1799-4d03-a08e-f382f80703de
+
+
+Sign-in:
+curl -X 'POST' \
+  'http://localhost:5000/v1/auth/signin' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "email": "krishna-test1@yopmail.com",
+  "password": "U2FsdGVkX18+Bi1+wGI1/4UDAJJ4nbrSoyxT3iUaMvk="
+}'
+
+curl -X 'POST' \
+  'http://localhost:5000/v1/orgs/47d4c9e9-1799-4d03-a08e-f382f80703de/agents/wallet' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJZYU1oUWotZjRtd19MdFlqYjJTT0N3dTA2Tmhtc19LdnhFOEpPNjNEZ3lVIn0.eyJleHAiOjE3NTU0OTIyNDcsImlhdCI6MTc1NTQ5MTk0NywianRpIjoiZTk1MWI1MzgtZGUxZi00NWYyLWI1MGYtMDhlYTc5N2NkZWQyIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9jcmVkZWJsLXBsYXRmb3JtIiwiYXVkIjpbIjQ3ZDRjOWU5LTE3OTktNGQwMy1hMDhlLWYzODJmODA3MDNkZSIsImFjY291bnQiXSwic3ViIjoiM2EzYjdjZGQtNmY2ZC00MDA2LTk4YTAtYjRhNjNkMzk0OWE2IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiYWRtaW5DbGllbnQiLCJzaWQiOiJmOTg3MjJkYy1lOTZiLTQ4ZTQtODYxMS0xMzYyZDY1ZDUwN2QiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC8iXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbImRlZmF1bHQtcm9sZXMtY3JlZGVibC1wbGF0Zm9ybSIsIm9mZmxpbmVfYWNjZXNzIiwiaG9sZGVyIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyI0N2Q0YzllOS0xNzk5LTRkMDMtYTA4ZS1mMzgyZjgwNzAzZGUiOnsicm9sZXMiOlsib3duZXIiXX0sImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoiS3Jpc2huYSBNYW51YWwtdXNlciIsInByZWZlcnJlZF91c2VybmFtZSI6ImtyaXNobmEtdGVzdDFAeW9wbWFpbC5jb20iLCJnaXZlbl9uYW1lIjoiS3Jpc2huYSIsImZhbWlseV9uYW1lIjoiTWFudWFsLXVzZXIiLCJlbWFpbCI6ImtyaXNobmEtdGVzdDFAeW9wbWFpbC5jb20ifQ.BlswNviMWwqRLmikbq7m-uIFhtS4fz3NqRifle4pu7zRi6Jd0jefiqnLIxRWW3DkA5U_dZ4MBSiT4WJ2S_TT-oMXm5xhnR0NzhHvQj-7c-zZe0tI_uzqPgPMwN6FTT6WJG5r66PuHzOok6ZqxG4TBnmqI4yIwLvObUGRCZ1CrKC3T1jzfs9sj4z-DRr0qvn88Fzxq-BeDQoPmjUCaJzKlr0jG0yxpSSfiDI6uFNasmr1_6u27bUXLhOY9W6_UKLVBzqIdRJzbgpkE3Id5oH4M-qIvIs3sG1DZf81W0QXLaX3SbV0QD1iF7LmVDx8IR_mm7L8lduc-Ae6WfGfWnXZsw' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "label": "t2t2t2",
+  "seed": "kXIkF3zhXkghTjDxW5cz3NYvnWfruU1d",
+  "keyType": "ed25519",
+  "method": "key",
+"clientSocketId": "bZDoxN8zHt4wmr_-AAdI"
+}'

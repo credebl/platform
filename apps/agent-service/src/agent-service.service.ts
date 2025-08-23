@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable yoda */
 /* eslint-disable no-useless-catch */
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import {
@@ -71,7 +72,7 @@ import * as retry from 'async-retry';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ledgerName } from '@credebl/common/cast.helper';
-import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
+import { InvitationMessage, OrgAgentWithProtocol } from '@credebl/common/interfaces/agent-service.interface';
 import * as CryptoJS from 'crypto-js';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { PrismaService } from '@credebl/prisma-service';
@@ -80,6 +81,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
 import { IVerificationMethod } from 'apps/organization/interfaces/organization.interface';
 import { getAgentUrl } from '@credebl/common/common.utils';
+import { IssuerCreation } from 'apps/issuance/interfaces/oidc-issuance.interfaces';
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {
@@ -919,16 +921,26 @@ export class AgentServiceService {
   async createDid(createDidPayload: IDidCreate, orgId: string, user: IUserRequestInterface): Promise<object> {
     try {
       const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      console.log('This is agentDetails', JSON.stringify(agentDetails, null, 2));
 
       if (createDidPayload?.network) {
         const getNameSpace = await this.agentServiceRepository.getLedgerByNameSpace(createDidPayload?.network);
+        console.log('This is getNameSpace:::', JSON.stringify(getNameSpace, null, 2));
         if (agentDetails.ledgerId !== null) {
           if (agentDetails.ledgerId !== getNameSpace.id) {
             throw new BadRequestException(ResponseMessages.agent.error.networkMismatch);
           }
+          // Check if the network we are about to create our did on, is supported for the same protocol as that of users, if yes, let them create
+          const hasCommonProtocol = getNameSpace.supported_protocol.some((protocol) =>
+            agentDetails.organisation.supported_protocol.includes(protocol)
+          );
+          if (!hasCommonProtocol) {
+            throw new Error('Organisation does not support any of the protocols required by the DID network');
+          }
         }
       }
 
+      console.log('This is 2');
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const url = this.constructUrl(agentDetails);
 
@@ -1380,6 +1392,19 @@ export class AgentServiceService {
       return getProofPresentationsData;
     } catch (error) {
       this.logger.error(`Error in proof presentations in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async oidcIssuerCreate(issueData: IssuerCreation, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const data = await this.commonService
+        .httpPost(url, issueData, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return data;
+    } catch (error) {
+      this.logger.error(`Error in oidcIssuerCreate in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

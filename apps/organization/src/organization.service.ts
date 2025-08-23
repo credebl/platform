@@ -730,24 +730,14 @@ export class OrganizationService {
     // Otherwise, create a new account and also create the new session
     const fetchAccountDetails = await this.userRepository.checkAccountDetails(orgRoleDetails['user'].id);
     if (fetchAccountDetails) {
-      const accountData = {
-        sessionToken: authenticationResult?.access_token,
-        userId: orgRoleDetails['user'].id,
-        expires: authenticationResult?.expires_in
-      };
-
-      await this.userRepository.updateAccountDetails(accountData).then(async (response) => {
-        const finalSessionData = { ...sessionData, accountId: response.id };
-        addSessionDetails = await this.userRepository.createSession(finalSessionData);
-      });
+      const finalSessionData = { ...sessionData, accountId: fetchAccountDetails.id };
+      addSessionDetails = await this.userRepository.createSession(finalSessionData);
     } else {
       // Note:
       // This else block is mostly used for already registered users on the platform to create their account & session in the database.
       // Once all users are migrated or created their accounts and sessions in the DB, this code can be removed.
       const accountData = {
-        sessionToken: authenticationResult?.access_token,
         userId: orgRoleDetails['user'].id,
-        expires: authenticationResult?.expires_in,
         keycloakUserId: orgRoleDetails['user'].keycloakUserId,
         type: TokenType.BEARER_TOKEN
       };

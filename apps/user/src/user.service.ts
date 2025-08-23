@@ -489,10 +489,7 @@ export class UserService {
         let accountData;
         if (null === fetchAccountDetails) {
           accountData = {
-            sessionToken: tokenDetails?.access_token,
             userId: userData?.id,
-            expires: tokenDetails?.expires_in,
-            refreshToken: tokenDetails?.refresh_token,
             keycloakUserId: userData?.keycloakUserId,
             type: TokenType.BEARER_TOKEN
           };
@@ -502,17 +499,8 @@ export class UserService {
             addSessionDetails = await this.userRepository.createSession(finalSessionData);
           });
         } else {
-          accountData = {
-            sessionToken: tokenDetails?.access_token,
-            userId: userData?.id,
-            expires: tokenDetails?.expires_in,
-            refreshToken: tokenDetails?.refresh_token
-          };
-
-          await this.userRepository.updateAccountDetails(accountData).then(async (response) => {
-            const finalSessionData = { ...sessionData, accountId: response.id };
-            addSessionDetails = await this.userRepository.createSession(finalSessionData);
-          });
+          const finalSessionData = { ...sessionData, accountId: fetchAccountDetails.id };
+          addSessionDetails = await this.userRepository.createSession(finalSessionData);
         }
 
         const finalResponse = {
@@ -554,26 +542,18 @@ export class UserService {
         );
         this.logger.debug(`tokenResponse::::${JSON.stringify(tokenResponse)}`);
         // Fetch the details from account table based on userid and refresh token
-        const userAccountDetails = await this.userRepository.fetchAccountByRefreshToken(
-          userByKeycloakId?.['id'],
-          refreshToken
-        );
+        const userAccountDetails = await this.userRepository.checkAccountDetails(userByKeycloakId?.['id']);
         // Update the account details with latest access token, refresh token and exp date
         if (!userAccountDetails) {
           throw new NotFoundException(ResponseMessages.user.error.userAccountNotFound);
         }
-        const updateAccountDetails: IUpdateAccountDetails = {
-          accessToken: tokenResponse.access_token,
-          refreshToken: tokenResponse.refresh_token,
-          expiresAt: tokenResponse.expires_in,
-          accountId: userAccountDetails.id
-        };
-        const updateAccountDetailsResponse = await this.userRepository.updateAccountDetailsById(updateAccountDetails);
-        // Delete the preveious session record and create new one
-        if (!updateAccountDetailsResponse) {
-          throw new InternalServerErrorException(ResponseMessages.user.error.errorInUpdateAccountDetails);
+        // Fetch session details
+        const sessionDetails = await this.userRepository.fetchSessionByRefreshToken(refreshToken);
+        if (!sessionDetails) {
+          throw new NotFoundException(ResponseMessages.user.error.userSeesionNotFound);
         }
-        const deletePreviousSession = await this.userRepository.deleteSessionRecordByRefreshToken(refreshToken);
+        // Delete previous session
+        const deletePreviousSession = await this.userRepository.deleteSessionRecordByRefreshToken(sessionDetails.id);
         if (!deletePreviousSession) {
           throw new InternalServerErrorException(ResponseMessages.user.error.errorInDeleteSession);
         }
@@ -583,7 +563,7 @@ export class UserService {
           expires: tokenResponse.expires_in,
           refreshToken: tokenResponse.refresh_token,
           sessionType: SessionType.USER_SESSION,
-          accountId: updateAccountDetailsResponse.id
+          accountId: userAccountDetails.id
         };
         const addSessionDetails = await this.userRepository.createSession(sessionData);
         if (!addSessionDetails) {

@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable prefer-destructuring */
 
 import {
@@ -5,7 +6,6 @@ import {
   ISendVerificationEmail,
   ISession,
   IShareUserCertificate,
-  IUpdateAccountDetails,
   IUserDeletedActivity,
   IUserInformation,
   IUsersProfile,
@@ -17,7 +17,6 @@ import {
   UserRoleMapping
 } from '../interfaces/user.interface';
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-// eslint-disable-next-line camelcase
 import {
   Prisma,
   RecordType,
@@ -725,57 +724,6 @@ export class UserRepository {
     }
   }
 
-  async fetchAccountByRefreshToken(userId: string, refreshToken: string): Promise<account> {
-    try {
-      return await this.prisma.account.findUnique({
-        where: {
-          userId,
-          refreshToken
-        }
-      });
-    } catch (error) {
-      this.logger.error(`Error in getting account details: ${error.message} `);
-      throw error;
-    }
-  }
-
-  async updateAccountDetailsById(accountDetails: IUpdateAccountDetails): Promise<account> {
-    try {
-      return await this.prisma.account.update({
-        where: {
-          id: accountDetails.accountId
-        },
-        data: {
-          accessToken: accountDetails.accessToken,
-          refreshToken: accountDetails.refreshToken,
-          expiresAt: accountDetails.expiresAt
-        }
-      });
-    } catch (error) {
-      this.logger.error(`Error in getting account details: ${error.message} `);
-      throw error;
-    }
-  }
-
-  async updateAccountDetails(accountDetails: ISession): Promise<account> {
-    try {
-      const userAccountDetails = await this.prisma.account.update({
-        where: {
-          userId: accountDetails.userId
-        },
-        data: {
-          accessToken: accountDetails.sessionToken,
-          refreshToken: accountDetails.refreshToken,
-          expiresAt: accountDetails.expires
-        }
-      });
-      return userAccountDetails;
-    } catch (error) {
-      this.logger.error(`Error in updateAccountDetails: ${error.message}`);
-      throw error;
-    }
-  }
-
   async addAccountDetails(accountDetails: ISession): Promise<account> {
     try {
       const userAccountDetails = await this.prisma.account.create({
@@ -783,9 +731,6 @@ export class UserRepository {
           userId: accountDetails.userId,
           provider: ProviderType.KEYCLOAK,
           providerAccountId: accountDetails.keycloakUserId,
-          accessToken: accountDetails.sessionToken,
-          refreshToken: accountDetails.refreshToken,
-          expiresAt: accountDetails.expires,
           tokenType: accountDetails.type
         }
       });
@@ -1014,16 +959,30 @@ export class UserRepository {
     }
   }
 
-  async deleteSessionRecordByRefreshToken(refreshToken: string): Promise<session> {
+  async deleteSessionRecordByRefreshToken(sessionId: string): Promise<session> {
     try {
       const userSession = await this.prisma.session.delete({
         where: {
-          refreshToken
+          id: sessionId
         }
       });
       return userSession;
     } catch (error) {
       this.logger.error(`Error in logging out user: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async fetchSessionByRefreshToken(refreshToken: string): Promise<session> {
+    try {
+      const sessionDetails = await this.prisma.session.findFirst({
+        where: {
+          refreshToken
+        }
+      });
+      return sessionDetails;
+    } catch (error) {
+      this.logger.error(`Error in fetching session details::${error.message}`);
       throw error;
     }
   }

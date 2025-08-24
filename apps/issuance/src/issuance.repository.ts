@@ -127,6 +127,15 @@ export class IssuanceRepository {
     }[];
   }> {
     try {
+      const schemas = await this.prisma.schema.findMany({
+        where: {
+          schemaLedgerId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
+        },
+        select: { id: true }
+      });
+
+      const schemaIdsMatched = schemas.map((s) => s.id);
+
       const issuedCredentialsList = await this.prisma.credentials.findMany({
         where: {
           orgId,
@@ -135,7 +144,8 @@ export class IssuanceRepository {
             ? {
                 OR: [
                   { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
+                  { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+                  { schemaId: { in: schemaIdsMatched } }
                 ]
               }
             : {})

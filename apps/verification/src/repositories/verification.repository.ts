@@ -8,7 +8,7 @@ import {
 import { IProofPresentationsListCount, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { agent_invitations, org_agents, organisation, platform_config, presentations } from '@prisma/client';
+import { agent_invitations, org_agents, organisation, platform_config, presentations, Prisma } from '@prisma/client';
 
 import { CommonService } from '@credebl/common';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -115,22 +115,24 @@ export class VerificationRepository {
           stateInfo = null;
       }
 
+      const whereClause: Prisma.presentationsWhereInput = {
+        orgId,
+        OR: [
+          { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+          { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+          { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+          { emailId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+          {
+            connections: {
+              theirLabel: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' }
+            }
+          },
+          { state: { contains: stateInfo ?? proofRequestsSearchCriteria.search, mode: 'insensitive' } }
+        ]
+      };
+
       const proofRequestsList = await this.prisma.presentations.findMany({
-        where: {
-          orgId,
-          OR: [
-            { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            { emailId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            {
-              connections: {
-                theirLabel: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' }
-              }
-            },
-            { state: { contains: stateInfo ?? proofRequestsSearchCriteria.search, mode: 'insensitive' } }
-          ]
-        },
+        where: whereClause,
         select: {
           createDateTime: true,
           createdBy: true,
@@ -157,21 +159,7 @@ export class VerificationRepository {
       });
 
       const proofRequestsCount = await this.prisma.presentations.count({
-        where: {
-          orgId,
-          OR: [
-            { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            { emailId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            {
-              connections: {
-                theirLabel: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' }
-              }
-            },
-            { state: { contains: stateInfo ?? proofRequestsSearchCriteria.search, mode: 'insensitive' } }
-          ]
-        }
+        where: whereClause
       });
 
       return { proofRequestsCount, proofRequestsList };

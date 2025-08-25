@@ -681,6 +681,7 @@ export class UserRepository {
       const { sessionToken, userId, expires, refreshToken, accountId, sessionType } = tokenDetails;
       const sessionResponse = await this.prisma.session.create({
         data: {
+          id: tokenDetails.id,
           sessionToken,
           expires,
           userId,
@@ -959,7 +960,7 @@ export class UserRepository {
     }
   }
 
-  async deleteSessionRecordByRefreshToken(sessionId: string): Promise<session> {
+  async deleteSession(sessionId: string): Promise<session> {
     try {
       const userSession = await this.prisma.session.delete({
         where: {

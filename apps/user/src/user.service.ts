@@ -449,9 +449,7 @@ export class UserService {
     try {
       this.validateEmail(email.toLowerCase());
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());
-
       const userSessionDetails = await this.userRepository.fetchUserSessions(userData?.id);
-
       if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
         throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
       }
@@ -475,8 +473,10 @@ export class UserService {
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(password);
         const tokenDetails = await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
-
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const decodedToken: any = jwt.decode(tokenDetails?.access_token);
         const sessionData = {
+          id: decodedToken.sid,
           sessionToken: tokenDetails?.access_token,
           userId: userData?.id,
           expires: tokenDetails?.expires_in,
@@ -553,7 +553,7 @@ export class UserService {
           throw new NotFoundException(ResponseMessages.user.error.userSeesionNotFound);
         }
         // Delete previous session
-        const deletePreviousSession = await this.userRepository.deleteSessionRecordByRefreshToken(sessionDetails.id);
+        const deletePreviousSession = await this.userRepository.deleteSession(sessionDetails.id);
         if (!deletePreviousSession) {
           throw new InternalServerErrorException(ResponseMessages.user.error.errorInDeleteSession);
         }

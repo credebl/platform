@@ -70,7 +70,8 @@ export const ResponseMessages = {
       errorInUpdateAccountDetails: 'Error in updating the account details',
       errorInDeleteSession: 'Error in deleting the session',
       errorInSessionCreation: 'Error in create session',
-      userAccountNotFound: 'User account not found'
+      userAccountNotFound: 'User account not found',
+      userSeesionNotFound: 'User session not found'
     }
   },
   organisation: {

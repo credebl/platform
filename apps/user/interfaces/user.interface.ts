@@ -182,6 +182,7 @@ export interface IUserSignIn {
 }
 
 export interface ISession {
+  id?: string;
   sessionToken?: string;
   userId?: string;
   expires?: number;

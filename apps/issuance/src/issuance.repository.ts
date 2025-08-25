@@ -19,6 +19,7 @@ import {
   org_agents,
   organisation,
   platform_config,
+  Prisma,
   schema
 } from '@prisma/client';
 
@@ -166,26 +167,28 @@ export class IssuanceRepository {
           stateInfo = null;
       }
 
+      const issuanceWhereClause: Prisma.credentialsWhereInput = {
+        orgId,
+        ...(schemaIds?.length ? { schemaId: { in: schemaIds } } : {}),
+        ...(!schemaIds?.length && issuedCredentialsSearchCriteria.search
+          ? {
+              OR: [
+                { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+                { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+                { schemaId: { in: schemaIdsMatched } },
+                {
+                  connections: {
+                    theirLabel: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
+                  }
+                },
+                { state: { contains: stateInfo ?? issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
+              ]
+            }
+          : {})
+      };
+
       const issuedCredentialsList = await this.prisma.credentials.findMany({
-        where: {
-          orgId,
-          ...(schemaIds?.length ? { schemaId: { in: schemaIds } } : {}),
-          ...(!schemaIds?.length && issuedCredentialsSearchCriteria.search
-            ? {
-                OR: [
-                  { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { in: schemaIdsMatched } },
-                  {
-                    connections: {
-                      theirLabel: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
-                    }
-                  },
-                  { state: { contains: stateInfo ?? issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
-                ]
-              }
-            : {})
-        },
+        where: issuanceWhereClause,
         select: {
           credentialExchangeId: true,
           createDateTime: true,
@@ -208,25 +211,7 @@ export class IssuanceRepository {
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize
       });
       const issuedCredentialsCount = await this.prisma.credentials.count({
-        where: {
-          orgId,
-          ...(schemaIds?.length ? { schemaId: { in: schemaIds } } : {}),
-          ...(!schemaIds?.length && issuedCredentialsSearchCriteria.search
-            ? {
-                OR: [
-                  { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { in: schemaIdsMatched } },
-                  {
-                    connections: {
-                      theirLabel: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
-                    }
-                  },
-                  { state: { contains: stateInfo ?? issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
-                ]
-              }
-            : {})
-        }
+        where: issuanceWhereClause
       });
 
       return { issuedCredentialsCount, issuedCredentialsList };

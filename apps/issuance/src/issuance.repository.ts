@@ -28,6 +28,7 @@ import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/int
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { IssueCredentials, IssueCredentialUserText } from '../enum/issuance.enum';
 
 @Injectable()
 export class IssuanceRepository {
@@ -129,12 +130,41 @@ export class IssuanceRepository {
     try {
       const schemas = await this.prisma.schema.findMany({
         where: {
-          schemaLedgerId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
+          name: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
         },
-        select: { id: true }
+        select: { schemaLedgerId: true }
       });
 
-      const schemaIdsMatched = schemas.map((s) => s.id);
+      const schemaIdsMatched = schemas.map((s) => s.schemaLedgerId);
+      let stateInfo = null;
+      switch (issuedCredentialsSearchCriteria.search.toLowerCase()) {
+        case IssueCredentialUserText.offerSent.toLowerCase():
+          stateInfo = IssueCredentials.offerSent;
+          break;
+
+        case IssueCredentialUserText.done.toLowerCase():
+          stateInfo = IssueCredentials.done;
+          break;
+
+        case IssueCredentialUserText.abandoned.toLowerCase():
+          stateInfo = IssueCredentials.abandoned;
+          break;
+
+        case IssueCredentialUserText.received.toLowerCase():
+          stateInfo = IssueCredentials.requestReceived;
+          break;
+
+        case IssueCredentialUserText.proposalReceived.toLowerCase():
+          stateInfo = IssueCredentials.proposalReceived;
+          break;
+
+        case IssueCredentialUserText.credIssued.toLowerCase():
+          stateInfo = IssueCredentials.offerSent;
+          break;
+
+        default:
+          stateInfo = null;
+      }
 
       const issuedCredentialsList = await this.prisma.credentials.findMany({
         where: {
@@ -145,7 +175,13 @@ export class IssuanceRepository {
                 OR: [
                   { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
                   { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { in: schemaIdsMatched } }
+                  { schemaId: { in: schemaIdsMatched } },
+                  {
+                    connections: {
+                      theirLabel: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
+                    }
+                  },
+                  { state: { contains: stateInfo ?? issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
                 ]
               }
             : {})
@@ -179,7 +215,14 @@ export class IssuanceRepository {
             ? {
                 OR: [
                   { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
+                  { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+                  { schemaId: { in: schemaIdsMatched } },
+                  {
+                    connections: {
+                      theirLabel: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
+                    }
+                  },
+                  { state: { contains: stateInfo ?? issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
                 ]
               }
             : {})

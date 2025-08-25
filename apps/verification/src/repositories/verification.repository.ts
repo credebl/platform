@@ -93,26 +93,26 @@ export class VerificationRepository {
     proofRequestsSearchCriteria: IProofRequestSearchCriteria
   ): Promise<IProofPresentationsListCount> {
     try {
-      let stateInfo = null;
+      let verificationStateInfo = null;
 
       switch (proofRequestsSearchCriteria.search.toLowerCase()) {
         case ProofRequestStateUserText.requestSent.toLowerCase():
-          stateInfo = ProofRequestState.requestSent;
+          verificationStateInfo = ProofRequestState.requestSent;
           break;
         case ProofRequestStateUserText.requestReceived.toLowerCase():
-          stateInfo = ProofRequestState.requestReceived;
+          verificationStateInfo = ProofRequestState.requestReceived;
           break;
         case ProofRequestStateUserText.done.toLowerCase():
-          stateInfo = ProofRequestState.done;
+          verificationStateInfo = ProofRequestState.done;
           break;
         case ProofRequestStateUserText.abandoned.toLowerCase():
-          stateInfo = ProofRequestState.abandoned;
+          verificationStateInfo = ProofRequestState.abandoned;
           break;
         case ProofRequestStateUserText.presentationReceived.toLowerCase():
-          stateInfo = ProofRequestState.presentationReceived;
+          verificationStateInfo = ProofRequestState.presentationReceived;
           break;
         default:
-          stateInfo = null;
+          verificationStateInfo = null;
       }
 
       const whereClause: Prisma.presentationsWhereInput = {
@@ -127,7 +127,7 @@ export class VerificationRepository {
               theirLabel: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' }
             }
           },
-          { state: { contains: stateInfo ?? proofRequestsSearchCriteria.search, mode: 'insensitive' } }
+          { state: { contains: verificationStateInfo ?? proofRequestsSearchCriteria.search, mode: 'insensitive' } }
         ]
       };
 

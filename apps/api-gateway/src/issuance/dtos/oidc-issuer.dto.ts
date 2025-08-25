@@ -177,7 +177,7 @@ export class ClientAuthenticationDto {
 
   @ApiProperty({
     description: 'OAuth2 client secret for the authorization server',
-    example: '1qKMWulZpMBzXIdfPO5AEs0xaTaKs1ym'
+    example: '2qKMWulZpMBzXIdfPO5AEs0xaTaKs1uk'
   })
   @IsString()
   clientSecret: string;
@@ -186,7 +186,7 @@ export class ClientAuthenticationDto {
 export class AuthorizationServerConfigDto {
   @ApiProperty({
     description: 'Authorization server issuer URL',
-    example: 'https://id.t4trust.ae:8443/realms/trustid'
+    example: 'https://example-oidc-provider.com'
   })
   @IsString()
   issuer: string;

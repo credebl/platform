@@ -353,10 +353,10 @@
     },
     "authorizationServerConfigs": [
         {
-            "issuer": "https://id.t4trust.ae:8443/realms/trustid",
+            "issuer": "https://example-oidc-provider.com",
             "clientAuthentication": {
                 "clientId": "issuer-server",
-                "clientSecret": "1qKMWulZpMBzXIdfPO5AEs0xaTaKs1ym"
+                "clientSecret": "2qKMWulZpMBzXIdfPO5AEs0xaTaKs1uk"
             }
         }
     ]

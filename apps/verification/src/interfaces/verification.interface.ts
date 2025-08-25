@@ -278,3 +278,23 @@ export interface IEmailResponse {
   outOfBandRecordId: string;
   proofRecordThId: string;
 }
+
+export enum ProofRequestState {
+  presentationReceived = 'presentation-received',
+  offerReceived = 'offer-received',
+  declined = 'decliend',
+  requestSent = 'request-sent',
+  requestReceived = 'request-received',
+  credentialIssued = 'credential-issued',
+  credentialReceived = 'credential-received',
+  done = 'done',
+  abandoned = 'abandoned'
+}
+
+export enum ProofRequestStateUserText {
+  requestSent = 'Requested',
+  requestReceived = 'Received',
+  done = 'Verified',
+  abandoned = 'Declined',
+  presentationReceived = 'Presentation Received'
+}

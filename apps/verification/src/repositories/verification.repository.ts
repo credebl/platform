@@ -1,4 +1,10 @@
-import { IEmailResponse, IProofPresentation, IProofRequestSearchCriteria } from '../interfaces/verification.interface';
+import {
+  IEmailResponse,
+  IProofPresentation,
+  IProofRequestSearchCriteria,
+  ProofRequestState,
+  ProofRequestStateUserText
+} from '../interfaces/verification.interface';
 import { IProofPresentationsListCount, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
@@ -87,13 +93,42 @@ export class VerificationRepository {
     proofRequestsSearchCriteria: IProofRequestSearchCriteria
   ): Promise<IProofPresentationsListCount> {
     try {
+      let stateInfo = null;
+
+      switch (proofRequestsSearchCriteria.search.toLowerCase()) {
+        case ProofRequestStateUserText.requestSent.toLowerCase():
+          stateInfo = ProofRequestState.requestSent;
+          break;
+        case ProofRequestStateUserText.requestReceived.toLowerCase():
+          stateInfo = ProofRequestState.requestReceived;
+          break;
+        case ProofRequestStateUserText.done.toLowerCase():
+          stateInfo = ProofRequestState.done;
+          break;
+        case ProofRequestStateUserText.abandoned.toLowerCase():
+          stateInfo = ProofRequestState.abandoned;
+          break;
+        case ProofRequestStateUserText.presentationReceived.toLowerCase():
+          stateInfo = ProofRequestState.presentationReceived;
+          break;
+        default:
+          stateInfo = null;
+      }
+
       const proofRequestsList = await this.prisma.presentations.findMany({
         where: {
           orgId,
           OR: [
             { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
             { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } }
+            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            { emailId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            {
+              connections: {
+                theirLabel: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' }
+              }
+            },
+            { state: { contains: stateInfo ?? proofRequestsSearchCriteria.search, mode: 'insensitive' } }
           ]
         },
         select: {
@@ -127,7 +162,14 @@ export class VerificationRepository {
           OR: [
             { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
             { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } }
+            { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            { emailId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
+            {
+              connections: {
+                theirLabel: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' }
+              }
+            },
+            { state: { contains: stateInfo ?? proofRequestsSearchCriteria.search, mode: 'insensitive' } }
           ]
         }
       });

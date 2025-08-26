@@ -279,7 +279,7 @@ export interface IEmailResponse {
   proofRecordThId: string;
 }
 
-export enum ProofRequestState {
+export enum ProofRequest {
   presentationReceived = 'presentation-received',
   offerReceived = 'offer-received',
   declined = 'decliend',
@@ -291,7 +291,7 @@ export enum ProofRequestState {
   abandoned = 'abandoned'
 }
 
-export enum ProofRequestStateUserText {
+export enum ProofRequestState {
   requestSent = 'Requested',
   requestReceived = 'Received',
   done = 'Verified',

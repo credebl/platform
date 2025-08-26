@@ -2,8 +2,8 @@ import {
   IEmailResponse,
   IProofPresentation,
   IProofRequestSearchCriteria,
-  ProofRequestState,
-  ProofRequestStateUserText
+  ProofRequest,
+  ProofRequestState
 } from '../interfaces/verification.interface';
 import { IProofPresentationsListCount, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -96,20 +96,20 @@ export class VerificationRepository {
       let verificationStateInfo = null;
 
       switch (proofRequestsSearchCriteria.search.toLowerCase()) {
-        case ProofRequestStateUserText.requestSent.toLowerCase():
-          verificationStateInfo = ProofRequestState.requestSent;
+        case ProofRequestState.requestSent.toLowerCase():
+          verificationStateInfo = ProofRequest.requestSent;
           break;
-        case ProofRequestStateUserText.requestReceived.toLowerCase():
-          verificationStateInfo = ProofRequestState.requestReceived;
+        case ProofRequestState.requestReceived.toLowerCase():
+          verificationStateInfo = ProofRequest.requestReceived;
           break;
-        case ProofRequestStateUserText.done.toLowerCase():
-          verificationStateInfo = ProofRequestState.done;
+        case ProofRequestState.done.toLowerCase():
+          verificationStateInfo = ProofRequest.done;
           break;
-        case ProofRequestStateUserText.abandoned.toLowerCase():
-          verificationStateInfo = ProofRequestState.abandoned;
+        case ProofRequestState.abandoned.toLowerCase():
+          verificationStateInfo = ProofRequest.abandoned;
           break;
-        case ProofRequestStateUserText.presentationReceived.toLowerCase():
-          verificationStateInfo = ProofRequestState.presentationReceived;
+        case ProofRequestState.presentationReceived.toLowerCase():
+          verificationStateInfo = ProofRequest.presentationReceived;
           break;
         default:
           verificationStateInfo = null;
@@ -119,7 +119,6 @@ export class VerificationRepository {
         orgId,
         OR: [
           { connectionId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
-          { state: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
           { presentationId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
           { emailId: { contains: proofRequestsSearchCriteria.search, mode: 'insensitive' } },
           {

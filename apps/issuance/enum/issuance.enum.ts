@@ -19,7 +19,7 @@ export enum IssueCredentials {
   abandoned = 'abandoned'
 }
 
-export enum IssueCredentialUserText {
+export enum IssueCredentialDisplayText {
   offerSent = 'Offered',
   done = 'Accepted',
   abandoned = 'Declined',

@@ -29,7 +29,7 @@ import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/int
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { IssueCredentials, IssueCredentialUserText } from '../enum/issuance.enum';
+import { IssueCredentials, IssueCredentialDisplayText } from '../enum/issuance.enum';
 
 @Injectable()
 export class IssuanceRepository {
@@ -139,27 +139,27 @@ export class IssuanceRepository {
       const schemaIdsMatched = schemas.map((s) => s.schemaLedgerId);
       let stateInfo = null;
       switch (issuedCredentialsSearchCriteria.search.toLowerCase()) {
-        case IssueCredentialUserText.offerSent.toLowerCase():
+        case IssueCredentialDisplayText.offerSent.toLowerCase():
           stateInfo = IssueCredentials.offerSent;
           break;
 
-        case IssueCredentialUserText.done.toLowerCase():
+        case IssueCredentialDisplayText.done.toLowerCase():
           stateInfo = IssueCredentials.done;
           break;
 
-        case IssueCredentialUserText.abandoned.toLowerCase():
+        case IssueCredentialDisplayText.abandoned.toLowerCase():
           stateInfo = IssueCredentials.abandoned;
           break;
 
-        case IssueCredentialUserText.received.toLowerCase():
+        case IssueCredentialDisplayText.received.toLowerCase():
           stateInfo = IssueCredentials.requestReceived;
           break;
 
-        case IssueCredentialUserText.proposalReceived.toLowerCase():
+        case IssueCredentialDisplayText.proposalReceived.toLowerCase():
           stateInfo = IssueCredentials.proposalReceived;
           break;
 
-        case IssueCredentialUserText.credIssued.toLowerCase():
+        case IssueCredentialDisplayText.credIssued.toLowerCase():
           stateInfo = IssueCredentials.offerSent;
           break;
 

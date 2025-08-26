@@ -462,51 +462,51 @@ export class UserService {
       if (true === isPasskey && false === userData?.isFidoVerified) {
         throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
       }
-
+      let tokenDetails;
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {
         const getUserDetails = await this.userRepository.getUserDetails(userData.email.toLowerCase());
         const decryptedPassword = await this.commonService.decryptPassword(getUserDetails.password);
-        return await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
+        tokenDetails = await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       } else {
         const decryptedPassword = await this.commonService.decryptPassword(password);
-        const tokenDetails = await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const decodedToken: any = jwt.decode(tokenDetails?.access_token);
-        const sessionData = {
-          id: decodedToken.sid,
-          sessionToken: tokenDetails?.access_token,
-          userId: userData?.id,
-          expires: tokenDetails?.expires_in,
-          refreshToken: tokenDetails?.refresh_token,
-          sessionType: SessionType.USER_SESSION
-        };
-
-        const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
-        let addSessionDetails;
-        let accountData;
-        if (null === fetchAccountDetails) {
-          accountData = {
-            userId: userData?.id,
-            keycloakUserId: userData?.keycloakUserId,
-            type: TokenType.BEARER_TOKEN
-          };
-
-          await this.userRepository.addAccountDetails(accountData).then(async (response) => {
-            const finalSessionData = { ...sessionData, accountId: response.id };
-            addSessionDetails = await this.userRepository.createSession(finalSessionData);
-          });
-        } else {
-          const finalSessionData = { ...sessionData, accountId: fetchAccountDetails.id };
-          addSessionDetails = await this.userRepository.createSession(finalSessionData);
-        }
-
-        const finalResponse = {
-          ...tokenDetails,
-          sessionId: addSessionDetails.id
-        };
-
-        return finalResponse;
+        tokenDetails = await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const decodedToken: any = jwt.decode(tokenDetails?.access_token);
+      const sessionData = {
+        id: decodedToken.sid,
+        sessionToken: tokenDetails?.access_token,
+        userId: userData?.id,
+        expires: tokenDetails?.expires_in,
+        refreshToken: tokenDetails?.refresh_token,
+        sessionType: SessionType.USER_SESSION
+      };
+
+      const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
+      let addSessionDetails;
+      let accountData;
+      if (null === fetchAccountDetails) {
+        accountData = {
+          userId: userData?.id,
+          keycloakUserId: userData?.keycloakUserId,
+          type: TokenType.BEARER_TOKEN
+        };
+
+        await this.userRepository.addAccountDetails(accountData).then(async (response) => {
+          const finalSessionData = { ...sessionData, accountId: response.id };
+          addSessionDetails = await this.userRepository.createSession(finalSessionData);
+        });
+      } else {
+        const finalSessionData = { ...sessionData, accountId: fetchAccountDetails.id };
+        addSessionDetails = await this.userRepository.createSession(finalSessionData);
+      }
+
+      const finalResponse = {
+        ...tokenDetails,
+        sessionId: addSessionDetails.id
+      };
+
+      return finalResponse;
     } catch (error) {
       this.logger.error(`In Login User : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

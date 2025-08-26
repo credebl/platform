@@ -6,6 +6,7 @@ export const ResponseMessages = {
       emaiVerified: 'Email verified successfully',
       fetchClientAliases: 'Client aliases fetched successfully',
       login: 'User login successfully',
+      fetchSession: 'Session details fetched successfully',
       fetchProfile: 'User fetched successfully',
       fetchInvitations: 'Org invitations fetched successfully',
       invitationReject: 'Organization invitation rejected',
@@ -24,7 +25,8 @@ export const ResponseMessages = {
       refreshToken: 'Token details fetched successfully',
       countriesVerificationCode: 'All countries has been fetched successfully',
       stateVerificationCode: 'All states has been fetched successfully',
-      cityVerificationCode: 'All cities has been fetched successfully'
+      cityVerificationCode: 'All cities has been fetched successfully',
+      logout: 'User logout successfully'
     },
     error: {
       exists: 'User already exists',
@@ -37,6 +39,8 @@ export const ResponseMessages = {
       invalidEmailUrl: 'Invalid verification code or EmailId!',
       verifiedEmail: 'Email already verified',
       notFound: 'User not found',
+      sessionLimitReached:
+        'You have reached the maximum number of allowed sessions. Please remove an existing session to add a new one',
       verifyMail: 'Please verify your email',
       invalidCredentials: 'Invalid Credentials',
       registerFido: 'Please complete your fido registration',
@@ -62,7 +66,12 @@ export const ResponseMessages = {
       invalidResetLink: 'Invalid or expired reset password link',
       invalidAccessToken: 'Authentication failed',
       invalidRefreshToken: 'Invalid refreshToken provided',
-      userOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.'
+      userOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
+      errorInUpdateAccountDetails: 'Error in updating the account details',
+      errorInDeleteSession: 'Error in deleting the session',
+      errorInSessionCreation: 'Error in create session',
+      userAccountNotFound: 'User account not found',
+      userSeesionNotFound: 'User session not found'
     }
   },
   organisation: {

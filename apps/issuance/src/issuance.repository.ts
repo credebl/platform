@@ -230,8 +230,8 @@ export class IssuanceRepository {
           threadId: issueCredentialDto?.threadId,
           connectionId: issueCredentialDto?.connectionId,
           state: issueCredentialDto?.state,
-          schemaId,
-          credDefId
+          credDefId,
+          ...(schemaId ? { schemaId } : {})
         },
         create: {
           createDateTime: issueCredentialDto?.createDateTime,
@@ -738,6 +738,20 @@ export class IssuanceRepository {
       return fileDetails;
     } catch (error) {
       this.logger.error(`[getFileDetailsAndFileDataByFileId] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateSchemaIdByThreadId(threadId: string, schemaId: string): Promise<void> {
+    try {
+      await this.prisma.credentials.update({
+        where: { threadId },
+        data: {
+          schemaId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`[updateSchemaIdByThreadId] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

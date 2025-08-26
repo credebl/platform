@@ -5,6 +5,7 @@ export interface ISignInUser {
   expires_at?: number;
   refresh_token?: string;
   isRegisteredToSupabase?: boolean;
+  sessionId?: string;
 }
 export interface IVerifyUserEmail {
   email: string;

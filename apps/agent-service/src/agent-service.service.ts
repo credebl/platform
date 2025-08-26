@@ -1156,6 +1156,21 @@ export class AgentServiceService {
     return tenantDetails;
   }
 
+  private async handleCreateDid(
+    agentEndpoint: string,
+    didPayload: Record<string, string>,
+    apiKey: string
+  ): Promise<ICreateTenant> {
+    try {
+      return await this.commonService.httpPost(`${agentEndpoint}${CommonConstants.URL_AGENT_WRITE_DID}`, didPayload, {
+        headers: { authorization: apiKey }
+      });
+    } catch (error) {
+      this.logger.error('Error creating did:', error.message || error);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   /**
    * Create tenant wallet on the agent
    * @param _createDID
@@ -1164,13 +1179,24 @@ export class AgentServiceService {
   private async _createDID(didCreateOption): Promise<ICreateTenant> {
     const { didPayload, agentEndpoint, apiKey } = didCreateOption;
     // Invoke an API request from the agent to create multi-tenant agent
-    const didDetails = await this.commonService.httpPost(
-      `${agentEndpoint}${CommonConstants.URL_AGENT_WRITE_DID}`,
-      didPayload,
-      { headers: { authorization: apiKey } }
-    );
+
+    //To Do : this is a temporary fix in normal case the api should return correct data in first attempt , to be removed in future on fixing did/write api response
+    const retryOptions = {
+      retries: 2
+    };
+
+    const didDetails = await retry(async () => {
+      const data = await this.handleCreateDid(agentEndpoint, didPayload, apiKey);
+      if (data?.didDocument || data?.didDoc) {
+        return data;
+      }
+
+      throw new Error('Invalid response, retrying...');
+    }, retryOptions);
+
     return didDetails;
   }
+
   private async createSocketInstance(): Promise<Socket> {
     return io(`${process.env.SOCKET_HOST}`, {
       reconnection: true,

@@ -434,6 +434,8 @@ export interface ICreateTenant {
   tenantRecord: ITenantRecord;
   did: string;
   verkey: string;
+  didDocument?: Record<string, string>;
+  didDoc?: Record<string, string>;
 }
 
 export interface IOrgAgent {

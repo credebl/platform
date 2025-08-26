@@ -1156,6 +1156,21 @@ export class AgentServiceService {
     return tenantDetails;
   }
 
+  private async _callCreateDIDApi(
+    agentEndpoint: string,
+    didPayload: Record<string, string>,
+    apiKey: string
+  ): Promise<ICreateTenant> {
+    try {
+      return await this.commonService.httpPost(`${agentEndpoint}${CommonConstants.URL_AGENT_WRITE_DID}`, didPayload, {
+        headers: { authorization: apiKey }
+      });
+    } catch (error) {
+      this.logger.error('Error creating did:', error.message || error);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   /**
    * Create tenant wallet on the agent
    * @param _createDID
@@ -1164,30 +1179,23 @@ export class AgentServiceService {
   private async _createDID(didCreateOption): Promise<ICreateTenant> {
     const { didPayload, agentEndpoint, apiKey } = didCreateOption;
     // Invoke an API request from the agent to create multi-tenant agent
-    const requiredPayload = {
-      keyType: didPayload.keyType,
-      method: didPayload.method,
-      privatekey: didPayload.privatekey,
-      seed: didPayload.seed,
-      network: didPayload.network,
-      domain: didPayload.domain,
-      role: didPayload.role,
-      did: didPayload.did,
-      endorserDid: didPayload.endorserDid
+
+    const retryOptions = {
+      retries: 2
     };
-    let didDetails;
-    for (let i = 0; i < 2; i++) {
-      didDetails = await this.commonService.httpPost(
-        `${agentEndpoint}${CommonConstants.URL_AGENT_WRITE_DID}`,
-        requiredPayload,
-        { headers: { authorization: apiKey } }
-      );
-      if (didDetails?.didDocument || didDetails?.didDoc) {
-        break;
+
+    const didDetails = await retry(async () => {
+      const data = await this._callCreateDIDApi(agentEndpoint, didPayload, apiKey);
+      if (data?.didDocument || data?.didDoc) {
+        return data;
       }
-    }
+
+      throw new Error('Invalid response, retrying...');
+    }, retryOptions);
+
     return didDetails;
   }
+
   private async createSocketInstance(): Promise<Socket> {
     return io(`${process.env.SOCKET_HOST}`, {
       reconnection: true,

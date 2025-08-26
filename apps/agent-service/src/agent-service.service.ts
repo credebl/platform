@@ -1156,7 +1156,7 @@ export class AgentServiceService {
     return tenantDetails;
   }
 
-  private async _callCreateDIDApi(
+  private async handleCreateDid(
     agentEndpoint: string,
     didPayload: Record<string, string>,
     apiKey: string
@@ -1180,12 +1180,13 @@ export class AgentServiceService {
     const { didPayload, agentEndpoint, apiKey } = didCreateOption;
     // Invoke an API request from the agent to create multi-tenant agent
 
+    //To Do : this is a temporary fix in normal case the api should return correct data in first attempt , to be removed in future on fixing did/write api response
     const retryOptions = {
       retries: 2
     };
 
     const didDetails = await retry(async () => {
-      const data = await this._callCreateDIDApi(agentEndpoint, didPayload, apiKey);
+      const data = await this.handleCreateDid(agentEndpoint, didPayload, apiKey);
       if (data?.didDocument || data?.didDoc) {
         return data;
       }

@@ -19,6 +19,7 @@ import {
   org_agents,
   organisation,
   platform_config,
+  Prisma,
   schema
 } from '@prisma/client';
 
@@ -28,6 +29,7 @@ import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/int
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { IssueCredentials, IssuedCredentialStatus } from '../enum/issuance.enum';
 
 @Injectable()
 export class IssuanceRepository {
@@ -127,19 +129,66 @@ export class IssuanceRepository {
     }[];
   }> {
     try {
-      const issuedCredentialsList = await this.prisma.credentials.findMany({
+      const schemas = await this.prisma.schema.findMany({
         where: {
-          orgId,
-          ...(schemaIds?.length ? { schemaId: { in: schemaIds } } : {}),
-          ...(!schemaIds?.length && issuedCredentialsSearchCriteria.search
-            ? {
-                OR: [
-                  { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
-                ]
-              }
-            : {})
+          name: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
         },
+        select: { schemaLedgerId: true }
+      });
+
+      const schemaIdsMatched = schemas.map((s) => s.schemaLedgerId);
+      let stateInfo = null;
+      switch (issuedCredentialsSearchCriteria.search.toLowerCase()) {
+        case IssuedCredentialStatus.offerSent.toLowerCase():
+          stateInfo = IssueCredentials.offerSent;
+          break;
+
+        case IssuedCredentialStatus.done.toLowerCase():
+          stateInfo = IssueCredentials.done;
+          break;
+
+        case IssuedCredentialStatus.abandoned.toLowerCase():
+          stateInfo = IssueCredentials.abandoned;
+          break;
+
+        case IssuedCredentialStatus.received.toLowerCase():
+          stateInfo = IssueCredentials.requestReceived;
+          break;
+
+        case IssuedCredentialStatus.proposalReceived.toLowerCase():
+          stateInfo = IssueCredentials.proposalReceived;
+          break;
+
+        case IssuedCredentialStatus.credIssued.toLowerCase():
+          stateInfo = IssueCredentials.offerSent;
+          break;
+
+        default:
+          stateInfo = null;
+      }
+
+      const issuanceWhereClause: Prisma.credentialsWhereInput = {
+        orgId,
+        ...(schemaIds?.length ? { schemaId: { in: schemaIds } } : {}),
+        ...(!schemaIds?.length && issuedCredentialsSearchCriteria.search
+          ? {
+              OR: [
+                { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+                { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+                { schemaId: { in: schemaIdsMatched } },
+                {
+                  connections: {
+                    theirLabel: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
+                  }
+                },
+                { state: { contains: stateInfo ?? issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
+              ]
+            }
+          : {})
+      };
+
+      const issuedCredentialsList = await this.prisma.credentials.findMany({
+        where: issuanceWhereClause,
         select: {
           credentialExchangeId: true,
           createDateTime: true,
@@ -162,18 +211,7 @@ export class IssuanceRepository {
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize
       });
       const issuedCredentialsCount = await this.prisma.credentials.count({
-        where: {
-          orgId,
-          ...(schemaIds?.length ? { schemaId: { in: schemaIds } } : {}),
-          ...(!schemaIds?.length && issuedCredentialsSearchCriteria.search
-            ? {
-                OR: [
-                  { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
-                ]
-              }
-            : {})
-        }
+        where: issuanceWhereClause
       });
 
       return { issuedCredentialsCount, issuedCredentialsList };

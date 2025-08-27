@@ -19,11 +19,12 @@ AFJ_VERSION=${14}
 INDY_LEDGER=${15}
 INBOUND_ENDPOINT=${16}
 SCHEMA_FILE_SERVER_URL=${17}
-AGENT_HOST=${18}
-AWS_ACCOUNT_ID=${19}
-S3_BUCKET_ARN=${20}
-CLUSTER_NAME=${21}
-TESKDEFINITION_FAMILY=${22}
+AGENT_API_KEY=${18}
+AGENT_HOST=${19}
+AWS_ACCOUNT_ID=${20}
+S3_BUCKET_ARN=${21}
+CLUSTER_NAME=${22}
+TASKDEFINITION_FAMILY=${23}
 
 DESIRED_COUNT=1
 
@@ -197,9 +198,9 @@ CONTAINER_DEFINITIONS=$(
     "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/$TESKDEFINITION_FAMILY",
+          "awslogs-group": "/ecs/$TASKDEFINITION_FAMILY",
           "awslogs-create-group": "true",
-          "awslogs-region": "ap-south-1",
+          "awslogs-region": "$AWS_PUBLIC_REGION",
           "awslogs-stream-prefix": "ecs"
         },
     "ulimits": []
@@ -212,7 +213,7 @@ EOF
 TASK_DEFINITION=$(
   cat <<EOF
 {
-  "family": "$TESKDEFINITION_FAMILY",
+  "family": "$TASKDEFINITION_FAMILY",
   "containerDefinitions": $CONTAINER_DEFINITIONS,
   "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
   "volumes": [
@@ -281,17 +282,13 @@ task_id=$(echo "$service_description" | jq -r '.services[0].events[] | select(.m
 
 # to fetch log group of container 
 .............................................................
-log_group=/ecs/$TESKDEFINITION_FAMILY
+log_group=/ecs/$TASKDEFINITION_FAMILY
 echo "log_group=$log_group"
 
 # Get Log Stream Name
 log_stream=ecs/$CONTAINER_NAME/$task_id
 
 echo "logstrem=$log_stream"
-
-
-# Fetch logs
-#echo "$(aws logs get-log-events --log-group-name "/ecs/$TESKDEFINITION_FAMILY/$CONTAINER_NAME" --log-stream-name "$log_stream" --region $AWS_PUBLIC_REGION)"
 
 # Check if the token folder exists, and create it if it doesn't
 token_folder="$PWD/agent-provisioning/AFJ/token"
@@ -311,7 +308,7 @@ for attempt in $(seq 1 $RETRIES); do
     token=$(aws logs get-log-events \
     --log-group-name "$log_group" \
     --log-stream-name "$log_stream" \
-    --region ap-southeast-1 \
+    --region $AWS_PUBLIC_REGION \
     | grep -o '*** API Key: [^ ]*' \
     | cut -d ' ' -f 3
 )

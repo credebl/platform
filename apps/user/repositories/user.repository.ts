@@ -987,4 +987,30 @@ export class UserRepository {
       throw error;
     }
   }
+
+  async deleteInactiveSessions(): Promise<number> {
+    try {
+      //       await this.prisma.session.deleteMany({
+      //   where: {
+      //     AND: [
+      //       {
+      //         createdAt: {
+      //           lt: new Date(Date.now() - expires), // Current time minus expire interval
+      //         },
+      //       },
+      //       // You can add more conditions here
+      //     ],
+      //   },
+      // });
+      const response = await this.prisma.$executeRaw`
+        DELETE FROM "session"
+        WHERE ("createdAt" + make_interval(secs => "expires")) < NOW()
+      `;
+      this.logger.debug('Response::', response);
+      return response;
+    } catch (error) {
+      this.logger.error(`Error in deleting the in active sessions::${error.message}`);
+      throw error;
+    }
+  }
 }

@@ -1335,4 +1335,13 @@ export class UserService {
       throw new RpcException(error.response ? error.response : error);
     }
   }
+
+  async deleteInActiveSessions(): Promise<number> {
+    try {
+      return await this.userRepository.deleteInactiveSessions();
+    } catch (error) {
+      this.logger.error(`Error in deleting in-active sessions`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
 }

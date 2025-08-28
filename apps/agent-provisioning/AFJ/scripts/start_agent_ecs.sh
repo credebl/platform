@@ -38,7 +38,7 @@ random_string=$(generate_random_string)
 # Print the generated random string
 echo "Random String: $random_string"
 
-SERVICE_NAME="${CONTAINER_NAME}-service-test"
+SERVICE_NAME="${CONTAINER_NAME}-service"
 EXTERNAL_IP=$(echo "$2" | tr -d '[:space:]')
 ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"

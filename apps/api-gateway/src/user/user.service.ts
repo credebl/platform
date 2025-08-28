@@ -15,7 +15,10 @@ import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class UserService extends BaseService {
-  constructor(@Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy, private readonly natsClient : NATSClient) {
+  constructor(
+    @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
+    private readonly natsClient: NATSClient
+  ) {
     super('User Service');
   }
 
@@ -25,8 +28,8 @@ export class UserService extends BaseService {
   }
 
   async getPublicProfile(username: string): Promise<object> {
-  const payload = { username };
-  return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-user-public-profile', payload);
+    const payload = { username };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-user-public-profile', payload);
   }
 
   async updateUserProfile(updateUserProfileDto: UpdateUserProfileDto): Promise<user> {
@@ -43,24 +46,19 @@ export class UserService extends BaseService {
     const payload = { id };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-user-by-keycloak', payload);
   }
-  
+
   async invitations(id: string, status: string, getAllInvitationsDto: GetAllInvitationsDto): Promise<IUserInvitations> {
     const { pageNumber, pageSize, search } = getAllInvitationsDto;
     const payload = { id, status, pageNumber, pageSize, search };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-org-invitations', payload);
   }
 
-  async acceptRejectInvitaion(
-    acceptRejectInvitation: AcceptRejectInvitationDto,
-    userId: string
-  ): Promise<string> {
+  async acceptRejectInvitaion(acceptRejectInvitation: AcceptRejectInvitationDto, userId: string): Promise<string> {
     const payload = { acceptRejectInvitation, userId };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'accept-reject-invitations', payload);
   }
 
-  async get(
-    paginationDto:PaginationDto
-  ): Promise<object> {
+  async get(paginationDto: PaginationDto): Promise<object> {
     const { pageNumber, pageSize, search } = paginationDto;
     const payload = { pageNumber, pageSize, search };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'fetch-users', payload);
@@ -93,5 +91,9 @@ export class UserService extends BaseService {
   async getUserByUserIdInKeycloak(email: string): Promise<object> {
     const payload = { email };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-user-info-by-user-email-keycloak', payload);
+  }
+
+  async deleteInactiveSessions(): Promise<void> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-inactive-sessions', '');
   }
 }

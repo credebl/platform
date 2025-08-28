@@ -416,4 +416,19 @@ export class UserController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
+
+  @Post('/delete-inactive-sessions')
+  @ApiOperation({
+    summary: 'Update platform settings',
+    description: 'Modify platform settings. Only accessible by platform admins.'
+  })
+  async deleteInactiveSessions(@Res() res: Response): Promise<Response> {
+    await this.userService.deleteInactiveSessions();
+    const finalResponse = {
+      statusCode: HttpStatus.OK,
+      message: ''
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 }

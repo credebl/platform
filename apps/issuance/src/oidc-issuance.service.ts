@@ -41,14 +41,28 @@ export class OIDCIssuanceService {
 
       // Call agent
       const createdIssuer = await this._createOIDCIssuer(issuerCreation, url, orgId);
+      if (!createdIssuer || !createdIssuer.response) {
+        throw new NotFoundException('Error in creating OIDC Issuer via agent');
+      }
+      const issuerConfigJson = createdIssuer.response;
 
+      const { issuerId } = issuerConfigJson;
+
+      const addOidcIssuerDetails = await this.issuanceRepository.addOidcIssuerDetails(
+        JSON.stringify(issuerConfigJson),
+        userDetails.id,
+        issuerId
+      );
+      if (!addOidcIssuerDetails) {
+        throw new NotFoundException('Error in adding OIDC Issuer details in DB');
+      }
       console.log('This is the created issuer', JSON.stringify(createdIssuer, null, 2));
 
       // Once issuer is created, add the data along with issuer details inside the table
 
       return 'issuer created successfully';
     } catch (error) {
-      this.logger.error(`[oidcIssuerCreate] - error in deleting issuance records: ${JSON.stringify(error)}`);
+      this.logger.error(`[oidcIssuerCreate] - error in oidcIssuerCreate issuance records: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -146,6 +160,7 @@ export class OIDCIssuanceService {
     try {
       // console.log("REached here", JSON.stringify(dto, null, 2))
       // Prepare metadata in the expected schema
+      console.log('DTO in createTemplate OID4VCI:;;; ', JSON.stringify(dto, null, 2));
       const metadata = {
         name: dto.name,
         description: dto.description,
@@ -159,6 +174,7 @@ export class OIDCIssuanceService {
         // createdBy: userDetails.id,
         // createdAt: new Date()
       };
+      console.log('Metadata in createTemplate OID4VCI:;;; ', JSON.stringify(metadata, null, 2));
 
       // console.log("REached here")
 

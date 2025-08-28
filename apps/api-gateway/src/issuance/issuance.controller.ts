@@ -1061,7 +1061,7 @@ export class IssuanceController {
     console.log('Received the request body', JSON.stringify(issueCredentialDto, null, 2));
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.issuance.success.deleteIssuanceRecords
+      message: ResponseMessages.issuance.success.issuerConfig
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -1070,26 +1070,12 @@ export class IssuanceController {
   @ApiOperation({ summary: 'Create credential template' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Template created successfully' })
   @ApiBearerAuth()
-  @Roles(OrgRoles.OWNER)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  // @Roles(OrgRoles.OWNER)
+  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async createTemplate(
-    @Param(
-      'orgId',
-      new ParseUUIDPipe({
-        exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-        }
-      })
-    )
+    @Param('orgId')
     orgId: string,
-    @Param(
-      'issuerId',
-      new ParseUUIDPipe({
-        exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-        }
-      })
-    )
+    @Param('issuerId')
     issuerId: string,
     @User() user: user,
     @Body() dto: CreateCredentialTemplateDto,

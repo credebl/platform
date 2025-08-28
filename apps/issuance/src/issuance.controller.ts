@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
   IClientDetails,
   IIssuance,
@@ -20,7 +22,6 @@ import { IssuanceService } from './issuance.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { user } from '@prisma/client';
-import { IssuerCreation } from '../interfaces/oidc-issuance.interfaces';
 import { OIDCIssuanceService } from './oidc-issuance.service';
 import { CreateCredentialTemplate, UpdateCredentialTemplate } from '../interfaces/oidc-template.interface';
 
@@ -142,13 +143,14 @@ export class IssuanceController {
 
   // oidc-issuer-create
   @MessagePattern({ cmd: 'oidc-issuer-create' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcIssuerCreate(payload: {
-    issuerCreation: IssuerCreation;
+    issueCredentialDto: any; //TODO: need to create interface
     orgId: string;
     userDetails: user;
-  }): Promise<IDeletedIssuanceRecords> {
-    const { orgId, userDetails } = payload;
-    return this.oidcIssuanceService.oidcIssuerCreate(payload.issuerCreation, orgId, userDetails);
+  }): Promise<any> {
+    const { issueCredentialDto, orgId, userDetails } = payload;
+    return this.oidcIssuanceService.oidcIssuerCreate(issueCredentialDto, orgId, userDetails);
   }
 
   @MessagePattern({ cmd: 'oidc-template-create' })

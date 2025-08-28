@@ -766,7 +766,7 @@ export class IssuanceRepository {
     try {
       const fileDetails = await this.prisma.oidc_issuer.create({
         data: {
-          ...issuerJson,
+          metadata: issuerJson,
           createdBy: credatedById, // FK
           agentIssuerId: issuerId
         },
@@ -789,8 +789,8 @@ export class IssuanceRepository {
     try {
       return await this.prisma.credential_templates.create({
         data: {
-          ...data
-          // issuerId: issuerId,
+          ...data,
+          issuerId
         }
       });
     } catch (error) {

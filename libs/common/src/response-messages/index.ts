@@ -310,7 +310,8 @@ export const ResponseMessages = {
       notFound: 'Schema records not found',
       bulkProcess: 'Process initiated for bulk issuance',
       deleteIssuanceRecords: 'Issuance records deleted',
-      fileDetailsAndFileData: 'File details and File data fetched successfully'
+      fileDetailsAndFileData: 'File details and File data fetched successfully',
+      issuerConfig: 'Issuer config details created successfully'
     },
     error: {
       invalidCredentialRecordId: 'Please provide valid credential Record Id',

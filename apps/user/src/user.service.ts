@@ -449,21 +449,19 @@ export class UserService {
     try {
       this.validateEmail(email.toLowerCase());
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());
-      const userSessionDetails = await this.userRepository.fetchUserSessions(userData?.id);
-      if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
-        throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
-      }
-
       if (!userData) {
         throw new NotFoundException(ResponseMessages.user.error.notFound);
       }
-
       if (userData && !userData.isEmailVerified) {
         throw new BadRequestException(ResponseMessages.user.error.verifyMail);
       }
 
       if (true === isPasskey && false === userData?.isFidoVerified) {
         throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
+      }
+      const userSessionDetails = await this.userRepository.fetchUserSessions(userData?.id);
+      if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
+        throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
       }
       let tokenDetails;
       if (true === isPasskey && userData?.username && true === userData?.isFidoVerified) {

@@ -111,7 +111,7 @@ export enum CommonConstants {
   URL_AGENT_GET_ENDPOINT = '/agent',
 
   // sign data from agent
-  URL_AGENT_SIGN_DATA = '/agent/credential/sign/#',
+  URL_AGENT_SIGN_DATA = '/agent/credential/sign',
   URL_AGENT_VERIFY_SIGNED_DATA = '/agent/credential/verify',
 
   // CREATE KEYS

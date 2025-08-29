@@ -269,9 +269,4 @@ export class UserController {
   async logout(logoutUserDto: ISessions): Promise<string> {
     return this.userService.logout(logoutUserDto);
   }
-
-  @MessagePattern({ cmd: 'delete-inactive-sessions' })
-  async deleteInActiveSessions(): Promise<string> {
-    return this.userService.deleteInActiveSessions();
-  }
 }

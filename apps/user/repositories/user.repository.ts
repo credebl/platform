@@ -678,7 +678,7 @@ export class UserRepository {
 
   async createSession(tokenDetails: ISession): Promise<session> {
     try {
-      const { sessionToken, userId, expires, refreshToken, accountId, sessionType } = tokenDetails;
+      const { sessionToken, userId, expires, refreshToken, accountId, sessionType, expiresAt } = tokenDetails;
       const sessionResponse = await this.prisma.session.create({
         data: {
           id: tokenDetails.id,
@@ -687,7 +687,8 @@ export class UserRepository {
           userId,
           refreshToken,
           accountId,
-          sessionType
+          sessionType,
+          expiresAt
         }
       });
       return sessionResponse;
@@ -988,24 +989,16 @@ export class UserRepository {
     }
   }
 
-  async deleteInactiveSessions(): Promise<number> {
+  async deleteInactiveSessions(userId: string): Promise<Prisma.BatchPayload> {
     try {
-      //       await this.prisma.session.deleteMany({
-      //   where: {
-      //     AND: [
-      //       {
-      //         createdAt: {
-      //           lt: new Date(Date.now() - expires), // Current time minus expire interval
-      //         },
-      //       },
-      //       // You can add more conditions here
-      //     ],
-      //   },
-      // });
-      const response = await this.prisma.$executeRaw`
-        DELETE FROM "session"
-        WHERE ("createdAt" + make_interval(secs => "expires")) < NOW()
-      `;
+      const response = await this.prisma.session.deleteMany({
+        where: {
+          expiresAt: {
+            lt: new Date()
+          },
+          userId
+        }
+      });
       this.logger.debug('Response::', response);
       return response;
     } catch (error) {

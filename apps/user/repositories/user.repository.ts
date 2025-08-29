@@ -999,7 +999,7 @@ export class UserRepository {
           userId
         }
       });
-      this.logger.debug('Response::', response);
+      this.logger.debug('Deleted inactive sessions::', response);
       return response;
     } catch (error) {
       this.logger.error(`Error in deleting the in active sessions::${error.message}`);

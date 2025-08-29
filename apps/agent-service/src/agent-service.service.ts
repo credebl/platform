@@ -105,7 +105,7 @@ export class AgentServiceService {
       const agentDetails = await this.agentServiceRepository.getAgentDetailsByOrgId(orgId);
       return agentDetails;
     } catch (error) {
-      this.logger.error(`in getAgentDetails::: ${JSON.stringify(error)}`);
+      this.logger.error(`in getAgentDetails ::: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
   }

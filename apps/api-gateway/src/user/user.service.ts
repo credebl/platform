@@ -92,8 +92,4 @@ export class UserService extends BaseService {
     const payload = { email };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-user-info-by-user-email-keycloak', payload);
   }
-
-  async deleteInactiveSessions(): Promise<void> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-inactive-sessions', '');
-  }
 }

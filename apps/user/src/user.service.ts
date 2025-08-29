@@ -456,6 +456,8 @@ export class UserService {
       if (true === isPasskey && false === userData?.isFidoVerified) {
         throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
       }
+      // called seprate method to delete exp session
+      this.userRepository.deleteInactiveSessions(userData?.id);
       const userSessionDetails = await this.userRepository.fetchUserSessions(userData?.id);
       if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
         throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
@@ -471,13 +473,16 @@ export class UserService {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const decodedToken: any = jwt.decode(tokenDetails?.access_token);
+      const expiresAt = new Date(decodedToken.exp * 1000);
+
       const sessionData = {
         id: decodedToken.sid,
         sessionToken: tokenDetails?.access_token,
         userId: userData?.id,
         expires: tokenDetails?.expires_in,
         refreshToken: tokenDetails?.refresh_token,
-        sessionType: SessionType.USER_SESSION
+        sessionType: SessionType.USER_SESSION,
+        expiresAt
       };
 
       const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
@@ -552,13 +557,17 @@ export class UserService {
         if (!deletePreviousSession) {
           throw new InternalServerErrorException(ResponseMessages.user.error.errorInDeleteSession);
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const decodedToken: any = jwt.decode(tokenResponse?.access_token);
+        const expiresAt = new Date(decodedToken.exp * 1000);
         const sessionData = {
           sessionToken: tokenResponse.access_token,
           userId: userByKeycloakId?.['id'],
           expires: tokenResponse.expires_in,
           refreshToken: tokenResponse.refresh_token,
           sessionType: SessionType.USER_SESSION,
-          accountId: userAccountDetails.id
+          accountId: userAccountDetails.id,
+          expiresAt
         };
         const addSessionDetails = await this.userRepository.createSession(sessionData);
         if (!addSessionDetails) {
@@ -1329,15 +1338,6 @@ export class UserService {
       return 'user logged out successfully';
     } catch (error) {
       this.logger.error(`Error in logging out session: ${error}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
-  async deleteInActiveSessions(): Promise<number> {
-    try {
-      return await this.userRepository.deleteInactiveSessions();
-    } catch (error) {
-      this.logger.error(`Error in deleting in-active sessions`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

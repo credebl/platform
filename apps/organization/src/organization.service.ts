@@ -65,6 +65,8 @@ import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { UserRepository } from 'apps/user/repositories/user.repository';
+import * as jwt from 'jsonwebtoken';
+
 @Injectable()
 export class OrganizationService {
   private readonly IMG_EXT = 'png';
@@ -712,17 +714,24 @@ export class OrganizationService {
     let addSessionDetails;
     // Fetch owner organization details for getting the user id
     const orgRoleDetails = await this.organizationRepository.getOrgAndOwnerUser(clientId);
+    // called seprate method to delete exp session
+    this.userRepository.deleteInactiveSessions(orgRoleDetails['user'].id);
+
     // Fetch the total number of sessions for the requested user to check and restrict the creation of multiple sessions.
     const userSessionDetails = await this.userRepository.fetchUserSessions(orgRoleDetails['user'].id);
     if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
       throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const decodedToken: any = jwt.decode(authenticationResult?.access_token);
+    const expiresAt = new Date(decodedToken.exp * 1000);
     // Session payload
     const sessionData = {
       sessionToken: authenticationResult?.access_token,
       userId: orgRoleDetails['user'].id,
       expires: authenticationResult?.expires_in,
-      sessionType: SessionType.ORG_SESSION
+      sessionType: SessionType.ORG_SESSION,
+      expiresAt
     };
     // Note:
     // Fetch account details to check whether the requested user account exists

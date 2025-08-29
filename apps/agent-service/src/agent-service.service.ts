@@ -1568,7 +1568,7 @@ export class AgentServiceService {
           description: ResponseMessages.errorMessages.notFound
         });
       }
-      const url = getAgentUrl(orgAgentDetails.agentEndPoint, CommonConstants.SIGN_DATA_FROM_AGENT);
+      const url = await getAgentUrl(orgAgentDetails.agentEndPoint, CommonConstants.SIGN_DATA_FROM_AGENT);
 
       const { dataTypeToSign, credentialPayload, rawPayload, storeCredential } = data;
 
@@ -1628,7 +1628,7 @@ export class AgentServiceService {
           description: ResponseMessages.errorMessages.notFound
         });
       }
-      const url = getAgentUrl(orgAgentDetails.agentEndPoint, CommonConstants.VERIFY_SIGNED_DATA_FROM_AGENT);
+      const url = await getAgentUrl(orgAgentDetails.agentEndPoint, CommonConstants.VERIFY_SIGNED_DATA_FROM_AGENT);
 
       // Invoke an API request from the agent to assess its current status
       const signedDataFromAgent = await this.commonService

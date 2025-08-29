@@ -191,6 +191,7 @@ export interface ISession {
   type?: string;
   accountId?: string;
   sessionType?: string;
+  expiresAt?: Date;
 }
 
 export interface IUpdateAccountDetails {

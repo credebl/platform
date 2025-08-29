@@ -1,28 +1,31 @@
 # CREDEBL SSI Platform
 
-This repository host codebase for CREDEBL SSI Platform backend.
+This repository hosts the codebase for CREDEBL SSI Platform backend.
 
-## Pre-requisites
+## Prerequisites
 
-Install Docker and docker-compose
-</br>See: https://docs.docker.com/engine/install/
+### Install Docker and Docker Compose
+See: https://docs.docker.com/engine/install/
 
-Install Node: >= 18.17.0
-</br>See: https://nodejs.dev/en/learn/how-to-install-nodejs/
+### Install Node.js
+Version: >= 18.17.0  
+See: https://nodejs.dev/en/learn/how-to-install-nodejs/
 
-**Install NestJS**
+### Install NestJS CLI
 ```bash
 npm i @nestjs/cli@latest 
 ```
 
-**Setup & run postgres**
-Start the postgresql service using the docker:
+## Setup Instructions
+
+### 1. Setup and Run PostgreSQL
+Start the PostgreSQL service using Docker:
 
 ```bash
 docker run --name some-postgres -p 5432:5432 -e POSTGRES_PASSWORD=<secretpassword> -e POSTGRES_USER=credebl -d postgres
 ```
 
-**Run prisma to generate db schema**
+### 2. Run Prisma to Generate Database Schema
 
 ```bash
 cd ./libs/prisma-service/prisma
@@ -30,54 +33,56 @@ npx prisma generate
 npx prisma db push
 ```
 
-**Seed initial data**
+### 3. Seed Initial Data
 
 ```bash
 cd ./libs/prisma-service
 npx prisma db seed
 ```
 
-# Install NATS Message Broker
-## Pull NATS docker image
+## Install NATS Message Broker
 
-NATS is used for inter-service communication. The only pre-requisite here is to install docker.
+### Pull NATS Docker Image
 
-```
+NATS is used for inter-service communication. The only prerequisite here is to install Docker.
+
+```bash
 docker pull nats:latest
 ```
 
-## Run NATS using `docker-compose`
+### Run NATS using Docker Compose
 The `docker-compose.yml` file is available in the root folder.
 
-```
+```bash
 docker-compose up
 ```
 
+## Run CREDEBL Microservices
 
-## Run CREDEBL Micro-services
-
+### Install Dependencies
 ```bash
 npm install
 ```
 
-## Configure environment variables in `.env` before you start the API Gateway
+### Configure Environment Variables
+Configure environment variables in `.env` before you start the API Gateway.
 
-## Running the API Gateway app
-You can optionally use the `--watch` flag during development / testing.
+### Running the API Gateway
+You can optionally use the `--watch` flag during development/testing.
 
 ```bash
 nest start [--watch]
 ```
 
-## Starting the individual Micro-services
+### Starting Individual Microservices
 
-### e.g. for starting `organization service` micro-service run below command in a separate terminal window
+For example, to start the `organization service` microservice, run the following command in a separate terminal window:
 
 ```bash
 nest start organization [--watch]
 ```
 
-### Likewise you can start all the micro-services one after another in separate terminal window
+Start all the microservices one after another in separate terminal windows:
 
 ```bash
 nest start user [--watch]
@@ -89,7 +94,9 @@ nest start agent-provisioning [--watch]
 nest start agent-service [--watch]
 ```
 
-## To access micro-service endpoints using the API Gateway. Navigate to
+## Access Microservice Endpoints
+
+To access microservice endpoints using the API Gateway, navigate to:
 
 ```
 http://localhost:5000/api
@@ -102,7 +109,7 @@ For the core SSI capabilities, it leverages the great work from multiple open-so
 
 ## Contributing
 
-Pull requests are welcome! Please read our [contributions guide](https://github.com/credebl/platform/blob/main/CONTRIBUTING.md) and submit your PRs. We enforce [developer certificate of origin](https://developercertificate.org/) (DCO) commit signing — [guidance](https://github.com/apps/dco) on this is available. We also welcome issues submitted about problems you encounter in using CREDEBL.
+Pull requests are welcome! Please read our [contributions guide](https://github.com/credebl/platform/blob/main/CONTRIBUTING.md) and submit your PRs. We enforce [developer certificate of origin](https://developercertificate.org/) (DCO) commit signing — [guidance](https://github.com/apps/dco) on this is available. We also welcome issues submitted about problems you encounter in using CREDEBL.
 
 ## License
 

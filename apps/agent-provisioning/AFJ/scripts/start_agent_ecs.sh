@@ -25,6 +25,8 @@ AWS_ACCOUNT_ID=${20}
 S3_BUCKET_ARN=${21}
 CLUSTER_NAME=${22}
 TASKDEFINITION_FAMILY=${23}
+ADMIN_TG_ARN=${24}
+INBOUND_TG_ARN=${25}
 
 DESIRED_COUNT=1
 
@@ -155,7 +157,7 @@ CONTAINER_DEFINITIONS=$(
   {
     "name": "$CONTAINER_NAME",
     "image": "${AFJ_VERSION}",
-    "cpu": 154,
+    "cpu": 307,
     "memory": 307,
     "portMappings": [
       {
@@ -196,15 +198,16 @@ CONTAINER_DEFINITIONS=$(
             ],
     "volumesFrom": [],
     "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/$TASKDEFINITION_FAMILY",
-          "awslogs-create-group": "true",
-          "awslogs-region": "$AWS_PUBLIC_REGION",
-          "awslogs-stream-prefix": "ecs"
-        },
-    "ulimits": []
-  }
+    "logDriver": "awslogs",
+    "options": {
+      "awslogs-group": "/ecs/$TASKDEFINITION_FAMILY",
+      "awslogs-create-group": "true",
+      "awslogs-region": "$AWS_PUBLIC_REGION",
+      "awslogs-stream-prefix": "ecs"
+    }
+  },
+  "ulimits": []
+}
 ]
 EOF
 )
@@ -228,7 +231,7 @@ TASK_DEFINITION=$(
   "requiresCompatibilities": [
     "EC2"
   ],
-  "cpu": "154",
+  "cpu": "307",
   "memory": "307"
 }
 EOF
@@ -240,14 +243,57 @@ echo "$TASK_DEFINITION" >task_definition.json
 # Register the task definition and retrieve the ARN
 TASK_DEFINITION_ARN=$(aws ecs register-task-definition --cli-input-json file://task_definition.json --query 'taskDefinition.taskDefinitionArn' --output text)
 
+SERVICE_JSON=$(
+  cat <<EOF
+  {
+    "cluster": "$CLUSTER_NAME",
+    "serviceName": "$SERVICE_NAME",
+    "taskDefinition": "$TASK_DEFINITION_ARN",
+    "launchType": "EC2",
+    "loadBalancers": [
+        {
+            "targetGroupArn": "$ADMIN_TG_ARN",
+            "containerName": "$CONTAINER_NAME",
+            "containerPort": $ADMIN_PORT
+        },
+        {
+            "targetGroupArn": "$INBOUND_TG_ARN",
+            "containerName": "$CONTAINER_NAME",
+            "containerPort": $INBOUND_PORT
+        }
+    ],
+    "desiredCount": $DESIRED_COUNT,
+    "healthCheckGracePeriodSeconds": 300,
+}
+EOF
+)
+
+# Save the service JSON to a file
+echo "$SERVICE_JSON" > service.json
+
+# Check if the service file was created successfully
+if [ -f "service.json" ]; then
+    echo "Service file created successfully: service.json"
+else
+    echo "Failed to create service file: service.json"
+fi 
+
 # Create the service
 aws ecs create-service \
-  --cluster $CLUSTER_NAME \
-  --service-name $SERVICE_NAME \
-  --task-definition $TASK_DEFINITION_ARN \
-  --desired-count $DESIRED_COUNT \
-  --launch-type EC2 \
-  --deployment-configuration "maximumPercent=200,minimumHealthyPercent=100"
+  --cli-input-json file://service.json \
+  --deployment-configuration "maximumPercent=200,minimumHealthyPercent=100" \
+  --region $AWS_PUBLIC_REGION
+
+# Describe the ECS service and filter by service name
+service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluster $CLUSTER_NAME --region $AWS_PUBLIC_REGION)
+
+# Check if the service creation was successful
+if [ $? -eq 0 ]; then
+    echo "Service creation successful"
+else
+    echo "Failed to create service"
+    exit 1
+fi
 
 if [ $? -eq 0 ]; then
 

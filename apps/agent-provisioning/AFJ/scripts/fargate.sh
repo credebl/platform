@@ -33,7 +33,7 @@ AWS_PUBLIC_REGION=${27}
 STAGE=${28}
 AGENT_WEBSOCKET_PROTOCOL=${29}
 DB_SECURITY_GROUP_ID=${30}
-TESKDEFINITION_FAMILY="${STAGE}_${CONTAINER_NAME}_TASKDEFITION"
+TESKDEFINITION_FAMILY="${CONTAINER_NAME}_TASKDEFITION"
 
 
 echo "START_TIME: $START_TIME"
@@ -537,9 +537,9 @@ fi
 
 # Create the service
 aws ecs create-service \
---service-name $SERVICE_NAME \
---cli-input-json file://service.json \
---region $AWS_PUBLIC_REGION 
+    --service-name $SERVICE_NAME \
+    --cli-input-json file://service.json \
+    --region $AWS_PUBLIC_REGION 
 
 # Describe the ECS service and filter by service name
 service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluster $CLUSTER_NAME --region $AWS_PUBLIC_REGION)

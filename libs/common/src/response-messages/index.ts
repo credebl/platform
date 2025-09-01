@@ -6,6 +6,7 @@ export const ResponseMessages = {
       emaiVerified: 'Email verified successfully',
       fetchClientAliases: 'Client aliases fetched successfully',
       login: 'User login successfully',
+      fetchSession: 'Session details fetched successfully',
       fetchProfile: 'User fetched successfully',
       fetchInvitations: 'Org invitations fetched successfully',
       invitationReject: 'Organization invitation rejected',
@@ -24,7 +25,8 @@ export const ResponseMessages = {
       refreshToken: 'Token details fetched successfully',
       countriesVerificationCode: 'All countries has been fetched successfully',
       stateVerificationCode: 'All states has been fetched successfully',
-      cityVerificationCode: 'All cities has been fetched successfully'
+      cityVerificationCode: 'All cities has been fetched successfully',
+      logout: 'User logout successfully'
     },
     error: {
       exists: 'User already exists',
@@ -37,6 +39,8 @@ export const ResponseMessages = {
       invalidEmailUrl: 'Invalid verification code or EmailId!',
       verifiedEmail: 'Email already verified',
       notFound: 'User not found',
+      sessionLimitReached:
+        'You have reached the maximum number of allowed sessions. Please remove an existing session to add a new one',
       verifyMail: 'Please verify your email',
       invalidCredentials: 'Invalid Credentials',
       registerFido: 'Please complete your fido registration',
@@ -62,7 +66,12 @@ export const ResponseMessages = {
       invalidResetLink: 'Invalid or expired reset password link',
       invalidAccessToken: 'Authentication failed',
       invalidRefreshToken: 'Invalid refreshToken provided',
-      userOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.'
+      userOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
+      errorInUpdateAccountDetails: 'Error in updating the account details',
+      errorInDeleteSession: 'Error in deleting the session',
+      errorInSessionCreation: 'Error in create session',
+      userAccountNotFound: 'User account not found',
+      userSeesionNotFound: 'User session not found'
     }
   },
   organisation: {
@@ -79,7 +88,7 @@ export const ResponseMessages = {
       updateUserRoles: 'User roles updated successfully',
       delete: 'Organization deleted successfully',
       orgInvitationDeleted: 'Organization invitation deleted successfully',
-      orgCredentials: 'Organization credentials created successfully',
+      orgCredentials: 'Client credentials created successfully',
       fetchedOrgCredentials: 'Organization credentials fetched successfully',
       clientCredentials: 'Client credentials fetched successfully',
       deleteCredentials: 'Organization client credentials deleted',
@@ -240,6 +249,7 @@ export const ResponseMessages = {
       ledgerNotFound: 'Ledgers not found',
       agentNotExists: 'Agent not spun up for this organization',
       agentDown: 'Agent is down or not spun up',
+      notConfigured: 'Agent is not configured properly',
       walletAlreadyCreated: 'Your wallet is already been created',
       walletAlreadyProcessing: 'Your wallet is already processing',
       notAbleToSpinp: 'Agent not able to spun up',
@@ -270,7 +280,10 @@ export const ResponseMessages = {
       requiredEndorserDid: 'Role or endorser DID is required',
       requiredPrivateKey: 'Privatekey is required for polygon method',
       privateKeyLength: 'Private key must be exactly 64 characters long',
-      requiredSeed: 'Seed is required'
+      requiredSeed: 'Seed is required',
+      baseWalletToken: 'Error while fetching base wallet token',
+      tenantWalletToken: 'Error while fetching tenant wallet token',
+      invalidTenantDetails: 'Invalid wallet details provided'
     }
   },
   connection: {
@@ -490,6 +503,14 @@ export const ResponseMessages = {
       noSubscribers:
         'No subscribers for the requested message. Error while connecting to NATS, service might not be started',
       natsConnect: 'Empty response. There are no subscribers listening to that message'
+    }
+  },
+  common: {
+    error: {
+      invalidUrl: 'Please check the url suffix.',
+      invalidEndpoint: 'Invalid agent endpoint provided',
+      fetchBaseWalletToken: 'Error while fetching base wallet token',
+      fetchTenantWalletToken: 'Error while fetching tenant wallet token'
     }
   }
 };

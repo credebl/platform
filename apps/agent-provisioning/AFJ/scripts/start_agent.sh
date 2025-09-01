@@ -19,7 +19,7 @@ AFJ_VERSION=${14}
 INDY_LEDGER=${15}
 INBOUND_ENDPOINT=${16}
 SCHEMA_FILE_SERVER_URL=${17}
-
+AGENT_API_KEY="${18}"
 ADMIN_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/apps/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
 ADMIN_PORT=8001
@@ -122,7 +122,7 @@ if [ -f "$CONFIG_FILE" ]; then
   rm "$CONFIG_FILE"
 fi
 
-cat <<EOF >${CONFIG_FILE}
+cat <<EOF >"$CONFIG_FILE"
 {
   "label": "${AGENCY}_${CONTAINER_NAME}",
   "walletId": "$WALLET_NAME",
@@ -154,7 +154,8 @@ cat <<EOF >${CONFIG_FILE}
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
   "adminPort": $ADMIN_PORT,
   "tenancy": $TENANT,
-  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
+  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL",
+  "apiKey": "$AGENT_API_KEY"
 }
 EOF
 
@@ -238,7 +239,7 @@ if [ $? -eq 0 ]; then
     container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
 
     # Extract the token from the logs using sed
-    token=$(echo "$container_logs" | sed -nE 's/.*API Token: ([^ ]+).*/\1/p')
+    token=$(echo "$container_logs" | sed -nE 's/.*** API Key: ([^ ]+).*/\1/p')
 
     # Print the extracted token
     echo "Token: $token"

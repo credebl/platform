@@ -13,7 +13,6 @@ import { HttpService } from '@nestjs/axios';
 import * as dotenv from 'dotenv';
 import { ResponseMessages } from './response-messages';
 import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
-import { OrgAgentType } from '../../enum/src/enum';
 import { RpcException } from '@nestjs/microservices';
 dotenv.config();
 
@@ -311,40 +310,44 @@ export class CommonService {
     }
   }
 
-  async sendBasicMessageAgentUrl(
-    label: string,
-    orgAgentType: string,
-    agentEndPoint: string,
-    tenantId?: string,
-    connectionId?: string
-  ): Promise<string> {
-    try {
-      let url;
-      switch (label) {
-        case 'send-basic-message': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_SEND_BASIC_MESSAGE}`.replace('#', connectionId)
-              : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHARED_SEND_BASIC_MESSAGE}`
-                  .replace('#', connectionId)
-                  .replace('@', tenantId)
-              : null;
-          break;
-        }
-
-        default: {
-          break;
-        }
+  async getBaseAgentToken(agentEndPoint: string, apiKey: string): Promise<string> {
+    const normalizedBaseUrl = await this.normalizeUrlWithProtocol(agentEndPoint);
+    this.logger.log(`Fetching base agent token from ${normalizedBaseUrl}`);
+    const agentBaseWalletDetils = await this.httpPost(`${normalizedBaseUrl}${CommonConstants.URL_AGENT_TOKEN}`, '', {
+      headers: {
+        Accept: 'application/json',
+        Authorization: apiKey
       }
-
-      if (!url) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
-      }
-      return url;
-    } catch (error) {
-      this.logger.error(`Error in getting basic-message Url: ${JSON.stringify(error)}`);
-      throw error;
+    });
+    if (!agentBaseWalletDetils) {
+      throw new NotFoundException(ResponseMessages.common.error.fetchBaseWalletToken);
     }
+    return agentBaseWalletDetils.token;
+  }
+
+  async getTenantWalletToken(agentEndPoint: string, apiKey: string, tenantId: string): Promise<string> {
+    const normalizedBaseUrl = await this.normalizeUrlWithProtocol(agentEndPoint);
+    this.logger.log(`Fetching tenant wallet token for tenantId: ${tenantId} from ${normalizedBaseUrl}`);
+    const tenantWalletDetails = await this.httpPost(
+      `${normalizedBaseUrl}${CommonConstants.URL_SHARED_WALLET_TOKEN}${tenantId}`,
+      {},
+      {
+        headers: {
+          Accept: 'application/json',
+          Authorization: apiKey
+        }
+      }
+    );
+    if (!tenantWalletDetails) {
+      throw new NotFoundException(ResponseMessages.common.error.fetchTenantWalletToken);
+    }
+    return tenantWalletDetails.token;
+  }
+
+  async normalizeUrlWithProtocol(baseUrl: string): Promise<string> {
+    if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
+      return baseUrl;
+    }
+    return `${process.env.API_GATEWAY_PROTOCOL}://${baseUrl}`;
   }
 }

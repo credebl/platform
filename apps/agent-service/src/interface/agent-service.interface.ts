@@ -434,6 +434,8 @@ export interface ICreateTenant {
   tenantRecord: ITenantRecord;
   did: string;
   verkey: string;
+  didDocument?: Record<string, string>;
+  didDoc?: Record<string, string>;
 }
 
 export interface IOrgAgent {
@@ -643,16 +645,21 @@ export interface OrgDid {
 }
 
 export interface ILedgers {
-    id: string;
-    createDateTime: Date;
-    lastChangedDateTime: Date;
-    name: string;
-    networkType: string;
-    poolConfig: string;
-    isActive: boolean;
-    networkString: string;
-    nymTxnEndpoint: string;
-    indyNamespace: string;
-    networkUrl: string;
-
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  name: string;
+  networkType: string;
+  poolConfig: string;
+  isActive: boolean;
+  networkString: string;
+  nymTxnEndpoint: string;
+  indyNamespace: string;
+  networkUrl: string;
+}
+export interface WalletDetails {
+  agentEndPoint: string;
+  apiKey: string;
+  tenantId: string;
+  orgId: string;
 }

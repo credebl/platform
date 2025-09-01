@@ -34,6 +34,38 @@ model user {
   token                  token[]
   user_role_mapping      user_role_mapping[]
   cloud_wallet_user_info cloud_wallet_user_info[]
+  accounts               account[]
+  sessions               session[]
+}
+
+model account {
+  id                String      @id @default(uuid()) @db.Uuid
+  userId            String      @unique @db.Uuid
+  type              String?
+  provider          String
+  providerAccountId String      
+  tokenType         String?
+  scope             String?
+  idToken           String?
+  sessionState      String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt 
+  user              user         @relation(fields: [userId], references: [id])
+  sessions          session[]
+ }
+
+model session {
+  id               String      @id @default(uuid()) @db.Uuid
+  sessionToken     String      
+  userId           String      @db.Uuid
+  expires          Int
+  refreshToken     String?     
+  user             user        @relation(fields: [userId], references: [id])
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  accountId        String?     @db.Uuid
+  sessionType      String?
+  account          account?    @relation(fields: [accountId], references:[id])
 }
 
 model token {
@@ -325,6 +357,8 @@ model connections {
   state               String
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
+  presentations       presentations[]
+  credentials         credentials[]
 }
 
 model credentials {
@@ -341,6 +375,7 @@ model credentials {
   credDefId            String        @default("")
   orgId                String?       @db.Uuid
   organisation         organisation? @relation(fields: [orgId], references: [id])
+  connections          connections?  @relation(fields: [connectionId], references: [connectionId])
 }
 
 model presentations {
@@ -349,7 +384,7 @@ model presentations {
   createdBy           String        @db.Uuid
   lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
   lastChangedBy       String        @db.Uuid
-  connectionId        String?
+  connectionId        String?       
   state               String?
   threadId            String        @unique
   isVerified          Boolean?
@@ -359,6 +394,8 @@ model presentations {
   emailId             String?
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
+  connections         connections?  @relation(fields: [connectionId], references: [connectionId])
+
 }
 
 model file_upload {

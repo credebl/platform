@@ -1,13 +1,14 @@
+import { AgentDetails, ISchemasWithCount, IUpdateSchema, UpdateSchemaResponse } from '../interfaces/schema.interface';
 /* eslint-disable camelcase */
 import { ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { PrismaService } from '@credebl/prisma-service';
-import { ledgers, org_agents, org_agents_type, organisation, Prisma, schema } from '@prisma/client';
-import { ISchema, ISchemaExist, ISchemaSearchCriteria, ISaveSchema } from '../interfaces/schema-payload.interface';
-import { ResponseMessages } from '@credebl/common/response-messages';
-import { AgentDetails, ISchemasWithCount, IUpdateSchema, UpdateSchemaResponse } from '../interfaces/schema.interface';
+import { ICredDefWithCount, IPlatformSchemasWithOrg } from '@credebl/common/interfaces/schema.interface';
+import { ISaveSchema, ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
+import { Prisma, ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { SchemaType, SortValue } from '@credebl/enum/enum';
-import { ICredDefWithCount, IPlatformSchemas } from '@credebl/common/interfaces/schema.interface';
+
 import { ISchemaId } from '../schema.interface';
+import { PrismaService } from '@credebl/prisma-service';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class SchemaRepository {
@@ -297,7 +298,7 @@ export class SchemaRepository {
     }
   }
 
-  async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<IPlatformSchemas> {
+  async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<IPlatformSchemasWithOrg> {
     try {
       const { ledgerId, schemaType, searchByText, sortField, sortBy, pageSize, pageNumber } = payload;
       let schemaResult;
@@ -334,7 +335,12 @@ export class SchemaRepository {
             orgId: true, // This field can be null
             issuerId: true,
             type: true,
-            alias: true
+            alias: true,
+            organisation: {
+              select: {
+                name: true
+              }
+            }
           },
           orderBy: {
             [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
@@ -363,7 +369,12 @@ export class SchemaRepository {
             orgId: true, // This field can be null
             issuerId: true,
             type: true,
-            alias: true
+            alias: true,
+            organisation: {
+              select: {
+                name: true
+              }
+            }
           },
           orderBy: {
             [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
@@ -468,10 +479,10 @@ export class SchemaRepository {
     const { alias, schemaLedgerId, orgId } = schemaDetails;
 
     try {
-        return await this.prisma.schema.updateMany({
-          where: orgId ? { schemaLedgerId, orgId } : { schemaLedgerId },
-          data: { alias }
-        });
+      return await this.prisma.schema.updateMany({
+        where: orgId ? { schemaLedgerId, orgId } : { schemaLedgerId },
+        data: { alias }
+      });
     } catch (error) {
       this.logger.error(`Error in updating schema details: ${error}`);
       throw error;

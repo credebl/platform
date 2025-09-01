@@ -760,7 +760,29 @@ export class OrganizationRepository {
       throw error;
     }
   }
-
+  async getOrgAndOwnerUser(orgId: string): Promise<user_org_roles> {
+    try {
+      return this.prisma.user_org_roles.findFirst({
+        where: {
+          orgId,
+          orgRole: {
+            name: 'owner'
+          }
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              keycloakUserId: true
+            }
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in fetch in organization with admin details`);
+      throw error;
+    }
+  }
   async getCredDefByOrg(orgId: string): Promise<
     {
       tag: string;

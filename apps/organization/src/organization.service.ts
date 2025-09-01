@@ -27,7 +27,7 @@ import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { DidMethod, Invitation, Ledgers, PrismaTables, transition } from '@credebl/enum/enum';
+import { DidMethod, Invitation, Ledgers, PrismaTables, SessionType, TokenType, transition } from '@credebl/enum/enum';
 import {
   IGetOrgById,
   IGetOrganization,
@@ -63,6 +63,7 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { UserRepository } from 'apps/user/repositories/user.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 @Injectable()
 export class OrganizationService {
@@ -82,7 +83,8 @@ export class OrganizationService {
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly clientRegistrationService: ClientRegistrationService,
     private readonly userActivityRepository: UserActivityRepository,
-    private readonly natsClient: NATSClient
+    private readonly natsClient: NATSClient,
+    private readonly userRepository: UserRepository
   ) {}
 
   async getPlatformConfigDetails(): Promise<object> {
@@ -698,9 +700,59 @@ export class OrganizationService {
     return response;
   }
 
+  /**
+   * Method used for generate access token based on client-id and client secret
+   * @param clientCredentials
+   * @returns session and access token both
+   */
   async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
     const { clientId, clientSecret } = clientCredentials;
-    return this.authenticateClientKeycloak(clientId, clientSecret);
+    // This method used to authenticate the requested user on keycloak
+    const authenticationResult = await this.authenticateClientKeycloak(clientId, clientSecret);
+    let addSessionDetails;
+    // Fetch owner organization details for getting the user id
+    const orgRoleDetails = await this.organizationRepository.getOrgAndOwnerUser(clientId);
+    // Fetch the total number of sessions for the requested user to check and restrict the creation of multiple sessions.
+    const userSessionDetails = await this.userRepository.fetchUserSessions(orgRoleDetails['user'].id);
+    if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
+      throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
+    }
+    // Session payload
+    const sessionData = {
+      sessionToken: authenticationResult?.access_token,
+      userId: orgRoleDetails['user'].id,
+      expires: authenticationResult?.expires_in,
+      sessionType: SessionType.ORG_SESSION
+    };
+    // Note:
+    // Fetch account details to check whether the requested user account exists
+    // If the account exists, update it with the latest details and create a new session
+    // Otherwise, create a new account and also create the new session
+    const fetchAccountDetails = await this.userRepository.checkAccountDetails(orgRoleDetails['user'].id);
+    if (fetchAccountDetails) {
+      const finalSessionData = { ...sessionData, accountId: fetchAccountDetails.id };
+      addSessionDetails = await this.userRepository.createSession(finalSessionData);
+    } else {
+      // Note:
+      // This else block is mostly used for already registered users on the platform to create their account & session in the database.
+      // Once all users are migrated or created their accounts and sessions in the DB, this code can be removed.
+      const accountData = {
+        userId: orgRoleDetails['user'].id,
+        keycloakUserId: orgRoleDetails['user'].keycloakUserId,
+        type: TokenType.BEARER_TOKEN
+      };
+
+      await this.userRepository.addAccountDetails(accountData).then(async (response) => {
+        const finalSessionData = { ...sessionData, accountId: response.id };
+        addSessionDetails = await this.userRepository.createSession(finalSessionData);
+      });
+    }
+    // Response: add session id
+    const finalResponse = {
+      ...authenticationResult,
+      sessionId: addSessionDetails.id
+    };
+    return finalResponse;
   }
 
   async authenticateClientKeycloak(clientId: string, clientSecret: string): Promise<IAccessTokenData> {

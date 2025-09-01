@@ -527,7 +527,7 @@ export class AgentServiceService {
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
       const agentBaseWalletToken = await this.commonService.getBaseAgentToken(
-        agentDetails.gentEndPoint,
+        agentDetails.agentEndPoint,
         agentDetails?.agentToken
       );
       if (!agentBaseWalletToken) {

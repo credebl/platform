@@ -85,18 +85,23 @@ export default class LoggerService implements Logger {
       };
 
       if (data?.error) {
-        attributes.error =
-          'string' === typeof data.error
-            ? data.error
-            : data.error instanceof Error
-              ? {
-                  name: data.error.name,
-                  message: data.error.message,
-                  stack: data.error.stack
-                }
-              : 'object' === typeof data.error
-                ? JSON.parse(JSON.stringify(data.error))
-                : String(data.error);
+        let errorValue;
+
+        if ('string' === typeof data.error) {
+          errorValue = data.error;
+        } else if (data.error instanceof Error) {
+          errorValue = {
+            name: data.error.name,
+            message: data.error.message,
+            stack: data.error.stack
+          };
+        } else if ('object' === typeof data.error) {
+          errorValue = JSON.parse(JSON.stringify(data.error));
+        } else {
+          errorValue = String(data.error);
+        }
+
+        attributes.error = errorValue;
       }
 
       otelLogger.emit({

@@ -68,3 +68,14 @@ export interface IClientAliases {
   clientAlias: string;
   clientUrl: string;
 }
+
+export interface IVerificationEmail {
+  email: string;
+  verificationCode: string;
+  redirectUrl: string;
+  clientId: string;
+  brandLogoUrl: string;
+  platformName: string;
+  redirectTo?: string;
+  clientAlias?: string;
+}

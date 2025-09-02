@@ -607,7 +607,7 @@ export class AgentServiceService {
       /**
        * Organization storage data
        */
-      const storeOrgAgentData = await this._buildStoreOrgAgentData(payload, `${orgAgentTypeId}`);
+      const storeOrgAgentData = this._buildStoreOrgAgentData(payload, `${orgAgentTypeId}`);
       /**
        * Store org agent details
        */

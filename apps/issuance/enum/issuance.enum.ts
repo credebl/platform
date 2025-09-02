@@ -10,7 +10,7 @@ export enum IssueCredentials {
   proposalReceived = 'proposal-received',
   offerSent = 'offer-sent',
   offerReceived = 'offer-received',
-  declined = 'decliend',
+  declined = 'declined',
   requestSent = 'request-sent',
   requestReceived = 'request-received',
   credentialIssued = 'credential-issued',

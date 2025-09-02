@@ -151,16 +151,6 @@ export class AgentController {
     summary: 'Validates signed data from agent, including credentials',
     description: 'Credentials or any other data signed by the organisation is validated'
   })
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  // @Roles(
-  //   OrgRoles.OWNER,
-  //   OrgRoles.ADMIN,
-  //   OrgRoles.HOLDER,
-  //   OrgRoles.ISSUER,
-  //   OrgRoles.SUPER_ADMIN,
-  //   OrgRoles.MEMBER,
-  //   OrgRoles.VERIFIER
-  // )
   async verifysignature(
     @Param('orgId') orgId: string,
     @Body() data: IVerifySignature,

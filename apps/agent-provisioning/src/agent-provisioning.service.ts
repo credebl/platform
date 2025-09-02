@@ -1,10 +1,13 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
-import { IWalletProvision } from './interface/agent-provisioning.interfaces';
 import * as dotenv from 'dotenv';
-import { AgentType } from '@credebl/enum/enum';
 import * as fs from 'fs';
+
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+
+import { AgentType } from '@credebl/enum/enum';
+import { IWalletProvision } from './interface/agent-provisioning.interfaces';
+import { RpcException } from '@nestjs/microservices';
 import { exec } from 'child_process';
+
 dotenv.config();
 
 @Injectable()
@@ -84,7 +87,7 @@ export class AgentProvisioningService {
 
   async checkFileExistence(filePath: string): Promise<boolean> {
     try {
-      await fs.accessSync(filePath);
+      fs.accessSync(filePath);
       return true; // File exists
     } catch (error) {
       return false; // File does not exist

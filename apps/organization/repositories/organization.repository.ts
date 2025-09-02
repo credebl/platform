@@ -37,6 +37,7 @@ import {
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { OrgRoles } from 'libs/org-roles/enums';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
@@ -766,7 +767,7 @@ export class OrganizationRepository {
         where: {
           orgId,
           orgRole: {
-            name: 'owner'
+            name: OrgRoles.OWNER
           }
         },
         include: {
@@ -779,7 +780,7 @@ export class OrganizationRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`Error in fetch in organization with admin details`);
+      this.logger.error(`Error fetching organization owner details`);
       throw error;
     }
   }

@@ -767,11 +767,7 @@ export class UserService {
           );
 
           if (userData.keycloakUserId) {
-            keycloakDetails = await this.clientRegistrationService.resetPasswordOfUser(
-              userData,
-              process.env.KEYCLOAK_REALM,
-              token
-            );
+            await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, token);
             await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
           } else {
             keycloakDetails = await this.clientRegistrationService.createUser(

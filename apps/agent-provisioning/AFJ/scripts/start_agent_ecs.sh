@@ -327,11 +327,15 @@ echo "service_description=$service_description"
 
 
 # Extract Task ID from the service description events
-task_id=$(echo "$service_description" | jq -r '.services[0].events[] | select(.message | test("has started 1 tasks")) | .message | capture("\\(task (?<id>[^)]+)\\)") | .id')
-#echo "task_id=$task_id"
+task_id=$(echo "$service_description" | jq -r '
+  .services[0].events[] 
+  | select(.message | test("has started 1 tasks")) 
+  | .message 
+  | capture("\\(task (?<id>[^)]+)\\)") 
+  | .id
+')
 
 # to fetch log group of container 
-
 log_group=/ecs/$TASKDEFINITION_FAMILY
 echo "log_group=$log_group"
 
@@ -359,8 +363,12 @@ for attempt in $(seq 1 $RETRIES); do
     --log-group-name "$log_group" \
     --log-stream-name "$log_stream" \
     --region $AWS_PUBLIC_REGION \
-    | grep -o '*** API Key: [^ ]*' \
-    | cut -d ' ' -f 3
+    --query 'events[*].message' \
+    --output text \
+    | tr -d '\033' \
+    | grep 'API Key:' \
+    | sed -E 's/.*API Key:[[:space:]]*([a-zA-Z0-9._:-]*).*/\1/' \
+    | head -n 1
 )
    # echo "token=$token"
     if [ -n "$token" ]; then
@@ -382,8 +390,7 @@ done
   echo "Creating agent config"
   cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
-        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",
-        "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
+        "CONTROLLER_ENDPOINT":"${CONTROLLER_ENDPOINT}"
     }
 EOF
 

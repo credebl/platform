@@ -331,7 +331,7 @@ task_id=$(echo "$service_description" | jq -r '.services[0].events[] | select(.m
 #echo "task_id=$task_id"
 
 # to fetch log group of container 
-.............................................................
+
 log_group=/ecs/$TASKDEFINITION_FAMILY
 echo "log_group=$log_group"
 

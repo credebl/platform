@@ -20,13 +20,12 @@ INDY_LEDGER=${15}
 INBOUND_ENDPOINT=${16}
 SCHEMA_FILE_SERVER_URL=${17}
 AGENT_API_KEY=${18}
-AGENT_HOST=${19}
-AWS_ACCOUNT_ID=${20}
-S3_BUCKET_ARN=${21}
-CLUSTER_NAME=${22}
-TASKDEFINITION_FAMILY=${23}
-ADMIN_TG_ARN=${24}
-INBOUND_TG_ARN=${25}
+AWS_ACCOUNT_ID=${19}
+S3_BUCKET_ARN=${20}
+CLUSTER_NAME=${21}
+TASKDEFINITION_FAMILY=${22}
+ADMIN_TG_ARN=${23}
+INBOUND_TG_ARN=${24}
 
 DESIRED_COUNT=1
 
@@ -148,7 +147,6 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
 }
 EOF
-# scp ${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json ${AGENT_HOST}:/home/ec2-user/config/
 
 # Construct the container definitions dynamically
 CONTAINER_DEFINITIONS=$(
@@ -263,7 +261,7 @@ SERVICE_JSON=$(
         }
     ],
     "desiredCount": $DESIRED_COUNT,
-    "healthCheckGracePeriodSeconds": 300,
+    "healthCheckGracePeriodSeconds": 300
 }
 EOF
 )

@@ -19,9 +19,9 @@ import { resourceFromAttributes } from '@opentelemetry/resources';
 
 dotenv.config();
 
-const otelSDK: NodeSDK | null = null;
-const otelLogger: Logger | null = null;
-const otelLoggerProviderInstance: LoggerProvider | null = null;
+let otelSDK: NodeSDK | null = null;
+let otelLogger: Logger | null = null;
+let otelLoggerProviderInstance: LoggerProvider | null = null;
 if ('true' === process.env.IS_ENABLE_OTEL) {
   diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
 

@@ -234,7 +234,7 @@ TASK_DEFINITION=$(
   "runtimePlatform": {
     "cpuArchitecture": "ARM64",
     "operatingSystemFamily": "LINUX"
-  }
+  },
   "cpu": "307",
   "memory": "358"
 }

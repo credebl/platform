@@ -26,34 +26,9 @@ CLUSTER_NAME=${21}
 TASKDEFINITION_FAMILY=${22}
 ADMIN_TG_ARN=${23}
 INBOUND_TG_ARN=${24}
+FILESYSTEMID=${25}
 
 DESIRED_COUNT=1
-
-echo "AGENCY=$AGENCY"
-echo "EXTERNAL_IP=$EXTERNAL_IP"
-echo "WALLET_NAME=$WALLET_NAME"
-echo "WALLET_PASSWORD=$WALLET_PASSWORD"
-echo "RANDOM_SEED=$RANDOM_SEED"
-echo "WEBHOOK_HOST=$WEBHOOK_HOST"
-echo "WALLET_STORAGE_HOST=$WALLET_STORAGE_HOST"
-echo "WALLET_STORAGE_PORT=$WALLET_STORAGE_PORT"
-echo "WALLET_STORAGE_USER=$WALLET_STORAGE_USER"
-echo "WALLET_STORAGE_PASSWORD=$WALLET_STORAGE_PASSWORD"
-echo "CONTAINER_NAME=$CONTAINER_NAME"
-echo "PROTOCOL=$PROTOCOL"
-echo "TENANT=$TENANT"
-echo "AFJ_VERSION=$AFJ_VERSION"
-echo "INDY_LEDGER=$INDY_LEDGER"
-echo "INBOUND_ENDPOINT=$INBOUND_ENDPOINT"
-echo "SCHEMA_FILE_SERVER_URL=$SCHEMA_FILE_SERVER_URL"
-echo "AGENT_API_KEY=$AGENT_API_KEY"
-echo "AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID"
-echo "S3_BUCKET_ARN=$S3_BUCKET_ARN"
-echo "CLUSTER_NAME=$CLUSTER_NAME"
-echo "TASKDEFINITION_FAMILY=$TASKDEFINITION_FAMILY"
-echo "ADMIN_TG_ARN=$ADMIN_TG_ARN"
-echo "INBOUND_TG_ARN=$INBOUND_TG_ARN"
-
 
 generate_random_string() {
   echo "$(date +%s%N | sha256sum | base64 | head -c 12)"
@@ -65,7 +40,7 @@ random_string=$(generate_random_string)
 # Print the generated random string
 echo "Random String: $random_string"
 
-SERVICE_NAME="${CONTAINER_NAME}-service-test"
+SERVICE_NAME="${CONTAINER_NAME}-service"
 EXTERNAL_IP=$(echo "$2" | tr -d '[:space:]')
 ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
@@ -170,7 +145,8 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
   "adminPort": $ADMIN_PORT,
   "tenancy": $TENANT,
-  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
+  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL",
+  "apiKey": "$AGENT_API_KEY"
 }
 EOF
 
@@ -182,7 +158,7 @@ CONTAINER_DEFINITIONS=$(
     "name": "$CONTAINER_NAME",
     "image": "${AFJ_VERSION}",
     "cpu": 307,
-    "memory": 307,
+    "memory": 358,
     "portMappings": [
       {
         "containerPort": $ADMIN_PORT,
@@ -199,7 +175,7 @@ CONTAINER_DEFINITIONS=$(
     "command": [
                 "--auto-accept-connections",
                 "--config",
-                "/config.json"
+                "/config/${AGENCY}_${CONTAINER_NAME}.json"
             ],
     "environment": [
       {
@@ -216,7 +192,7 @@ CONTAINER_DEFINITIONS=$(
     "mountPoints": [
                 {
                     "sourceVolume": "config",
-                    "containerPath": "/config.json",
+                    "containerPath": "/config",
                     "readOnly": true
                 }
             ],
@@ -245,18 +221,22 @@ TASK_DEFINITION=$(
   "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
   "volumes": [
         {
-            "name": "config",
-            "host": {
-                "sourcePath": "/home/ec2-user/config/${AGENCY}_${CONTAINER_NAME}.json"
-            }
-        }
+        "efsVolumeConfiguration": {
+          "fileSystemId": "$FILESYSTEMID",
+          "rootDirectory": "/"
+        },
+        "name": "config"
+      }
     ],
-  "networkMode": "host",
   "requiresCompatibilities": [
     "EC2"
   ],
+  "runtimePlatform": {
+    "cpuArchitecture": "ARM64",
+    "operatingSystemFamily": "LINUX"
+  }
   "cpu": "307",
-  "memory": "307"
+  "memory": "358"
 }
 EOF
 )

@@ -9,9 +9,10 @@ import {
   PreviewRequest,
   SchemaDetails
 } from '../interfaces/issuance.interfaces';
-import { PrismaTables, SortValue } from '@credebl/enum/enum';
+import { IssueCredentials, IssuedCredentialStatus } from '../enum/issuance.enum';
 // eslint-disable-next-line camelcase
 import {
+  Prisma,
   agent_invitations,
   credentials,
   file_data,
@@ -19,9 +20,9 @@ import {
   org_agents,
   organisation,
   platform_config,
-  Prisma,
   schema
 } from '@prisma/client';
+import { PrismaTables, SortValue } from '@credebl/enum/enum';
 
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
@@ -29,7 +30,6 @@ import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/int
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { IssueCredentials, IssuedCredentialStatus } from '../enum/issuance.enum';
 
 @Injectable()
 export class IssuanceRepository {
@@ -164,7 +164,7 @@ export class IssuanceRepository {
           break;
 
         default:
-          stateInfo = null;
+          break;
       }
 
       const issuanceWhereClause: Prisma.credentialsWhereInput = {

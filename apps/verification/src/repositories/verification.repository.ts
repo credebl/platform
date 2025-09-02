@@ -8,7 +8,7 @@ import {
 import { IProofPresentationsListCount, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { agent_invitations, org_agents, organisation, platform_config, presentations, Prisma } from '@prisma/client';
+import { Prisma, agent_invitations, org_agents, organisation, platform_config, presentations } from '@prisma/client';
 
 import { CommonService } from '@credebl/common';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -112,7 +112,7 @@ export class VerificationRepository {
           verificationStateInfo = ProofRequest.presentationReceived;
           break;
         default:
-          verificationStateInfo = null;
+          break;
       }
 
       const whereClause: Prisma.presentationsWhereInput = {

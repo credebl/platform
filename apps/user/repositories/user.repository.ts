@@ -153,7 +153,6 @@ export class UserRepository {
       where: { id: sessionId },
       include: { user: true }
     });
-    // if (!session || new Date() > session.expires) return null;
     return session;
   }
 

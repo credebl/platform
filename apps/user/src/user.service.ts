@@ -59,7 +59,8 @@ import {
   IVerifyUserEmail,
   IUserInvitations,
   IResetPasswordResponse,
-  ISignUpUserResponse
+  ISignUpUserResponse,
+  IVerificationEmail
 } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
@@ -146,16 +147,16 @@ export class UserService {
           throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
         }
 
-        sendVerificationMail = await this.sendEmailForVerification(
+        sendVerificationMail = await this.sendEmailForVerification({
           email,
-          verifyCode,
+          verificationCode: verifyCode,
           redirectUrl,
-          clientDetails.clientId,
+          clientId: clientDetails.clientId,
           brandLogoUrl,
           platformName,
-          clientDetails.domain,
+          redirectTo: clientDetails.domain,
           clientAlias
-        );
+        });
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -204,20 +205,12 @@ export class UserService {
    * @returns
    */
 
-  async sendEmailForVerification(
-    email: string,
-    verificationCode: string,
-    redirectUrl: string,
-    clientId: string,
-    brandLogoUrl: string,
-    platformName: string,
-    redirectTo?: string,
-    clientAlias?: string
-  ): Promise<boolean> {
+  async sendEmailForVerification(verificationEmailParameter: IVerificationEmail): Promise<boolean> {
     try {
+      const { email, verificationCode, brandLogoUrl, platformName, redirectTo, clientAlias } =
+        verificationEmailParameter;
       const platformConfigData = await this.prisma.platform_config.findMany();
 
-      const decryptedClientId = await this.commonService.decryptPassword(clientId);
       const urlEmailTemplate = new URLUserEmailTemplate();
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData[0].emailFrom;
@@ -225,11 +218,9 @@ export class UserService {
       const platform = platformName || process.env.PLATFORM_NAME;
       emailData.emailSubject = `[${platform}] Verify your email to activate your account`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(
+      emailData.emailHtml = urlEmailTemplate.getUserURLTemplate(
         email,
         verificationCode,
-        redirectUrl,
-        decryptedClientId,
         brandLogoUrl,
         platformName,
         redirectTo,
@@ -659,7 +650,7 @@ export class UserService {
       const platform = platformName || process.env.PLATFORM_NAME;
       emailData.emailSubject = `[${platform}] Important: Password Reset Request`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(
+      emailData.emailHtml = urlEmailTemplate.getUserResetPasswordTemplate(
         email,
         platform,
         brandLogoUrl,

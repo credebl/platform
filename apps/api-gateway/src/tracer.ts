@@ -2,28 +2,26 @@
 // @ts-nocheck TODO: Facing issues with types, need to fix later
 // tracer.ts
 import * as dotenv from 'dotenv';
-dotenv.config();
-
-import { NodeSDK } from '@opentelemetry/sdk-node';
 import * as process from 'process';
 
-import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
-import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
-import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
-
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
-
-import { resourceFromAttributes } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-
-import { LoggerProvider, BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
+import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs';
 import { DiagConsoleLogger, DiagLogLevel, diag } from '@opentelemetry/api';
-import type { Logger } from '@opentelemetry/api-logs';
 
-let otelSDK: NodeSDK | null = null;
-let otelLogger: Logger | null = null;
-let otelLoggerProviderInstance: LoggerProvider | null = null;
+import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
+import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import type { Logger } from '@opentelemetry/api-logs';
+import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+
+dotenv.config();
+
+const otelSDK: NodeSDK | null = null;
+const otelLogger: Logger | null = null;
+const otelLoggerProviderInstance: LoggerProvider | null = null;
 if ('true' === process.env.IS_ENABLE_OTEL) {
   diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
 

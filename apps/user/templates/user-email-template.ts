@@ -2,8 +2,6 @@ export class URLUserEmailTemplate {
   public getUserURLTemplate(
     email: string,
     verificationCode: string,
-    redirectUrl: string,
-    clientId: string,
     brandLogoUrl: string,
     platformName: string,
     redirectTo?: string,

@@ -283,7 +283,7 @@ EOF
 )
 
 # Save the service JSON to a file
-echo "$SERVICE" > service.json
+echo "$SERVICE_JSON" > service.json
 
 # Check if the service file was created successfully
 if [ -f "service.json" ]; then

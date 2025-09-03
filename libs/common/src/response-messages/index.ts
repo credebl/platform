@@ -516,7 +516,10 @@ export const ResponseMessages = {
       invalidId: 'Invalid OIDC template ID.',
       createFailed: 'Failed to create OIDC template.',
       updateFailed: 'Failed to update OIDC template.',
-      deleteFailed: 'Failed to delete OIDC template.'
+      deleteFailed: 'Failed to delete OIDC template.',
+      issuerDisplayNotFound: 'Issuer display not found.',
+      issuerDetailsNotFound: 'Issuer details not found.',
+      templateNameAlreadyExist: 'Template name already exists for this issuer.'
     }
   },
   nats: {

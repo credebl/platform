@@ -761,21 +761,36 @@ export class IssuanceRepository {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async addOidcIssuerDetails(issuerId: string, credatedById: string, issuerJson: any): Promise<object> {
+  async getOidcIssuerDetailsById(issuerId: string): Promise<oidc_issuer> {
     try {
-      const fileDetails = await this.prisma.oidc_issuer.create({
+      return await this.prisma.oidc_issuer.findFirstOrThrow({
+        where: { id: issuerId }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getOidcIssuerDetailsById: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async addOidcIssuerDetails(
+    publicIssuerId: string,
+    createdById: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    issuerProfileJson: any,
+    orgAgentId: string
+  ): Promise<oidc_issuer> {
+    try {
+      const oidcIssuerDetails = await this.prisma.oidc_issuer.create({
         data: {
-          metadata: issuerJson,
-          createdBy: credatedById, // FK
-          agentIssuerId: issuerId
-        },
-        include: {
-          org_agents: true // bring back agent info
+          metadata: issuerProfileJson,
+          publicIssuerId,
+          createdBy: createdById,
+          orgAgentId
         }
       });
 
-      return fileDetails;
+      return oidcIssuerDetails;
     } catch (error) {
       this.logger.error(`[addOidcIssuerDetails] - error: ${JSON.stringify(error)}`);
       throw error;
@@ -806,6 +821,23 @@ export class IssuanceRepository {
       });
     } catch (error) {
       this.logger.error(`Error in getTemplateById: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getTemplateByNameForIssuer(name: string, issuerId: string): Promise<credential_templates[] | null> {
+    try {
+      return await this.prisma.credential_templates.findMany({
+        where: {
+          issuerId,
+          name: {
+            equals: name,
+            mode: 'insensitive'
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getTemplateByNameForIssuer: ${error.message}`);
       throw error;
     }
   }

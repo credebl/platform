@@ -1056,14 +1056,13 @@ export class IssuanceController {
     @Body() issueCredentialDto: IssuerCreationDto,
     @Res() res: Response
   ): Promise<Response> {
-    await this.issueCredentialService.oidcIssuerCreate(issueCredentialDto, orgId, user);
-    console.log('THis is dto', JSON.stringify(issueCredentialDto, null, 2));
-    console.log('Received the request body', JSON.stringify(issueCredentialDto, null, 2));
+    const createIssuer = await this.issueCredentialService.oidcIssuerCreate(issueCredentialDto, orgId, user);
     const finalResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.issuance.success.issuerConfig
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.issuance.success.issuerConfig,
+      data: createIssuer
     };
-    return res.status(HttpStatus.OK).json(finalResponse);
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   @Post('/orgs/:orgId/oidc/:issuerId/template')
@@ -1078,12 +1077,12 @@ export class IssuanceController {
     @Param('issuerId')
     issuerId: string,
     @User() user: user,
-    @Body() dto: CreateCredentialTemplateDto,
+    @Body() CredentialTemplate: CreateCredentialTemplateDto,
     @Res() res: Response
   ): Promise<Response> {
-    dto.issuerId = issuerId;
-    console.log('THis is dto', JSON.stringify(dto, null, 2));
-    const template = await this.issueCredentialService.createTemplate(dto, user, orgId, issuerId);
+    CredentialTemplate.issuerId = issuerId;
+    console.log('THis is dto', JSON.stringify(CredentialTemplate, null, 2));
+    const template = await this.issueCredentialService.createTemplate(CredentialTemplate, user, orgId, issuerId);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,

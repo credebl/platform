@@ -330,4 +330,9 @@ export class AgentServiceController {
   async oidcIssuerCreate(payload: { issuerCreation: IssuerCreation; url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcIssuerCreate(payload.issuerCreation, payload.url, payload.orgId);
   }
+  @MessagePattern({ cmd: 'agent-create-oidc-template' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcIssuerTemplate(payload: { templatePayload; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcIssuerTemplate(payload.templatePayload, payload.url, payload.orgId);
+  }
 }

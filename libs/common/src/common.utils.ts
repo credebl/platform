@@ -94,7 +94,8 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
     [String(CommonConstants.GET_QUESTION_ANSWER_RECORD), String(CommonConstants.URL_QUESTION_ANSWER_RECORD)],
     [String(CommonConstants.SEND_QUESTION), String(CommonConstants.URL_SEND_QUESTION)],
     [String(CommonConstants.SEND_BASIC_MESSAGE), String(CommonConstants.URL_SEND_BASIC_MESSAGE)],
-    [String(CommonConstants.OIDC_ISSUER_CREATE), String(CommonConstants.URL_OIDC_ISSUER_CREATE)]
+    [String(CommonConstants.OIDC_ISSUER_CREATE), String(CommonConstants.URL_OIDC_ISSUER_CREATE)],
+    [String(CommonConstants.OIDC_ISSUER_TEMPLATE), String(CommonConstants.URL_OIDC_ISSUER_UPDATE)]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);
@@ -108,3 +109,132 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
   const url = `${agentEndPoint}${resolvedUrlPath}`;
   return url;
 };
+
+// ---- Types (adjust or remove if you already have them elsewhere) ----
+type AttributeDisplay = { name: string; locale: string };
+// type AttributeDef = {
+//   display?: AttributeDisplay[];
+//   mandatory?: boolean;
+//   value_type: "string" | "date" | "number" | "boolean" | string;
+// };
+// type AttributesInput = Record<string, AttributeDef>;
+
+// type AppearanceItem = {
+//   logo?: { uri: string; alt_text?: string };
+//   name: string;
+//   locale?: string;
+//   description?: string;
+// };
+
+type CredentialConfig = {
+  format: string;
+  vct: string;
+  scope: string;
+  claims: Record<
+    string,
+    {
+      mandatory?: boolean;
+      value_type: string;
+      display?: AttributeDisplay[];
+    }
+  >;
+  credential_signing_alg_values_supported: string[];
+  cryptographic_binding_methods_supported: string[];
+  display: {
+    name: string;
+    description?: string;
+    locale?: string;
+  }[];
+};
+
+type AgentPayload = {
+  dpopSigningAlgValuesSupported: string[];
+  credentialConfigurationsSupported: Record<string, CredentialConfig>;
+};
+
+// ---- Static Lists (as requested) ----
+const STATIC_DPOP_ALGS = ['RS256', 'ES256', 'EdDSA'] as const;
+const STATIC_CREDENTIAL_ALGS = ['ES256', 'EdDSA'] as const;
+const STATIC_BINDING_METHODS = ['did:key', 'did:web', 'did:cheqd'] as const;
+
+// ---- Builder ----
+/**
+ * Build the agent payload for an SD-JWT VCT.
+ *
+ * @param name       e.g. "BirthCertificateCredential" (used as VCT and to derive scope/key)
+ * @param attributes Input claims definition map (only `mandatory: true` will be included)
+ * @param appearance Array for credential display (mapped to name/description/locale)
+ * @param opts       Optional { format?, scope? }
+ */
+export function buildAgentPayload(
+  name: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  attributes: any, //AttributesInput, TODO: correct this
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  appearance: any, //AppearanceItem[],
+  opts?: { format?: string; scope?: string }
+): AgentPayload {
+  if (!name || 'string' !== typeof name) {
+    throw new Error('Invalid input: `name` must be a non-empty string.');
+  }
+  if (!attributes || 'object' !== typeof attributes) {
+    throw new Error('Invalid input: `attributes` must be an object map.');
+  }
+
+  const format = opts?.format ?? 'vc+sd-jwt';
+  const credKey = `${name}-sdjwt`;
+  const scope = opts?.scope ?? `openid4vc:credential:${credKey}`;
+
+  // Keep ONLY mandatory claims, and map to the required shape
+  const claims = Object.fromEntries(
+    Object.entries(attributes)
+      .filter(([, def]) => true === def?.mandatory)
+      .map(([claimName, def]) => {
+        const out: { mandatory?: boolean; value_type: string; display?: AttributeDisplay[] } = {
+          value_type: def.value_type,
+          mandatory: true
+        };
+
+        if (Array.isArray(def.display)) {
+          out.display = def.display.map((d) => ({
+            name: d.name,
+            locale: d.locale
+          }));
+        }
+        return [claimName, out];
+      })
+  );
+
+  // Map appearance -> display (omit logo here as per target payload)
+  const credentialDisplay =
+    appearance?.map((d) => ({
+      name: d.name,
+      description: d.description,
+      locale: d.locale
+    })) ?? [];
+
+  // Assemble final payload
+  const payload: AgentPayload = {
+    dpopSigningAlgValuesSupported: [...STATIC_DPOP_ALGS],
+    credentialConfigurationsSupported: {
+      [credKey]: {
+        format,
+        vct: name,
+        scope,
+        claims,
+        credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS],
+        cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS],
+        display: credentialDisplay
+      }
+    }
+  };
+
+  return payload;
+}
+
+// ---- Example usage ----
+// const name = "BirthCertificateCredential";
+// const attributes = { ... }  // your sample map
+// const appearance = [ ... ]  // your sample array
+// const payload = buildAgentPayload(name, attributes, appearance);
+// console.log(JSON.stringify(payload, null, 2));

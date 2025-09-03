@@ -41,9 +41,9 @@ export interface IssuerCreation {
   issuerId: string;
   accessTokenSignerKeyType: string;
   display: Display[];
-  dpopSigningAlgValuesSupported: string[];
+  dpopSigningAlgValuesSupported?: string[];
+  credentialConfigurationsSupported?: Record<string, CredentialConfiguration>;
   authorizationServerConfigs: AuthorizationServerConfig;
-  credential_configurations: Record<string, CredentialConfiguration>;
 }
 
 export interface IAgentNatsPayload {

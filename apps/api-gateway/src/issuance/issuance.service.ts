@@ -298,7 +298,7 @@ export class IssuanceService extends BaseService {
     dto: UpdateCredentialTemplateDto,
     issuerId: string
   ) {
-    const payload = { templateId, orgId, userDetails };
+    const payload = { templateId, orgId, userDetails, dto, issuerId };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-update', payload);
   }
 
@@ -312,8 +312,13 @@ export class IssuanceService extends BaseService {
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-find-all', payload);
   }
 
-  async createTemplate(dto: CreateCredentialTemplateDto, userDetails: user, orgId: string, issuerId: string) {
-    const payload = { dto, orgId, userDetails, issuerId };
+  async createTemplate(
+    CredentialTemplate: CreateCredentialTemplateDto,
+    userDetails: user,
+    orgId: string,
+    issuerId: string
+  ) {
+    const payload = { CredentialTemplate, orgId, userDetails, issuerId };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-create', payload);
   }
 }

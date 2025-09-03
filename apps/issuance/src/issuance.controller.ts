@@ -21,9 +21,11 @@ import { Controller } from '@nestjs/common';
 import { IssuanceService } from './issuance.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
-import { user } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import { oidc_issuer, user } from '@prisma/client';
 import { OIDCIssuanceService } from './oidc-issuance.service';
 import { CreateCredentialTemplate, UpdateCredentialTemplate } from '../interfaces/oidc-template.interface';
+import { IssuerCreation } from '../interfaces/oidc-issuance.interfaces';
 
 @Controller()
 export class IssuanceController {
@@ -141,14 +143,14 @@ export class IssuanceController {
     return this.issuanceService.getFileDetailsAndFileDataByFileId(payload.fileId, payload.orgId);
   }
 
-  // oidc-issuer-create
   @MessagePattern({ cmd: 'oidc-issuer-create' })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line camelcase
   async oidcIssuerCreate(payload: {
-    issueCredentialDto: any; //TODO: need to create interface
+    issueCredentialDto: IssuerCreation;
     orgId: string;
     userDetails: user;
-  }): Promise<any> {
+    // eslint-disable-next-line camelcase
+  }): Promise<oidc_issuer> {
     const { issueCredentialDto, orgId, userDetails } = payload;
     return this.oidcIssuanceService.oidcIssuerCreate(issueCredentialDto, orgId, userDetails);
   }
@@ -156,13 +158,12 @@ export class IssuanceController {
   @MessagePattern({ cmd: 'oidc-template-create' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcTemplateCreate(payload: {
-    dto: CreateCredentialTemplate;
+    CredentialTemplate: CreateCredentialTemplate;
     orgId: string;
-    userDetails: user;
     issuerId: string;
   }): Promise<any> {
-    const { dto, orgId, userDetails, issuerId } = payload;
-    return this.oidcIssuanceService.createTemplate(dto, orgId, userDetails, issuerId);
+    const { CredentialTemplate, orgId, issuerId } = payload;
+    return this.oidcIssuanceService.createTemplate(CredentialTemplate, orgId, issuerId);
   }
 
   @MessagePattern({ cmd: 'oidc-template-update' })

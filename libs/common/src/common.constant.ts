@@ -116,6 +116,7 @@ export enum CommonConstants {
 
   // OIDC URLs
   URL_OIDC_ISSUER_CREATE = '/openid4vc/issuer',
+  URL_OIDC_ISSUER_UPDATE = '/openid4vc/issuer/#',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   OIDC_ISSUER_GET = '/openid4vc/issuer',
 
@@ -388,7 +389,8 @@ export enum CommonConstants {
   SEND_BASIC_MESSAGE = 'send-basic-message',
 
   // OIDC
-  OIDC_ISSUER_CREATE = 'create-oidc-issuer'
+  OIDC_ISSUER_CREATE = 'create-oidc-issuer',
+  OIDC_ISSUER_TEMPLATE = 'create-oidc-template'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

@@ -494,7 +494,9 @@ export class AgentServiceService {
       if (agentSpinupDto.method !== DidMethod.KEY && agentSpinupDto.method !== DidMethod.WEB) {
         const { network } = agentSpinupDto;
         const ledger = await ledgerName(network);
+        console.log('ledger::::::::::::::', ledger);
         const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse;
+        console.log('ledgerList::::::::::::::', ledgerList);
         const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
         if (!isLedgerExist) {
           throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {
@@ -529,9 +531,10 @@ export class AgentServiceService {
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
       const agentBaseWalletToken = await this.commonService.getBaseAgentToken(
-        agentDetails.gentEndPoint,
+        agentDetails.agentEndPoint,
         agentDetails?.agentToken
       );
+      console.log('agentBaseWalletToken::::::::::::::', agentBaseWalletToken);
       if (!agentBaseWalletToken) {
         throw new BadRequestException(ResponseMessages.agent.error.baseWalletToken, {
           cause: new Error(),
@@ -539,6 +542,7 @@ export class AgentServiceService {
         });
       }
       const encryptedToken = await this.tokenEncryption(agentBaseWalletToken);
+      console.log('encryptedToken::::::::::::::', encryptedToken);
       const agentPayload: IStoreOrgAgentDetails = {
         agentEndPoint,
         seed: agentSpinupDto.seed,
@@ -555,10 +559,12 @@ export class AgentServiceService {
         did: agentSpinupDto.did,
         id: agentProcess?.id
       };
+      console.log('agentPayload::::::::::::::', agentPayload);
       /**
        * Store organization agent details
        */
       const storeAgentDetails = await this._storeOrgAgentDetails(agentPayload);
+      console.log('storeAgentDetails::::::::::::::', storeAgentDetails);
       if (storeAgentDetails) {
         const filePath = `${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgData.id}_${orgData.name
           .split(' ')
@@ -1401,6 +1407,19 @@ export class AgentServiceService {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const data = await this.commonService
         .httpPost(url, issueData, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return data;
+    } catch (error) {
+      this.logger.error(`Error in oidcIssuerCreate in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async oidcIssuerTemplate(templatePayload, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const data = await this.commonService
+        .httpPut(url, templatePayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
       return data;
     } catch (error) {

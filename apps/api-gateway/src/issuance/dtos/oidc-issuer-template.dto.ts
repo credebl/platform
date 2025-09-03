@@ -33,43 +33,18 @@ export class CreateCredentialTemplateDto {
   description?: string;
 
   @ApiProperty({ enum: ['sd-jwt-vc', 'mdoc'], description: 'Credential format type' })
-  @IsEnum(['sd-jwt-vc', 'mdoc'])
-  format: 'sd-jwt-vc' | 'mdoc';
-
-  @ApiProperty({ description: 'Issuer identifier (DID or issuer ID)' })
-  @IsString()
-  issuer: string;
+  @IsEnum(['sd-jwt-vc', 'mdoc', 'vc+sd-jwt'])
+  format: 'sd-jwt-vc' | 'mdoc ' | 'vc+sd-jwt';
 
   @ApiProperty({ default: false, description: 'Indicates whether credentials can be revoked' })
   @IsBoolean()
   canBeRevoked = false;
 
-  // @ApiProperty({
-  //   type: 'object',
-  //   additionalProperties: { $ref: getSchemaPath(CredentialAttributeDto) },
-  //   description: 'Attributes included in the credential template'
-  // })
-  // // @Type(() => CredentialAttributeDto)
-  // @Transform(({ value }) =>
-  //   Object.fromEntries(
-  //     Object.entries(value || {}).map(([k, v]) => [k, plainToInstance(CredentialAttributeDto, v)])
-  //   )
-  // )
-  // @ValidateNested({ each: true })
-  // attributes: Record<string, CredentialAttributeDto>;
   @ApiProperty({
     type: 'object',
     additionalProperties: { $ref: getSchemaPath(CredentialAttributeDto) },
     description: 'Attributes included in the credential template'
   })
-  // @Validate(ValidateAttributeKeys)
-  // @ValidateNested({ each: true })
-  // @Type(() => CredentialAttributeDto)
-  // @Transform(({ value }) =>
-  //   Object.fromEntries(
-  //     Object.entries(value || {}).map(([k, v]) => [k, plainToInstance(CredentialAttributeDto, v)])
-  //   )
-  // )
   @IsObject()
   attributes: Record<string, CredentialAttributeDto>;
 

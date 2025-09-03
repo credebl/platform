@@ -1,6 +1,16 @@
 /* eslint-disable camelcase */
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsArray, ValidateNested, IsObject, IsUrl } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsArray,
+  ValidateNested,
+  IsObject,
+  IsUrl,
+  IsNotEmpty,
+  IsDefined
+} from 'class-validator';
 import { plainToInstance, Transform, Type } from 'class-transformer';
 
 export class ClaimDto {
@@ -81,6 +91,8 @@ export class CredentialConfigurationDto {
     example: 'jwt_vc_json'
   })
   @IsString()
+  @IsDefined({ message: 'format field is required' })
+  @IsNotEmpty({ message: 'format property is required' })
   format: string;
 
   @ApiProperty({ required: false })
@@ -228,41 +240,10 @@ export class IssuerCreationDto {
   display: DisplayDto[];
 
   @ApiProperty({
-    description: 'DPoP signing algorithms supported by the server',
-    example: ['RS256', 'ES256', 'EdDSA'],
-    isArray: true,
-    type: String
-  })
-  @IsArray()
-  @IsString({ each: true })
-  dpopSigningAlgValuesSupported: string[];
-
-  @ApiProperty({
     description: 'Configuration of the authorization server',
     type: AuthorizationServerConfigDto
   })
   @ValidateNested()
   @Type(() => AuthorizationServerConfigDto)
   authorizationServerConfigs: AuthorizationServerConfigDto;
-
-  // @ApiProperty({
-  //   description: 'Credential configurations supported by this issuer',
-  //   type: 'object',
-  //   additionalProperties: { $ref: getSchemaPath(CredentialConfigurationDto) },
-  // })
-  // @IsObject()
-  // @ValidateNested({ each: true })
-  // @Transform(({ value }) =>
-  //   Object.fromEntries(
-  //     Object.entries(value || {}).map(([k, v]) => [k, plainToInstance(CredentialConfigurationDto, v)])
-  //   )
-  // )
-  // credential_configurations: Record<string, CredentialConfigurationDto>;
-
-  @ApiProperty({
-    description: 'Credential configurations supported by this issuer',
-    type: 'object'
-  })
-  @IsObject()
-  credential_configurations: unknown;
 }

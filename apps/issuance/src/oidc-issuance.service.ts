@@ -19,11 +19,22 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
-import { buildAgentPayload, getAgentUrl } from '@credebl/common/common.utils';
+import { buildAgentPayload, buildAgentPayloadFromPrismaTemplates, getAgentUrl } from '@credebl/common/common.utils';
 import { credential_templates, oidc_issuer, user } from '@prisma/client';
 import { IAgentOIDCIssuerCreate, IssuerCreation } from '../interfaces/oidc-issuance.interfaces';
-import { CreateCredentialTemplate, UpdateCredentialTemplate } from '../interfaces/oidc-template.interface';
+import { UpdateCredentialTemplate } from '../interfaces/oidc-template.interface';
 import { credentialConfigurationsSupported, dpopSigningAlgValuesSupported } from '../constant/issuance';
+
+type CredentialDisplayItem = {
+  logo?: { uri: string; alt_text?: string };
+  name: string;
+  locale?: string;
+  description?: string;
+};
+
+type Appearance = {
+  credential_display: CredentialDisplayItem[];
+};
 @Injectable()
 export class OIDCIssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
@@ -133,41 +144,26 @@ export class OIDCIssuanceService {
 
   async updateTemplate(
     templateId: string,
-    dto: UpdateCredentialTemplate,
+    updateCredentialTemplate: UpdateCredentialTemplate,
     orgId: string,
-    userDetails: user,
     issuerId: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<any> {
+  ): Promise<credential_templates> {
     try {
       const template = await this.issuanceRepository.getTemplateById(templateId);
       if (!template) {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.notFound);
       }
-      const checkNameExist = await this.issuanceRepository.getTemplateByNameForIssuer(dto.name, issuerId);
+      const checkNameExist = await this.issuanceRepository.getTemplateByNameForIssuer(
+        updateCredentialTemplate.name,
+        issuerId
+      );
       if (0 < checkNameExist.length) {
         throw new ConflictException(ResponseMessages.oidcTemplate.error.templateNameAlreadyExist);
       }
-      const normalized: any = {
-        ...dto,
+      const normalized = {
+        ...updateCredentialTemplate,
         ...(issuerId ? { issuerId } : {})
       };
-      delete normalized.issuer;
-      delete normalized.id;
-      delete normalized.createdAt;
-      delete normalized.updatedAt;
-
-      if ('string' === typeof normalized.attributes) {
-        try {
-          normalized.attributes = JSON.parse(normalized.attributes);
-        } catch {}
-      }
-      if ('string' === typeof normalized.appearance) {
-        try {
-          normalized.appearance = JSON.parse(normalized.appearance);
-        } catch {}
-      }
-
       const { name, description, format, canBeRevoked, attributes, appearance } = normalized;
 
       const payload = {
@@ -182,31 +178,28 @@ export class OIDCIssuanceService {
 
       const updatedTemplate = await this.issuanceRepository.updateTemplate(templateId, payload);
 
-      const opts = { format, Scope };
       const templates = await this.issuanceRepository.getTemplatesByIssuer(issuerId);
-      if (!templates) {
+      if (!templates || 0 === templates.length) {
         throw new NotFoundException(ResponseMessages.issuance.error.notFound);
       }
-      const attribute = templates[0].attributes;
-      const display = templates[0].appearance;
-      const agentPayload = buildAgentPayload(name, attribute, display, opts);
-
+      const agentPayload = buildAgentPayloadFromPrismaTemplates(templates);
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint } = agentDetails;
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, dto.issuer);
+      const issuerDetails = await this.issuanceRepository.getOidcIssuerDetailsById(issuerId);
+      if (!issuerDetails) {
+        throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
+      }
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, issuerDetails.publicIssuerId);
 
       const createTemplateOnAgent = await this._createOIDCTemplate(agentPayload, url, orgId);
       if (!createTemplateOnAgent) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
-      return {
-        message: ResponseMessages.oidcTemplate.success.update,
-        data: updatedTemplate
-      };
+      return updatedTemplate;
     } catch (error) {
       this.logger.error(`[updateTemplate] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);

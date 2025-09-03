@@ -1,6 +1,15 @@
 /* eslint-disable camelcase */
-import { IsString, IsBoolean, IsOptional, IsEnum, ValidateNested, IsObject } from 'class-validator';
-import { ApiExtraModels, ApiProperty, getSchemaPath, PartialType } from '@nestjs/swagger';
+import {
+  IsString,
+  IsBoolean,
+  IsOptional,
+  IsEnum,
+  ValidateNested,
+  IsObject,
+  IsNotEmpty,
+  IsArray
+} from 'class-validator';
+import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { DisplayDto } from './oidc-issuer.dto';
 
@@ -21,6 +30,77 @@ export class CredentialAttributeDto {
   display?: DisplayDto[];
 }
 
+class LogoDto {
+  @ApiPropertyOptional({
+    example: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg'
+  })
+  @IsString()
+  @IsNotEmpty()
+  uri: string;
+
+  @ApiPropertyOptional({ example: 'abc_logo' })
+  @IsString()
+  @IsOptional()
+  alt_text?: string;
+}
+
+class CredentialDisplayDto {
+  @ApiPropertyOptional({ example: 'Birth Certificate' })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @ApiPropertyOptional({ example: 'Official record of birth' })
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiPropertyOptional({ example: 'en' })
+  @IsString()
+  @IsOptional()
+  locale?: string;
+
+  @ApiPropertyOptional({
+    example: {
+      uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
+      alt_text: 'abc_logo'
+    }
+  })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => LogoDto)
+  logo?: LogoDto;
+}
+
+export class AppearanceDto {
+  @ApiPropertyOptional({
+    example: [
+      {
+        locale: 'en',
+        name: 'Birth Certificate',
+        description: 'Official record of birth',
+        logo: {
+          uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
+          alt_text: 'abc_logo'
+        }
+      },
+      {
+        locale: 'ar',
+        name: 'شهادة الميلاد',
+        description: 'سجل رسمي للولادة',
+        logo: {
+          uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
+          alt_text: 'شعار abc'
+        }
+      }
+    ]
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CredentialDisplayDto)
+  credential_display: CredentialDisplayDto[];
+}
 @ApiExtraModels(CredentialAttributeDto)
 export class CreateCredentialTemplateDto {
   @ApiProperty({ description: 'Template name' })
@@ -33,8 +113,8 @@ export class CreateCredentialTemplateDto {
   description?: string;
 
   @ApiProperty({ enum: ['sd-jwt-vc', 'mdoc'], description: 'Credential format type' })
-  @IsEnum(['sd-jwt-vc', 'mdoc', 'vc+sd-jwt'])
-  format: 'sd-jwt-vc' | 'mdoc ' | 'vc+sd-jwt';
+  @IsEnum(['sd-jwt-vc', 'mso_mdoc', 'vc+sd-jwt'])
+  format: 'sd-jwt-vc' | 'mso_mdoc ' | 'vc+sd-jwt';
 
   @ApiProperty({ default: false, description: 'Indicates whether credentials can be revoked' })
   @IsBoolean()
@@ -53,10 +133,35 @@ export class CreateCredentialTemplateDto {
     required: false,
     description: 'Appearance configuration for credentials (branding, colors, etc.)'
   })
+  @ApiPropertyOptional({
+    type: AppearanceDto,
+    example: {
+      credential_display: [
+        {
+          locale: 'en',
+          name: 'Birth Certificate',
+          description: 'Official record of birth',
+          logo: {
+            uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
+            alt_text: 'abc_logo'
+          }
+        },
+        {
+          locale: 'ar',
+          name: 'شهادة الميلاد',
+          description: 'سجل رسمي للولادة',
+          logo: {
+            uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
+            alt_text: 'شعار abc'
+          }
+        }
+      ]
+    }
+  })
   @IsOptional()
-  @IsObject()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  appearance?: Record<string, any>;
+  @ValidateNested()
+  @Type(() => AppearanceDto)
+  appearance?: AppearanceDto;
 
   issuerId: string;
 }

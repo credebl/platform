@@ -1069,8 +1069,8 @@ export class IssuanceController {
   @ApiOperation({ summary: 'Create credential template' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Template created successfully' })
   @ApiBearerAuth()
-  // @Roles(OrgRoles.OWNER)
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async createTemplate(
     @Param('orgId')
     orgId: string,

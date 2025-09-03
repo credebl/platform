@@ -285,7 +285,6 @@ fi
 # Create the service
 aws ecs create-service \
   --cli-input-json file://service.json \
-  --deployment-configuration "maximumPercent=200,minimumHealthyPercent=100" \
   --region $AWS_PUBLIC_REGION
 
 # Describe the ECS service and filter by service name
@@ -321,6 +320,7 @@ if [ $? -eq 0 ]; then
       sleep 10
     fi
   done
+
 # Describe the ECS service and filter by service name
 service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluster $CLUSTER_NAME --region $AWS_PUBLIC_REGION)
 echo "service_description=$service_description"
@@ -353,7 +353,6 @@ fi
 # Set maximum retry attempts
 RETRIES=3
 
-# Loop to attempt retrieving token from logs
 # Loop to attempt retrieving token from logs
 for attempt in $(seq 1 $RETRIES); do
     echo "Attempt $attempt: Checking service logs for token..."

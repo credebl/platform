@@ -24,7 +24,6 @@ AWS_ACCOUNT_ID=${19}
 S3_BUCKET_ARN=${20}
 CLUSTER_NAME=${21}
 TASKDEFINITION_FAMILY=${22}
-TASKDEFINITION_FAMILY=${22}
 ADMIN_TG_ARN=${23}
 INBOUND_TG_ARN=${24}
 FILESYSTEMID=${25}
@@ -226,17 +225,12 @@ TASK_DEFINITION=$(cat <<EOF
   "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
   "volumes": [
         {
-            "name": "AGENT-CONFIG",
-            "efsVolumeConfiguration": {
-                "fileSystemId": "$FILESYSTEMID",
-                "rootDirectory": "/",
-                "transitEncryption": "ENABLED",
-                "authorizationConfig": {
-                    "accessPointId": "$ACCESSPOINTID",
-                    "iam": "DISABLED"
-                }
-            }
-        }
+        "efsVolumeConfiguration": {
+          "fileSystemId": "$FILESYSTEMID",
+          "rootDirectory": "/"
+        },
+        "name": "config"
+      }
     ],
   "networkMode": "awsvpc",
   "requiresCompatibilities": [

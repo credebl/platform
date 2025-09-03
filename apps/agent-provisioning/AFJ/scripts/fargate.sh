@@ -159,7 +159,7 @@ CONTAINER_DEFINITIONS=$(
 [
   {
     "name": "$CONTAINER_NAME",
-    "image": "${AFJ_IMAGE_URL}",
+    "image": "${AFJ_VERSION}",
     "cpu": 307,
     "memory": 358,
     "portMappings": [

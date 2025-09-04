@@ -237,6 +237,10 @@ TASK_DEFINITION=$(cat <<EOF
     "EC2",
     "FARGATE"
   ],
+    "runtimePlatform": {
+    "cpuArchitecture": "ARM64",
+    "operatingSystemFamily": "LINUX"
+  },
   "cpu": "1024",
   "memory": "2048"
 }

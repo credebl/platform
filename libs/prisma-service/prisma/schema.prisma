@@ -88,6 +88,10 @@ enum CredentialExchangeProtocol {
   DIDCOMM
 }
 
+enum AccessTokenSignerKeyType {
+  ed25519
+}
+
 
 
 model organisation {
@@ -125,12 +129,6 @@ model organisation {
   file_upload           file_upload[]
   supported_protocol    CredentialExchangeProtocol[]    @default([DIDCOMM])
 }
-
-// model supported_protocol {
-//   id                  String       @id @default(uuid()) @db.Uuid
-//   name                String
-// }
-
 model org_invitations {
   id                  String       @id @default(uuid()) @db.Uuid
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
@@ -219,6 +217,8 @@ model oidc_issuer {
   orgAgentId     String     @db.Uuid
   orgAgent       org_agents @relation(fields: [orgAgentId], references: [id])
   templates      credential_templates[]
+  accessTokenSignerKeyType  AccessTokenSignerKeyType[]    @default([ed25519])
+  batchCredentialIssuanceSize Int       @default(0)
   @@index([orgAgentId])
 }
 

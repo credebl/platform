@@ -21,6 +21,7 @@ import {
   org_agents,
   organisation,
   platform_config,
+  Prisma,
   schema
 } from '@prisma/client';
 
@@ -30,6 +31,7 @@ import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/int
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { IssuerMetadata, IssuerUpdation } from '../interfaces/oidc-issuance.interfaces';
 
 @Injectable()
 export class IssuanceRepository {
@@ -773,20 +775,36 @@ export class IssuanceRepository {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async addOidcIssuerDetails(
-    publicIssuerId: string,
-    createdById: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    issuerProfileJson: any,
-    orgAgentId: string
-  ): Promise<oidc_issuer> {
+  async addOidcIssuerDetails(issuerMetadata: IssuerMetadata, issuerProfileJson): Promise<oidc_issuer> {
     try {
+      const { publicIssuerId, createdById, orgAgentId, batchCredentialIssuanceSize } = issuerMetadata;
       const oidcIssuerDetails = await this.prisma.oidc_issuer.create({
         data: {
           metadata: issuerProfileJson,
           publicIssuerId,
           createdBy: createdById,
-          orgAgentId
+          orgAgentId,
+          batchCredentialIssuanceSize
+        }
+      });
+
+      return oidcIssuerDetails;
+    } catch (error) {
+      this.logger.error(`[addOidcIssuerDetails] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateOidcIssuerDetails(createdById: string, issuerConfig: IssuerUpdation): Promise<oidc_issuer> {
+    try {
+      const { issuerId, accessTokenSignerKeyType, display, batchCredentialIssuanceSize } = issuerConfig;
+      const oidcIssuerDetails = await this.prisma.oidc_issuer.update({
+        where: { id: issuerId },
+        data: {
+          metadata: display as unknown as Prisma.InputJsonValue,
+          createdBy: createdById,
+          accessTokenSignerKeyType: { set: [accessTokenSignerKeyType] },
+          ...(batchCredentialIssuanceSize !== undefined ? { batchCredentialIssuanceSize } : {})
         }
       });
 
@@ -842,7 +860,7 @@ export class IssuanceRepository {
     }
   }
 
-  async getTemplatesByIssuer(issuerId: string): Promise<credential_templates[]> {
+  async getTemplatesByIssuerId(issuerId: string): Promise<credential_templates[]> {
     try {
       return await this.prisma.credential_templates.findMany({
         where: { issuerId },

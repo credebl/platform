@@ -30,9 +30,9 @@ import {
   IIssuedCredential
 } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
-import { user } from '@prisma/client';
+import { oidc_issuer, user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
-import { IssuerCreationDto } from './dtos/oidc-issuer.dto';
+import { IssuerCreationDto, IssuerUpdationDto } from './dtos/oidc-issuer.dto';
 import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oidc-issuer-template.dto';
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -281,9 +281,14 @@ export class IssuanceService extends BaseService {
     issueCredentialDto: IssuerCreationDto,
     orgId: string,
     userDetails: user
-  ): Promise<IDeletedIssuanceRecords> {
+  ): Promise<oidc_issuer> {
     const payload = { issueCredentialDto, orgId, userDetails };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-issuer-create', payload);
+  }
+
+  async oidcIssuerUpdate(issueUpdationDto: IssuerUpdationDto, orgId: string, userDetails: user) {
+    const payload = { issueUpdationDto, orgId, userDetails };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-issuer-update', payload);
   }
 
   async deleteTemplate(userDetails: user, orgId: string, templateId: string, issuerId: string) {

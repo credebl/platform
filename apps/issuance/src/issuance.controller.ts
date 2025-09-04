@@ -23,7 +23,7 @@ import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuan
 import { credential_templates, oidc_issuer, user } from '@prisma/client';
 import { OIDCIssuanceService } from './oidc-issuance.service';
 import { CreateCredentialTemplate, UpdateCredentialTemplate } from '../interfaces/oidc-template.interface';
-import { IssuerCreation } from '../interfaces/oidc-issuance.interfaces';
+import { IssuerCreation, IssuerUpdation } from '../interfaces/oidc-issuance.interfaces';
 
 @Controller()
 export class IssuanceController {
@@ -149,6 +149,16 @@ export class IssuanceController {
   }): Promise<oidc_issuer> {
     const { issueCredentialDto, orgId, userDetails } = payload;
     return this.oidcIssuanceService.oidcIssuerCreate(issueCredentialDto, orgId, userDetails);
+  }
+
+  @MessagePattern({ cmd: 'oidc-issuer-update' })
+  async oidcIssuerUpdate(payload: {
+    issueUpdationDto: IssuerUpdation;
+    orgId: string;
+    userDetails: user;
+  }): Promise<oidc_issuer> {
+    const { issueUpdationDto, orgId, userDetails } = payload;
+    return this.oidcIssuanceService.oidcIssuerUpdate(issueUpdationDto, orgId, userDetails);
   }
 
   @MessagePattern({ cmd: 'oidc-template-create' })

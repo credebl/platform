@@ -9,7 +9,9 @@ import {
   IsObject,
   IsUrl,
   IsNotEmpty,
-  IsDefined
+  IsDefined,
+  IsInt,
+  IsEnum
 } from 'class-validator';
 import { plainToInstance, Transform, Type } from 'class-transformer';
 
@@ -212,6 +214,10 @@ export class AuthorizationServerConfigDto {
   clientAuthentication: ClientAuthenticationDto;
 }
 
+export enum AccessTokenSignerKeyType {
+  ED25519 = 'ed25519'
+}
+
 @ApiExtraModels(CredentialConfigurationDto)
 export class IssuerCreationDto {
   @ApiProperty({
@@ -220,6 +226,46 @@ export class IssuerCreationDto {
   })
   @IsString({ message: 'issuerId from IssuerCreationDto -> issuerId, must be a string' })
   issuerId: string;
+
+  @ApiProperty({
+    description: 'Access token signer key type',
+    enum: AccessTokenSignerKeyType,
+    example: AccessTokenSignerKeyType.ED25519
+  })
+  @IsEnum(AccessTokenSignerKeyType, {
+    message: 'accessTokenSignerKeyType must be a valid enum value (ed25519)'
+  })
+  accessTokenSignerKeyType: AccessTokenSignerKeyType;
+
+  @ApiPropertyOptional({
+    description: 'Maximum number of credentials that can be issued in a batch',
+    example: 50,
+    type: Number
+  })
+  @IsOptional()
+  @IsInt({ message: 'batchCredentialIssuanceSize must be an integer' })
+  batchCredentialIssuanceSize?: number;
+
+  @ApiProperty({
+    description: 'Localized display information for the credential',
+    type: [DisplayDto]
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => DisplayDto)
+  display: DisplayDto[];
+
+  @ApiProperty({
+    description: 'Configuration of the authorization server',
+    type: AuthorizationServerConfigDto
+  })
+  @ValidateNested()
+  @Type(() => AuthorizationServerConfigDto)
+  authorizationServerConfigs: AuthorizationServerConfigDto;
+}
+
+export class IssuerUpdationDto {
+  issuerId?: string;
 
   @ApiProperty({
     description: 'accessTokenSignerKeyType',
@@ -240,10 +286,15 @@ export class IssuerCreationDto {
   display: DisplayDto[];
 
   @ApiProperty({
-    description: 'Configuration of the authorization server',
-    type: AuthorizationServerConfigDto
+    description: 'batchCredentialIssuanceSize',
+    example: '50'
   })
-  @ValidateNested()
-  @Type(() => AuthorizationServerConfigDto)
-  authorizationServerConfigs: AuthorizationServerConfigDto;
+  @ApiPropertyOptional({
+    description: 'Maximum number of credentials that can be issued in a batch',
+    example: 50,
+    type: Number
+  })
+  @IsOptional()
+  @IsInt({ message: 'batchCredentialIssuanceSize must be an integer' })
+  batchCredentialIssuanceSize?: number;
 }

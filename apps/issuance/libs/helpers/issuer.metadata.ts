@@ -1,131 +1,236 @@
-/* eslint-disable quotes */
-/* eslint-disable no-useless-catch */
 /* eslint-disable camelcase */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// utils/issuer-metadata.ts
-import type { credential_templates } from '@prisma/client';
-import type { CredentialConfiguration, Display } from '../../interfaces/oidc-issuance.interfaces';
+import { oidc_issuer, Prisma } from '@prisma/client';
+import { batchCredentialIssuanceDefault } from 'apps/issuance/constant/issuance';
 
-// Map our template.format to OIDC4VCI "format"
-const mapFormatToOidc = (fmt: 'sd-jwt-vc' | 'mdoc'): 'vc+sd-jwt' | 'mso_mdoc' =>
-  'sd-jwt-vc' === fmt ? 'vc+sd-jwt' : 'mso_mdoc';
+type AttributeDisplay = { name: string; locale: string };
+type AttributeDef = {
+  display?: AttributeDisplay[];
+  mandatory?: boolean;
+  value_type: 'string' | 'date' | 'number' | 'boolean' | string;
+};
+type AttributesMap = Record<string, AttributeDef>;
 
-// Build a stable config id when issuer metadata doesn’t already have one
-const configIdFromTemplate = (t: credential_templates): string =>
-  `${t.name}-${'sd-jwt-vc' === t.format ? 'sdjwt' : 'mdoc'}`;
-
-// Turn template.attributes into OIDC4VCI "claims" map
-// const claimsFromTemplate = (t: credential_templates): CredentialConfiguration['claims'] => {
-//   const claims: Record<string, any> = {};
-//   const attrs = (t.attributes ?? {}) as Record<
-//     string,
-//     { mandatory?: boolean; value_type: string; display?: Display[] }
-//   >;
-//   for (const [key, def] of Object.entries(attrs)) {
-//     claims[key] = {
-//       // exact field names per your example
-//       mandatory: !!def.mandatory,
-//       value_type: def.value_type,
-//       ...(def.display ? { display: def.display } : {})
-//     };
-//   }
-//   return claims;
-// };
-const claimsFromTemplate = (t: credential_templates): CredentialConfiguration['claims'] => {
-  const claims: Record<string, any> = {};
-
-  // Narrowing: only handle JsonObject
-  const raw = t.attributes as unknown;
-  if (raw && 'object' === typeof raw && !Array.isArray(raw)) {
-    const attrs = raw as Record<string, { mandatory?: boolean; value_type: string; display?: Display[] }>;
-
-    for (const [key, def] of Object.entries(attrs)) {
-      claims[key] = {
-        mandatory: Boolean(def.mandatory),
-        value_type: def.value_type,
-        ...(def.display ? { display: def.display } : {})
-      };
-    }
-  }
-
-  return claims;
+type CredentialDisplayItem = {
+  logo?: { uri: string; alt_text?: string };
+  name: string;
+  locale?: string;
+  description?: string;
+};
+type Appearance = {
+  credential_display: CredentialDisplayItem[];
 };
 
-// Minimal issuer-level display from template when needed
-const displayFromTemplate = (t: credential_templates): Display[] => {
-  const base = {
-    name: t.name,
-    description: t.description ?? undefined,
-    locale: 'en'
-  } as Display;
-  return [base];
+type CredentialConfig = {
+  format: string;
+  vct?: string;
+  scope: string;
+  doctype?: string;
+  claims: Record<
+    string,
+    {
+      mandatory?: boolean;
+      value_type: string;
+      display?: AttributeDisplay[];
+    }
+  >;
+  credential_signing_alg_values_supported: string[];
+  cryptographic_binding_methods_supported: string[];
+  display: { name: string; description?: string; locale?: string }[];
+};
+
+type CredentialConfigurationsSupported = {
+  credentialConfigurationsSupported: Record<string, CredentialConfig>;
+};
+
+// ---- Static Lists (as requested) ----
+const STATIC_CREDENTIAL_ALGS = ['ES256', 'EdDSA'] as const;
+const STATIC_BINDING_METHODS = ['did:key'] as const;
+const DOCTYPE = 'org.iso.18013.5.1'; // for mso_mdoc format
+const MSO_MDOC = 'mso_mdoc'; // alternative format value
+
+// Safe coercion helpers
+function coerceJsonObject<T>(v: Prisma.JsonValue): T | null {
+  if (null == v) {
+    return null;
+  }
+  if ('string' === typeof v) {
+    try {
+      return JSON.parse(v) as T;
+    } catch {
+      return null;
+    }
+  }
+  return v as unknown as T; // already a JsonObject/JsonArray
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isAttributesMap(x: any): x is AttributesMap {
+  return x && 'object' === typeof x && !Array.isArray(x);
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isAppearance(x: any): x is Appearance {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return x && 'object' === typeof x && Array.isArray((x as any).credential_display);
+}
+
+// Prisma row shape
+type TemplateRowPrisma = {
+  id: string;
+  name: string;
+  description?: string | null;
+  format?: string | null;
+  canBeRevoked?: boolean | null;
+  attributes: Prisma.JsonValue; // JsonValue from DB
+  appearance: Prisma.JsonValue; // JsonValue from DB
+  issuerId: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 };
 
 /**
- * Compose final issuer metadata:
- * - Start with exact stored issuer.metadata (as returned by agent or stored upon creation)
- * - Upsert credential_configurations_supported entries from templates:
- *     - Keep existing alg/binding/display unless template explicitly provides display
- *     - Replace/define "claims" from template.attributes
- * - Support both keys: "credential_configurations_supported" and legacy "credentials_supported"
+ * Build agent payload from Prisma rows (attributes/appearance are Prisma.JsonValue).
+ * Safely coerces JSON and then builds the same structure as Builder #2.
  */
-export function composeIssuerMetadataExact(issuerMetadata: any, templates: credential_templates[]): Promise<any> {
-  if (!issuerMetadata || 'object' !== typeof issuerMetadata) {
-    throw new Error('issuerMetadata must be a JSON object');
+export function buildCredentialConfigurationsSupported(
+  templates: TemplateRowPrisma[],
+  opts?: {
+    vct?: string;
+    scopeVct?: string;
+    keyResolver?: (t: TemplateRowPrisma) => string;
+    format?: string;
   }
-
-  // Determine which wrapper key the stored metadata uses
-  const WRAPPER_KEY =
-    'credential_configurations_supported' in issuerMetadata
-      ? 'credential_configurations_supported'
-      : 'credentials_supported' in issuerMetadata
-        ? 'credentials_supported'
-        : 'credential_configurations_supported'; // default to the current spec key
-
-  const out = {
-    ...issuerMetadata,
-    [WRAPPER_KEY]: { ...(issuerMetadata[WRAPPER_KEY] ?? {}) }
-  };
-
+): CredentialConfigurationsSupported {
+  const format = opts?.format ?? 'vc+sd-jwt';
+  const credentialConfigurationsSupported: Record<string, CredentialConfig> = {};
   for (const t of templates) {
-    const desiredFormat = mapFormatToOidc(t.format as 'sd-jwt-vc' | 'mdoc');
+    // Coerce JSON fields
+    const attrs = coerceJsonObject<unknown>(t.attributes);
+    const app = coerceJsonObject<unknown>(t.appearance);
 
-    // Try to find an existing config to update by matching name+format suffix in keys
-    const existingKey =
-      Object.keys(out[WRAPPER_KEY]).find((k) => {
-        const cfg = out[WRAPPER_KEY][k];
-        return (
-          'object' === typeof cfg &&
-          cfg?.format === desiredFormat &&
-          // common conventions: key contains template name and format suffix
-          (k === `${t.name}-sdjwt` || k === `${t.name}-mdoc` || k === `${t.name}-${desiredFormat}`)
-        );
-      }) ?? configIdFromTemplate(t);
+    if (!isAttributesMap(attrs)) {
+      throw new Error(`Template ${t.id}: invalid attributes JSON`);
+    }
+    if (!isAppearance(app)) {
+      throw new Error(`Template ${t.id}: invalid appearance JSON (missing credential_display)`);
+    }
 
-    const existingCfg: Partial<CredentialConfiguration> = out[WRAPPER_KEY][existingKey] ?? {};
+    // ---- dynamic format per row ----
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rowFormat = (t as any).format ?? format;
+    const suffix = rowFormat === `${MSO_MDOC}` ? 'mdoc' : 'sdjwt';
 
-    // Build the upserted configuration, preserving algs/binding/scope/vct/doctype if they already exist in metadata
-    const nextCfg: CredentialConfiguration = {
-      format: existingCfg.format ?? desiredFormat,
-      // Keep vct/doctype if already present; templates are generic, so we don’t invent them
-      vct: existingCfg.vct,
-      doctype: existingCfg.doctype,
-      scope: existingCfg.scope ?? `openid4vc:credential:${existingKey}`, // safe default if missing
-      // Replace claims with the template-derived claims (the truth source for fields)
-      claims: claimsFromTemplate(t),
+    // key: keep your keyResolver override; otherwise include suffix
+    const key = 'function' === typeof opts?.keyResolver ? opts.keyResolver(t) : `${t.name}-${suffix}`;
 
-      // Preserve existing algs/binding lists if the stored metadata has them
-      credential_signing_alg_values_supported: existingCfg.credential_signing_alg_values_supported ?? [],
-      cryptographic_binding_methods_supported: existingCfg.cryptographic_binding_methods_supported ?? [],
+    // vct/scope: vct only for non-mdoc; scope always uses suffix
+    const vct = opts?.vct ?? t.name;
+    const scopeBase = opts?.scopeVct ?? vct;
+    const scope = `openid4vc:credential:${scopeBase}-${suffix}`;
+    const claims = Object.fromEntries(
+      Object.entries(attrs).map(([claimName, def]) => {
+        const d = def as AttributeDef;
+        return [
+          claimName,
+          {
+            value_type: d.value_type,
+            mandatory: d.mandatory ?? false, // always include, default to false
+            display: Array.isArray(d.display) ? d.display.map((x) => ({ name: x.name, locale: x.locale })) : undefined
+          }
+        ];
+      })
+    );
 
-      // Prefer existing display; if absent, synthesize from template (name/description)
-      display: existingCfg.display && 0 < existingCfg.display.length ? existingCfg.display : displayFromTemplate(t)
+    const display =
+      app.credential_display.map((d) => ({
+        name: d.name,
+        description: d.description,
+        locale: d.locale
+      })) ?? [];
+
+    // assemble per-template config
+    credentialConfigurationsSupported[key] = {
+      format: rowFormat,
+      scope,
+      claims,
+      credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS],
+      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS],
+      display,
+      ...(rowFormat === `${MSO_MDOC}`
+        ? { doctype: `${DOCTYPE}` } // static for mdoc
+        : { vct }) // keep vct only for non-mdoc
     };
-
-    out[WRAPPER_KEY][existingKey] = nextCfg;
   }
 
-  return out;
+  return {
+    credentialConfigurationsSupported
+  };
+}
+
+// Default DPoP list for issuer-level metadata (match your example)
+const ISSUER_DPOP_ALGS_DEFAULT = ['RS256', 'ES256'] as const;
+
+// ---------- Safe coercion ----------
+function coerceJson<T>(v: Prisma.JsonValue): T | null {
+  if (null == v) {
+    return null;
+  }
+  if ('string' === typeof v) {
+    try {
+      return JSON.parse(v) as T;
+    } catch {
+      return null;
+    }
+  }
+  return v as unknown as T;
+}
+
+type DisplayItem = {
+  name: string;
+  locale?: string;
+  description?: string;
+  logo?: { uri: string; alt_text?: string };
+};
+
+function isDisplayArray(x: unknown): x is DisplayItem[] {
+  return (
+    Array.isArray(x) &&
+    x.every(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (i) => i && 'object' === typeof i && 'string' === typeof (i as any).name
+    )
+  );
+}
+
+// ---------- Builder you asked for ----------
+/**
+ * Build issuer metadata payload from issuer row + credential configurations.
+ *
+ * @param credentialConfigurations Object with credentialConfigurationsSupported (from your template builder)
+ * @param oidcIssuer               OIDC issuer row (uses publicIssuerId and metadata -> display)
+ * @param opts                     Optional overrides: dpopAlgs[], accessTokenSignerKeyType
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export function buildIssuerPayload(
+  credentialConfigurations: CredentialConfigurationsSupported,
+  oidcIssuer: oidc_issuer,
+  opts?: {
+    dpopAlgs?: string[];
+    accessTokenSignerKeyType?: string;
+  }
+) {
+  if (!oidcIssuer?.publicIssuerId || 'string' !== typeof oidcIssuer.publicIssuerId) {
+    throw new Error('Invalid issuer: missing publicIssuerId');
+  }
+
+  const rawDisplay = coerceJson<unknown>(oidcIssuer.metadata);
+  const display: DisplayItem[] = isDisplayArray(rawDisplay) ? rawDisplay : [];
+
+  return {
+    // accessTokenSignerKeyType: oidcIssuer?.accessTokenSignerKeyType[0],
+    display,
+    dpopSigningAlgValuesSupported: opts?.dpopAlgs ?? [...ISSUER_DPOP_ALGS_DEFAULT],
+    credentialConfigurationsSupported: credentialConfigurations.credentialConfigurationsSupported ?? {},
+    batchCredentialIssuance: {
+      batchSize: oidcIssuer?.batchCredentialIssuanceSize ?? batchCredentialIssuanceDefault
+    }
+  };
 }

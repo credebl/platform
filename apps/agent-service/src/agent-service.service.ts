@@ -1423,7 +1423,7 @@ export class AgentServiceService {
         .then(async (response) => response);
       return data;
     } catch (error) {
-      this.logger.error(`Error in oidcIssuerCreate in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(`Error in oidcIssuerTemplate in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

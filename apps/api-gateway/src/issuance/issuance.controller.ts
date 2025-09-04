@@ -83,7 +83,7 @@ import { SchemaType } from '@credebl/enum/enum';
 import { CommonConstants } from '../../../../libs/common/src/common.constant';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
-import { IssuerCreationDto } from './dtos/oidc-issuer.dto';
+import { IssuerCreationDto, IssuerUpdationDto } from './dtos/oidc-issuer.dto';
 import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oidc-issuer-template.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -1060,6 +1060,38 @@ export class IssuanceController {
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.issuance.success.issuerConfig,
+      data: createIssuer
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/oidc/issuers/:issuerId')
+  @ApiOperation({ summary: 'Update OIDC issuer', description: 'Update OIDC issuer by orgId' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async oidcIssuerUpdate(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @User() user: user,
+    @Param('issuerId')
+    issuerId: string,
+    @Body() issueCredentialDto: IssuerUpdationDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    issueCredentialDto.issuerId = issuerId;
+    const createIssuer = await this.issueCredentialService.oidcIssuerUpdate(issueCredentialDto, orgId, user);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.issuance.success.issuerConfigUpdate,
       data: createIssuer
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);

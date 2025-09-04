@@ -311,7 +311,8 @@ export const ResponseMessages = {
       bulkProcess: 'Process initiated for bulk issuance',
       deleteIssuanceRecords: 'Issuance records deleted',
       fileDetailsAndFileData: 'File details and File data fetched successfully',
-      issuerConfig: 'Issuer config details created successfully'
+      issuerConfig: 'Issuer config details created successfully',
+      issuerConfigUpdate: 'Issuer config details updated successfully'
     },
     error: {
       invalidCredentialRecordId: 'Please provide valid credential Record Id',

@@ -39,11 +39,47 @@ export interface AuthorizationServerConfig {
 
 export interface IssuerCreation {
   issuerId: string;
-  accessTokenSignerKeyType: string;
+  accessTokenSignerKeyType: AccessTokenSignerKeyType;
   display: Display[];
   dpopSigningAlgValuesSupported?: string[];
   credentialConfigurationsSupported?: Record<string, CredentialConfiguration>;
   authorizationServerConfigs: AuthorizationServerConfig;
+  batchCredentialIssuanceSize: number;
+}
+
+export interface IssuerInitialConfig {
+  issuerId: string;
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  display: Display[] | {};
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  authorizationServerConfigs: AuthorizationServerConfig | {};
+  accessTokenSignerKeyType: AccessTokenSignerKeyType;
+  dpopSigningAlgValuesSupported: string[];
+  batchCredentialIssuance: object;
+  credentialConfigurationsSupported: object;
+}
+
+export interface IssuerMetadata {
+  publicIssuerId: string;
+  createdById: string;
+  orgAgentId: string;
+  batchCredentialIssuanceSize?: number;
+}
+
+export interface initialIssuerDetails {
+  metadata: Display[];
+  publicIssuerId: string;
+}
+
+export enum AccessTokenSignerKeyType {
+  ED25519 = 'ed25519'
+}
+
+export interface IssuerUpdation {
+  issuerId: string;
+  accessTokenSignerKeyType: AccessTokenSignerKeyType;
+  display;
+  batchCredentialIssuanceSize?: number;
 }
 
 export interface IAgentNatsPayload {

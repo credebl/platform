@@ -130,7 +130,7 @@ cat <<EOF >$PWD/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "walletScheme": "DatabasePerWallet",
   "indyLedger": $INDY_LEDGER,
   "endpoint": [
-    "$AGENT_ENDPOINT"
+    "$INBOUND_ENDPOINT"
   ],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",

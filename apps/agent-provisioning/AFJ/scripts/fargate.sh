@@ -402,7 +402,7 @@ done
   echo "Creating agent config"
   cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
-        "CONTROLLER_ENDPOINT":"${CONTROLLER_ENDPOINT}"
+        "CONTROLLER_ENDPOINT":"$EXTERNAL_IP"
     }
 EOF
 

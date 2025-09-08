@@ -47,7 +47,6 @@ import {
 import {
   AutoAccept,
   IssuanceProcessState,
-  OrgAgentType,
   PromiseResult,
   SchemaType,
   TemplateIdentifier,
@@ -63,7 +62,7 @@ import { parse as paParse } from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { convertUrlToDeepLinkUrl, paginator } from '@credebl/common/common.utils';
+import { convertUrlToDeepLinkUrl, getAgentUrl, paginator } from '@credebl/common/common.utils';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
@@ -185,8 +184,7 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
       }
 
-      const issuanceMethodLabel = 'create-offer';
-      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.CREATE_OFFER);
 
       if (payload.credentialType === IssueCredentialType.JSONLD) {
         await validateAndUpdateIssuanceDates(credentialData);
@@ -283,6 +281,18 @@ export class IssuanceService {
 
       if (allSuccessful) {
         finalStatusCode = HttpStatus.CREATED;
+        const context = payload?.credentialData[0]?.credential?.['@context'] as string[];
+
+        if (Array.isArray(context) && context.includes(CommonConstants.W3C_SCHEMA_URL)) {
+          const filterData = context.filter((item) => CommonConstants.W3C_SCHEMA_URL !== item);
+          const [schemaId] = filterData;
+          results.forEach((record) => {
+            if (PromiseResult.FULFILLED === record.status && record?.value?.threadId) {
+              this.issuanceRepository.updateSchemaIdByThreadId(record?.value?.threadId, schemaId);
+            }
+          });
+        }
+
         finalMessage = ResponseMessages.issuance.success.create;
       } else if (allFailed) {
         finalStatusCode = HttpStatus.BAD_REQUEST;
@@ -371,10 +381,7 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
-      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-
-      const issuanceMethodLabel = 'create-offer-oob';
-      const url = await this.getAgentUrl(issuanceMethodLabel, orgAgentType, agentEndPoint, agentDetails?.tenantId);
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.CREATE_OFFER_OUT_OF_BAND);
 
       let issueData;
       if (credentialType === IssueCredentialType.INDY) {
@@ -687,15 +694,7 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
-      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
-      const issuanceMethodLabel = 'get-issue-credential-by-credential-id';
-      const url = await this.getAgentUrl(
-        issuanceMethodLabel,
-        orgAgentType,
-        agentEndPoint,
-        agentDetails?.tenantId,
-        credentialRecordId
-      );
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.GET_OFFER_BY_CRED_ID, credentialRecordId);
 
       const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, orgId);
       return createConnectionInvitation?.response;
@@ -836,15 +835,8 @@ export class IssuanceService {
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      const orgAgentType = await this.issuanceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
 
-      const issuanceMethodLabel = 'create-offer-oob';
-      const url = await this.getAgentUrl(
-        issuanceMethodLabel,
-        orgAgentType,
-        agentDetails.agentEndPoint,
-        agentDetails.tenantId
-      );
+      const url = await getAgentUrl(agentDetails.agentEndPoint, CommonConstants.CREATE_OFFER_OUT_OF_BAND);
       const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
 
       if (!organizationDetails) {
@@ -909,7 +901,6 @@ export class IssuanceService {
 
           await this.delay(500); // Wait for 0.5 seconds
           const sendOobOffer = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
-
           arraycredentialOfferResponse.push(sendOobOffer);
         }
         if (0 < errors.length) {
@@ -1084,6 +1075,20 @@ export class IssuanceService {
         return false;
       }
 
+      if (isEmailSent) {
+        const w3cSchemaId = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.['@context'] as string[];
+        if (w3cSchemaId?.includes(CommonConstants.W3C_SCHEMA_URL)) {
+          const filterData = w3cSchemaId.filter((item) => CommonConstants.W3C_SCHEMA_URL !== item);
+          const [schemaId] = filterData;
+          if (credentialCreateOfferDetails.response.credentialRequestThId) {
+            this.issuanceRepository.updateSchemaIdByThreadId(
+              credentialCreateOfferDetails.response.credentialRequestThId,
+              schemaId
+            );
+          }
+        }
+      }
+
       return isEmailSent;
     } catch (error) {
       const iterationNoMessage = ` at position ${iterationNo}`;
@@ -1127,79 +1132,6 @@ export class IssuanceService {
       return await this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(`[_outOfBandCredentialOffer] [NATS call]- error in out of band  : ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
-  /**
-   * Description: Fetch agent url
-   * @param referenceId
-   * @returns agent URL
-   */
-  async getAgentUrl(
-    issuanceMethodLabel: string,
-    orgAgentType: string,
-    agentEndPoint: string,
-    tenantId: string,
-    credentialRecordId?: string
-  ): Promise<string> {
-    try {
-      let url;
-      switch (issuanceMethodLabel) {
-        case 'create-offer': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_CREATE_CRED_OFFER_AFJ}`
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER}`.replace('#', tenantId)
-                : null;
-          break;
-        }
-
-        case 'create-offer-oob': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER}`
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_OFFER_OUT_OF_BAND}`.replace('#', tenantId)
-                : null;
-          break;
-        }
-
-        case 'get-issue-credentials': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ}`
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS}`.replace('#', tenantId)
-                : null;
-          break;
-        }
-
-        case 'get-issue-credential-by-credential-id': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_ISSUE_GET_CREDS_AFJ_BY_CRED_REC_ID}/${credentialRecordId}`
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CREDENTIALS_BY_CREDENTIAL_ID}`
-                    .replace('#', credentialRecordId)
-                    .replace('@', tenantId)
-                : null;
-          break;
-        }
-
-        default: {
-          break;
-        }
-      }
-
-      if (!url) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
-      }
-
-      return url;
-    } catch (error) {
-      this.logger.error(`Error in get agent url: ${JSON.stringify(error)}`);
       throw error;
     }
   }

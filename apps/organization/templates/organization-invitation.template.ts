@@ -1,25 +1,23 @@
 export class OrganizationInviteTemplate {
+  public sendInviteEmailTemplate(
+    email: string,
+    orgName: string,
+    orgRolesDetails: object[],
+    firstName: string,
+    isUserExist: boolean
+  ): string {
+    const validUrl = isUserExist ? `${process.env.FRONT_END_URL}/sign-in` : `${process.env.FRONT_END_URL}/sign-up`;
 
-    public sendInviteEmailTemplate(
-        email: string,
-        orgName: string,
-        orgRolesDetails: object[],
-        firstName: string,
-        isUserExist: boolean
-    ): string {
+    const message = isUserExist
+      ? `Please accept the invitation using the following link:`
+      : `To get started, kindly register on ${process.env.PLATFORM_NAME} platform using this link:`;
 
-        const validUrl = isUserExist ? `${process.env.FRONT_END_URL}/authentication/sign-in` : `${process.env.FRONT_END_URL}/authentication/sign-up`;
+    const secondMessage = isUserExist
+      ? `After successful login into ${process.env.PLATFORM_NAME} click on "Accept Organization Invitation" link on your dashboard.`
+      : `After successful registration, you can log in to the platform and click on “Accept Organization Invitation” on your dashboard.`;
 
-        const message = isUserExist 
-                        ? `Please accept the invitation using the following link:`
-            : `To get started, kindly register on ${process.env.PLATFORM_NAME} platform using this link:`;
+    const Button = isUserExist ? `Accept Organization Invitation` : `Register on ${process.env.PLATFORM_NAME}`;
 
-        const secondMessage = isUserExist 
-                        ? `After successful login into ${process.env.PLATFORM_NAME} click on "Accept Organization Invitation" link on your dashboard.`
-            : `After successful registration, you can log in to the platform and click on “Accept Organization Invitation” on your dashboard.`;
-        
-            const Button = isUserExist ? `Accept Organization Invitation` : `Register on ${process.env.PLATFORM_NAME}`;
-          
     return `<!DOCTYPE html>
         <html lang="en">
         
@@ -75,8 +73,5 @@ export class OrganizationInviteTemplate {
         </body>
         
         </html>`;
-
-    }
-
-
+  }
 }

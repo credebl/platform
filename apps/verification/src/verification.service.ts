@@ -21,12 +21,13 @@ import {
   IVerifyPresentation,
   IVerifiedProofData,
   IInvitation,
-  IProofRequestData
+  IProofRequestData,
+  IEmailResponse
 } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
 import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
-import { AutoAccept, OrgAgentType, VerificationProcessState } from '@credebl/enum/enum';
+import { AutoAccept, VerificationProcessState } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
@@ -45,11 +46,10 @@ import {
   ProofRequestLabel,
   ProofRequestType,
   ProofVersion,
-  ProtocolVersionType,
-  VerificationMethodLabel
+  ProtocolVersionType
 } from 'apps/api-gateway/src/verification/enum/verification.enum';
 import { UserActivityService } from '@credebl/user-activity';
-import { convertUrlToDeepLinkUrl } from '@credebl/common/common.utils';
+import { convertUrlToDeepLinkUrl, getAgentUrl } from '@credebl/common/common.utils';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
@@ -88,7 +88,6 @@ export class VerificationService {
         orgId,
         proofRequestsSearchCriteria
       );
-
       const schemaIds = getProofRequestsList?.proofRequestsList?.map((schema) => schema?.schemaId).filter(Boolean);
 
       const getSchemaDetails = await this._getSchemaAndOrganizationDetails(schemaIds);
@@ -226,15 +225,9 @@ export class VerificationService {
   async getProofPresentationById(proofId: string, orgId: string): Promise<string> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
-
-      const verificationMethodLabel = 'get-proof-presentation-by-id';
-      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      const url = await this.getAgentUrl(
-        verificationMethodLabel,
-        orgAgentType,
+      const url = await getAgentUrl(
         getAgentDetails?.agentEndPoint,
-        getAgentDetails?.tenantId,
-        '',
+        CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID_FLAG,
         proofId
       );
 
@@ -243,7 +236,9 @@ export class VerificationService {
       const getProofPresentationById = await this._getProofPresentationById(payload);
       return getProofPresentationById?.response;
     } catch (error) {
-      this.logger.error(`[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`
+      );
       const errorMessage = error?.response?.error?.reason || error?.message;
 
       if (errorMessage?.includes('not found')) {
@@ -286,15 +281,7 @@ export class VerificationService {
     try {
       const comment = requestProof.comment ? requestProof.comment : '';
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.orgId);
-      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      const verificationMethodLabel = VerificationMethodLabel.REQUEST_PROOF;
-      const url = await this.getAgentUrl(
-        verificationMethodLabel,
-        orgAgentType,
-        getAgentDetails?.agentEndPoint,
-        getAgentDetails?.tenantId
-      );
-
+      const url = await getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.REQUEST_PROOF);
       // Function to create a payload
       const createPayload = async (connectionId: string): Promise<IProofRequestPayload> => {
         const proofRequestPayload = {
@@ -415,18 +402,7 @@ export class VerificationService {
   async verifyPresentation(proofId: string, orgId: string): Promise<string> {
     try {
       const getAgentData = await this.verificationRepository.getAgentEndPoint(orgId);
-      const orgAgentTypeData = await this.verificationRepository.getOrgAgentType(getAgentData?.orgAgentTypeId);
-
-      const verificationMethod = 'accept-presentation';
-
-      const url = await this.getAgentUrl(
-        verificationMethod,
-        orgAgentTypeData,
-        getAgentData?.agentEndPoint,
-        getAgentData?.tenantId,
-        '',
-        proofId
-      );
+      const url = await getAgentUrl(getAgentData?.agentEndPoint, CommonConstants.ACCEPT_PRESENTATION, proofId);
 
       const payload = { orgId, url };
       const getProofPresentationById = await this._verifyPresentation(payload);
@@ -504,13 +480,9 @@ export class VerificationService {
 
       outOfBandRequestProof['label'] = label;
 
-      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      const verificationMethodLabel = 'create-request-out-of-band';
-      const url = await this.getAgentUrl(
-        verificationMethodLabel,
-        orgAgentType,
+      const url = await getAgentUrl(
         getAgentDetails?.agentEndPoint,
-        getAgentDetails?.tenantId
+        CommonConstants.CREATE_OUT_OF_BAND_PROOF_PRESENTATION
       );
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
@@ -566,9 +538,9 @@ export class VerificationService {
           }
         };
       }
-
       if (emailId) {
         const emailResponse = await this.sendEmailInBatches(payload, emailId, getAgentDetails, getOrganization);
+        await this.verificationRepository.saveEmail(emailResponse as IEmailResponse[]);
         return emailResponse;
       } else {
         const presentationProof: IInvitation = await this.generateOOBProofReq(payload);
@@ -784,127 +756,13 @@ export class VerificationService {
     }
   }
 
-  /**
-   * Description: Fetch agent url
-   * @param referenceId
-   * @returns agent URL
-   */
-  async getAgentUrl(
-    verificationMethodLabel: string,
-    orgAgentType: string,
-    agentEndPoint: string,
-    tenantId: string,
-    threadId?: string,
-    proofPresentationId?: string
-  ): Promise<string> {
-    try {
-      let url;
-      switch (verificationMethodLabel) {
-        case 'get-proof-presentation': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED && threadId
-              ? `${agentEndPoint}${CommonConstants.URL_GET_PROOF_PRESENTATIONS}?threadId=${threadId}`
-              : orgAgentType === OrgAgentType.SHARED && threadId
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS}?threadId=${threadId}`.replace(
-                    '#',
-                    tenantId
-                  )
-                : orgAgentType === OrgAgentType.DEDICATED
-                  ? `${agentEndPoint}${CommonConstants.URL_GET_PROOF_PRESENTATIONS}`
-                  : orgAgentType === OrgAgentType.SHARED
-                    ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS}`.replace('#', tenantId)
-                    : null;
-          break;
-        }
-
-        case 'get-proof-presentation-by-id': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID}`.replace('#', proofPresentationId)
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_GET_PROOFS_BY_PRESENTATION_ID}`
-                    .replace('#', proofPresentationId)
-                    .replace('@', tenantId)
-                : null;
-          break;
-        }
-
-        case 'request-proof': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_SEND_PROOF_REQUEST}`
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_REQUEST_PROOF}`.replace('#', tenantId)
-                : null;
-          break;
-        }
-
-        case 'accept-presentation': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_VERIFY_PRESENTATION}`.replace('#', proofPresentationId)
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_ACCEPT_PRESENTATION}`
-                    .replace('@', proofPresentationId)
-                    .replace('#', tenantId)
-                : null;
-          break;
-        }
-
-        case 'create-request-out-of-band': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_SEND_OUT_OF_BAND_CREATE_REQUEST}`
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_OUT_OF_BAND_CREATE_REQUEST}`.replace('#', tenantId)
-                : null;
-          break;
-        }
-
-        case 'get-verified-proof': {
-          url =
-            orgAgentType === OrgAgentType.DEDICATED
-              ? `${agentEndPoint}${CommonConstants.URL_PROOF_FORM_DATA}`.replace('#', proofPresentationId)
-              : orgAgentType === OrgAgentType.SHARED
-                ? `${agentEndPoint}${CommonConstants.URL_SHAGENT_PROOF_FORM_DATA}`
-                    .replace('@', proofPresentationId)
-                    .replace('#', tenantId)
-                : null;
-          break;
-        }
-
-        default: {
-          break;
-        }
-      }
-
-      if (!url) {
-        throw new NotFoundException(ResponseMessages.verification.error.agentUrlNotFound);
-      }
-
-      return url;
-    } catch (error) {
-      this.logger.error(`Error in get agent url: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
   async getVerifiedProofdetails(proofId: string, orgId: string): Promise<IProofPresentationDetails[]> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
-      const verificationMethodLabel = 'get-verified-proof';
       let credDefId;
       let schemaId;
       let certificate;
-      const orgAgentType = await this.verificationRepository.getOrgAgentType(getAgentDetails?.orgAgentTypeId);
-      const url = await this.getAgentUrl(
-        verificationMethodLabel,
-        orgAgentType,
-        getAgentDetails?.agentEndPoint,
-        getAgentDetails?.tenantId,
-        '',
-        proofId
-      );
+      const url = await getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.GET_VERIFIED_PROOF, proofId);
 
       const payload = { orgId, url };
 

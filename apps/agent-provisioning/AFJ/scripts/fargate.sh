@@ -139,7 +139,7 @@ cat <<EOF >$PWD/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "inboundTransport": [
     {
       "transport": "$PROTOCOL",
-      "port": "$INBOUND_PORT"
+      "port": $INBOUND_PORT
     }
   ],
   "outboundTransport": [

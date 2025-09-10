@@ -26,7 +26,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 // eslint-disable-next-line camelcase
-import { client_aliases, RecordType, user, user_org_roles } from '@prisma/client';
+import { client_aliases, RecordType, session, user, user_org_roles } from '@prisma/client';
 import {
   ICheckUserDetails,
   OrgInvitations,
@@ -575,6 +575,24 @@ export class UserService {
     } catch (error) {
       this.logger.error(`In refreshTokenDetails : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async userSessions(userId: string): Promise<session[]> {
+    try {
+      return this.userRepository.fetchUserSessions(userId);
+    } catch (error) {
+      this.logger.error(`get user sessions: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async deleteSession(sessionId: string, userId: string): Promise<{ message: string }> {
+    try {
+      return this.userRepository.deleteSessionBySessionId(sessionId, userId);
+    } catch (error) {
+      this.logger.error(`delete session by session id: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

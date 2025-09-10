@@ -31,6 +31,7 @@ import {
 import { ProviderType, UserRole } from '@credebl/enum/enum';
 
 import { PrismaService } from '@credebl/prisma-service';
+import { RpcException } from '@nestjs/microservices';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model
@@ -970,6 +971,23 @@ export class UserRepository {
       return userSession;
     } catch (error) {
       this.logger.error(`Error in logging out user: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteSessionBySessionId(sessionId: string, userId: string): Promise<{ message: string }> {
+    try {
+      const result = await this.prisma.session.deleteMany({
+        where: { id: sessionId, userId }
+      });
+
+      if (0 === result.count) {
+        throw new RpcException(new NotFoundException(`Session not found for userId: ${userId}`));
+      }
+
+      return { message: 'Session deleted successfully' };
+    } catch (error) {
+      this.logger.error(`Error in Deleting Session: ${error.message}`);
       throw error;
     }
   }

@@ -23,7 +23,7 @@ import {
   IVerifyUserEmail
 } from '@credebl/common/interfaces/user.interface';
 // eslint-disable-next-line camelcase
-import { client_aliases, user, user_org_roles } from '@prisma/client';
+import { client_aliases, session, user, user_org_roles } from '@prisma/client';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
@@ -87,6 +87,16 @@ export class UserController {
   @MessagePattern({ cmd: 'refresh-token-details' })
   async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
     return this.userService.refreshTokenDetails(refreshToken);
+  }
+
+  @MessagePattern({ cmd: 'session-details-by-userId' })
+  async userSessions(userId: string): Promise<session[]> {
+    return this.userService.userSessions(userId);
+  }
+
+  @MessagePattern({ cmd: 'delete-session-by-sessionId' })
+  async deleteSession(payload: { sessionId: string; userId: string }): Promise<{ message: string }> {
+    return this.userService.deleteSession(payload.sessionId, payload.userId);
   }
 
   @MessagePattern({ cmd: 'user-reset-password' })

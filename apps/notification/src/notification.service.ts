@@ -1,13 +1,10 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import {
-  INotification,
-  IWebhookEndpoint,
-  ISendNotification
-} from '../interfaces/notification.interfaces';
-import { RpcException } from '@nestjs/microservices';
+import { INotification, ISendNotification, IWebhookEndpoint } from '../interfaces/notification.interfaces';
+
+import { CommonService } from '@credebl/common';
 import { NotificationRepository } from './notification.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { CommonService } from '@credebl/common';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class NotificationService {
@@ -53,7 +50,8 @@ export class NotificationService {
         fcmToken: payload.fcmToken,
         messageType: payload.messageType
       };
-
+      this.logger.debug(`Webhook Payload: ${JSON.stringify(webhookPayload)}`);
+      this.logger.debug(`Webhook URL: ${getWebhookUrl?.notificationWebhook}`);
       /**
        * Send notification details with webhook endpoint
        */
@@ -64,7 +62,7 @@ export class NotificationService {
           this.logger.error(`Error in sendNotification : ${JSON.stringify(error)}`);
           throw error;
         });
-
+      this.logger.debug(`Webhook Response: ${JSON.stringify(webhookResponse)}`);
       if (!this.isValidUrl(getWebhookUrl?.notificationWebhook)) {
         throw new BadRequestException(ResponseMessages.notification.error.invalidUrl);
       }

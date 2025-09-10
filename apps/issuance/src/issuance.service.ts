@@ -1082,7 +1082,7 @@ export class IssuanceService {
 
       if (isEmailSent) {
         const w3cSchemaId = outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential?.['@context'] as string[];
-        if (w3cSchemaId && w3cSchemaId.includes(CommonConstants.W3C_SCHEMA_URL)) {
+        if (w3cSchemaId?.includes(CommonConstants.W3C_SCHEMA_URL)) {
           const filterData = w3cSchemaId.filter((item) => CommonConstants.W3C_SCHEMA_URL !== item);
           const [schemaId] = filterData;
           if (credentialCreateOfferDetails.response.credentialRequestThId) {

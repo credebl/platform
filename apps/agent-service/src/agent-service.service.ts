@@ -105,7 +105,7 @@ export class AgentServiceService {
       const agentDetails = await this.agentServiceRepository.getAgentDetailsByOrgId(orgId);
       return agentDetails;
     } catch (error) {
-      this.logger.error(`in getAgentDetails::: ${JSON.stringify(error)}`);
+      this.logger.error(`in getAgentDetails ::: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
   }
@@ -527,7 +527,7 @@ export class AgentServiceService {
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
       const agentBaseWalletToken = await this.commonService.getBaseAgentToken(
-        agentDetails.gentEndPoint,
+        agentDetails.agentEndPoint,
         agentDetails?.agentToken
       );
       if (!agentBaseWalletToken) {
@@ -607,7 +607,7 @@ export class AgentServiceService {
       /**
        * Organization storage data
        */
-      const storeOrgAgentData = await this._buildStoreOrgAgentData(payload, `${orgAgentTypeId}`);
+      const storeOrgAgentData = this._buildStoreOrgAgentData(payload, `${orgAgentTypeId}`);
       /**
        * Store org agent details
        */

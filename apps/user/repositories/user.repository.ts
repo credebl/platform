@@ -153,7 +153,6 @@ export class UserRepository {
       where: { id: sessionId },
       include: { user: true }
     });
-    // if (!session || new Date() > session.expires) return null;
     return session;
   }
 
@@ -678,7 +677,7 @@ export class UserRepository {
 
   async createSession(tokenDetails: ISession): Promise<session> {
     try {
-      const { sessionToken, userId, expires, refreshToken, accountId, sessionType } = tokenDetails;
+      const { sessionToken, userId, expires, refreshToken, accountId, sessionType, expiresAt } = tokenDetails;
       const sessionResponse = await this.prisma.session.create({
         data: {
           id: tokenDetails.id,
@@ -687,7 +686,8 @@ export class UserRepository {
           userId,
           refreshToken,
           accountId,
-          sessionType
+          sessionType,
+          expiresAt
         }
       });
       return sessionResponse;
@@ -984,6 +984,24 @@ export class UserRepository {
       return sessionDetails;
     } catch (error) {
       this.logger.error(`Error in fetching session details::${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteInactiveSessions(userId: string): Promise<Prisma.BatchPayload> {
+    try {
+      const response = await this.prisma.session.deleteMany({
+        where: {
+          expiresAt: {
+            lt: new Date()
+          },
+          userId
+        }
+      });
+      this.logger.debug('Deleted inactive sessions::', response);
+      return response;
+    } catch (error) {
+      this.logger.error(`Error in deleting the in active sessions::${error.message}`);
       throw error;
     }
   }

@@ -59,7 +59,8 @@ import {
   IVerifyUserEmail,
   IUserInvitations,
   IResetPasswordResponse,
-  ISignUpUserResponse
+  ISignUpUserResponse,
+  IVerificationEmail
 } from '@credebl/common/interfaces/user.interface';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { URLUserResetPasswordTemplate } from '../templates/reset-password-template';
@@ -146,16 +147,16 @@ export class UserService {
           throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
         }
 
-        sendVerificationMail = await this.sendEmailForVerification(
+        sendVerificationMail = await this.sendEmailForVerification({
           email,
-          verifyCode,
+          verificationCode: verifyCode,
           redirectUrl,
-          clientDetails.clientId,
+          clientId: clientDetails.clientId,
           brandLogoUrl,
           platformName,
-          clientDetails.domain,
+          redirectTo: clientDetails.domain,
           clientAlias
-        );
+        });
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -204,20 +205,12 @@ export class UserService {
    * @returns
    */
 
-  async sendEmailForVerification(
-    email: string,
-    verificationCode: string,
-    redirectUrl: string,
-    clientId: string,
-    brandLogoUrl: string,
-    platformName: string,
-    redirectTo?: string,
-    clientAlias?: string
-  ): Promise<boolean> {
+  async sendEmailForVerification(verificationEmailParameter: IVerificationEmail): Promise<boolean> {
     try {
+      const { email, verificationCode, brandLogoUrl, platformName, redirectTo, clientAlias } =
+        verificationEmailParameter;
       const platformConfigData = await this.prisma.platform_config.findMany();
 
-      const decryptedClientId = await this.commonService.decryptPassword(clientId);
       const urlEmailTemplate = new URLUserEmailTemplate();
       const emailData = new EmailDto();
       emailData.emailFrom = platformConfigData[0].emailFrom;
@@ -225,11 +218,9 @@ export class UserService {
       const platform = platformName || process.env.PLATFORM_NAME;
       emailData.emailSubject = `[${platform}] Verify your email to activate your account`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserURLTemplate(
+      emailData.emailHtml = urlEmailTemplate.getUserURLTemplate(
         email,
         verificationCode,
-        redirectUrl,
-        decryptedClientId,
         brandLogoUrl,
         platformName,
         redirectTo,
@@ -456,6 +447,8 @@ export class UserService {
       if (true === isPasskey && false === userData?.isFidoVerified) {
         throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
       }
+      // called seprate method to delete exp session
+      this.userRepository.deleteInactiveSessions(userData?.id);
       const userSessionDetails = await this.userRepository.fetchUserSessions(userData?.id);
       if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
         throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
@@ -471,13 +464,16 @@ export class UserService {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const decodedToken: any = jwt.decode(tokenDetails?.access_token);
+      const expiresAt = new Date(decodedToken.exp * 1000);
+
       const sessionData = {
         id: decodedToken.sid,
         sessionToken: tokenDetails?.access_token,
         userId: userData?.id,
         expires: tokenDetails?.expires_in,
         refreshToken: tokenDetails?.refresh_token,
-        sessionType: SessionType.USER_SESSION
+        sessionType: SessionType.USER_SESSION,
+        expiresAt
       };
 
       const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
@@ -552,13 +548,17 @@ export class UserService {
         if (!deletePreviousSession) {
           throw new InternalServerErrorException(ResponseMessages.user.error.errorInDeleteSession);
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const decodedToken: any = jwt.decode(tokenResponse?.access_token);
+        const expiresAt = new Date(decodedToken.exp * 1000);
         const sessionData = {
           sessionToken: tokenResponse.access_token,
           userId: userByKeycloakId?.['id'],
           expires: tokenResponse.expires_in,
           refreshToken: tokenResponse.refresh_token,
           sessionType: SessionType.USER_SESSION,
-          accountId: userAccountDetails.id
+          accountId: userAccountDetails.id,
+          expiresAt
         };
         const addSessionDetails = await this.userRepository.createSession(sessionData);
         if (!addSessionDetails) {
@@ -650,7 +650,7 @@ export class UserService {
       const platform = platformName || process.env.PLATFORM_NAME;
       emailData.emailSubject = `[${platform}] Important: Password Reset Request`;
 
-      emailData.emailHtml = await urlEmailTemplate.getUserResetPasswordTemplate(
+      emailData.emailHtml = urlEmailTemplate.getUserResetPasswordTemplate(
         email,
         platform,
         brandLogoUrl,
@@ -767,11 +767,7 @@ export class UserService {
           );
 
           if (userData.keycloakUserId) {
-            keycloakDetails = await this.clientRegistrationService.resetPasswordOfUser(
-              userData,
-              process.env.KEYCLOAK_REALM,
-              token
-            );
+            await this.clientRegistrationService.resetPasswordOfUser(userData, process.env.KEYCLOAK_REALM, token);
             await this.updateFidoVerifiedUser(email.toLowerCase(), userData.isFidoVerified, newPassword);
           } else {
             keycloakDetails = await this.clientRegistrationService.createUser(

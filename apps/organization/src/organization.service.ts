@@ -65,6 +65,8 @@ import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
+import * as jwt from 'jsonwebtoken';
+
 @Injectable()
 export class OrganizationService {
   private readonly IMG_EXT = 'png';
@@ -196,6 +198,25 @@ export class OrganizationService {
     }
   }
 
+  private async ensureOrganizationExists(orgId: string): Promise<void> {
+    const organizationExist = await this.organizationRepository.getOrgProfile(orgId);
+    if (!organizationExist) {
+      throw new NotFoundException(ResponseMessages.organisation.error.notFound);
+    }
+  }
+  private async ensureNotExistingPrimaryDid(orgId: string, did: string): Promise<void> {
+    const orgAgentDetails = await this.organizationRepository.getAgentEndPoint(orgId);
+    if (orgAgentDetails.orgDid === did) {
+      throw new ConflictException(ResponseMessages.organisation.error.primaryDid);
+    }
+  }
+  private async ensureDidBelongsToOrg(orgId: string, did: string): Promise<void> {
+    const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId);
+    const isDidMatch = organizationDidList.some((item) => item.did === did);
+    if (!isDidMatch) {
+      throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+    }
+  }
   /**
    *
    * @param registerOrgDto
@@ -205,22 +226,11 @@ export class OrganizationService {
   // eslint-disable-next-line camelcase
   async setPrimaryDid(orgId: string, did: string, id: string): Promise<string> {
     try {
-      const organizationExist = await this.organizationRepository.getOrgProfile(orgId);
-      if (!organizationExist) {
-        throw new NotFoundException(ResponseMessages.organisation.error.notFound);
-      }
-      const orgAgentDetails = await this.organizationRepository.getAgentEndPoint(orgId);
-      if (orgAgentDetails.orgDid === did) {
-        throw new ConflictException(ResponseMessages.organisation.error.primaryDid);
-      }
+      await this.ensureOrganizationExists(orgId);
+      await this.ensureNotExistingPrimaryDid(orgId, did);
 
       //check user DID exist in the organization's did list
-      const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId);
-      const isDidMatch = organizationDidList.some((item) => item.did === did);
-
-      if (!isDidMatch) {
-        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
-      }
+      await this.ensureDidBelongsToOrg(orgId, did);
       const didDetails = await this.organizationRepository.getDidDetailsByDid(did);
 
       if (!didDetails) {
@@ -712,17 +722,24 @@ export class OrganizationService {
     let addSessionDetails;
     // Fetch owner organization details for getting the user id
     const orgRoleDetails = await this.organizationRepository.getOrgAndOwnerUser(clientId);
+    // called seprate method to delete exp session
+    this.userRepository.deleteInactiveSessions(orgRoleDetails['user'].id);
+
     // Fetch the total number of sessions for the requested user to check and restrict the creation of multiple sessions.
     const userSessionDetails = await this.userRepository.fetchUserSessions(orgRoleDetails['user'].id);
     if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
       throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const decodedToken: any = jwt.decode(authenticationResult?.access_token);
+    const expiresAt = new Date(decodedToken.exp * 1000);
     // Session payload
     const sessionData = {
       sessionToken: authenticationResult?.access_token,
       userId: orgRoleDetails['user'].id,
       expires: authenticationResult?.expires_in,
-      sessionType: SessionType.ORG_SESSION
+      sessionType: SessionType.ORG_SESSION,
+      expiresAt
     };
     // Note:
     // Fetch account details to check whether the requested user account exists
@@ -1732,7 +1749,7 @@ export class OrganizationService {
     emailData.emailTo = email;
     emailData.emailSubject = `Removal of participation of “${orgName}”`;
 
-    emailData.emailHtml = await urlEmailTemplate.sendDeleteOrgMemberEmailTemplate(email, orgName, orgRole);
+    emailData.emailHtml = urlEmailTemplate.sendDeleteOrgMemberEmailTemplate(email, orgName, orgRole);
 
     //Email is sent to user for the verification through emailData
     const isEmailSent = await sendEmail(emailData);

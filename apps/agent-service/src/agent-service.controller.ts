@@ -323,4 +323,38 @@ export class AgentServiceController {
   async agentdetailsByOrgId(payload: { orgId: string }): Promise<IStoreAgent> {
     return this.agentServiceService.getAgentDetails(payload.orgId);
   }
+
+  @MessagePattern({ cmd: 'agent-create-oidc-issuer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcIssuerCreate(payload: { issuerCreation; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcIssuerCreate(payload.issuerCreation, payload.url, payload.orgId);
+  }
+  @MessagePattern({ cmd: 'delete-oidc-issuer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcDeleteIssuer(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.deleteOidcIssuer(payload.url, payload.orgId);
+  }
+  @MessagePattern({ cmd: 'agent-create-oidc-template' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcIssuerTemplate(payload: { templatePayload; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcIssuerTemplate(payload.templatePayload, payload.url, payload.orgId);
+  }
+  //TODO: change message for oidc
+  @MessagePattern({ cmd: 'oidc-get-issuer-by-id' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcGetIssuerById(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcGetIssuerById(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'oidc-get-issuers' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcGetIssuers(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcGetIssuers(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oidc-create-credential-offer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcCreateCredentialOffer(payload: { credentialPayload; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcCreateCredentialOffer(payload.credentialPayload, payload.url, payload.orgId);
+  }
 }

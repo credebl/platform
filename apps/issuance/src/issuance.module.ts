@@ -21,6 +21,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { OIDCIssuanceService } from './oidc-issuance.service';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
   controllers: [IssuanceController],
   providers: [
     IssuanceService,
+    OIDCIssuanceService,
     IssuanceRepository,
     UserActivityRepository,
     PrismaService,

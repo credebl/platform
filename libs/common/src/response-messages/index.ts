@@ -497,6 +497,54 @@ export const ResponseMessages = {
       walletRecordNotFound: 'Wallet record not found.'
     }
   },
+  oidcIssuer: {
+    success: {
+      create: 'OIDC issuer created successfully.',
+      update: 'OIDC issuer updated successfully.',
+      delete: 'OIDC issuer deleted successfully.',
+      fetch: 'OIDC issuer(s) fetched successfully.',
+      issuerConfig: 'Issuer config details created successfully',
+      issuerConfigUpdate: 'Issuer config details updated successfully'
+    },
+    error: {
+      notFound: 'OIDC issuer not found.',
+      invalidId: 'Invalid OIDC issuer ID.',
+      createFailed: 'Failed to create OIDC issuer.',
+      updateFailed: 'Failed to update OIDC issuer.',
+      deleteFailed: 'Failed to delete OIDC issuer.'
+    }
+  },
+  oidcTemplate: {
+    success: {
+      create: 'OIDC template created successfully.',
+      update: 'OIDC template updated successfully.',
+      delete: 'OIDC template deleted successfully.',
+      fetch: 'OIDC template(s) fetched successfully.'
+    },
+    error: {
+      notFound: 'OIDC template not found.',
+      invalidId: 'Invalid OIDC template ID.',
+      createFailed: 'Failed to create OIDC template.',
+      updateFailed: 'Failed to update OIDC template.',
+      deleteFailed: 'Failed to delete OIDC template.',
+      issuerDisplayNotFound: 'Issuer display not found.',
+      issuerDetailsNotFound: 'Issuer details not found.',
+      templateNameAlreadyExist: 'Template name already exists for this issuer.',
+      deleteTemplate: 'Error while deleting template.'
+    }
+  },
+  oidcIssuerSession: {
+    success: {
+      create: 'OIDC Credential offer created successfully.'
+    },
+    error: {
+      errroCreateOffer: 'Error while creating OIDC credential offer on agent.',
+      invalidId: 'Invalid OIDC issuer ID.',
+      createFailed: 'Failed to create OIDC issuer.',
+      updateFailed: 'Failed to update OIDC issuer.',
+      deleteFailed: 'Failed to delete OIDC issuer.'
+    }
+  },
   nats: {
     success: {},
     error: {

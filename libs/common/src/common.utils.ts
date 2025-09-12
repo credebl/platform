@@ -93,7 +93,16 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
     [String(CommonConstants.GET_VERIFIED_PROOF), String(CommonConstants.URL_PROOF_FORM_DATA)],
     [String(CommonConstants.GET_QUESTION_ANSWER_RECORD), String(CommonConstants.URL_QUESTION_ANSWER_RECORD)],
     [String(CommonConstants.SEND_QUESTION), String(CommonConstants.URL_SEND_QUESTION)],
-    [String(CommonConstants.SEND_BASIC_MESSAGE), String(CommonConstants.URL_SEND_BASIC_MESSAGE)]
+    [String(CommonConstants.SEND_BASIC_MESSAGE), String(CommonConstants.URL_SEND_BASIC_MESSAGE)],
+    [String(CommonConstants.OIDC_ISSUER_CREATE), String(CommonConstants.URL_OIDC_ISSUER_CREATE)],
+    [String(CommonConstants.OIDC_GET_ALL_ISSUERS), String(CommonConstants.URL_OIDC_GET_ISSUES)],
+    [String(CommonConstants.OIDC_ISSUER_DELETE), String(CommonConstants.URL_OIDC_ISSUER_UPDATE)],
+    [String(CommonConstants.OIDC_ISSUER_BY_ID), String(CommonConstants.URL_OIDC_ISSUER_UPDATE)],
+    [String(CommonConstants.OIDC_ISSUER_TEMPLATE), String(CommonConstants.URL_OIDC_ISSUER_UPDATE)],
+    [
+      String(CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER),
+      String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_CREATE)
+    ]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);

@@ -229,6 +229,7 @@ model org_agents {
   organisation        organisation?       @relation(fields: [orgId], references: [id])
   webhookUrl          String?             @db.VarChar
   org_dids            org_dids[]
+  oidc_issuer         oidc_issuer[]
 }
 
 model org_dids {
@@ -567,4 +568,40 @@ model client_aliases {
   lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
   clientAlias          String?
   clientUrl            String        
+}
+
+model oidc_issuer {
+  id             String    @id @default(uuid()) @db.Uuid
+  createDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy      String    @db.Uuid
+  publicIssuerId String
+  metadata       Json
+  orgAgentId     String     @db.Uuid
+  orgAgent       org_agents @relation(fields: [orgAgentId], references: [id])
+  templates      credential_templates[]
+  batchCredentialIssuanceSize Int       @default(0)
+  @@index([orgAgentId])
+}
+
+enum SignerOption {
+  did
+  x509
+}
+
+model credential_templates {
+  id            String      @id @default(uuid())
+  name          String
+  description   String?
+  format        String      // e.g. "sd_jwt", "mso_mdoc"
+  canBeRevoked  Boolean     @default(false)
+
+  attributes    Json 
+  appearance    Json
+
+  issuerId      String      @db.Uuid
+  issuer        oidc_issuer @relation(fields: [issuerId], references: [id])
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  signerOption  SignerOption
 }

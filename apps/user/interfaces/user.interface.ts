@@ -1,4 +1,5 @@
 import { $Enums, Prisma, RecordType } from '@prisma/client';
+import { JsonValue } from 'aws-sdk/clients/glue';
 
 export interface IUsersProfile {
   id: string;
@@ -179,6 +180,7 @@ export interface IUserSignIn {
   email: string;
   password: string;
   isPasskey?: boolean;
+  clientInfo: JsonValue;
 }
 
 export interface ISession {
@@ -192,6 +194,7 @@ export interface ISession {
   accountId?: string;
   sessionType?: string;
   expiresAt?: Date;
+  clientInfo?: Prisma.JsonValue | null;
 }
 
 export interface IUpdateAccountDetails {

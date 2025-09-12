@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, HttpException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from '../../../../libs/service/base.service';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
@@ -16,9 +16,10 @@ import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { NATSClient } from '@credebl/common/NATSClient';
-import { user } from '@prisma/client';
+import { session, user } from '@prisma/client';
 import { ISessionDetails } from 'apps/user/interfaces/user.interface';
 import { UserLogoutDto } from './dtos/user-logout.dto';
+import { JsonValue } from 'aws-sdk/clients/glue';
 @Injectable()
 @WebSocketGateway()
 export class AuthzService extends BaseService {
@@ -50,8 +51,8 @@ export class AuthzService extends BaseService {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-email-verification', payload);
   }
 
-  async login(email: string, password?: string, isPasskey = false): Promise<ISignInUser> {
-    const payload = { email, password, isPasskey };
+  async login(clientInfo: JsonValue, email: string, password?: string, isPasskey = false): Promise<ISignInUser> {
+    const payload = { email, password, isPasskey, clientInfo };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-holder-login', payload);
   }
 
@@ -74,6 +75,24 @@ export class AuthzService extends BaseService {
 
   async refreshToken(refreshToken: string): Promise<ISignInUser> {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'refresh-token-details', refreshToken);
+  }
+
+  async userSessions(userId: string): Promise<session[]> {
+    return this.natsClient.sendNatsMessage(this.authServiceProxy, 'session-details-by-userId', userId);
+  }
+
+  async deleteSession(sessionId: string, userId: string): Promise<{ message: string }> {
+    try {
+      return await this.natsClient.sendNatsMessage(this.authServiceProxy, 'delete-session-by-sessionId', {
+        sessionId,
+        userId
+      });
+    } catch (error) {
+      if (error?.response && error?.status) {
+        throw new HttpException(error.response, error.status);
+      }
+      throw error;
+    }
   }
 
   async addUserDetails(userInfo: AddUserDetailsDto): Promise<ISignUpUserResponse> {

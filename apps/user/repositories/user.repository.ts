@@ -688,7 +688,8 @@ export class UserRepository {
           refreshToken,
           accountId,
           sessionType,
-          expiresAt
+          expiresAt,
+          ...(tokenDetails.clientInfo ? { clientInfo: tokenDetails.clientInfo } : { clientInfo: { clientToken: true } })
         }
       });
       return sessionResponse;

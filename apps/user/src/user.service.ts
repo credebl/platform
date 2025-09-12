@@ -435,7 +435,7 @@ export class UserService {
    * @returns User access token details
    */
   async login(loginUserDto: LoginUserDto): Promise<ISignInUser> {
-    const { email, password, isPasskey } = loginUserDto;
+    const { email, password, isPasskey, clientInfo } = loginUserDto;
 
     try {
       this.validateEmail(email.toLowerCase());
@@ -476,7 +476,8 @@ export class UserService {
         expires: tokenDetails?.expires_in,
         refreshToken: tokenDetails?.refresh_token,
         sessionType: SessionType.USER_SESSION,
-        expiresAt
+        expiresAt,
+        clientInfo
       };
 
       const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);

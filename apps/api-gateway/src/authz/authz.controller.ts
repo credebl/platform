@@ -52,7 +52,7 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { User } from './decorators/user.decorator';
 import { user } from '@prisma/client';
-
+import * as UAParser from 'ua-parser-js';
 @Controller('auth')
 @ApiTags('auth')
 @UseFilters(CustomExceptionFilter)
@@ -175,9 +175,18 @@ export class AuthzController {
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
   @ApiBody({ type: LoginUserDto })
-  async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
+  async login(@Req() req: Request, @Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
     if (loginUserDto.email) {
-      const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password);
+      const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress;
+      const ua = req.headers['user-agent'];
+      const parser = new UAParser.UAParser(ua);
+      const device = {
+        os: `${parser?.getOS()?.name} ${parser?.getOS()?.version ?? ''}`.trim(),
+        browser: `${parser?.getBrowser()?.name} ${parser?.getBrowser()?.version ?? ''}`.trim(),
+        deviceType: parser?.getDevice()?.type || 'desktop'
+      };
+      const clientInfo = JSON.stringify({ ...device, rawDetail: ua, ip });
+      const userData = await this.authzService.login(clientInfo, loginUserDto.email, loginUserDto.password);
 
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,

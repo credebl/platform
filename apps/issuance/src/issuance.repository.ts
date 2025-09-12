@@ -14,9 +14,11 @@ import { IssueCredentials, IssuedCredentialStatus } from '../enum/issuance.enum'
 import {
   Prisma,
   agent_invitations,
+  credential_templates,
   credentials,
   file_data,
   file_upload,
+  oidc_issuer,
   org_agents,
   organisation,
   platform_config,
@@ -30,6 +32,7 @@ import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/int
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { IssuerMetadata, IssuerUpdation } from '../interfaces/oidc-issuance.interfaces';
 
 @Injectable()
 export class IssuanceRepository {
@@ -790,6 +793,188 @@ export class IssuanceRepository {
       });
     } catch (error) {
       this.logger.error(`[updateSchemaIdByThreadId] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getOidcIssuerByOrg(orgId: string): Promise<oidc_issuer[]> {
+    try {
+      return await this.prisma.oidc_issuer.findMany({
+        where: { createdBy: orgId },
+        include: {
+          templates: true
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getOidcIssuerByOrg: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getOidcIssuerDetailsById(issuerId: string): Promise<oidc_issuer> {
+    try {
+      return await this.prisma.oidc_issuer.findFirstOrThrow({
+        where: { id: issuerId }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getOidcIssuerDetailsById: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async addOidcIssuerDetails(issuerMetadata: IssuerMetadata, issuerProfileJson): Promise<oidc_issuer> {
+    try {
+      const { publicIssuerId, createdById, orgAgentId, batchCredentialIssuanceSize } = issuerMetadata;
+      const oidcIssuerDetails = await this.prisma.oidc_issuer.create({
+        data: {
+          metadata: issuerProfileJson,
+          publicIssuerId,
+          createdBy: createdById,
+          orgAgentId,
+          batchCredentialIssuanceSize
+        }
+      });
+
+      return oidcIssuerDetails;
+    } catch (error) {
+      this.logger.error(`[addOidcIssuerDetails] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateOidcIssuerDetails(createdById: string, issuerConfig: IssuerUpdation): Promise<oidc_issuer> {
+    try {
+      const { issuerId, display, batchCredentialIssuanceSize } = issuerConfig;
+      const oidcIssuerDetails = await this.prisma.oidc_issuer.update({
+        where: { id: issuerId },
+        data: {
+          metadata: display as unknown as Prisma.InputJsonValue,
+          createdBy: createdById,
+          ...(batchCredentialIssuanceSize !== undefined ? { batchCredentialIssuanceSize } : {})
+        }
+      });
+
+      return oidcIssuerDetails;
+    } catch (error) {
+      this.logger.error(`[addOidcIssuerDetails] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteOidcIssuer(issuerId: string): Promise<oidc_issuer> {
+    try {
+      return await this.prisma.oidc_issuer.delete({
+        where: { id: issuerId }
+      });
+    } catch (error) {
+      this.logger.error(`[deleteOidcIssuer] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async createTemplate(
+    issuerId: string,
+    data: Omit<credential_templates, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<credential_templates> {
+    try {
+      return await this.prisma.credential_templates.create({
+        data: {
+          ...data,
+          issuerId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in createTemplate: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getTemplateById(templateId: string): Promise<credential_templates | null> {
+    try {
+      return await this.prisma.credential_templates.findUnique({
+        where: { id: templateId }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getTemplateById: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getTemplateByIds(templateIds: string[], issuerId: string): Promise<credential_templates[]> {
+    try {
+      // Early return if empty input (avoids full table scan if someone passes [])
+      if (!Array.isArray(templateIds) || 0 === templateIds.length) {
+        return [];
+      }
+
+      this.logger.debug(`getTemplateByIds templateIds=${JSON.stringify(templateIds)} issuerId=${issuerId}`);
+
+      return await this.prisma.credential_templates.findMany({
+        where: {
+          id: { in: templateIds },
+          issuerId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getTemplateByIds: ${error?.message}`, error?.stack);
+      throw error;
+    }
+  }
+
+  async getTemplateByNameForIssuer(name: string, issuerId: string): Promise<credential_templates[] | null> {
+    try {
+      return await this.prisma.credential_templates.findMany({
+        where: {
+          issuerId,
+          name: {
+            equals: name,
+            mode: 'insensitive'
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getTemplateByNameForIssuer: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getTemplatesByIssuerId(issuerId: string): Promise<credential_templates[]> {
+    try {
+      return await this.prisma.credential_templates.findMany({
+        where: { issuerId },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getTemplatesByIssuer: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateTemplate(templateId: string, data: Partial<credential_templates>): Promise<credential_templates> {
+    try {
+      return await this.prisma.credential_templates.update({
+        where: { id: templateId },
+        data
+      });
+    } catch (error) {
+      this.logger.error(`Error in updateTemplate: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteTemplate(templateId: string): Promise<credential_templates> {
+    try {
+      return await this.prisma.credential_templates.delete({
+        where: { id: templateId }
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleteTemplate: ${error.message}`);
       throw error;
     }
   }

@@ -1355,6 +1355,84 @@ export class AgentServiceService {
     }
   }
 
+  async oidcIssuerCreate(issueData, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const data = await this.commonService
+        .httpPost(url, issueData, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return data;
+    } catch (error) {
+      this.logger.error(`Error in oidcIssuerCreate in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteOidcIssuer(url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const data = await this.commonService
+        .httpDelete(url, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return data;
+    } catch (error) {
+      this.logger.error(`Error in deleteOidcIssuer in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async oidcGetIssuerById(url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const data = await this.commonService
+        .httpGet(url, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return data;
+    } catch (error) {
+      this.logger.error(`Error in oidcGetIssuerById in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async oidcGetIssuers(url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const data = await this.commonService
+        .httpGet(url, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return data;
+    } catch (error) {
+      this.logger.error(`Error in oidcGetIssuers in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async oidcCreateCredentialOffer(credentialPayload, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const data = await this.commonService
+        .httpPost(url, credentialPayload, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return data;
+    } catch (error) {
+      this.logger.error(`Error in oidcCreateCredentialOffer in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async oidcIssuerTemplate(templatePayload, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const data = await this.commonService
+        .httpPut(url, templatePayload, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return data;
+    } catch (error) {
+      this.logger.error(`Error in oidcIssuerTemplate in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async getIssueCredentials(url: string, apiKey: string): Promise<object> {
     try {
       const data = await this.commonService

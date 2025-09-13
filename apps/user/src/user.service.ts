@@ -581,7 +581,7 @@ export class UserService {
 
   async userSessions(userId: string): Promise<session[]> {
     try {
-      return this.userRepository.fetchUserSessions(userId);
+      return await this.userRepository.fetchUserSessions(userId);
     } catch (error) {
       this.logger.error(`get user sessions: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -590,7 +590,7 @@ export class UserService {
 
   async deleteSession(sessionId: string, userId: string): Promise<{ message: string }> {
     try {
-      return this.userRepository.deleteSessionBySessionId(sessionId, userId);
+      return await this.userRepository.deleteSessionBySessionId(sessionId, userId);
     } catch (error) {
       this.logger.error(`delete session by session id: ${JSON.stringify(error)}`);
       throw error;

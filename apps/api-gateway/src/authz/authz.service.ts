@@ -17,9 +17,9 @@ import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { session, user } from '@prisma/client';
-import { ISessionDetails } from 'apps/user/interfaces/user.interface';
+import { IRestrictedUserSession } from 'apps/user/interfaces/user.interface';
 import { UserLogoutDto } from './dtos/user-logout.dto';
-import { JsonValue } from 'aws-sdk/clients/glue';
+import type { Prisma } from '@prisma/client';
 @Injectable()
 @WebSocketGateway()
 export class AuthzService extends BaseService {
@@ -51,12 +51,12 @@ export class AuthzService extends BaseService {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-email-verification', payload);
   }
 
-  async login(clientInfo: JsonValue, email: string, password?: string, isPasskey = false): Promise<ISignInUser> {
+  async login(clientInfo: Prisma.JsonValue, email: string, password?: string, isPasskey = false): Promise<ISignInUser> {
     const payload = { email, password, isPasskey, clientInfo };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-holder-login', payload);
   }
 
-  async getSession(sessionId): Promise<ISessionDetails> {
+  async getSession(sessionId): Promise<IRestrictedUserSession> {
     const payload = { ...sessionId };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'fetch-session-details', payload);
   }

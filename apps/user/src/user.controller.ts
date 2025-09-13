@@ -1,6 +1,7 @@
 import {
   ICheckUserDetails,
   IOrgUsers,
+  IRestrictedUserSession,
   ISessionDetails,
   ISessions,
   IUserDeletedActivity,
@@ -23,7 +24,7 @@ import {
   IVerifyUserEmail
 } from '@credebl/common/interfaces/user.interface';
 // eslint-disable-next-line camelcase
-import { client_aliases, session, user, user_org_roles } from '@prisma/client';
+import { client_aliases, user, user_org_roles } from '@prisma/client';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
@@ -90,7 +91,7 @@ export class UserController {
   }
 
   @MessagePattern({ cmd: 'session-details-by-userId' })
-  async userSessions(userId: string): Promise<session[]> {
+  async userSessions(userId: string): Promise<IRestrictedUserSession[]> {
     return this.userService.userSessions(userId);
   }
 

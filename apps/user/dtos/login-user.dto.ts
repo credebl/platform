@@ -1,8 +1,9 @@
-import { trim } from '@credebl/common/cast.helper';
-import { ApiProperty } from '@nestjs/swagger';
-import { JsonValue } from '@prisma/client/runtime/library';
-import { Transform } from 'class-transformer';
 import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+import { ApiProperty } from '@nestjs/swagger';
+import type { Prisma } from '@prisma/client';
+import { Transform } from 'class-transformer';
+import { trim } from '@credebl/common/cast.helper';
 
 export class LoginUserDto {
   @ApiProperty({ example: 'awqx@yopmail.com' })
@@ -24,5 +25,5 @@ export class LoginUserDto {
 
   @ApiProperty({ example: 'false' })
   @IsOptional()
-  clientInfo?: JsonValue;
+  clientInfo?: Prisma.JsonValue;
 }

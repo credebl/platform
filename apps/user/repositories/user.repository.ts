@@ -3,6 +3,7 @@
 
 import {
   IOrgUsers,
+  IRestrictedUserSession,
   ISendVerificationEmail,
   ISession,
   IShareUserCertificate,
@@ -699,11 +700,19 @@ export class UserRepository {
     }
   }
 
-  async fetchUserSessions(userId: string): Promise<session[]> {
+  async fetchUserSessions(userId: string): Promise<IRestrictedUserSession[]> {
     try {
       const userSessionCount = await this.prisma.session.findMany({
         where: {
           userId
+        },
+        select: {
+          id: true,
+          userId: true,
+          expiresAt: true,
+          createdAt: true,
+          clientInfo: true,
+          sessionType: true
         }
       });
       return userSessionCount;

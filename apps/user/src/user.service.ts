@@ -42,7 +42,8 @@ import {
   IUserForgotPassword,
   ISessionDetails,
   ISessions,
-  IUpdateAccountDetails
+  IUpdateAccountDetails,
+  IRestrictedUserSession
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -579,7 +580,7 @@ export class UserService {
     }
   }
 
-  async userSessions(userId: string): Promise<session[]> {
+  async userSessions(userId: string): Promise<IRestrictedUserSession[]> {
     try {
       return await this.userRepository.fetchUserSessions(userId);
     } catch (error) {

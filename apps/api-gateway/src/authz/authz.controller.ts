@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpStatus,
   Logger,
@@ -52,7 +53,8 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { User } from './decorators/user.decorator';
 import { user } from '@prisma/client';
-import * as UAParser from 'ua-parser-js';
+// import * as UAParser from 'ua-parser-js';
+import { UAParser } from 'ua-parser-js';
 @Controller('auth')
 @ApiTags('auth')
 @UseFilters(CustomExceptionFilter)
@@ -179,7 +181,7 @@ export class AuthzController {
     if (loginUserDto.email) {
       const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress;
       const ua = req.headers['user-agent'];
-      const parser = new UAParser.UAParser(ua);
+      const parser = new UAParser(ua);
       const device = {
         os: `${parser?.getOS()?.name} ${parser?.getOS()?.version ?? ''}`.trim(),
         browser: `${parser?.getBrowser()?.name} ${parser?.getBrowser()?.version ?? ''}`.trim(),
@@ -365,7 +367,7 @@ export class AuthzController {
    */
   @Get('/:userId/sessions')
   @ApiOperation({
-    summary: 'Get all sesssions by userId',
+    summary: 'Get all sessions by userId',
     description: 'Retrieve sessions for the user. Based on userId.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -374,6 +376,7 @@ export class AuthzController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   async userSessions(
+    @User() reqUser: user,
     @Res() res: Response,
     @Param(
       'userId',
@@ -385,6 +388,9 @@ export class AuthzController {
     )
     userId: string
   ): Promise<Response> {
+    if (reqUser.id !== userId) {
+      throw new ForbiddenException('You are not allowed to access sessions of another user');
+    }
     const response = await this.authzService.userSessions(userId);
 
     const finalResponse: IResponse = {

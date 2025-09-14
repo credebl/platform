@@ -22,7 +22,13 @@ npm i @nestjs/cli@latest
 Start the PostgreSQL service using Docker:
 
 ```bash
-docker run --name some-postgres -p 5432:5432 -e POSTGRES_PASSWORD=<secretpassword> -e POSTGRES_USER=credebl -d postgres
+docker run --name credebl-postgres \
+  -p 5432:5432 \
+  -e POSTGRES_USER=credebl \
+  -e POSTGRES_PASSWORD=changeme \
+  -e POSTGRES_DB=credebl \
+  -v credebl_pgdata:/var/lib/postgresql/data \
+  -d postgres:16
 ```
 
 ### 2. Run Prisma to Generate Database Schema

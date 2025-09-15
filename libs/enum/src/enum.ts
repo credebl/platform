@@ -269,5 +269,6 @@ export enum SessionType {
 
 export enum ProviderType {
   KEYCLOAK = 'keycloak',
-  SUPABASE = 'supabase'
+  SUPABASE = 'supabase',
+  GOOGLE = 'google'
 }

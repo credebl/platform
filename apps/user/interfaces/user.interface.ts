@@ -62,6 +62,7 @@ export interface IUserInformation {
   lastName: string;
   isPasskey: boolean;
   isHolder?: boolean;
+  isEmailVerified?: boolean;
 }
 
 export interface AddPasskeyDetails {
@@ -174,12 +175,20 @@ export interface IVerifyUserEmail {
   email: string;
   verificationCode: string;
 }
-
 export interface IUserSignIn {
   email: string;
-  password: string;
+  password?: string;
   isPasskey?: boolean;
+  provider?: 'google' | 'credentials';
+  idToken?: string;
+  access_token?: string;
 }
+
+// export interface IUserSignIn {
+//   email: string;
+//   password: string;
+//   isPasskey?: boolean;
+// }
 
 export interface ISession {
   id?: string;

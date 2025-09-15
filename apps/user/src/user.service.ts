@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
@@ -44,6 +45,8 @@ import {
   ISessions,
   IUpdateAccountDetails
 } from '../interfaces/user.interface';
+import { OAuth2Client } from 'google-auth-library';
+
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
@@ -69,9 +72,14 @@ import { toNumber } from '@credebl/common/cast.helper';
 import * as jwt from 'jsonwebtoken';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { getCredentialsByAlias } from 'apps/api-gateway/src/user/utils';
+import { CreateUserDto } from '../dtos/create-user.dto';
+import { randomUUID } from 'crypto';
+import * as qs from 'qs';
 
 @Injectable()
 export class UserService {
+  private oauthClient: OAuth2Client;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly clientRegistrationService: ClientRegistrationService,
@@ -86,7 +94,9 @@ export class UserService {
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
-  ) {}
+  ) {
+    this.oauthClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
 
   /**
    *
@@ -435,9 +445,118 @@ export class UserService {
    * @returns User access token details
    */
   async login(loginUserDto: LoginUserDto): Promise<ISignInUser> {
-    const { email, password, isPasskey } = loginUserDto;
+    const { email, password, isPasskey, idToken, provider, access_token } = loginUserDto;
 
     try {
+      if (provider === ProviderType.GOOGLE) {
+        this.logger.log(`Google login attempt with provider: ${provider}`);
+
+        if (!idToken) {
+          throw new BadRequestException('Google idToken is required for Google login');
+        }
+
+        // Step 1: Verify Google id_token
+        const ticket = await this.oauthClient.verifyIdToken({
+          idToken,
+          audience: process.env.GOOGLE_CLIENT_ID
+        });
+        const payload = ticket.getPayload();
+
+        if (!payload?.email) {
+          throw new UnauthorizedException('Google token verification failed');
+        }
+
+        const googleEmail = payload.email.toLowerCase();
+
+        if (email && email.toLowerCase() !== googleEmail) {
+          throw new BadRequestException('Email does not match Google account');
+        }
+
+        // Step 2: Lookup user in DB
+        let userData = await this.userRepository.checkUserExist(googleEmail);
+        if (!userData) {
+          throw new BadRequestException('User does not exist. Please register with email first.');
+        }
+
+        if (!userData) {
+          this.logger.log(`New Google user detected. Creating account for: ${googleEmail}`);
+
+          // Build minimal user info
+          const userInfo: IUserInformation = {
+            email: googleEmail,
+            firstName: payload.given_name || '',
+            lastName: payload.family_name || '',
+            password: this.commonService.decryptPassword('tempRandomPassword123!'),
+            isPasskey: false,
+            isHolder: true // or false based on your logic
+          };
+
+          const newUser = await this.createUserForToken(userInfo);
+          userData = await this.userRepository.getUserDetails(googleEmail.toLowerCase());
+        }
+        this.logger.log(`Existing user found for Google login: ${googleEmail}`);
+
+        // Step 3: Generate Keycloak token via token exchange
+        const tokenDetails = await this.generateToken(
+          googleEmail,
+          null,
+          userData,
+          ProviderType.GOOGLE,
+          idToken,
+          access_token
+        );
+
+        // Step 4: Add or update account/session (use Keycloak access_token)
+        const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData.id);
+        let addSessionDetails;
+        let accountData;
+
+        if (!fetchAccountDetails) {
+          accountData = {
+            providerAccountId: payload.sub,
+            userId: userData.id,
+            expires: tokenDetails.expires_in,
+            refreshToken: tokenDetails.refresh_token,
+            keycloakUserId: userData.keycloakUserId,
+            type: TokenType.BEARER_TOKEN,
+            provider: ProviderType.GOOGLE
+          };
+
+          const response = await this.userRepository.addAccountDetails(accountData);
+          addSessionDetails = await this.userRepository.createSession({
+            sessionToken: tokenDetails.access_token,
+            userId: userData.id,
+            expires: tokenDetails.expires_in,
+            refreshToken: tokenDetails.refresh_token,
+            sessionType: SessionType.USER_SESSION,
+            accountId: response.id
+          });
+        } else {
+          accountData = {
+            sessionToken: tokenDetails.access_token,
+            userId: userData.id,
+            expires: tokenDetails.expires_in,
+            refreshToken: tokenDetails.refresh_token,
+            provider: ProviderType.GOOGLE
+          };
+
+          const response = await this.userRepository.addAccountDetails(accountData);
+          addSessionDetails = await this.userRepository.createSession({
+            sessionToken: tokenDetails.access_token,
+            userId: userData.id,
+            expires: tokenDetails.expires_in,
+            refreshToken: tokenDetails.refresh_token,
+            sessionType: SessionType.USER_SESSION,
+            accountId: response.id
+          });
+        }
+
+        return {
+          ...tokenDetails,
+          sessionId: addSessionDetails.id
+        };
+      }
+
       this.validateEmail(email.toLowerCase());
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());
       if (!userData) {
@@ -798,7 +917,61 @@ export class UserService {
     }
   }
 
-  async generateToken(email: string, password: string, userData: user): Promise<ISignInUser> {
+  async generateToken(
+    email: string,
+    password: string,
+    userData: user,
+    provider?: string,
+    idToken?: string,
+    access_token?: string
+  ): Promise<ISignInUser> {
+    if (provider === ProviderType.GOOGLE) {
+      try {
+        // 1. Verify Google ID token
+        const ticket = await this.oauthClient.verifyIdToken({
+          idToken,
+          audience: process.env.GOOGLE_CLIENT_ID
+        });
+        const payload = ticket.getPayload();
+
+        if (!payload?.email) {
+          throw new UnauthorizedException('Google token verification failed');
+        }
+
+        // 2. Use direct password grant with Keycloak
+        const tokenData = new URLSearchParams();
+        tokenData.append('grant_type', 'password');
+        tokenData.append('client_id', process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID);
+        tokenData.append('client_secret', process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET);
+        tokenData.append('username', payload.email);
+
+        // Use a consistent password for Google-authenticated users
+        // Set this during user registration or use a default
+        tokenData.append('password', 'Password@1');
+
+        const tokenResponse = await this.commonService.httpPost(
+          `http://localhost:8080/realms/credebl-platform/protocol/openid-connect/token`,
+          tokenData.toString(),
+          {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }
+        );
+
+        return {
+          access_token: tokenResponse.data.access_token,
+          token_type: tokenResponse.data.token_type,
+          expires_in: tokenResponse.data.expires_in,
+          refresh_token: tokenResponse.data.refresh_token,
+          isRegisteredToSupabase: false
+        };
+      } catch (err) {
+        this.logger.error(`Google authentication failed: ${JSON.stringify(err.response?.data || err.message)}`);
+        throw new HttpException(err.response?.data || 'Google authentication failed', err.response?.status || 500);
+      }
+    }
+    // === Traditional login ===
     if (userData.keycloakUserId) {
       try {
         const tokenResponse = await this.clientRegistrationService.getUserToken(
@@ -810,16 +983,12 @@ export class UserService {
         tokenResponse.isRegisteredToSupabase = false;
         return tokenResponse;
       } catch (error) {
-        throw new UnauthorizedException(ResponseMessages.user.error.invalidCredentials);
+        throw new UnauthorizedException('Invalid credentials');
       }
     } else {
+      // Supabase flow
       const supaInstance = await this.supabaseService.getClient();
-      const { data, error } = await supaInstance.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      this.logger.error(`Supa Login Error::`, JSON.stringify(error));
+      const { data, error } = await supaInstance.auth.signInWithPassword({ email, password });
 
       if (error) {
         throw new BadRequestException(error?.message);
@@ -828,13 +997,9 @@ export class UserService {
       const token = data?.session;
 
       return {
-        // eslint-disable-next-line camelcase
         access_token: token.access_token,
-        // eslint-disable-next-line camelcase
         token_type: token.token_type,
-        // eslint-disable-next-line camelcase
         expires_in: token.expires_in,
-        // eslint-disable-next-line camelcase
         expires_at: token.expires_at,
         isRegisteredToSupabase: true
       };

@@ -159,8 +159,27 @@ export class AuthzController {
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
   @ApiBody({ type: LoginUserDto })
   async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
+    if ('google' === loginUserDto.provider) {
+      const userData = await this.authzService.login({
+        provider: 'google',
+        idToken: loginUserDto.idToken,
+        // eslint-disable-next-line camelcase
+        access_token: loginUserDto.access_token
+      });
+
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        message: 'Google login successful',
+        data: userData
+      });
+    }
+
     if (loginUserDto.email) {
-      const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password);
+      const userData = await this.authzService.login({
+        email: loginUserDto.email,
+        password: loginUserDto.password,
+        provider: 'credentials'
+      });
 
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
@@ -173,6 +192,32 @@ export class AuthzController {
       throw new UnauthorizedException(`Please provide valid credentials`);
     }
   }
+
+  // @Post('/signin')
+  // @ApiOperation({
+  //   summary: 'Authenticate the user for the access',
+  //   description: 'Allows registered user to sign.'
+  // })
+  // @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
+  // @ApiBody({ type: LoginUserDto })
+  // async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
+  //   // eslint-disable-next-line no-console
+  //   console.log('loginUserDto', loginUserDto);
+
+  //   if (loginUserDto.email) {
+  //     const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password);
+
+  //     const finalResponse: IResponseType = {
+  //       statusCode: HttpStatus.OK,
+  //       message: ResponseMessages.user.success.login,
+  //       data: userData
+  //     };
+
+  //     return res.status(HttpStatus.OK).json(finalResponse);
+  //   } else {
+  //     throw new UnauthorizedException(`Please provide valid credentials`);
+  //   }
+  // }
 
   /**
    * Fetch session details

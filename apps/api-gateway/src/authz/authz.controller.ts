@@ -53,7 +53,8 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { User } from './decorators/user.decorator';
 import { user } from '@prisma/client';
-import { UAParser } from 'ua-parser-js';
+import * as useragent from 'express-useragent';
+
 @Controller('auth')
 @ApiTags('auth')
 @UseFilters(CustomExceptionFilter)
@@ -180,12 +181,13 @@ export class AuthzController {
     if (loginUserDto.email) {
       const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress;
       const ua = req.headers['user-agent'];
-      const parser = new UAParser(ua);
+      const expressUa = useragent.parse(ua);
       const device = {
-        os: `${parser?.getOS()?.name} ${parser?.getOS()?.version ?? ''}`.trim(),
-        browser: `${parser?.getBrowser()?.name} ${parser?.getBrowser()?.version ?? ''}`.trim(),
-        deviceType: parser?.getDevice()?.type || 'desktop'
+        browser: `${expressUa.browser} ${expressUa.version ?? ''}`.trim(),
+        os: expressUa.platform,
+        deviceType: expressUa.isDesktop ? 'desktop' : 'mobile'
       };
+
       const clientInfo = JSON.stringify({ ...device, rawDetail: ua, ip });
       const userData = await this.authzService.login(clientInfo, loginUserDto.email, loginUserDto.password);
 

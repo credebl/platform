@@ -53,7 +53,6 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { User } from './decorators/user.decorator';
 import { user } from '@prisma/client';
-// import * as UAParser from 'ua-parser-js';
 import { UAParser } from 'ua-parser-js';
 @Controller('auth')
 @ApiTags('auth')

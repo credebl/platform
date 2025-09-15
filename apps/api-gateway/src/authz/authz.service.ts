@@ -16,8 +16,8 @@ import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { NATSClient } from '@credebl/common/NATSClient';
-import { session, user } from '@prisma/client';
-import { IRestrictedUserSession } from 'apps/user/interfaces/user.interface';
+import { user } from '@prisma/client';
+import { IRestrictedUserSession, ISessionDetails } from 'apps/user/interfaces/user.interface';
 import { UserLogoutDto } from './dtos/user-logout.dto';
 import type { Prisma } from '@prisma/client';
 @Injectable()
@@ -56,7 +56,7 @@ export class AuthzService extends BaseService {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-holder-login', payload);
   }
 
-  async getSession(sessionId): Promise<IRestrictedUserSession> {
+  async getSession(sessionId): Promise<ISessionDetails> {
     const payload = { ...sessionId };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'fetch-session-details', payload);
   }
@@ -77,7 +77,7 @@ export class AuthzService extends BaseService {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'refresh-token-details', refreshToken);
   }
 
-  async userSessions(userId: string): Promise<session[]> {
+  async userSessions(userId: string): Promise<IRestrictedUserSession[]> {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'session-details-by-userId', userId);
   }
 

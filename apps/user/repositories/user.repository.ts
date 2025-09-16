@@ -139,11 +139,12 @@ export class UserRepository {
    */
   async getSession(sessionId: string): Promise<session> {
     try {
-      return this.prisma.session.findUnique({
+      const data = await this.prisma.session.findUnique({
         where: {
           id: sessionId
         }
       });
+      return data;
     } catch (error) {
       this.logger.error(`Not Found: ${JSON.stringify(error)}`);
       throw new NotFoundException(error);

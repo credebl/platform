@@ -61,6 +61,10 @@ export class AuthzService extends BaseService {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'fetch-session-details', payload);
   }
 
+  async checkSession(sessionId): Promise<ISessionDetails> {
+    return this.natsClient.sendNatsMessage(this.authServiceProxy, 'check-session-details', sessionId);
+  }
+
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<IResetPasswordResponse> {
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-reset-password', resetPasswordDto);
   }

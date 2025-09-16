@@ -525,6 +525,16 @@ export class UserService {
     }
   }
 
+  async checkSession(sessionId: string): Promise<ISessionDetails> {
+    try {
+      const sessionDetails = await this.userRepository.getSession(sessionId);
+      return sessionDetails;
+    } catch (error) {
+      this.logger.error(`In fetching session details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
   async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
     try {
       try {

@@ -62,6 +62,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     let userDetails = null;
     let userInfo;
 
+    const sessionId = payload?.sid;
+    let sessionDetails = null;
+    if (sessionId) {
+      try {
+        sessionDetails = await this.authzService.checkSession(sessionId);
+      } catch (error) {
+        this.logger.log('Error in JWT Stratergy while fetching session details', JSON.stringify(error, null, 2));
+      }
+      if (!sessionDetails) {
+        throw new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken);
+      }
+    }
+
     if (payload?.email) {
       userInfo = await this.usersService.getUserByUserIdInKeycloak(payload?.email);
     }

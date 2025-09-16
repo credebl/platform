@@ -85,6 +85,11 @@ export class UserController {
     return this.userService.getSession(payload?.sessionId);
   }
 
+  @MessagePattern({ cmd: 'check-session-details' })
+  async checkSession(sessionId: string): Promise<ISessionDetails> {
+    return this.userService.checkSession(sessionId);
+  }
+
   @MessagePattern({ cmd: 'refresh-token-details' })
   async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
     return this.userService.refreshTokenDetails(refreshToken);

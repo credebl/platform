@@ -24,7 +24,11 @@ import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuan
 import { credential_templates, oidc_issuer, user } from '@prisma/client';
 import { CreateCredentialTemplate, UpdateCredentialTemplate } from '../interfaces/oidc-template.interface';
 import { IssuerCreation, IssuerUpdation } from '../interfaces/oidc-issuance.interfaces';
-import { CreateOidcCredentialOffer } from '../interfaces/oidc-issuer-sessions.interfaces';
+import {
+  CreateOidcCredentialOffer,
+  GetAllCredentialOffer,
+  UpdateCredentialRequest
+} from '../interfaces/oidc-issuer-sessions.interfaces';
 import { OIDCIssuanceService } from './oidc-issuance.service';
 
 @Controller()
@@ -173,7 +177,7 @@ export class IssuanceController {
     return this.oidcIssuanceService.oidcIssuerGetById(issuerId, orgId);
   }
 
-  @MessagePattern({ cmd: 'oidc-get-issuers' })
+  @MessagePattern({ cmd: 'oidc-get-issuers-issuance' })
   async oidcGetIssuers(payload: { orgId: string }): Promise<object> {
     const { orgId } = payload;
     return this.oidcIssuanceService.oidcIssuers(orgId);
@@ -249,9 +253,54 @@ export class IssuanceController {
     orgId: string;
     userDetails: user;
     issuerId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }): Promise<any> {
     const { oidcCredentialPayload, orgId, userDetails, issuerId } = payload;
     return this.oidcIssuanceService.createOidcCredentialOffer(oidcCredentialPayload, orgId, userDetails, issuerId);
+  }
+
+  @MessagePattern({ cmd: 'oidc-update-credential-offer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async updateOidcCredentialOffer(payload: {
+    oidcUpdateCredentialPayload: UpdateCredentialRequest;
+    orgId: string;
+    issuerId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }): Promise<any> {
+    const { oidcUpdateCredentialPayload, orgId, issuerId } = payload;
+    return this.oidcIssuanceService.updateOidcCredentialOffer(oidcUpdateCredentialPayload, orgId, issuerId);
+  }
+
+  @MessagePattern({ cmd: 'oidc-credential-offer-get-by-id' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getCredentialOfferDetailsById(payload: {
+    offerId: string;
+    orgId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }): Promise<any> {
+    const { offerId, orgId } = payload;
+    return this.oidcIssuanceService.getCredentialOfferDetailsById(offerId, orgId);
+  }
+  @MessagePattern({ cmd: 'oidc-credential-offer-get-all' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getAllCredentialOffers(payload: {
+    orgId: string;
+    getAllCredentialOffer: GetAllCredentialOffer;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }): Promise<any> {
+    const { orgId, getAllCredentialOffer } = payload;
+    return this.oidcIssuanceService.getCredentialOffers(orgId, getAllCredentialOffer);
+  }
+
+  @MessagePattern({ cmd: 'oidc-credential-offer-delete' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteCredentialOffers(payload: {
+    orgId: string;
+    credentialId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }): Promise<any> {
+    const { orgId, credentialId } = payload;
+    return this.oidcIssuanceService.deleteCredentialOffers(orgId, credentialId);
   }
 
   //TODO: complete the logic

@@ -46,11 +46,18 @@ import {
 } from '../libs/helpers/issuer.metadata';
 import {
   CreateOidcCredentialOffer,
+  GetAllCredentialOffer,
   SignerMethodOption,
-  SignerOption
+  SignerOption,
+  UpdateCredentialRequest
 } from '../interfaces/oidc-issuer-sessions.interfaces';
 import { BadRequestErrorDto } from 'apps/api-gateway/src/dtos/bad-request-error.dto';
-import { buildCredentialOfferPayload, CredentialOfferPayload } from '../libs/helpers/credential-sessions.builder';
+import {
+  buildCredentialOfferPayload,
+  buildCredentialOfferUrl,
+  buildUpdateCredentialOfferPayload,
+  CredentialOfferPayload
+} from '../libs/helpers/credential-sessions.builder';
 
 type CredentialDisplayItem = {
   logo?: { uri: string; alt_text?: string };
@@ -86,7 +93,7 @@ export class OIDCIssuanceService {
       const issuerInitialConfig: IssuerInitialConfig = {
         issuerId,
         display: issuerCreation?.display || {},
-        authorizationServerConfigs: issuerCreation?.authorizationServerConfigs || {},
+        authorizationServerConfigs: issuerCreation?.authorizationServerConfigs || undefined,
         accessTokenSignerKeyType,
         dpopSigningAlgValuesSupported,
         batchCredentialIssuance: {
@@ -212,21 +219,31 @@ export class OIDCIssuanceService {
     }
   }
 
-  async oidcIssuers(orgId: string): Promise<object> {
+  async oidcIssuers(orgId: string): Promise<IssuerResponse[]> {
     try {
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      if (!agentDetails) {
+      if (!agentDetails?.agentEndPoint) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      const url = await getAgentUrl(agentDetails?.agentEndPoint, CommonConstants.OIDC_GET_ALL_ISSUERS);
+
+      const url = await getAgentUrl(agentDetails.agentEndPoint, CommonConstants.OIDC_GET_ALL_ISSUERS);
       const issuersDetails = await this._oidcGetIssuers(url, orgId);
-      if (!issuersDetails) {
-        throw new InternalServerErrorException(`Error from agent while oidcIssuers`);
+      if (!issuersDetails || null == issuersDetails.response) {
+        throw new InternalServerErrorException('Error from agent while oidcIssuers');
+      }
+      //TODO: Fix the response type from agent
+      const raw = issuersDetails.response as unknown;
+      const response: IssuerResponse[] =
+        'string' === typeof raw ? (JSON.parse(raw) as IssuerResponse[]) : (raw as IssuerResponse[]);
+
+      if (!Array.isArray(response)) {
+        throw new InternalServerErrorException('Invalid issuer payload from agent');
       }
 
-      return issuersDetails;
-    } catch (error) {
-      this.logger.error(`[oidcIssuers] - error in oidcIssuers issuance records: ${JSON.stringify(error)}`);
+      return response;
+    } catch (error: any) {
+      const msg = error?.message ?? 'unknown error';
+      this.logger.error(`[oidcIssuers] - error in oidcIssuers: ${msg}`);
       throw new RpcException(error?.response ?? error);
     }
   }
@@ -471,7 +488,7 @@ export class OIDCIssuanceService {
 
       const createCredentialOfferOnAgent = await this._oidcCreateCredentialOffer(buildOidcCredentialOffer, url, orgId);
       if (!createCredentialOfferOnAgent) {
-        throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errroCreateOffer);
+        throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
       }
 
       return createCredentialOfferOnAgent.response;
@@ -480,6 +497,126 @@ export class OIDCIssuanceService {
       throw new RpcException(error.response ?? error);
     }
   }
+
+  async updateOidcCredentialOffer(
+    updateOidcCredentialOffer: UpdateCredentialRequest,
+    orgId: string,
+    issuerId: string
+  ): Promise<any> {
+    try {
+      if (!updateOidcCredentialOffer.issuerMetadata) {
+        throw new BadRequestException('Please provide a valid issuerMetadata');
+      }
+      // TODO: Need to implement this in future if required
+
+      // const filterTemplateIds = extractTemplateIds(updateOidcCredentialOffer);
+      // console.log('This is the filterTemplateIds:', filterTemplateIds);
+      // if (!filterTemplateIds) {
+      //   throw new BadRequestException('Please provide a valid id');
+      // }
+      // const getAllOfferTemplates = await this.issuanceRepository.getTemplateByIds(filterTemplateIds, issuerId);
+      // console.log('This is the getAllOfferTemplates:', getAllOfferTemplates);
+      // if (!getAllOfferTemplates || getAllOfferTemplates.length === 0) {
+      //   throw new NotFoundException('No templates found for the issuer');
+      // }
+      // const buildOidcUpdateCredentialOffer = buildUpdateCredentialOfferPayload(
+      //   updateOidcCredentialOffer,
+      //   getAllOfferTemplates
+      // );
+      // if (!buildOidcUpdateCredentialOffer) {
+      //   throw new BadRequestException('Error while creating oidc credential offer');
+      // }
+      // const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      // if (!agentDetails) {
+      //   throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
+      // }
+      //   const issuanceMetadata= {
+      //     issuanceMetadata: {
+      //     issuerDid: agentDetails.orgDid,
+      //     credentials: buildOidcUpdateCredentialOffer.credentials
+      //   }
+      // }
+      const url = await getAgentUrl(
+        await this.getAgentEndpoint(orgId),
+        CommonConstants.OIDC_ISSUER_SESSIONS_UPDATE_OFFER,
+        updateOidcCredentialOffer.credentialOfferId
+      );
+      const updateCredentialOfferOnAgent = await this._oidcUpdateCredentialOffer(
+        updateOidcCredentialOffer.issuerMetadata,
+        url,
+        orgId
+      );
+      console.log('This is the updateCredentialOfferOnAgent:', JSON.stringify(updateCredentialOfferOnAgent));
+      if (!updateCredentialOfferOnAgent) {
+        throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorUpdateOffer);
+      }
+
+      return updateCredentialOfferOnAgent.response;
+    } catch (error) {
+      this.logger.error(`[createOidcCredentialOffer] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
+  async getCredentialOfferDetailsById(offerId: string, orgId: string): Promise<any> {
+    try {
+      const url = await getAgentUrl(
+        await this.getAgentEndpoint(orgId),
+        CommonConstants.OIDC_ISSUER_SESSIONS_BY_ID,
+        offerId
+      );
+      const offer = await this._oidcGetCredentialOfferById(url, orgId);
+      if ('string' === typeof offer.response) {
+        offer.response = JSON.parse(offer.response);
+      }
+      return offer.response;
+    } catch (error) {
+      this.logger.error(`[getCredentialOfferDetailsById] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
+  async getCredentialOffers(orgId: string, getAllCredentialOffer: GetAllCredentialOffer): Promise<any> {
+    try {
+      const url = await getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.OIDC_ISSUER_SESSIONS);
+      const credentialOfferUrl = buildCredentialOfferUrl(url, getAllCredentialOffer);
+      console.log('This is credentialOfferUrl', credentialOfferUrl);
+      const offers = await this._oidcGetCredentialOfferById(credentialOfferUrl, orgId);
+      console.log('This is offer', JSON.stringify(offers, null, 2));
+      if ('string' === typeof offers.response) {
+        offers.response = JSON.parse(offers.response);
+      }
+      return offers.response;
+    } catch (error) {
+      this.logger.error(`[getCredentialOffers] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+  async deleteCredentialOffers(orgId: string, credentialId: string): Promise<any> {
+    try {
+      if (!credentialId) {
+        throw new BadRequestException('Please provide a valid credentialId');
+      }
+      const url = await getAgentUrl(
+        await this.getAgentEndpoint(orgId),
+        CommonConstants.OIDC_DELETE_CREDENTIAL_OFFER,
+        credentialId
+      );
+      console.log('This is the url:', url);
+      const deletedCredentialOffer = await this._oidcDeleteCredentialOffer(url, orgId);
+      if (!deletedCredentialOffer) {
+        throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.deleteFailed);
+      }
+      if ('string' === typeof deletedCredentialOffer.response) {
+        deletedCredentialOffer.response = JSON.parse(deletedCredentialOffer.response);
+      }
+      return deletedCredentialOffer.response;
+    } catch (error) {
+      this.logger.error(`[getCredentialOffers] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   async buildOidcIssuerConfig(issuerId: string) {
     try {
@@ -553,7 +690,7 @@ export class OIDCIssuanceService {
 
   async _oidcGetIssuers(url: string, orgId: string) {
     try {
-      const pattern = { cmd: 'oidc-get-issuers' };
+      const pattern = { cmd: 'oidc-get-issuers-agent-service' };
       const payload = { url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
@@ -570,6 +707,58 @@ export class OIDCIssuanceService {
     } catch (error) {
       this.logger.error(
         `[_oidcCreateCredentialOffer] [NATS call]- error in oidc create credential offer : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
+  async _oidcUpdateCredentialOffer(issuanceMetadata, url: string, orgId: string) {
+    try {
+      const pattern = { cmd: 'agent-service-oidc-update-credential-offer' };
+      const payload = { issuanceMetadata, url, orgId };
+      return this.natsCall(pattern, payload);
+    } catch (error) {
+      this.logger.error(
+        `[_oidcUpdateCredentialOffer] [NATS call]- error in oidc update credential offer : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
+  async _oidcGetCredentialOfferById(url: string, orgId: string) {
+    try {
+      const pattern = { cmd: 'agent-service-oidc-get-credential-offer-by-id' };
+      const payload = { url, orgId };
+      return this.natsCall(pattern, payload);
+    } catch (error) {
+      this.logger.error(
+        `[_oidcGetCredentialOfferById] [NATS call]- error in oidc get credential offer by id : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
+  async _oidcGetCredentialOffers(url: string, orgId: string) {
+    try {
+      const pattern = { cmd: 'agent-service-oidc-get-credential-offers' };
+      const payload = { url, orgId };
+      return this.natsCall(pattern, payload);
+    } catch (error) {
+      this.logger.error(
+        `[_oidcGetCredentialOffers] [NATS call]- error in oidc get credential offers : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
+  async _oidcDeleteCredentialOffer(url: string, orgId: string) {
+    try {
+      const pattern = { cmd: 'agent-service-oidc-delete-credential-offer' };
+      const payload = { url, orgId };
+      return this.natsCall(pattern, payload);
+    } catch (error) {
+      this.logger.error(
+        `[_oidcDeleteCredentialOffer] [NATS call]- error in oidc delete credential offer : ${JSON.stringify(error)}`
       );
       throw error;
     }

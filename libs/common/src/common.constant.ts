@@ -123,6 +123,8 @@ export enum CommonConstants {
   URL_OIDC_GET_ISSUES = '/openid4vc/issuer',
   URL_OIDC_ISSUER_UPDATE = '/openid4vc/issuer/#',
   URL_OIDC_ISSUER_SESSIONS_CREATE = '/openid4vc/issuance-sessions/create-credential-offer',
+  URL_OIDC_ISSUER_SESSIONS_GET = '/openid4vc/issuance-sessions/#',
+  URL_OIDC_ISSUER_SESSIONS_GET_ALL = '/openid4vc/issuance-sessions',
 
   // Nested attribute separator
   NESTED_ATTRIBUTE_SEPARATOR = '~',
@@ -398,7 +400,11 @@ export enum CommonConstants {
   OIDC_GET_ALL_ISSUERS = 'get-all-oidc-issuers',
   OIDC_ISSUER_BY_ID = 'get-issuer-by-id',
   OIDC_ISSUER_TEMPLATE = 'create-oidc-template',
-  OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER = 'create-oidc-credential-offer'
+  OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER = 'create-oidc-credential-offer',
+  OIDC_ISSUER_SESSIONS_UPDATE_OFFER = 'update-oidc-credential-offer',
+  OIDC_ISSUER_SESSIONS_BY_ID = 'get-oidc-session-by-id',
+  OIDC_ISSUER_SESSIONS = 'get-oidc-sessions',
+  OIDC_DELETE_CREDENTIAL_OFFER = 'delete-oidc-credential-offer'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

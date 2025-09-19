@@ -125,9 +125,9 @@ export class CreateCredentialTemplateDto {
   @IsEnum(SignerOption)
   signerOption!: SignerOption;
 
-  @ApiProperty({ enum: ['sd-jwt-vc', 'mdoc'], description: 'Credential format type' })
-  @IsEnum(['sd-jwt-vc', 'mso_mdoc', 'vc+sd-jwt'])
-  format: 'sd-jwt-vc' | 'mso_mdoc ' | 'vc+sd-jwt';
+  @ApiProperty({ enum: ['mso_mdoc', 'vc+sd-jwt'], description: 'Credential format type' })
+  @IsEnum(['mso_mdoc', 'vc+sd-jwt'])
+  format: 'mso_mdoc' | 'vc+sd-jwt';
 
   @ApiProperty({ default: false, description: 'Indicates whether credentials can be revoked' })
   @IsBoolean()

@@ -1,21 +1,18 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
-
 import {
   IsArray,
-  IsEnum,
   IsNotEmpty,
   IsObject,
   IsOptional,
   IsString,
-  Matches,
   ValidateNested,
   registerDecorator,
   ValidationOptions,
+  ArrayMinSize,
   IsInt,
   Min,
   IsIn,
-  ArrayMinSize,
   IsUrl,
   ValidatorConstraint,
   ValidatorConstraintInterface,
@@ -25,17 +22,13 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
+/* ========= Enums ========= */
 export enum CredentialFormat {
   SdJwtVc = 'vc+sd-jwt',
   Mdoc = 'mdoc'
 }
 
-export enum SignerMethodOption {
-  DID = 'did',
-  X5C = 'x5c'
-}
-
-/** ---------- custom validator: disclosureFrame ---------- */
+/* ========= disclosureFrame custom validator ========= */
 function isDisclosureFrameValue(v: unknown): boolean {
   if ('boolean' === typeof v) {
     return true;
@@ -57,7 +50,7 @@ export function IsDisclosureFrame(options?: ValidationOptions) {
         validate(value: unknown) {
           if (value === undefined) {
             return true;
-          }
+          } // optional
           if (!value || 'object' !== typeof value || Array.isArray(value)) {
             return false;
           }
@@ -71,66 +64,7 @@ export function IsDisclosureFrame(options?: ValidationOptions) {
   };
 }
 
-/** ---------- payload DTOs ---------- */
-export class CredentialPayloadDto {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  vct?: string;
-
-  @ApiPropertyOptional({ example: 'Garry' })
-  @IsOptional()
-  @IsString()
-  full_name?: string;
-
-  @ApiPropertyOptional({ example: '2000-01-01', description: 'YYYY-MM-DD' })
-  @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'birth_date must be YYYY-MM-DD' })
-  birth_date?: string;
-
-  @ApiPropertyOptional({ example: 'Africa' })
-  @IsOptional()
-  @IsString()
-  birth_place?: string;
-
-  @ApiPropertyOptional({ example: 'James Bear' })
-  @IsOptional()
-  @IsString()
-  parent_names?: string;
-
-  [key: string]: unknown;
-}
-
-export class CredentialRequestDto {
-  @ApiProperty({ example: '1b2d3c4e-...' })
-  @IsString()
-  @IsNotEmpty()
-  templateId!: string;
-
-  @ApiProperty({ enum: CredentialFormat, example: CredentialFormat.SdJwtVc })
-  @IsEnum(CredentialFormat)
-  format!: CredentialFormat;
-
-  @ApiProperty({
-    type: CredentialPayloadDto,
-    description: 'Credential payload (structure depends on the format)'
-  })
-  @ValidateNested()
-  @Type(() => CredentialPayloadDto)
-  payload!: CredentialPayloadDto;
-
-  @ApiPropertyOptional({
-    description: 'Selective disclosure frame (claim -> boolean or nested map).',
-    example: { full_name: true, birth_date: true, birth_place: false, parent_names: false },
-    required: false
-  })
-  @IsOptional()
-  @IsObject()
-  @IsDisclosureFrame()
-  disclosureFrame?: Record<string, boolean | Record<string, boolean>>;
-}
-
-/** ---------- auth-config DTOs ---------- */
+/* ========= Auth flow DTOs ========= */
 export class TxCodeDto {
   @ApiPropertyOptional({ example: 'test abc' })
   @IsOptional()
@@ -164,14 +98,14 @@ export class PreAuthorizedCodeFlowConfigDto {
 
 export class AuthorizationCodeFlowConfigDto {
   @ApiProperty({
-    example: 'https://id.credebl.ae:8443/realms/credebl',
+    example: 'https://id.example.com/realms/issuer',
     description: 'AS (Authorization Server) base URL'
   })
   @IsUrl({ require_tld: false })
   authorizationServerUrl!: string;
 }
 
-/** ---------- class-level constraint: EXACTLY ONE of the two configs ---------- */
+/* ========= XOR class-level validator (exactly one config) ========= */
 @ValidatorConstraint({ name: 'ExactlyOneOf', async: false })
 class ExactlyOneOfConstraint implements ValidatorConstraintInterface {
   validate(_: unknown, args: ValidationArguments) {
@@ -189,7 +123,35 @@ function ExactlyOneOf(keys: string[], options?: ValidationOptions) {
   return Validate(ExactlyOneOfConstraint, keys, options);
 }
 
-/** ---------- root DTO (no authenticationType) ---------- */
+/* ========= Request DTOs ========= */
+export class CredentialRequestDto {
+  @ApiProperty({
+    example: 'c49bdee0-d028-4595-85dc-177c85ea391c',
+    description: 'Must match credential template id'
+  })
+  @IsString()
+  @IsNotEmpty()
+  templateId!: string;
+
+  @ApiProperty({
+    description: 'Dynamic claims object',
+    example: { name: 'Garry', DOB: '2000-01-01', additionalProp3: 'Africa' },
+    type: 'object',
+    additionalProperties: true
+  })
+  @IsObject()
+  payload!: Record<string, unknown>;
+
+  @ApiPropertyOptional({
+    description: 'Selective disclosure: claim -> boolean (or nested map)',
+    example: { name: true, DOB: true, additionalProp3: false },
+    required: false
+  })
+  @IsOptional()
+  @IsDisclosureFrame()
+  disclosureFrame?: Record<string, boolean | Record<string, boolean>>;
+}
+
 export class CreateOidcCredentialOfferDto {
   @ApiProperty({
     type: [CredentialRequestDto],
@@ -201,14 +163,13 @@ export class CreateOidcCredentialOfferDto {
   @Type(() => CredentialRequestDto)
   credentials!: CredentialRequestDto[];
 
-  // Each is optional individually; XOR rule below enforces exactly one present.
+  // XOR: exactly one present
   @ApiPropertyOptional({ type: PreAuthorizedCodeFlowConfigDto })
   @IsOptional()
   @ValidateNested()
   @Type(() => PreAuthorizedCodeFlowConfigDto)
   preAuthorizedCodeFlowConfig?: PreAuthorizedCodeFlowConfigDto;
 
-  @ApiPropertyOptional({ type: AuthorizationCodeFlowConfigDto })
   @IsOptional()
   @ValidateNested()
   @Type(() => AuthorizationCodeFlowConfigDto)
@@ -216,9 +177,51 @@ export class CreateOidcCredentialOfferDto {
 
   issuerId?: string;
 
-  // Host the class-level XOR validator on a dummy property
+  // host XOR rule
   @ExactlyOneOf(['preAuthorizedCodeFlowConfig', 'authorizationCodeFlowConfig'], {
     message: 'Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.'
   })
   private readonly _exactlyOne?: unknown;
+}
+
+export class GetAllCredentialOfferDto {
+  @ApiProperty({ required: false, example: 'credebl university' })
+  @IsOptional()
+  publicIssuerId: string = '';
+
+  @ApiProperty({ required: false, example: '568345' })
+  @IsOptional()
+  preAuthorizedCode: string = '';
+
+  // @ApiPropertyOptional({
+  //   example: OpenId4VcIssuanceSessionState.OfferCreated,
+  //   enum: OpenId4VcIssuanceSessionState,
+  //   required: false,
+  // })
+  // @IsOptional()
+  // @IsEnum(OpenId4VcIssuanceSessionState)
+  // state?: OpenId4VcIssuanceSessionState;
+
+  @ApiProperty({ required: false, example: 'openid-credential-offer://?credential_offer_uri=http%3A%2F%2.....' })
+  @IsOptional()
+  credentialOfferUri: string = '';
+
+  @ApiProperty({ required: false, example: 'Bob' })
+  @IsOptional()
+  authorizationCode: string = '';
+}
+
+export class UpdateCredentialRequestDto {
+  @ApiPropertyOptional({
+    description: 'Issuer metadata (any valid JSON object)',
+    type: 'object',
+    additionalProperties: true
+  })
+  @IsOptional()
+  @IsObject()
+  issuerMetadata?: Record<string, unknown>;
+
+  issuerId?: string;
+
+  credentialOfferId?: string;
 }

@@ -535,14 +535,16 @@ export const ResponseMessages = {
   },
   oidcIssuerSession: {
     success: {
-      create: 'OIDC Credential offer created successfully.'
+      create: 'OIDC Credential offer created successfully.',
+      getById: 'OIDC Credential offer details fetched successfully.',
+      getAll: 'OIDC Credential offers fetched successfully.',
+      update: 'OIDC Credential offer updated successfully.',
+      delete: 'OIDC Credential offer deleted successfully.'
     },
     error: {
-      errroCreateOffer: 'Error while creating OIDC credential offer on agent.',
-      invalidId: 'Invalid OIDC issuer ID.',
-      createFailed: 'Failed to create OIDC issuer.',
-      updateFailed: 'Failed to update OIDC issuer.',
-      deleteFailed: 'Failed to delete OIDC issuer.'
+      errorCreateOffer: 'Error while creating OIDC credential offer on agent.',
+      errorUpdateOffer: 'Error while updating OIDC credential offer on agent.',
+      deleteFailed: 'Failed to delete OIDC credential offer.'
     }
   },
   nats: {

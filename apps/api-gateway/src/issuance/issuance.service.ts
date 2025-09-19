@@ -31,7 +31,11 @@ import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { oidc_issuer, user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oidc-issuer-template.dto';
-import { CreateOidcCredentialOfferDto } from './dtos/issuer-sessions.dto';
+import {
+  CreateOidcCredentialOfferDto,
+  GetAllCredentialOfferDto,
+  UpdateCredentialRequestDto
+} from './dtos/issuer-sessions.dto';
 import { IssuerCreationDto, IssuerUpdationDto } from './dtos/oidc-issuer.dto';
 @Injectable()
 export class IssuanceService extends BaseService {
@@ -299,7 +303,7 @@ export class IssuanceService extends BaseService {
 
   async oidcGetIssuers(orgId: string) {
     const payload = { orgId };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-get-issuers', payload);
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-get-issuers-issuance', payload);
   }
 
   async oidcDeleteIssuer(userDetails: user, orgId: string, issuerId: string) {
@@ -351,6 +355,29 @@ export class IssuanceService extends BaseService {
   ) {
     const payload = { oidcCredentialPayload, orgId, userDetails, issuerId };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-create-credential-offer', payload);
+  }
+
+  async updateOidcCredentialOffer(
+    oidcUpdateCredentialPayload: UpdateCredentialRequestDto,
+    orgId: string,
+    issuerId: string
+  ) {
+    const payload = { oidcUpdateCredentialPayload, orgId, issuerId };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-update-credential-offer', payload);
+  }
+
+  async getCredentialOfferDetailsById(offerId: string, orgId: string) {
+    const payload = { offerId, orgId };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-credential-offer-get-by-id', payload);
+  }
+  async getAllCredentialOffers(orgId: string, getAllCredentialOffer: GetAllCredentialOfferDto) {
+    const payload = { orgId, getAllCredentialOffer };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-credential-offer-get-all', payload);
+  }
+
+  async deleteCredentialOffers(orgId: string, credentialId: string) {
+    const payload = { orgId, credentialId };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-credential-offer-delete', payload);
   }
 
   oidcIssueCredentialWebhook(

@@ -248,9 +248,10 @@ export class IssuerCreationDto {
     description: 'Configuration of the authorization server',
     type: AuthorizationServerConfigDto
   })
+  @IsOptional()
   @ValidateNested()
   @Type(() => AuthorizationServerConfigDto)
-  authorizationServerConfigs: AuthorizationServerConfigDto;
+  authorizationServerConfigs?: AuthorizationServerConfigDto;
 }
 
 export class IssuerUpdationDto {

@@ -16,7 +16,9 @@ import {
   BadRequestException,
   ParseUUIDPipe,
   Delete,
-  Patch
+  Patch,
+  Query,
+  Put
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -44,8 +46,11 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { user } from '@prisma/client';
 import { IssuerCreationDto, IssuerUpdationDto } from './dtos/oidc-issuer.dto';
 import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oidc-issuer-template.dto';
-import { CreateOidcCredentialOfferDto } from './dtos/issuer-sessions.dto';
-import { IssuanceDto } from './dtos/issuance.dto';
+import {
+  CreateOidcCredentialOfferDto,
+  GetAllCredentialOfferDto,
+  UpdateCredentialRequestDto
+} from './dtos/issuer-sessions.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('OIDC')
@@ -60,6 +65,7 @@ export class OidcController {
    * @param res The response object
    * @returns The status of the deletion operation
    */
+
   @Post('/orgs/:orgId/oidc/issuers')
   @ApiOperation({ summary: 'Create OIDC issuer', description: 'Create OIDC issuer by orgId' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -122,7 +128,7 @@ export class OidcController {
   }
 
   @Get('/orgs/:orgId/oidc/issuers/:issuerId')
-  @ApiOperation({ summary: 'Get OIDC issuer', description: 'Get OIDC issuer by orgId' })
+  @ApiOperation({ summary: 'Get OIDC issuer', description: 'Get OIDC issuer by issuerId' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
@@ -170,11 +176,11 @@ export class OidcController {
   ): Promise<Response> {
     const oidcIssuer = await this.issueCredentialService.oidcGetIssuers(orgId);
     const finalResponse: IResponse = {
-      statusCode: HttpStatus.CREATED,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.oidcIssuer.success.fetch,
       data: oidcIssuer
     };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Delete('/orgs/:orgId/oidc/:issuerId')
@@ -317,7 +323,7 @@ export class OidcController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    const template = await this.issueCredentialService.findByIdTemplate(user, orgId, templateId, issuerId);
+    const template = await this.issueCredentialService.findByIdTemplate(user, orgId, templateId);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -412,8 +418,7 @@ export class OidcController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    await this.issueCredentialService.deleteTemplate(user, orgId, templateId, issuerId);
-
+    await this.issueCredentialService.deleteTemplate(user, orgId, templateId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.oidcTemplate.success.delete
@@ -441,6 +446,7 @@ export class OidcController {
     @Res() res: Response
   ): Promise<Response> {
     oidcCredentialPayload.issuerId = issuerId;
+    console.log('This is dto', JSON.stringify(oidcCredentialPayload, null, 2));
     const template = await this.issueCredentialService.createOidcCredentialOffer(
       oidcCredentialPayload,
       user,
@@ -449,11 +455,108 @@ export class OidcController {
     );
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.oidcTemplate.success.create,
+      message: ResponseMessages.oidcIssuerSession.success.create,
       data: template
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Put('/orgs/:orgId/oidc/:issuerId/:credentialId/update-offer')
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async updateCredentialOffers(
+    @Body() oidcUpdateCredentialPayload: UpdateCredentialRequestDto,
+    @Param('orgId') orgId: string,
+    @Param('issuerId') issuerId: string,
+    @Param('credentialId') credentialId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    oidcUpdateCredentialPayload.issuerId = issuerId;
+    oidcUpdateCredentialPayload.credentialOfferId = credentialId;
+    const updateCredentialOffer = await this.issueCredentialService.updateOidcCredentialOffer(
+      oidcUpdateCredentialPayload,
+      orgId,
+      issuerId
+    );
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.oidcIssuerSession.success.update,
+      data: updateCredentialOffer
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/orgs/:orgId/oidc/credential-offer/:id')
+  @ApiOperation({ summary: 'Get OIDC credential offer', description: 'Get OIDC credential offer by id' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getCredentialOfferDetailsById(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Param('id')
+    id: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const oidcIssuer = await this.issueCredentialService.getCredentialOfferDetailsById(id, orgId);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.oidcIssuerSession.success.getById,
+      data: oidcIssuer
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/orgs/:orgId/oidc/credential-offer')
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getAllCredentialOffers(
+    @Query() getAllCredentialOffer: GetAllCredentialOfferDto,
+    @Param('orgId') orgId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const connectionDetails = await this.issueCredentialService.getAllCredentialOffers(orgId, getAllCredentialOffer);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.oidcIssuerSession.success.getAll,
+      data: connectionDetails
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Delete('/orgs/:orgId/oidc/:credentialId/delete-offer')
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async deleteCredentialOffers(
+    @Param('orgId') orgId: string,
+    @Param('credentialId') credentialId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const deletedofferDetails = await this.issueCredentialService.deleteCredentialOffers(orgId, credentialId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.NO_CONTENT,
+      message: ResponseMessages.oidcIssuerSession.success.delete,
+      data: deletedofferDetails
+    };
+    return res.status(HttpStatus.NO_CONTENT).json(finalResponse);
   }
 
   /**

@@ -346,7 +346,7 @@ export class AgentServiceController {
     return this.agentServiceService.oidcGetIssuerById(payload.url, payload.orgId);
   }
 
-  @MessagePattern({ cmd: 'oidc-get-issuers' })
+  @MessagePattern({ cmd: 'oidc-get-issuers-agent-service' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcGetIssuers(payload: { url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcGetIssuers(payload.url, payload.orgId);
@@ -356,5 +356,29 @@ export class AgentServiceController {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcCreateCredentialOffer(payload: { credentialPayload; url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcCreateCredentialOffer(payload.credentialPayload, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oidc-update-credential-offer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcUpdateCredentialOffer(payload: { issuanceMetadata; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcUpdateCredentialOffer(payload.issuanceMetadata, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oidc-get-credential-offer-by-id' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcGetCredentialOfferById(payload: { url: string; orgId: string; offerId: string }): Promise<any> {
+    return this.agentServiceService.oidcGetCredentialOfferById(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oidc-get-all-credential-offers' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcGetAllCredentialOffers(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcGetAllCredentialOffers(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oidc-delete-credential-offer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcDeleteCredentialOffer(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcDeleteCredentialOffer(payload.url, payload.orgId);
   }
 }

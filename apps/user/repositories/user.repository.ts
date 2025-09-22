@@ -139,12 +139,11 @@ export class UserRepository {
    */
   async getSession(sessionId: string): Promise<session> {
     try {
-      const data = await this.prisma.session.findUnique({
+      return await this.prisma.session.findUnique({
         where: {
           id: sessionId
         }
       });
-      return data;
     } catch (error) {
       this.logger.error(`Not Found: ${JSON.stringify(error)}`);
       throw new NotFoundException(error);
@@ -988,16 +987,15 @@ export class UserRepository {
 
   async deleteSessionBySessionId(sessionId: string, userId: string): Promise<{ message: string }> {
     try {
-      const result = await this.prisma.session.deleteMany({
+      await this.prisma.session.delete({
         where: { id: sessionId, userId }
       });
 
-      if (0 === result.count) {
-        throw new RpcException(new NotFoundException(`Session not found for userId: ${userId}`));
-      }
-
       return { message: 'Session deleted successfully' };
     } catch (error) {
+      if ('P2025' === error.code) {
+        throw new RpcException(new NotFoundException(`Session not found for userId: ${userId}`));
+      }
       this.logger.error(`Error in Deleting Session: ${error.message}`);
       throw error;
     }

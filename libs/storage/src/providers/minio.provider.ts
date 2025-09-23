@@ -6,11 +6,15 @@ export class MinioProvider implements IStorageProvider {
   private readonly minioClient: Client;
 
   constructor() {
+    const requiredEnvVars = ['MINIO_ENDPOINT', 'MINIO_ACCESS_KEY', 'MINIO_SECRET_KEY', 'MINIO_PORT'];
+    const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
+    if (0 < missingVars.length) {
+      throw new Error(`Missing required Minio environment variables: ${missingVars.join(', ')}`);
+    }
     this.minioClient = new Client({
       endPoint: process.env.MINIO_ENDPOINT as string,
       port: parseInt(process.env.MINIO_PORT || '9000', 10),
-      // eslint-disable-next-line yoda
-      useSSL: process.env.MINIO_USE_SSL === 'true',
+      useSSL: 'true' === process.env.MINIO_USE_SSL,
       accessKey: process.env.MINIO_ACCESS_KEY as string,
       secretKey: process.env.MINIO_SECRET_KEY as string
     });
@@ -21,7 +25,8 @@ export class MinioProvider implements IStorageProvider {
       'Content-Type': options.mimeType,
       'Content-Encoding': options.encoding
     });
-    return `${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${bucket}/${key}`;
+    const protocol = 'true' === process.env.MINIO_USE_SSL ? 'https' : 'http';
+    return `${protocol}://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${bucket}/${key}`;
   }
 
   async getFile(bucket: string, key: string): Promise<Buffer> {
@@ -31,7 +36,6 @@ export class MinioProvider implements IStorageProvider {
     for await (const chunk of stream) {
       chunks.push(chunk);
     }
-
     return Buffer.concat(chunks);
   }
 
@@ -47,7 +51,7 @@ export class MinioProvider implements IStorageProvider {
       ContentType: 'application/json',
       ContentEncoding: CommonConstants.ENCODING
     });
-
-    return `${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${bucket}/${objKey}`;
+    const protocol = 'true' === process.env.MINIO_USE_SSL ? 'https' : 'http';
+    return `${protocol}://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${bucket}/${key}`;
   }
 }

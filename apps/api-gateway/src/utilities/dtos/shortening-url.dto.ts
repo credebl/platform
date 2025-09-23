@@ -1,6 +1,6 @@
 
 import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty } from 'class-validator';
+import { IsArray, IsNotEmpty, ArrayMinSize } from 'class-validator';
 
 @ApiExtraModels()
   
@@ -31,6 +31,7 @@ export class UtilitiesDto {
         ]
       })
       @IsArray({ message: 'attributes must be a valid array' })
+      @ArrayMinSize(1, { message: 'attributes array must contain at least one element' })
       @IsNotEmpty({ message: 'please provide valid attributes' })
       attributes: Attribute[];
 }

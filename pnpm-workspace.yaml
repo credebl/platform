@@ -22,3 +22,6 @@ catalog:
   "@nestjs/cli": ^11.0.10
   "@nestjs/schematics": ^11.0.7
   "@nestjs/testing": ^11.1.6
+  "nestjs-rate-limiter": ^3.1.0
+  "nestjs-supabase-auth": ^1.0.9
+  "nestjs-typeorm-paginate": ^4.0.4

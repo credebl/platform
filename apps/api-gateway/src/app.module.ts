@@ -81,7 +81,7 @@ export class AppModule {
       .apply(AuthzMiddleware)
       .exclude(
         { path: 'authz', method: RequestMethod.ALL },
-        'authz/:splat*',
+        'authz/*path',
         'admin/subscriptions',
         'registry/organizations/',
         'email/user/verify',

@@ -9,7 +9,6 @@ import {
   Logger,
   NotFoundException
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
@@ -46,7 +45,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 export class CloudWalletService {
   constructor(
     private readonly commonService: CommonService,
-    @Inject('NATS_CLIENT') private readonly cloudWalletServiceProxy: ClientProxy,
+    @Inject('NATS_CLIENT') private readonly cloudWalletServiceProxy,
     private readonly cloudWalletRepository: CloudWalletRepository,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache

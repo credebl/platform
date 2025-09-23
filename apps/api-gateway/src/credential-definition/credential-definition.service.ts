@@ -1,5 +1,4 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { BaseService } from '../../../../libs/service/base.service';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
@@ -10,16 +9,15 @@ import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
-
   constructor(
-    @Inject('NATS_CLIENT') private readonly credDefServiceProxy: ClientProxy,
-    private readonly natsClient : NATSClient
+    @Inject('NATS_CLIENT') private readonly credDefServiceProxy,
+    private readonly natsClient: NATSClient
   ) {
     super('CredentialDefinitionService');
   }
 
   createCredentialDefinition(credDef: CreateCredentialDefinitionDto, user: IUserRequestInterface): Promise<ICredDef> {
-    const payload = { credDef, user };   
+    const payload = { credDef, user };
     return this.natsClient.sendNatsMessage(this.credDefServiceProxy, 'create-credential-definition', payload);
   }
 
@@ -28,13 +26,21 @@ export class CredentialDefinitionService extends BaseService {
     return this.natsClient.sendNatsMessage(this.credDefServiceProxy, 'get-credential-definition-by-id', payload);
   }
 
-  getAllCredDefs(credDefSearchCriteria: GetAllCredDefsDto, user: IUserRequestInterface, orgId: string): Promise<ICredDefData> {
+  getAllCredDefs(
+    credDefSearchCriteria: GetAllCredDefsDto,
+    user: IUserRequestInterface,
+    orgId: string
+  ): Promise<ICredDefData> {
     const payload = { credDefSearchCriteria, user, orgId };
     return this.natsClient.sendNatsMessage(this.credDefServiceProxy, 'get-all-credential-definitions', payload);
   }
 
   getCredentialDefinitionBySchemaId(schemaId: string): Promise<ICredDefs> {
     const payload = { schemaId };
-    return this.natsClient.sendNatsMessage(this.credDefServiceProxy, 'get-all-credential-definitions-by-schema-id', payload);
+    return this.natsClient.sendNatsMessage(
+      this.credDefServiceProxy,
+      'get-all-credential-definitions-by-schema-id',
+      payload
+    );
   }
 }

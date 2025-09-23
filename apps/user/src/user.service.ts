@@ -85,7 +85,7 @@ export class UserService {
     private readonly awsService: AwsService,
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
-    @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
+    @Inject('NATS_CLIENT') private readonly userServiceProxy,
     private readonly natsClient: NATSClient
   ) {}
 

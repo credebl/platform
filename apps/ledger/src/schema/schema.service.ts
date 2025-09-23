@@ -8,7 +8,7 @@ import {
   NotAcceptableException,
   NotFoundException
 } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
 import { Prisma, schema } from '@prisma/client';
@@ -62,7 +62,7 @@ export class SchemaService extends BaseService {
   constructor(
     private readonly schemaRepository: SchemaRepository,
     private readonly commonService: CommonService,
-    @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy,
+    @Inject('NATS_CLIENT') private readonly schemaServiceProxy,
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly natsClient: NATSClient
   ) {

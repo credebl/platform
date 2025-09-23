@@ -1,5 +1,4 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SendProofRequestPayload, RequestProofDtoV1, RequestProofDtoV2 } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -18,7 +17,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class VerificationService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
+    @Inject('NATS_CLIENT') private readonly verificationServiceProxy,
     private readonly natsClient: NATSClient
   ) {
     super('VerificationService');
@@ -118,7 +117,7 @@ export class VerificationService extends BaseService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.verificationServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.verificationServiceProxy.send(pattern, payload).toPromise();
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -132,7 +131,7 @@ export class VerificationService extends BaseService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.verificationServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.verificationServiceProxy.send(pattern, payload).toPromise();
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);

@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable camelcase */
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { CreateRevocationRegistryDto } from '../dtos/create-revocation-registry.dto';
 import { UpdateRevocationRegistryUriDto } from '../dtos/update-revocation-registry.dto';
 import { BaseService } from 'libs/service/base.service';
@@ -11,7 +10,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class RevocationService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly revocationServiceProxy: ClientProxy,
+    @Inject('NATS_CLIENT') private readonly revocationServiceProxy,
     private readonly natsClient: NATSClient
   ) {
     super('RevocationService');
@@ -40,7 +39,7 @@ export class RevocationService extends BaseService {
     const payload = { revocationId, user };
     return this.natsClient.sendNats(this.revocationServiceProxy, 'publish-revocation-registry', payload);
   }
- // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   getRevocationRegistry(rev_reg_id: string, user: any) {
     this.logger.log('**** getRevocationRegistry called');
     const payload = { rev_reg_id, user };

@@ -1,5 +1,4 @@
 import { Injectable, Inject, HttpException } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from '../../../../libs/service/base.service';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
@@ -26,7 +25,7 @@ export class AuthzService extends BaseService {
   //private logger = new Logger('AuthService');
   @WebSocketServer() server;
   constructor(
-    @Inject('NATS_CLIENT') private readonly authServiceProxy: ClientProxy,
+    @Inject('NATS_CLIENT') private readonly authServiceProxy,
     private readonly natsClient: NATSClient
   ) {
     super('AuthzService');

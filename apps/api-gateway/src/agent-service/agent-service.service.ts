@@ -1,5 +1,4 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { user } from '@prisma/client';
 import { BaseService } from 'libs/service/base.service';
 import { AgentSpinupDto } from './dto/agent-service.dto';
@@ -14,7 +13,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class AgentService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
+    @Inject('NATS_CLIENT') private readonly agentServiceProxy,
     private readonly natsClient: NATSClient
   ) {
     super('AgentService');

@@ -8,7 +8,7 @@ import {
   Logger,
   NotFoundException
 } from '@nestjs/common';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import {
   IGetAllProofPresentations,
@@ -60,7 +60,7 @@ export class VerificationService {
   private readonly logger = new Logger('VerificationService');
 
   constructor(
-    @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
+    @Inject('NATS_CLIENT') private readonly verificationServiceProxy,
     private readonly verificationRepository: VerificationRepository,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly outOfBandVerification: OutOfBandVerification,

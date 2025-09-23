@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { ClientProxy, NatsRecordBuilder } from '@nestjs/microservices';
+import { NatsRecordBuilder } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import * as nats from 'nats';
 import { firstValueFrom } from 'rxjs';
@@ -19,14 +19,14 @@ export class NATSClient {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  sendNats(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<any> {
+  sendNats(serviceProxy, cmd: string, payload: any): Promise<any> {
     this.logger.log(`Inside NATSClient for sendNats()`);
     const pattern = { cmd };
     const headers = nats.headers(1, this.contextStorageService.getContextId());
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
     return serviceProxy
-      .send<string>(pattern, record)
+      .send(pattern, record)
       .pipe(
         map((response: string) => ({
           response
@@ -35,17 +35,17 @@ export class NATSClient {
       .toPromise();
   }
 
-  sendNatsMessage(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<any> {
+  sendNatsMessage(serviceProxy, cmd: string, payload: any): Promise<any> {
     const pattern = { cmd };
     const headers = nats.headers(1, this.contextStorageService.getContextId());
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
-    const result = serviceProxy.send<string>(pattern, record);
+    const result = serviceProxy.send(pattern, record);
 
     return firstValueFrom(result);
   }
 
-  send<T>(serviceProxy: ClientProxy, pattern: object, payload: any): Promise<T> {
+  send<T>(serviceProxy, pattern: object, payload: any): Promise<T> {
     let contextId = this.contextStorageService.getContextId();
 
     if (!contextId) {
@@ -55,7 +55,7 @@ export class NATSClient {
     const headers = nats.headers(1, contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
-    const result = serviceProxy.send<T>(pattern, record);
+    const result = serviceProxy.send(pattern, record);
 
     return firstValueFrom(result);
   }

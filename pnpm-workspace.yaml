@@ -1,3 +1,24 @@
 packages:
   - 'apps/*'
   - 'libs/*'
+
+catalog:
+  "@nestjs/common": ^11.1.6
+  "@nestjs/core": ^11.1.6
+  "@nestjs/platform-express": ^11.1.6
+  "@nestjs/axios": ^4.0.1
+  "@nestjs/bull": ^11.0.3
+  "@nestjs/cache-manager": ^3.0.1
+  "@nestjs/config": ^4.0.2
+  "@nestjs/jwt": ^11.0.0
+  "@nestjs/microservices": ^11.1.6
+  "@nestjs/passport": ^11.0.5
+  "@nestjs/platform-socket.io": ^11.1.6
+  "@nestjs/schedule": ^6.0.1
+  "@nestjs/swagger": ^11.2.0
+  "@nestjs/typeorm": ^11.0.0
+  "@nestjs/websockets": ^11.1.6
+  "nestjs-cls": ^6.0.1
+  "@nestjs/cli": ^11.0.10
+  "@nestjs/schematics": ^11.0.7
+  "@nestjs/testing": ^11.1.6

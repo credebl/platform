@@ -3,6 +3,7 @@
 
 import {
   IOrgUsers,
+  IRestrictedUserSession,
   ISendVerificationEmail,
   ISession,
   IShareUserCertificate,
@@ -31,6 +32,7 @@ import {
 import { ProviderType, UserRole } from '@credebl/enum/enum';
 
 import { PrismaService } from '@credebl/prisma-service';
+import { RpcException } from '@nestjs/microservices';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model
@@ -137,7 +139,7 @@ export class UserRepository {
    */
   async getSession(sessionId: string): Promise<session> {
     try {
-      return this.prisma.session.findUnique({
+      return await this.prisma.session.findUnique({
         where: {
           id: sessionId
         }
@@ -687,7 +689,8 @@ export class UserRepository {
           refreshToken,
           accountId,
           sessionType,
-          expiresAt
+          expiresAt,
+          ...(tokenDetails.clientInfo ? { clientInfo: tokenDetails.clientInfo } : { clientInfo: { clientToken: true } })
         }
       });
       return sessionResponse;
@@ -697,11 +700,19 @@ export class UserRepository {
     }
   }
 
-  async fetchUserSessions(userId: string): Promise<session[]> {
+  async fetchUserSessions(userId: string): Promise<IRestrictedUserSession[]> {
     try {
       const userSessionCount = await this.prisma.session.findMany({
         where: {
           userId
+        },
+        select: {
+          id: true,
+          userId: true,
+          expiresAt: true,
+          createdAt: true,
+          clientInfo: true,
+          sessionType: true
         }
       });
       return userSessionCount;
@@ -970,6 +981,22 @@ export class UserRepository {
       return userSession;
     } catch (error) {
       this.logger.error(`Error in logging out user: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteSessionBySessionId(sessionId: string, userId: string): Promise<{ message: string }> {
+    try {
+      await this.prisma.session.delete({
+        where: { id: sessionId, userId }
+      });
+
+      return { message: 'Session deleted successfully' };
+    } catch (error) {
+      if ('P2025' === error.code) {
+        throw new RpcException(new NotFoundException(`Session not found for userId: ${userId}`));
+      }
+      this.logger.error(`Error in Deleting Session: ${error.message}`);
       throw error;
     }
   }

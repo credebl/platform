@@ -16,6 +16,8 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import { NatsInterceptor } from '@credebl/common';
 import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-validation-pipe';
+import * as useragent from 'express-useragent';
+
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
@@ -46,6 +48,7 @@ async function bootstrap(): Promise<void> {
   app.use(express.json({ limit: '100mb' }));
   app.use(express.urlencoded({ limit: '100mb', extended: true }));
   app.use(cookieParser());
+  app.use(useragent.express());
 
   app.use((req, res, next) => {
     let err = null;

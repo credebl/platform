@@ -26,7 +26,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 import { sendEmail } from '@credebl/common/send-grid-helper-file';
 // eslint-disable-next-line camelcase
-import { client_aliases, RecordType, user, user_org_roles } from '@prisma/client';
+import { client_aliases, RecordType, session, user, user_org_roles } from '@prisma/client';
 import {
   ICheckUserDetails,
   OrgInvitations,
@@ -42,7 +42,8 @@ import {
   IUserForgotPassword,
   ISessionDetails,
   ISessions,
-  IUpdateAccountDetails
+  IUpdateAccountDetails,
+  IRestrictedUserSession
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { UserActivityService } from '@credebl/user-activity';
@@ -435,7 +436,7 @@ export class UserService {
    * @returns User access token details
    */
   async login(loginUserDto: LoginUserDto): Promise<ISignInUser> {
-    const { email, password, isPasskey } = loginUserDto;
+    const { email, password, isPasskey, clientInfo } = loginUserDto;
 
     try {
       this.validateEmail(email.toLowerCase());
@@ -476,7 +477,8 @@ export class UserService {
         expires: tokenDetails?.expires_in,
         refreshToken: tokenDetails?.refresh_token,
         sessionType: SessionType.USER_SESSION,
-        expiresAt
+        expiresAt,
+        clientInfo
       };
 
       const fetchAccountDetails = await this.userRepository.checkAccountDetails(userData?.id);
@@ -516,6 +518,16 @@ export class UserService {
       const decodedSessionId = decodeURIComponent(onceDecoded);
       const decryptedSessionId = await this.commonService.decryptPassword(decodedSessionId);
       const sessionDetails = await this.userRepository.getSession(decryptedSessionId);
+      return sessionDetails;
+    } catch (error) {
+      this.logger.error(`In fetching session details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async checkSession(sessionId: string): Promise<ISessionDetails> {
+    try {
+      const sessionDetails = await this.userRepository.getSession(sessionId);
       return sessionDetails;
     } catch (error) {
       this.logger.error(`In fetching session details : ${JSON.stringify(error)}`);
@@ -575,6 +587,24 @@ export class UserService {
     } catch (error) {
       this.logger.error(`In refreshTokenDetails : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async userSessions(userId: string): Promise<IRestrictedUserSession[]> {
+    try {
+      return await this.userRepository.fetchUserSessions(userId);
+    } catch (error) {
+      this.logger.error(`get user sessions: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async deleteSession(sessionId: string, userId: string): Promise<{ message: string }> {
+    try {
+      return await this.userRepository.deleteSessionBySessionId(sessionId, userId);
+    } catch (error) {
+      this.logger.error(`delete session by session id: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

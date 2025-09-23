@@ -1,10 +1,14 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  Delete,
+  ForbiddenException,
   Get,
   HttpStatus,
   Logger,
   Param,
+  ParseUUIDPipe,
   Post,
   Query,
   Req,
@@ -15,10 +19,19 @@ import {
 } from '@nestjs/common';
 import { AuthzService } from './authz.service';
 import { CommonService } from '../../../../libs/common/src/common.service';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiForbiddenResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse
+} from '@nestjs/swagger';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
-import IResponseType from '@credebl/common/interfaces/response.interface';
+import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Response, Request } from 'express';
 import { EmailVerificationDto } from '../user/dto/email-verify.dto';
@@ -36,6 +49,12 @@ import { SessionGuard } from './guards/session.guard';
 import { UserLogoutDto } from './dtos/user-logout.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ISessionData } from 'apps/user/interfaces/user.interface';
+import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
+import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
+import { User } from './decorators/user.decorator';
+import { user } from '@prisma/client';
+import * as useragent from 'express-useragent';
+
 @Controller('auth')
 @ApiTags('auth')
 @UseFilters(CustomExceptionFilter)
@@ -158,9 +177,19 @@ export class AuthzController {
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: AuthTokenResponse })
   @ApiBody({ type: LoginUserDto })
-  async login(@Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
+  async login(@Req() req: Request, @Body() loginUserDto: LoginUserDto, @Res() res: Response): Promise<Response> {
     if (loginUserDto.email) {
-      const userData = await this.authzService.login(loginUserDto.email, loginUserDto.password);
+      const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress;
+      const ua = req.headers['user-agent'];
+      const expressUa = useragent.parse(ua);
+      const device = {
+        browser: `${expressUa.browser} ${expressUa.version ?? ''}`.trim(),
+        os: expressUa.platform,
+        deviceType: expressUa.isDesktop ? 'desktop' : 'mobile'
+      };
+
+      const clientInfo = JSON.stringify({ ...device, rawDetail: ua, ip });
+      const userData = await this.authzService.login(clientInfo, loginUserDto.email, loginUserDto.password);
 
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
@@ -329,6 +358,84 @@ export class AuthzController {
       message: ResponseMessages.user.success.logout
     };
 
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Get all sessions by userId
+   * @param userId The ID of the user
+   * @returns All sessions related to the user
+   */
+  @Get('/:userId/sessions')
+  @ApiOperation({
+    summary: 'Get all sessions by userId',
+    description: 'Retrieve sessions for the user. Based on userId.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  async userSessions(
+    @User() reqUser: user,
+    @Res() res: Response,
+    @Param(
+      'userId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(`Invalid format for User Id`);
+        }
+      })
+    )
+    userId: string
+  ): Promise<Response> {
+    if (reqUser.id !== userId) {
+      throw new ForbiddenException('You are not allowed to access sessions of another user');
+    }
+    const response = await this.authzService.userSessions(userId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.user.success.fetchAllSession,
+      data: response
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Delete session by sessionId
+   * @param sessionId The ID of the session record to delete
+   * @returns Acknowledgement on deletion
+   */
+  @Delete('/:sessionId/sessions')
+  @ApiOperation({
+    summary: 'Delete a particular session using its sessionId',
+    description: 'Delete a particular session using its sessionId'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  async deleteSession(
+    @User() reqUser: user,
+    @Res() res: Response,
+    @Param(
+      'sessionId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(`Invalid format for session Id`);
+        }
+      })
+    )
+    sessionId: string
+  ): Promise<Response> {
+    const response = await this.authzService.deleteSession(sessionId, reqUser.id);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: response.message
+    };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

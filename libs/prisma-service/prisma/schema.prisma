@@ -67,6 +67,7 @@ model session {
   sessionType      String?
   account          account?    @relation(fields: [accountId], references:[id])
   expiresAt        DateTime?   @db.Timestamp(6)
+  clientInfo       Json? 
 }
 
 model token {

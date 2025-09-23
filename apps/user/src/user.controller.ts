@@ -1,6 +1,7 @@
 import {
   ICheckUserDetails,
   IOrgUsers,
+  IRestrictedUserSession,
   ISessionDetails,
   ISessions,
   IUserDeletedActivity,
@@ -84,9 +85,24 @@ export class UserController {
     return this.userService.getSession(payload?.sessionId);
   }
 
+  @MessagePattern({ cmd: 'check-session-details' })
+  async checkSession(sessionId: string): Promise<ISessionDetails> {
+    return this.userService.checkSession(sessionId);
+  }
+
   @MessagePattern({ cmd: 'refresh-token-details' })
   async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
     return this.userService.refreshTokenDetails(refreshToken);
+  }
+
+  @MessagePattern({ cmd: 'session-details-by-userId' })
+  async userSessions(userId: string): Promise<IRestrictedUserSession[]> {
+    return this.userService.userSessions(userId);
+  }
+
+  @MessagePattern({ cmd: 'delete-session-by-sessionId' })
+  async deleteSession(payload: { sessionId: string; userId: string }): Promise<{ message: string }> {
+    return this.userService.deleteSession(payload.sessionId, payload.userId);
   }
 
   @MessagePattern({ cmd: 'user-reset-password' })

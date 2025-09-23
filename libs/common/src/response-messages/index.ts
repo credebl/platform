@@ -26,7 +26,9 @@ export const ResponseMessages = {
       countriesVerificationCode: 'All countries has been fetched successfully',
       stateVerificationCode: 'All states has been fetched successfully',
       cityVerificationCode: 'All cities has been fetched successfully',
-      logout: 'User logout successfully'
+      logout: 'User logout successfully',
+      fetchAllSession: 'User Sessions fetched Successfully',
+      sessionDelete: 'Session deleted Successfully'
     },
     error: {
       exists: 'User already exists',

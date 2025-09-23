@@ -179,6 +179,7 @@ export interface IUserSignIn {
   email: string;
   password: string;
   isPasskey?: boolean;
+  clientInfo: Prisma.JsonValue;
 }
 
 export interface ISession {
@@ -192,6 +193,7 @@ export interface ISession {
   accountId?: string;
   sessionType?: string;
   expiresAt?: Date;
+  clientInfo?: Prisma.JsonValue | null;
 }
 
 export interface IUpdateAccountDetails {
@@ -289,4 +291,13 @@ export interface IAccountDetails {
 }
 export interface ISessionData {
   sessionId: string;
+}
+
+export interface IRestrictedUserSession {
+  id: string;
+  userId: string;
+  expiresAt: Date;
+  createdAt: Date;
+  clientInfo: Prisma.JsonValue | null;
+  sessionType: string;
 }

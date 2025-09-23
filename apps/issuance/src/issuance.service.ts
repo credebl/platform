@@ -524,7 +524,7 @@ export class IssuanceService {
   }> {
     try {
       return this.issuanceServiceProxy
-        .send<string>(pattern, payload)
+        .send(pattern, payload)
         .pipe(
           map((response) => ({
             response

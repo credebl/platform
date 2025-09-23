@@ -60,7 +60,7 @@ export class UserActivityRepository {
       const payload = { orgId, userId: user?.id, deletedBy: user?.id, recordType, userEmail: user?.email, txnMetadata };
 
       return this.userActivityServiceProxy
-        .send<string>(pattern, payload)
+        .send(pattern, payload)
         .pipe(
           map((message) => ({
             message

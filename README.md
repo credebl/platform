@@ -2,23 +2,23 @@
 
 This repository hosts the codebase for CREDEBL SSI Platform backend.
 
-## 1. Prerequisites
+## Prerequisites
 
-### 1.1. Install Docker and Docker Compose
+### • Install Docker and Docker Compose
 See: https://docs.docker.com/engine/install/
 
-### 1.2. Install Node.js
+### • Install Node.js
 Version: >= 18.17.0  
 See: https://nodejs.dev/en/learn/how-to-install-nodejs/
 
-### 1.3. Install NestJS CLI
+### • Install NestJS CLI
 ```bash
 npm i @nestjs/cli@latest 
 ```
 
-## 2. Setup Instructions
+## Setup Instructions
 
-### 2.1. Setup and Run PostgreSQL
+### • Setup and Run PostgreSQL
 Start the PostgreSQL service using Docker:
 
 ```bash
@@ -31,7 +31,7 @@ docker run --name credebl-postgres \
   -d postgres:16
 ```
 
-### 2.2. Run Prisma to Generate Database Schema
+### • Run Prisma to Generate Database Schema
 
 ```bash
 cd ./libs/prisma-service/prisma
@@ -39,16 +39,16 @@ npx prisma generate
 npx prisma db push
 ```
 
-### 2.3. Seed Initial Data
+### • Seed Initial Data
 
 ```bash
 cd ./libs/prisma-service
 npx prisma db seed
 ```
 
-## 3. Install NATS Message Broker
+## Install NATS Message Broker
 
-### 3.1. Pull NATS Docker Image
+### • Pull NATS Docker Image
 
 NATS is used for inter-service communication. The only prerequisite here is to install Docker.
 
@@ -56,31 +56,31 @@ NATS is used for inter-service communication. The only prerequisite here is to i
 docker pull nats:latest
 ```
 
-### 3.2. Run NATS using Docker Compose
+### • Run NATS using Docker Compose
 The `docker-compose.yml` file is available in the root folder.
 
 ```bash
 docker-compose up
 ```
 
-## 4. Run CREDEBL Microservices
+## Run CREDEBL Microservices
 
-### 4.1. Install Dependencies
+### • Install Dependencies
 ```bash
 npm install
 ```
 
-### 4.2. Configure Environment Variables
+### • Configure Environment Variables
 Configure environment variables in `.env` before you start the API Gateway.
 
-### 4.3. Running the API Gateway
+### • Running the API Gateway
 You can optionally use the `--watch` flag during development/testing.
 
 ```bash
 nest start [--watch]
 ```
 
-### 4.4. Starting Individual Microservices
+### • Starting Individual Microservices
 
 For example, to start the `organization service` microservice, run the following command in a separate terminal window:
 
@@ -100,7 +100,7 @@ nest start agent-provisioning [--watch]
 nest start agent-service [--watch]
 ```
 
-## 5. Access Microservice Endpoints
+## Access Microservice Endpoints
 
 To access microservice endpoints using the API Gateway, navigate to:
 

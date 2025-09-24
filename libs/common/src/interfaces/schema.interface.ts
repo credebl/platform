@@ -1,3 +1,5 @@
+import { ICredDefData } from './cred-def.interface';
+
 export interface IPaginationDetails {
   totalItems: number;
   hasNextPage: boolean;
@@ -71,21 +73,15 @@ export interface IPlatformSchemas {
   schemasResult: ISchemaData[];
 }
 
-export interface ICredDefData {
-  tag: string;
-  credentialDefinitionId: string;
-  schemaLedgerId: string;
-  revocable: boolean;
-  createDateTime?: Date;
-}
+export interface PartialICredDefData extends Pick<ICredDefData, 'createdBy' | 'schemaId' | 'orgId'> {}
 
 export interface ICredDefWithPagination extends IPaginationDetails {
-  data: ICredDefData[];
+  data: PartialICredDefData[];
 }
 
 export interface ICredDefWithCount {
   credDefCount: number;
-  credDefResult: ICredDefData[];
+  credDefResult: PartialICredDefData[];
 }
 
 export interface INetworkUrl {

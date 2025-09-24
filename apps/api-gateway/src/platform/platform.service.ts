@@ -29,7 +29,7 @@ export class PlatformService extends BaseService {
     return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-all-platform-cred-defs', credDefs);
   }
 
-  async getAllLedgers(): Promise<ILedgers> {
+  async getAllLedgers(): Promise<ILedgers[]> {
     const payload = {};
     return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-all-ledgers', payload);
   }

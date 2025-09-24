@@ -424,7 +424,7 @@ export class CloudWalletService {
    * @param walletDetails
    * @returns DID list
    */
-  async getDidList(walletDetails: IWalletDetailsForDidList): Promise<Response> {
+  async getDidList(walletDetails: IWalletDetailsForDidList): Promise<IProofRequestRes[]> {
     try {
       const { userId } = walletDetails;
       const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
@@ -433,7 +433,7 @@ export class CloudWalletService {
 
       const url = `${agentEndpoint}${CommonConstants.URL_AGENT_GET_DID}`;
 
-      const didList = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
+      const didList = (await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } })) ?? [];
       return didList;
     } catch (error) {
       await this.commonService.handleError(error);

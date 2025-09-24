@@ -385,7 +385,7 @@ export class AuthzController {
       new TrimStringParamPipe(),
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid session ID`);
+          throw new BadRequestException(`Invalid user ID`);
         }
       })
     )

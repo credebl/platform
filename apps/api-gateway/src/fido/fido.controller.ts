@@ -72,7 +72,7 @@ export class FidoController {
   @ApiBadRequestResponse({ description: 'Bad Request', type: BadRequestErrorDto })
   async fetchFidoUserDetails(@Request() req, @Param('email') email: string, @Res() res: Response): Promise<Response> {
     try {
-      const fidoUserDetails = await this.fidoService.fetchFidoUserDetails(req.params.email.toLowerCase());
+      const fidoUserDetails = await this.fidoService.fetchFidoUserDetails(email.toLowerCase());
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.user.success.fetchUsers,

@@ -6,7 +6,8 @@ import {
   ConflictException,
   Injectable,
   NotAcceptableException,
-  NotFoundException
+  NotFoundException,
+  HttpStatus
 } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
@@ -516,16 +517,13 @@ export class SchemaService extends BaseService {
       }
     } catch (error) {
       this.logger.error(`Error in getting schema by id: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      if (error?.status?.message?.error) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          message: error.status.message.error.reason || error.status.message.error,
+          statusCode: error.status?.code ?? HttpStatus.INTERNAL_SERVER_ERROR
         });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
       }
+      throw new RpcException(error.response || error);
     }
   }
 

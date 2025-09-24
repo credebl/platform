@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ConflictException, HttpException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { CredentialDefinitionRepository } from './repositories/credential-definition.repository';
@@ -135,16 +135,13 @@ export class CredentialDefinitionService extends BaseService {
       return credDefResponse;
     } catch (error) {
       this.logger.error(`Error in creating credential definition: ${JSON.stringify(error)}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      if (error?.status?.message?.error) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          message: error.status.message.error.reason || error.status.message.error,
+          statusCode: error.status?.code ?? HttpStatus.INTERNAL_SERVER_ERROR
         });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
       }
+      throw new RpcException(error.response || error);
     }
   }
 
@@ -243,16 +240,13 @@ export class CredentialDefinitionService extends BaseService {
       return credDefResponse;
     } catch (error) {
       this.logger.error(`Error retrieving credential definition with id ${payload.credentialDefinitionId}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      if (error?.status?.message?.error) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          message: error.status.message.error.reason || error.status.message.error,
+          statusCode: error.status?.code ?? HttpStatus.INTERNAL_SERVER_ERROR
         });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
       }
+      throw new RpcException(error.response || error);
     }
   }
 

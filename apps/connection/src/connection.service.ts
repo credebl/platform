@@ -460,16 +460,13 @@ export class ConnectionService {
       return createQuestion;
     } catch (error) {
       this.logger.error(`[sendQuestion] - error in sending question: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      if (error?.status?.message?.error) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          message: error.status.message.error.reason || error.status.message.error,
+          statusCode: error.status?.code ?? HttpStatus.INTERNAL_SERVER_ERROR
         });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
       }
+      throw new RpcException(error.response || error);
     }
   }
 
@@ -657,16 +654,13 @@ export class ConnectionService {
   }
 
   handleError(error): Promise<void> {
-    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+    if (error?.status?.message?.error) {
       throw new RpcException({
-        message: error?.status?.message?.error?.reason
-          ? error?.status?.message?.error?.reason
-          : error?.status?.message?.error,
-        statusCode: error?.status?.code
+        message: error.status.message.error.reason || error.status.message.error,
+        statusCode: error.status?.code ?? HttpStatus.INTERNAL_SERVER_ERROR
       });
-    } else {
-      throw new RpcException(error.response ? error.response : error);
     }
+    throw new RpcException(error.response || error);
   }
 
   async deleteConnectionRecords(orgId: string, user: user): Promise<IDeletedConnectionsRecord> {
@@ -732,16 +726,13 @@ export class ConnectionService {
       return sendBasicMessage;
     } catch (error) {
       this.logger.error(`[sendBasicMesage] - error in send basic message: ${error}`);
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      if (error?.status?.message?.error) {
         throw new RpcException({
-          message: error?.status?.message?.error?.reason
-            ? error?.status?.message?.error?.reason
-            : error?.status?.message?.error,
-          statusCode: error?.status?.code
+          message: error.status.message.error.reason || error.status.message.error,
+          statusCode: error.status?.code ?? HttpStatus.INTERNAL_SERVER_ERROR
         });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
       }
+      throw new RpcException(error.response || error);
     }
   }
 

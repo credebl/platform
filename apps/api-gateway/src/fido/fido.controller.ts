@@ -115,6 +115,7 @@ export class FidoController {
       return res.status(HttpStatus.CREATED).json(finalResponse);
     } catch (error) {
       this.logger.error(`Error::${error}`);
+      throw error;
     }
   }
 

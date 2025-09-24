@@ -39,9 +39,9 @@ export class AgentService extends BaseService {
   }
 
   async walletProvision(walletUserDetails: WalletDetailsDto, user: any) {
-    this.logger.log(`**** walletProvision called...${JSON.stringify(walletUserDetails)}`);
+    this.logger.log(`**** walletProvision called...${walletUserDetails.walletName}`);
     const payload = { walletUserDetails, user };
-    return await this.natsClient.sendNats(this.agentServiceProxy, 'wallet-provision', payload);
+    return this.natsClient.sendNats(this.agentServiceProxy, 'wallet-provision', payload);
   }
 
   /**

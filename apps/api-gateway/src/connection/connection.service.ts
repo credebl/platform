@@ -18,6 +18,7 @@ import {
 import { BasicMessageDto, QuestionDto } from './dtos/question-answer.dto';
 import { user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class ConnectionService extends BaseService {
   constructor(
@@ -118,7 +119,7 @@ export class ConnectionService extends BaseService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.connectionServiceProxy.send(pattern, payload).toPromise();
+      const message: string = await firstValueFrom(this.connectionServiceProxy.send(pattern, payload));
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -131,7 +132,7 @@ export class ConnectionService extends BaseService {
     const payload = { webhookUrl, data };
 
     try {
-      const message = await this.connectionServiceProxy.send(pattern, payload).toPromise();
+      const message: string = await firstValueFrom(this.connectionServiceProxy.send(pattern, payload));
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);

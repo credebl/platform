@@ -80,8 +80,8 @@ export class AppModule {
     userContext
       .apply(AuthzMiddleware)
       .exclude(
-        { path: 'authz', method: RequestMethod.ALL },
-        'authz/*path',
+        // The below excludes authz with all its subpaths
+        { path: 'authz/(.*)', method: RequestMethod.ALL },
         'admin/subscriptions',
         'registry/organizations/',
         'email/user/verify',

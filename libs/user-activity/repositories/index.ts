@@ -1,9 +1,10 @@
 /* eslint-disable camelcase */
-import { HttpException, Inject, Injectable, Logger } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { IUsersActivity } from '../interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { RecordType, user, user_activity } from '@prisma/client';
-import { map } from 'rxjs';
+import { lastValueFrom, timeout } from 'rxjs';
 
 @Injectable()
 export class UserActivityRepository {
@@ -59,29 +60,28 @@ export class UserActivityRepository {
       const pattern = { cmd: 'org-deleted-activity' };
       const payload = { orgId, userId: user?.id, deletedBy: user?.id, recordType, userEmail: user?.email, txnMetadata };
 
-      return this.userActivityServiceProxy
-        .send(pattern, payload)
-        .pipe(
-          map((message) => ({
-            message
-          }))
-        )
-        .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
+      const resp = await lastValueFrom(this.userActivityServiceProxy.send(pattern, payload).pipe(timeout(10000)));
 
-          throw new HttpException(
-            {
-              status: error?.error?.statusCode,
-              error: error?.error?.error,
-              message: error?.error?.message ?? error?.message
-            },
-            error.error
-          );
-        });
+      if ('string' === typeof resp) {
+        return { message: resp };
+      }
+      if (resp && 'string' === typeof (resp as any).message) {
+        return { message: (resp as any).message };
+      }
+      return { message: 'OK' };
     } catch (error) {
-      this.logger.error(`[_orgDeletedActivity] - error in delete wallet : ${JSON.stringify(error)}`);
-      throw error;
+      this.logger.error(`[_orgDeletedActivity] - NATS 'org-deleted-activity' failed`, (error as any)?.stack);
+      const status =
+        (error as any)?.status ??
+        (error as any)?.statusCode ??
+        (error as any)?.error?.statusCode ??
+        HttpStatus.INTERNAL_SERVER_ERROR;
+      const response = {
+        status,
+        error: (error as any)?.name ?? (error as any)?.error?.error ?? 'InternalServerError',
+        message: (error as any)?.message ?? (error as any)?.error?.message ?? 'Internal server error'
+      };
+      throw new HttpException(response, status);
     }
   }
 }

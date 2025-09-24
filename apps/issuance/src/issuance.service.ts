@@ -66,7 +66,7 @@ import { convertUrlToDeepLinkUrl, getAgentUrl, paginator } from '@credebl/common
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import {
@@ -105,7 +105,7 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
-    private readonly awsService: AwsService,
+    private readonly storageService: StorageService,
     @InjectQueue('bulk-issuance') private readonly bulkIssuanceQueue: Queue,
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     @Inject(ContextStorageServiceKey)
@@ -149,8 +149,9 @@ export class IssuanceService {
       const { orgId, credentialDefinitionId, comment, credentialData, isValidateSchema } = payload || {};
 
       if (payload.credentialType === IssueCredentialType.INDY) {
-        const schemaResponse: SchemaDetails =
-          await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
         if (schemaResponse?.attributes) {
           const schemaResponseError = [];
           const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
@@ -341,8 +342,9 @@ export class IssuanceService {
         isValidateSchema
       } = payload;
       if (credentialType === IssueCredentialType.INDY) {
-        const schemadetailsResponse: SchemaDetails =
-          await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+        const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
 
         if (schemadetailsResponse?.attributes) {
           const schemadetailsResponseError = [];
@@ -486,7 +488,9 @@ export class IssuanceService {
       return message.response;
     } catch (error) {
       this.logger.error(
-        `[storeIssuanceObjectReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(error)}`
+        `[storeIssuanceObjectReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
+          error
+        )}`
       );
       throw error;
     }
@@ -788,8 +792,9 @@ export class IssuanceService {
       }
 
       if (IssueCredentialType.INDY === credentialType) {
-        const schemaResponse: SchemaDetails =
-          await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
+        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
+          credentialDefinitionId
+        );
 
         let attributesArray: IAttributes[] = [];
         if (schemaResponse?.attributes) {
@@ -1261,9 +1266,8 @@ export class IssuanceService {
         credentialPayload.schemaName = credentialDetails.schemaName;
       }
 
-      const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
-
-      const csvData: string = getFileDetails.Body.toString();
+      const getFileDetails = await this.storageService.getFile(importFileDetails.fileKey);
+      const csvData: string = getFileDetails.toString();
 
       const parsedData = paParse(csvData, {
         header: true,

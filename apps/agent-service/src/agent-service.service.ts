@@ -317,7 +317,7 @@ export class AgentServiceService {
   private async getAgentHealthData(agentEndpoint: string, apiKey: string): Promise<AgentHealthData> {
     try {
       return await this.commonService
-        .httpGet(`${agentEndpoint}${CommonConstants.URL_AGENT_STATUS}`, {
+        .httpGet(`${agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`, {
           headers: { authorization: apiKey }
         })
         .then((response) => response);
@@ -1529,7 +1529,7 @@ export class AgentServiceService {
 
       // Invoke an API request from the agent to assess its current status
       const agentHealthData = await this.commonService
-        .httpGet(`${orgAgentDetails.agentEndPoint}${CommonConstants.URL_AGENT_STATUS}`, {
+        .httpGet(`${orgAgentDetails.agentEndPoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`, {
           headers: { authorization: agentApiKey }
         })
         .then(async (response) => response);
@@ -1802,8 +1802,9 @@ export class AgentServiceService {
       // Perform the deletion in a transaction
       return await this.prisma.$transaction(async (prisma) => {
         // Delete org agent and related records
-        const { orgDid, agentInvitation, deleteOrgAgent } =
-          await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
+        const { orgDid, agentInvitation, deleteOrgAgent } = await this.agentServiceRepository.deleteOrgAgentByOrg(
+          orgId
+        );
 
         // Make the HTTP DELETE request
         const deleteWallet = await this.commonService.httpDelete(url, {

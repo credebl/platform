@@ -727,7 +727,9 @@ export class IssuanceRepository {
         .filter(Boolean);
 
       if (0 < referencedTables.length) {
-        let errorMessage = `Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`;
+        let errorMessage = `Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(
+          ', '
+        )}`;
 
         if (1 === referencedTables.length) {
           if (referencedTables.includes(`${PrismaTables.PRESENTATIONS}`)) {

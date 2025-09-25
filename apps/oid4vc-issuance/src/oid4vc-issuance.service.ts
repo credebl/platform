@@ -597,9 +597,7 @@ export class Oid4vcIssuanceService {
     try {
       const url = await getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.OIDC_ISSUER_SESSIONS);
       const credentialOfferUrl = buildCredentialOfferUrl(url, getAllCredentialOffer);
-      console.log('This is credentialOfferUrl', credentialOfferUrl);
       const offers = await this._oidcGetCredentialOfferById(credentialOfferUrl, orgId);
-      console.log('This is offer', JSON.stringify(offers, null, 2));
       if ('string' === typeof offers.response) {
         offers.response = JSON.parse(offers.response);
       }
@@ -619,7 +617,6 @@ export class Oid4vcIssuanceService {
         CommonConstants.OIDC_DELETE_CREDENTIAL_OFFER,
         credentialId
       );
-      console.log('This is the url:', url);
       const deletedCredentialOffer = await this._oidcDeleteCredentialOffer(url, orgId);
       if (!deletedCredentialOffer) {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.deleteFailed);

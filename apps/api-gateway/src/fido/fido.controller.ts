@@ -11,7 +11,8 @@ import {
   Query,
   Request,
   Res,
-  UseFilters
+  UseFilters,
+  UseGuards
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -42,6 +43,8 @@ import { Response } from 'express';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { AuthGuard } from '@nestjs/passport';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('auth')
@@ -61,6 +64,7 @@ export class FidoController {
    */
   @Get('/passkey/:email')
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Fetch fido user details',
@@ -241,8 +245,9 @@ export class FidoController {
    * @returns Updated device name
    */
   @Put('/passkey/:credentialId')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
   @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
   @ApiOperation({ summary: 'Update fido user device name', description: 'Update the device name of a FIDO user.' })
   @ApiQuery({ name: 'deviceName', required: true })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
@@ -272,8 +277,9 @@ export class FidoController {
    * @returns Success message
    */
   @Delete('/passkey/:credentialId')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
   @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
   @ApiOperation({ summary: 'Delete fido user device', description: 'Delete a FIDO user device by its credential ID.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async deleteFidoUserDevice(@Param('credentialId') credentialId: string, @Res() res: Response): Promise<Response> {

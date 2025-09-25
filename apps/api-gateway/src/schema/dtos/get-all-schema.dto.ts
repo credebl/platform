@@ -62,12 +62,13 @@ export class GetCredentialDefinitionBySchemaIdDto {
   searchByText: string = '';
 
   @ApiProperty({
-    required: false
+    required: false,
+    enum: CredDefSortFields
   })
   @Transform(({ value }) => trim(value))
   @IsOptional()
   @IsEnum(CredDefSortFields)
-  sortField: string = SortFields.CREATED_DATE_TIME;
+  sortField: string = CredDefSortFields.CREATED_DATE_TIME;
 
   @ApiProperty({
     enum: [SortValue.DESC, SortValue.ASC],

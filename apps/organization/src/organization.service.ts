@@ -2033,16 +2033,13 @@ export class OrganizationService {
 
   async generateClientApiToken(generateTokenDetails: ClientTokenDto): Promise<{ token: string }> {
     try {
-      this.logger.debug(`generateTokenDetails ::: ${JSON.stringify(generateTokenDetails)}`);
       const orgDetails = await this.organizationRepository.getOrganizationDetails(generateTokenDetails.orgId);
-      this.logger.debug(`orgDetails ::: ${JSON.stringify(orgDetails)}`);
       if (!orgDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
       }
       // Step:1 generate the token using admin credentials
       const adminTokenDetails =
         await this.clientRegistrationService.generateTokenUsingAdminCredentials(generateTokenDetails);
-      this.logger.debug(`adminTokenDetails ::: ${JSON.stringify(adminTokenDetails)}`);
       if (!adminTokenDetails?.access_token) {
         throw new InternalServerErrorException(ResponseMessages.organisation.error.adminTokenDetails);
       }
@@ -2054,11 +2051,9 @@ export class OrganizationService {
       if (!clientDetails || 0 === clientDetails.length) {
         throw new NotFoundException(ResponseMessages.organisation.error.clientDetails);
       }
-      this.logger.debug(`clientDetails ::: ${JSON.stringify(clientDetails)}`);
       const { secret } = clientDetails[0];
       //step3: generate the token using client id and secret
       const authenticationResult = await this.authenticateClientKeycloak(generateTokenDetails.orgId, secret);
-      this.logger.debug(`authenticationResult ::: ${JSON.stringify(authenticationResult)}`);
       return { token: authenticationResult.access_token };
     } catch (error) {
       this.logger.error(`in generating issuer api token : ${JSON.stringify(error)}`);

@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import {
@@ -28,6 +27,7 @@ import {
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 @Injectable()
 export class IssuanceService extends BaseService {
   constructor(

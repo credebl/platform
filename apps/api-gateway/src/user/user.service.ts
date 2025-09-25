@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';
 import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
@@ -12,6 +11,7 @@ import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { user } from '@prisma/client';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class UserService extends BaseService {

@@ -55,8 +55,8 @@ const seedLength = 32;
 @Controller()
 @ApiTags('agents')
 @ApiBearerAuth()
-@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class AgentController {
   constructor(private readonly agentService: AgentService) {}
   private readonly logger = new Logger();

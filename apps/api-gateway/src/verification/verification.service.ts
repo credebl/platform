@@ -1,5 +1,4 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SendProofRequestPayload, RequestProofDtoV1, RequestProofDtoV2 } from './dto/request-proof.dto';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -14,6 +13,7 @@ import { IProofPresentation } from './interfaces/verification.interface';
 // To do make a similar interface in API-gateway
 import { user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class VerificationService extends BaseService {
@@ -118,7 +118,7 @@ export class VerificationService extends BaseService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.verificationServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.verificationServiceProxy.send(pattern, payload).toPromise();
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -132,7 +132,7 @@ export class VerificationService extends BaseService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.verificationServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.verificationServiceProxy.send(pattern, payload).toPromise();
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);

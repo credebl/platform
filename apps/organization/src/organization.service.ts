@@ -1763,7 +1763,7 @@ export class OrganizationService {
       };
 
       return this.organizationServiceProxy
-        .send<string>(pattern, userEmails)
+        .send(pattern, userEmails)
         .pipe(
           map((response: string) => ({
             response
@@ -1792,7 +1792,7 @@ export class OrganizationService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message = await this.organizationServiceProxy.send<any>(pattern, payload).toPromise();
+      const message = await this.organizationServiceProxy.send(pattern, payload).toPromise();
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);

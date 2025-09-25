@@ -19,25 +19,34 @@ export class NATSClient {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  sendNats(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<any> {
+  sendNats(serviceProxy: Pick<ClientProxy, 'send'>, cmd: string, payload: any): Promise<any> {
     this.logger.log(`Inside NATSClient for sendNats()`);
     const pattern = { cmd };
-    const headers = nats.headers(1, this.contextStorageService.getContextId());
+    const contextId = this.contextStorageService.getContextId() ?? v4();
+    const headers = nats.headers();
+    headers.set('contextId', contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
-    return serviceProxy
-      .send<string>(pattern, record)
-      .pipe(
+    return firstValueFrom(
+      serviceProxy.send<string>(pattern, record).pipe(
+        /**
+         * TODO: Check dependency of this mapping.
+         * This might be the reason we are getting, response.response in multiple responses
+         * We are maintaining them as is for now, but it need to be updated later
+         */
         map((response: string) => ({
+          // This map return the reposne as `{response: string}` instead of just the `string`
           response
         }))
       )
-      .toPromise();
+    );
   }
 
-  sendNatsMessage(serviceProxy: ClientProxy, cmd: string, payload: any): Promise<any> {
+  sendNatsMessage(serviceProxy: Pick<ClientProxy, 'send'>, cmd: string, payload: any): Promise<any> {
     const pattern = { cmd };
-    const headers = nats.headers(1, this.contextStorageService.getContextId());
+    const contextId = this.contextStorageService.getContextId() ?? v4();
+    const headers = nats.headers();
+    headers.set('contextId', contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
     const result = serviceProxy.send<string>(pattern, record);
@@ -45,13 +54,10 @@ export class NATSClient {
     return firstValueFrom(result);
   }
 
-  send<T>(serviceProxy: ClientProxy, pattern: object, payload: any): Promise<T> {
-    let contextId = this.contextStorageService.getContextId();
-
-    if (!contextId) {
-      contextId = v4();
-    }
-    const headers = nats.headers(1, contextId);
+  send<T>(serviceProxy: Pick<ClientProxy, 'send'>, pattern: object, payload: any): Promise<T> {
+    const contextId = this.contextStorageService.getContextId() ?? v4();
+    const headers = nats.headers();
+    headers.set('contextId', contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
     const result = serviceProxy.send<T>(pattern, record);
     return firstValueFrom(result);

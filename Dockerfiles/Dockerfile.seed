@@ -13,6 +13,7 @@ RUN chmod +x /app/libs/prisma-service/prisma/scripts/geo_location_data_import.sh
 RUN chmod +x /app/libs/prisma-service/prisma/scripts/update_client_credential_data.sh
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
+COPY pnpm-workspace.yaml ./
 RUN pnpm i --ignore-scripts
 
 # Run Prisma commands

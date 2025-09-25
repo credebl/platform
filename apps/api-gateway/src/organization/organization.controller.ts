@@ -792,6 +792,7 @@ export class OrganizationController {
   }
 
   @Post('/generateIssuerApiToken')
+  @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Generate API Token for the issuer',
     description: 'Generate API Token for the issuer'

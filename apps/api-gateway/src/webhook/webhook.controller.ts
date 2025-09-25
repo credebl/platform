@@ -104,7 +104,7 @@ export class WebhookController {
     description: 'Retrieve the details of the webhook URL for an organization.'
   })
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @Roles(OrgRoles.OWNER, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.ADMIN)
   @ApiResponse({
     status: HttpStatus.OK,

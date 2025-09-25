@@ -73,7 +73,7 @@ export interface IPlatformSchemas {
   schemasResult: ISchemaData[];
 }
 
-export interface PartialICredDefData extends Pick<ICredDefData, 'createdBy' | 'schemaId' | 'orgId'> {}
+export interface PartialICredDefData extends Omit<ICredDefData, 'createdBy' | 'schemaId' | 'orgId'> {}
 
 export interface ICredDefWithPagination extends IPaginationDetails {
   data: PartialICredDefData[];

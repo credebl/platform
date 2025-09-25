@@ -1,6 +1,5 @@
 import { Inject } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
@@ -24,6 +23,7 @@ import { IClientRoles } from '@credebl/client-registration/interfaces/client.int
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class OrganizationService extends BaseService {

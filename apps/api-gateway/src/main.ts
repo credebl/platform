@@ -84,7 +84,7 @@ async function bootstrap(): Promise<void> {
 
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
-  const httpAdapter = app.get(HttpAdapterHost);
+  const httpAdapter: HttpAdapterHost = app.get(HttpAdapterHost) as HttpAdapterHost;
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
   const { ENABLE_CORS_IP_LIST } = process.env || {};
   if (ENABLE_CORS_IP_LIST && '' !== ENABLE_CORS_IP_LIST) {

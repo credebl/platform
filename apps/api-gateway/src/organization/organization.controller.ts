@@ -58,8 +58,8 @@ import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
 @ApiTags('organizations')
-@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class OrganizationController {
   constructor(
     private readonly organizationService: OrganizationService,

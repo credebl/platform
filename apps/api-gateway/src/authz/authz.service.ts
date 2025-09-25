@@ -1,5 +1,4 @@
 import { Injectable, Inject, HttpException } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from '../../../../libs/service/base.service';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { UserEmailVerificationDto } from '../user/dto/create-user.dto';
@@ -20,6 +19,7 @@ import { user } from '@prisma/client';
 import { IRestrictedUserSession, ISessionDetails } from 'apps/user/interfaces/user.interface';
 import { UserLogoutDto } from './dtos/user-logout.dto';
 import type { Prisma } from '@prisma/client';
+import { ClientProxy } from '@nestjs/microservices';
 @Injectable()
 @WebSocketGateway()
 export class AuthzService extends BaseService {

@@ -9,7 +9,6 @@ import {
   Logger,
   NotFoundException
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
@@ -41,6 +40,7 @@ import { CloudWalletRepository } from './cloud-wallet.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CloudWalletType } from '@credebl/enum/enum';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class CloudWalletService {
@@ -425,7 +425,7 @@ export class CloudWalletService {
    * @param walletDetails
    * @returns DID list
    */
-  async getDidList(walletDetails: IWalletDetailsForDidList): Promise<Response> {
+  async getDidList(walletDetails: IWalletDetailsForDidList): Promise<IProofRequestRes[]> {
     try {
       const { userId } = walletDetails;
       const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
@@ -434,7 +434,7 @@ export class CloudWalletService {
 
       const url = `${agentEndpoint}${CommonConstants.URL_AGENT_GET_DID}`;
 
-      const didList = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
+      const didList = (await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } })) ?? [];
       return didList;
     } catch (error) {
       await this.commonService.handleError(error);

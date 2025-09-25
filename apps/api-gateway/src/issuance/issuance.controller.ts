@@ -960,7 +960,6 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     issueCredentialDto.type = 'Issuance';
-
     if (id && 'default' === issueCredentialDto.contextCorrelationId) {
       issueCredentialDto.orgId = id;
     }

@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { Display } from './oidc-issuance.interfaces';
+import { Display } from './oid4vc-issuance.interfaces';
 
 export interface CredentialAttribute {
   mandatory?: boolean;

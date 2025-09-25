@@ -1423,13 +1423,15 @@ export class AgentServiceService {
     }
   }
 
-  async deleteOidcIssuer(url: string, orgId: string): Promise<object> {
+  async deleteOidcIssuer(url: string, orgId: string): Promise<object | string> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const data = await this.commonService
-        .httpDelete(url, { headers: { authorization: getApiKey } })
-        .then(async (response) => response);
-      return data;
+      const response = await this.commonService.httpDelete(url, {
+        headers: { authorization: getApiKey }
+      });
+      if (response?.status === 204) {
+        return 'Data deleted successfully';
+      }
     } catch (error) {
       this.logger.error(`Error in deleteOidcIssuer in agent service : ${JSON.stringify(error)}`);
       throw error;

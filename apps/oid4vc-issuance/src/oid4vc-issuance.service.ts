@@ -17,7 +17,7 @@ import {
   NotFoundException,
   Scope
 } from '@nestjs/common';
-import { IssuanceRepository } from './issuance.repository';
+import { Oid4vcIssuanceRepository } from './oid4vc-issuance.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
@@ -31,8 +31,8 @@ import {
   IssuerMetadata,
   IssuerResponse,
   IssuerUpdation
-} from '../interfaces/oidc-issuance.interfaces';
-import { CreateCredentialTemplate, UpdateCredentialTemplate } from '../interfaces/oidc-template.interface';
+} from '../interfaces/oid4vc-issuance.interfaces';
+import { CreateCredentialTemplate, UpdateCredentialTemplate } from '../interfaces/oid4vc-template.interfaces';
 import {
   accessTokenSignerKeyType,
   batchCredentialIssuanceDefault,
@@ -42,22 +42,25 @@ import {
 import {
   buildCredentialConfigurationsSupported,
   buildIssuerPayload,
-  extractTemplateIds
+  encodeIssuerPublicId,
+  extractTemplateIds,
+  normalizeJson
 } from '../libs/helpers/issuer.metadata';
 import {
   CreateOidcCredentialOffer,
+  CredentialPayload,
   GetAllCredentialOffer,
   SignerMethodOption,
   SignerOption,
   UpdateCredentialRequest
-} from '../interfaces/oidc-issuer-sessions.interfaces';
+} from '../interfaces/oid4vc-issuer-sessions.interfaces';
 import { BadRequestErrorDto } from 'apps/api-gateway/src/dtos/bad-request-error.dto';
 import {
   buildCredentialOfferPayload,
   buildCredentialOfferUrl,
-  buildUpdateCredentialOfferPayload,
   CredentialOfferPayload
 } from '../libs/helpers/credential-sessions.builder';
+import { context } from '@opentelemetry/api';
 
 type CredentialDisplayItem = {
   logo?: { uri: string; alt_text?: string };
@@ -70,22 +73,22 @@ type Appearance = {
   display: CredentialDisplayItem[];
 };
 @Injectable()
-export class OIDCIssuanceService {
+export class Oid4vcIssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
   constructor(
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
-    private readonly issuanceRepository: IssuanceRepository
+    private readonly oid4vcIssuanceRepository: Oid4vcIssuanceRepository
   ) {}
 
   async oidcIssuerCreate(issuerCreation: IssuerCreation, orgId: string, userDetails: user): Promise<oidc_issuer> {
     try {
       const { issuerId, batchCredentialIssuanceSize } = issuerCreation;
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint, id: orgAgentId, orgAgentTypeId } = agentDetails;
-      const orgAgentType = await this.issuanceRepository.getOrgAgentType(orgAgentTypeId);
+      const orgAgentType = await this.oid4vcIssuanceRepository.getOrgAgentType(orgAgentTypeId);
       if (!orgAgentType) {
         throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
       }
@@ -126,13 +129,13 @@ export class OIDCIssuanceService {
         orgAgentId,
         batchCredentialIssuanceSize: issuerCreation?.batchCredentialIssuanceSize
       };
-      const addOidcIssuerDetails = await this.issuanceRepository.addOidcIssuerDetails(
+      const addOidcIssuerDetails = await this.oid4vcIssuanceRepository.addOidcIssuerDetails(
         issuerMetadata,
         issuerCreation?.display
       );
 
       if (!addOidcIssuerDetails) {
-        throw new InternalServerErrorException('Error in adding OIDC Issuer details in DB');
+        throw new InternalServerErrorException('Error in adding OID4VC Issuer details in DB');
       }
       return addOidcIssuerDetails;
     } catch (error) {
@@ -143,27 +146,29 @@ export class OIDCIssuanceService {
 
   async oidcIssuerUpdate(issuerUpdationConfig: IssuerUpdation, orgId: string, userDetails: user): Promise<oidc_issuer> {
     try {
-      const getIssuerDetails = await this.issuanceRepository.getOidcIssuerDetailsById(issuerUpdationConfig.issuerId);
+      const getIssuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(
+        issuerUpdationConfig.issuerId
+      );
       if (!getIssuerDetails) {
         throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
       }
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      const { agentEndPoint, id: orgAgentId, orgAgentTypeId } = agentDetails;
-      const orgAgentType = await this.issuanceRepository.getOrgAgentType(orgAgentTypeId);
+      const { agentEndPoint, orgAgentTypeId } = agentDetails;
+      const orgAgentType = await this.oid4vcIssuanceRepository.getOrgAgentType(orgAgentTypeId);
       if (!orgAgentType) {
         throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
       }
 
-      const addOidcIssuerDetails = await this.issuanceRepository.updateOidcIssuerDetails(
+      const addOidcIssuerDetails = await this.oid4vcIssuanceRepository.updateOidcIssuerDetails(
         userDetails.id,
         issuerUpdationConfig
       );
 
       if (!addOidcIssuerDetails) {
-        throw new InternalServerErrorException('Error in updating OIDC Issuer details in DB');
+        throw new InternalServerErrorException('Error in updating OID4VC Issuer details in DB');
       }
 
       const url = await getAgentUrl(
@@ -172,6 +177,7 @@ export class OIDCIssuanceService {
         getIssuerDetails.publicIssuerId
       );
       const issuerConfig = await this.buildOidcIssuerConfig(issuerUpdationConfig.issuerId);
+      console.log('This is the issuerConfig:', JSON.stringify(issuerConfig, null, 2));
       const updatedIssuer = await this._createOIDCTemplate(issuerConfig, url, orgId);
       if (updatedIssuer?.response?.statusCode && 200 !== updatedIssuer?.response?.statusCode) {
         throw new InternalServerErrorException(
@@ -188,40 +194,45 @@ export class OIDCIssuanceService {
 
   async oidcIssuerGetById(issuerId: string, orgId: string): Promise<IssuerResponse> {
     try {
-      const getIssuerDetails = await this.issuanceRepository.getOidcIssuerDetailsById(issuerId);
+      const getIssuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
+      console.log('This is the getIssuerDetails:', JSON.stringify(getIssuerDetails, null, 2));
       if (!getIssuerDetails && getIssuerDetails.publicIssuerId) {
         throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
       }
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      const url = await getAgentUrl(
-        agentDetails?.agentEndPoint,
-        CommonConstants.OIDC_ISSUER_BY_ID,
-        getIssuerDetails?.publicIssuerId
-      );
+      console.log('This is the agentDetails:', getIssuerDetails?.publicIssuerId);
+      const encodedId = encodeIssuerPublicId(getIssuerDetails?.publicIssuerId);
+      const url = await getAgentUrl(agentDetails?.agentEndPoint, CommonConstants.OIDC_ISSUER_BY_ID, encodedId);
+      console.log('This is the oidcIssuerGetById url:', url);
       const issuerDetailsRaw = await this._oidcGetIssuerById(url, orgId);
-
+      console.log('This is the issuerDetailsRaw:', JSON.stringify(issuerDetailsRaw, null, 2));
       if (!issuerDetailsRaw) {
         throw new InternalServerErrorException(`Error from agent while getting issuer`);
       }
-
-      // response is a string → parse it into IssuerResponse
       const issuerDetails = {
-        response: JSON.parse(issuerDetailsRaw.response) as IssuerResponse
+        response: normalizeJson(issuerDetailsRaw.response)
       };
 
       return issuerDetails.response;
     } catch (error) {
-      this.logger.error(`[oidcIssuerGetById] - error in oidcIssuerGetById issuance records: ${JSON.stringify(error)}`);
-      throw new RpcException(error?.response ?? error);
+      const errorStack = error?.status?.message?.error;
+      if (errorStack) {
+        throw new RpcException({
+          message: errorStack?.reason ? errorStack?.reason : errorStack?.message,
+          statusCode: error?.status?.code
+        });
+      } else {
+        throw new RpcException(error.response ? error.response : error);
+      }
     }
   }
 
   async oidcIssuers(orgId: string): Promise<IssuerResponse[]> {
     try {
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails?.agentEndPoint) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
@@ -239,7 +250,6 @@ export class OIDCIssuanceService {
       if (!Array.isArray(response)) {
         throw new InternalServerErrorException('Invalid issuer payload from agent');
       }
-
       return response;
     } catch (error: any) {
       const msg = error?.message ?? 'unknown error';
@@ -250,34 +260,30 @@ export class OIDCIssuanceService {
 
   async deleteOidcIssuer(orgId: string, userDetails: user, issuerId: string) {
     try {
-      const deleteOidcIssuer = await this.issuanceRepository.deleteOidcIssuer(issuerId);
+      const deleteOidcIssuer = await this.oid4vcIssuanceRepository.deleteOidcIssuer(issuerId);
       if (!deleteOidcIssuer) {
-        throw new NotFoundException(ResponseMessages.oidcTemplate.error.deleteTemplate);
+        throw new NotFoundException(ResponseMessages.oidcIssuer.error.deleteFailed);
       }
-
       const issuerRecordId = await this.oidcIssuerGetById(issuerId, orgId);
       if (!issuerRecordId.id) {
         throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
       }
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint } = agentDetails;
-      const issuerDetails = await this.issuanceRepository.getOidcIssuerDetailsById(issuerId);
-      if (!issuerDetails) {
-        throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
-      }
       const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_DELETE, issuerRecordId.id);
-
       const createTemplateOnAgent = await this._deleteOidcIssuer(url, orgId);
       if (!createTemplateOnAgent) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       return deleteOidcIssuer;
     } catch (error) {
-      this.logger.error(`[deleteTemplate] - error: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ?? error);
+      if ('PrismaClientKnownRequestError' === error.name) {
+        throw new BadRequestException(error.meta?.cause ?? ResponseMessages.oidcIssuer.error.deleteFailed);
+      }
+      throw new Error(error.response ? error.response : error);
     }
   }
 
@@ -288,7 +294,7 @@ export class OIDCIssuanceService {
   ): Promise<credential_templates> {
     try {
       const { name, description, format, canBeRevoked, attributes, appearance, signerOption } = CredentialTemplate;
-      const checkNameExist = await this.issuanceRepository.getTemplateByNameForIssuer(name, issuerId);
+      const checkNameExist = await this.oid4vcIssuanceRepository.getTemplateByNameForIssuer(name, issuerId);
       if (0 < checkNameExist.length) {
         throw new ConflictException(ResponseMessages.oidcTemplate.error.templateNameAlreadyExist);
       }
@@ -303,17 +309,17 @@ export class OIDCIssuanceService {
         signerOption
       };
       // Persist in DB
-      const createdTemplate = await this.issuanceRepository.createTemplate(issuerId, metadata);
+      const createdTemplate = await this.oid4vcIssuanceRepository.createTemplate(issuerId, metadata);
       if (!createdTemplate) {
         throw new InternalServerErrorException(ResponseMessages.oidcTemplate.error.createFailed);
       }
       const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint } = agentDetails;
-      const issuerDetails = await this.issuanceRepository.getOidcIssuerDetailsById(issuerId);
+      const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       if (!issuerDetails) {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
       }
@@ -336,12 +342,12 @@ export class OIDCIssuanceService {
     issuerId: string
   ): Promise<credential_templates> {
     try {
-      const template = await this.issuanceRepository.getTemplateById(templateId);
+      const template = await this.oid4vcIssuanceRepository.getTemplateById(templateId);
       if (!template) {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.notFound);
       }
       if (updateCredentialTemplate.name) {
-        const checkNameExist = await this.issuanceRepository.getTemplateByNameForIssuer(
+        const checkNameExist = await this.oid4vcIssuanceRepository.getTemplateByNameForIssuer(
           updateCredentialTemplate.name,
           issuerId
         );
@@ -365,19 +371,19 @@ export class OIDCIssuanceService {
         ...(issuerId ? { issuerId } : {})
       };
 
-      const updatedTemplate = await this.issuanceRepository.updateTemplate(templateId, payload);
+      const updatedTemplate = await this.oid4vcIssuanceRepository.updateTemplate(templateId, payload);
 
-      const templates = await this.issuanceRepository.getTemplatesByIssuerId(issuerId);
+      const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
       if (!templates || 0 === templates.length) {
         throw new NotFoundException(ResponseMessages.issuance.error.notFound);
       }
       const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint } = agentDetails;
-      const issuerDetails = await this.issuanceRepository.getOidcIssuerDetailsById(issuerId);
+      const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       if (!issuerDetails) {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
       }
@@ -398,22 +404,22 @@ export class OIDCIssuanceService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async deleteTemplate(templateId: string, orgId: string, userDetails: user, issuerId: string): Promise<any> {
     try {
-      const template = await this.issuanceRepository.getTemplateById(templateId);
+      const template = await this.oid4vcIssuanceRepository.getTemplateById(templateId);
       if (!template) {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.notFound);
       }
-      const deleteTemplate = await this.issuanceRepository.deleteTemplate(templateId);
+      const deleteTemplate = await this.oid4vcIssuanceRepository.deleteTemplate(templateId);
       if (!deleteTemplate) {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.deleteTemplate);
       }
 
       const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint } = agentDetails;
-      const issuerDetails = await this.issuanceRepository.getOidcIssuerDetailsById(issuerId);
+      const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       if (!issuerDetails) {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
       }
@@ -430,15 +436,16 @@ export class OIDCIssuanceService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async findByIdTemplate(templateId: string, orgId: string, userDetails: user, issuerId: string): Promise<any> {
+  async findByIdTemplate(templateId: string, orgId: string): Promise<credential_templates | null> {
     try {
-      const template = await this.issuanceRepository.getTemplateById(templateId);
+      if (!orgId || !templateId) {
+        throw new BadRequestException(ResponseMessages.oidcTemplate.error.invalidId);
+      }
+      const template = await this.oid4vcIssuanceRepository.getTemplateById(templateId);
       if (!template) {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.notFound);
       }
-
-      return { message: ResponseMessages.oidcTemplate.success.fetch, data: template };
+      return template;
     } catch (error) {
       this.logger.error(`[findByIdTemplate] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
@@ -456,26 +463,36 @@ export class OIDCIssuanceService {
       if (!filterTemplateIds) {
         throw new BadRequestException('Please provide a valid id');
       }
-      const getAllOfferTemplates = await this.issuanceRepository.getTemplateByIds(filterTemplateIds, issuerId);
+      const getAllOfferTemplates = await this.oid4vcIssuanceRepository.getTemplateByIds(filterTemplateIds, issuerId);
       if (!getAllOfferTemplates) {
         throw new NotFoundException('No templates found for the issuer');
       }
 
-      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       //TDOD: signerOption should be under credentials change this with x509 support
-      const signerOption: SignerOption = {
-        method: SignerMethodOption.DID,
-        did: agentDetails.orgDid
-      };
+
+      //TDOD: signerOption should be under credentials change this with x509 support
+      const signerOptions: SignerOption[] = [];
+      getAllOfferTemplates.forEach((template) => {
+        if (template.signerOption === SignerMethodOption.DID) {
+          signerOptions.push({
+            method: SignerMethodOption.DID,
+            did: agentDetails.orgDid
+          });
+        }
+      });
+      //TODO: Implement x509 support and discuss with team
       const buildOidcCredentialOffer: CredentialOfferPayload = buildCredentialOfferPayload(
         createOidcCredentialOffer,
         getAllOfferTemplates,
-        signerOption
+        signerOptions
       );
+      console.log('This is the buildOidcCredentialOffer:', JSON.stringify(buildOidcCredentialOffer, null, 2));
+
       if (!buildOidcCredentialOffer) {
-        throw new BadRequestException('Error while creating oidc credential offer');
+        throw new BadRequestException('Error while creating oid4vc credential offer');
       }
-      const issuerDetails = await this.issuanceRepository.getOidcIssuerDetailsById(issuerId);
+      const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       if (!issuerDetails) {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
       }
@@ -524,7 +541,7 @@ export class OIDCIssuanceService {
       //   getAllOfferTemplates
       // );
       // if (!buildOidcUpdateCredentialOffer) {
-      //   throw new BadRequestException('Error while creating oidc credential offer');
+      //   throw new BadRequestException('Error while creating oid4vc credential offer');
       // }
       // const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
       // if (!agentDetails) {
@@ -620,8 +637,8 @@ export class OIDCIssuanceService {
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   async buildOidcIssuerConfig(issuerId: string) {
     try {
-      const issuerDetails = await this.issuanceRepository.getOidcIssuerDetailsById(issuerId);
-      const templates = await this.issuanceRepository.getTemplatesByIssuerId(issuerId);
+      const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
+      const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
 
       const credentialConfigurationsSupported = buildCredentialConfigurationsSupported(templates);
 
@@ -632,11 +649,12 @@ export class OIDCIssuanceService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async findAllTemplate(orgId: string, userDetails: user, issuerId: string): Promise<any> {
+  async findAllTemplate(orgId: string, issuerId: string): Promise<credential_templates[]> {
     try {
-      const templates = await this.issuanceRepository.getTemplatesByIssuerId(issuerId);
-      return { message: ResponseMessages.oidcTemplate.success.fetch, data: templates };
+      if (!orgId || !issuerId) {
+        throw new BadRequestException(ResponseMessages.oidcTemplate.error.invalidId);
+      }
+      return this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
     } catch (error) {
       this.logger.error(`[findAllTemplate] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
@@ -646,67 +664,73 @@ export class OIDCIssuanceService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async _createOIDCIssuer(issuerCreation, url: string, orgId: string): Promise<any> {
     try {
-      const pattern = { cmd: 'agent-create-oidc-issuer' };
+      const pattern = { cmd: 'agent-create-oid4vc-issuer' };
       const payload: IAgentOIDCIssuerCreate = { issuerCreation, url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
-      this.logger.error(`[_createOIDCIssuer] [NATS call]- error in create OIDC Issuer : ${JSON.stringify(error)}`);
+      this.logger.error(`[_createOIDCIssuer] [NATS call]- error in create OID4VC Issuer : ${JSON.stringify(error)}`);
       throw error;
     }
   }
 
   async _createOIDCTemplate(templatePayload, url: string, orgId: string): Promise<any> {
     try {
-      const pattern = { cmd: 'agent-create-oidc-template' };
+      const pattern = { cmd: 'agent-create-oid4vc-template' };
       const payload = { templatePayload, url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
-      this.logger.error(`[_createOIDCTemplate] [NATS call]- error in create OIDC Template : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[_createOIDCTemplate] [NATS call]- error in create OID4VC Template : ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }
 
   async _deleteOidcIssuer(url: string, orgId: string): Promise<any> {
     try {
-      const pattern = { cmd: 'delete-oidc-issuer' };
+      const pattern = { cmd: 'delete-oid4vc-issuer' };
       const payload = { url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
-      this.logger.error(`[_createOIDCTemplate] [NATS call]- error in create OIDC Template : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[_createOIDCTemplate] [NATS call]- error in create OID4VC Template : ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }
 
   async _oidcGetIssuerById(url: string, orgId: string) {
     try {
-      const pattern = { cmd: 'oidc-get-issuer-by-id' };
+      const pattern = { cmd: 'oid4vc-get-issuer-by-id' };
       const payload = { url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
-      this.logger.error(`[_oidcGetIssuerById] [NATS call]- error in oidc get issuer by id : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[_oidcGetIssuerById] [NATS call]- error in oid4vc get issuer by id : ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }
 
   async _oidcGetIssuers(url: string, orgId: string) {
     try {
-      const pattern = { cmd: 'oidc-get-issuers-agent-service' };
+      const pattern = { cmd: 'oid4vc-get-issuers-agent-service' };
       const payload = { url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
-      this.logger.error(`[_oidcGetIssuers] [NATS call]- error in oidc get issuers : ${JSON.stringify(error)}`);
+      this.logger.error(`[_oidcGetIssuers] [NATS call]- error in oid4vc get issuers : ${JSON.stringify(error)}`);
       throw error;
     }
   }
 
   async _oidcCreateCredentialOffer(credentialPayload: CredentialOfferPayload, url: string, orgId: string) {
     try {
-      const pattern = { cmd: 'agent-service-oidc-create-credential-offer' };
+      const pattern = { cmd: 'agent-service-oid4vc-create-credential-offer' };
       const payload = { credentialPayload, url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(
-        `[_oidcCreateCredentialOffer] [NATS call]- error in oidc create credential offer : ${JSON.stringify(error)}`
+        `[_oidcCreateCredentialOffer] [NATS call]- error in oid4vc create credential offer : ${JSON.stringify(error)}`
       );
       throw error;
     }
@@ -714,12 +738,12 @@ export class OIDCIssuanceService {
 
   async _oidcUpdateCredentialOffer(issuanceMetadata, url: string, orgId: string) {
     try {
-      const pattern = { cmd: 'agent-service-oidc-update-credential-offer' };
+      const pattern = { cmd: 'agent-service-oid4vc-update-credential-offer' };
       const payload = { issuanceMetadata, url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(
-        `[_oidcUpdateCredentialOffer] [NATS call]- error in oidc update credential offer : ${JSON.stringify(error)}`
+        `[_oidcUpdateCredentialOffer] [NATS call]- error in oid4vc update credential offer : ${JSON.stringify(error)}`
       );
       throw error;
     }
@@ -727,12 +751,12 @@ export class OIDCIssuanceService {
 
   async _oidcGetCredentialOfferById(url: string, orgId: string) {
     try {
-      const pattern = { cmd: 'agent-service-oidc-get-credential-offer-by-id' };
+      const pattern = { cmd: 'agent-service-oid4vc-get-credential-offer-by-id' };
       const payload = { url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(
-        `[_oidcGetCredentialOfferById] [NATS call]- error in oidc get credential offer by id : ${JSON.stringify(error)}`
+        `[_oidcGetCredentialOfferById] [NATS call]- error in oid4vc get credential offer by id : ${JSON.stringify(error)}`
       );
       throw error;
     }
@@ -740,12 +764,12 @@ export class OIDCIssuanceService {
 
   async _oidcGetCredentialOffers(url: string, orgId: string) {
     try {
-      const pattern = { cmd: 'agent-service-oidc-get-credential-offers' };
+      const pattern = { cmd: 'agent-service-oid4vc-get-credential-offers' };
       const payload = { url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(
-        `[_oidcGetCredentialOffers] [NATS call]- error in oidc get credential offers : ${JSON.stringify(error)}`
+        `[_oidcGetCredentialOffers] [NATS call]- error in oid4vc get credential offers : ${JSON.stringify(error)}`
       );
       throw error;
     }
@@ -753,12 +777,12 @@ export class OIDCIssuanceService {
 
   async _oidcDeleteCredentialOffer(url: string, orgId: string) {
     try {
-      const pattern = { cmd: 'agent-service-oidc-delete-credential-offer' };
+      const pattern = { cmd: 'agent-service-oid4vc-delete-credential-offer' };
       const payload = { url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {
       this.logger.error(
-        `[_oidcDeleteCredentialOffer] [NATS call]- error in oidc delete credential offer : ${JSON.stringify(error)}`
+        `[_oidcDeleteCredentialOffer] [NATS call]- error in oid4vc delete credential offer : ${JSON.stringify(error)}`
       );
       throw error;
     }
@@ -796,7 +820,7 @@ export class OIDCIssuanceService {
   }
 
   async getAgentEndpoint(orgId: string): Promise<string> {
-    const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+    const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
 
     if (!agentDetails) {
       throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -807,5 +831,35 @@ export class OIDCIssuanceService {
     }
 
     return agentDetails.agentEndPoint;
+  }
+
+  async storeOidcCredentialWebhook(CredentialOfferWebhookPayload): Promise<object> {
+    try {
+      console.log('Storing OID4VC Credential Webhook:', CredentialOfferWebhookPayload);
+      const { credentialOfferId, state, id, contextCorrelationId } = CredentialOfferWebhookPayload;
+      let orgId: string;
+      if ('default' !== contextCorrelationId) {
+        const getOrganizationId = await this.oid4vcIssuanceRepository.getOrganizationByTenantId(contextCorrelationId);
+        orgId = getOrganizationId?.orgId;
+      } else {
+        orgId = id;
+      }
+
+      const credentialPayload = {
+        orgId,
+        offerId: id,
+        credentialOfferId,
+        state,
+        contextCorrelationId
+      };
+
+      const agentDetails = await this.oid4vcIssuanceRepository.storeOidcCredentialDetails(credentialPayload);
+      return agentDetails;
+    } catch (error) {
+      this.logger.error(
+        `[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 }

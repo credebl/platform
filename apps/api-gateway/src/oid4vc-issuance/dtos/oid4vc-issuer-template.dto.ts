@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { DisplayDto } from './oidc-issuer.dto';
+import { DisplayDto } from './oid4vc-issuer.dto';
 
 export class CredentialAttributeDto {
   @ApiProperty({ required: false, description: 'Whether the attribute is mandatory' })

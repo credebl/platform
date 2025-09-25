@@ -499,34 +499,35 @@ export const ResponseMessages = {
   },
   oidcIssuer: {
     success: {
-      create: 'OIDC issuer created successfully.',
-      update: 'OIDC issuer updated successfully.',
-      delete: 'OIDC issuer deleted successfully.',
-      fetch: 'OIDC issuer(s) fetched successfully.',
+      create: 'OID4VC issuer created successfully.',
+      update: 'OID4VC issuer updated successfully.',
+      delete: 'OID4VC issuer deleted successfully.',
+      fetch: 'OID4VC issuer(s) fetched successfully.',
       issuerConfig: 'Issuer config details created successfully',
       issuerConfigUpdate: 'Issuer config details updated successfully'
     },
     error: {
-      notFound: 'OIDC issuer not found.',
-      invalidId: 'Invalid OIDC issuer ID.',
-      createFailed: 'Failed to create OIDC issuer.',
-      updateFailed: 'Failed to update OIDC issuer.',
-      deleteFailed: 'Failed to delete OIDC issuer.'
+      notFound: 'OID4VC issuer not found.',
+      invalidId: 'Invalid OID4VC issuer ID.',
+      createFailed: 'Failed to create OID4VC issuer.',
+      updateFailed: 'Failed to update OID4VC issuer.',
+      deleteFailed: 'Failed to delete OID4VC issuer.'
     }
   },
   oidcTemplate: {
     success: {
-      create: 'OIDC template created successfully.',
-      update: 'OIDC template updated successfully.',
-      delete: 'OIDC template deleted successfully.',
-      fetch: 'OIDC template(s) fetched successfully.'
+      create: 'OID4VC template created successfully.',
+      update: 'OID4VC template updated successfully.',
+      delete: 'OID4VC template deleted successfully.',
+      fetch: 'OID4VC template(s) fetched successfully.',
+      getById: 'OID4VC template details fetched successfully.'
     },
     error: {
-      notFound: 'OIDC template not found.',
-      invalidId: 'Invalid OIDC template ID.',
-      createFailed: 'Failed to create OIDC template.',
-      updateFailed: 'Failed to update OIDC template.',
-      deleteFailed: 'Failed to delete OIDC template.',
+      notFound: 'OID4VC template not found.',
+      invalidId: 'Invalid OID4VC template ID.',
+      createFailed: 'Failed to create OID4VC template.',
+      updateFailed: 'Failed to update OID4VC template.',
+      deleteFailed: 'Failed to delete OID4VC template.',
       issuerDisplayNotFound: 'Issuer display not found.',
       issuerDetailsNotFound: 'Issuer details not found.',
       templateNameAlreadyExist: 'Template name already exists for this issuer.',
@@ -535,16 +536,16 @@ export const ResponseMessages = {
   },
   oidcIssuerSession: {
     success: {
-      create: 'OIDC Credential offer created successfully.',
-      getById: 'OIDC Credential offer details fetched successfully.',
-      getAll: 'OIDC Credential offers fetched successfully.',
-      update: 'OIDC Credential offer updated successfully.',
-      delete: 'OIDC Credential offer deleted successfully.'
+      create: 'OID4VC Credential offer created successfully.',
+      getById: 'OID4VC Credential offer details fetched successfully.',
+      getAll: 'OID4VC Credential offers fetched successfully.',
+      update: 'OID4VC Credential offer updated successfully.',
+      delete: 'OID4VC Credential offer deleted successfully.'
     },
     error: {
-      errorCreateOffer: 'Error while creating OIDC credential offer on agent.',
-      errorUpdateOffer: 'Error while updating OIDC credential offer on agent.',
-      deleteFailed: 'Failed to delete OIDC credential offer.'
+      errorCreateOffer: 'Error while creating OID4VC credential offer on agent.',
+      errorUpdateOffer: 'Error while updating OID4VC credential offer on agent.',
+      deleteFailed: 'Failed to delete OID4VC credential offer.'
     }
   },
   nats: {

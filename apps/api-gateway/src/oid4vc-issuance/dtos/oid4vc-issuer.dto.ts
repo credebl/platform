@@ -199,7 +199,7 @@ export class ClientAuthenticationDto {
 export class AuthorizationServerConfigDto {
   @ApiProperty({
     description: 'Authorization server issuer URL',
-    example: 'https://example-oidc-provider.com'
+    example: 'https://example-oid4vc-provider.com'
   })
   @IsString()
   issuer: string;
@@ -256,15 +256,6 @@ export class IssuerCreationDto {
 
 export class IssuerUpdationDto {
   issuerId?: string;
-
-  @ApiProperty({
-    description: 'accessTokenSignerKeyType',
-    example: 'ed25519'
-  })
-  @IsString({
-    message: 'accessTokenSignerKeyType from IssuerCreationDto -> accessTokenSignerKeyType, must be a string'
-  })
-  accessTokenSignerKeyType: string;
 
   @ApiProperty({
     description: 'Localized display information for the credential',

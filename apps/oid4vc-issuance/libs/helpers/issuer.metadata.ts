@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { oidc_issuer, Prisma } from '@prisma/client';
 import { batchCredentialIssuanceDefault } from '../../constant/issuance';
-import { CreateOidcCredentialOffer } from 'apps/issuance/interfaces/oid4vc-issuer-sessions.interfaces';
+import { CreateOidcCredentialOffer } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
+import { IssuerResponse } from 'apps/oid4vc-issuance/interfaces/oid4vc-issuance.interfaces';
 
 type AttributeDisplay = { name: string; locale: string };
 type AttributeDef = {
@@ -241,4 +242,21 @@ export function extractTemplateIds(offer: CreateOidcCredentialOffer): string[] {
   }
 
   return offer.credentials.map((c) => c.templateId).filter((id): id is string => Boolean(id));
+}
+
+export function normalizeJson(input: unknown): IssuerResponse {
+  if ('string' === typeof input) {
+    return JSON.parse(input) as IssuerResponse;
+  }
+  if (input && 'object' === typeof input) {
+    return input as IssuerResponse;
+  }
+  throw new Error('Expected a JSON object or JSON string');
+}
+
+export function encodeIssuerPublicId(publicIssuerId: string): string {
+  if (!publicIssuerId) {
+    throw new Error('issuerPublicId is required');
+  }
+  return encodeURIComponent(publicIssuerId.trim());
 }

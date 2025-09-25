@@ -1,8 +1,7 @@
 // builder/credential-offer.builder.ts
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 import { Prisma, credential_templates } from '@prisma/client';
-import { GetAllCredentialOffer } from 'apps/issuance/interfaces/oid4vc-issuer-sessions.interfaces';
-
+import { GetAllCredentialOffer, SignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 /* ============================================================================
    Domain Types
 ============================================================================ */
@@ -66,6 +65,7 @@ export interface ResolvedSignerOption {
 export interface BuiltCredential {
   /** e.g., "BirthCertificateCredential-sdjwt" or "DrivingLicenseCredential-mdoc" */
   credentialSupportedId: string;
+  signerOptions?: ResolvedSignerOption;
   /** Derived from template.format ("vc+sd-jwt" | "mdoc") */
   format: CredentialFormat;
   /** User-provided payload (validated, with vct removed) */
@@ -189,7 +189,8 @@ function ensureTemplateAttributes(v: Prisma.JsonValue): TemplateAttributes {
 function buildOneCredential(
   cred: CredentialRequestDtoLike,
   template: credential_templates,
-  attrs: TemplateAttributes
+  attrs: TemplateAttributes,
+  signerOptions?: SignerOption[]
 ): BuiltCredential {
   // 1) Validate payload against template attributes
   assertMandatoryClaims(cred.payload, attrs, { templateId: cred.templateId });
@@ -207,6 +208,7 @@ function buildOneCredential(
 
   return {
     credentialSupportedId, // e.g., "BirthCertificateCredential-sdjwt"
+    signerOptions: signerOptions[0],
     format: apiFormat, // 'vc+sd-jwt' | 'mdoc'
     payload, // without vct
     ...(cred.disclosureFrame ? { disclosureFrame: cred.disclosureFrame } : {})
@@ -226,7 +228,7 @@ function buildOneCredential(
 export function buildCredentialOfferPayload(
   dto: CreateOidcCredentialOfferDtoLike,
   templates: credential_templates[],
-  signerOption?: ResolvedSignerOption // <-- now optional
+  signerOptions?: SignerOption[]
 ): CredentialOfferPayload {
   // Index templates
   const byId = new Map(templates.map((t) => [t.id, t]));
@@ -241,14 +243,13 @@ export function buildCredentialOfferPayload(
   const credentials: BuiltCredential[] = dto.credentials.map((cred) => {
     const template = byId.get(cred.templateId)!;
     const attrs = ensureTemplateAttributes(template.attributes); // narrow JsonValue safely
-    return buildOneCredential(cred, template, attrs);
+    return buildOneCredential(cred, template, attrs, signerOptions);
   });
 
   // --- Base envelope (issuerId deliberately NOT included) ---
   const base: BuiltCredentialOfferBase = {
     credentials,
-    ...(dto.publicIssuerId ? { publicIssuerId: dto.publicIssuerId } : {}),
-    ...(signerOption ? { signerOption } : {}) // <-- add only if provided
+    ...(dto.publicIssuerId ? { publicIssuerId: dto.publicIssuerId } : {})
   };
 
   // XOR flow selection (defensive)

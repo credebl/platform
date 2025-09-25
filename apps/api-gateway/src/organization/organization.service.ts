@@ -24,6 +24,7 @@ import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
+import { ClientTokenDto } from './dtos/client-token.dto';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -237,5 +238,8 @@ export class OrganizationService extends BaseService {
     const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
     const imageBuffer = Buffer.from(base64Data, 'base64');
     return imageBuffer;
+  }
+  async generateClientApiToken(clientTokenDto: ClientTokenDto): Promise<{ token: string }> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'generate-client-api-token', clientTokenDto);
   }
 }

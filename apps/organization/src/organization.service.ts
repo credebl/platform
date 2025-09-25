@@ -65,6 +65,7 @@ import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import * as jwt from 'jsonwebtoken';
+import { ClientTokenDto } from '../dtos/client-token.dto';
 
 @Injectable()
 export class OrganizationService {
@@ -2026,6 +2027,41 @@ export class OrganizationService {
       return getAllOrganizationDetails;
     } catch (error) {
       this.logger.error(`Error in getOrgAgentDetailsForEcosystem: ${error}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async generateClientApiToken(generateTokenDetails: ClientTokenDto): Promise<{ token: string }> {
+    try {
+      this.logger.debug(`generateTokenDetails ::: ${JSON.stringify(generateTokenDetails)}`);
+      const orgDetails = await this.organizationRepository.getOrganizationDetails(generateTokenDetails.orgId);
+      this.logger.debug(`orgDetails ::: ${JSON.stringify(orgDetails)}`);
+      if (!orgDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      }
+      // Step:1 generate the token using admin credentials
+      const adminTokenDetails =
+        await this.clientRegistrationService.generateTokenUsingAdminCredentials(generateTokenDetails);
+      this.logger.debug(`adminTokenDetails ::: ${JSON.stringify(adminTokenDetails)}`);
+      if (!adminTokenDetails?.access_token) {
+        throw new InternalServerErrorException(ResponseMessages.organisation.error.adminTokenDetails);
+      }
+      // Step:2 Call API to fetch client id and secret
+      const clientDetails = await this.clientRegistrationService.fetchClientDetails(
+        generateTokenDetails.orgId,
+        adminTokenDetails.access_token
+      );
+      if (!clientDetails || 0 === clientDetails.length) {
+        throw new NotFoundException(ResponseMessages.organisation.error.clientDetails);
+      }
+      this.logger.debug(`clientDetails ::: ${JSON.stringify(clientDetails)}`);
+      const { secret } = clientDetails[0];
+      //step3: generate the token using client id and secret
+      const authenticationResult = await this.authenticateClientKeycloak(generateTokenDetails.orgId, secret);
+      this.logger.debug(`authenticationResult ::: ${JSON.stringify(authenticationResult)}`);
+      return { token: authenticationResult.access_token };
+    } catch (error) {
+      this.logger.error(`in generating issuer api token : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

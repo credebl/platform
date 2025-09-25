@@ -22,22 +22,26 @@ export class NATSClient {
   sendNats(serviceProxy, cmd: string, payload: any): Promise<any> {
     this.logger.log(`Inside NATSClient for sendNats()`);
     const pattern = { cmd };
-    const headers = nats.headers(1, this.contextStorageService.getContextId());
+    const contextId = this.contextStorageService.getContextId() ?? v4();
+    const headers = nats.headers();
+    headers.set('contextId', contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
-    return serviceProxy
-      .send(pattern, record)
-      .pipe(
+    return firstValueFrom(
+      serviceProxy.send(pattern, record).pipe(
         map((response: string) => ({
+          // This map return the reposne as `{response: string}` instead of just the `string`
           response
         }))
       )
-      .toPromise();
+    );
   }
 
   sendNatsMessage(serviceProxy, cmd: string, payload: any): Promise<any> {
     const pattern = { cmd };
-    const headers = nats.headers(1, this.contextStorageService.getContextId());
+    const contextId = this.contextStorageService.getContextId() ?? v4();
+    const headers = nats.headers();
+    headers.set('contextId', contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
     const result = serviceProxy.send(pattern, record);
@@ -46,13 +50,9 @@ export class NATSClient {
   }
 
   send<T>(serviceProxy, pattern: object, payload: any): Promise<T> {
-    let contextId = this.contextStorageService.getContextId();
-
-    if (!contextId) {
-      contextId = v4();
-    }
-
-    const headers = nats.headers(1, contextId);
+    const contextId = this.contextStorageService.getContextId() ?? v4();
+    const headers = nats.headers();
+    headers.set('contextId', contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
     const result = serviceProxy.send(pattern, record);

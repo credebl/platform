@@ -167,7 +167,7 @@ export class CredentialDefinitionService extends BaseService {
               status: error.statusCode,
               error: error.message
             },
-            error.error
+            error.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR
           );
         });
       return credDefResponse;
@@ -271,7 +271,7 @@ export class CredentialDefinitionService extends BaseService {
               status: error.statusCode,
               error: error.message
             },
-            error.error
+            error.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR
           );
         });
       return credDefResponse;

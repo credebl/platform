@@ -6,7 +6,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse
 } from '@nestjs/swagger';
-import { Controller, UseFilters, Post, Body, Res, HttpStatus, Param, UseGuards } from '@nestjs/common';
+import { Controller, UseFilters, Post, Body, Res, HttpStatus, Param, UseGuards, ParseBoolPipe } from '@nestjs/common';
 import IResponse from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -66,10 +66,12 @@ export class UtilitiesController {
   })
   async storeObject(
     @Body() storeObjectDto: StoreObjectDto,
-    @Param('persist') persist: boolean,
+    // Since Params are always strings, we need to parse the value.
+    // This prevent for example 'false' being considered as a truthy value
+    @Param('persist', ParseBoolPipe) persist: boolean,
     @Res() res: Response
   ): Promise<Response> {
-    const shorteningUrl = await this.utilitiesService.storeObject(persist.valueOf(), storeObjectDto);
+    const shorteningUrl = await this.utilitiesService.storeObject(persist, storeObjectDto);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.storeObject.success.storeObject,

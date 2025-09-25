@@ -45,24 +45,6 @@ export class AgentService extends BaseService {
   }
 
   /**
-   * Description: Calling agent service for get-public-did
-   */
-  getPublicDid(user: any) {
-    this.logger.log('**** getPublicDid called...');
-    return this.natsClient.sendNats(this.agentServiceProxy, 'get-public-did', user);
-  }
-
-  /**
-   * Description: Calling agent service for assign-public-did
-   * @param did
-   */
-  assignPublicDid(id: number, user: any) {
-    this.logger.log('**** assignPublicDid called...');
-    const payload = { id, user };
-    return this.natsClient.sendNats(this.agentServiceProxy, 'assign-public-did-org', payload);
-  }
-
-  /**
    * Description: Calling agent service for onboard-register-ledger
    * @param role
    * @param alias

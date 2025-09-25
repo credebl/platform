@@ -128,46 +128,6 @@ export class AgentController {
   }
 
   /**
-   * Description: Route for fetch public DID
-   */
-  @Get('/wallet/did/public')
-  @ApiTags('agent')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @SetMetadata('permissions', [CommonConstants.PERMISSION_ORG_MGMT])
-  @ApiOperation({ summary: 'Fetch the current public DID', description: 'Fetch the current public DID.' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
-  getPublicDid(@User() user: any): Promise<object> {
-    this.logger.log(`**** Fetch public Did...`);
-    return this.agentService.getPublicDid(user);
-  }
-
-  /**
-   * Description: Route for assign public DID
-   * @param did
-   */
-  @Get('/wallet/did/public/:id')
-  @ApiTags('agent')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @SetMetadata('permissions', [CommonConstants.PERMISSION_USER_MANAGEMENT])
-  @ApiOperation({ summary: 'Assign public DID', description: 'Assign public DID for the current use.' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
-  assignPublicDid(@Param('id') id: number, @User() user: any): Promise<object> {
-    this.logger.log(`**** Assign public DID...`);
-    this.logger.log(`user: ${user.orgId} == id: ${Number(id)}`);
-
-    if (user.orgId === Number(id)) {
-      return this.agentService.assignPublicDid(id, user);
-    } else {
-      this.logger.error(`Cannot make DID public of requested organization.`);
-      throw new BadRequestException(`Cannot make DID public requested organization.`);
-    }
-  }
-
-  /**
    * Description: Route for onboarding register role on ledger
    * @param role
    * @param alias

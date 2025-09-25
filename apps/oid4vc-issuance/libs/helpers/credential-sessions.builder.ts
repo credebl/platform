@@ -1,7 +1,7 @@
 // builder/credential-offer.builder.ts
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 import { Prisma, credential_templates } from '@prisma/client';
-
+import { GetAllCredentialOffer, SignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 /* ============================================================================
    Domain Types
 ============================================================================ */
@@ -65,6 +65,7 @@ export interface ResolvedSignerOption {
 export interface BuiltCredential {
   /** e.g., "BirthCertificateCredential-sdjwt" or "DrivingLicenseCredential-mdoc" */
   credentialSupportedId: string;
+  signerOptions?: ResolvedSignerOption;
   /** Derived from template.format ("vc+sd-jwt" | "mdoc") */
   format: CredentialFormat;
   /** User-provided payload (validated, with vct removed) */
@@ -75,7 +76,7 @@ export interface BuiltCredential {
 
 export interface BuiltCredentialOfferBase {
   /** Resolved signer option (DID or x5c) */
-  signerOption: ResolvedSignerOption;
+  signerOption?: ResolvedSignerOption;
   /** Normalized credential entries */
   credentials: BuiltCredential[];
   /** Optional public issuer id to include */
@@ -111,7 +112,7 @@ const isRecord = (v: unknown): v is Record<string, unknown> => Boolean(v) && 'ob
 /** Map DB format string -> API enum */
 function mapDbFormatToApiFormat(db: string): CredentialFormat {
   const norm = db.toLowerCase().replace(/_/g, '-');
-  if ('sd-jwt' === norm || 'vc+sd-jwt' === norm || 'sdjwt' === norm) {
+  if ('sd-jwt' === norm || 'vc+sd-jwt' === norm || 'sdjwt' === norm || 'sd+jwt-vc' === norm) {
     return CredentialFormat.SdJwtVc;
   }
   if ('mdoc' === norm || 'mso-mdoc' === norm || 'mso-mdoc' === norm) {
@@ -188,7 +189,8 @@ function ensureTemplateAttributes(v: Prisma.JsonValue): TemplateAttributes {
 function buildOneCredential(
   cred: CredentialRequestDtoLike,
   template: credential_templates,
-  attrs: TemplateAttributes
+  attrs: TemplateAttributes,
+  signerOptions?: SignerOption[]
 ): BuiltCredential {
   // 1) Validate payload against template attributes
   assertMandatoryClaims(cred.payload, attrs, { templateId: cred.templateId });
@@ -206,6 +208,7 @@ function buildOneCredential(
 
   return {
     credentialSupportedId, // e.g., "BirthCertificateCredential-sdjwt"
+    signerOptions: signerOptions[0],
     format: apiFormat, // 'vc+sd-jwt' | 'mdoc'
     payload, // without vct
     ...(cred.disclosureFrame ? { disclosureFrame: cred.disclosureFrame } : {})
@@ -213,7 +216,7 @@ function buildOneCredential(
 }
 
 /**
- * Build the full OIDC credential offer payload.
+ * Build the full OID4VC credential offer payload.
  * - Verifies template IDs
  * - Validates mandatory claims per template
  * - Normalizes formats & IDs
@@ -225,7 +228,7 @@ function buildOneCredential(
 export function buildCredentialOfferPayload(
   dto: CreateOidcCredentialOfferDtoLike,
   templates: credential_templates[],
-  signerOption: ResolvedSignerOption
+  signerOptions?: SignerOption[]
 ): CredentialOfferPayload {
   // Index templates
   const byId = new Map(templates.map((t) => [t.id, t]));
@@ -240,12 +243,11 @@ export function buildCredentialOfferPayload(
   const credentials: BuiltCredential[] = dto.credentials.map((cred) => {
     const template = byId.get(cred.templateId)!;
     const attrs = ensureTemplateAttributes(template.attributes); // narrow JsonValue safely
-    return buildOneCredential(cred, template, attrs);
+    return buildOneCredential(cred, template, attrs, signerOptions);
   });
 
   // --- Base envelope (issuerId deliberately NOT included) ---
   const base: BuiltCredentialOfferBase = {
-    signerOption, // resolved keys (did/x5c) from DB
     credentials,
     ...(dto.publicIssuerId ? { publicIssuerId: dto.publicIssuerId } : {})
   };
@@ -268,4 +270,80 @@ export function buildCredentialOfferPayload(
     ...base,
     authorizationCodeFlowConfig: dto.authorizationCodeFlowConfig! // definite since !hasPre
   };
+}
+
+// -----------------------------------------------------------------------------
+// Builder: Update Credential Offer
+// -----------------------------------------------------------------------------
+export function buildUpdateCredentialOfferPayload(
+  dto: CreateOidcCredentialOfferDtoLike,
+  templates: credential_templates[]
+): { credentials: BuiltCredential[] } {
+  // Index templates by id
+  const byId = new Map(templates.map((t) => [t.id, t]));
+
+  // Validate all templateIds exist
+  const unknown = dto.credentials.map((c) => c.templateId).filter((id) => !byId.has(id));
+  if (unknown.length) {
+    throw new Error(`Unknown template ids: ${unknown.join(', ')}`);
+  }
+
+  // Validate each credential against its template
+  const credentials: BuiltCredential[] = dto.credentials.map((cred) => {
+    const template = byId.get(cred.templateId)!;
+    const attrs = ensureTemplateAttributes(template.attributes); // safely narrow JsonValue
+
+    // check that all payload keys exist in template attributes
+    const payloadKeys = Object.keys(cred.payload);
+    const invalidKeys = payloadKeys.filter((k) => !attrs[k]);
+    if (invalidKeys.length) {
+      throw new Error(`Invalid attributes for template "${cred.templateId}": ${invalidKeys.join(', ')}`);
+    }
+
+    // also validate mandatory fields are present
+    assertMandatoryClaims(cred.payload, attrs, { templateId: cred.templateId });
+
+    // build minimal normalized credential (no vct, issuerId, etc.)
+    const apiFormat = mapDbFormatToApiFormat(template.format);
+    const suffix = formatSuffix(apiFormat);
+    const credentialSupportedId = `${template.name}-${suffix}`;
+    return {
+      credentialSupportedId,
+      format: apiFormat,
+      payload: cred.payload,
+      ...(cred.disclosureFrame ? { disclosureFrame: cred.disclosureFrame } : {})
+    };
+  });
+
+  // Only return credentials array here (update flow doesn't need preAuth/auth configs)
+  return {
+    credentials
+  };
+}
+
+export function buildCredentialOfferUrl(baseUrl: string, getAllCredentialOffer: GetAllCredentialOffer): string {
+  const criteriaParams: string[] = [];
+
+  if (getAllCredentialOffer.publicIssuerId) {
+    criteriaParams.push(`publicIssuerId=${encodeURIComponent(getAllCredentialOffer.publicIssuerId)}`);
+  }
+
+  if (getAllCredentialOffer.preAuthorizedCode) {
+    criteriaParams.push(`preAuthorizedCode=${encodeURIComponent(getAllCredentialOffer.preAuthorizedCode)}`);
+  }
+
+  if (getAllCredentialOffer.state) {
+    criteriaParams.push(`state=${encodeURIComponent(getAllCredentialOffer.state)}`);
+  }
+
+  if (getAllCredentialOffer.credentialOfferUri) {
+    criteriaParams.push(`credentialOfferUri=${encodeURIComponent(getAllCredentialOffer.credentialOfferUri)}`);
+  }
+
+  if (getAllCredentialOffer.authorizationCode) {
+    criteriaParams.push(`authorizationCode=${encodeURIComponent(getAllCredentialOffer.authorizationCode)}`);
+  }
+
+  // Append query string if any params exist
+  return 0 < criteriaParams.length ? `${baseUrl}?${criteriaParams.join('&')}` : baseUrl;
 }

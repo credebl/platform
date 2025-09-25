@@ -172,7 +172,7 @@ export class FidoController {
       message: ResponseMessages.fido.success.generateAuthenticationOption,
       data: generateAuthentication.response
     };
-    return res.status(HttpStatus.OK).json(finalResponse);
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   /**

@@ -38,7 +38,7 @@ export class PlatformService extends BaseService {
     return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-network-url', indyNamespace);
   }
 
-  async getShorteningUrlById(referenceId: string): Promise<string> {
+  async getShorteningUrlById(referenceId: string): Promise<object> {
     // NATS call
     return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-shortening-url', referenceId);
   }

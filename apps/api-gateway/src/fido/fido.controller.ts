@@ -138,10 +138,7 @@ export class FidoController {
     @Param('email') email: string,
     @Res() res: Response
   ): Promise<Response> {
-    const verifyRegistration = await this.fidoService.verifyRegistration(
-      verifyRegistrationDto,
-      req.params.email.toLowerCase()
-    );
+    const verifyRegistration = await this.fidoService.verifyRegistration(verifyRegistrationDto, email.toLowerCase());
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.fido.success.verifyRegistration,
@@ -196,7 +193,7 @@ export class FidoController {
   ): Promise<Response> {
     const verifyAuthentication = await this.fidoService.verifyAuthentication(
       verifyAuthenticationDto,
-      req.params.email.toLowerCase()
+      email.toLowerCase()
     );
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.OK,

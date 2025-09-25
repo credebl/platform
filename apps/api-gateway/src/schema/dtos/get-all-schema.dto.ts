@@ -94,7 +94,7 @@ export class GetAllSchemaByPlatformDto {
 
   @ApiProperty({ required: false, default: 1 })
   @IsOptional()
-  @Transform(({ value }) => toNumber(value))
+  @Transform(({ value }) => toNumber(value, { min: 1 }))
   @Min(1, { message: 'Page number must be greater than 0' })
   pageNumber: number = 1;
 
@@ -105,7 +105,7 @@ export class GetAllSchemaByPlatformDto {
 
   @ApiProperty({ required: false, default: 10 })
   @IsOptional()
-  @Transform(({ value }) => toNumber(value))
+  @Transform(({ value }) => toNumber(value, { min: 1 }))
   @Min(1, { message: 'Page size must be greater than 0' })
   pageSize: number = 10;
 

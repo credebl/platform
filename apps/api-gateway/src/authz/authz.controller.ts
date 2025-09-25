@@ -54,6 +54,7 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { User } from './decorators/user.decorator';
 import { user } from '@prisma/client';
 import * as useragent from 'express-useragent';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -381,9 +382,10 @@ export class AuthzController {
     @Res() res: Response,
     @Param(
       'userId',
+      new TrimStringParamPipe(),
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for User Id`);
+          throw new BadRequestException(`Invalid user ID`);
         }
       })
     )
@@ -422,9 +424,10 @@ export class AuthzController {
     @Res() res: Response,
     @Param(
       'sessionId',
+      new TrimStringParamPipe(),
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for session Id`);
+          throw new BadRequestException(`Invalid session ID`);
         }
       })
     )

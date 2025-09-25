@@ -18,7 +18,13 @@ import { Reflector } from '@nestjs/core';
 
 export const REWRITE_VALIDATION_OPTIONS = 'rewrite_validation_options';
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+/**
+ * Decorator that overrides global validation options for a specific route handler or controller.
+ *
+ * Attaches custom {@link ValidatorOptions} metadata, allowing selective adjustment of validation behavior such as whitelisting or property checks on a per-handler or per-class basis.
+ *
+ * @param options - The validation options to apply for the decorated handler or class.
+ */
 export function RewriteValidationOptions(options: ValidatorOptions) {
   return SetMetadata(REWRITE_VALIDATION_OPTIONS, options);
 }

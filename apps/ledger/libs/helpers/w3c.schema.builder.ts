@@ -1,15 +1,17 @@
 import { IW3CAttributeValue } from '@credebl/common/interfaces/interface';
 import { ISchemaAttributesFormat } from 'apps/ledger/src/schema/interfaces/schema-payload.interface';
 import { IProductSchema } from 'apps/ledger/src/schema/interfaces/schema.interface';
-import ExclusiveMinimum from 'libs/validations/exclusiveMinimum';
-import MaxItems from 'libs/validations/maxItems';
-import MaxLength from 'libs/validations/maxLength';
-import Minimum from 'libs/validations/minimum';
-import MinItems from 'libs/validations/minItems';
-import MinLength from 'libs/validations/minLength';
-import MultipleOf from 'libs/validations/multipleOf';
-import Pattern from 'libs/validations/pattern';
-import UniqueItems from 'libs/validations/uniqueItems';
+import ExclusiveMinimum from '../../../../libs/validations/exclusiveMinimum';
+import ExclusiveMaximum from '../../../../libs/validations/exclusiveMaximum';
+import MaxItems from '../../../../libs/validations/maxItems';
+import MaxLength from '../../../../libs/validations/maxLength';
+import Maximum from '../../../../libs/validations/maximum';
+import Minimum from '../../../../libs/validations/minimum';
+import MinItems from '../../../../libs/validations/minItems';
+import MinLength from '../../../../libs/validations/minLength';
+import MultipleOf from '../../../../libs/validations/multipleOf';
+import Pattern from '../../../../libs/validations/pattern';
+import UniqueItems from '../../../../libs/validations/uniqueItems';
 
 export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: string, description: string): object {
   // Function to apply validations based on attribute properties
@@ -32,6 +34,20 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
         const validation = new Pattern(attribute.pattern);
         validation.json(context);
       }
+
+      // Add enum validation
+      if (attribute.enum !== undefined) {
+        context.enum = attribute.enum;
+      }
+
+      // Add content encoding and media type
+      if (attribute.contentEncoding !== undefined) {
+        context.contentEncoding = attribute.contentEncoding;
+      }
+
+      if (attribute.contentMediaType !== undefined) {
+        context.contentMediaType = attribute.contentMediaType;
+      }
     }
 
     // Apply number validations
@@ -41,8 +57,18 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
         validation.json(context);
       }
 
+      if (attribute.maximum !== undefined) {
+        const validation = new Maximum(attribute.maximum);
+        validation.json(context);
+      }
+
       if (attribute.exclusiveMinimum !== undefined) {
         const validation = new ExclusiveMinimum(attribute.exclusiveMinimum);
+        validation.json(context);
+      }
+
+      if (attribute.exclusiveMaximum !== undefined) {
+        const validation = new ExclusiveMaximum(attribute.exclusiveMaximum);
         validation.json(context);
       }
 
@@ -84,6 +110,11 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
 
     attrs.forEach((attribute) => {
       const { attributeName, schemaDataType, isRequired, displayName, description } = attribute;
+
+      // Skip attributes with missing essential properties
+      if (!attributeName || !schemaDataType) {
+        return;
+      }
 
       // Add to required array if isRequired is true
       if (isRequired) {
@@ -209,6 +240,9 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
         if (0 < arrayItemRequired.length) {
           properties[attributeName].items.required = arrayItemRequired;
         }
+      } else if ('array' === schemaDataType.toLowerCase()) {
+        // Handle arrays without items definition
+        properties[attributeName] = applyValidations(attribute, baseProperty);
       } else if ('object' === schemaDataType.toLowerCase() && attribute.properties) {
         const nestedProperties = {};
         const nestedRequired = [];

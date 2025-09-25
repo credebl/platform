@@ -53,6 +53,7 @@ import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto } from './dtos/q
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { ClientProxy } from '@nestjs/microservices';
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('connections')
@@ -63,7 +64,7 @@ export class ConnectionController {
   private readonly logger = new Logger('Connection');
   constructor(
     private readonly connectionService: ConnectionService,
-    @Inject('NATS_CLIENT') private readonly connectionServiceProxy
+    @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy
   ) {}
 
   /**

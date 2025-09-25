@@ -9,11 +9,12 @@ import { CreateDidDto } from './dto/create-did.dto';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class AgentService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly agentServiceProxy,
+    @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super('AgentService');

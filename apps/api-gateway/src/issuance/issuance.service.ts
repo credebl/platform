@@ -27,6 +27,7 @@ import {
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 @Injectable()
 export class IssuanceService extends BaseService {
   constructor(

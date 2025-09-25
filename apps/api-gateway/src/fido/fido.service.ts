@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import {
   UpdateFidoUserDetailsDto,
@@ -12,7 +12,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 @Injectable()
 export class FidoService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly fidoServiceProxy,
+    @Inject('NATS_CLIENT') private readonly fidoServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super('FidoService');

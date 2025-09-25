@@ -6,11 +6,12 @@ import { INetworkUrl, ISchemaDetails } from '@credebl/common/interfaces/schema.i
 import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
 import { IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class PlatformService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly platformServiceProxy,
+    @Inject('NATS_CLIENT') private readonly platformServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super('PlatformService');

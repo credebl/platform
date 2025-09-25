@@ -17,7 +17,7 @@ import { IssuanceRepository } from './issuance.repository';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {
   BulkPayloadDetails,
@@ -98,7 +98,7 @@ export class IssuanceService {
   private counter = 0;
   private processedJobsCounters: Record<string, number> = {};
   constructor(
-    @Inject('NATS_CLIENT') private readonly issuanceServiceProxy,
+    @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
     private readonly commonService: CommonService,
     private readonly issuanceRepository: IssuanceRepository,
     private readonly userActivityRepository: UserActivityRepository,

@@ -13,11 +13,12 @@ import { IProofPresentation } from './interfaces/verification.interface';
 // To do make a similar interface in API-gateway
 import { user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class VerificationService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly verificationServiceProxy,
+    @Inject('NATS_CLIENT') private readonly verificationServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super('VerificationService');

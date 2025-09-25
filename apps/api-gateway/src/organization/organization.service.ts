@@ -23,11 +23,12 @@ import { IClientRoles } from '@credebl/client-registration/interfaces/client.int
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class OrganizationService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly serviceProxy,
+    @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super('OrganizationService');

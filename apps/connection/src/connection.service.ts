@@ -2,7 +2,7 @@
 import { CommonService } from '@credebl/common';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { HttpException, HttpStatus, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { from, map } from 'rxjs';
 import {
   ConnectionResponseDetail,
@@ -37,7 +37,7 @@ import { getAgentUrl } from '@credebl/common/common.utils';
 export class ConnectionService {
   constructor(
     private readonly commonService: CommonService,
-    @Inject('NATS_CLIENT') private readonly connectionServiceProxy,
+    @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy,
     private readonly connectionRepository: ConnectionRepository,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,

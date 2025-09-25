@@ -40,12 +40,13 @@ import { CloudWalletRepository } from './cloud-wallet.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CloudWalletType } from '@credebl/enum/enum';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class CloudWalletService {
   constructor(
     private readonly commonService: CommonService,
-    @Inject('NATS_CLIENT') private readonly cloudWalletServiceProxy,
+    @Inject('NATS_CLIENT') private readonly cloudWalletServiceProxy: ClientProxy,
     private readonly cloudWalletRepository: CloudWalletRepository,
     private readonly logger: Logger,
     @Inject(CACHE_MANAGER) private cacheService: Cache

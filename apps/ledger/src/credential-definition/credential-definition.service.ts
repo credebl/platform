@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { ConflictException, HttpException, HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { CredentialDefinitionRepository } from './repositories/credential-definition.repository';
 import {
@@ -31,7 +31,7 @@ import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 export class CredentialDefinitionService extends BaseService {
   constructor(
     private readonly credentialDefinitionRepository: CredentialDefinitionRepository,
-    @Inject('NATS_CLIENT') private readonly credDefServiceProxy,
+    @Inject('NATS_CLIENT') private readonly credDefServiceProxy: ClientProxy,
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly natsClient: NATSClient
   ) {

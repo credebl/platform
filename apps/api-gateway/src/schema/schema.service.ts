@@ -13,11 +13,12 @@ import { NATSClient } from '@credebl/common/NATSClient';
 
 import { UpdateSchemaResponse } from 'apps/ledger/src/schema/interfaces/schema.interface';
 import { UpdateSchemaDto } from './dtos/update-schema-dto';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class SchemaService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly schemaServiceProxy,
+    @Inject('NATS_CLIENT') private readonly schemaServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super(`Schema Service`);

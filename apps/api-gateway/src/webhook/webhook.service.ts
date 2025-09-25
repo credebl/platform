@@ -5,6 +5,7 @@ import { RegisterWebhookDto } from './dtos/register-webhook-dto';
 import { ICreateWebhookUrl, IGetWebhookUrl } from 'apps/webhook/interfaces/webhook.interfaces';
 import { GetWebhookDto } from './dtos/get-webhoook-dto';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class WebhookService extends BaseService {

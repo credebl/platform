@@ -23,11 +23,12 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class CloudWalletService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly cloudWalletServiceProxy,
+    @Inject('NATS_CLIENT') private readonly cloudWalletServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super('CloudWalletServiceProxy');

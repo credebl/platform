@@ -5,13 +5,14 @@ import { IUsersActivity } from '../interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { RecordType, user, user_activity } from '@prisma/client';
 import { lastValueFrom, timeout } from 'rxjs';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class UserActivityRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: Logger,
-    @Inject('NATS_CLIENT') private readonly userActivityServiceProxy
+    @Inject('NATS_CLIENT') private readonly userActivityServiceProxy: ClientProxy
   ) {}
 
   async logActivity(userId: string, orgId: string, action: string, details: string): Promise<user_activity> {

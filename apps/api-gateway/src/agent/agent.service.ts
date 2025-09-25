@@ -8,11 +8,12 @@ import { BaseService } from 'libs/service/base.service';
 
 import { WalletDetailsDto } from '../dtos/wallet-details.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class AgentService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly agentServiceProxy,
+    @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super('AgentService');

@@ -16,7 +16,7 @@ import {
 import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
 import { OrganizationRepository } from '../repositories/organization.repository';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { OrgRolesService } from '@credebl/org-roles';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
@@ -71,7 +71,7 @@ export class OrganizationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly commonService: CommonService,
-    @Inject('NATS_CLIENT') private readonly organizationServiceProxy,
+    @Inject('NATS_CLIENT') private readonly organizationServiceProxy: ClientProxy,
     private readonly organizationRepository: OrganizationRepository,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,

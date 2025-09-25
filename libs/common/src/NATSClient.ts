@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { NatsRecordBuilder } from '@nestjs/microservices';
+import { ClientProxy, NatsRecordBuilder } from '@nestjs/microservices';
 import { map } from 'rxjs/operators';
 import * as nats from 'nats';
 import { firstValueFrom } from 'rxjs';
@@ -19,7 +19,7 @@ export class NATSClient {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  sendNats(serviceProxy, cmd: string, payload: any): Promise<any> {
+  sendNats(serviceProxy: Pick<ClientProxy, 'send'>, cmd: string, payload: any): Promise<any> {
     this.logger.log(`Inside NATSClient for sendNats()`);
     const pattern = { cmd };
     const contextId = this.contextStorageService.getContextId() ?? v4();
@@ -37,7 +37,7 @@ export class NATSClient {
     );
   }
 
-  sendNatsMessage(serviceProxy, cmd: string, payload: any): Promise<any> {
+  sendNatsMessage(serviceProxy: Pick<ClientProxy, 'send'>, cmd: string, payload: any): Promise<any> {
     const pattern = { cmd };
     const contextId = this.contextStorageService.getContextId() ?? v4();
     const headers = nats.headers();
@@ -49,7 +49,7 @@ export class NATSClient {
     return firstValueFrom(result);
   }
 
-  send<T>(serviceProxy, pattern: object, payload: any): Promise<T> {
+  send<T>(serviceProxy: Pick<ClientProxy, 'send'>, pattern: object, payload: any): Promise<T> {
     const contextId = this.contextStorageService.getContextId() ?? v4();
     const headers = nats.headers();
     headers.set('contextId', contextId);

@@ -19,13 +19,14 @@ import { user } from '@prisma/client';
 import { IRestrictedUserSession, ISessionDetails } from 'apps/user/interfaces/user.interface';
 import { UserLogoutDto } from './dtos/user-logout.dto';
 import type { Prisma } from '@prisma/client';
+import { ClientProxy } from '@nestjs/microservices';
 @Injectable()
 @WebSocketGateway()
 export class AuthzService extends BaseService {
   //private logger = new Logger('AuthService');
   @WebSocketServer() server;
   constructor(
-    @Inject('NATS_CLIENT') private readonly authServiceProxy,
+    @Inject('NATS_CLIENT') private readonly authServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super('AuthzService');

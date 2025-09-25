@@ -6,11 +6,12 @@ import { GetAllCredDefsDto } from '../dtos/get-cred-defs.dto';
 import { ICredDef, ICredDefs } from './interfaces';
 import { ICredDefData } from '@credebl/common/interfaces/cred-def.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class CredentialDefinitionService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly credDefServiceProxy,
+    @Inject('NATS_CLIENT') private readonly credDefServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super('CredentialDefinitionService');

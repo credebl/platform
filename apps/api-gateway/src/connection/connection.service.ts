@@ -1,6 +1,6 @@
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { Inject, Injectable } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import {
   ConnectionDto,
@@ -22,7 +22,7 @@ import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class ConnectionService extends BaseService {
   constructor(
-    @Inject('NATS_CLIENT') private readonly connectionServiceProxy,
+    @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
     super('ConnectionService');

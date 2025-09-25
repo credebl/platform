@@ -28,7 +28,12 @@ export class NATSClient {
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
     return firstValueFrom(
-      serviceProxy.send(pattern, record).pipe(
+      serviceProxy.send<string>(pattern, record).pipe(
+        /**
+         * TODO: Check dependency of this mapping.
+         * This might be the reason we are getting, response.response in multiple responses
+         * We are maintaining them as is for now, but it need to be updated later
+         */
         map((response: string) => ({
           // This map return the reposne as `{response: string}` instead of just the `string`
           response
@@ -44,7 +49,7 @@ export class NATSClient {
     headers.set('contextId', contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
-    const result = serviceProxy.send(pattern, record);
+    const result = serviceProxy.send<string>(pattern, record);
 
     return firstValueFrom(result);
   }
@@ -55,7 +60,7 @@ export class NATSClient {
     headers.set('contextId', contextId);
     const record = new NatsRecordBuilder(payload).setHeaders(headers).build();
 
-    const result = serviceProxy.send(pattern, record);
+    const result = serviceProxy.send<T>(pattern, record);
 
     return firstValueFrom(result);
   }

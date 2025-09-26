@@ -729,7 +729,7 @@ export class ClientRegistrationService {
     const payload = {
       client_id: clientDetails.clientId,
       client_secret: clientDetails.clientSecret,
-      grant_type: clientDetails.grantType
+      grant_type: clientDetails.grantType ?? 'client_credentials'
     };
     const config = {
       headers: {

@@ -736,13 +736,11 @@ export class ClientRegistrationService {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     };
-    this.logger.debug(`generateTokenUsingAdminCredentials payload ${JSON.stringify(payload)}`);
     const generatetedTokenDetails = await this.commonService.httpPost(
       await this.keycloakUrlService.GenerateTokenUsingAdminCredentials(realmName),
       qs.stringify(payload),
       config
     );
-    this.logger.debug(`generatetedTokenDetails ${JSON.stringify(generatetedTokenDetails)}`);
     return generatetedTokenDetails;
   }
 
@@ -753,9 +751,6 @@ export class ClientRegistrationService {
       await this.keycloakUrlService.GetClientURL(realmName, clientId),
       this.getAuthHeader(token)
     );
-
-    this.logger.debug(`clientDetails ${JSON.stringify(clientDetails)}`);
-
     return clientDetails;
   }
 }

@@ -662,6 +662,7 @@ export class OrganizationRepository {
             countryId: true,
             stateId: true,
             cityId: true,
+            appLaunchDetails: true,
             userOrgRoles: {
               where: {
                 orgRole: {

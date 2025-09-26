@@ -54,7 +54,7 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { User } from './decorators/user.decorator';
 import { user } from '@prisma/client';
 import * as useragent from 'express-useragent';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { EmptyStringParamPipe, TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -382,6 +382,7 @@ export class AuthzController {
     @Res() res: Response,
     @Param(
       'userId',
+      EmptyStringParamPipe.forParam('userId'),
       new TrimStringParamPipe(),
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
@@ -424,6 +425,7 @@ export class AuthzController {
     @Res() res: Response,
     @Param(
       'sessionId',
+      EmptyStringParamPipe.forParam('sessionId'),
       new TrimStringParamPipe(),
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {

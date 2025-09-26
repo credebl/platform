@@ -188,7 +188,10 @@ export class EmptyStringParamPipe implements PipeTransform {
     const trimmedValue = value.trim();
 
     if (!trimmedValue) {
-      throw new BadRequestException(`${this.paramName} is required`);
+      if (!this.paramName || 'string' !== typeof this.paramName) {
+        throw new BadRequestException(`Parameter is required and cannot be empty`);
+      }
+      throw new BadRequestException(`${this.paramName[0].toUpperCase() + this.paramName.slice(1)} is required`);
     }
 
     return plainToClass(String, trimmedValue);

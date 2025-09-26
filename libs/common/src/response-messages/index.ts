@@ -132,7 +132,7 @@ export const ResponseMessages = {
       organizationNotFound: 'Organization not found',
       MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
       adminTokenDetails: 'Error in generating admin token details',
-      clientDetails: ' Error in fetching client details'
+      clientDetails: 'Error in fetching client details'
     }
   },
 

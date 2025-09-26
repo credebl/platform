@@ -69,6 +69,7 @@ export class UserController {
   async verifyEmail(payload: { param: VerifyEmailTokenDto }): Promise<IVerifyUserEmail> {
     return this.userService.verifyEmail(payload.param);
   }
+
   /**
    * @body loginUserDto
    * @returns User's access token details

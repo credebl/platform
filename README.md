@@ -120,3 +120,4 @@ Pull requests are welcome! Please read our [contributions guide](https://github.
 ## License
 
 [Apache License Version 2.0](https://github.com/credebl/platform/blob/main/LICENSE)
+

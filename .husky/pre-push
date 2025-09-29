@@ -43,11 +43,6 @@ while read local_ref local_sha remote_ref remote_sha; do
     echo "${YELLOW}Do you want to automatically sign these commits? [y/N]${RESET}"
     read -r answer </dev/tty
 
-    # if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
-    #   echo "${CYAN}🔧 Re-signing commits...${RESET}"
-    #   git rebase -i $remote_sha --exec 'git commit --amend -sS --no-edit'
-    #   echo "${GREEN}✅ All commits have been signed.${RESET}"
-    # else
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
       # The earliest local unsigned commit is the last in the list
       earliest_commit=$(echo $unsigned_commits | awk '{print $NF}')

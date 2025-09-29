@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+commit_msg_file=$1
+
+# Guard: ensure commit message file exists
+if [ -z "$commit_msg_file" ] || [ ! -f "$commit_msg_file" ]; then
+  echo "⚠️  No commit message file provided or file does not exist."
+  echo "👉 Skipping DCO sign-off check."
+  exit 0
+fi
+
+if ! grep -q "Signed-off-by:" "$commit_msg_file"; then
+  echo "Commit message missing Signed-off-by line"
+  echo "Use: git commit -s ..."
+  exit 1
+fi

@@ -49,17 +49,32 @@ while read local_ref local_sha remote_ref remote_sha; do
     #   echo "${GREEN}✅ All commits have been signed.${RESET}"
     # else
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
-        echo "${CYAN}🔧 Auto-signing commits...${RESET}"
-        for commit in $unsigned_commits; do
-            git rebase -i $remote_sha --onto $commit^ --exec 'git commit --amend -sS --no-edit'
-        done
-        echo "${GREEN}✅ All unsigned commits have been signed.${RESET}"
-        echo "Please push again: git push --force-with-lease"
-        exit 1
+      # The earliest local unsigned commit is the last in the list
+      earliest_commit=$(echo $unsigned_commits | awk '{print $NF}')
+      parent_commit=$(git rev-parse "${earliest_commit}^")
+
+      echo "${CYAN}🔧 Auto-signing earliest local unsigned commit $earliest_commit...${RESET}"
+      git rebase --onto "$parent_commit" "$parent_commit" --exec 'git commit --amend -sS --no-edit'
+
+      echo "${GREEN}✅ Earliest unsigned commit has been signed.${RESET}"
+      echo "Please push again: git push --force-with-lease"
+      exit 1
     else
       echo "${YELLOW}You can manually sign commits using:${RESET}"
-      echo "   git commit --amend -sS --no-edit  # for HEAD commit"
-      echo "   git rebase -i $remote_sha --exec 'git commit --amend -sS --no-edit'  # for older commits"
+      echo
+      # Latest commit (HEAD)
+      head_commit=$(git rev-parse HEAD)
+      echo "  - For the latest commit (HEAD):"
+      echo "      git commit --amend -sS --no-edit"
+      echo
+      # Earliest local unsigned commit
+      earliest_commit=$(echo $unsigned_commits | awk '{print $NF}')
+      short_hash=$(git rev-parse --short $earliest_commit)
+      echo "  - For the earliest unsigned commit $short_hash:"
+      echo "      git rebase -i <base_branch> --onto $earliest_commit^ --exec 'git commit --amend -sS --no-edit'"
+      echo
+      echo "Then push again using:"
+      echo "      git push --force-with-lease"
       echo
       echo "Helpful resources:"
       echo "   - GPG signing: https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits"

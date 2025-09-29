@@ -1,6 +1,6 @@
 # CREDEBL SSI Platform
 
-This repository hosts the codebase for CREDEBL SSI Platform backend .
+This repository hosts the codebase for CREDEBL SSI Platform backend.
 
 ## Prerequisites
 

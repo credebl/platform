@@ -32,8 +32,6 @@ import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-servi
 export class AgentServiceController {
   constructor(private readonly agentServiceService: AgentServiceService) {}
 
-  public a:any = 'a';
-
   /**
    * Spinup the agent by organization
    * @param payload

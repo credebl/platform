@@ -1,27 +1,67 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# ANSI colors
+RED="\033[0;31m"
+YELLOW="\033[0;33m"
+CYAN="\033[0;36m"
+GREEN="\033[0;32m"
+RESET="\033[0m"
+
 echo "🔒 Checking commit signatures..."
 
-# Get commits being pushed
 while read local_ref local_sha remote_ref remote_sha; do
-  # Range of commits depending on whether remote branch exists
+  # Determine range of commits
   if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
     range="$local_sha"
   else
     range="$remote_sha..$local_sha"
   fi
 
-  # Verify each commit in range
+  unsigned_commits=""
+
+  # Loop through each commit in range
   for commit in $(git rev-list $range); do
+    # Skip merge commits
+    parent_count=$(git rev-list --parents -n 1 $commit | awk '{print NF-1}')
+    if [ "$parent_count" -gt 1 ]; then
+      echo "${CYAN}ℹ️  Skipping merge commit $commit${RESET}"
+      continue
+    fi
+
     sig_status=$(git log --format='%G?' -n 1 $commit)
 
     if [ "$sig_status" != "G" ]; then
-      echo "Commit $commit is not verified!"
-      echo "Please sign commits with -S or configure SSH signing"
-      exit 1
+      unsigned_commits="$unsigned_commits $commit"
     fi
   done
+
+  # If there are unsigned commits, prompt the developer
+  if [ -n "$unsigned_commits" ]; then
+    echo "${RED}❌ Found unsigned commits:${RESET} $unsigned_commits"
+    echo
+    echo "${YELLOW}Do you want to automatically sign these commits? [y/N]${RESET}"
+    read -r answer
+
+    if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+      echo "${CYAN}🔧 Re-signing commits...${RESET}"
+      git rebase -i $remote_sha --exec 'git commit --amend -sS --no-edit'
+      echo "${GREEN}✅ All commits have been signed.${RESET}"
+    else
+      echo "${YELLOW}You can manually sign commits using:${RESET}"
+      echo "   git commit --amend -sS --no-edit  # for HEAD commit"
+      echo "   git rebase -i $remote_sha --exec 'git commit --amend -sS --no-edit'  # for older commits"
+      echo
+      echo "Helpful resources:"
+      echo "   - GPG signing: https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits"
+      echo
+      echo "${CYAN}💡 Tip: Enable automatic signing for all commits:${RESET}"
+      echo "   git config --global commit.gpgsign true"
+      echo "   git config --global user.signingkey <YOUR_KEY_ID>"
+      echo
+      exit 1
+    fi
+  fi
 done
 
-echo "All commits are signed and verified"
+echo "${GREEN}✅ All commits are signed and verified${RESET}"

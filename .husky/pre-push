@@ -10,6 +10,9 @@ RESET="\033[0m"
 
 echo "🔒 Checking commit signatures..."
 
+# Get the email of the current user
+# CURRENT_EMAIL=$(git config user.email)
+
 while read local_ref local_sha remote_ref remote_sha; do
   # Determine range of commits
   if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
@@ -29,7 +32,12 @@ while read local_ref local_sha remote_ref remote_sha; do
       continue
     fi
 
-    sig_status=$(git log --format='%G?' -n 1 $commit)
+    # Skip commits not authored by the current user
+    # author_email=$(git log -1 --format='%ae' $commit)
+    # if [ "$author_email" != "$CURRENT_EMAIL" ]; then
+    #   echo "${CYAN}ℹ️  Skipping commit $commit authored by $author_email${RESET}"
+    #   continue
+    # fi
 
     # Currently only check for "N" - for no signature.
     if [ "$sig_status" = "N" ]; then
@@ -58,13 +66,12 @@ while read local_ref local_sha remote_ref remote_sha; do
         --exec 'if [ $(git rev-list --parents -n 1 HEAD | awk "{print NF-1}") -eq 1 ]; then git commit --amend -sS --no-edit; else echo "Skipping merge commit $(git rev-parse --short HEAD)"; fi'
 
       echo "${GREEN}✅ Earliest unsigned commit has been signed.${RESET}"
-      echo "Please push again: git push --force-with-lease"
+      echo "Please push again: git push"
       exit 1
     else
       echo "${YELLOW}You can manually sign commits using:${RESET}"
       echo
       # Latest commit (HEAD)
-      head_commit=$(git rev-parse HEAD)
       echo "  - For the latest commit (HEAD):"
       echo "      git commit --amend -sS --no-edit"
       echo
@@ -75,7 +82,6 @@ while read local_ref local_sha remote_ref remote_sha; do
       echo "  - For the earliest unsigned commit $short_hash (skipping merge commits):"
       echo "      git rebase --onto $parent_commit $parent_commit \\"
       echo "        --exec 'if [ \$(git rev-list --parents -n 1 HEAD | awk \"{print NF-1}\") -eq 1 ]; then git commit --amend -sS --no-edit; else echo \"Skipping merge commit \$(git rev-parse --short HEAD)\"; fi'"
-
       echo
       echo "Then push normally with:"
       echo "      git push"

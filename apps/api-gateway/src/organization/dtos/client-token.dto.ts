@@ -7,6 +7,10 @@ export class ClientTokenDto {
   orgId: string;
 
   @ApiProperty()
+  @IsString({ message: 'clientAlias must be in string format.' })
+  clientAlias: string;
+
+  @ApiProperty()
   @IsString({ message: 'clientId must be in string format.' })
   clientId: string;
 

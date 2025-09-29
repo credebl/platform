@@ -2040,6 +2040,16 @@ export class OrganizationService {
       if (!orgDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
       }
+      // Add validation for client alias
+      const clientIdKey = `${generateTokenDetails.clientAlias}_KEYCLOAK_MANAGEMENT_CLIENT_ID`;
+
+      if (!process.env[clientIdKey]) {
+        throw new NotFoundException(ResponseMessages.organisation.error.clientDetails);
+      }
+      const getDecryptedAlias = await this.commonService.decryptPassword(process.env[clientIdKey]);
+      if (generateTokenDetails.clientAlias.toLowerCase() !== getDecryptedAlias.toLowerCase()) {
+        throw new NotFoundException(ResponseMessages.organisation.error.missMachingAlias);
+      }
       // Step:1 generate the token using admin credentials
       const adminTokenDetails =
         await this.clientRegistrationService.generateTokenUsingAdminCredentials(generateTokenDetails);

@@ -736,12 +736,12 @@ export class ClientRegistrationService {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     };
-    const generatetedTokenDetails = await this.commonService.httpPost(
+    const generatedTokenDetails = await this.commonService.httpPost(
       await this.keycloakUrlService.GetSATURL(realmName),
       qs.stringify(payload),
       config
     );
-    return generatetedTokenDetails;
+    return generatedTokenDetails;
   }
 
   async fetchClientDetails(clientId: string, token: string) {

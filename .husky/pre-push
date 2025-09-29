@@ -41,12 +41,21 @@ while read local_ref local_sha remote_ref remote_sha; do
     echo "${RED}❌ Found unsigned commits:${RESET} $unsigned_commits"
     echo
     echo "${YELLOW}Do you want to automatically sign these commits? [y/N]${RESET}"
-    read -r answer
+    read -r answer </dev/tty
 
+    # if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+    #   echo "${CYAN}🔧 Re-signing commits...${RESET}"
+    #   git rebase -i $remote_sha --exec 'git commit --amend -sS --no-edit'
+    #   echo "${GREEN}✅ All commits have been signed.${RESET}"
+    # else
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
-      echo "${CYAN}🔧 Re-signing commits...${RESET}"
-      git rebase -i $remote_sha --exec 'git commit --amend -sS --no-edit'
-      echo "${GREEN}✅ All commits have been signed.${RESET}"
+        echo "${CYAN}🔧 Auto-signing commits...${RESET}"
+        for commit in $unsigned_commits; do
+            git rebase -i $remote_sha --onto $commit^ --exec 'git commit --amend -sS --no-edit'
+        done
+        echo "${GREEN}✅ All unsigned commits have been signed.${RESET}"
+        echo "Please push again: git push --force-with-lease"
+        exit 1
     else
       echo "${YELLOW}You can manually sign commits using:${RESET}"
       echo "   git commit --amend -sS --no-edit  # for HEAD commit"

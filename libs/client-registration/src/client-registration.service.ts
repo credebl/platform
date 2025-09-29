@@ -737,7 +737,7 @@ export class ClientRegistrationService {
       }
     };
     const generatetedTokenDetails = await this.commonService.httpPost(
-      await this.keycloakUrlService.GenerateTokenUsingAdminCredentials(realmName),
+      await this.keycloakUrlService.GetSATURL(realmName),
       qs.stringify(payload),
       config
     );

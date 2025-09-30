@@ -2033,41 +2033,67 @@ export class OrganizationService {
 
   async generateClientApiToken(generateTokenDetails: ClientTokenDto): Promise<{ token: string }> {
     try {
+      // Fetch organization and fail fast if not found
       const orgDetails = await this.organizationRepository.getOrganizationDetails(generateTokenDetails.orgId);
       if (!orgDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
       }
-      // Add validation for client alias
-      const clientIdKey = `${generateTokenDetails.clientAlias}_KEYCLOAK_MANAGEMENT_CLIENT_ID`;
 
-      if (!process.env[clientIdKey]) {
-        throw new NotFoundException(ResponseMessages.organisation.error.clientDetails);
+      // Compose keys
+      const clientIdKey = `${generateTokenDetails.clientAlias}_KEYCLOAK_MANAGEMENT_CLIENT_ID`;
+      const clientSecretKey = `${generateTokenDetails.clientAlias}_KEYCLOAK_MANAGEMENT_CLIENT_SECRET`;
+
+      // Fetch env vars once
+      const encryptedClientId = process.env[clientIdKey];
+      const encryptedClientSecret = process.env[clientSecretKey];
+
+      // Fail fast if not present
+      if (!encryptedClientId || !encryptedClientSecret) {
+        throw new NotFoundException(ResponseMessages.organisation.error.invalidClientCredentials);
       }
-      const getDecryptedAlias = await this.commonService.decryptPassword(process.env[clientIdKey]);
-      if (generateTokenDetails.clientAlias.toLowerCase() !== getDecryptedAlias.toLowerCase()) {
-        throw new NotFoundException(ResponseMessages.organisation.error.missMachingAlias);
+
+      // Decrypt env vars once
+      const decryptedClientId = await this.commonService.decryptPassword(encryptedClientId);
+      if (!decryptedClientId) {
+        throw new NotFoundException(ResponseMessages.organisation.error.invalidClientCredentials);
       }
-      // Step:1 generate the token using admin credentials
+      const decryptedSecret = await this.commonService.decryptPassword(encryptedClientSecret);
+      if (!decryptedSecret) {
+        throw new NotFoundException(ResponseMessages.organisation.error.invalidClientCredentials);
+      }
+
+      // Guard clauses for validation
+      if (generateTokenDetails.clientAlias.toLowerCase() !== decryptedClientId.toLowerCase()) {
+        throw new NotFoundException(ResponseMessages.organisation.error.invalidClientCredentials);
+      }
+      if (generateTokenDetails.clientSecret !== decryptedSecret) {
+        throw new NotFoundException(ResponseMessages.organisation.error.invalidClientCredentials);
+      }
+
+      // Generate admin token
       const adminTokenDetails =
         await this.clientRegistrationService.generateTokenUsingAdminCredentials(generateTokenDetails);
       if (!adminTokenDetails?.access_token) {
         throw new InternalServerErrorException(ResponseMessages.organisation.error.adminTokenDetails);
       }
-      // Step:2 Call API to fetch client id and secret
+
+      // Fetch client details
       const clientDetails = await this.clientRegistrationService.fetchClientDetails(
         generateTokenDetails.orgId,
         adminTokenDetails.access_token
       );
-      if (!clientDetails || 0 === clientDetails.length) {
+      if (!clientDetails?.length) {
         throw new NotFoundException(ResponseMessages.organisation.error.clientDetails);
       }
+
+      // Authenticate client
       const { secret } = clientDetails[0];
-      //step3: generate the token using client id and secret
       const authenticationResult = await this.authenticateClientKeycloak(generateTokenDetails.orgId, secret);
+
       return { token: authenticationResult.access_token };
     } catch (error) {
-      this.logger.error(`in generating issuer api token : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`in generating issuer api token: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response || error);
     }
   }
 }

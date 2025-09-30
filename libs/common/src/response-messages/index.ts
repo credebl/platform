@@ -133,7 +133,7 @@ export const ResponseMessages = {
       MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
       adminTokenDetails: 'Error in generating admin token details',
       clientDetails: 'Error in fetching client details',
-      missMachingAlias: 'Client alias does not match the registered alias'
+      invalidClientCredentials: 'Invalid client credentials'
     }
   },
 

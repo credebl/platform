@@ -28,9 +28,7 @@ while read local_ref local_sha remote_ref remote_sha; do
       echo "${CYAN}ℹ️  Skipping merge commit $commit${RESET}"
       continue
     fi
-
-    sig_status=$(git log --format='%G?' -n 1 $commit)
-
+    sig_status=$(git log --format='%G?' -n 1 $commit)	
     # Currently only check for "N" - for no signature.
     if [ "$sig_status" = "N" ]; then
       unsigned_commits="$unsigned_commits $commit"
@@ -64,7 +62,6 @@ while read local_ref local_sha remote_ref remote_sha; do
       echo "${YELLOW}You can manually sign commits using:${RESET}"
       echo
       # Latest commit (HEAD)
-      head_commit=$(git rev-parse HEAD)
       echo "  - For the latest commit (HEAD):"
       echo "      git commit --amend -sS --no-edit"
       echo
@@ -75,7 +72,6 @@ while read local_ref local_sha remote_ref remote_sha; do
       echo "  - For the earliest unsigned commit $short_hash (skipping merge commits):"
       echo "      git rebase --onto $parent_commit $parent_commit \\"
       echo "        --exec 'if [ \$(git rev-list --parents -n 1 HEAD | awk \"{print NF-1}\") -eq 1 ]; then git commit --amend -sS --no-edit; else echo \"Skipping merge commit \$(git rev-parse --short HEAD)\"; fi'"
-
       echo
       echo "Then push normally with:"
       echo "      git push"
@@ -92,4 +88,4 @@ while read local_ref local_sha remote_ref remote_sha; do
   fi
 done
 
-echo "${GREEN}✅ All commits are signed and verified${RESET}"
+echo "${GREEN}✅ No unsigned commits found${RESET}"

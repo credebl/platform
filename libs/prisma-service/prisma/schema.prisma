@@ -133,6 +133,7 @@ model organisation {
   clientId              String?                 @db.VarChar(500)
   clientSecret          String?                 @db.VarChar(500)
   registrationNumber    String?                 @db.VarChar(100)
+  appLaunchDetails      Json?
   countryId             Int?
   countries             countries?              @relation(fields: [countryId], references: [id])
   stateId               Int?

@@ -10,9 +10,6 @@ RESET="\033[0m"
 
 echo "🔒 Checking commit signatures..."
 
-# Get the email of the current user
-# CURRENT_EMAIL=$(git config user.email)
-
 while read local_ref local_sha remote_ref remote_sha; do
   # Determine range of commits
   if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
@@ -31,13 +28,6 @@ while read local_ref local_sha remote_ref remote_sha; do
       echo "${CYAN}ℹ️  Skipping merge commit $commit${RESET}"
       continue
     fi
-
-    # Skip commits not authored by the current user
-    # author_email=$(git log -1 --format='%ae' $commit)
-    # if [ "$author_email" != "$CURRENT_EMAIL" ]; then
-    #   echo "${CYAN}ℹ️  Skipping commit $commit authored by $author_email${RESET}"
-    #   continue
-    # fi
 
     # Currently only check for "N" - for no signature.
     if [ "$sig_status" = "N" ]; then

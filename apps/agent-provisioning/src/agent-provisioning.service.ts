@@ -39,7 +39,15 @@ export class AgentProvisioningService {
       } = payload;
       if (agentType === AgentType.AFJ) {
         // The wallet provision command is used to invoke a shell script
-        const walletProvision = `${process.cwd() + process.env.AFJ_AGENT_SPIN_UP} ${orgId} "${externalIp}" "${walletName}" "${walletPassword}" ${seed} ${webhookEndpoint} ${walletStorageHost} ${walletStoragePort} ${walletStorageUser} ${walletStoragePassword} ${containerName} ${protocol} ${tenant} ${credoImage} "${indyLedger}" ${inboundEndpoint} ${process.env.SCHEMA_FILE_SERVER_URL} ${process.env.AGENT_API_KEY} ${process.env.AWS_ACCOUNT_ID} ${process.env.S3_BUCKET_ARN} ${process.env.CLUSTER_NAME} ${process.env.TASKDEFINITION_FAMILY} ${process.env.ADMIN_TG_ARN} ${process.env.INBOUND_TG_ARN} ${process.env.FILESYSTEMID} ${process.env.ECS_SUBNET_ID} ${process.env.ECS_SECURITY_GROUP_ID}`;
+        const walletProvision = `${
+          process.cwd() + process.env.AFJ_AGENT_SPIN_UP
+        } ${orgId} "${externalIp}" "${walletName}" "${walletPassword}" ${seed} ${webhookEndpoint} ${walletStorageHost} ${walletStoragePort} ${walletStorageUser} ${walletStoragePassword} ${containerName} ${protocol} ${tenant} ${credoImage} "${indyLedger}" ${inboundEndpoint} ${
+          process.env.SCHEMA_FILE_SERVER_URL
+        } ${process.env.AGENT_API_KEY} ${process.env.AWS_ACCOUNT_ID} ${process.env.S3_BUCKET_ARN} ${
+          process.env.CLUSTER_NAME
+        } ${process.env.TASKDEFINITION_FAMILY} ${process.env.ADMIN_TG_ARN} ${process.env.INBOUND_TG_ARN} ${
+          process.env.FILESYSTEMID
+        } ${process.env.ECS_SUBNET_ID} ${process.env.ECS_SECURITY_GROUP_ID}`;
         const spinUpResponse: object = new Promise(async (resolve) => {
           await exec(walletProvision, async (err, stdout, stderr) => {
             this.logger.log(`shell script output: ${stdout}`);
@@ -47,7 +55,9 @@ export class AgentProvisioningService {
               this.logger.log(`shell script error: ${stderr}`);
             }
 
-            const agentEndpointPath = `${process.cwd()}${process.env.AFJ_AGENT_ENDPOINT_PATH}${orgId}_${containerName}.json`;
+            const agentEndpointPath = `${process.cwd()}${
+              process.env.AFJ_AGENT_ENDPOINT_PATH
+            }${orgId}_${containerName}.json`;
             const agentTokenPath = `${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgId}_${containerName}.json`;
 
             const agentEndPointExists = await this.checkFileExistence(agentEndpointPath);

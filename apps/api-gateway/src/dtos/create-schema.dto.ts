@@ -315,38 +315,33 @@ export class CreateW3CSchemaDto {
 
 @ApiExtraModels(CreateSchemaDto, CreateW3CSchemaDto)
 export class GenericSchemaDTO {
-    @ApiProperty({
-        description: 'The type of the schema',
-        enum: SchemaTypeEnum,
-        example: SchemaTypeEnum.INDY 
-      })
-      @IsEnum(SchemaTypeEnum, { message: 'Type must be a valid schema type' })
-      @IsNotEmpty({ message: 'Type is required' })
-    type: SchemaTypeEnum;
+  @ApiProperty({
+    description: 'The type of the schema',
+    enum: SchemaTypeEnum,
+    example: SchemaTypeEnum.INDY
+  })
+  @IsEnum(SchemaTypeEnum, { message: 'Type must be a valid schema type' })
+  @IsNotEmpty({ message: 'Type is required' })
+  type: SchemaTypeEnum;
 
-    @ApiPropertyOptional()
-    @Transform(({ value }) => trim(value))
-    @IsOptional()
-    @IsString({ message: 'alias must be a string' })
-    @IsNotEmpty({ message: 'alias is required' })
-    alias: string;
+  @ApiPropertyOptional()
+  @Transform(({ value }) => trim(value))
+  @IsOptional()
+  @IsString({ message: 'alias must be a string' })
+  @IsNotEmpty({ message: 'alias is required' })
+  alias: string;
 
-    @ApiProperty({
-        type: Object,
-        oneOf: [
-          { $ref: getSchemaPath(CreateSchemaDto) },
-          { $ref: getSchemaPath(CreateW3CSchemaDto) }
-        ]
-      })
-    @ValidateNested()
-      @Type(({ object }) => {
-        if (object.type === SchemaTypeEnum.INDY) {
-          return CreateSchemaDto;
-        } else if (object.type === SchemaTypeEnum.JSON) {
-          return CreateW3CSchemaDto;
-        }
-      })
-    schemaPayload:CreateSchemaDto | CreateW3CSchemaDto;
-
-   
+  @ApiProperty({
+    type: Object,
+    oneOf: [{ $ref: getSchemaPath(CreateSchemaDto) }, { $ref: getSchemaPath(CreateW3CSchemaDto) }]
+  })
+  @ValidateNested()
+  @Type(({ object }) => {
+    if (object.type === SchemaTypeEnum.INDY) {
+      return CreateSchemaDto;
+    } else if (object.type === SchemaTypeEnum.JSON) {
+      return CreateW3CSchemaDto;
+    }
+  })
+  schemaPayload: CreateSchemaDto | CreateW3CSchemaDto;
 }

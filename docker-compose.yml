@@ -146,14 +146,6 @@ services:
     depends_on:
       - nats
       - api-gateway
-      - user
-      - connection
-      - issuance
-      - ledger
-      - organization
-      - verification
-      - agent-provisioning
-      - agent-service
     image: ghcr.io/credebl/cloud-wallet:latest
     env_file:
       - ./.env
@@ -161,15 +153,6 @@ services:
     depends_on:
       - nats
       - api-gateway
-      - user
-      - connection
-      - issuance
-      - ledger
-      - organization
-      - verification
-      - agent-provisioning
-      - agent-service
-      - cloud-wallet
     image: ghcr.io/credebl/geolocation:latest
     env_file:
       - ./.env
@@ -177,16 +160,6 @@ services:
     depends_on:
       - nats
       - api-gateway
-      - user
-      - connection
-      - issuance
-      - ledger
-      - organization
-      - verification
-      - agent-provisioning
-      - agent-service
-      - cloud-wallet
-      - geolocation
     image: ghcr.io/credebl/notification:latest
     env_file:
       - ./.env
@@ -194,18 +167,12 @@ services:
     depends_on:
       - nats
       - api-gateway
-      - user
-      - connection
-      - issuance
-      - ledger
-      - organization
-      - verification
-      - agent-provisioning
-      - agent-service
-      - cloud-wallet
-      - geolocation
-      - notification
     image: ghcr.io/credebl/webhook:latest
+    env_file:
+      - ./.env
+  schema-file-server:
+    container_name: schema-file-server
+    image: ghcr.io/credebl/schema-file-server:latest
     env_file:
       - ./.env
   

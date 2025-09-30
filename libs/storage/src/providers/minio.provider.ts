@@ -52,6 +52,6 @@ export class MinioProvider implements IStorageProvider {
       ContentEncoding: CommonConstants.ENCODING
     });
     const protocol = 'true' === process.env.MINIO_USE_SSL ? 'https' : 'http';
-    return `${protocol}://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${bucket}/${key}`;
+    return `${protocol}://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${bucket}/${objKey}`;
   }
 }

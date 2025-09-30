@@ -1,7 +1,7 @@
 import StringKeyword from './stringKeyword';
 
 export default class MinLength extends StringKeyword {
-  private _value: number; 
+  private _value: number;
 
   constructor(value: number) {
     super();
@@ -9,7 +9,7 @@ export default class MinLength extends StringKeyword {
   }
 
   get value(): number {
-    return this._value; 
+    return this._value;
   }
 
   set value(value: number) {

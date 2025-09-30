@@ -486,7 +486,9 @@ export class IssuanceService {
       return message.response;
     } catch (error) {
       this.logger.error(
-        `[storeIssuanceObjectReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(error)}`
+        `[storeIssuanceObjectReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
+          error
+        )}`
       );
       throw error;
     }
@@ -784,9 +786,8 @@ export class IssuanceService {
       }
 
       if (IssueCredentialType.INDY === credentialType) {
-        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-          credentialDefinitionId
-        );
+        const schemaResponse: SchemaDetails =
+          await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
 
         let attributesArray: IAttributes[] = [];
         if (schemaResponse?.attributes) {

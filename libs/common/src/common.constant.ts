@@ -368,8 +368,6 @@ export enum CommonConstants {
   ACCEPT_OFFER = '/didcomm/credentials/accept-offer',
   SEED_LENGTH = 32,
 
-  ENCODING = 'base64',
-
   //Agent URL flags
   CONNECTION_INVITATION = 'connection-invitation',
   LEGACY_INVITATION = 'legacy-invitation',
@@ -385,7 +383,8 @@ export enum CommonConstants {
   GET_VERIFIED_PROOF = 'get-verified-proof',
   GET_QUESTION_ANSWER_RECORD = 'get-question-answer-record',
   SEND_QUESTION = 'send-question',
-  SEND_BASIC_MESSAGE = 'send-basic-message'
+  SEND_BASIC_MESSAGE = 'send-basic-message',
+  ENCODING = 'base64'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

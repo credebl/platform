@@ -129,9 +129,9 @@ export interface ISchemasList {
 export interface IUpdateSchema {
   alias: string;
   schemaLedgerId: string;
-  orgId?: string; 
+  orgId?: string;
 }
 
 export interface UpdateSchemaResponse {
-  count: number; 
+  count: number;
 }

@@ -63,8 +63,8 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
-import { CommonConstants } from '@credebl/common/common.constant';
 import { UserRepository } from 'apps/user/repositories/user.repository';
+import { CommonConstants } from '@credebl/common/common.constant';
 import * as jwt from 'jsonwebtoken';
 import { ClientTokenDto } from '../dtos/client-token.dto';
 
@@ -1636,7 +1636,8 @@ export class OrganizationService {
       this.logger.log('Keycloak User Ids');
 
       // Delete user client roles in parallel
-      const deleteUserRolesPromises = keycloakUserIds.map((keycloakUserId) => this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, keycloakUserId)
+      const deleteUserRolesPromises = keycloakUserIds.map((keycloakUserId) =>
+        this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, keycloakUserId)
       );
       deleteUserRolesPromises.push(
         this.clientRegistrationService.deleteUserClientRoles(organizationDetails?.idpId, token, getUser?.keycloakUserId)
@@ -1683,7 +1684,9 @@ export class OrganizationService {
           deletedOrgInvitationInfo.push(newInvitation);
 
           this.logger.log(
-            `email: ${userDetails.email}, orgName: ${organizationDetails?.name}, orgRoles: ${JSON.stringify(orgRoleNames)}, sendEmail: ${sendEmail}`
+            `email: ${userDetails.email}, orgName: ${organizationDetails?.name}, orgRoles: ${JSON.stringify(
+              orgRoleNames
+            )}, sendEmail: ${sendEmail}`
           );
         })
       );

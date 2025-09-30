@@ -164,7 +164,7 @@ export const ResponseMessages = {
     success: {
       fetch: 'Schema retrieved successfully.',
       create: 'Schema created successfully.',
-      update:'Schema updated successfully'
+      update: 'Schema updated successfully'
     },
     error: {
       invalidSchemaId: 'Please provide valid schema Id',

@@ -225,3 +225,156 @@ export class UpdateCredentialRequestDto {
 
   credentialOfferId?: string;
 }
+
+export class SignerOptionsDto {
+  @IsString()
+  @IsIn(['did', 'x5c'], { message: 'method must be either "did" or "x5c"' })
+  method: string;
+
+  @IsString()
+  @IsOptional()
+  did?: string;
+
+  @IsArray()
+  @IsOptional()
+  x5c?: string[];
+}
+
+export class CredentialDto {
+  @ApiProperty({
+    description: 'Unique ID of the supported credential',
+    example: 'DrivingLicenseCredential-mdoc'
+  })
+  @IsString()
+  credentialSupportedId: string;
+
+  @ApiProperty({
+    description: 'Signer options for credential issuance',
+    example: {
+      method: 'x5c',
+      x5c: [
+        'MIIB3jCCAZCgAwIBAgIQQfBdIK9v3TIzKR+1HjlixDAFBgMrZXAwJDEUMBIGA1UEAxMLRFkgdGVzdCBvcmcxDDAKBgNVBAYTA0lORDAeFw0yNTA5MjQwMDAwMDBaFw0yODA5MjQwMDAwMDBaMCQxFDASBgNVBAMTC0RZIHRlc3Qgb3JnMQwwCgYDVQQGEwNJTkQwKjAFBgMrZXADIQDIkLycOlkHP6+MG4rprj8fyxRfwqhH8Xx9v0XxCd175aOB1zCB1DAdBgNVHQ4EFgQUbqjjbQgbAx3lPjkPBVQwvvF14agwDgYDVR0PAQH/BAQDAgGGMBUGA1UdJQEB/wQLMAkGByiBjF0FAQIwOwYDVR0SBDQwMoIXaHR0cDovL3Rlc3QuZXhhbXBsZS5jb22GF2h0dHA6Ly90ZXN0LmV4YW1wbGUuY29tMDsGA1UdEQQ0MDKCF2h0dHA6Ly90ZXN0LmV4YW1wbGUuY29thhdodHRwOi8vdGVzdC5leGFtcGxlLmNvbTASBgNVHRMBAf8ECDAGAQH/AgEAMAUGAytlcANBALTqC64XSTRUoMmwYbCD/z46U/Je6IeQsh6qq4qXh+wfnMIfJMvLQnG+nMkfeAs3zYAwjK6sCZ/7lHkEJnYObQ4='
+      ]
+    }
+  })
+  @ValidateNested()
+  @Type(() => SignerOptionsDto)
+  signerOptions: SignerOptionsDto;
+
+  @ApiProperty({
+    description: 'Credential format type',
+    enum: ['mso_mdoc', 'vc+sd-jwt'],
+    example: 'mso_mdoc'
+  })
+  @IsString()
+  @IsIn(['mso_mdoc', 'vc+sd-jwt'], { message: 'format must be either "mso_mdoc" or "vc+sd-jwt"' })
+  format: string;
+
+  @ApiProperty({
+    description: 'Credential payload (namespace data, validity info, etc.)',
+    example: {
+      namespaces: {
+        'org.iso.23220.photoID.1': {
+          birth_date: '1970-02-14',
+          family_name: 'Müller-Lüdenscheid',
+          given_name: 'Ford Praxibetel',
+          document_number: 'LA001801M'
+        }
+      },
+      validityInfo: {
+        validFrom: '2025-04-23T14:34:09.188Z',
+        validUntil: '2026-05-03T14:34:09.188Z'
+      }
+    }
+  })
+  @ValidateNested()
+  payload: object;
+}
+
+export class CreateCredentialOfferD2ADto {
+  @ApiProperty({
+    description: 'Public identifier of the issuer visible to verifiers and wallets.',
+    example: 'dy-gov'
+  })
+  @IsString()
+  publicIssuerId: string;
+
+  @ApiProperty({
+    description: 'List of credentials to be issued under this offer.',
+    type: [CredentialDto],
+    example: [
+      {
+        credentialSupportedId: 'DrivingLicenseCredential-mdoc',
+        signerOptions: {
+          method: 'x5c',
+          x5c: [
+            'MIIB3jCCAZCgAwIBAgIQQfBdIK9v3TIzKR+1HjlixDAFBgMrZXAwJDEUMBIGA1UEAxMLRFkgdGVzdCBvcmcxDDAKBgNVBAYTA0lORDAeFw0yNTA5MjQwMDAwMDBaFw0yODA5MjQwMDAwMDBaMCQxFDASBgNVBAMTC0RZIHRlc3Qgb3JnMQwwCgYDVQQGEwNJTkQwKjAFBgMrZXADIQDIkLycOlkHP6+MG4rprj8fyxRfwqhH8Xx9v0XxCd175aOB1zCB1DAdBgNVHQ4EFgQUbqjjbQgbAx3lPjkPBVQwvvF14agwDgYDVR0PAQH/BAQDAgGGMBUGA1UdJQEB/wQLMAkGByiBjF0FAQIwOwYDVR0SBDQwMoIXaHR0cDovL3Rlc3QuZXhhbXBsZS5jb22GF2h0dHA6Ly90ZXN0LmV4YW1wbGUuY29tMDsGA1UdEQQ0MDKCF2h0dHA6Ly90ZXN0LmV4YW1wbGUuY29thhdodHRwOi8vdGVzdC5leGFtcGxlLmNvbTASBgNVHRMBAf8ECDAGAQH/AgEAMAUGAytlcANBALTqC64XSTRUoMmwYbCD/z46U/Je6IeQsh6qq4qXh+wfnMIfJMvLQnG+nMkfeAs3zYAwjK6sCZ/7lHkEJnYObQ4='
+          ]
+        },
+        format: 'mso_mdoc',
+        payload: {
+          namespaces: {
+            'org.iso.23220.photoID.1': {
+              birth_date: '1970-02-14',
+              family_name: 'Müller-Lüdenscheid',
+              given_name: 'Ford Praxibetel',
+              document_number: 'LA001801M'
+            }
+          },
+          validityInfo: {
+            validFrom: '2025-04-23T14:34:09.188Z',
+            validUntil: '2026-05-03T14:34:09.188Z'
+          }
+        }
+      }
+    ]
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CredentialDto)
+  credentials: CredentialDto[];
+
+  @ApiPropertyOptional({
+    description: 'Pre-Authorized Code Flow configuration. Provide this OR authorizationCodeFlowConfig (XOR rule).',
+    type: PreAuthorizedCodeFlowConfigDto,
+    example: {
+      preAuthorizedCode: 'abcd1234xyz',
+      txCode: {
+        length: 8,
+        inputMode: 'numeric'
+      },
+      userPinRequired: true
+    }
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PreAuthorizedCodeFlowConfigDto)
+  preAuthorizedCodeFlowConfig?: PreAuthorizedCodeFlowConfigDto;
+
+  @ApiPropertyOptional({
+    description: 'Authorization Code Flow configuration. Provide this OR preAuthorizedCodeFlowConfig (XOR rule).',
+    type: AuthorizationCodeFlowConfigDto,
+    example: {
+      clientId: 'wallet-app',
+      redirectUri: 'https://wallet.example.org/callback',
+      scope: 'openid vc_authn',
+      state: 'xyz-987654321'
+    }
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AuthorizationCodeFlowConfigDto)
+  authorizationCodeFlowConfig?: AuthorizationCodeFlowConfigDto;
+
+  @ApiPropertyOptional({
+    description: 'Internal identifier of the issuer (optional, for backend use).',
+    example: 'issuer-12345'
+  })
+  @IsOptional()
+  issuerId?: string;
+
+  @ExactlyOneOf(['preAuthorizedCodeFlowConfig', 'authorizationCodeFlowConfig'], {
+    message: 'Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.'
+  })
+  private readonly _exactlyOne?: unknown;
+}

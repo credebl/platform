@@ -121,6 +121,16 @@ export class Oid4vcIssuanceController {
     return this.oid4vcIssuanceService.createOidcCredentialOffer(oidcCredentialPayload, orgId, userDetails, issuerId);
   }
 
+  @MessagePattern({ cmd: 'oid4vc-create-credential-offer-D2A' })
+  async createOidcCredentialOfferD2A(payload: {
+    oidcCredentialD2APayload;
+    orgId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }): Promise<any> {
+    const { oidcCredentialD2APayload, orgId } = payload;
+    return this.oid4vcIssuanceService.createOidcCredentialOfferD2A(oidcCredentialD2APayload, orgId);
+  }
+
   @MessagePattern({ cmd: 'oid4vc-update-credential-offer' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async updateOidcCredentialOffer(payload: {

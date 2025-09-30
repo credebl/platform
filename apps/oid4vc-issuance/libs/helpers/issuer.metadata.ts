@@ -47,7 +47,6 @@ type CredentialConfigurationsSupported = {
 // ---- Static Lists (as requested) ----
 const STATIC_CREDENTIAL_ALGS = ['ES256', 'EdDSA'] as const;
 const STATIC_BINDING_METHODS = ['did:key'] as const;
-const DOCTYPE = 'org.iso.18013.5.1'; // for mso_mdoc format
 const MSO_MDOC = 'mso_mdoc'; // alternative format value
 
 // Safe coercion helpers
@@ -96,6 +95,7 @@ export function buildCredentialConfigurationsSupported(
   templates: TemplateRowPrisma[],
   opts?: {
     vct?: string;
+    doctype?: string;
     scopeVct?: string;
     keyResolver?: (t: TemplateRowPrisma) => string;
     format?: string;
@@ -118,14 +118,23 @@ export function buildCredentialConfigurationsSupported(
     // ---- dynamic format per row ----
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rowFormat = (t as any).format ?? format;
+    const isMdoc = rowFormat === `${MSO_MDOC}`;
     const suffix = rowFormat === `${MSO_MDOC}` ? 'mdoc' : 'sdjwt';
 
     // key: keep your keyResolver override; otherwise include suffix
     const key = 'function' === typeof opts?.keyResolver ? opts.keyResolver(t) : `${t.name}-${suffix}`;
 
     // vct/scope: vct only for non-mdoc; scope always uses suffix
-    const vct = opts?.vct ?? t.name;
-    const scopeBase = opts?.scopeVct ?? vct;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rowDoctype: string | undefined = opts?.doctype ?? (t as any).doctype;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rowVct: string = opts?.vct ?? (t as any).vct ?? t.name;
+
+    if (isMdoc && !rowDoctype) {
+      throw new Error(`Template ${t.id}: doctype is required for mdoc format`);
+    }
+
+    const scopeBase = opts?.scopeVct ?? rowVct;
     const scope = `openid4vc:credential:${scopeBase}-${suffix}`;
     const claims = Object.fromEntries(
       Object.entries(attrs).map(([claimName, def]) => {
@@ -156,9 +165,7 @@ export function buildCredentialConfigurationsSupported(
       credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS],
       cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS],
       display,
-      ...(rowFormat === `${MSO_MDOC}`
-        ? { doctype: `${DOCTYPE}` } // static for mdoc
-        : { vct }) // keep vct only for non-mdoc
+      ...(isMdoc ? { doctype: rowDoctype as string } : { vct: rowVct })
     };
   }
 

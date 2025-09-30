@@ -48,6 +48,7 @@ import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos
 import { OidcIssueCredentialDto } from './dtos/oid4vc-credential-wh.dto';
 import { Oid4vcIssuanceService } from './oid4vc-issuance.service';
 import {
+  CreateCredentialOfferD2ADto,
   CreateOidcCredentialOfferDto,
   GetAllCredentialOfferDto,
   UpdateCredentialRequestDto
@@ -582,6 +583,34 @@ export class Oid4vcIssuanceController {
       data: deletedofferDetails
     };
     return res.status(HttpStatus.NO_CONTENT).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/oid4vc/create-offer/agent')
+  @ApiOperation({
+    summary: 'Create OID4VC Credential Offer direct to agent',
+    description: 'Creates a new OIDC4VCI credential-offer for a given issuer.'
+  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Credential offer created successfully.' })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async createOidcCredentialOfferD2A(
+    @Param('orgId')
+    orgId: string,
+    @Body() oidcCredentialD2APayload: CreateCredentialOfferD2ADto,
+    @Res() res: Response
+  ): Promise<Response> {
+    const credentialOffer = await this.oid4vcIssuanceService.createOidcCredentialOfferD2A(
+      oidcCredentialD2APayload,
+      orgId
+    );
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.oidcIssuerSession.success.create,
+      data: credentialOffer
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   /**

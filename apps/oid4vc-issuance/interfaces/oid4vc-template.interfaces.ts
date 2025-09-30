@@ -21,6 +21,8 @@ export interface CreateCredentialTemplate {
   attributes: Prisma.JsonValue;
   appearance?: Prisma.JsonValue;
   issuerId: string;
+  vct?: string;
+  doctype?: string;
 }
 
 export interface UpdateCredentialTemplate extends Partial<CreateCredentialTemplate> {}

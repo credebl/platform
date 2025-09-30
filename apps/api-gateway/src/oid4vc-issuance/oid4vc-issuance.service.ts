@@ -98,6 +98,11 @@ export class Oid4vcIssuanceService extends BaseService {
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-create-credential-offer', payload);
   }
 
+  async createOidcCredentialOfferD2A(oidcCredentialD2APayload, orgId: string): Promise<object> {
+    const payload = { oidcCredentialD2APayload, orgId };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-create-credential-offer-D2A', payload);
+  }
+
   async updateOidcCredentialOffer(
     oidcUpdateCredentialPayload: UpdateCredentialRequestDto,
     orgId: string,

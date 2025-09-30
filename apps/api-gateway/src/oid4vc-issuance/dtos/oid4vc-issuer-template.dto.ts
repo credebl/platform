@@ -7,7 +7,9 @@ import {
   ValidateNested,
   IsObject,
   IsNotEmpty,
-  IsArray
+  IsArray,
+  ValidateIf,
+  IsEmpty
 } from 'class-validator';
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -128,6 +130,31 @@ export class CreateCredentialTemplateDto {
   @ApiProperty({ enum: ['mso_mdoc', 'vc+sd-jwt'], description: 'Credential format type' })
   @IsEnum(['mso_mdoc', 'vc+sd-jwt'])
   format: 'mso_mdoc' | 'vc+sd-jwt';
+
+  @ApiPropertyOptional({
+    description: 'Document type (required when format is "mso_mdoc"; must NOT be provided when format is "vc+sd-jwt")',
+    example: 'org.iso.23220.photoID.1'
+  })
+  @ValidateIf((o: CreateCredentialTemplateDto) => 'mso_mdoc' === o.format)
+  @IsString()
+  doctype?: string;
+
+  @ValidateIf((o: CreateCredentialTemplateDto) => 'vc+sd-jwt' === o.format)
+  @IsEmpty({ message: 'doctype must not be provided when format is "vc+sd-jwt"' })
+  readonly _doctypeAbsentGuard?: unknown;
+
+  @ApiPropertyOptional({
+    description:
+      'Verifiable Credential Type (required when format is "vc+sd-jwt"; must NOT be provided when format is "mso_mdoc")',
+    example: 'org.iso.18013.5.1.mDL'
+  })
+  @ValidateIf((o: CreateCredentialTemplateDto) => 'vc+sd-jwt' === o.format)
+  @IsString()
+  vct?: string;
+
+  @ValidateIf((o: CreateCredentialTemplateDto) => 'mso_mdoc' === o.format)
+  @IsEmpty({ message: 'vct must not be provided when format is "mso_mdoc"' })
+  readonly _vctAbsentGuard?: unknown;
 
   @ApiProperty({ default: false, description: 'Indicates whether credentials can be revoked' })
   @IsBoolean()

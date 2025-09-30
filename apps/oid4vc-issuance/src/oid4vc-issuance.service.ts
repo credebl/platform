@@ -48,19 +48,15 @@ import {
 } from '../libs/helpers/issuer.metadata';
 import {
   CreateOidcCredentialOffer,
-  CredentialPayload,
   GetAllCredentialOffer,
   SignerMethodOption,
-  SignerOption,
   UpdateCredentialRequest
 } from '../interfaces/oid4vc-issuer-sessions.interfaces';
-import { BadRequestErrorDto } from 'apps/api-gateway/src/dtos/bad-request-error.dto';
 import {
   buildCredentialOfferPayload,
   buildCredentialOfferUrl,
   CredentialOfferPayload
 } from '../libs/helpers/credential-sessions.builder';
-import { context } from '@opentelemetry/api';
 
 type CredentialDisplayItem = {
   logo?: { uri: string; alt_text?: string };
@@ -293,7 +289,8 @@ export class Oid4vcIssuanceService {
     issuerId: string
   ): Promise<credential_templates> {
     try {
-      const { name, description, format, canBeRevoked, attributes, appearance, signerOption } = CredentialTemplate;
+      const { name, description, format, canBeRevoked, attributes, appearance, signerOption, vct, doctype } =
+        CredentialTemplate;
       const checkNameExist = await this.oid4vcIssuanceRepository.getTemplateByNameForIssuer(name, issuerId);
       if (0 < checkNameExist.length) {
         throw new ConflictException(ResponseMessages.oidcTemplate.error.templateNameAlreadyExist);
@@ -313,7 +310,14 @@ export class Oid4vcIssuanceService {
       if (!createdTemplate) {
         throw new InternalServerErrorException(ResponseMessages.oidcTemplate.error.createFailed);
       }
-      const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
+      let opts = {};
+      if (vct) {
+        opts = { ...opts, vct };
+      }
+      if (doctype) {
+        opts = { ...opts, doctype };
+      }
+      const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId, opts);
       const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -472,7 +476,7 @@ export class Oid4vcIssuanceService {
       //TDOD: signerOption should be under credentials change this with x509 support
 
       //TDOD: signerOption should be under credentials change this with x509 support
-      const signerOptions: SignerOption[] = [];
+      const signerOptions = [];
       getAllOfferTemplates.forEach((template) => {
         if (template.signerOption === SignerMethodOption.DID) {
           signerOptions.push({
@@ -515,6 +519,58 @@ export class Oid4vcIssuanceService {
     }
   }
 
+  async createOidcCredentialOfferD2A(oidcCredentialD2APayload, orgId: string): Promise<object | string> {
+    try {
+      for (const credential of oidcCredentialD2APayload.credentials) {
+        const { signerOptions } = credential;
+
+        if (!signerOptions?.method) {
+          throw new BadRequestException(`signerOptions.method is required`);
+        }
+        if (signerOptions.method === SignerMethodOption.X5C) {
+          if (!signerOptions.x5c || 0 === signerOptions.x5c.length) {
+            // const x5cFromDb = await this.oid4vcIssuanceRepository.getIssuerX5c(
+            const x5cFromDb = 'Test';
+            // If you want to use the actual DB call, uncomment and use:
+            // const x5cFromDb = await this.oid4vcIssuanceRepository.getIssuerX5c(
+            //   oidcCredentialD2APayload.publicIssuerId,
+            //   orgId
+            // );
+            if (!x5cFromDb || 0 === x5cFromDb.length) {
+              throw new BadRequestException(`No x5c found for issuer`);
+            }
+            signerOptions.x5c = x5cFromDb;
+          }
+        }
+
+        if (signerOptions.method === SignerMethodOption.DID) {
+          if (!signerOptions.did) {
+            const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
+            if (!agentDetails) {
+              throw new BadRequestException(`No DID found for issuer`);
+            }
+            signerOptions.did = agentDetails.orgDid;
+          }
+        }
+      }
+
+      const url = await getAgentUrl(
+        await this.getAgentEndpoint(orgId),
+        CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER
+      );
+      const createCredentialOfferOnAgent = await this._oidcCreateCredentialOffer(oidcCredentialD2APayload, url, orgId);
+      if (!createCredentialOfferOnAgent) {
+        throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
+      }
+      console.log('This is the createCredentialOfferOnAgent:', JSON.stringify(createCredentialOfferOnAgent, null, 2));
+
+      return createCredentialOfferOnAgent.response;
+    } catch (error) {
+      this.logger.error(`[createOidcCredentialOffer] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
   async updateOidcCredentialOffer(
     updateOidcCredentialOffer: UpdateCredentialRequest,
     orgId: string,
@@ -524,35 +580,6 @@ export class Oid4vcIssuanceService {
       if (!updateOidcCredentialOffer.issuerMetadata) {
         throw new BadRequestException('Please provide a valid issuerMetadata');
       }
-      // TODO: Need to implement this in future if required
-
-      // const filterTemplateIds = extractTemplateIds(updateOidcCredentialOffer);
-      // console.log('This is the filterTemplateIds:', filterTemplateIds);
-      // if (!filterTemplateIds) {
-      //   throw new BadRequestException('Please provide a valid id');
-      // }
-      // const getAllOfferTemplates = await this.issuanceRepository.getTemplateByIds(filterTemplateIds, issuerId);
-      // console.log('This is the getAllOfferTemplates:', getAllOfferTemplates);
-      // if (!getAllOfferTemplates || getAllOfferTemplates.length === 0) {
-      //   throw new NotFoundException('No templates found for the issuer');
-      // }
-      // const buildOidcUpdateCredentialOffer = buildUpdateCredentialOfferPayload(
-      //   updateOidcCredentialOffer,
-      //   getAllOfferTemplates
-      // );
-      // if (!buildOidcUpdateCredentialOffer) {
-      //   throw new BadRequestException('Error while creating oid4vc credential offer');
-      // }
-      // const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      // if (!agentDetails) {
-      //   throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
-      // }
-      //   const issuanceMetadata= {
-      //     issuanceMetadata: {
-      //     issuerDid: agentDetails.orgDid,
-      //     credentials: buildOidcUpdateCredentialOffer.credentials
-      //   }
-      // }
       const url = await getAgentUrl(
         await this.getAgentEndpoint(orgId),
         CommonConstants.OIDC_ISSUER_SESSIONS_UPDATE_OFFER,
@@ -632,12 +659,12 @@ export class Oid4vcIssuanceService {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  async buildOidcIssuerConfig(issuerId: string) {
+  async buildOidcIssuerConfig(issuerId: string, configMetadata?) {
     try {
       const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
 
-      const credentialConfigurationsSupported = buildCredentialConfigurationsSupported(templates);
+      const credentialConfigurationsSupported = buildCredentialConfigurationsSupported(templates, configMetadata);
 
       return buildIssuerPayload(credentialConfigurationsSupported, issuerDetails);
     } catch (error) {

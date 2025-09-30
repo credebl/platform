@@ -31,7 +31,8 @@ while read local_ref local_sha remote_ref remote_sha; do
 
     sig_status=$(git log --format='%G?' -n 1 $commit)
 
-    if [ "$sig_status" != "G" ]; then
+    # Currently only check for "N" - for no signature.
+    if [ "$sig_status" = "N" ]; then
       unsigned_commits="$unsigned_commits $commit"
     fi
   done
@@ -50,6 +51,9 @@ while read local_ref local_sha remote_ref remote_sha; do
 
       echo "${CYAN}🔧 Auto-signing earliest local unsigned commit $earliest_commit...${RESET}"
       # Avoid flattening of merge commits
+      # Not sure, if we really want to make it this complex, ideally it should be fine even if we flatten merge commits.
+      # Unless, the merge commit appears on the local branch, when trying to sync with the upstreams
+      # If we face any issues doing this, we revert to either flattening or maybe check the '--rebase-merges' feasibility. Considering the requirement of git version
       git rebase --onto "$parent_commit" "$parent_commit" \
         --exec 'if [ $(git rev-list --parents -n 1 HEAD | awk "{print NF-1}") -eq 1 ]; then git commit --amend -sS --no-edit; else echo "Skipping merge commit $(git rev-parse --short HEAD)"; fi'
 

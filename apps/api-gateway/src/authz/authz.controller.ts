@@ -54,6 +54,7 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { User } from './decorators/user.decorator';
 import { user } from '@prisma/client';
 import * as useragent from 'express-useragent';
+import { EmptyStringParamPipe, TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -372,8 +373,8 @@ export class AuthzController {
     description: 'Retrieve sessions for the user. Based on userId.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   async userSessions(
@@ -381,9 +382,11 @@ export class AuthzController {
     @Res() res: Response,
     @Param(
       'userId',
+      EmptyStringParamPipe.forParam('userId'),
+      new TrimStringParamPipe(),
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for User Id`);
+          throw new BadRequestException(`Invalid user ID`);
         }
       })
     )
@@ -413,8 +416,8 @@ export class AuthzController {
     description: 'Delete a particular session using its sessionId'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   async deleteSession(
@@ -422,9 +425,11 @@ export class AuthzController {
     @Res() res: Response,
     @Param(
       'sessionId',
+      EmptyStringParamPipe.forParam('sessionId'),
+      new TrimStringParamPipe(),
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(`Invalid format for session Id`);
+          throw new BadRequestException(`Invalid session ID`);
         }
       })
     )

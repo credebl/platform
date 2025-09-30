@@ -84,8 +84,8 @@ import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
-@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
@@ -255,9 +255,9 @@ export class IssuanceController {
    */
   @Post('/orgs/:orgId/credentials/bulk/template')
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
-  @ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
-  @ApiNotFoundResponse({ status: HttpStatus.NOT_FOUND, description: 'Not Found', type: NotFoundErrorDto })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
+  @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
+  @ApiNotFoundResponse({ description: 'Not Found', type: NotFoundErrorDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -316,12 +316,10 @@ export class IssuanceController {
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -411,13 +409,11 @@ export class IssuanceController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiUnauthorizedResponse({
-    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiForbiddenResponse({
-    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -473,12 +469,10 @@ export class IssuanceController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiUnauthorizedResponse({
-    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -572,12 +566,10 @@ export class IssuanceController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiUnauthorizedResponse({
-    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -614,12 +606,10 @@ export class IssuanceController {
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -655,13 +645,11 @@ export class IssuanceController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   @ApiUnauthorizedResponse({
-    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiForbiddenResponse({
-    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })
@@ -698,12 +686,10 @@ export class IssuanceController {
   @ApiBearerAuth()
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   @ApiUnauthorizedResponse({
-    status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: UnauthorizedErrorDto
   })
   @ApiForbiddenResponse({
-    status: HttpStatus.FORBIDDEN,
     description: 'Forbidden',
     type: ForbiddenErrorDto
   })

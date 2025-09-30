@@ -477,12 +477,15 @@ export class AgentServiceRepository {
     }
   }
 
-  async getOrgDid(orgId: string): Promise<OrgDid[]> {
+  async getOrgDid(orgId: string, isPrimaryDid?: boolean): Promise<OrgDid[]> {
     try {
+      const whereClause: { orgId: string; isPrimaryDid?: boolean } = { orgId };
+      if (isPrimaryDid) {
+        whereClause.isPrimaryDid = isPrimaryDid;
+      }
+
       const orgDids = await this.prisma.org_dids.findMany({
-        where: {
-          orgId
-        }
+        where: whereClause
       });
       return orgDids;
     } catch (error) {
@@ -522,37 +525,28 @@ export class AgentServiceRepository {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await this.prisma.$transaction(
-        async (prisma: {
-          [x: string]: { count: (arg0: { where: { orgId: string } }) => any };
-          org_dids: { deleteMany: (arg0: { where: { orgId: string } }) => any };
-          agent_invitations: { deleteMany: (arg0: { where: { orgId: string } }) => any };
-          org_agents: { delete: (arg0: { where: { orgId: string } }) => any };
-        }) => {
-          const referenceCounts = await Promise.all(
-            tablesToCheck.map((table) => prisma[table].count({ where: { orgId } }))
-          );
+      return await this.prisma.$transaction(async (prisma) => {
+        const referenceCounts = await Promise.all(
+          tablesToCheck.map((table) => prisma[table].count({ where: { orgId } }))
+        );
 
-          referenceCounts.forEach((count, index) => {
-            if (0 < count) {
-              throw new ConflictException(
-                `Organization ID ${orgId} is referenced in the table ${tablesToCheck[index]}`
-              );
-            }
-          });
+        referenceCounts.forEach((count, index) => {
+          if (0 < count) {
+            throw new ConflictException(`Organization ID ${orgId} is referenced in the table ${tablesToCheck[index]}`);
+          }
+        });
 
-          // Concurrently delete related records
-          const [orgDid, agentInvitation] = await Promise.all([
-            prisma.org_dids.deleteMany({ where: { orgId } }),
-            prisma.agent_invitations.deleteMany({ where: { orgId } })
-          ]);
+        // Concurrently delete related records
+        const [orgDid, agentInvitation] = await Promise.all([
+          prisma.org_dids.deleteMany({ where: { orgId } }),
+          prisma.agent_invitations.deleteMany({ where: { orgId } })
+        ]);
 
-          // Delete the organization agent
-          const deleteOrgAgent = await prisma.org_agents.delete({ where: { orgId } });
+        // Delete the organization agent
+        const deleteOrgAgent = await prisma.org_agents.delete({ where: { orgId } });
 
-          return { orgDid, agentInvitation, deleteOrgAgent };
-        }
-      );
+        return { orgDid, agentInvitation, deleteOrgAgent };
+      });
     } catch (error) {
       this.logger.error(`[deleteOrgAgentByOrg] - Error deleting org agent record: ${error.message}`);
       throw error;

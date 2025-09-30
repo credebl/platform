@@ -238,16 +238,13 @@ export class CommonService {
    * This function is used to handle errors in apps with RpcException
    */
   handleError(error): Promise<void> {
-    if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+    if (error?.status?.message?.error) {
       throw new RpcException({
-        message: error?.status?.message?.error?.reason
-          ? error?.status?.message?.error?.reason
-          : error?.status?.message?.error,
-        statusCode: error?.status?.code
+        message: error.status.message.error.reason || error.status.message.error,
+        statusCode: error.status.code ?? HttpStatus.INTERNAL_SERVER_ERROR
       });
-    } else {
-      throw new RpcException(error.response ? error.response : error);
     }
+    throw new RpcException(error.response || error);
   }
 
   async checkAgentHealth(baseUrl: string, apiKey: string): Promise<boolean> {

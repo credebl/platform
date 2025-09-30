@@ -2,7 +2,28 @@
 import { Controller } from '@nestjs/common'; // Import the common service in the library
 import { CloudWalletService } from './cloud-wallet.service'; // Import the common service in connection module
 import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs microservices package
-import { IAcceptOffer, ICreateCloudWalletDid, IReceiveInvitation, IAcceptProofRequest, IProofRequestRes, ICloudBaseWalletConfigure, ICreateCloudWallet, IGetProofPresentation, IGetProofPresentationById, IGetStoredWalletInfo, IStoredWalletDetails, ICreateConnection, IConnectionInvitationResponse, IWalletDetailsForDidList, IConnectionDetailsById, ITenantDetail, ICredentialDetails, GetAllCloudWalletConnections, IBasicMessage, IBasicMessageDetails } from '@credebl/common/interfaces/cloud-wallet.interface';
+import {
+  IAcceptOffer,
+  ICreateCloudWalletDid,
+  IReceiveInvitation,
+  IAcceptProofRequest,
+  IProofRequestRes,
+  ICloudBaseWalletConfigure,
+  ICreateCloudWallet,
+  IGetProofPresentation,
+  IGetProofPresentationById,
+  IGetStoredWalletInfo,
+  IStoredWalletDetails,
+  ICreateConnection,
+  IConnectionInvitationResponse,
+  IWalletDetailsForDidList,
+  IConnectionDetailsById,
+  ITenantDetail,
+  ICredentialDetails,
+  GetAllCloudWalletConnections,
+  IBasicMessage,
+  IBasicMessageDetails
+} from '@credebl/common/interfaces/cloud-wallet.interface';
 
 @Controller()
 export class CloudWalletController {
@@ -54,7 +75,7 @@ export class CloudWalletController {
   }
 
   @MessagePattern({ cmd: 'cloud-wallet-did-list' })
-  async getDidList(walletDetails: IWalletDetailsForDidList): Promise<Response> {
+  async getDidList(walletDetails: IWalletDetailsForDidList): Promise<IProofRequestRes[]> {
     return this.cloudWalletService.getDidList(walletDetails);
   }
 
@@ -62,7 +83,6 @@ export class CloudWalletController {
   async getconnectionById(connectionDetails: IConnectionDetailsById): Promise<Response> {
     return this.cloudWalletService.getconnectionById(connectionDetails);
   }
-
 
   @MessagePattern({ cmd: 'get-all-cloud-wallet-connections-list-by-id' })
   async getAllconnectionById(connectionDetails: GetAllCloudWalletConnections): Promise<Response> {
@@ -73,7 +93,7 @@ export class CloudWalletController {
   async getCredentialList(tenantDetails: ITenantDetail): Promise<Response> {
     return this.cloudWalletService.getCredentialListById(tenantDetails);
   }
-  
+
   @MessagePattern({ cmd: 'wallet-credential-by-record-id' })
   async getCredentialByCredentialRecordId(credentialDetails: ICredentialDetails): Promise<Response> {
     return this.cloudWalletService.getCredentialByRecord(credentialDetails);
@@ -88,5 +108,4 @@ export class CloudWalletController {
   async sendBasicMessage(messageDetails: IBasicMessageDetails): Promise<Response> {
     return this.cloudWalletService.sendBasicMessage(messageDetails);
   }
-  
 }

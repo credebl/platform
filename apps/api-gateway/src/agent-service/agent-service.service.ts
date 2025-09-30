@@ -1,5 +1,4 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
 import { user } from '@prisma/client';
 import { BaseService } from 'libs/service/base.service';
 import { AgentSpinupDto } from './dto/agent-service.dto';
@@ -10,6 +9,7 @@ import { CreateDidDto } from './dto/create-did.dto';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class AgentService extends BaseService {

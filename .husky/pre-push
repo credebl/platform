@@ -1,0 +1,91 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# ANSI colors
+RED="\033[0;31m"
+YELLOW="\033[0;33m"
+CYAN="\033[0;36m"
+GREEN="\033[0;32m"
+RESET="\033[0m"
+
+echo "🔒 Checking commit signatures..."
+
+while read local_ref local_sha remote_ref remote_sha; do
+  # Determine range of commits
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    range="$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  unsigned_commits=""
+
+  # Loop through each commit in range
+  for commit in $(git rev-list $range); do
+    # Skip merge commits
+    parent_count=$(git rev-list --parents -n 1 $commit | awk '{print NF-1}')
+    if [ "$parent_count" -gt 1 ]; then
+      echo "${CYAN}ℹ️  Skipping merge commit $commit${RESET}"
+      continue
+    fi
+    sig_status=$(git log --format='%G?' -n 1 $commit)	
+    # Currently only check for "N" - for no signature.
+    if [ "$sig_status" = "N" ]; then
+      unsigned_commits="$unsigned_commits $commit"
+    fi
+  done
+
+  # If there are unsigned commits, prompt the developer
+  if [ -n "$unsigned_commits" ]; then
+    echo "${RED}❌ Found unsigned commits:${RESET} $unsigned_commits"
+    echo
+    echo "${YELLOW}Do you want to automatically sign these commits? [y/N]${RESET}"
+    read -r answer </dev/tty
+
+    if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+      # The earliest local unsigned commit is the last in the list
+      earliest_commit=$(echo $unsigned_commits | awk '{print $NF}')
+      parent_commit=$(git rev-parse "${earliest_commit}^")
+
+      echo "${CYAN}🔧 Auto-signing earliest local unsigned commit $earliest_commit...${RESET}"
+      # Avoid flattening of merge commits
+      # Not sure, if we really want to make it this complex, ideally it should be fine even if we flatten merge commits.
+      # Unless, the merge commit appears on the local branch, when trying to sync with the upstreams
+      # If we face any issues doing this, we revert to either flattening or maybe check the '--rebase-merges' feasibility. Considering the requirement of git version
+      git rebase --onto "$parent_commit" "$parent_commit" \
+        --exec 'if [ $(git rev-list --parents -n 1 HEAD | awk "{print NF-1}") -eq 1 ]; then git commit --amend -sS --no-edit; else echo "Skipping merge commit $(git rev-parse --short HEAD)"; fi'
+
+      echo "${GREEN}✅ Earliest unsigned commit has been signed.${RESET}"
+      echo "Please push again: git push --force-with-lease"
+      exit 1
+    else
+      echo "${YELLOW}You can manually sign commits using:${RESET}"
+      echo
+      # Latest commit (HEAD)
+      echo "  - For the latest commit (HEAD):"
+      echo "      git commit --amend -sS --no-edit"
+      echo
+      # Earliest local unsigned commit
+      earliest_commit=$(echo $unsigned_commits | awk '{print $NF}')
+      short_hash=$(git rev-parse --short $earliest_commit)
+      parent_commit=$(git rev-parse "${earliest_commit}^")
+      echo "  - For the earliest unsigned commit $short_hash (skipping merge commits):"
+      echo "      git rebase --onto $parent_commit $parent_commit \\"
+      echo "        --exec 'if [ \$(git rev-list --parents -n 1 HEAD | awk \"{print NF-1}\") -eq 1 ]; then git commit --amend -sS --no-edit; else echo \"Skipping merge commit \$(git rev-parse --short HEAD)\"; fi'"
+      echo
+      echo "Then push normally with:"
+      echo "      git push"
+      echo
+      echo "Helpful resources:"
+      echo "   - GPG signing: https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits"
+      echo
+      echo "${CYAN}💡 Tip: Enable automatic signing for all commits:${RESET}"
+      echo "   git config --global commit.gpgsign true"
+      echo "   git config --global user.signingkey <YOUR_KEY_ID>"
+      echo
+      exit 1
+    fi
+  fi
+done
+
+echo "${GREEN}✅ No unsigned commits found${RESET}"

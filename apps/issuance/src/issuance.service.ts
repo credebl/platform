@@ -149,9 +149,8 @@ export class IssuanceService {
       const { orgId, credentialDefinitionId, comment, credentialData, isValidateSchema } = payload || {};
 
       if (payload.credentialType === IssueCredentialType.INDY) {
-        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-          credentialDefinitionId
-        );
+        const schemaResponse: SchemaDetails =
+          await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
         if (schemaResponse?.attributes) {
           const schemaResponseError = [];
           const attributesArray: IAttributes[] = JSON.parse(schemaResponse.attributes);
@@ -342,9 +341,8 @@ export class IssuanceService {
         isValidateSchema
       } = payload;
       if (credentialType === IssueCredentialType.INDY) {
-        const schemadetailsResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-          credentialDefinitionId
-        );
+        const schemadetailsResponse: SchemaDetails =
+          await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
 
         if (schemadetailsResponse?.attributes) {
           const schemadetailsResponseError = [];
@@ -528,7 +526,7 @@ export class IssuanceService {
   }> {
     try {
       return this.issuanceServiceProxy
-        .send<string>(pattern, payload)
+        .send(pattern, payload)
         .pipe(
           map((response) => ({
             response
@@ -706,17 +704,13 @@ export class IssuanceService {
       this.logger.error(
         `[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`
       );
-      if (error && error?.status && error?.status?.message && error?.status?.message?.error) {
+      if (error?.status?.message?.error) {
         throw new RpcException({
-          message:
-            error?.status?.message?.error?.reason ||
-            error?.status?.message?.error?.message ||
-            error?.status?.message?.error,
-          statusCode: error?.status?.code
+          message: error.status.message.error.reason || error.status.message.error,
+          statusCode: error.status?.code ?? HttpStatus.INTERNAL_SERVER_ERROR
         });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
       }
+      throw new RpcException(error.response || error);
     }
   }
 
@@ -792,9 +786,8 @@ export class IssuanceService {
       }
 
       if (IssueCredentialType.INDY === credentialType) {
-        const schemaResponse: SchemaDetails = await this.issuanceRepository.getCredentialDefinitionDetails(
-          credentialDefinitionId
-        );
+        const schemaResponse: SchemaDetails =
+          await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
 
         let attributesArray: IAttributes[] = [];
         if (schemaResponse?.attributes) {

@@ -54,12 +54,13 @@ import { UserAccessGuard } from '../authz/guards/user-access-guard';
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { ClientTokenDto } from './dtos/client-token.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
 @ApiTags('organizations')
-@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class OrganizationController {
   constructor(
     private readonly organizationService: OrganizationService,
@@ -788,5 +789,17 @@ export class OrganizationController {
       message: ResponseMessages.organisation.success.orgInvitationDeleted
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/generateIssuerApiToken')
+  @ApiExcludeEndpoint()
+  @ApiOperation({
+    summary: 'Generate API Token for the issuer',
+    description: 'Generate API Token for the issuer'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async generateApiToken(@Body() clientTokenDto: ClientTokenDto, @Res() res: Response): Promise<Response> {
+    const finalResponse = await this.organizationService.generateClientApiToken(clientTokenDto);
+    return res.status(HttpStatus.OK).header('Content-Type', 'application/json').send(finalResponse);
   }
 }

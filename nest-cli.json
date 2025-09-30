@@ -286,6 +286,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/logger/tsconfig.lib.json"
       }
+    },
+    "oid4vc-issuance": {
+      "type": "application",
+      "root": "apps/oid4vc-issuance",
+      "entryFile": "main",
+      "sourceRoot": "apps/oid4vc-issuance/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/oid4vc-issuance/tsconfig.app.json"
+      }
     }
   }
 }

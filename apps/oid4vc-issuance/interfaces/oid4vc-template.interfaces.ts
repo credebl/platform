@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { Display } from './oidc-issuance.interfaces';
+import { Display } from './oid4vc-issuance.interfaces';
 
 export interface CredentialAttribute {
   mandatory?: boolean;
@@ -21,6 +21,8 @@ export interface CreateCredentialTemplate {
   attributes: Prisma.JsonValue;
   appearance?: Prisma.JsonValue;
   issuerId: string;
+  vct?: string;
+  doctype?: string;
 }
 
 export interface UpdateCredentialTemplate extends Partial<CreateCredentialTemplate> {}

@@ -32,6 +32,7 @@ import { ContextModule } from '@credebl/context/contextModule';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { Oid4vcIssuanceModule } from './oid4vc-issuance/oid4vc-issuance.module';
 
 @Module({
   imports: [
@@ -64,7 +65,8 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
     GlobalConfigModule,
     CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
     GeoLocationModule,
-    CloudWalletModule
+    CloudWalletModule,
+    Oid4vcIssuanceModule
   ],
   controllers: [AppController],
   providers: [

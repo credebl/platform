@@ -53,7 +53,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { Invitation, ProviderType, SessionType, TokenType, UserRole } from '@credebl/enum/enum';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
-import { AwsService } from '@credebl/aws';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import {
   ISendVerificationEmail,
@@ -82,8 +81,6 @@ export class UserService {
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
     private readonly userRepository: UserRepository,
-    private readonly awsService: AwsService,
-    private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient

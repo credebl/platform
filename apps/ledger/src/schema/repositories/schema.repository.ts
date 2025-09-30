@@ -5,7 +5,6 @@ import { ICredDefWithCount, IPlatformSchemasWithOrg } from '@credebl/common/inte
 import { ISaveSchema, ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { Prisma, ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { SchemaType, SortValue } from '@credebl/enum/enum';
-
 import { ISchemaId } from '../schema.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';

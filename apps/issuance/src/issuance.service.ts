@@ -66,7 +66,7 @@ import { convertUrlToDeepLinkUrl, getAgentUrl, paginator } from '@credebl/common
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import {
@@ -105,7 +105,7 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
-    private readonly awsService: AwsService,
+    private readonly storageService: StorageService,
     @InjectQueue('bulk-issuance') private readonly bulkIssuanceQueue: Queue,
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     @Inject(ContextStorageServiceKey)
@@ -486,7 +486,9 @@ export class IssuanceService {
       return message.response;
     } catch (error) {
       this.logger.error(
-        `[storeIssuanceObjectReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(error)}`
+        `[storeIssuanceObjectReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(
+          error
+        )}`
       );
       throw error;
     }
@@ -1257,9 +1259,8 @@ export class IssuanceService {
         credentialPayload.schemaName = credentialDetails.schemaName;
       }
 
-      const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
-
-      const csvData: string = getFileDetails.Body.toString();
+      const getFileDetails = await this.storageService.getFile(importFileDetails.fileKey);
+      const csvData: string = getFileDetails.toString();
 
       const parsedData = paParse(csvData, {
         header: true,

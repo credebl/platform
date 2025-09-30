@@ -108,6 +108,7 @@ export enum CommonConstants {
   URL_SERVER_STATUS = '/status',
   URL_AGENT_WRITE_DID = '/dids/write',
   URL_AGENT_GET_DID = '/dids',
+  // agent status
   URL_AGENT_GET_ENDPOINT = '/agent',
 
   // sign data from agent
@@ -150,7 +151,6 @@ export enum CommonConstants {
 
   // (Platform) admin permissions
   PERMISSION_TENANT_MGMT = 'Tenant Management',
-  PERMISSION_ROLE_MGMT = 'Role Management',
   PERMISSION_ORG_REPORTS = 'Organization Reports',
   PERMISSION_TENANT_REPORTS = 'Tenant Reports',
 
@@ -383,7 +383,8 @@ export enum CommonConstants {
   GET_VERIFIED_PROOF = 'get-verified-proof',
   GET_QUESTION_ANSWER_RECORD = 'get-question-answer-record',
   SEND_QUESTION = 'send-question',
-  SEND_BASIC_MESSAGE = 'send-basic-message'
+  SEND_BASIC_MESSAGE = 'send-basic-message',
+  ENCODING = 'base64'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

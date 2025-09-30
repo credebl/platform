@@ -309,7 +309,7 @@ export class AgentServiceRepository {
 
   async getLedgerDetails(name: string[] | string): Promise<IOrgLedgers[]> {
     try {
-      let whereClause;
+      let whereClause: { name: string | { in: string[] } };
 
       if (Array.isArray(name)) {
         whereClause = {
@@ -525,6 +525,7 @@ export class AgentServiceRepository {
     ];
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return await this.prisma.$transaction(async (prisma) => {
         const referenceCounts = await Promise.all(
           tablesToCheck.map((table) => prisma[table].count({ where: { orgId } }))

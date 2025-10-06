@@ -22,27 +22,25 @@ type Appearance = {
   display: CredentialDisplayItem[];
 };
 
+type Claim = {
+  mandatory?: boolean;
+  // value_type: string;
+  path: string[];
+  display?: AttributeDisplay[];
+};
+
 type CredentialConfig = {
   format: string;
   vct?: string;
   scope: string;
   doctype?: string;
-  claims: Record<
-    string,
-    {
-      mandatory?: boolean;
-      value_type: string;
-      display?: AttributeDisplay[];
-    }
-  >;
+  claims: Claim[];
   credential_signing_alg_values_supported: string[];
   cryptographic_binding_methods_supported: string[];
   display: { name: string; description?: string; locale?: string }[];
 };
 
-type CredentialConfigurationsSupported = {
-  credentialConfigurationsSupported: Record<string, CredentialConfig>;
-};
+type CredentialConfigurationsSupported = CredentialConfig[];
 
 // ---- Static Lists (as requested) ----
 const STATIC_CREDENTIAL_ALGS = ['ES256', 'EdDSA'] as const;
@@ -102,7 +100,7 @@ export function buildCredentialConfigurationsSupported(
   }
 ): CredentialConfigurationsSupported {
   const format = opts?.format ?? 'vc+sd-jwt';
-  const credentialConfigurationsSupported: Record<string, CredentialConfig> = {};
+  const credentialConfigurationsSupported: CredentialConfigurationsSupported = [];
   for (const t of templates) {
     // Coerce JSON fields
     const attrs = coerceJsonObject<unknown>(t.attributes);
@@ -122,7 +120,7 @@ export function buildCredentialConfigurationsSupported(
     const suffix = rowFormat === `${MSO_MDOC}` ? 'mdoc' : 'sdjwt';
 
     // key: keep your keyResolver override; otherwise include suffix
-    const key = 'function' === typeof opts?.keyResolver ? opts.keyResolver(t) : `${t.name}-${suffix}`;
+    // const key = 'function' === typeof opts?.keyResolver ? opts.keyResolver(t) : `${t.name}-${suffix}`;
 
     // vct/scope: vct only for non-mdoc; scope always uses suffix
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -136,19 +134,15 @@ export function buildCredentialConfigurationsSupported(
 
     const scopeBase = opts?.scopeVct ?? rowVct;
     const scope = `openid4vc:credential:${scopeBase}-${suffix}`;
-    const claims = Object.fromEntries(
-      Object.entries(attrs).map(([claimName, def]) => {
-        const d = def as AttributeDef;
-        return [
-          claimName,
-          {
-            value_type: d.value_type,
-            mandatory: d.mandatory ?? false, // always include, default to false
-            display: Array.isArray(d.display) ? d.display.map((x) => ({ name: x.name, locale: x.locale })) : undefined
-          }
-        ];
-      })
-    );
+    const claims = Object.entries(attrs).map(([claimName, def]) => {
+      const d = def as AttributeDef;
+      return {
+        path: [claimName],
+        // value_type: d.value_type,    // Didn't find this in draft 15
+        mandatory: d.mandatory ?? false, // always include, default to false
+        display: Array.isArray(d.display) ? d.display.map((x) => ({ name: x.name, locale: x.locale })) : undefined
+      };
+    });
 
     const display =
       app.display.map((d) => ({
@@ -158,7 +152,7 @@ export function buildCredentialConfigurationsSupported(
       })) ?? [];
 
     // assemble per-template config
-    credentialConfigurationsSupported[key] = {
+    credentialConfigurationsSupported.push({
       format: rowFormat,
       scope,
       claims,
@@ -166,12 +160,10 @@ export function buildCredentialConfigurationsSupported(
       cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS],
       display,
       ...(isMdoc ? { doctype: rowDoctype as string } : { vct: rowVct })
-    };
+    });
   }
 
-  return {
-    credentialConfigurationsSupported
-  };
+  return credentialConfigurationsSupported;
 }
 
 // Default DPoP list for issuer-level metadata (match your example)
@@ -236,7 +228,7 @@ export function buildIssuerPayload(
   return {
     display,
     dpopSigningAlgValuesSupported: opts?.dpopAlgs ?? [...ISSUER_DPOP_ALGS_DEFAULT],
-    credentialConfigurationsSupported: credentialConfigurations.credentialConfigurationsSupported ?? {},
+    credentialConfigurationsSupported: credentialConfigurations ?? [],
     batchCredentialIssuance: {
       batchSize: oidcIssuer?.batchCredentialIssuanceSize ?? batchCredentialIssuanceDefault
     }

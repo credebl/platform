@@ -239,7 +239,24 @@ export class IssuanceRepository {
         organisationId = id;
       }
 
-      const schemaId = '';
+      let schemaId = '';
+
+      if (
+        issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId ||
+        issueCredentialDto?.['credentialData']?.offer?.jsonld?.credential?.['@context'][1] ||
+        (issueCredentialDto?.state &&
+          issueCredentialDto?.['credentialData']?.proposal?.jsonld?.credential?.['@context'][1])
+      ) {
+        schemaId =
+          issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId ||
+          issueCredentialDto?.['credentialData']?.offer?.jsonld?.credential?.['@context'][1] ||
+          issueCredentialDto?.['credentialData']?.proposal?.jsonld?.credential?.['@context'][1];
+      }
+
+      let credDefId = '';
+      if (issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId) {
+        credDefId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId;
+      }
 
       const credentialDetails = await this.prisma.credentials.upsert({
         where: {
@@ -250,7 +267,9 @@ export class IssuanceRepository {
           createDateTime: issueCredentialDto?.createDateTime,
           threadId: issueCredentialDto?.threadId,
           connectionId: issueCredentialDto?.connectionId,
-          state: issueCredentialDto?.state
+          state: issueCredentialDto?.state,
+          credDefId,
+          ...(schemaId ? { schemaId } : {})
         },
         create: {
           createDateTime: issueCredentialDto?.createDateTime,
@@ -260,6 +279,7 @@ export class IssuanceRepository {
           state: issueCredentialDto?.state,
           threadId: issueCredentialDto?.threadId,
           schemaId,
+          credDefId,
           credentialExchangeId: issueCredentialDto?.id,
           orgId: organisationId
         }

@@ -21,9 +21,19 @@ export class CredentialAttributeDto {
   @IsBoolean()
   mandatory?: boolean;
 
+  // TODO: Check how do we handle claims with only path rpoperty like email, etc.
   @ApiProperty({ description: 'Type of the attribute value (string, number, date, etc.)' })
   @IsString()
   value_type: string;
+
+  @ApiProperty({
+    type: [String],
+    description:
+      'Claims path pointer as per the draft 15 - https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID2.html#name-claims-path-pointer'
+  })
+  @IsArray()
+  @IsString({ each: true })
+  path: string[];
 
   @ApiProperty({ type: [DisplayDto], required: false, description: 'Localized display values' })
   @IsOptional()
@@ -166,7 +176,7 @@ export class CreateCredentialTemplateDto {
     description: 'Attributes included in the credential template'
   })
   @IsObject()
-  attributes: Record<string, CredentialAttributeDto>;
+  attributes: CredentialAttributeDto[];
 
   @ApiProperty({
     type: Object,

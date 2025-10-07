@@ -27,7 +27,6 @@ RUN npm run build oid4vc-issuance
 FROM node:18-alpine
 # Install OpenSSL
 RUN apk add --no-cache openssl
-
 # Set the working directory
 WORKDIR /app
 

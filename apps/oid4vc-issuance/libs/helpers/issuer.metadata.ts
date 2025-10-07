@@ -165,9 +165,6 @@ export function buildCredentialConfigurationsSupported(
         locale: d.locale
       })) ?? [];
 
-    // debug: what was chosen (optional)
-    // console.debug(`[buildCredentialConfigurationsSupported] template=${t.id} rowFormat=${rowFormat} useDoctype=${rowDoctype} useVct=${rowVct} scope=${scope}`);
-
     credentialConfigurationsSupported[key] = {
       format: rowFormat,
       scope,

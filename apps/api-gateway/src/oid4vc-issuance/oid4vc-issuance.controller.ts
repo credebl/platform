@@ -56,8 +56,8 @@ import {
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('OID4VC')
-@ApiUnauthorizedResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized', type: UnauthorizedErrorDto })
-@ApiForbiddenResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden', type: ForbiddenErrorDto })
+@ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
+@ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class Oid4vcIssuanceController {
   constructor(private readonly oid4vcIssuanceService: Oid4vcIssuanceService) {}
   /**

@@ -15,6 +15,9 @@ catalogs:
     '@nestjs/cache-manager':
       specifier: ^3.0.1
       version: 3.0.1
+    '@nestjs/cli':
+      specifier: ^11.0.10
+      version: 11.0.10
     '@nestjs/common':
       specifier: ^11.1.6
       version: 11.1.6
@@ -42,6 +45,9 @@ catalogs:
     '@nestjs/schedule':
       specifier: ^6.0.1
       version: 6.0.1
+    '@nestjs/schematics':
+      specifier: ^11.0.7
+      version: 11.0.7
     '@nestjs/swagger':
       specifier: ^11.2.0
       version: 11.2.0
@@ -54,6 +60,18 @@ catalogs:
     '@nestjs/websockets':
       specifier: ^11.1.6
       version: 11.1.6
+    nestjs-cls:
+      specifier: ^6.0.1
+      version: 6.0.1
+    nestjs-rate-limiter:
+      specifier: ^3.1.0
+      version: 3.1.0
+    nestjs-supabase-auth:
+      specifier: ^1.0.9
+      version: 1.0.9
+    nestjs-typeorm-paginate:
+      specifier: ^4.0.4
+      version: 4.1.0
 
 importers:
 
@@ -255,16 +273,16 @@ importers:
         specifier: ^2.15.1
         version: 2.29.3
       nestjs-cls:
-        specifier: ^6.0.1
+        specifier: 'catalog:'
         version: 6.0.1(@nestjs/common@11.1.6(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.6)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       nestjs-rate-limiter:
-        specifier: ^3.1.0
+        specifier: 'catalog:'
         version: 3.1.0
       nestjs-supabase-auth:
-        specifier: ^1.0.9
+        specifier: 'catalog:'
         version: 1.0.9
       nestjs-typeorm-paginate:
-        specifier: ^4.0.4
+        specifier: 'catalog:'
         version: 4.1.0(@nestjs/common@11.1.6(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(typeorm@0.3.27(ioredis@5.8.0)(pg@8.16.3)(redis@3.1.2)(reflect-metadata@0.1.14)(ts-node@10.9.2(@types/node@20.19.17)(typescript@5.9.2)))
       node-html-to-image:
         specifier: ^4.0.0
@@ -352,13 +370,13 @@ importers:
         version: 1.6.11
     devDependencies:
       '@nestjs/cli':
-        specifier: ^11.0.10
+        specifier: 'catalog:'
         version: 11.0.10(@types/node@20.19.17)
       '@nestjs/schematics':
-        specifier: ^11.0.7
+        specifier: 'catalog:'
         version: 11.0.7(chokidar@4.0.3)(typescript@5.9.2)
       '@nestjs/testing':
-        specifier: ^11.1.6
+        specifier: 'catalog:'
         version: 11.1.6(@nestjs/common@11.1.6(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.6)(@nestjs/microservices@11.1.6)(@nestjs/platform-express@11.1.6)
       '@types/express':
         specifier: ^4.17.17

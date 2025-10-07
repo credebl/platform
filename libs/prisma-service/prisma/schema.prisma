@@ -151,6 +151,7 @@ model organisation {
   agent_invitations     agent_invitations[]
   credential_definition credential_definition[]
   file_upload           file_upload[]
+  oid4vc_credentials oid4vc_credentials[]
 }
 
 model org_invitations {
@@ -583,6 +584,21 @@ model oidc_issuer {
   @@index([orgAgentId])
 }
 
+model oid4vc_credentials {
+  id                   String        @id @default(uuid()) @db.Uuid
+  orgId                String        @db.Uuid
+  offerId              String        @unique
+  credentialOfferId    String
+  state                String
+  contextCorrelationId String
+  createdBy            String        @db.Uuid
+  createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedBy        String        @db.Uuid
+
+  organisation         organisation  @relation(fields: [orgId], references: [id])
+}
+
 enum SignerOption {
   did
   x509
@@ -605,3 +621,4 @@ model credential_templates {
   updatedAt     DateTime    @updatedAt
   signerOption  SignerOption
 }
+

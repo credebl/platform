@@ -1,3 +1,5 @@
+import { OpenId4VcIssuanceSessionState } from '@credebl/enum/enum';
+
 /* ---------------------------------------------------------
  * Enums
  * --------------------------------------------------------- */
@@ -36,7 +38,7 @@ export interface CredentialPayload {
 }
 
 export interface CredentialRequest {
-  credentialSupportedId: string;
+  credentialSupportedId?: string;
   templateId: string;
   format: CredentialFormat; // "vc+sd-jwt" | "mso_mdoc"
   payload: CredentialPayload; // user-supplied payload (without vct)
@@ -48,4 +50,18 @@ export interface CreateOidcCredentialOffer {
   // signerMethod: SignerMethodOption;      // only option selector
   authenticationType: AuthenticationType; // only option selector
   credentials: CredentialRequest[]; // one or more credentials
+}
+
+export interface GetAllCredentialOffer {
+  publicIssuerId?: string;
+  preAuthorizedCode?: string;
+  state?: OpenId4VcIssuanceSessionState;
+  credentialOfferUri?: string;
+  authorizationCode?: string;
+}
+
+export interface UpdateCredentialRequest {
+  issuerId: string;
+  credentialOfferId: string;
+  issuerMetadata: object;
 }

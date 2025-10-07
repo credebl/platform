@@ -146,7 +146,7 @@ export class CreateCredentialTemplateDto {
   @ApiPropertyOptional({
     description:
       'Verifiable Credential Type (required when format is "vc+sd-jwt"; must NOT be provided when format is "mso_mdoc")',
-    example: 'org.iso.18013.5.1.mDL'
+    example: 'BirthCertificateCredential-sdjwt'
   })
   @ValidateIf((o: CreateCredentialTemplateDto) => 'vc+sd-jwt' === o.format)
   @IsString()

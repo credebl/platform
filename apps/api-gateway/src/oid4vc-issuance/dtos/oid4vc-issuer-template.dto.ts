@@ -79,21 +79,21 @@ export class AppearanceDto {
   @ApiPropertyOptional({
     example: [
       {
-        locale: 'en',
-        name: 'Birth Certificate',
-        description: 'Official record of birth',
+        locale: 'de',
+        name: 'Geburtsurkunde',
+        description: 'Offizielle Geburtsbescheinigung',
         logo: {
           uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
           alt_text: 'abc_logo'
         }
       },
       {
-        locale: 'ar',
-        name: 'شهادة الميلاد',
-        description: 'سجل رسمي للولادة',
+        locale: 'en',
+        name: 'Birth Certificate',
+        description: 'Official record of birth',
         logo: {
           uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
-          alt_text: 'شعار abc'
+          alt_text: 'abc_logo'
         }
       }
     ]

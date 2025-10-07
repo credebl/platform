@@ -104,7 +104,8 @@
       "@credebl/context/*": [
         "libs/context/src/*"
       ]
-    }
+    },
+    "baseUrl": "./"
   },
   "exclude": [
     "node_modules",

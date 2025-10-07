@@ -102,7 +102,11 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
     [
       String(CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER),
       String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_CREATE)
-    ]
+    ],
+    [String(CommonConstants.OIDC_ISSUER_SESSIONS_UPDATE_OFFER), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET)],
+    [String(CommonConstants.OIDC_ISSUER_SESSIONS_BY_ID), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET)],
+    [String(CommonConstants.OIDC_ISSUER_SESSIONS), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)],
+    [String(CommonConstants.OIDC_DELETE_CREDENTIAL_OFFER), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);

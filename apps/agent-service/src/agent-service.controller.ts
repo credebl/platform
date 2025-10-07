@@ -325,37 +325,60 @@ export class AgentServiceController {
     return this.agentServiceService.getAgentDetails(payload.orgId);
   }
 
-  @MessagePattern({ cmd: 'agent-create-oidc-issuer' })
+  @MessagePattern({ cmd: 'agent-create-oid4vc-issuer' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcIssuerCreate(payload: { issuerCreation; url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcIssuerCreate(payload.issuerCreation, payload.url, payload.orgId);
   }
-  @MessagePattern({ cmd: 'delete-oidc-issuer' })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async oidcDeleteIssuer(payload: { url: string; orgId: string }): Promise<any> {
+  @MessagePattern({ cmd: 'delete-oid4vc-issuer' })
+  async oidcDeleteIssuer(payload: { url: string; orgId: string }): Promise<object | string> {
     return this.agentServiceService.deleteOidcIssuer(payload.url, payload.orgId);
   }
-  @MessagePattern({ cmd: 'agent-create-oidc-template' })
+  @MessagePattern({ cmd: 'agent-create-oid4vc-template' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcIssuerTemplate(payload: { templatePayload; url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcIssuerTemplate(payload.templatePayload, payload.url, payload.orgId);
   }
-  //TODO: change message for oidc
-  @MessagePattern({ cmd: 'oidc-get-issuer-by-id' })
+  //TODO: change message for oid4vc
+  @MessagePattern({ cmd: 'oid4vc-get-issuer-by-id' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcGetIssuerById(payload: { url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcGetIssuerById(payload.url, payload.orgId);
   }
 
-  @MessagePattern({ cmd: 'oidc-get-issuers' })
+  @MessagePattern({ cmd: 'oid4vc-get-issuers-agent-service' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcGetIssuers(payload: { url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcGetIssuers(payload.url, payload.orgId);
   }
 
-  @MessagePattern({ cmd: 'agent-service-oidc-create-credential-offer' })
+  @MessagePattern({ cmd: 'agent-service-oid4vc-create-credential-offer' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcCreateCredentialOffer(payload: { credentialPayload; url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcCreateCredentialOffer(payload.credentialPayload, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oid4vc-update-credential-offer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcUpdateCredentialOffer(payload: { issuanceMetadata; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcUpdateCredentialOffer(payload.issuanceMetadata, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oid4vc-get-credential-offer-by-id' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcGetCredentialOfferById(payload: { url: string; orgId: string; offerId: string }): Promise<any> {
+    return this.agentServiceService.oidcGetCredentialOfferById(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oid4vc-get-all-credential-offers' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcGetAllCredentialOffers(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcGetAllCredentialOffers(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oid4vc-delete-credential-offer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcDeleteCredentialOffer(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcDeleteCredentialOffer(payload.url, payload.orgId);
   }
 }

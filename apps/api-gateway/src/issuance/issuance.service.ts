@@ -27,9 +27,9 @@ import {
   IIssuedCredential
 } from '@credebl/common/interfaces/issuance.interface';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
-import { oidc_issuer, user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
+import { user } from '@prisma/client';
 @Injectable()
 export class IssuanceService extends BaseService {
   constructor(
@@ -271,92 +271,5 @@ export class IssuanceService extends BaseService {
       fileId
     };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'issued-file-data-and-file-details', payload);
-  }
-
-  // OIDC methods
-
-  async oidcIssuerCreate(
-    issueCredentialDto: IssuerCreationDto,
-    orgId: string,
-    userDetails: user
-  ): Promise<oidc_issuer> {
-    const payload = { issueCredentialDto, orgId, userDetails };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-issuer-create', payload);
-  }
-
-  async oidcIssuerUpdate(issueUpdationDto: IssuerUpdationDto, orgId: string, userDetails: user) {
-    const payload = { issueUpdationDto, orgId, userDetails };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-issuer-update', payload);
-  }
-
-  async oidcGetIssuerById(issuerId: string, orgId: string) {
-    const payload = { issuerId, orgId };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-issuer-get-by-id', payload);
-  }
-
-  async oidcGetIssuers(orgId: string) {
-    const payload = { orgId };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-get-issuers', payload);
-  }
-
-  async oidcDeleteIssuer(userDetails: user, orgId: string, issuerId: string) {
-    const payload = { issuerId, orgId, userDetails };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-delete-issuer', payload);
-  }
-
-  async deleteTemplate(userDetails: user, orgId: string, templateId: string) {
-    const payload = { templateId, orgId, userDetails };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-delete', payload);
-  }
-
-  async updateTemplate(
-    userDetails: user,
-    orgId: string,
-    templateId: string,
-    dto: UpdateCredentialTemplateDto,
-    issuerId: string
-  ) {
-    const payload = { templateId, orgId, userDetails, dto, issuerId };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-update', payload);
-  }
-
-  async findByIdTemplate(userDetails: user, orgId: string, templateId: string) {
-    const payload = { templateId, orgId, userDetails };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-find-id', payload);
-  }
-
-  async findAllTemplate(userDetails: user, orgId: string) {
-    const payload = { orgId, userDetails };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-find-all', payload);
-  }
-
-  async createTemplate(
-    CredentialTemplate: CreateCredentialTemplateDto,
-    userDetails: user,
-    orgId: string,
-    issuerId: string
-  ) {
-    const payload = { CredentialTemplate, orgId, userDetails, issuerId };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-template-create', payload);
-  }
-
-  async createOidcCredentialOffer(
-    oidcCredentialPayload: CreateOidcCredentialOfferDto,
-    userDetails: user,
-    orgId: string,
-    issuerId: string
-  ) {
-    const payload = { oidcCredentialPayload, orgId, userDetails, issuerId };
-    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oidc-create-credential-offer', payload);
-  }
-
-  oidcIssueCredentialWebhook(
-    oidcIssueCredentialDto,
-    id: string
-  ): Promise<{
-    response: object;
-  }> {
-    const payload = { oidcIssueCredentialDto, id };
-    return this.natsClient.sendNats(this.issuanceProxy, 'webhook-oidc-issue-credential', payload);
   }
 }

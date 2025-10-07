@@ -117,12 +117,14 @@ export enum CommonConstants {
   // CREATE KEYS
   CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
 
-  // OIDC URLs
+  // OID4VC URLs
   URL_OIDC_ISSUER_CREATE = '/openid4vc/issuer',
   /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase, @typescript-eslint/no-duplicate-enum-values */
   URL_OIDC_GET_ISSUES = '/openid4vc/issuer',
   URL_OIDC_ISSUER_UPDATE = '/openid4vc/issuer/#',
   URL_OIDC_ISSUER_SESSIONS_CREATE = '/openid4vc/issuance-sessions/create-credential-offer',
+  URL_OIDC_ISSUER_SESSIONS_GET = '/openid4vc/issuance-sessions/#',
+  URL_OIDC_ISSUER_SESSIONS_GET_ALL = '/openid4vc/issuance-sessions',
 
   // Nested attribute separator
   NESTED_ATTRIBUTE_SEPARATOR = '~',
@@ -371,6 +373,7 @@ export enum CommonConstants {
   NOTIFICATION_SERVICE = 'notification',
   GEO_LOCATION_SERVICE = 'geo-location',
   CLOUD_WALLET_SERVICE = 'cloud-wallet',
+  OIDC4VC_ISSUANCE_SERVICE = 'oid4vc-issuance',
 
   ACCEPT_OFFER = '/didcomm/credentials/accept-offer',
   SEED_LENGTH = 32,
@@ -394,13 +397,17 @@ export enum CommonConstants {
 
   AFFECTED_RECORDS_THRESHOLD_PERCENTAGE_FOR_DB_ALERT = 30,
 
-  // OIDC
-  OIDC_ISSUER_CREATE = 'create-oidc-issuer',
-  OIDC_ISSUER_DELETE = 'delete-oidc-issuer',
-  OIDC_GET_ALL_ISSUERS = 'get-all-oidc-issuers',
+  // OID4VC
+  OIDC_ISSUER_CREATE = 'create-oid4vc-issuer',
+  OIDC_ISSUER_DELETE = 'delete-oid4vc-issuer',
+  OIDC_GET_ALL_ISSUERS = 'get-all-oid4vc-issuers',
   OIDC_ISSUER_BY_ID = 'get-issuer-by-id',
-  OIDC_ISSUER_TEMPLATE = 'create-oidc-template',
-  OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER = 'create-oidc-credential-offer'
+  OIDC_ISSUER_TEMPLATE = 'create-oid4vc-template',
+  OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER = 'create-oid4vc-credential-offer',
+  OIDC_ISSUER_SESSIONS_UPDATE_OFFER = 'update-oid4vc-credential-offer',
+  OIDC_ISSUER_SESSIONS_BY_ID = 'get-oid4vc-session-by-id',
+  OIDC_ISSUER_SESSIONS = 'get-oid4vc-sessions',
+  OIDC_DELETE_CREDENTIAL_OFFER = 'delete-oid4vc-credential-offer'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

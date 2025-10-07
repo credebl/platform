@@ -8,6 +8,7 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package.json ./
+COPY pnpm-workspace.yaml ./
 #COPY package-lock.json ./
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
@@ -20,8 +21,9 @@ COPY . .
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
 RUN cd libs/prisma-service && npx prisma generate
 
-# Build the issuance service
-RUN pnpm run build issuance
+# Build the oid4vc-issuance service
+RUN npm run build oid4vc-issuance
+
 
 # Stage 2: Create the final image
 FROM node:18-alpine
@@ -38,8 +40,6 @@ COPY --from=build /app/dist/apps/oid4vc-issuance/ ./dist/apps/oid4vc-issuance/
 COPY --from=build /app/libs/ ./libs/
 #COPY --from=build /app/package.json ./  
 COPY --from=build /app/node_modules  ./node_modules
-# COPY --from=build /app/uploadedFiles ./uploadedFiles
-
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/oid4vc-issuance/main.js"]

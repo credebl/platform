@@ -38,12 +38,12 @@ export class Oid4vcIssuanceController {
 
   @MessagePattern({ cmd: 'oid4vc-issuer-get-by-id' })
   async oidcGetIssuerById(payload: {
-    issuerId: string;
+    id: string;
     orgId: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }): Promise<any> {
-    const { issuerId, orgId } = payload;
-    return this.oid4vcIssuanceService.oidcIssuerGetById(issuerId, orgId);
+    const { id, orgId } = payload;
+    return this.oid4vcIssuanceService.oidcIssuerGetById(id, orgId);
   }
 
   @MessagePattern({ cmd: 'oid4vc-get-issuers-issuance' })
@@ -56,11 +56,11 @@ export class Oid4vcIssuanceController {
   async deleteOidcIssuer(payload: {
     orgId: string;
     userDetails: user;
-    issuerId: string;
+    id: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }): Promise<any> {
-    const { orgId, userDetails, issuerId } = payload;
-    return this.oid4vcIssuanceService.deleteOidcIssuer(orgId, userDetails, issuerId);
+    const { orgId, userDetails, id } = payload;
+    return this.oid4vcIssuanceService.deleteOidcIssuer(orgId, userDetails, id);
   }
 
   @MessagePattern({ cmd: 'oid4vc-template-create' })

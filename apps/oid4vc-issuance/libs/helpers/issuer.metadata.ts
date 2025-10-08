@@ -47,7 +47,6 @@ type CredentialConfigurationsSupported = {
 // ---- Static Lists (as requested) ----
 const STATIC_CREDENTIAL_ALGS = ['ES256', 'EdDSA'] as const;
 const STATIC_BINDING_METHODS = ['did:key'] as const;
-const MSO_MDOC = 'mso_mdoc'; // alternative format value
 
 // Safe coercion helpers
 function coerceJsonObject<T>(v: Prisma.JsonValue): T | null {
@@ -101,10 +100,10 @@ export function buildCredentialConfigurationsSupported(
     format?: string;
   }
 ): CredentialConfigurationsSupported {
-  const format = opts?.format ?? 'vc+sd-jwt';
+  const defaultFormat = opts?.format ?? 'vc+sd-jwt';
   const credentialConfigurationsSupported: Record<string, CredentialConfig> = {};
+
   for (const t of templates) {
-    // Coerce JSON fields
     const attrs = coerceJsonObject<unknown>(t.attributes);
     const app = coerceJsonObject<unknown>(t.appearance);
 
@@ -115,27 +114,36 @@ export function buildCredentialConfigurationsSupported(
       throw new Error(`Template ${t.id}: invalid appearance JSON (missing display)`);
     }
 
-    // ---- dynamic format per row ----
+    // per-row format (allow column override)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rowFormat = (t as any).format ?? format;
-    const isMdoc = rowFormat === `${MSO_MDOC}`;
-    const suffix = rowFormat === `${MSO_MDOC}` ? 'mdoc' : 'sdjwt';
+    const rowFormat: string = (t as any).format ?? defaultFormat;
+    const isMdoc = 'mso_mdoc' === rowFormat;
+    const suffix = isMdoc ? 'mdoc' : 'sdjwt';
 
-    // key: keep your keyResolver override; otherwise include suffix
+    // key (allow override)
     const key = 'function' === typeof opts?.keyResolver ? opts.keyResolver(t) : `${t.name}-${suffix}`;
 
-    // vct/scope: vct only for non-mdoc; scope always uses suffix
+    // Resolve doctype/vct:
+    // - For mdoc: try opts.doctype -> t.doctype -> fallback to t.name (or throw if you prefer)
+    // - For sd-jwt: try opts.vct -> t.vct -> fallback to t.name
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rowDoctype: string | undefined = opts?.doctype ?? (t as any).doctype;
+    let rowDoctype: string | undefined = opts?.doctype ?? (t as any).doctype;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rowVct: string = opts?.vct ?? (t as any).vct ?? t.name;
 
-    if (isMdoc && !rowDoctype) {
-      throw new Error(`Template ${t.id}: doctype is required for mdoc format`);
+    if (isMdoc) {
+      if (!rowDoctype) {
+        // Fallback strategy: use template's name as doctype (change to throw if you want strictness)
+        rowDoctype = t.name;
+        // If you want to fail instead of fallback, uncomment next line:
+        // throw new Error(`Template ${t.id}: doctype is required for mdoc format`);
+      }
     }
 
-    const scopeBase = opts?.scopeVct ?? rowVct;
+    // Choose scope base: prefer opts.scopeVct, otherwise for mdoc use doctype, else vct
+    const scopeBase = opts?.scopeVct ?? (isMdoc ? rowDoctype : rowVct);
     const scope = `openid4vc:credential:${scopeBase}-${suffix}`;
+
     const claims = Object.fromEntries(
       Object.entries(attrs).map(([claimName, def]) => {
         const d = def as AttributeDef;
@@ -143,7 +151,7 @@ export function buildCredentialConfigurationsSupported(
           claimName,
           {
             value_type: d.value_type,
-            mandatory: d.mandatory ?? false, // always include, default to false
+            mandatory: d.mandatory ?? false,
             display: Array.isArray(d.display) ? d.display.map((x) => ({ name: x.name, locale: x.locale })) : undefined
           }
         ];
@@ -151,13 +159,12 @@ export function buildCredentialConfigurationsSupported(
     );
 
     const display =
-      app.display.map((d) => ({
+      app.display?.map((d) => ({
         name: d.name,
         description: d.description,
         locale: d.locale
       })) ?? [];
 
-    // assemble per-template config
     credentialConfigurationsSupported[key] = {
       format: rowFormat,
       scope,
@@ -169,9 +176,7 @@ export function buildCredentialConfigurationsSupported(
     };
   }
 
-  return {
-    credentialConfigurationsSupported
-  };
+  return { credentialConfigurationsSupported };
 }
 
 // Default DPoP list for issuer-level metadata (match your example)

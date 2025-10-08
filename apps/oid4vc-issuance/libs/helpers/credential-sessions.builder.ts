@@ -1,4 +1,4 @@
-// builder/credential-offer.builder.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 import { Prisma, credential_templates } from '@prisma/client';
 import { GetAllCredentialOffer, SignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
@@ -6,7 +6,7 @@ import { GetAllCredentialOffer, SignerOption } from '../../interfaces/oid4vc-iss
    Domain Types
 ============================================================================ */
 
-type ValueType = 'string' | 'date' | 'number' | 'boolean' | string;
+type ValueType = 'string' | 'date' | 'number' | 'boolean' | 'integer' | string;
 
 interface TemplateAttribute {
   display: { name: string; locale: string }[];
@@ -17,7 +17,7 @@ type TemplateAttributes = Record<string, TemplateAttribute>;
 
 export enum CredentialFormat {
   SdJwtVc = 'vc+sd-jwt',
-  Mdoc = 'mdoc'
+  Mdoc = 'mso_mdoc'
 }
 
 export enum SignerMethodOption {
@@ -105,25 +105,25 @@ export type CredentialOfferPayload = BuiltCredentialOfferBase &
    Small Utilities
 ============================================================================ */
 
-const isNil = (v: unknown): v is null | undefined => null == v;
-const isEmptyString = (v: unknown): boolean => 'string' === typeof v && '' === v.trim();
-const isRecord = (v: unknown): v is Record<string, unknown> => Boolean(v) && 'object' === typeof v && !Array.isArray(v);
+const isNil = (value: unknown): value is null | undefined => null == value;
+const isEmptyString = (value: unknown): boolean => 'string' === typeof value && '' === value.trim();
+const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && 'object' === typeof value && !Array.isArray(value);
 
 /** Map DB format string -> API enum */
-function mapDbFormatToApiFormat(db: string): CredentialFormat {
-  const norm = db.toLowerCase().replace(/_/g, '-');
-  if ('sd-jwt' === norm || 'vc+sd-jwt' === norm || 'sdjwt' === norm || 'sd+jwt-vc' === norm) {
+function mapDbFormatToApiFormat(dbFormat: string): CredentialFormat {
+  if ('sd-jwt' === dbFormat || 'vc+sd-jwt' === dbFormat || 'sdjwt' === dbFormat || 'sd+jwt-vc' === dbFormat) {
     return CredentialFormat.SdJwtVc;
   }
-  if ('mdoc' === norm || 'mso-mdoc' === norm || 'mso-mdoc' === norm) {
+  if ('mso_mdoc' === dbFormat) {
     return CredentialFormat.Mdoc;
   }
-  throw new Error(`Unsupported template format: ${db}`);
+  throw new Error(`Unsupported template format: ${dbFormat}`);
 }
 
 /** Map API enum -> id suffix required for credentialSupportedId */
-function formatSuffix(api: CredentialFormat): 'sdjwt' | 'mdoc' {
-  return api === CredentialFormat.SdJwtVc ? 'sdjwt' : 'mdoc';
+function formatSuffix(apiFormat: CredentialFormat): 'sdjwt' | 'mdoc' {
+  return apiFormat === CredentialFormat.SdJwtVc ? 'sdjwt' : 'mdoc';
 }
 
 /* ============================================================================
@@ -134,20 +134,20 @@ function formatSuffix(api: CredentialFormat): 'sdjwt' | 'mdoc' {
 function assertMandatoryClaims(
   payload: Record<string, unknown>,
   attributes: TemplateAttributes,
-  ctx: { templateId: string }
+  context: { templateId: string }
 ): void {
-  const missing: string[] = [];
-  for (const [claim, def] of Object.entries(attributes)) {
-    if (!def?.mandatory) {
+  const missingClaims: string[] = [];
+  for (const [claimName, attributeDefinition] of Object.entries(attributes)) {
+    if (!attributeDefinition?.mandatory) {
       continue;
     }
-    const val = payload[claim];
-    if (isNil(val) || isEmptyString(val)) {
-      missing.push(claim);
+    const claimValue = payload[claimName];
+    if (isNil(claimValue) || isEmptyString(claimValue)) {
+      missingClaims.push(claimName);
     }
   }
-  if (missing.length) {
-    throw new Error(`Missing mandatory claims for template "${ctx.templateId}": ${missing.join(', ')}`);
+  if (missingClaims.length) {
+    throw new Error(`Missing mandatory claims for template "${context.templateId}": ${missingClaims.join(', ')}`);
   }
 }
 
@@ -155,30 +155,130 @@ function assertMandatoryClaims(
    JsonValue → TemplateAttributes Narrowing (Type Guards)
 ============================================================================ */
 
-function isDisplayArray(v: unknown): v is { name: string; locale: string }[] {
-  return Array.isArray(v) && v.every((d) => isRecord(d) && 'string' === typeof d.name && 'string' === typeof d.locale);
-}
-
-function isTemplateAttribute(v: unknown): v is TemplateAttribute {
+function isDisplayArray(value: unknown): value is { name: string; locale: string }[] {
   return (
-    isRecord(v) && isDisplayArray(v.display) && 'boolean' === typeof v.mandatory && 'string' === typeof v.value_type
+    Array.isArray(value) &&
+    value.every(
+      (entry) =>
+        isPlainRecord(entry) && 'string' === typeof (entry as any).name && 'string' === typeof (entry as any).locale
+    )
   );
 }
 
-/** Accept `unknown` so predicate type (TemplateAttributes) is assignable to parameter type. */
-function isTemplateAttributes(v: unknown): v is TemplateAttributes {
-  if (!isRecord(v)) {
-    return false;
-  }
-  return Object.values(v).every(isTemplateAttribute);
-}
+/* ============================================================================
+   Improved ensureTemplateAttributes: runtime assert with helpful errors
+============================================================================ */
 
-/** Runtime assert + narrow Prisma.JsonValue → TemplateAttributes */
-function ensureTemplateAttributes(v: Prisma.JsonValue): TemplateAttributes {
-  if (!isTemplateAttributes(v)) {
-    throw new Error('Invalid template.attributes shape. Expecting TemplateAttributes map.');
+const ALLOWED_VALUE_TYPES: ValueType[] = ['string', 'date', 'number', 'boolean', 'integer'];
+
+function ensureTemplateAttributes(jsonValue: Prisma.JsonValue): TemplateAttributes {
+  if (!isPlainRecord(jsonValue)) {
+    throw new Error(
+      `Invalid template.attributes: expected an object map but received ${
+        null === jsonValue ? 'null' : typeof jsonValue
+      }.\n\nFix: provide an object whose keys are attribute names and whose values are attribute definitions, e.g.\n{\n  "given_name": { "mandatory": true, "value_type": "string" }\n}`
+    );
   }
-  return v;
+
+  const attributesMap = jsonValue as Record<string, unknown>;
+  const attributeKeys = Object.keys(attributesMap);
+  if (0 === attributeKeys.length) {
+    throw new Error(
+      'Invalid template.attributes: object is empty (no attributes defined).\n\nFix: add at least one attribute definition, for example:\n{\n  "given_name": { "mandatory": true, "value_type": "string" }\n}'
+    );
+  }
+
+  const problems: string[] = [];
+  const suggestedFixes: string[] = [];
+
+  for (const attributeKey of attributeKeys) {
+    const rawAttributeDef = attributesMap[attributeKey];
+
+    if (!isPlainRecord(rawAttributeDef)) {
+      problems.push(
+        `${attributeKey}: expected an object but got ${null === rawAttributeDef ? 'null' : typeof rawAttributeDef}`
+      );
+      suggestedFixes.push(
+        `Replace attribute "${attributeKey}" value with an object, e.g.\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
+      );
+      continue;
+    }
+
+    // mandatory checks
+    if (!('mandatory' in rawAttributeDef)) {
+      problems.push(`${attributeKey}.mandatory: missing`);
+      suggestedFixes.push(
+        `Add mandatory boolean for "${attributeKey}":\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
+      );
+    } else if ('boolean' !== typeof (rawAttributeDef as any).mandatory) {
+      problems.push(`${attributeKey}.mandatory: expected boolean but got ${typeof (rawAttributeDef as any).mandatory}`);
+      suggestedFixes.push(
+        `Set "mandatory" to a boolean for "${attributeKey}", e.g.\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
+      );
+    }
+
+    // value_type checks
+    if (!('value_type' in rawAttributeDef)) {
+      problems.push(`${attributeKey}.value_type: missing`);
+      suggestedFixes.push(
+        `Add value_type for "${attributeKey}", for example:\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
+      );
+    } else if ('string' !== typeof (rawAttributeDef as any).value_type) {
+      problems.push(
+        `${attributeKey}.value_type: expected string but got ${typeof (rawAttributeDef as any).value_type}`
+      );
+      suggestedFixes.push(
+        `Make sure "value_type" is a string for "${attributeKey}", e.g.\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
+      );
+    } else {
+      const declaredType = (rawAttributeDef as any).value_type as string;
+      if (!ALLOWED_VALUE_TYPES.includes(declaredType as ValueType)) {
+        problems.push(
+          `${attributeKey}.value_type: unsupported value_type "${declaredType}". Allowed types: ${ALLOWED_VALUE_TYPES.join(', ')}`
+        );
+        suggestedFixes.push(
+          `Use one of the allowed types for "${attributeKey}", e.g.\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
+        );
+      }
+    }
+
+    // display checks (optional)
+    if ('display' in rawAttributeDef && !isDisplayArray((rawAttributeDef as any).display)) {
+      problems.push(`${attributeKey}.display: expected array of { name: string, locale: string }`);
+      suggestedFixes.push(
+        `Fix "display" for "${attributeKey}" to be an array of objects with name/locale, e.g.\n"${attributeKey}": { "mandatory": true, "value_type": "string", "display": [{ "name": "Given Name", "locale": "en-US" }] }`
+      );
+    }
+  }
+
+  if (0 < problems.length) {
+    // Build a user-friendly message: problems + suggested fixes (unique)
+    const uniqueFixes = Array.from(new Set(suggestedFixes)).slice(0, 20);
+    const fixesText = uniqueFixes.length
+      ? `\n\nSuggested fixes (copy-paste examples):\n- ${uniqueFixes.join('\n- ')}`
+      : '';
+
+    // Include a small truncated sample of the attributes to help debugging
+    const samplePreview = JSON.stringify(
+      Object.fromEntries(attributeKeys.slice(0, 10).map((key) => [key, attributesMap[key]])),
+      (_, value) => {
+        if ('string' === typeof value && 200 < value.length) {
+          return `${value.slice(0, 200)}...`;
+        }
+        return value;
+      },
+      2
+    );
+
+    throw new Error(
+      `Invalid template.attributes shape. Problems found:\n- ${problems.join(
+        '\n- '
+      )}\n\nExample attributes (truncated):\n${samplePreview}${fixesText}`
+    );
+  }
+
+  // Safe to cast to TemplateAttributes
+  return attributesMap as TemplateAttributes;
 }
 
 /* ============================================================================
@@ -187,31 +287,31 @@ function ensureTemplateAttributes(v: Prisma.JsonValue): TemplateAttributes {
 
 /** Build one credential block normalized to API format (using the template's format). */
 function buildOneCredential(
-  cred: CredentialRequestDtoLike,
-  template: credential_templates,
-  attrs: TemplateAttributes,
+  credentialRequest: CredentialRequestDtoLike,
+  templateRecord: credential_templates,
+  templateAttributes: TemplateAttributes,
   signerOptions?: SignerOption[]
 ): BuiltCredential {
   // 1) Validate payload against template attributes
-  assertMandatoryClaims(cred.payload, attrs, { templateId: cred.templateId });
+  assertMandatoryClaims(credentialRequest.payload, templateAttributes, { templateId: credentialRequest.templateId });
 
   // 2) Decide API format from DB format
-  const apiFormat = mapDbFormatToApiFormat(template.format);
+  const selectedApiFormat = mapDbFormatToApiFormat(templateRecord.format);
 
   // 3) Build supportedId from template.name + suffix ("-sdjwt" | "-mdoc")
-  const suffix = formatSuffix(apiFormat);
-  const credentialSupportedId = `${template.name}-${suffix}`;
+  const idSuffix = formatSuffix(selectedApiFormat);
+  const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
 
   // 4) Strip vct ALWAYS (per requirement)
-  const payload = { ...(cred.payload as Record<string, unknown>) };
-  delete (payload as Record<string, unknown>).vct;
+  const normalizedPayload = { ...(credentialRequest.payload as Record<string, unknown>) };
+  delete (normalizedPayload as Record<string, unknown>).vct;
 
   return {
     credentialSupportedId, // e.g., "BirthCertificateCredential-sdjwt"
-    signerOptions: signerOptions[0],
-    format: apiFormat, // 'vc+sd-jwt' | 'mdoc'
-    payload, // without vct
-    ...(cred.disclosureFrame ? { disclosureFrame: cred.disclosureFrame } : {})
+    signerOptions: signerOptions ? signerOptions[0] : undefined,
+    format: selectedApiFormat, // 'vc+sd-jwt' | 'mdoc'
+    payload: normalizedPayload, // without vct
+    ...(credentialRequest.disclosureFrame ? { disclosureFrame: credentialRequest.disclosureFrame } : {})
   };
 }
 
@@ -231,44 +331,46 @@ export function buildCredentialOfferPayload(
   signerOptions?: SignerOption[]
 ): CredentialOfferPayload {
   // Index templates
-  const byId = new Map(templates.map((t) => [t.id, t]));
+  const templatesById = new Map(templates.map((template) => [template.id, template]));
 
   // Verify all requested templateIds exist
-  const unknown = dto.credentials.map((c) => c.templateId).filter((id) => !byId.has(id));
-  if (unknown.length) {
-    throw new Error(`Unknown template ids: ${unknown.join(', ')}`);
+  const unknownTemplateIds = dto.credentials
+    .map((c) => c.templateId)
+    .filter((requestedId) => !templatesById.has(requestedId));
+  if (unknownTemplateIds.length) {
+    throw new Error(`Unknown template ids: ${unknownTemplateIds.join(', ')}`);
   }
 
   // Build credentials
-  const credentials: BuiltCredential[] = dto.credentials.map((cred) => {
-    const template = byId.get(cred.templateId)!;
-    const attrs = ensureTemplateAttributes(template.attributes); // narrow JsonValue safely
-    return buildOneCredential(cred, template, attrs, signerOptions);
+  const builtCredentials: BuiltCredential[] = dto.credentials.map((credentialRequest) => {
+    const templateRecord = templatesById.get(credentialRequest.templateId)!;
+    const resolvedAttributes = ensureTemplateAttributes(templateRecord.attributes); // narrow JsonValue safely
+    return buildOneCredential(credentialRequest, templateRecord, resolvedAttributes, signerOptions);
   });
 
   // --- Base envelope (issuerId deliberately NOT included) ---
-  const base: BuiltCredentialOfferBase = {
-    credentials,
+  const baseEnvelope: BuiltCredentialOfferBase = {
+    credentials: builtCredentials,
     ...(dto.publicIssuerId ? { publicIssuerId: dto.publicIssuerId } : {})
   };
 
   // XOR flow selection (defensive)
-  const hasPre = Boolean(dto.preAuthorizedCodeFlowConfig);
-  const hasAuth = Boolean(dto.authorizationCodeFlowConfig);
-  if (hasPre === hasAuth) {
+  const hasPreAuthFlow = Boolean(dto.preAuthorizedCodeFlowConfig);
+  const hasAuthCodeFlow = Boolean(dto.authorizationCodeFlowConfig);
+  if (hasPreAuthFlow === hasAuthCodeFlow) {
     throw new Error('Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.');
   }
 
-  if (hasPre) {
+  if (hasPreAuthFlow) {
     return {
-      ...base,
-      preAuthorizedCodeFlowConfig: dto.preAuthorizedCodeFlowConfig! // definite since hasPre
+      ...baseEnvelope,
+      preAuthorizedCodeFlowConfig: dto.preAuthorizedCodeFlowConfig!
     };
   }
 
   return {
-    ...base,
-    authorizationCodeFlowConfig: dto.authorizationCodeFlowConfig! // definite since !hasPre
+    ...baseEnvelope,
+    authorizationCodeFlowConfig: dto.authorizationCodeFlowConfig!
   };
 }
 
@@ -280,44 +382,49 @@ export function buildUpdateCredentialOfferPayload(
   templates: credential_templates[]
 ): { credentials: BuiltCredential[] } {
   // Index templates by id
-  const byId = new Map(templates.map((t) => [t.id, t]));
+  const templatesById = new Map(templates.map((template) => [template.id, template]));
 
   // Validate all templateIds exist
-  const unknown = dto.credentials.map((c) => c.templateId).filter((id) => !byId.has(id));
-  if (unknown.length) {
-    throw new Error(`Unknown template ids: ${unknown.join(', ')}`);
+  const unknownTemplateIds = dto.credentials
+    .map((c) => c.templateId)
+    .filter((requestedId) => !templatesById.has(requestedId));
+  if (unknownTemplateIds.length) {
+    throw new Error(`Unknown template ids: ${unknownTemplateIds.join(', ')}`);
   }
 
   // Validate each credential against its template
-  const credentials: BuiltCredential[] = dto.credentials.map((cred) => {
-    const template = byId.get(cred.templateId)!;
-    const attrs = ensureTemplateAttributes(template.attributes); // safely narrow JsonValue
+  const normalizedCredentials: BuiltCredential[] = dto.credentials.map((credentialRequest) => {
+    const templateRecord = templatesById.get(credentialRequest.templateId)!;
+    const resolvedAttributes = ensureTemplateAttributes(templateRecord.attributes); // safely narrow JsonValue
 
     // check that all payload keys exist in template attributes
-    const payloadKeys = Object.keys(cred.payload);
-    const invalidKeys = payloadKeys.filter((k) => !attrs[k]);
-    if (invalidKeys.length) {
-      throw new Error(`Invalid attributes for template "${cred.templateId}": ${invalidKeys.join(', ')}`);
+    const payloadKeys = Object.keys(credentialRequest.payload);
+    const invalidPayloadKeys = payloadKeys.filter((payloadKey) => !resolvedAttributes[payloadKey]);
+    if (invalidPayloadKeys.length) {
+      throw new Error(
+        `Invalid attributes for template "${credentialRequest.templateId}": ${invalidPayloadKeys.join(', ')}`
+      );
     }
 
     // also validate mandatory fields are present
-    assertMandatoryClaims(cred.payload, attrs, { templateId: cred.templateId });
+    assertMandatoryClaims(credentialRequest.payload, resolvedAttributes, { templateId: credentialRequest.templateId });
 
     // build minimal normalized credential (no vct, issuerId, etc.)
-    const apiFormat = mapDbFormatToApiFormat(template.format);
-    const suffix = formatSuffix(apiFormat);
-    const credentialSupportedId = `${template.name}-${suffix}`;
+    const selectedApiFormat = mapDbFormatToApiFormat(templateRecord.format);
+    const idSuffix = formatSuffix(selectedApiFormat);
+    const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
+
     return {
       credentialSupportedId,
-      format: apiFormat,
-      payload: cred.payload,
-      ...(cred.disclosureFrame ? { disclosureFrame: cred.disclosureFrame } : {})
+      format: selectedApiFormat,
+      payload: credentialRequest.payload,
+      ...(credentialRequest.disclosureFrame ? { disclosureFrame: credentialRequest.disclosureFrame } : {})
     };
   });
 
   // Only return credentials array here (update flow doesn't need preAuth/auth configs)
   return {
-    credentials
+    credentials: normalizedCredentials
   };
 }
 

@@ -37,8 +37,8 @@ export class Oid4vcIssuanceService extends BaseService {
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-issuer-update', payload);
   }
 
-  async oidcGetIssuerById(issuerId: string, orgId: string): Promise<object> {
-    const payload = { issuerId, orgId };
+  async oidcGetIssuerById(id: string, orgId: string): Promise<object> {
+    const payload = { id, orgId };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-issuer-get-by-id', payload);
   }
 
@@ -47,8 +47,8 @@ export class Oid4vcIssuanceService extends BaseService {
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-get-issuers-issuance', payload);
   }
 
-  async oidcDeleteIssuer(userDetails: user, orgId: string, issuerId: string): Promise<object> {
-    const payload = { issuerId, orgId, userDetails };
+  async oidcDeleteIssuer(userDetails: user, orgId: string, id: string): Promise<object> {
+    const payload = { id, orgId, userDetails };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-delete-issuer', payload);
   }
 

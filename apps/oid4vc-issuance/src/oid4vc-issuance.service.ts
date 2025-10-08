@@ -188,10 +188,9 @@ export class Oid4vcIssuanceService {
     }
   }
 
-  async oidcIssuerGetById(issuerId: string, orgId: string): Promise<IssuerResponse> {
+  async oidcIssuerGetById(id: string, orgId: string): Promise<IssuerResponse> {
     try {
-      const getIssuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
-      console.log('This is the getIssuerDetails:', JSON.stringify(getIssuerDetails, null, 2));
+      const getIssuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(id);
       if (!getIssuerDetails && getIssuerDetails.publicIssuerId) {
         throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
       }
@@ -199,12 +198,9 @@ export class Oid4vcIssuanceService {
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      console.log('This is the agentDetails:', getIssuerDetails?.publicIssuerId);
       const encodedId = encodeIssuerPublicId(getIssuerDetails?.publicIssuerId);
       const url = await getAgentUrl(agentDetails?.agentEndPoint, CommonConstants.OIDC_ISSUER_BY_ID, encodedId);
-      console.log('This is the oidcIssuerGetById url:', url);
       const issuerDetailsRaw = await this._oidcGetIssuerById(url, orgId);
-      console.log('This is the issuerDetailsRaw:', JSON.stringify(issuerDetailsRaw, null, 2));
       if (!issuerDetailsRaw) {
         throw new InternalServerErrorException(`Error from agent while getting issuer`);
       }
@@ -254,13 +250,9 @@ export class Oid4vcIssuanceService {
     }
   }
 
-  async deleteOidcIssuer(orgId: string, userDetails: user, issuerId: string) {
+  async deleteOidcIssuer(orgId: string, userDetails: user, id: string) {
     try {
-      const deleteOidcIssuer = await this.oid4vcIssuanceRepository.deleteOidcIssuer(issuerId);
-      if (!deleteOidcIssuer) {
-        throw new NotFoundException(ResponseMessages.oidcIssuer.error.deleteFailed);
-      }
-      const issuerRecordId = await this.oidcIssuerGetById(issuerId, orgId);
+      const issuerRecordId = await this.oidcIssuerGetById(id, orgId);
       if (!issuerRecordId.id) {
         throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
       }
@@ -273,6 +265,10 @@ export class Oid4vcIssuanceService {
       const createTemplateOnAgent = await this._deleteOidcIssuer(url, orgId);
       if (!createTemplateOnAgent) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+      const deleteOidcIssuer = await this.oid4vcIssuanceRepository.deleteOidcIssuer(id);
+      if (!deleteOidcIssuer) {
+        throw new NotFoundException(ResponseMessages.oidcIssuer.error.deleteFailed);
       }
       return deleteOidcIssuer;
     } catch (error) {

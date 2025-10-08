@@ -135,8 +135,8 @@ export class Oid4vcIssuanceController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Get('/orgs/:orgId/oid4vc/issuers/:issuerId')
-  @ApiOperation({ summary: 'Get OID4VC issuer', description: 'Retrieves an OID4VC issuer by issuerId.' })
+  @Get('/orgs/:orgId/oid4vc/issuers/:id')
+  @ApiOperation({ summary: 'Get OID4VC issuer', description: 'Retrieves an OID4VC issuer by id.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Issuer fetched successfully.', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
@@ -151,17 +151,17 @@ export class Oid4vcIssuanceController {
       })
     )
     orgId: string,
-    @Param('issuerId')
-    issuerId: string,
+    @Param('id')
+    id: string,
     @Res() res: Response
   ): Promise<Response> {
-    const oidcIssuer = await this.oid4vcIssuanceService.oidcGetIssuerById(issuerId, orgId);
+    const oidcIssuer = await this.oid4vcIssuanceService.oidcGetIssuerById(id, orgId);
     const finalResponse: IResponse = {
-      statusCode: HttpStatus.CREATED,
+      statusCode: HttpStatus.OK,
       message: ResponseMessages.oidcIssuer.success.fetch,
       data: oidcIssuer
     };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Get('/orgs/:orgId/oid4vc/issuers')
@@ -194,7 +194,7 @@ export class Oid4vcIssuanceController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Delete('/orgs/:orgId/oid4vc/:issuerId')
+  @Delete('/orgs/:orgId/oid4vc/:id')
   @ApiOperation({
     summary: 'Delete OID4VC issuer',
     description: 'Deletes an OID4VC issuer for the specified organization.'
@@ -213,18 +213,18 @@ export class Oid4vcIssuanceController {
     )
     orgId: string,
     @Param(
-      'issuerId',
+      'id',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
         }
       })
     )
-    issuerId: string,
+    id: string,
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    await this.oid4vcIssuanceService.oidcDeleteIssuer(user, orgId, issuerId);
+    await this.oid4vcIssuanceService.oidcDeleteIssuer(user, orgId, id);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -253,7 +253,6 @@ export class Oid4vcIssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     CredentialTemplate.issuerId = issuerId;
-    console.log('THis is dto', JSON.stringify(CredentialTemplate, null, 2));
     const template = await this.oid4vcIssuanceService.createTemplate(CredentialTemplate, user, orgId, issuerId);
 
     const finalResponse: IResponse = {

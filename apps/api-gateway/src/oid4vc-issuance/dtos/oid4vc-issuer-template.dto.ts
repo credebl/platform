@@ -79,21 +79,21 @@ export class AppearanceDto {
   @ApiPropertyOptional({
     example: [
       {
-        locale: 'en',
-        name: 'Birth Certificate',
-        description: 'Official record of birth',
+        locale: 'de',
+        name: 'Geburtsurkunde',
+        description: 'Offizielle Geburtsbescheinigung',
         logo: {
           uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
           alt_text: 'abc_logo'
         }
       },
       {
-        locale: 'ar',
-        name: 'شهادة الميلاد',
-        description: 'سجل رسمي للولادة',
+        locale: 'en',
+        name: 'Birth Certificate',
+        description: 'Official record of birth',
         logo: {
           uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
-          alt_text: 'شعار abc'
+          alt_text: 'abc_logo'
         }
       }
     ]
@@ -146,7 +146,7 @@ export class CreateCredentialTemplateDto {
   @ApiPropertyOptional({
     description:
       'Verifiable Credential Type (required when format is "vc+sd-jwt"; must NOT be provided when format is "mso_mdoc")',
-    example: 'org.iso.18013.5.1.mDL'
+    example: 'BirthCertificateCredential-sdjwt'
   })
   @ValidateIf((o: CreateCredentialTemplateDto) => 'vc+sd-jwt' === o.format)
   @IsString()

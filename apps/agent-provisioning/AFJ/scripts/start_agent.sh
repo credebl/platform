@@ -228,7 +228,6 @@ if [ $? -eq 0 ]; then
     done
 
     echo "Creating agent config"
-    # This is not actually being read, maybe we can remove this logic for endpoint file
     ENDPOINT="${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json"
 
     # Check if the file exists

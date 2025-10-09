@@ -87,13 +87,6 @@ else
   mkdir ${PWD}/apps/agent-provisioning/AFJ/agent-config
 fi
 
-if [ -d "${PWD}/apps/agent-provisioning/AFJ/token" ]; then
-  echo "token directory exists."
-else
-  echo "Error: token directory does not exists."
-  mkdir ${PWD}/apps/agent-provisioning/AFJ/token
-fi
-
 # Define a regular expression pattern for IP address
 IP_REGEX="^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$"
 
@@ -235,14 +228,6 @@ if [ $? -eq 0 ]; then
     done
 
     echo "Creating agent config"
-    # Capture the logs from the container
-    container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
-
-    # Extract the token from the logs using sed
-    token=$(echo "$container_logs" | sed -nE 's/.*** API Key: ([^ ]+).*/\1/p')
-
-    # Print the extracted token
-    echo "Token: $token"
 
     ENDPOINT="${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json"
 
@@ -257,11 +242,6 @@ if [ $? -eq 0 ]; then
     }
 EOF
 
-    cat <<EOF >${PWD}/token/${AGENCY}_${CONTAINER_NAME}.json
-    {
-        "token" : "$token"
-    }
-EOF
     echo "Agent config created"
   else
     echo "==============="

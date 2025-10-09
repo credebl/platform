@@ -2,11 +2,19 @@
 /* eslint-disable prefer-destructuring */
 
 import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException
+} from '@nestjs/common';
+import {
   IOrgUsers,
   IRestrictedUserSession,
   ISendVerificationEmail,
   ISession,
   IShareUserCertificate,
+  ITokenData,
   IUserDeletedActivity,
   IUserInformation,
   IUsersProfile,
@@ -17,7 +25,6 @@ import {
   UserRoleDetails,
   UserRoleMapping
 } from '../interfaces/user.interface';
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import {
   Prisma,
   RecordType,
@@ -722,6 +729,21 @@ export class UserRepository {
     }
   }
 
+  //this function is to fetch all session details for a user including token details without any restriction
+  async fetchUserSessionDetails(userId: string): Promise<ISession[]> {
+    try {
+      const userSessionCount = await this.prisma.session.findMany({
+        where: {
+          userId
+        }
+      });
+      return userSessionCount;
+    } catch (error) {
+      this.logger.error(`Error in getting user session details: ${error.message} `);
+      throw error;
+    }
+  }
+
   async checkAccountDetails(userId: string): Promise<account> {
     try {
       const accountDetails = await this.prisma.account.findUnique({
@@ -980,8 +1002,13 @@ export class UserRepository {
       });
       return userSession;
     } catch (error) {
-      this.logger.error(`Error in logging out user: ${error.message}`);
-      throw error;
+      if (error instanceof Prisma.PrismaClientKnownRequestError && 'P2025' === error.code) {
+        this.logger.warn(`Session not found for deletion: ${sessionId}`);
+        throw new NotFoundException('Record to be deleted not found');
+      } else {
+        this.logger.error(`Error in logging out user: ${error.message}`);
+        throw error;
+      }
     }
   }
 
@@ -1029,6 +1056,24 @@ export class UserRepository {
       return response;
     } catch (error) {
       this.logger.error(`Error in deleting the in active sessions::${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateSessionToken(id: string, tokenData: ITokenData): Promise<session> {
+    if (!id || !tokenData) {
+      throw new BadRequestException(`Missing id or tokenData for session details update`);
+    }
+    try {
+      const sessionResponse = await this.prisma.session.update({
+        where: {
+          id
+        },
+        data: tokenData
+      });
+      return sessionResponse;
+    } catch (error) {
+      this.logger.error(`Error in creating session: ${error.message} `);
       throw error;
     }
   }

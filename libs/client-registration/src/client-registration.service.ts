@@ -4,21 +4,22 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
-import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as qs from 'qs';
+
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 import { ClientCredentialTokenPayloadDto } from './dtos/client-credential-token-payload.dto';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { JwtService } from '@nestjs/jwt';
-import { KeycloakUrlService } from '@credebl/keycloak-url';
-import { accessTokenPayloadDto } from './dtos/accessTokenPayloadDto';
-import { userTokenPayloadDto } from './dtos/userTokenPayloadDto';
-import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
-import { ResponseMessages } from '@credebl/common/response-messages';
 import { IClientRoles } from './interfaces/client.interface';
 import { IFormattedResponse } from '@credebl/common/interfaces/interface';
+import { JwtService } from '@nestjs/jwt';
+import { KeycloakUrlService } from '@credebl/keycloak-url';
+import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
+import { ResponseMessages } from '@credebl/common/response-messages';
+import { accessTokenPayloadDto } from './dtos/accessTokenPayloadDto';
+import { userTokenPayloadDto } from './dtos/userTokenPayloadDto';
 
 @Injectable()
 export class ClientRegistrationService {

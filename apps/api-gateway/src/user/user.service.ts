@@ -7,7 +7,7 @@ import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
 import { IUsersActivity } from 'libs/user-activity/interface';
-import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
+import { ISignInUser, IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { user } from '@prisma/client';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
@@ -72,6 +72,11 @@ export class UserService extends BaseService {
   async getUserActivities(userId: string, limit: number): Promise<IUsersActivity[]> {
     const payload = { userId, limit };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-user-activity', payload);
+  }
+
+  async getAccessTokenUsingRefreshToken(refreshToken: string): Promise<ISignInUser> {
+    const payload = { refreshToken };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'generate-accessToken-using-refresh-token', payload);
   }
 
   async addPasskey(userEmail: string, userInfo: AddPasskeyDetailsDto): Promise<string> {

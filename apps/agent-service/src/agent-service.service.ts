@@ -528,10 +528,7 @@ export class AgentServiceService {
         socket.emit('did-publish-process-initiated', { clientId: agentSpinupDto.clientSocketId });
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
-      const agentBaseWalletToken = await this.commonService.getBaseAgentToken(
-        agentDetails.agentEndPoint,
-        agentDetails?.agentToken
-      );
+      const agentBaseWalletToken = await this.commonService.getBaseAgentToken(agentDetails.agentEndPoint);
       if (!agentBaseWalletToken) {
         throw new BadRequestException(ResponseMessages.agent.error.baseWalletToken, {
           cause: new Error(),
@@ -560,20 +557,6 @@ export class AgentServiceService {
        */
       const storeAgentDetails = await this._storeOrgAgentDetails(agentPayload);
       if (storeAgentDetails) {
-        const filePath = `${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgData.id}_${orgData.name
-          .split(' ')
-          .join('_')}.json`;
-        if (agentDetails?.agentToken) {
-          fs.unlink(filePath, (err) => {
-            if (err) {
-              this.logger.error(`Error removing file: ${err.message}`);
-              throw new InternalServerErrorException(err.message);
-            } else {
-              this.logger.log(`File ${filePath} has been removed successfully`);
-            }
-          });
-        }
-
         if (agentSpinupDto.clientSocketId) {
           socket.emit('did-publish-process-completed', { clientId: agentSpinupDto.clientSocketId });
         }

@@ -1,10 +1,13 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
-import { IWalletProvision } from './interface/agent-provisioning.interfaces';
 import * as dotenv from 'dotenv';
-import { AgentType } from '@credebl/enum/enum';
 import * as fs from 'fs';
+
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+
+import { AgentType } from '@credebl/enum/enum';
+import { IWalletProvision } from './interface/agent-provisioning.interfaces';
+import { RpcException } from '@nestjs/microservices';
 import { exec } from 'child_process';
+
 dotenv.config();
 
 @Injectable()
@@ -48,27 +51,22 @@ export class AgentProvisioningService {
             }
 
             const agentEndpointPath = `${process.cwd()}${process.env.AFJ_AGENT_ENDPOINT_PATH}${orgId}_${containerName}.json`;
-            const agentTokenPath = `${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgId}_${containerName}.json`;
 
             const agentEndPointExists = await this.checkFileExistence(agentEndpointPath);
-            const agentTokenExists = await this.checkFileExistence(agentTokenPath);
 
             let agentEndPoint;
-            let agentToken;
 
-            if (agentEndPointExists && agentTokenExists) {
+            if (agentEndPointExists) {
               this.logger.log('Both files exist');
               agentEndPoint = await fs.readFileSync(agentEndpointPath, 'utf8');
-              agentToken = await fs.readFileSync(agentTokenPath, 'utf8');
               // Proceed with accessing the files if needed
             } else {
               this.logger.log('One or both files do not exist');
-              throw new NotFoundException(`${agentEndpointPath} or ${agentTokenPath} files do not exist `);
+              throw new NotFoundException(`${agentEndpointPath} file do not exist `);
             }
 
             resolve({
-              agentEndPoint: JSON.parse(agentEndPoint).CONTROLLER_ENDPOINT,
-              agentToken: JSON.parse(agentToken).token
+              agentEndPoint: JSON.parse(agentEndPoint).CONTROLLER_ENDPOINT
             });
           });
         });

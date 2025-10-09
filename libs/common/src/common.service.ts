@@ -5,15 +5,16 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import * as CryptoJS from 'crypto-js';
+import * as dotenv from 'dotenv';
 
 import { BadRequestException, HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
 
 import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios';
-import * as dotenv from 'dotenv';
 import { ResponseMessages } from './response-messages';
-import { IFormattedResponse, IOptionalParams } from './interfaces/interface';
 import { RpcException } from '@nestjs/microservices';
+
 dotenv.config();
 
 @Injectable()
@@ -307,13 +308,14 @@ export class CommonService {
     }
   }
 
-  async getBaseAgentToken(agentEndPoint: string, apiKey: string): Promise<string> {
+  async getBaseAgentToken(agentEndPoint: string): Promise<string> {
     const normalizedBaseUrl = await this.normalizeUrlWithProtocol(agentEndPoint);
     this.logger.log(`Fetching base agent token from ${normalizedBaseUrl}`);
+    const apikey = process.env.AGENT_API_KEY;
     const agentBaseWalletDetils = await this.httpPost(`${normalizedBaseUrl}${CommonConstants.URL_AGENT_TOKEN}`, '', {
       headers: {
         Accept: 'application/json',
-        Authorization: apiKey
+        Authorization: apikey
       }
     });
     if (!agentBaseWalletDetils) {

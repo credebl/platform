@@ -349,19 +349,6 @@ task_id=$(echo "$service_description" | jq -r '
   | .id
 ')
 
-# to fetch log group of container 
-log_group=/ecs/$TASKDEFINITION_FAMILY
-echo "log_group=$log_group"
-
-# Get Log Stream Name
-log_stream=ecs/$CONTAINER_NAME/$task_id
-
-echo "logstrem=$log_stream"
-
-# Set maximum retry attempts
-RETRIES=3
-
-
   echo "Creating agent config"
   cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {

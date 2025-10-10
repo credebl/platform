@@ -528,7 +528,8 @@ export class AgentServiceService {
         socket.emit('did-publish-process-initiated', { clientId: agentSpinupDto.clientSocketId });
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
-      const agentBaseWalletToken = await this.commonService.getBaseAgentToken(agentDetails.agentEndPoint);
+      const apiKey = process.env.AGENT_API_KEY;
+      const agentBaseWalletToken = await this.commonService.getBaseAgentToken(agentDetails.agentEndPoint, apiKey);
       if (!agentBaseWalletToken) {
         throw new BadRequestException(ResponseMessages.agent.error.baseWalletToken, {
           cause: new Error(),

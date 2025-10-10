@@ -308,13 +308,13 @@ export class CommonService {
     }
   }
 
-  async getBaseAgentToken(agentEndPoint: string): Promise<string> {
+  async getBaseAgentToken(agentEndPoint: string, apiKey: string): Promise<string> {
     const normalizedBaseUrl = await this.normalizeUrlWithProtocol(agentEndPoint);
     this.logger.log(`Fetching base agent token from ${normalizedBaseUrl}`);
     const agentBaseWalletDetils = await this.httpPost(`${normalizedBaseUrl}${CommonConstants.URL_AGENT_TOKEN}`, '', {
       headers: {
         Accept: 'application/json',
-        Authorization: apikey
+        Authorization: apiKey
       }
     });
     if (!agentBaseWalletDetils) {

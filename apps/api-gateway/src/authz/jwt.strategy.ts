@@ -31,11 +31,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         // Todo: We need to add this logic in seprate jwt gurd to handle the token expiration functionality.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const decodedToken: any = jwt.decode(jwtToken);
-        const currentTime = Math.floor(Date.now() / 1000);
-        if (decodedToken?.exp < currentTime) {
-          const sessionIds = { sessions: [decodedToken?.sid] };
-          await this.authzService.logout(sessionIds);
-        }
         if (!decodedToken) {
           throw new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken);
         }

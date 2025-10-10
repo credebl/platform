@@ -301,3 +301,10 @@ export interface IRestrictedUserSession {
   clientInfo: Prisma.JsonValue | null;
   sessionType: string;
 }
+
+export interface ITokenData {
+  sessionToken: string;
+  expires: number;
+  refreshToken: string;
+  expiresAt: Date;
+}

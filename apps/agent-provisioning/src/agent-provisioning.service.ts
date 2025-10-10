@@ -57,11 +57,11 @@ export class AgentProvisioningService {
             let agentEndPoint;
 
             if (agentEndPointExists) {
-              this.logger.log('Both files exist');
+              this.logger.log('Agent endpoint file exists');
               agentEndPoint = await fs.readFileSync(agentEndpointPath, 'utf8');
               // Proceed with accessing the files if needed
             } else {
-              this.logger.log('One or both files do not exist');
+              this.logger.log('Agent endpoint file does not exist');
               throw new NotFoundException(`${agentEndpointPath} file do not exist `);
             }
 

@@ -62,11 +62,24 @@ export class AgentProvisioningService {
               // Proceed with accessing the files if needed
             } else {
               this.logger.log('Agent endpoint file does not exist');
-              throw new NotFoundException(`${agentEndpointPath} file do not exist `);
+              throw new NotFoundException(`Agent endpoint file does not exist: ${agentEndpointPath}`);
+            }
+
+            let parsedEndpoint;
+            try {
+              parsedEndpoint = JSON.parse(agentEndPoint);
+            } catch (parseError) {
+              this.logger.error(`Failed to parse agent endpoint file: ${parseError.message}`);
+              throw new Error(`Invalid JSON in agent endpoint file: ${agentEndpointPath}`);
+            }
+
+            if (!parsedEndpoint.CONTROLLER_ENDPOINT) {
+              this.logger.error('CONTROLLER_ENDPOINT key missing in agent endpoint file');
+              throw new Error(`Missing CONTROLLER_ENDPOINT in: ${agentEndpointPath}`);
             }
 
             resolve({
-              agentEndPoint: JSON.parse(agentEndPoint).CONTROLLER_ENDPOINT
+              agentEndPoint: parsedEndpoint.CONTROLLER_ENDPOINT
             });
           });
         });

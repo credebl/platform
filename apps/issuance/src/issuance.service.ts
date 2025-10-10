@@ -125,6 +125,7 @@ export class IssuanceService {
   }
 
   async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes[]> {
+    this.logger.debug('Getting w3c schema attributes from schemaUrl', schemaUrl);
     const schemaRequest = await this.commonService.httpGet(schemaUrl).then(async (response) => response);
     if (!schemaRequest) {
       throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
@@ -140,6 +141,7 @@ export class IssuanceService {
     }
 
     const schemaAttributes = JSON.parse(getSchemaDetails?.attributes);
+    this.logger.debug('Schema attributes fetched successfully', JSON.stringify(schemaAttributes, null, 2));
 
     return schemaAttributes;
   }
@@ -246,7 +248,7 @@ export class IssuanceService {
           const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
 
           if (isValidateSchema) {
-            validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+            validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes, this.logger);
           }
         }
 
@@ -447,7 +449,7 @@ export class IssuanceService {
         const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
 
         if (isValidateSchema) {
-          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes, this.logger);
         }
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
@@ -762,21 +764,27 @@ export class IssuanceService {
         isValidateSchema
       } = outOfBandCredential;
 
+      this.logger.debug('Request reaced isuance microservice service');
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
+      this.logger.debug('The credential to be issued is of type:', credentialType);
       if (IssueCredentialType.JSONLD === credentialType) {
         await validateAndUpdateIssuanceDates(credentialOffer);
 
+        this.logger.debug('Validated/Updated Issuance dates credential offer');
         const schemaIds = credentialOffer?.map((item) => {
           const context: string[] = item?.credential?.['@context'];
           return Array.isArray(context) && 1 < context.length ? context[1] : undefined;
         });
 
+        this.logger.debug('Issuing credential with schemaIds', schemaIds);
         const schemaDetails = await this._getSchemaDetails(schemaIds);
 
         const ledgerIds = schemaDetails?.map((item) => item?.ledgerId);
+        this.logger.debug('Issuance will be done with the following schemas: ', JSON.stringify(schemaDetails, null, 2));
 
         for (const ledgerId of ledgerIds) {
+          this.logger.debug('Checking ledger compatibility of schemas and issuer agent');
           if (agentDetails?.ledgerId !== ledgerId) {
             throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
           }
@@ -787,6 +795,10 @@ export class IssuanceService {
         const schemaResponse: SchemaDetails =
           await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
 
+        this.logger.debug(
+          'Schema details for indy based credential received:',
+          JSON.stringify(schemaResponse, null, 2)
+        );
         let attributesArray: IAttributes[] = [];
         if (schemaResponse?.attributes) {
           attributesArray = JSON.parse(schemaResponse.attributes);
@@ -803,6 +815,7 @@ export class IssuanceService {
             }
           });
           if (0 < attrError.length) {
+            this.logger.debug('Error validating attributes. Number of errors:', attrError.length);
             throw new BadRequestException(attrError);
           }
         }
@@ -839,6 +852,7 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
       }
       const errors = [];
+      this.logger.debug('Creating offer response for agent on url: ', url);
       let credentialOfferResponse;
       const arraycredentialOfferResponse = [];
       const sendEmailCredentialOffer: {
@@ -890,12 +904,14 @@ export class IssuanceService {
       };
 
       if (credentialOffer) {
+        this.logger.debug('Iterating over credentials offers: ', credentialOffer.entries());
         for (const [index, iterator] of credentialOffer.entries()) {
           sendEmailCredentialOffer['iterator'] = iterator;
           sendEmailCredentialOffer['emailId'] = iterator.emailId;
           sendEmailCredentialOffer['index'] = index;
 
           await this.delay(500); // Wait for 0.5 seconds
+          this.logger.debug(`Sending offer number: index: ${index}, iterator: ${iterator}`);
           const sendOobOffer = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
           arraycredentialOfferResponse.push(sendOobOffer);
         }
@@ -905,6 +921,7 @@ export class IssuanceService {
 
         return arraycredentialOfferResponse.every((result) => true === result);
       } else {
+        this.logger.debug('Sending a single OOB email offer');
         credentialOfferResponse = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
         return credentialOfferResponse;
       }
@@ -957,6 +974,7 @@ export class IssuanceService {
     try {
       let invitationDid: string | undefined;
       if (true === isReuseConnection) {
+        this.logger.debug('This is a reuse connection, fetching invitation did');
         const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
         if (data && 0 < data.length) {
           const [firstElement] = data;
@@ -965,6 +983,7 @@ export class IssuanceService {
       }
 
       let outOfBandIssuancePayload;
+      this.logger.debug('This is an email issuance of type', credentialType);
       if (IssueCredentialType.INDY === credentialType) {
         outOfBandIssuancePayload = {
           protocolVersion: protocolVersion || 'v1',
@@ -1016,10 +1035,12 @@ export class IssuanceService {
         const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
 
         if (isValidateSchema) {
-          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes, this.logger);
         }
       }
+      this.logger.debug('Payload created for issuance');
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
+      this.logger.debug('Offer created successfully');
 
       if (!credentialCreateOfferDetails) {
         errors.push(new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound));
@@ -1027,9 +1048,11 @@ export class IssuanceService {
       }
 
       const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
+      this.logger.debug('Shortening invitation url');
       const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
 
       const deepLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
+      this.logger.debug('Deeplink URL created successfully');
 
       if (!invitationUrl) {
         errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
@@ -1061,6 +1084,7 @@ export class IssuanceService {
           disposition: 'attachment'
         }
       ];
+      this.logger.debug('Invitation url and deeplink created successfully. Sending email');
 
       const isEmailSent = await sendEmail(this.emailData);
 
@@ -1084,6 +1108,10 @@ export class IssuanceService {
           }
         }
       }
+      this.logger.debug(
+        'Email sent successfully for credential threadId:',
+        credentialCreateOfferDetails.response.credentialRequestThId ?? ''
+      );
 
       return isEmailSent;
     } catch (error) {
@@ -1123,9 +1151,12 @@ export class IssuanceService {
     response;
   }> {
     try {
+      this.logger.debug('Issuance service call to the agent controller for creating an OOB offer');
       const pattern = { cmd: 'agent-out-of-band-credential-offer' };
       const payload = { outOfBandIssuancePayload, url, orgId };
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsCall(pattern, payload);
+      this.logger.debug('Success: Issuance service call to the agent controller for creating an OOB offer');
+      return result;
     } catch (error) {
       this.logger.error(`[_outOfBandCredentialOffer] [NATS call]- error in out of band  : ${JSON.stringify(error)}`);
       throw error;

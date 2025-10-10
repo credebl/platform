@@ -1154,8 +1154,9 @@ export class IssuanceService {
       this.logger.debug('Issuance service call to the agent controller for creating an OOB offer');
       const pattern = { cmd: 'agent-out-of-band-credential-offer' };
       const payload = { outOfBandIssuancePayload, url, orgId };
-      this.logger.debug('Successful: Issuance service call to the agent controller for creating an OOB offer');
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsCall(pattern, payload);
+      this.logger.debug('Success: Issuance service call to the agent controller for creating an OOB offer');
+      return result;
     } catch (error) {
       this.logger.error(`[_outOfBandCredentialOffer] [NATS call]- error in out of band  : ${JSON.stringify(error)}`);
       throw error;

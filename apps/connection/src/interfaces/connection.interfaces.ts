@@ -16,7 +16,7 @@ export interface IConnection {
   handshakeProtocols: string[];
   orgId: string;
   recipientKey?: string;
-  invitationDid?: string
+  invitationDid?: string;
 }
 export interface IUserRequestInterface {
   userId: string;
@@ -130,7 +130,7 @@ export interface IConnectionSearchCriteria {
   sortField: string;
   sortBy: string;
   searchByText: string;
-  user: IUserRequestInterface
+  user: IUserRequestInterface;
 }
 
 export interface AgentConnectionSearchCriteria {
@@ -143,9 +143,9 @@ export interface AgentConnectionSearchCriteria {
 }
 
 export interface IReceiveInvitationByUrlOrg {
-  user: IUserRequestInterface,
-  receiveInvitationUrl: IReceiveInvitationUrl,
-  orgId: string
+  user: IUserRequestInterface;
+  receiveInvitationUrl: IReceiveInvitationUrl;
+  orgId: string;
 }
 
 export interface IReceiveInvitationUrl extends IReceiveInvite {
@@ -153,9 +153,9 @@ export interface IReceiveInvitationUrl extends IReceiveInvite {
 }
 
 export interface IReceiveInvitationByOrg {
-  user: IUserRequestInterface,
-  receiveInvitation: IReceiveInvitation,
-  orgId: string
+  user: IUserRequestInterface;
+  receiveInvitation: IReceiveInvitation;
+  orgId: string;
 }
 
 interface Service {
@@ -210,8 +210,8 @@ interface OutOfBandInvitationService {
 }
 
 interface OutOfBandInvitation {
-  "@type": string;
-  "@id": string;
+  '@type': string;
+  '@id': string;
   label: string;
   accept: string[];
   handshake_protocols: string[];
@@ -266,7 +266,7 @@ export interface ConnectionResponseDetail {
   lastChangedDateTime: Date;
   lastChangedBy: number;
   recordId: string;
-  invitationDid?: string
+  invitationDid?: string;
 }
 
 export interface ICreateConnectionInvitation {
@@ -289,6 +289,6 @@ export interface ICreateConnectionInvitation {
 }
 
 export interface ICreateOutOfbandConnectionInvitation {
-  user: IUserRequestInterface,
-  createOutOfBandConnectionInvitation: ICreateConnectionInvitation,
+  user: IUserRequestInterface;
+  createOutOfBandConnectionInvitation: ICreateConnectionInvitation;
 }

@@ -451,22 +451,8 @@ export class UserService {
       if (true === isPasskey && false === userData?.isFidoVerified) {
         throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
       }
-      // called seprate method to delete exp session
-      if (userData?.id) {
-        const sessions = await this.userRepository.fetchUserSessionDetails(userData?.id);
-        if (sessions && 0 < sessions.length) {
-          for (const session of sessions) {
-            const decodedToken = jwt.decode(session.refreshToken);
-            const expiresAt = new Date(decodedToken.exp * 1000);
-            const currentTime = new Date();
-            if (expiresAt < currentTime) {
-              await this.userRepository.deleteSession(session?.id);
-            }
-          }
-        }
-      }
 
-      // this.userRepository.deleteInactiveSessions(userData?.id);
+      this.userRepository.deleteInactiveSessions(userData?.id);
       const userSessionDetails = await this.userRepository.fetchUserSessions(userData?.id);
       if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
         throw new BadRequestException(ResponseMessages.user.error.sessionLimitReached);
@@ -576,13 +562,9 @@ export class UserService {
 
       const sessionDetails = await this.userRepository.getSession(data.sid);
       if (!sessionDetails) {
-        throw new NotFoundException(ResponseMessages.user.error.userSeesionNotFound);
+        throw new NotFoundException(ResponseMessages.user.error.userSessionNotFound);
       }
-      // Delete previous session
-      // const deletePreviousSession = await this.userRepository.deleteSession(sessionDetails.id);
-      // if (!deletePreviousSession) {
-      //   throw new InternalServerErrorException(ResponseMessages.user.error.errorInDeleteSession);
-      // }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const decodedToken: any = jwt.decode(tokenResponse?.refresh_token);
       const expiresAt = new Date(decodedToken.exp * 1000);
@@ -600,23 +582,6 @@ export class UserService {
       return tokenResponse;
     } catch (error) {
       this.logger.error(`In refreshTokenDetails : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
-  async generateAccessTokenUsingRefreshToken(refreshToken: string): Promise<ISignInUser> {
-    try {
-      const data = jwt.decode(refreshToken) as jwt.JwtPayload;
-      const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
-      this.logger.debug(`User details::;${JSON.stringify(userByKeycloakId)}`);
-      const tokenResponse = await this.clientRegistrationService.getAccessToken(
-        refreshToken,
-        userByKeycloakId?.['clientId'],
-        userByKeycloakId?.['clientSecret']
-      );
-      return tokenResponse;
-    } catch (error) {
-      this.logger.error(`In generateAccessTokenUsingRefreshToken : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

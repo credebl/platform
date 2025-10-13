@@ -1074,6 +1074,10 @@ export class UserRepository {
       return sessionResponse;
     } catch (error) {
       this.logger.error(`Error in creating session: ${error.message} `);
+      if (error instanceof Prisma.PrismaClientKnownRequestError && 'P2025' === error.code) {
+        this.logger.warn(`Session not found for update: ${id}`);
+        throw new NotFoundException('Session not found');
+      }
       throw error;
     }
   }

@@ -73,7 +73,7 @@ export const ResponseMessages = {
       errorInDeleteSession: 'Error in deleting the session',
       errorInSessionCreation: 'Error in create session',
       userAccountNotFound: 'User account not found',
-      userSeesionNotFound: 'User session not found',
+      userSessionNotFound: 'User session not found',
       refreshTokenExpired: 'Refresh token has expired'
     }
   },

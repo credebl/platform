@@ -95,11 +95,6 @@ export class UserController {
     return this.userService.refreshTokenDetails(refreshToken);
   }
 
-  @MessagePattern({ cmd: 'generate-accessToken-using-refresh-token' })
-  async generateAccessTokenUsingRefreshToken(payload: { refreshToken: string }): Promise<ISignInUser> {
-    return this.userService.generateAccessTokenUsingRefreshToken(payload?.refreshToken);
-  }
-
   @MessagePattern({ cmd: 'session-details-by-userId' })
   async userSessions(userId: string): Promise<IRestrictedUserSession[]> {
     return this.userService.userSessions(userId);

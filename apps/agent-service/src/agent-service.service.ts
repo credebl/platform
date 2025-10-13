@@ -80,6 +80,11 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
 import { IVerificationMethod } from 'apps/organization/interfaces/organization.interface';
 import { getAgentUrl } from '@credebl/common/common.utils';
+import {
+  IX509ImportCertificateOptionsDto,
+  x509CertificateDecodeDto,
+  X509CreateCertificateOptions
+} from '@credebl/common/interfaces/x509.interface';
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {
@@ -89,7 +94,6 @@ export class AgentServiceService {
     private readonly agentServiceRepository: AgentServiceRepository,
     private readonly prisma: PrismaService,
     private readonly commonService: CommonService,
-    private readonly connectionService: ConnectionService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly userActivityRepository: UserActivityRepository,
@@ -2218,6 +2222,51 @@ export class AgentServiceService {
 
       return encryptedToken;
     } catch (error) {
+      throw error;
+    }
+  }
+
+  async createX509Certificate(options: X509CreateCertificateOptions, url: string, orgId: string): Promise<object> {
+    try {
+      this.logger.log('Start creating X509 certificate');
+      this.logger.debug('Creating X509 certificate with options', options);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const x509Certificate = await this.commonService
+        .httpPost(url, options, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return x509Certificate;
+    } catch (error) {
+      this.logger.error(`Error in creating x509 certificate in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async decodeX509Certificate(options: x509CertificateDecodeDto, url: string, orgId: string): Promise<object> {
+    try {
+      this.logger.log('Start decoding X509 certificate');
+      this.logger.debug('Decoding X509 certificate with options', options);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const x509Certificate = await this.commonService
+        .httpPost(url, options, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return x509Certificate;
+    } catch (error) {
+      this.logger.error(`Error in decoding x509 certificate in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async importX509Certificate(options: IX509ImportCertificateOptionsDto, url: string, orgId: string): Promise<object> {
+    try {
+      this.logger.log('Start importing X509 certificate');
+      this.logger.debug(`Importing X509 certificate with options`, options.certificate);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const x509Certificate = await this.commonService
+        .httpPost(url, options, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return x509Certificate;
+    } catch (error) {
+      this.logger.error(`Error in creating x509 certificate in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

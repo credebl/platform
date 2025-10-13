@@ -466,8 +466,10 @@ export class UserService {
         const decryptedPassword = await this.commonService.decryptPassword(password);
         tokenDetails = await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const decodedToken: any = jwt.decode(tokenDetails?.refresh_token);
+      const decodedToken = jwt.decode(tokenDetails?.refresh_token);
+      if (!decodedToken || 'object' !== typeof decodedToken || !decodedToken.exp || !decodedToken.sid) {
+        throw new UnauthorizedException(ResponseMessages.user.error.refreshTokenExpired);
+      }
       const expiresAt = new Date(decodedToken.exp * 1000);
 
       const sessionData = {

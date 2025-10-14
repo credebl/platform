@@ -32,6 +32,7 @@ export class CredentialDefinitionService extends BaseService {
   constructor(
     private readonly credentialDefinitionRepository: CredentialDefinitionRepository,
     @Inject('NATS_CLIENT') private readonly credDefServiceProxy: ClientProxy,
+    // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly natsClient: NATSClient
   ) {

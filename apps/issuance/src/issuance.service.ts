@@ -109,6 +109,7 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private readonly bulkIssuanceQueue: Queue,
+    // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     @Inject(ContextStorageServiceKey)
     private readonly contextStorageService: ContextStorageService,

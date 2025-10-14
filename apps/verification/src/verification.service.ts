@@ -64,8 +64,10 @@ export class VerificationService {
     private readonly verificationRepository: VerificationRepository,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly outOfBandVerification: OutOfBandVerification,
+    // TODO: Remove duplicate, unused variable
     private readonly userActivityService: UserActivityService,
     private readonly emailData: EmailDto,
+    // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly natsClient: NATSClient
   ) {}

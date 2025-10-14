@@ -91,6 +91,7 @@ export class AgentServiceService {
     private readonly commonService: CommonService,
     private readonly connectionService: ConnectionService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
+    // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly natsClient: NATSClient

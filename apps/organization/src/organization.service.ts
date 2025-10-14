@@ -79,6 +79,7 @@ export class OrganizationService {
     private readonly awsService: AwsService,
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
+    // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly clientRegistrationService: ClientRegistrationService,
     private readonly userActivityRepository: UserActivityRepository,

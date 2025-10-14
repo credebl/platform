@@ -11,7 +11,6 @@ import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { BullModule } from '@nestjs/bull';
 import { CacheModule } from '@nestjs/cache-manager';
-// import * as redisStore from 'cache-manager-redis-store';
 import { BulkIssuanceProcessor } from './issuance.processor';
 import { AwsService } from '@credebl/aws';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
@@ -21,8 +20,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { NATSClient } from '@credebl/common/NATSClient';
-import { redisStore } from 'cache-manager-ioredis-yet';
-
+import KeyvRedis from '@keyv/redis';
 
 @Module({
   imports: [
@@ -39,22 +37,11 @@ import { redisStore } from 'cache-manager-ioredis-yet';
     LoggerModule,
     PlatformConfig,
     ContextInterceptorModule,
-    // CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
-    CacheModule.register(),
-  //  CacheModule.registerAsync({
-  //     isGlobal: true,
-  //     useFactory: async () => {
-  //       const store = await redisStore({
-  //         host: process.env.REDIS_HOST || 'localhost',
-  //         port: Number(process.env.REDIS_PORT) || 6380,
-  //       });
-
-  //       return {
-  //         store,
-  //         ttl: 3600, // 1 hour (optional)
-  //       };
-  //     },
-  //   }),
+    CacheModule.registerAsync({
+      useFactory: async () => ({
+        stores: [new KeyvRedis(`redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`)]
+      })
+    }),
     BullModule.forRoot({
       redis: {
         host: process.env.REDIS_HOST,

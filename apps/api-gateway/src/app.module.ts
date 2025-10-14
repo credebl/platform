@@ -16,12 +16,10 @@ import { VerificationModule } from './verification/verification.module';
 import { RevocationController } from './revocation/revocation.controller';
 import { RevocationModule } from './revocation/revocation.module';
 import { SchemaModule } from './schema/schema.module';
-// import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CacheModule } from '@nestjs/cache-manager';
-// import * as redisStore from 'cache-manager-redis-store';
 import { WebhookModule } from './webhook/webhook.module';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { NotificationModule } from './notification/notification.module';
@@ -32,7 +30,7 @@ import { ContextModule } from '@credebl/context/contextModule';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { redisStore } from 'cache-manager-ioredis-yet';
+import KeyvRedis from '@keyv/redis';
 
 @Module({
   imports: [
@@ -63,22 +61,11 @@ import { redisStore } from 'cache-manager-ioredis-yet';
     WebhookModule,
     NotificationModule,
     GlobalConfigModule,
-    // CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
-    CacheModule.register(),
-    // CacheModule.registerAsync({
-    //       isGlobal: true,
-    //       useFactory: async () => {
-    //         const store = await redisStore({
-    //           host: process.env.REDIS_HOST || 'localhost',
-    //           port: Number(process.env.REDIS_PORT) || 6380,
-    //         });
-    
-    //         return {
-    //           store,
-    //           ttl: 3600, // 1 hour (optional)
-    //         };
-    //       },
-    //     }),
+    CacheModule.registerAsync({
+      useFactory: async () => ({
+        stores: [new KeyvRedis(`redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`)]
+      })
+    }),
     GeoLocationModule,
     CloudWalletModule
   ],

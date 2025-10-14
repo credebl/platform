@@ -89,6 +89,7 @@ export class AgentServiceService {
     private readonly agentServiceRepository: AgentServiceRepository,
     private readonly prisma: PrismaService,
     private readonly commonService: CommonService,
+    // TODO: Remove duplicate, unused variable
     private readonly connectionService: ConnectionService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
     // TODO: Remove duplicate, unused variable

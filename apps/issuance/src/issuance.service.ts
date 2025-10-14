@@ -92,7 +92,6 @@ import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
-import { redisStore } from 'cache-manager-ioredis-yet';
 
 @Injectable()
 export class IssuanceService {
@@ -1260,13 +1259,13 @@ export class IssuanceService {
       };
 
       const orgDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      this.logger.debug('-----1-----',JSON.stringify(orgDetails))
-      this.logger.debug('-----importFileDetails----',JSON.stringify(importFileDetails))
+      this.logger.debug('-----1-----', JSON.stringify(orgDetails));
+      this.logger.debug('-----importFileDetails----', JSON.stringify(importFileDetails));
       const { fileName, templateId, type, isValidateSchema } = importFileDetails;
-      this.logger.debug('----1.1-----',isValidateSchema)
+      this.logger.debug('----1.1-----', isValidateSchema);
       if (type === SchemaType.W3C_Schema) {
         credentialDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
-      this.logger.debug('-----2-----',JSON.stringify(credentialDetails))
+        this.logger.debug('-----2-----', JSON.stringify(credentialDetails));
         if (orgDetails?.ledgerId !== credentialDetails?.ledgerId) {
           throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
         }
@@ -1294,7 +1293,7 @@ export class IssuanceService {
       }
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
-      this.logger.debug('-----3----------',JSON.stringify(getFileDetails))
+      this.logger.debug('-----3----------', JSON.stringify(getFileDetails));
       const csvData: string = getFileDetails.Body.toString();
 
       const parsedData = paParse(csvData, {
@@ -1360,7 +1359,7 @@ export class IssuanceService {
           return { email_identifier, ...newRow };
         });
       }
-      this.logger.debug(`validatedData::::${JSON.stringify(validatedData)}`)
+      this.logger.debug(`validatedData::::${JSON.stringify(validatedData)}`);
       const finalFileData = {
         data: validatedData,
         errors: [],
@@ -1371,27 +1370,19 @@ export class IssuanceService {
         await this.validateFileHeaders(fileHeader, attributeNameArray);
         await this.validateFileData(fileData, attributesArray, fileHeader);
       }
-      this.logger.debug('---------after validating')
+      this.logger.debug('---------after validating');
 
       credentialPayload.fileData = type === SchemaType.W3C_Schema ? finalFileData : parsedData;
       credentialPayload.fileName = fileName;
-      this.logger.debug(`credentialPayload:::${JSON.stringify(credentialPayload)}`)
+      this.logger.debug(`credentialPayload:::${JSON.stringify(credentialPayload)}`);
       const newCacheKey = uuidv4();
       const cacheTTL = Number(process.env.FILEUPLOAD_CACHE_TTL) || CommonConstants.DEFAULT_CACHE_TTL;
-      console.log("cacheTTL",cacheTTL)
-      this.logger.debug(`newCacheKey:::${JSON.stringify(newCacheKey)}`)
-      const store = await redisStore({
-        host: '10.0.0.112',
-        port: 6380,
-      });
-      await store.set(requestId || newCacheKey,JSON.stringify(credentialPayload), cacheTTL);
-      const val = await store.get(newCacheKey);
-      console.log('Redis Value:', val);
-      // await this.cacheManager.set(requestId || newCacheKey, JSON.stringify(credentialPayload), cacheTTL).catch((error)=>{
-      //   this.logger.error(`Error in setting the cache${error}`)
-      // });
-  
-      console.log('-------end----------------')
+      await this.cacheManager
+        .set(requestId || newCacheKey, JSON.stringify(credentialPayload), cacheTTL)
+        .catch((error) => {
+          this.logger.error(`Error in setting the cache${error}`);
+          throw new RpcException('Failed to set cache');
+        });
       return newCacheKey;
     } catch (error) {
       this.logger.error(`error in validating credentials : ${error}`);
@@ -1402,12 +1393,7 @@ export class IssuanceService {
   async previewFileDataForIssuance(requestId: string, previewRequest: PreviewRequest): Promise<object> {
     try {
       if ('' !== requestId.trim()) {
-        const store = await redisStore({
-        host: '10.0.0.112',
-        port: 6380,
-      });
-        // const cachedData = await this.cacheManager.get(requestId);
-              const cachedData = await store.get(requestId);
+        const cachedData = await this.cacheManager.get(requestId);
         if (!cachedData) {
           throw new NotFoundException(ResponseMessages.issuance.error.emptyFileData);
         }
@@ -1441,7 +1427,7 @@ export class IssuanceService {
 
   async getFileDetailsByFileId(fileId: string, getAllfileDetails: PreviewRequest): Promise<object> {
     try {
-      console.log('------------------2------------------')
+      this.logger.log('getFileDetailsByFileId: get file details by fileId');
       const fileData = await this.issuanceRepository.getFileDetailsByFileId(fileId, getAllfileDetails);
 
       const fileResponse = {
@@ -1467,7 +1453,7 @@ export class IssuanceService {
 
   async issuedFileDetails(orgId: string, getAllfileDetails: PreviewRequest): Promise<object> {
     try {
-      console.log('-----1-----------')
+      this.logger.log('issuedFileDetails: Get issued file details');
       const fileDetails = await this.issuanceRepository.getAllFileDetails(orgId, getAllfileDetails);
 
       const templateIds = fileDetails?.fileList.map((file) => file.templateId);

@@ -43,6 +43,7 @@
     "@nestjs/typeorm": "catalog:",
     "@nestjs/websockets": "catalog:",
     "@keyv/redis": "catalog:",
+    "keyv": "catalog:",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/exporter-logs-otlp-http": "^0.202.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.202.0",

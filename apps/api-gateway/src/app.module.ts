@@ -62,6 +62,7 @@ import KeyvRedis from '@keyv/redis';
     NotificationModule,
     GlobalConfigModule,
     CacheModule.registerAsync({
+      isGlobal: true,
       useFactory: async () => ({
         stores: [new KeyvRedis(`redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`)]
       })
@@ -76,7 +77,8 @@ import KeyvRedis from '@keyv/redis';
       provide: MICRO_SERVICE_NAME,
       useValue: 'APIGATEWAY'
     }
-  ]
+  ],
+  exports: [CacheModule]
 })
 export class AppModule {
   configure(userContext: MiddlewareConsumer): void {

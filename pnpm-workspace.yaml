@@ -26,3 +26,4 @@ catalog:
   "nestjs-supabase-auth": ^1.0.9
   "nestjs-typeorm-paginate": ^4.0.4
   "@keyv/redis": ^5.1.3
+  "keyv": ^5.5.3

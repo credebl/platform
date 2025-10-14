@@ -92,7 +92,6 @@ import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
-import { Keyv } from '@keyv/redis';
 
 @Injectable()
 export class IssuanceService {
@@ -104,7 +103,7 @@ export class IssuanceService {
     private readonly commonService: CommonService,
     private readonly issuanceRepository: IssuanceRepository,
     private readonly userActivityRepository: UserActivityRepository,
-    @Inject('KEYV') private readonly cacheManager: Keyv,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
@@ -1249,6 +1248,7 @@ export class IssuanceService {
 
   async uploadCSVTemplate(importFileDetails: ImportFileDetails, orgId: string, requestId?: string): Promise<string> {
     try {
+      this.logger.debug('REached here in:: uploadCSVTemplate ');
       let credentialDetails;
       const credentialPayload: ICredentialPayload = {
         schemaLedgerId: '',

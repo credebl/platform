@@ -20,6 +20,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { NATSClient } from '@credebl/common/NATSClient';
+import Keyv from 'keyv';
 import KeyvRedis from '@keyv/redis';
 
 @Module({
@@ -38,8 +39,13 @@ import KeyvRedis from '@keyv/redis';
     PlatformConfig,
     ContextInterceptorModule,
     CacheModule.registerAsync({
+      isGlobal: true,
       useFactory: async () => ({
-        stores: [new KeyvRedis(`redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`)]
+        stores: [
+          new Keyv({
+            store: new KeyvRedis(`redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`)
+          })
+        ]
       })
     }),
     BullModule.forRoot({
@@ -68,6 +74,7 @@ import KeyvRedis from '@keyv/redis';
       provide: MICRO_SERVICE_NAME,
       useValue: 'IssuanceService'
     }
-  ]
+  ],
+  exports: [CacheModule]
 })
 export class IssuanceModule {}

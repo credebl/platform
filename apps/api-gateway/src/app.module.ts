@@ -21,7 +21,7 @@ import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CacheModule } from '@nestjs/cache-manager';
-import * as redisStore from 'cache-manager-redis-store';
+// import * as redisStore from 'cache-manager-redis-store';
 import { WebhookModule } from './webhook/webhook.module';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { NotificationModule } from './notification/notification.module';
@@ -32,6 +32,7 @@ import { ContextModule } from '@credebl/context/contextModule';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { redisStore } from 'cache-manager-ioredis-yet';
 
 @Module({
   imports: [
@@ -62,7 +63,22 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
     WebhookModule,
     NotificationModule,
     GlobalConfigModule,
-    CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
+    // CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
+    CacheModule.register(),
+    // CacheModule.registerAsync({
+    //       isGlobal: true,
+    //       useFactory: async () => {
+    //         const store = await redisStore({
+    //           host: process.env.REDIS_HOST || 'localhost',
+    //           port: Number(process.env.REDIS_PORT) || 6380,
+    //         });
+    
+    //         return {
+    //           store,
+    //           ttl: 3600, // 1 hour (optional)
+    //         };
+    //       },
+    //     }),
     GeoLocationModule,
     CloudWalletModule
   ],

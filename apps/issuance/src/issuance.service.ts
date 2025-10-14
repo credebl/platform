@@ -92,6 +92,7 @@ import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
+import { Keyv } from '@keyv/redis';
 
 @Injectable()
 export class IssuanceService {
@@ -103,7 +104,7 @@ export class IssuanceService {
     private readonly commonService: CommonService,
     private readonly issuanceRepository: IssuanceRepository,
     private readonly userActivityRepository: UserActivityRepository,
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @Inject('KEYV') private readonly cacheManager: Keyv,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,

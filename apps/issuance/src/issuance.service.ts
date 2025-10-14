@@ -1261,13 +1261,9 @@ export class IssuanceService {
       };
 
       const orgDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-      this.logger.debug('-----1-----', JSON.stringify(orgDetails));
-      this.logger.debug('-----importFileDetails----', JSON.stringify(importFileDetails));
       const { fileName, templateId, type, isValidateSchema } = importFileDetails;
-      this.logger.debug('----1.1-----', isValidateSchema);
       if (type === SchemaType.W3C_Schema) {
         credentialDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
-        this.logger.debug('-----2-----', JSON.stringify(credentialDetails));
         if (orgDetails?.ledgerId !== credentialDetails?.ledgerId) {
           throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
         }
@@ -1295,7 +1291,6 @@ export class IssuanceService {
       }
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
-      this.logger.debug('-----3----------', JSON.stringify(getFileDetails));
       const csvData: string = getFileDetails.Body.toString();
 
       const parsedData = paParse(csvData, {
@@ -1372,7 +1367,6 @@ export class IssuanceService {
         await this.validateFileHeaders(fileHeader, attributeNameArray);
         await this.validateFileData(fileData, attributesArray, fileHeader);
       }
-      this.logger.debug('---------after validating');
 
       credentialPayload.fileData = type === SchemaType.W3C_Schema ? finalFileData : parsedData;
       credentialPayload.fileName = fileName;

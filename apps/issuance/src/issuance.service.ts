@@ -92,6 +92,7 @@ import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
+import { redisStore } from 'cache-manager-ioredis-yet';
 
 @Injectable()
 export class IssuanceService {
@@ -1378,12 +1379,14 @@ export class IssuanceService {
       this.logger.debug(`credentialPayload:::${JSON.stringify(credentialPayload)}`);
       const newCacheKey = uuidv4();
       const cacheTTL = Number(process.env.FILEUPLOAD_CACHE_TTL) || CommonConstants.DEFAULT_CACHE_TTL;
-      await this.cacheManager
-        .set(requestId || newCacheKey, JSON.stringify(credentialPayload), cacheTTL)
-        .catch((error) => {
-          this.logger.error(`Error in setting the cache${error}`);
-          throw new RpcException('Failed to set cache');
-        });
+      const store = await redisStore({
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT)
+      });
+      await store.set(requestId || newCacheKey, JSON.stringify(credentialPayload), cacheTTL).catch((error) => {
+        this.logger.error(`Error in setting the cache${error}`);
+        throw new RpcException('Failed to set cache');
+      });
       return newCacheKey;
     } catch (error) {
       this.logger.error(`error in validating credentials : ${error}`);
@@ -1394,7 +1397,11 @@ export class IssuanceService {
   async previewFileDataForIssuance(requestId: string, previewRequest: PreviewRequest): Promise<object> {
     try {
       if ('' !== requestId.trim()) {
-        const cachedData = await this.cacheManager.get(requestId);
+        const store = await redisStore({
+          host: process.env.REDIS_HOST,
+          port: Number(process.env.REDIS_PORT)
+        });
+        const cachedData = await store.get(requestId);
         if (!cachedData) {
           throw new NotFoundException(ResponseMessages.issuance.error.emptyFileData);
         }
@@ -1626,16 +1633,20 @@ export class IssuanceService {
     let csvFileDetail;
 
     try {
-      let cachedData = await this.cacheManager.get(requestId);
+      const store = await redisStore({
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT)
+      });
+      let cachedData = await store.get(requestId);
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
 
       // For demo UI
       if (cachedData && clientDetails?.isSelectiveIssuance) {
-        await this.cacheManager.del(requestId);
+        await store.del(requestId);
         await this.uploadCSVTemplate(reqPayload, requestId);
-        cachedData = await this.cacheManager.get(requestId);
+        cachedData = await store.get(requestId);
       }
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
@@ -1867,7 +1878,12 @@ export class IssuanceService {
             clientId: jobDetails.clientId,
             fileUploadId: jobDetails.fileUploadId
           });
-          this.cacheManager.del(jobDetails.cacheId);
+
+          const store = await redisStore({
+            host: process.env.REDIS_HOST,
+            port: Number(process.env.REDIS_PORT)
+          });
+          store.del(jobDetails.cacheId);
         } else {
           socket.emit('bulk-issuance-process-retry-completed', {
             clientId: jobDetails.clientId,

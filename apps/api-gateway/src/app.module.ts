@@ -30,7 +30,6 @@ import { ContextModule } from '@credebl/context/contextModule';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import KeyvRedis from '@keyv/redis';
 
 @Module({
   imports: [
@@ -61,12 +60,7 @@ import KeyvRedis from '@keyv/redis';
     WebhookModule,
     NotificationModule,
     GlobalConfigModule,
-    CacheModule.registerAsync({
-      isGlobal: true,
-      useFactory: async () => ({
-        stores: [new KeyvRedis(`redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`)]
-      })
-    }),
+    CacheModule.register(),
     GeoLocationModule,
     CloudWalletModule
   ],

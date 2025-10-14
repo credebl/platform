@@ -49,6 +49,7 @@ export class CloudWalletService {
     @Inject('NATS_CLIENT') private readonly cloudWalletServiceProxy: ClientProxy,
     private readonly cloudWalletRepository: CloudWalletRepository,
     private readonly logger: Logger,
+    // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private cacheService: Cache
   ) {}
 

@@ -19,6 +19,7 @@
     "@nestjs/testing": "catalog:",
     "@nestjs/microservices": "catalog:",
     "@nestjs/swagger": "catalog:",
+    "@nestjs/cache-manager": "catalog:",
     "@prisma/client": "^5.1.1",
     "@sendgrid/mail": "^7.7.0",
     "class-transformer": "^0.5.1",

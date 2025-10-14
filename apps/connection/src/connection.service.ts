@@ -41,6 +41,7 @@ export class ConnectionService {
     private readonly connectionRepository: ConnectionRepository,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
+    // TODO: Remove unused variable
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly natsClient: NATSClient
   ) {}

@@ -616,6 +616,28 @@ export const ResponseMessages = {
       errorDecode: 'Error while decoding x509 certificate.'
     }
   },
+  x509: {
+    success: {
+      create: 'x509 certificate created successfully',
+      activated: 'x509 certificate activated successfully',
+      deActivated: 'x509 certificate deactivated successfully',
+      fetch: 'x509 certificate fetched successfully',
+      fetchAll: 'x509 certificates fetched successfully',
+      import: 'x509 certificate imported successfully'
+    },
+    error: {
+      errorCreate: 'Error while creating x509 certificate.',
+      errorUpdateStatus: 'Error while updating x509 certificate.',
+      errorActivation: 'Failed to activate x509 certificate..',
+      agentEndPointNotFound: 'Agent details not found',
+      collision: 'Certificate date range collides with existing certificates for this organization',
+      collisionForActivatingX5c:
+        'Certificate date range collides with existing certificates for this organization, In order to active this you need to Inactivate the previous one.',
+      notFound: 'x509 certificate record not found.',
+      import: 'Failed to import x509 certificate',
+      errorDecode: 'Error while decoding x509 certificate.'
+    }
+  },
   nats: {
     success: {},
     error: {

@@ -295,6 +295,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/oid4vc-issuance/tsconfig.app.json"
       }
+    },
+      "x509": {
+      "type": "application",
+      "root": "apps/x509",
+      "entryFile": "main",
+      "sourceRoot": "apps/x509/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/x509/tsconfig.app.json"
+      }
     }
   }
 }

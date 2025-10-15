@@ -22,12 +22,6 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
-/* ========= Enums ========= */
-export enum CredentialFormat {
-  SdJwtVc = 'vc+sd-jwt',
-  Mdoc = 'mdoc'
-}
-
 /* ========= disclosureFrame custom validator ========= */
 function isDisclosureFrameValue(v: unknown): boolean {
   if ('boolean' === typeof v) {

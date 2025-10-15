@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 import { Prisma, credential_templates } from '@prisma/client';
 import { GetAllCredentialOffer, SignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
+import { CredentialFormat } from '@credebl/enum/enum';
 /* ============================================================================
    Domain Types
 ============================================================================ */
@@ -14,11 +15,6 @@ interface TemplateAttribute {
   value_type: ValueType;
 }
 type TemplateAttributes = Record<string, TemplateAttribute>;
-
-export enum CredentialFormat {
-  SdJwtVc = 'vc+sd-jwt',
-  Mdoc = 'mso_mdoc'
-}
 
 export enum SignerMethodOption {
   DID = 'did',

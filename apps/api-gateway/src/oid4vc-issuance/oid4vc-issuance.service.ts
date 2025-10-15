@@ -7,6 +7,7 @@ import { BaseService } from 'libs/service/base.service';
 import { oidc_issuer, user } from '@prisma/client';
 import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oid4vc-issuer-template.dto';
 import {
+  CreateCredentialOfferD2ADto,
   CreateOidcCredentialOfferDto,
   GetAllCredentialOfferDto,
   UpdateCredentialRequestDto
@@ -98,7 +99,10 @@ export class Oid4vcIssuanceService extends BaseService {
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-create-credential-offer', payload);
   }
 
-  async createOidcCredentialOfferD2A(oidcCredentialD2APayload, orgId: string): Promise<object> {
+  async createOidcCredentialOfferD2A(
+    oidcCredentialD2APayload: CreateCredentialOfferD2ADto,
+    orgId: string
+  ): Promise<object> {
     const payload = { oidcCredentialD2APayload, orgId };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-create-credential-offer-D2A', payload);
   }

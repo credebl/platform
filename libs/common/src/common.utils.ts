@@ -71,7 +71,6 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
   if (!agentEndPoint) {
     throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
   }
-
   const agentUrlMap: Map<string, string> = new Map<string, string>([
     [String(CommonConstants.CONNECTION_INVITATION), String(CommonConstants.URL_CONN_INVITE)],
     [String(CommonConstants.LEGACY_INVITATION), String(CommonConstants.URL_CONN_LEGACY_INVITE)],
@@ -106,7 +105,10 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
     [String(CommonConstants.OIDC_ISSUER_SESSIONS_UPDATE_OFFER), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET)],
     [String(CommonConstants.OIDC_ISSUER_SESSIONS_BY_ID), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET)],
     [String(CommonConstants.OIDC_ISSUER_SESSIONS), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)],
-    [String(CommonConstants.OIDC_DELETE_CREDENTIAL_OFFER), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)]
+    [String(CommonConstants.OIDC_DELETE_CREDENTIAL_OFFER), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)],
+    [String(CommonConstants.X509_CREATE_CERTIFICATE), String(CommonConstants.URL_CREATE_X509_CERTIFICATE)],
+    [String(CommonConstants.X509_DECODE_CERTIFICATE), String(CommonConstants.URL_DECODE_X509_CERTIFICATE)],
+    [String(CommonConstants.X509_IMPORT_CERTIFICATE), String(CommonConstants.URL_IMPORT_X509_CERTIFICATE)]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);

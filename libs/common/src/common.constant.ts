@@ -126,6 +126,11 @@ export enum CommonConstants {
   URL_OIDC_ISSUER_SESSIONS_GET = '/openid4vc/issuance-sessions/#',
   URL_OIDC_ISSUER_SESSIONS_GET_ALL = '/openid4vc/issuance-sessions',
 
+  //X509 agent API URLs
+  URL_CREATE_X509_CERTIFICATE = '/x509',
+  URL_IMPORT_X509_CERTIFICATE = '/x509/import',
+  URL_DECODE_X509_CERTIFICATE = '/x509/decode',
+
   // Nested attribute separator
   NESTED_ATTRIBUTE_SEPARATOR = '~',
 
@@ -374,6 +379,7 @@ export enum CommonConstants {
   GEO_LOCATION_SERVICE = 'geo-location',
   CLOUD_WALLET_SERVICE = 'cloud-wallet',
   OIDC4VC_ISSUANCE_SERVICE = 'oid4vc-issuance',
+  X509_SERVICE = 'x509-service',
 
   ACCEPT_OFFER = '/didcomm/credentials/accept-offer',
   SEED_LENGTH = 32,
@@ -407,7 +413,12 @@ export enum CommonConstants {
   OIDC_ISSUER_SESSIONS_UPDATE_OFFER = 'update-oid4vc-credential-offer',
   OIDC_ISSUER_SESSIONS_BY_ID = 'get-oid4vc-session-by-id',
   OIDC_ISSUER_SESSIONS = 'get-oid4vc-sessions',
-  OIDC_DELETE_CREDENTIAL_OFFER = 'delete-oid4vc-credential-offer'
+  OIDC_DELETE_CREDENTIAL_OFFER = 'delete-oid4vc-credential-offer',
+
+  //X509
+  X509_CREATE_CERTIFICATE = 'create-x509-certificate',
+  X509_IMPORT_CERTIFICATE = 'import-x509-certificate',
+  X509_DECODE_CERTIFICATE = 'decode-x509-certificate'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

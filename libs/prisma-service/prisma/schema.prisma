@@ -231,6 +231,7 @@ model org_agents {
   webhookUrl          String?             @db.VarChar
   org_dids            org_dids[]
   oidc_issuer         oidc_issuer[]
+  x509_certificates   x509_certificates[] 
 }
 
 model org_dids {
@@ -621,4 +622,25 @@ model credential_templates {
   updatedAt     DateTime    @updatedAt
   signerOption  SignerOption
 }
+
+model x509_certificates {
+  id            String      @id @default(uuid())
+
+  orgAgentId          String     @db.Uuid
+  org_agents          org_agents @relation(fields: [orgAgentId], references: [id])
+
+  keyType       String      // "p256", "ed25519"
+  status        String     //e.g "Active", "Pending activation", "InActive" 
+  validFrom     DateTime     
+
+  expiry        DateTime 
+  certificateBase64    String
+  isImported    Boolean     @default(false)
+
+  createdAt     DateTime    @default(now())
+  createdBy     String        @db.Uuid
+  lastChangedDateTime     DateTime    @updatedAt
+  lastChangedBy        String        @db.Uuid
+}
+
 

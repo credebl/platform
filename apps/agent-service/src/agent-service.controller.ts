@@ -27,6 +27,11 @@ import { user } from '@prisma/client';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
+import {
+  IX509ImportCertificateOptionsDto,
+  x509CertificateDecodeDto,
+  X509CreateCertificateOptions
+} from '@credebl/common/interfaces/x509.interface';
 
 @Controller()
 export class AgentServiceController {
@@ -379,5 +384,32 @@ export class AgentServiceController {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcDeleteCredentialOffer(payload: { url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcDeleteCredentialOffer(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-create-x509-certificate' })
+  async createX509Certificate(payload: {
+    options: X509CreateCertificateOptions;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.createX509Certificate(payload.options, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-decode-x509-certificate' })
+  async decodeX509Certificate(payload: {
+    options: x509CertificateDecodeDto;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.decodeX509Certificate(payload.options, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-import-x509-certificate' })
+  async importX509Certificate(payload: {
+    options: IX509ImportCertificateOptionsDto;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.importX509Certificate(payload.options, payload.url, payload.orgId);
   }
 }

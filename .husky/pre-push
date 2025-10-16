@@ -13,13 +13,30 @@ echo "🔒 Checking commit signatures..."
 while read local_ref local_sha remote_ref remote_sha; do
   # Determine range of commits
   if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
-    range="$local_sha"
+      current_branch=$(git rev-parse --abbrev-ref HEAD)
+      base_branch=$(git for-each-ref --format='%(refname:short)' refs/heads/ \
+              | grep -v "^${current_branch}$" \
+              | while read other_branch; do
+                  merge_base=$(git merge-base "$current_branch" "$other_branch")
+                  echo "$(git rev-list --count ${merge_base}..${current_branch}) $other_branch"
+                  done \
+              | sort -n \
+              | head -n1 \
+              | awk '{print $2}')
+
+      if [ -z "$base_branch" ]; then
+              echo "⚠️  Base branch not found — defaulting to 'main'"
+              base_branch=${default_branch:-main} 
+      fi
+    base_commit=$(git merge-base "$base_branch" "$current_branch")
+    range="$base_commit..$local_sha"
   else
     range="$remote_sha..$local_sha"
   fi
 
   unsigned_commits=""
 
+  echo "commit range ${range}"
   # Loop through each commit in range
   for commit in $(git rev-list $range); do
     # Skip merge commits

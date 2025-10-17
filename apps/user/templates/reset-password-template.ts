@@ -1,12 +1,19 @@
 import * as url from 'url';
 export class URLUserResetPasswordTemplate {
-  public getUserResetPasswordTemplate(email: string, platform: string, brandLogoUrl: string, uiEndpoint: string, verificationCode: string): string {
+  public getUserResetPasswordTemplate(
+    email: string,
+    platform: string,
+    brandLogoUrl: string,
+    uiEndpoint: string,
+    verificationCode: string,
+    clientAlias?: string
+  ): string {
     const endpoint = uiEndpoint || process.env.FRONT_END_URL;
 
     const apiUrl = url.parse(
-      `${endpoint}/reset-password?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}`
+      `${endpoint}/reset-password?verificationCode=${verificationCode}&email=${encodeURIComponent(email)}${clientAlias ? `&clientAlias=${clientAlias}` : ''}`
     );
-    
+
     const logoUrl = brandLogoUrl || process.env.BRAND_LOGO;
     const poweredBy = platform || process.env.POWERED_BY;
 
@@ -60,7 +67,6 @@ export class URLUserResetPasswordTemplate {
           </div>
       </body>
       </html>`;
-
     } catch (error) {}
   }
 }

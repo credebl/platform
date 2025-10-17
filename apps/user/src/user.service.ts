@@ -621,7 +621,7 @@ export class UserService {
    * @returns
    */
   async forgotPassword(forgotPasswordDto: IUserForgotPassword): Promise<IResetPasswordResponse> {
-    const { email, brandLogoUrl, platformName, endpoint } = forgotPasswordDto;
+    const { email, brandLogoUrl, platformName, endpoint, clientAlias } = forgotPasswordDto;
     try {
       this.validateEmail(email.toLowerCase());
       const userData = await this.userRepository.checkUserExist(email.toLowerCase());
@@ -644,7 +644,14 @@ export class UserService {
       }
 
       try {
-        await this.sendEmailForResetPassword(email, brandLogoUrl, platformName, endpoint, tokenCreated.token);
+        await this.sendEmailForResetPassword(
+          email,
+          brandLogoUrl,
+          platformName,
+          endpoint,
+          tokenCreated.token,
+          clientAlias
+        );
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
@@ -670,7 +677,8 @@ export class UserService {
     brandLogoUrl: string,
     platformName: string,
     endpoint: string,
-    verificationCode: string
+    verificationCode: string,
+    clientAlias: string | undefined
   ): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findMany();
@@ -688,7 +696,8 @@ export class UserService {
         platform,
         brandLogoUrl,
         endpoint,
-        verificationCode
+        verificationCode,
+        clientAlias
       );
       const isEmailSent = await sendEmail(emailData);
       if (isEmailSent) {

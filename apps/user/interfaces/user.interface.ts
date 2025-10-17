@@ -221,6 +221,7 @@ export interface IUserForgotPassword {
   brandLogoUrl?: string;
   platformName?: string;
   endpoint?: string;
+  clientAlias?: string;
 }
 export interface IIssueCertificate {
   courseCode: string;

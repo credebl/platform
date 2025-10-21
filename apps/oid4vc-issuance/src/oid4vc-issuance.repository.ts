@@ -5,6 +5,8 @@ import { Prisma, credential_templates, oidc_issuer, org_agents } from '@prisma/c
 import { PrismaService } from '@credebl/prisma-service';
 import { IssuerMetadata, IssuerUpdation, OrgAgent } from '../interfaces/oid4vc-issuance.interfaces';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
+import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 
 @Injectable()
 export class Oid4vcIssuanceRepository {
@@ -111,6 +113,27 @@ export class Oid4vcIssuanceRepository {
     }
   }
 
+  async getAllOidcIssuersByOrg(orgId: string): Promise<oidc_issuer[]> {
+    try {
+      return await this.prisma.oidc_issuer.findMany({
+        where: {
+          orgAgent: {
+            orgId
+          }
+        },
+        // include: {
+        //   templates: true
+        // },
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getOidcIssuerByOrg: ${error.message}`);
+      throw error;
+    }
+  }
+
   async getOidcIssuerDetailsById(issuerId: string): Promise<oidc_issuer> {
     try {
       return await this.prisma.oidc_issuer.findFirstOrThrow({
@@ -118,6 +141,35 @@ export class Oid4vcIssuanceRepository {
       });
     } catch (error) {
       this.logger.error(`Error in getOidcIssuerDetailsById: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getCurrentActiveCertificate(orgId: string, keyType: x5cKeyType): Promise<X509CertificateRecord> {
+    try {
+      const now = new Date();
+
+      const certificate = await this.prisma.x509_certificates.findFirst({
+        where: {
+          org_agents: {
+            orgId
+          },
+          status: x5cRecordStatus.Active,
+          keyType,
+          validFrom: {
+            lte: now
+          },
+          expiry: {
+            gte: now
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+      return certificate;
+    } catch (error) {
+      this.logger.error(`Error in getCurrentActiveCertificate: ${error.message}`);
       throw error;
     }
   }

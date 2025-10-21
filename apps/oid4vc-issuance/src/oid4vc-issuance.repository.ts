@@ -121,6 +121,9 @@ export class Oid4vcIssuanceRepository {
             orgId
           }
         },
+        // include: {
+        //   templates: true
+        // },
         orderBy: {
           createDateTime: 'desc'
         }

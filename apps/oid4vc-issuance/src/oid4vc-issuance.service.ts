@@ -23,7 +23,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { getAgentUrl } from '@credebl/common/common.utils';
-import { credential_templates, oidc_issuer, user } from '@prisma/client';
+import { credential_templates, oidc_issuer, SignerOption, user } from '@prisma/client';
 import {
   IAgentOIDCIssuerCreate,
   IssuerCreation,
@@ -57,6 +57,7 @@ import {
   buildCredentialOfferUrl,
   CredentialOfferPayload
 } from '../libs/helpers/credential-sessions.builder';
+import { x5cKeyType } from '@credebl/enum/enum';
 
 type CredentialDisplayItem = {
   logo?: { uri: string; alt_text?: string };
@@ -222,27 +223,30 @@ export class Oid4vcIssuanceService {
     }
   }
 
-  async oidcIssuers(orgId: string): Promise<IssuerResponse[]> {
+  async oidcIssuers(orgId: string): Promise<any> {
+    //Promise<IssuerResponse[]> {
     try {
       const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails?.agentEndPoint) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
+      const getIssuers = await this.oid4vcIssuanceRepository.getAllOidcIssuersByOrg(orgId);
 
-      const url = await getAgentUrl(agentDetails.agentEndPoint, CommonConstants.OIDC_GET_ALL_ISSUERS);
-      const issuersDetails = await this._oidcGetIssuers(url, orgId);
-      if (!issuersDetails || null == issuersDetails.response) {
-        throw new InternalServerErrorException('Error from agent while oidcIssuers');
-      }
-      //TODO: Fix the response type from agent
-      const raw = issuersDetails.response as unknown;
-      const response: IssuerResponse[] =
-        'string' === typeof raw ? (JSON.parse(raw) as IssuerResponse[]) : (raw as IssuerResponse[]);
+      // const url = await getAgentUrl(agentDetails.agentEndPoint, CommonConstants.OIDC_GET_ALL_ISSUERS);
+      // const issuersDetails = await this._oidcGetIssuers(url, orgId);
+      // if (!issuersDetails || null == issuersDetails.response) {
+      //   throw new InternalServerErrorException('Error from agent while oidcIssuers');
+      // }
+      // //TODO: Fix the response type from agent
+      // const raw = issuersDetails.response as unknown;
+      // const response: IssuerResponse[] =
+      //   'string' === typeof raw ? (JSON.parse(raw) as IssuerResponse[]) : (raw as IssuerResponse[]);
 
-      if (!Array.isArray(response)) {
-        throw new InternalServerErrorException('Invalid issuer payload from agent');
-      }
-      return response;
+      // if (!Array.isArray(response)) {
+      //   throw new InternalServerErrorException('Invalid issuer payload from agent');
+      // }
+      // return response;
+      return getIssuers;
     } catch (error: any) {
       const msg = error?.message ?? 'unknown error';
       this.logger.error(`[oidcIssuers] - error in oidcIssuers: ${msg}`);
@@ -294,13 +298,14 @@ export class Oid4vcIssuanceService {
       const metadata = {
         name,
         description,
-        format,
+        format: format.toString(),
         canBeRevoked,
         attributes,
         appearance: appearance ?? {},
         issuerId,
         signerOption
       };
+      console.log(`service - createTemplate: `, issuerId);
       // Persist in DB
       const createdTemplate = await this.oid4vcIssuanceRepository.createTemplate(issuerId, metadata);
       if (!createdTemplate) {
@@ -473,14 +478,45 @@ export class Oid4vcIssuanceService {
 
       //TDOD: signerOption should be under credentials change this with x509 support
       const signerOptions = [];
-      getAllOfferTemplates.forEach((template) => {
-        if (template.signerOption === SignerMethodOption.DID) {
+      for (const template of getAllOfferTemplates) {
+        if (template.signerOption === SignerOption.DID) {
           signerOptions.push({
             method: SignerMethodOption.DID,
             did: agentDetails.orgDid
           });
         }
-      });
+
+        if (template.signerOption == SignerOption.X509_P256) {
+          const activeCertificate = await this.oid4vcIssuanceRepository.getCurrentActiveCertificate(
+            orgId,
+            x5cKeyType.P256
+          );
+
+          if (!activeCertificate) {
+            throw new NotFoundException('No active certificate(p256) found for issuer');
+          }
+          signerOptions.push({
+            method: SignerMethodOption.X5C,
+            x5c: [activeCertificate.certificateBase64]
+          });
+        }
+
+        if (template.signerOption == SignerOption.X509_ED25519) {
+          const activeCertificate = await this.oid4vcIssuanceRepository.getCurrentActiveCertificate(
+            orgId,
+            x5cKeyType.Ed25519
+          );
+
+          if (!activeCertificate) {
+            throw new NotFoundException('No active certificate(ed25519) found for issuer');
+          }
+          signerOptions.push({
+            method: SignerMethodOption.X5C,
+            x5c: [activeCertificate.certificateBase64]
+          });
+        }
+      }
+      console.log(`Setup signerOptions `, signerOptions);
       //TODO: Implement x509 support and discuss with team
       const buildOidcCredentialOffer: CredentialOfferPayload = buildCredentialOfferPayload(
         createOidcCredentialOffer,

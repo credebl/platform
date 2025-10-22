@@ -1,26 +1,27 @@
 /* eslint-disable camelcase */
-import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsOptional,
   IsBoolean,
   IsArray,
   ValidateNested,
-  IsObject,
   IsUrl,
   IsNotEmpty,
   IsDefined,
   IsInt
 } from 'class-validator';
-import { plainToInstance, Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 
 export class ClaimDto {
   @ApiProperty({
-    description: 'The unique key for the claim (e.g. email, name)',
-    example: 'email'
+    description: 'The path for nested claims',
+    example: ['address', 'street_number'],
+    type: [String]
   })
-  @IsString()
-  key: string;
+  @Type(() => String)
+  @IsArray()
+  path: string[];
 
   @ApiProperty({
     description: 'The display label for the claim',
@@ -85,6 +86,7 @@ export class DisplayDto {
   logo?: LogoDto;
 }
 
+// TODO: Check where it is used, coz no reference found
 @ApiExtraModels(ClaimDto)
 export class CredentialConfigurationDto {
   @ApiProperty({
@@ -110,25 +112,25 @@ export class CredentialConfigurationDto {
   @IsString()
   scope: string;
 
-  // @ApiProperty({
-  //   description: 'List of claims supported in this credential',
-  //   type: [ClaimDto],
-  // })
-  // @IsArray()
-  // @ValidateNested({ each: true })
-  // @Type(() => ClaimDto)
-  // claims: ClaimDto[]
   @ApiProperty({
-    description: 'Claims supported by this credential',
-    type: 'object',
-    additionalProperties: { $ref: getSchemaPath(ClaimDto) }
+    description: 'List of claims supported in this credential',
+    type: [ClaimDto]
   })
-  @IsObject()
+  @IsArray()
   @ValidateNested({ each: true })
-  @Transform(({ value }) =>
-    Object.fromEntries(Object.entries(value || {}).map(([k, v]) => [k, plainToInstance(ClaimDto, v)]))
-  )
-  claims: Record<string, ClaimDto>;
+  @Type(() => ClaimDto)
+  claims: ClaimDto[];
+  // @ApiProperty({
+  //   description: 'Claims supported by this credential',
+  //   type: 'object',
+  //   additionalProperties: { $ref: getSchemaPath(ClaimDto) }
+  // })
+  // @IsObject()
+  // @ValidateNested({ each: true })
+  // @Transform(({ value }) =>
+  //   Object.fromEntries(Object.entries(value || {}).map(([k, v]) => [k, plainToInstance(ClaimDto, v)]))
+  // )
+  // claims: Record<string, ClaimDto>;
 
   @ApiProperty({ type: [String] })
   @IsArray()
@@ -217,7 +219,7 @@ export enum AccessTokenSignerKeyType {
   ED25519 = 'ed25519'
 }
 
-@ApiExtraModels(CredentialConfigurationDto)
+// @ApiExtraModels(CredentialConfigurationDto)
 export class IssuerCreationDto {
   @ApiProperty({
     description: 'Name of the issuer',

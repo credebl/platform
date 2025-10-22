@@ -18,9 +18,9 @@ export interface OrgAgent {
 }
 
 export interface Claim {
-  key: string;
-  label: string;
-  required: boolean;
+  path: string[];
+  label?: string;
+  required?: boolean;
 }
 
 export interface Logo {
@@ -40,7 +40,7 @@ export interface CredentialConfiguration {
   vct?: string;
   doctype?: string;
   scope: string;
-  claims: Record<string, Claim>;
+  claims: Claim[];
   credential_signing_alg_values_supported: string[];
   cryptographic_binding_methods_supported: string[];
   display: Display[];
@@ -61,7 +61,7 @@ export interface IssuerCreation {
   accessTokenSignerKeyType?: AccessTokenSignerKeyType;
   display: Display[];
   dpopSigningAlgValuesSupported?: string[];
-  credentialConfigurationsSupported?: Record<string, CredentialConfiguration>;
+  // credentialConfigurationsSupported?: Record<string, CredentialConfiguration>;   // Not used
   authorizationServerConfigs: AuthorizationServerConfig;
   batchCredentialIssuanceSize: number;
 }

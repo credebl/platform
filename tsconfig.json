@@ -2,17 +2,11 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "paths": {
-      "@credebl/common": [
-        "libs/common/src"
+      "@credebl/aws": [
+        "libs/aws/src"
       ],
-      "@credebl/common/*": [
-        "libs/common/src/*"
-      ],
-      "@credebl/keycloak-url": [
-        "libs/keycloak-url/src"
-      ],
-      "@credebl/keycloak-url/*": [
-        "libs/keycloak-url/src/*"
+      "@credebl/aws/*": [
+        "libs/aws/src/*"
       ],
       "@credebl/client-registration": [
         "libs/client-registration/src"
@@ -20,77 +14,11 @@
       "@credebl/client-registration/*": [
         "libs/client-registration/src/*"
       ],
-      "@credebl/prisma": [
-        "libs/prisma/src"
+      "@credebl/common": [
+        "libs/common/src"
       ],
-      "@credebl/prisma/*": [
-        "libs/prisma/src/*"
-      ],
-      "@credebl/repositories": [
-        "libs/repositories/src"
-      ],
-      "@credebl/repositories/*": [
-        "libs/repositories/src/*"
-      ],
-      "@credebl/user-request": [
-        "libs/user-request/src"
-      ],
-      "@credebl/user-request/*": [
-        "libs/user-request/src/*"
-      ],
-      "@credebl/logger": [
-        "libs/logger/src"
-      ],
-      "@credebl/logger/*": [
-        "libs/logger/src/*"
-      ],
-      "@credebl/enum": [
-        "libs/enum/src"
-      ],
-      "@credebl/enum/*": [
-        "libs/enum/src/*"
-      ],
-      "@credebl/prisma-service": [
-        "libs/prisma-service/src"
-      ],
-      "@credebl/prisma-service/*": [
-        "libs/prisma-service/src/*"
-      ],
-      "@credebl/org-roles": [
-        "libs/org-roles/src"
-      ],
-      "@credebl/org-roles/*": [
-        "libs/org-roles/src/*"
-      ],
-      "@credebl/user-org-roles": [
-        "libs/user-org-roles/src"
-      ],
-      "@credebl/user-org-roles/*": [
-        "libs/user-org-roles/src/*"
-      ],
-      "@credebl/user-activity": [
-        "libs/user-activity/src"
-      ],
-      "@credebl/user-activity/*": [
-        "libs/user-activity/src/*"
-      ],
-      "@credebl/supabase": [
-        "libs/supabase/src"
-      ],
-      "@credebl/supabase/*": [
-        "libs/supabase/src/*"
-      ],
-      "@credebl/aws": [
-        "libs/aws/src"
-      ],
-      "@credebl/aws/*": [
-        "libs/aws/src/*"
-      ],
-      "credebl/utility": [
-        "libs/utility/src"
-      ],
-      "credebl/utility/*": [
-        "libs/utility/src/*"
+      "@credebl/common/*": [
+        "libs/common/src/*"
       ],
       "@credebl/config": [
         "libs/config/src"
@@ -103,6 +31,78 @@
       ],
       "@credebl/context/*": [
         "libs/context/src/*"
+      ],
+      "@credebl/enum": [
+        "libs/enum/src"
+      ],
+      "@credebl/enum/*": [
+        "libs/enum/src/*"
+      ],
+      "@credebl/keycloak-url": [
+        "libs/keycloak-url/src"
+      ],
+      "@credebl/keycloak-url/*": [
+        "libs/keycloak-url/src/*"
+      ],
+      "@credebl/logger": [
+        "libs/logger/src"
+      ],
+      "@credebl/logger/*": [
+        "libs/logger/src/*"
+      ],
+      "@credebl/org-roles": [
+        "libs/org-roles/src"
+      ],
+      "@credebl/org-roles/*": [
+        "libs/org-roles/src/*"
+      ],
+      "@credebl/prisma": [
+        "libs/prisma/src"
+      ],
+      "@credebl/prisma-service": [
+        "libs/prisma-service/src"
+      ],
+      "@credebl/prisma-service/*": [
+        "libs/prisma-service/src/*"
+      ],
+      "@credebl/prisma/*": [
+        "libs/prisma/src/*"
+      ],
+      "@credebl/repositories": [
+        "libs/repositories/src"
+      ],
+      "@credebl/repositories/*": [
+        "libs/repositories/src/*"
+      ],
+      "@credebl/supabase": [
+        "libs/supabase/src"
+      ],
+      "@credebl/supabase/*": [
+        "libs/supabase/src/*"
+      ],
+      "@credebl/user-activity": [
+        "libs/user-activity/src"
+      ],
+      "@credebl/user-activity/*": [
+        "libs/user-activity/src/*"
+      ],
+      "@credebl/user-org-roles": [
+        "libs/user-org-roles/src"
+      ],
+      "@credebl/user-org-roles/*": [
+        "libs/user-org-roles/src/*"
+      ],
+      "@credebl/user-request": [
+        "libs/user-request/src"
+      ],
+      "@credebl/user-request/*": [
+        "libs/user-request/src/*"
+      ],
+      "credebl/utility": [
+        "libs/utility/src"
+      ],
+      "credebl/utility/*": [
+        "libs/utility/src/*"
       ]
     },
     "baseUrl": "./"

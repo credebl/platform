@@ -126,6 +126,11 @@ export enum CommonConstants {
   URL_OIDC_ISSUER_SESSIONS_GET = '/openid4vc/issuance-sessions/#',
   URL_OIDC_ISSUER_SESSIONS_GET_ALL = '/openid4vc/issuance-sessions',
 
+  // OID4Vp URLs
+  URL_OIDC_VERIFIER_CREATE = '/openid4vc/verifier', //TODO: correct this URL
+  URL_OIDC_VERIFIER_UPDATE = '/openid4vp/verifier/#',
+  URL_OIDC_VERIFIER_GET = '/openid4vp/verifier/#',
+
   //X509 agent API URLs
   URL_CREATE_X509_CERTIFICATE = '/x509',
   URL_IMPORT_X509_CERTIFICATE = '/x509/import',
@@ -379,6 +384,7 @@ export enum CommonConstants {
   GEO_LOCATION_SERVICE = 'geo-location',
   CLOUD_WALLET_SERVICE = 'cloud-wallet',
   OIDC4VC_ISSUANCE_SERVICE = 'oid4vc-issuance',
+  OIDC4VC_VERIFICATION_SERVICE = 'oid4vc-verification',
   X509_SERVICE = 'x509-service',
 
   ACCEPT_OFFER = '/didcomm/credentials/accept-offer',
@@ -412,6 +418,9 @@ export enum CommonConstants {
   OIDC_ISSUER_SESSIONS_BY_ID = 'get-oid4vc-session-by-id',
   OIDC_ISSUER_SESSIONS = 'get-oid4vc-sessions',
   OIDC_DELETE_CREDENTIAL_OFFER = 'delete-oid4vc-credential-offer',
+
+  // OID4VP
+  OIDC_VERIFIER_CREATE = 'create-oid4vp-verifier',
 
   //X509
   X509_CREATE_CERTIFICATE = 'create-x509-certificate',

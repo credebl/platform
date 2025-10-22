@@ -1,17 +1,5 @@
-import { PrismaService } from '@credebl/prisma-service';
+import { AgentType, PrismaTables } from '@credebl/enum/enum';
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
-/* eslint-disable camelcase */
-import {
-  Prisma,
-  ledgerConfig,
-  ledgers,
-  org_agents,
-  org_agents_type,
-  org_dids,
-  organisation,
-  platform_config,
-  user
-} from '@prisma/client';
 import {
   ICreateOrgAgent,
   ILedgers,
@@ -24,7 +12,20 @@ import {
   LedgerNameSpace,
   OrgDid
 } from '../interface/agent-service.interface';
-import { AgentType, PrismaTables } from '@credebl/enum/enum';
+/* eslint-disable camelcase */
+import {
+  Prisma,
+  ledgerConfig,
+  ledgers,
+  org_agents,
+  org_agents_type,
+  org_dids,
+  organisation,
+  platform_config,
+  user
+} from '@prisma/client';
+
+import { PrismaService } from '@credebl/prisma-service';
 
 @Injectable()
 export class AgentServiceRepository {
@@ -157,15 +158,15 @@ export class AgentServiceRepository {
   // eslint-disable-next-line camelcase
   async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
     try {
-      const { id, userId, ledgerId, did, didDoc, ...commonFields } = storeOrgAgentDetails;
+      const { id, userId, ledgerId, didDoc, ...commonFields } = storeOrgAgentDetails;
       const firstLedgerId = Array.isArray(ledgerId) ? ledgerId[0] : null;
       const data = {
         ...commonFields,
         ledgerId: firstLedgerId,
         createdBy: userId,
         lastChangedBy: userId,
-        didDocument: didDoc,
-        orgDid: did
+        didDocument: didDoc
+        // orgDid: ''
       };
 
       // eslint-disable-next-line camelcase

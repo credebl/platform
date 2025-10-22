@@ -32,6 +32,7 @@ import {
   x509CertificateDecodeDto,
   X509CreateCertificateOptions
 } from '@credebl/common/interfaces/x509.interface';
+import { CreateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
 
 @Controller()
 export class AgentServiceController {
@@ -411,5 +412,14 @@ export class AgentServiceController {
     orgId: string;
   }): Promise<object> {
     return this.agentServiceService.importX509Certificate(payload.options, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-create-oid4vp-verifier' })
+  async createOid4vpVerifier(payload: {
+    verifierDetails: CreateVerifier;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.createOid4vpVerifier(payload.verifierDetails, payload.url, payload.orgId);
   }
 }

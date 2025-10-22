@@ -85,6 +85,7 @@ import {
   x509CertificateDecodeDto,
   X509CreateCertificateOptions
 } from '@credebl/common/interfaces/x509.interface';
+import { CreateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {
@@ -2267,6 +2268,19 @@ export class AgentServiceService {
       return x509Certificate;
     } catch (error) {
       this.logger.error(`Error in creating x509 certificate in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async createOid4vpVerifier(verifierDetails: CreateVerifier, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const createVerifier = await this.commonService
+        .httpPost(url, verifierDetails, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return createVerifier;
+    } catch (error) {
+      this.logger.error(`Error in creating oid4vp verifier in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

@@ -34,6 +34,7 @@ import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { Oid4vcIssuanceModule } from './oid4vc-issuance/oid4vc-issuance.module';
 import { X509Module } from './x509/x509.module';
+import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { X509Module } from './x509/x509.module';
     GeoLocationModule,
     CloudWalletModule,
     Oid4vcIssuanceModule,
+    Oid4vpModule,
     X509Module
   ],
   controllers: [AppController],

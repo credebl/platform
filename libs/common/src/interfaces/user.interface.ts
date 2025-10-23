@@ -20,6 +20,7 @@ export interface ISendVerificationEmail {
   platformName?: string;
   redirectTo?: string;
   clientAlias?: string;
+  isDefaultVerified?: boolean;
 }
 
 export interface IClientDetailsSSO {

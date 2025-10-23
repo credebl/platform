@@ -32,18 +32,10 @@ export interface IProofPresentation {
   isVerified: boolean;
 }
 
-export interface IPresentation {
+export interface IPresentation extends IProofPresentation {
   _tags: ITags;
   metadata: object;
   id: string;
-  createdAt: string;
-  protocolVersion: string;
-  state: string;
-  connectionId: string;
-  threadId: string;
-  autoAcceptProof: string;
-  updatedAt: string;
-  isVerified: boolean;
 }
 
 interface ITags {

@@ -17,7 +17,7 @@ import {
   IIssuedCredential
 } from '@credebl/common/interfaces/issuance.interface';
 
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { IssuanceService } from './issuance.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
@@ -25,6 +25,7 @@ import { user } from '@prisma/client';
 
 @Controller()
 export class IssuanceController {
+  private readonly logger = new Logger('IssueCredentialController');
   constructor(private readonly issuanceService: IssuanceService) {}
 
   @MessagePattern({ cmd: 'get-issuance-records' })
@@ -63,6 +64,7 @@ export class IssuanceController {
   @MessagePattern({ cmd: 'out-of-band-credential-offer' })
   async outOfBandCredentialOffer(payload: OutOfBandCredentialOffer): Promise<boolean> {
     const { outOfBandCredentialDto } = payload;
+    this.logger.debug('Request reached issuance microservice controller, issuing oob credential');
     return this.issuanceService.outOfBandCredentialOffer(outOfBandCredentialDto);
   }
 

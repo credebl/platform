@@ -44,7 +44,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   IOrgCredentials,
@@ -66,9 +66,13 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import * as jwt from 'jsonwebtoken';
 import { ClientTokenDto } from '../dtos/client-token.dto';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Injectable()
 export class OrganizationService {
+  private readonly IMG_EXT = 'png';
+  private readonly ORG_LOGO_FOLDER = 'orgLogos';
+  private readonly ORG_LOGO_PREFIX = 'orgLogo';
   constructor(
     private readonly prisma: PrismaService,
     private readonly commonService: CommonService,
@@ -76,7 +80,7 @@ export class OrganizationService {
     private readonly organizationRepository: OrganizationRepository,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
-    private readonly awsService: AwsService,
+    private readonly storageService: StorageService,
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     // TODO: Remove duplicate, unused variable
@@ -135,7 +139,7 @@ export class OrganizationService {
       createOrgDto.lastChangedBy = userId;
 
       if (await this.isValidBase64(createOrgDto?.logo)) {
-        const imageUrl = await this.uploadFileToS3(createOrgDto.logo);
+        const imageUrl = await this.uploadFile(createOrgDto.logo);
         createOrgDto.logo = imageUrl;
       } else {
         createOrgDto.logo = '';
@@ -488,17 +492,17 @@ export class OrganizationService {
     }
   }
 
-  async uploadFileToS3(orgLogo: string): Promise<string> {
+  async uploadFile(orgLogo: string): Promise<string> {
     try {
       const updatedOrglogo = orgLogo.split(',')[1];
-      const imgData = Buffer.from(updatedOrglogo, 'base64');
-      const logoUrl = await this.awsService.uploadFileToS3Bucket(
+      const imgData = Buffer.from(updatedOrglogo, CommonConstants.ENCODING);
+      const logoUrl = await this.storageService.uploadFileToBucket(
         imgData,
-        'png',
-        'orgLogo',
-        process.env.AWS_ORG_LOGO_BUCKET_NAME,
-        'base64',
-        'orgLogos'
+        this.IMG_EXT,
+        this.ORG_LOGO_PREFIX,
+        process.env.ORG_LOGO_BUCKET,
+        CommonConstants.ENCODING,
+        this.ORG_LOGO_FOLDER
       );
       return logoUrl;
     } catch (error) {
@@ -540,7 +544,7 @@ export class OrganizationService {
       updateOrgDto.userId = userId;
 
       if (await this.isValidBase64(updateOrgDto.logo)) {
-        const imageUrl = await this.uploadFileToS3(updateOrgDto.logo);
+        const imageUrl = await this.uploadFile(updateOrgDto.logo);
         updateOrgDto.logo = imageUrl;
       } else {
         delete updateOrgDto.logo;

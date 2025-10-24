@@ -13,8 +13,9 @@ interface TemplateAttribute {
   display: { name: string; locale: string }[];
   mandatory: boolean;
   value_type: ValueType;
+  path: string[];
 }
-type TemplateAttributes = Record<string, TemplateAttribute>;
+type TemplateAttributes = TemplateAttribute[];
 
 export enum SignerMethodOption {
   DID = 'did',
@@ -103,8 +104,8 @@ export type CredentialOfferPayload = BuiltCredentialOfferBase &
 
 const isNil = (value: unknown): value is null | undefined => null == value;
 const isEmptyString = (value: unknown): boolean => 'string' === typeof value && '' === value.trim();
-const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && 'object' === typeof value && !Array.isArray(value);
+// const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+//   Boolean(value) && 'object' === typeof value && !Array.isArray(value);
 
 /** Map DB format string -> API enum */
 function mapDbFormatToApiFormat(dbFormat: string): CredentialFormat {
@@ -125,23 +126,33 @@ function formatSuffix(apiFormat: CredentialFormat): 'sdjwt' | 'mdoc' {
 /* ============================================================================
    Validation of Payload vs Template Attributes
 ============================================================================ */
-
-/** Throw if any template-mandatory claim is missing/empty in payload. */
 function assertMandatoryClaims(
   payload: Record<string, unknown>,
   attributes: TemplateAttributes,
   context: { templateId: string }
 ): void {
   const missingClaims: string[] = [];
-  for (const [claimName, attributeDefinition] of Object.entries(attributes)) {
-    if (!attributeDefinition?.mandatory) {
+
+  for (const attribute of attributes) {
+    if (!attribute.mandatory) {
       continue;
     }
-    const claimValue = payload[claimName];
-    if (isNil(claimValue) || isEmptyString(claimValue)) {
-      missingClaims.push(claimName);
+
+    // Navigate through nested path
+    let value: unknown = payload;
+    for (const key of attribute.path) {
+      if (!value || 'object' !== typeof value) {
+        value = undefined;
+        break;
+      }
+      value = (value as Record<string, unknown>)[key];
+    }
+
+    if (isNil(value) || isEmptyString(value)) {
+      missingClaims.push(attribute.path.join('.'));
     }
   }
+
   if (missingClaims.length) {
     throw new Error(`Missing mandatory claims for template "${context.templateId}": ${missingClaims.join(', ')}`);
   }
@@ -151,15 +162,15 @@ function assertMandatoryClaims(
    JsonValue → TemplateAttributes Narrowing (Type Guards)
 ============================================================================ */
 
-function isDisplayArray(value: unknown): value is { name: string; locale: string }[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (entry) =>
-        isPlainRecord(entry) && 'string' === typeof (entry as any).name && 'string' === typeof (entry as any).locale
-    )
-  );
-}
+// function isDisplayArray(value: unknown): value is { name: string; locale: string }[] {
+//   return (
+//     Array.isArray(value) &&
+//     value.every(
+//       (entry) =>
+//         isPlainRecord(entry) && 'string' === typeof (entry as any).name && 'string' === typeof (entry as any).locale
+//     )
+//   );
+// }
 
 /* ============================================================================
    Improved ensureTemplateAttributes: runtime assert with helpful errors
@@ -168,113 +179,94 @@ function isDisplayArray(value: unknown): value is { name: string; locale: string
 const ALLOWED_VALUE_TYPES: ValueType[] = ['string', 'date', 'number', 'boolean', 'integer'];
 
 function ensureTemplateAttributes(jsonValue: Prisma.JsonValue): TemplateAttributes {
-  if (!isPlainRecord(jsonValue)) {
+  // Expect top-level array
+  if (!Array.isArray(jsonValue)) {
     throw new Error(
-      `Invalid template.attributes: expected an object map but received ${
+      `Invalid template.attributes: expected an array of claim definitions but received ${
         null === jsonValue ? 'null' : typeof jsonValue
-      }.\n\nFix: provide an object whose keys are attribute names and whose values are attribute definitions, e.g.\n{\n  "given_name": { "mandatory": true, "value_type": "string" }\n}`
+      }.\n\nExample:\n[\n  {\n    "path": ["given_name"],\n    "mandatory": true,\n    "value_type": "string",\n    "display": [\n      { "name": "Given Name", "locale": "en-US" }\n    ]\n  }\n]`
     );
   }
 
-  const attributesMap = jsonValue as Record<string, unknown>;
-  const attributeKeys = Object.keys(attributesMap);
-  if (0 === attributeKeys.length) {
-    throw new Error(
-      'Invalid template.attributes: object is empty (no attributes defined).\n\nFix: add at least one attribute definition, for example:\n{\n  "given_name": { "mandatory": true, "value_type": "string" }\n}'
-    );
-  }
-
+  const claims = jsonValue as Record<string, unknown>[];
   const problems: string[] = [];
   const suggestedFixes: string[] = [];
 
-  for (const attributeKey of attributeKeys) {
-    const rawAttributeDef = attributesMap[attributeKey];
+  for (let i = 0; i < claims.length; i++) {
+    const claim = claims[i];
 
-    if (!isPlainRecord(rawAttributeDef)) {
-      problems.push(
-        `${attributeKey}: expected an object but got ${null === rawAttributeDef ? 'null' : typeof rawAttributeDef}`
-      );
-      suggestedFixes.push(
-        `Replace attribute "${attributeKey}" value with an object, e.g.\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
-      );
+    if (!claim || 'object' !== typeof claim || Array.isArray(claim)) {
+      problems.push(`claims[${i}]: expected an object but got ${typeof claim}`);
+      suggestedFixes.push(`claims[${i}]: remove or replace this invalid entry with a valid claim object.`);
       continue;
     }
 
-    // mandatory checks
-    if (!('mandatory' in rawAttributeDef)) {
-      problems.push(`${attributeKey}.mandatory: missing`);
-      suggestedFixes.push(
-        `Add mandatory boolean for "${attributeKey}":\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
-      );
-    } else if ('boolean' !== typeof (rawAttributeDef as any).mandatory) {
-      problems.push(`${attributeKey}.mandatory: expected boolean but got ${typeof (rawAttributeDef as any).mandatory}`);
-      suggestedFixes.push(
-        `Set "mandatory" to a boolean for "${attributeKey}", e.g.\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
-      );
+    const { path, mandatory, value_type, display } = claim as Record<string, unknown>;
+
+    // Validate path
+    if (!Array.isArray(path) || !path.every((p) => 'string' === typeof p)) {
+      problems.push(`claims[${i}].path: expected an array of strings, e.g. ["given_name"]`);
+      suggestedFixes.push(`claims[${i}].path: ensure it's an array like ["attribute_name"].`);
+    } else if (0 === path.length) {
+      problems.push(`claims[${i}].path: must not be empty`);
+      suggestedFixes.push(`claims[${i}].path: add at least one string key to identify the claim.`);
     }
 
-    // value_type checks
-    if (!('value_type' in rawAttributeDef)) {
-      problems.push(`${attributeKey}.value_type: missing`);
-      suggestedFixes.push(
-        `Add value_type for "${attributeKey}", for example:\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
-      );
-    } else if ('string' !== typeof (rawAttributeDef as any).value_type) {
+    // Validate mandatory
+    if ('boolean' !== typeof mandatory) {
+      problems.push(`claims[${i}].mandatory: expected boolean but got ${typeof mandatory}`);
+      suggestedFixes.push(`claims[${i}].mandatory: defaulting to false.`);
+      (claims[i] as any).mandatory = false;
+    }
+
+    // Validate value_type
+    if ('string' !== typeof value_type) {
+      problems.push(`claims[${i}].value_type: expected string but got ${typeof value_type}`);
+      suggestedFixes.push(`claims[${i}].value_type: defaulting to "string".`);
+      (claims[i] as any).value_type = 'string';
+    } else if (!ALLOWED_VALUE_TYPES.includes(value_type as ValueType)) {
       problems.push(
-        `${attributeKey}.value_type: expected string but got ${typeof (rawAttributeDef as any).value_type}`
+        `claims[${i}].value_type: unsupported value_type "${value_type}". Allowed types: ${ALLOWED_VALUE_TYPES.join(', ')}`
       );
-      suggestedFixes.push(
-        `Make sure "value_type" is a string for "${attributeKey}", e.g.\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
-      );
-    } else {
-      const declaredType = (rawAttributeDef as any).value_type as string;
-      if (!ALLOWED_VALUE_TYPES.includes(declaredType as ValueType)) {
-        problems.push(
-          `${attributeKey}.value_type: unsupported value_type "${declaredType}". Allowed types: ${ALLOWED_VALUE_TYPES.join(', ')}`
-        );
-        suggestedFixes.push(
-          `Use one of the allowed types for "${attributeKey}", e.g.\n"${attributeKey}": { "mandatory": true, "value_type": "string" }`
-        );
-      }
+      suggestedFixes.push(`claims[${i}].value_type: change to one of ${ALLOWED_VALUE_TYPES.join(', ')}.`);
+      (claims[i] as any).value_type = 'string';
     }
 
-    // display checks (optional)
-    if ('display' in rawAttributeDef && !isDisplayArray((rawAttributeDef as any).display)) {
-      problems.push(`${attributeKey}.display: expected array of { name: string, locale: string }`);
-      suggestedFixes.push(
-        `Fix "display" for "${attributeKey}" to be an array of objects with name/locale, e.g.\n"${attributeKey}": { "mandatory": true, "value_type": "string", "display": [{ "name": "Given Name", "locale": "en-US" }] }`
-      );
+    // Validate display (optional)
+    if (display !== undefined) {
+      if (!Array.isArray(display)) {
+        problems.push(`claims[${i}].display: expected array of { name, locale }`);
+        suggestedFixes.push(
+          `claims[${i}].display: convert to an array of objects like [{ "name": "Label", "locale": "en-US" }].`
+        );
+      } else {
+        for (let j = 0; j < display.length; j++) {
+          const d = display[j];
+          if (
+            !d ||
+            'object' !== typeof d ||
+            Array.isArray(d) ||
+            'string' !== typeof (d as any).name ||
+            'string' !== typeof (d as any).locale
+          ) {
+            problems.push(`claims[${i}].display[${j}]: expected { name: string, locale: string }`);
+            suggestedFixes.push(`claims[${i}].display[${j}]: ensure both "name" and "locale" are strings.`);
+          }
+        }
+      }
     }
   }
 
   if (0 < problems.length) {
-    // Build a user-friendly message: problems + suggested fixes (unique)
-    const uniqueFixes = Array.from(new Set(suggestedFixes)).slice(0, 20);
-    const fixesText = uniqueFixes.length
-      ? `\n\nSuggested fixes (copy-paste examples):\n- ${uniqueFixes.join('\n- ')}`
-      : '';
-
-    // Include a small truncated sample of the attributes to help debugging
-    const samplePreview = JSON.stringify(
-      Object.fromEntries(attributeKeys.slice(0, 10).map((key) => [key, attributesMap[key]])),
-      (_, value) => {
-        if ('string' === typeof value && 200 < value.length) {
-          return `${value.slice(0, 200)}...`;
-        }
-        return value;
-      },
-      2
-    );
-
     throw new Error(
-      `Invalid template.attributes shape. Problems found:\n- ${problems.join(
+      `Invalid template.attributes structure:\n- ${problems.join(
         '\n- '
-      )}\n\nExample attributes (truncated):\n${samplePreview}${fixesText}`
+      )}\n\nExample valid structure:\n[\n  {\n    "path": ["given_name"],\n    "mandatory": true,\n    "value_type": "string",\n    "display": [\n      { "name": "Given Name", "locale": "en-US" }\n    ]\n  }\n]`
     );
   }
 
-  // Safe to cast to TemplateAttributes
-  return attributesMap as TemplateAttributes;
+  // Return safely typed array
+  return claims as unknown as TemplateAttributes;
 }
 
 /* ============================================================================
@@ -373,6 +365,7 @@ export function buildCredentialOfferPayload(
 // -----------------------------------------------------------------------------
 // Builder: Update Credential Offer
 // -----------------------------------------------------------------------------
+
 export function buildUpdateCredentialOfferPayload(
   dto: CreateOidcCredentialOfferDtoLike,
   templates: credential_templates[]

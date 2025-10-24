@@ -1,18 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `supported_protocol` on the `ledgers` table. All the data in the column will be lost.
-  - You are about to drop the column `supported_protocol` on the `organisation` table. All the data in the column will be lost.
-
-*/
--- AlterTable
-ALTER TABLE "ledgers" DROP COLUMN "supported_protocol";
-
--- AlterTable
-ALTER TABLE "organisation" DROP COLUMN "supported_protocol";
-
--- DropEnum
-DROP TYPE "CredentialExchangeProtocol";
 
 -- CreateTable
 CREATE TABLE "oid4vc_credentials" (

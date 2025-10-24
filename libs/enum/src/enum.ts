@@ -322,9 +322,3 @@ export enum CredentialFormat {
   SdJwtVc = 'vc+sd-jwt',
   Mdoc = 'mso_mdoc'
 }
-
-// export enum SignerOption {
-//   DID,
-//   X509_P256,
-//   X509_ED25519
-// }

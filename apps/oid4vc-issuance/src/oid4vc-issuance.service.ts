@@ -223,8 +223,7 @@ export class Oid4vcIssuanceService {
     }
   }
 
-  async oidcIssuers(orgId: string): Promise<any> {
-    //Promise<IssuerResponse[]> {
+  async oidcIssuers(orgId: string): Promise<oidc_issuer[]> {
     try {
       const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails?.agentEndPoint) {
@@ -232,20 +231,6 @@ export class Oid4vcIssuanceService {
       }
       const getIssuers = await this.oid4vcIssuanceRepository.getAllOidcIssuersByOrg(orgId);
 
-      // const url = await getAgentUrl(agentDetails.agentEndPoint, CommonConstants.OIDC_GET_ALL_ISSUERS);
-      // const issuersDetails = await this._oidcGetIssuers(url, orgId);
-      // if (!issuersDetails || null == issuersDetails.response) {
-      //   throw new InternalServerErrorException('Error from agent while oidcIssuers');
-      // }
-      // //TODO: Fix the response type from agent
-      // const raw = issuersDetails.response as unknown;
-      // const response: IssuerResponse[] =
-      //   'string' === typeof raw ? (JSON.parse(raw) as IssuerResponse[]) : (raw as IssuerResponse[]);
-
-      // if (!Array.isArray(response)) {
-      //   throw new InternalServerErrorException('Invalid issuer payload from agent');
-      // }
-      // return response;
       return getIssuers;
     } catch (error: any) {
       const msg = error?.message ?? 'unknown error';

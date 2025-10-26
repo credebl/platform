@@ -157,25 +157,16 @@ export class CreateOidcCredentialOfferDto {
   @Type(() => CredentialRequestDto)
   credentials!: CredentialRequestDto[];
 
-  // XOR: exactly one present
-  @ApiPropertyOptional({ type: PreAuthorizedCodeFlowConfigDto })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => PreAuthorizedCodeFlowConfigDto)
-  preAuthorizedCodeFlowConfig?: PreAuthorizedCodeFlowConfigDto;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => AuthorizationCodeFlowConfigDto)
-  authorizationCodeFlowConfig?: AuthorizationCodeFlowConfigDto;
+  @ApiProperty({
+    example: 'preAuthorizedCodeFlow',
+    enum: ['preAuthorizedCodeFlow', 'authorizationCodeFlow'],
+    description: 'Authorization type'
+  })
+  @IsString()
+  @IsIn(['preAuthorizedCodeFlow', 'authorizationCodeFlow'])
+  authorizationType!: 'preAuthorizedCodeFlow' | 'authorizationCodeFlow';
 
   issuerId?: string;
-
-  // host XOR rule
-  @ExactlyOneOf(['preAuthorizedCodeFlowConfig', 'authorizationCodeFlowConfig'], {
-    message: 'Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.'
-  })
-  private readonly _exactlyOne?: unknown;
 }
 
 export class GetAllCredentialOfferDto {

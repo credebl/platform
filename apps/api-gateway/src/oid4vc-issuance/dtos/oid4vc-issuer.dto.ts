@@ -246,6 +246,10 @@ export class IssuerCreationDto {
   @Type(() => DisplayDto)
   display: DisplayDto[];
 
+  @ApiProperty({ example: 'https://auth.example.org', description: 'Authorization URL' })
+  @IsUrl({ require_tld: false })
+  authorizationServerUrl: string;
+
   @ApiProperty({
     description: 'Configuration of the authorization server',
     type: AuthorizationServerConfigDto

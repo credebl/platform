@@ -437,7 +437,7 @@ export class Oid4vcIssuanceController {
   @Post('/orgs/:orgId/oid4vc/:issuerId/create-offer')
   @ApiOperation({
     summary: 'Create OID4VC Credential Offer',
-    description: 'Creates a new OIDC4VCI credential-offer for a given issuer.'
+    description: 'Creates a new OID4VC credential-offer for a given issuer.'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Credential offer created successfully.' })
   @ApiBearerAuth()

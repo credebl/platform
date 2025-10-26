@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { oidc_issuer, Prisma } from '@prisma/client';
 import { batchCredentialIssuanceDefault } from '../../constant/issuance';
 import { CreateOidcCredentialOffer } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
@@ -40,7 +41,9 @@ type CredentialConfig = {
   display: { name: string; description?: string; locale?: string }[];
 };
 
-type CredentialConfigurationsSupported = CredentialConfig[];
+type CredentialConfigurationsSupported = {
+  credentialConfigurationsSupported: Record<string, CredentialConfig>;
+};
 
 // ---- Static Lists (as requested) ----
 const STATIC_CREDENTIAL_ALGS = ['ES256', 'EdDSA'] as const;
@@ -99,7 +102,7 @@ export function buildCredentialConfigurationsSupported(
   }
 ): CredentialConfigurationsSupported {
   const defaultFormat = opts?.format ?? 'vc+sd-jwt';
-  const credentialConfigurationsSupported: CredentialConfigurationsSupported = [];
+  const credentialConfigurationsSupported: Record<string, CredentialConfig> = {};
   for (const t of templates) {
     const attrs = coerceJsonObject<unknown>(t.attributes);
     const app = coerceJsonObject<unknown>(t.appearance);
@@ -116,6 +119,7 @@ export function buildCredentialConfigurationsSupported(
     const rowFormat: string = (t as any).format ?? defaultFormat;
     const isMdoc = 'mso_mdoc' === rowFormat;
     const suffix = isMdoc ? 'mdoc' : 'sdjwt';
+    const key = 'function' === typeof opts?.keyResolver ? opts.keyResolver(t) : `${t.name}-${suffix}`;
 
     // key: keep your keyResolver override; otherwise include suffix
     // const key = 'function' === typeof opts?.keyResolver ? opts.keyResolver(t) : `${t.name}-${suffix}`;
@@ -158,7 +162,7 @@ export function buildCredentialConfigurationsSupported(
       })) ?? [];
 
     // assemble per-template config
-    credentialConfigurationsSupported.push({
+    credentialConfigurationsSupported[key] = {
       format: rowFormat,
       scope,
       claims,
@@ -166,10 +170,10 @@ export function buildCredentialConfigurationsSupported(
       cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS],
       display,
       ...(isMdoc ? { doctype: rowDoctype as string } : { vct: rowVct })
-    });
+    };
   }
 
-  return credentialConfigurationsSupported;
+  return { credentialConfigurationsSupported };
 }
 
 // Default DPoP list for issuer-level metadata (match your example)
@@ -217,7 +221,7 @@ function isDisplayArray(x: unknown): x is DisplayItem[] {
  */
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function buildIssuerPayload(
-  credentialConfigurations: CredentialConfigurationsSupported,
+  credentialConfigurations: CredentialConfigurationsSupported | Record<string, any> | null | undefined,
   oidcIssuer: oidc_issuer,
   opts?: {
     dpopAlgs?: string[];
@@ -231,10 +235,22 @@ export function buildIssuerPayload(
   const rawDisplay = coerceJson<unknown>(oidcIssuer.metadata);
   const display: DisplayItem[] = isDisplayArray(rawDisplay) ? rawDisplay : [];
 
+  // Accept both shapes:
+  // 1) { credentialConfigurationsSupported: Record<string, CredentialConfig> }
+  // 2) directly the Record<string, CredentialConfig>
+  let credentialConfigMap: Record<string, unknown> = {};
+  if (!credentialConfigurations) {
+    credentialConfigMap = {};
+  } else if ('credentialConfigurationsSupported' in (credentialConfigurations as any)) {
+    credentialConfigMap = (credentialConfigurations as any).credentialConfigurationsSupported ?? {};
+  } else {
+    credentialConfigMap = credentialConfigurations as Record<string, unknown>;
+  }
+
   return {
     display,
     dpopSigningAlgValuesSupported: opts?.dpopAlgs ?? [...ISSUER_DPOP_ALGS_DEFAULT],
-    credentialConfigurationsSupported: credentialConfigurations ?? [],
+    credentialConfigurationsSupported: credentialConfigMap,
     batchCredentialIssuance: {
       batchSize: oidcIssuer?.batchCredentialIssuanceSize ?? batchCredentialIssuanceDefault
     }

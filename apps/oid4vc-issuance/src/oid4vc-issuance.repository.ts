@@ -177,14 +177,16 @@ export class Oid4vcIssuanceRepository {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async addOidcIssuerDetails(issuerMetadata: IssuerMetadata, issuerProfileJson): Promise<oidc_issuer> {
     try {
-      const { publicIssuerId, createdById, orgAgentId, batchCredentialIssuanceSize } = issuerMetadata;
+      const { publicIssuerId, createdById, orgAgentId, batchCredentialIssuanceSize, authorizationServerUrl } =
+        issuerMetadata;
       const oidcIssuerDetails = await this.prisma.oidc_issuer.create({
         data: {
           metadata: issuerProfileJson,
           publicIssuerId,
           createdBy: createdById,
           orgAgentId,
-          batchCredentialIssuanceSize
+          batchCredentialIssuanceSize,
+          authorizationServerUrl
         }
       });
 

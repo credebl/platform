@@ -1,12 +1,12 @@
 {
   "platformConfigData": {
-    "externalIp": "##Machine Ip Address/Domain for agent setup##",
-    "inboundEndpoint": "##Machine Ip Address/Domain for agent setup##",
+    "externalIp": "192.168.1.25",
+    "inboundEndpoint": "192.168.1.25",
     "username": "credebl",
     "sgApiKey": "###Sendgrid Key###",
-    "emailFrom": "##Senders Mail ID##",
-    "apiEndpoint": "## Platform API Ip Address##",
-    "tailsFileServer": "##Machine Ip Address for agent setup##"
+    "emailFrom": "info@blockster.global",
+    "apiEndpoint": "http://0.0.0.0:5000",
+    "tailsFileServer": ""
   },
   "platformAdminData": {
     "firstName": "CREDEBL",

@@ -47,7 +47,7 @@ export class Oid4vcIssuanceController {
   }
 
   @MessagePattern({ cmd: 'oid4vc-get-issuers-issuance' })
-  async oidcGetIssuers(payload: { orgId: string }): Promise<object> {
+  async oidcGetIssuers(payload: { orgId: string }): Promise<oidc_issuer[]> {
     const { orgId } = payload;
     return this.oid4vcIssuanceService.oidcIssuers(orgId);
   }

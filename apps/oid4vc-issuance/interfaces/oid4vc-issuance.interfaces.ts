@@ -57,11 +57,11 @@ export interface AuthorizationServerConfig {
 }
 
 export interface IssuerCreation {
+  authorizationServerUrl: string;
   issuerId: string;
   accessTokenSignerKeyType?: AccessTokenSignerKeyType;
   display: Display[];
   dpopSigningAlgValuesSupported?: string[];
-  // credentialConfigurationsSupported?: Record<string, CredentialConfiguration>;   // Not used
   authorizationServerConfigs: AuthorizationServerConfig;
   batchCredentialIssuanceSize: number;
 }
@@ -79,6 +79,7 @@ export interface IssuerInitialConfig {
 }
 
 export interface IssuerMetadata {
+  authorizationServerUrl: string;
   publicIssuerId: string;
   createdById: string;
   orgAgentId: string;

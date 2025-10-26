@@ -601,8 +601,9 @@ model oid4vc_credentials {
 }
 
 enum SignerOption {
-  did
-  x509
+  DID
+  X509_P256
+  X509_ED25519
 }
 
 model credential_templates {

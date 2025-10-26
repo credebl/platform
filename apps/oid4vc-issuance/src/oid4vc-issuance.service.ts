@@ -121,6 +121,7 @@ export class Oid4vcIssuanceService {
         throw new InternalServerErrorException('Issuer ID missing from agent response');
       }
       const issuerMetadata: IssuerMetadata = {
+        authorizationServerUrl: issuerCreation.authorizationServerUrl,
         publicIssuerId: issuerIdFromAgent,
         createdById: userDetails.id,
         orgAgentId,
@@ -319,6 +320,7 @@ export class Oid4vcIssuanceService {
         opts = { ...opts, doctype };
       }
       const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId, opts);
+      console.log(`service - createTemplate: `, JSON.stringify(issuerTemplateConfig));
       const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -330,6 +332,7 @@ export class Oid4vcIssuanceService {
       }
       const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, issuerDetails.publicIssuerId);
       const createTemplateOnAgent = await this._createOIDCTemplate(issuerTemplateConfig, url, orgId);
+      console.log('createTemplateOnAgent::::::::::::::', createTemplateOnAgent);
       if (!createTemplateOnAgent) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
@@ -622,7 +625,6 @@ export class Oid4vcIssuanceService {
         url,
         orgId
       );
-      console.log('This is the updateCredentialOfferOnAgent:', JSON.stringify(updateCredentialOfferOnAgent));
       if (!updateCredentialOfferOnAgent) {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorUpdateOffer);
       }

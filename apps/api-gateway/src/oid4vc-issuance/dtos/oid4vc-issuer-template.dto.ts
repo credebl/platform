@@ -14,6 +14,7 @@ import {
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { DisplayDto } from './oid4vc-issuer.dto';
+import { SignerOption } from '@prisma/client';
 
 export class CredentialAttributeDto {
   @ApiProperty({ required: false, description: 'Whether the attribute is mandatory' })
@@ -104,10 +105,6 @@ export class AppearanceDto {
   display: CredentialDisplayDto[];
 }
 
-export enum SignerOption {
-  DID = 'did',
-  X509 = 'x509'
-}
 @ApiExtraModels(CredentialAttributeDto)
 export class CreateCredentialTemplateDto {
   @ApiProperty({ description: 'Template name' })
@@ -184,15 +181,6 @@ export class CreateCredentialTemplateDto {
           logo: {
             uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
             alt_text: 'abc_logo'
-          }
-        },
-        {
-          locale: 'ar',
-          name: 'شهادة الميلاد',
-          description: 'سجل رسمي للولادة',
-          logo: {
-            uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg',
-            alt_text: 'شعار abc'
           }
         }
       ]

@@ -307,6 +307,17 @@ export class Oid4vcIssuanceRepository {
     }
   }
 
+  async getIssuerDetailsByIssuerId(issuerId: string): Promise<oidc_issuer | null> {
+    try {
+      return await this.prisma.oidc_issuer.findUnique({
+        where: { id: issuerId }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getIssuerDetailsByIssuerId: ${error.message}`);
+      throw error;
+    }
+  }
+
   async updateTemplate(templateId: string, data: Partial<credential_templates>): Promise<credential_templates> {
     try {
       return await this.prisma.credential_templates.update({

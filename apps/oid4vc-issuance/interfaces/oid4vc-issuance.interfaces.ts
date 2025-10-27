@@ -1,4 +1,5 @@
 import { organisation } from '@prisma/client';
+import { Claim } from './oid4vc-template.interfaces';
 
 export interface OrgAgent {
   organisation: organisation;
@@ -15,12 +16,6 @@ export interface OrgAgent {
   ledgerId: string;
   orgAgentTypeId: string;
   tenantId: string;
-}
-
-export interface Claim {
-  path: string[];
-  label?: string;
-  required?: boolean;
 }
 
 export interface Logo {
@@ -114,17 +109,6 @@ export interface TagMap {
   [key: string]: string;
 }
 
-export interface ClaimDisplay {
-  name: string;
-  locale: string;
-  description?: string;
-}
-
-export interface ClaimDefinition {
-  value_type: string;
-  mandatory: boolean;
-  display: ClaimDisplay[];
-}
 export interface Logo {
   uri: string;
   alt_text: string;

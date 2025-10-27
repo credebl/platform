@@ -290,6 +290,7 @@ export class Oid4vcIssuanceService {
     issuerId: string
   ): Promise<credential_templates> {
     try {
+      //TODO: add revert mechanism if agent call fails
       const { name, description, format, canBeRevoked, attributes, appearance, signerOption, vct, doctype } =
         CredentialTemplate;
       const checkNameExist = await this.oid4vcIssuanceRepository.getTemplateByNameForIssuer(name, issuerId);
@@ -519,12 +520,17 @@ export class Oid4vcIssuanceService {
           });
         }
       }
-      console.log(`Setup signerOptions `, signerOptions);
       //TODO: Implement x509 support and discuss with team
+      //TODO: add logic to pass the issuer info
       const buildOidcCredentialOffer: CredentialOfferPayload = buildCredentialOfferPayload(
         createOidcCredentialOffer,
+        //
         getAllOfferTemplates,
-        signerOptions
+        {
+          publicId: 'photoIdIssuer',
+          authorizationServerUrl: 'http://localhost:4002/oid4vci/photoIdIssuer'
+        },
+        signerOptions as any
       );
       console.log('This is the buildOidcCredentialOffer:', JSON.stringify(buildOidcCredentialOffer, null, 2));
 

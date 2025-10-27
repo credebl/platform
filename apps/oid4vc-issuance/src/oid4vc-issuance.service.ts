@@ -23,7 +23,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { getAgentUrl } from '@credebl/common/common.utils';
-import { credential_templates, oidc_issuer, SignerOption, user } from '@prisma/client';
+import { credential_templates, oidc_issuer, Prisma, SignerOption, user } from '@prisma/client';
 import {
   IAgentOIDCIssuerCreate,
   IssuerCreation,
@@ -40,7 +40,7 @@ import {
   dpopSigningAlgValuesSupported
 } from '../constant/issuance';
 import {
-  buildCredentialConfigurationsSupported,
+  buildCredentialConfigurationsSupportedNew,
   buildIssuerPayload,
   encodeIssuerPublicId,
   extractTemplateIds,
@@ -58,6 +58,7 @@ import {
   CredentialOfferPayload
 } from '../libs/helpers/credential-sessions.builder';
 import { x5cKeyType } from '@credebl/enum/enum';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 type CredentialDisplayItem = {
   logo?: { uri: string; alt_text?: string };
@@ -285,14 +286,14 @@ export class Oid4vcIssuanceService {
   }
 
   async createTemplate(
-    CredentialTemplate: CreateCredentialTemplate,
+    credentialTemplate: CreateCredentialTemplate,
     orgId: string,
     issuerId: string
   ): Promise<credential_templates> {
     try {
       //TODO: add revert mechanism if agent call fails
-      const { name, description, format, canBeRevoked, attributes, appearance, signerOption, vct, doctype } =
-        CredentialTemplate;
+      const { name, description, format, canBeRevoked, appearance, signerOption } = credentialTemplate;
+
       const checkNameExist = await this.oid4vcIssuanceRepository.getTemplateByNameForIssuer(name, issuerId);
       if (0 < checkNameExist.length) {
         throw new ConflictException(ResponseMessages.oidcTemplate.error.templateNameAlreadyExist);
@@ -302,7 +303,7 @@ export class Oid4vcIssuanceService {
         description,
         format: format.toString(),
         canBeRevoked,
-        attributes,
+        attributes: instanceToPlain(credentialTemplate.template),
         appearance: appearance ?? {},
         issuerId,
         signerOption
@@ -313,14 +314,14 @@ export class Oid4vcIssuanceService {
       if (!createdTemplate) {
         throw new InternalServerErrorException(ResponseMessages.oidcTemplate.error.createFailed);
       }
-      let opts = {};
-      if (vct) {
-        opts = { ...opts, vct };
-      }
-      if (doctype) {
-        opts = { ...opts, doctype };
-      }
-      const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId, opts);
+      // let opts = {};
+      // if (vct) {
+      //   opts = { ...opts, vct };
+      // }
+      // if (doctype) {
+      //   opts = { ...opts, doctype };
+      // }
+      const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
       console.log(`service - createTemplate: `, JSON.stringify(issuerTemplateConfig));
       const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
@@ -360,7 +361,7 @@ export class Oid4vcIssuanceService {
           updateCredentialTemplate.name,
           issuerId
         );
-        if (0 < checkNameExist.length) {
+        if (0 < checkNameExist.length && !checkNameExist.some((item) => item.id === templateId)) {
           throw new ConflictException(ResponseMessages.oidcTemplate.error.templateNameAlreadyExist);
         }
       }
@@ -368,7 +369,8 @@ export class Oid4vcIssuanceService {
         ...updateCredentialTemplate,
         ...(issuerId ? { issuerId } : {})
       };
-      const { name, description, format, canBeRevoked, attributes, appearance } = normalized;
+      const { name, description, format, canBeRevoked, appearance } = normalized;
+      const attributes = instanceToPlain(normalized.template);
 
       const payload = {
         ...(name !== undefined ? { name } : {}),
@@ -699,14 +701,17 @@ export class Oid4vcIssuanceService {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  async buildOidcIssuerConfig(issuerId: string, configMetadata?) {
+  async buildOidcIssuerConfig(issuerId: string) {
     try {
       const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
 
-      const credentialConfigurationsSupported = buildCredentialConfigurationsSupported(templates, configMetadata);
+      console.log(`---------------- emplates, configMetadata`, templates);
+      const credentialConfigurationsSupported = buildCredentialConfigurationsSupportedNew(templates);
 
-      return buildIssuerPayload(credentialConfigurationsSupported, issuerDetails);
+      console.log(`-------------------credentialConfigurationsSupported`, credentialConfigurationsSupported);
+
+      return buildIssuerPayload({ credentialConfigurationsSupported }, issuerDetails);
     } catch (error) {
       this.logger.error(`[buildOidcIssuerPayload] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);

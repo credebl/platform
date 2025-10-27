@@ -332,36 +332,96 @@ export function encodeIssuerPublicId(publicIssuerId: string): string {
 
 ///---------------------------------------------------------
 
-function buildClaimsFromAttributes(attributes: CredentialAttribute[], parentPath: string[] = []): Claim[] {
-  const claims: Claim[] = [];
+// function buildClaimsFromAttributesWithPath(attributes: CredentialAttribute[], parentPath: string[] = []): Claim[] {
+//   const claims: Claim[] = [];
+
+//   for (const attr of attributes) {
+//     const currentPath = [...parentPath, attr.key];
+
+//     // 1️⃣ Add the parent attribute itself if it has display or mandatory metadata
+//     if ((attr.display && 0 < attr.display.length) || attr.mandatory) {
+//       const parentClaim: Claim = { path: currentPath };
+
+//       if (attr.display?.length) {
+//         parentClaim.display = attr.display.map((d) => ({
+//           name: d.name,
+//           locale: d.locale
+//         }));
+//       }
+
+//       if (attr.mandatory) {
+//         parentClaim.mandatory = true;
+//       }
+
+//       claims.push(parentClaim);
+//     }
+
+//     // 2️⃣ If this attribute has nested children, recurse into them
+//     if (attr.children && 0 < attr.children.length) {
+//       claims.push(...buildClaimsFromAttributes(attr.children, currentPath));
+//     }
+//   }
+//   return claims;
+// }
+
+/**
+ * Recursively builds a nested claims object from a list of attributes.
+ */
+function buildNestedClaims(attributes: CredentialAttribute[]): Record<string, Claim> {
+  const claims: Record<string, Claim> = {};
 
   for (const attr of attributes) {
-    const currentPath = [...parentPath, attr.key];
+    const node: Claim = {};
 
-    // 1️⃣ Add the parent attribute itself if it has display or mandatory metadata
-    if ((attr.display && 0 < attr.display.length) || attr.mandatory) {
-      const parentClaim: Claim = { path: currentPath };
-
-      if (attr.display?.length) {
-        parentClaim.display = attr.display.map((d) => ({
-          name: d.name,
-          locale: d.locale
-        }));
-      }
-
-      if (attr.mandatory) {
-        parentClaim.mandatory = true;
-      }
-
-      claims.push(parentClaim);
+    // ✅ include display info
+    if (attr.display?.length) {
+      node.display = attr.display.map((d) => ({
+        name: d.name,
+        locale: d.locale
+      }));
     }
 
-    // 2️⃣ If this attribute has nested children, recurse into them
-    if (attr.children && 0 < attr.children.length) {
-      claims.push(...buildClaimsFromAttributes(attr.children, currentPath));
+    // ✅ include mandatory flag
+    if (attr.mandatory) {
+      node.mandatory = true;
     }
+
+    // ✅ handle nested children recursively
+    if (attr.children?.length) {
+      const childClaims = buildNestedClaims(attr.children);
+      Object.assign(node, childClaims); // merge children into current node
+    }
+
+    claims[attr.key] = node;
   }
+
   return claims;
+}
+
+/**
+ * Builds claims object for both SD-JWT and MDOC credential templates.
+ */
+//TODO: Remove any type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildClaimsFromTemplate(template: SdJwtTemplate | MdocTemplate): Record<string, any> {
+  // ✅ MDOC case — handle namespaces
+  if ((template as MdocTemplate).namespaces) {
+    const mdocTemplate = template as MdocTemplate;
+
+    //TODO: Remove any type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const claims: Record<string, any> = {};
+
+    for (const ns of mdocTemplate.namespaces) {
+      claims[ns.namespace] = buildNestedClaims(ns.attributes);
+    }
+
+    return claims;
+  }
+
+  // ✅ SD-JWT case — flat attributes
+  const sdjwtTemplate = template as SdJwtTemplate;
+  return buildNestedClaims(sdjwtTemplate.attributes);
 }
 
 //TODO: Fix this eslint issue
@@ -373,7 +433,7 @@ export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate
   const configKey = `${name}-${formatSuffix}`;
   const credentialScope = `openid4vc:${template.vct}-${formatSuffix}`;
 
-  const claims = buildClaimsFromAttributes(template.attributes);
+  const claims = buildClaimsFromTemplate(template);
 
   return {
     [configKey]: {
@@ -394,7 +454,7 @@ export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function buildMdocCredentialConfig(name: string, template: MdocTemplate) {
-  const claims: Claim[] = [];
+  //const claims: Claim[] = [];
 
   const formatSuffix = 'mdoc';
 
@@ -402,9 +462,11 @@ export function buildMdocCredentialConfig(name: string, template: MdocTemplate) 
   const configKey = `${name}-${formatSuffix}`;
   const credentialScope = `openid4vc:${template.doctype}-${formatSuffix}`;
 
-  for (const ns of template.namespaces) {
-    claims.push(...buildClaimsFromAttributes(ns.attributes, [ns.namespace]));
-  }
+  const claims = buildClaimsFromTemplate(template);
+
+  // for (const ns of template.namespaces) {
+  //   claims.push(...buildClaimsFromAttributes(ns.attributes, [ns.namespace]));
+  // }
 
   return {
     [configKey]: {

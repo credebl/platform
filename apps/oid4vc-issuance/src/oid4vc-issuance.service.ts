@@ -54,6 +54,7 @@ import {
 } from '../interfaces/oid4vc-issuer-sessions.interfaces';
 import {
   buildCredentialOfferPayload,
+  buildCredentialOfferPayloadNew,
   buildCredentialOfferUrl,
   CredentialOfferPayload
 } from '../libs/helpers/credential-sessions.builder';
@@ -526,7 +527,7 @@ export class Oid4vcIssuanceService {
       //TODO: add logic to pass the issuer info
       const issuerDetailsFromDb = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       const { publicIssuerId, authorizationServerUrl } = issuerDetailsFromDb || {};
-      const buildOidcCredentialOffer: CredentialOfferPayload = buildCredentialOfferPayload(
+      const buildOidcCredentialOffer: CredentialOfferPayload = buildCredentialOfferPayloadNew(
         createOidcCredentialOffer,
         //
         getAllOfferTemplates,

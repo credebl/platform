@@ -30,10 +30,10 @@ export enum AuthenticationType {
 export type DisclosureFrame = Record<string, boolean | Record<string, boolean>>;
 
 export interface CredentialPayload {
-  full_name?: string;
-  birth_date?: string; // YYYY-MM-DD if present
-  birth_place?: string;
-  parent_names?: string;
+  validityInfo: {
+    validFrom: Date;
+    validUntil: Date;
+  };
   [key: string]: unknown; // extensible for mDoc or other formats
 }
 

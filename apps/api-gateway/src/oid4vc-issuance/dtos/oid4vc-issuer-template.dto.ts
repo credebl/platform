@@ -168,11 +168,11 @@ export class CreateCredentialTemplateDto {
   canBeRevoked = false;
 
   @ApiProperty({
-    type: 'object',
-    additionalProperties: { $ref: getSchemaPath(CredentialAttributeDto) },
+    type: 'array',
+    items: { $ref: getSchemaPath(CredentialAttributeDto) },
     description: 'Attributes included in the credential template'
   })
-  @IsObject()
+  @IsArray()
   attributes: CredentialAttributeDto[];
 
   @ApiProperty({

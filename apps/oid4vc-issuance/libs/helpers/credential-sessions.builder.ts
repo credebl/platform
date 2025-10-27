@@ -3,6 +3,12 @@
 import { Prisma, credential_templates } from '@prisma/client';
 import { GetAllCredentialOffer, SignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
+import {
+  CredentialAttribute,
+  MdocTemplate,
+  SdJwtTemplate
+} from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
+import { UnprocessableEntityException } from '@nestjs/common';
 
 /* ============================================================================
    Domain Types
@@ -493,4 +499,238 @@ export function buildCredentialOfferUrl(baseUrl: string, getAllCredentialOffer: 
 
   // Append query string if any params exist
   return 0 < criteriaParams.length ? `${baseUrl}?${criteriaParams.join('&')}` : baseUrl;
+}
+
+export function validatePayloadAgainstTemplate(template: any, payload: any): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  const validateAttributes = (attributes: CredentialAttribute[], data: any, path = '') => {
+    for (const attr of attributes) {
+      const currentPath = path ? `${path}.${attr.key}` : attr.key;
+      const value = data?.[attr.key];
+
+      // Check for missing mandatory value
+      const isEmpty =
+        value === undefined ||
+        null === value ||
+        ('string' === typeof value && '' === value.trim()) ||
+        ('object' === typeof value && !Array.isArray(value) && 0 === Object.keys(value).length);
+
+      if (attr.mandatory && isEmpty) {
+        errors.push(`Missing mandatory attribute: ${currentPath}`);
+      }
+
+      // Recurse for nested attributes
+      if (attr.children && 'object' === typeof value && null !== value) {
+        validateAttributes(attr.children, value, currentPath);
+      }
+    }
+  };
+
+  if (CredentialFormat.SdJwtVc === template.format) {
+    validateAttributes((template.attributes as SdJwtTemplate).attributes ?? [], payload);
+  } else if (CredentialFormat.Mdoc === template.format) {
+    const namespaces = payload?.namespaces;
+    if (!namespaces) {
+      errors.push('Missing namespaces object in mdoc payload.');
+    } else {
+      const templateNamespaces = (template.attributes as MdocTemplate).namespaces;
+      for (const ns of templateNamespaces ?? []) {
+        const nsData = namespaces[ns.namespace];
+        if (!nsData) {
+          errors.push(`Missing namespace: ${ns.namespace}`);
+          continue;
+        }
+        validateAttributes(ns.attributes, nsData, ns.namespace);
+      }
+    }
+  }
+
+  return { valid: 0 === errors.length, errors };
+}
+
+function buildDisclosureFrameFromTemplate(template: { attributes: CredentialAttribute[] }) {
+  const disclosureFrame: DisclosureFrame = {};
+
+  const buildFrame = (attributes: CredentialAttribute[]) => {
+    const frame: Record<string, any> = {};
+
+    for (const attr of attributes) {
+      if (attr.children?.length) {
+        // Handle nested attributes recursively
+        const subFrame = buildFrame(attr.children);
+        // Include parent only if disclose is true or it has children with disclosure
+        if (attr.disclose || 0 < Object.keys(subFrame).length) {
+          frame[attr.key] = subFrame;
+        }
+      } else if (attr.disclose !== undefined) {
+        frame[attr.key] = Boolean(attr.disclose);
+      }
+    }
+
+    return frame;
+  };
+
+  Object.assign(disclosureFrame, buildFrame(template.attributes));
+
+  return disclosureFrame;
+}
+
+function buildSdJwtCredentialNew(
+  credentialRequest: CredentialRequestDtoLike,
+  templateRecord: any,
+  signerOptions?: SignerOption[]
+): BuiltCredential {
+  // For SD-JWT format we expect payload to be a flat map of claims (no namespaces)
+  const payloadCopy = { ...(credentialRequest.payload as Record<string, unknown>) };
+
+  // // strip vct if present per requirement
+  // delete payloadCopy.vct;
+
+  const sdJwtTemplate = templateRecord.attributes as SdJwtTemplate;
+  payloadCopy.vct = sdJwtTemplate.vct;
+
+  const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
+  const idSuffix = formatSuffix(apiFormat);
+  const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
+  const disclosureFrame = buildDisclosureFrameFromTemplate({ attributes: sdJwtTemplate.attributes });
+
+  return {
+    credentialSupportedId,
+    signerOptions: signerOptions ? signerOptions[0] : undefined,
+    format: apiFormat,
+    payload: payloadCopy,
+    ...(disclosureFrame ? { disclosureFrame } : {})
+  };
+}
+
+/** Build an MSO mdoc credential object
+ *  - For mdocs we expect the payload to include a `namespaces` map (draft-15 style)
+ */
+function buildMdocCredentialNew(
+  credentialRequest: CredentialRequestDtoLike,
+  templateRecord: any,
+  signerOptions?: SignerOption[]
+): BuiltCredential {
+  const incomingPayload = { ...(credentialRequest.payload as Record<string, unknown>) };
+
+  // // If caller provided already-namespaced payload, keep it; otherwise build a namespaces map
+  // const workingPayload = { ...incomingPayload };
+  // if (!workingPayload.namespaces) {
+  //   const namespacesMap: Record<string, Record<string, unknown>> = {};
+  //   // collect claims that match attribute names into the chosen namespace
+  //   for (const claimName of Object.keys(normalizedAttributes)) {
+  //     if (Object.prototype.hasOwnProperty.call(incomingPayload, claimName)) {
+  //       namespacesMap[defaultNamespace] = namespacesMap[defaultNamespace] ?? {};
+  //       namespacesMap[defaultNamespace][claimName] = (incomingPayload as any)[claimName];
+  //       // remove original flattened claim to avoid duplication
+  //       delete (workingPayload as any)[claimName];
+  //     }
+  //   }
+  //   if (0 < Object.keys(namespacesMap).length) {
+  //     (workingPayload as any).namespaces = namespacesMap;
+  //   }
+  // } else {
+  //   // ensure namespaces is a plain object
+  //   if (!isPlainRecord((workingPayload as any).namespaces)) {
+  //     throw new Error(`Invalid mdoc payload: 'namespaces' must be an object`);
+  //   }
+  // }
+
+  const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
+  const idSuffix = formatSuffix(apiFormat);
+  const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
+
+  return {
+    credentialSupportedId,
+    signerOptions: signerOptions ? signerOptions[0] : undefined,
+    format: apiFormat,
+    payload: incomingPayload,
+    ...(credentialRequest.disclosureFrame ? { disclosureFrame: credentialRequest.disclosureFrame } : {})
+  };
+}
+
+export function buildCredentialOfferPayloadNew(
+  dto: CreateOidcCredentialOfferDtoLike,
+  templates: credential_templates[],
+  issuerDetails?: {
+    publicId: string;
+    authorizationServerUrl?: string;
+  },
+  signerOptions?: SignerOption[]
+): CredentialOfferPayload {
+  // Index templates by id
+  const templatesById = new Map(templates.map((template) => [template.id, template]));
+
+  // Validate template ids
+  const missingTemplateIds = dto.credentials.map((c) => c.templateId).filter((id) => !templatesById.has(id));
+  if (missingTemplateIds.length) {
+    throw new Error(`Unknown template ids: ${missingTemplateIds.join(', ')}`);
+  }
+
+  // Build each credential using the template's format
+  const builtCredentials: BuiltCredential[] = dto.credentials.map((credentialRequest) => {
+    const templateRecord = templatesById.get(credentialRequest.templateId)!;
+
+    const validationError = validatePayloadAgainstTemplate(templateRecord, credentialRequest.payload);
+    if (!validationError.valid) {
+      throw new UnprocessableEntityException(`${validationError.errors.join(', ')}`);
+    }
+
+    const templateFormat = (templateRecord as any).format ?? 'vc+sd-jwt';
+    const apiFormat = mapDbFormatToApiFormat(templateFormat);
+
+    if (apiFormat === CredentialFormat.SdJwtVc) {
+      return buildSdJwtCredentialNew(credentialRequest, templateRecord, signerOptions);
+    }
+    if (apiFormat === CredentialFormat.Mdoc) {
+      return buildMdocCredentialNew(credentialRequest, templateRecord, signerOptions);
+    }
+    throw new Error(`Unsupported template format for ${templateFormat}`);
+  });
+
+  // Base envelope: allow explicit publicIssuerId from DTO or fallback to issuerDetails.publicId
+  const publicIssuerIdFromDto = dto.publicIssuerId;
+  const publicIssuerIdFromIssuerDetails = issuerDetails?.publicId;
+  const finalPublicIssuerId = publicIssuerIdFromDto ?? publicIssuerIdFromIssuerDetails;
+
+  const baseEnvelope: BuiltCredentialOfferBase = {
+    credentials: builtCredentials,
+    ...(finalPublicIssuerId ? { publicIssuerId: finalPublicIssuerId } : {})
+  };
+
+  // Determine which authorization flow to return:
+  // Priority:
+  // 1) If issuerDetails.authorizationServerUrl is provided, return preAuthorizedCodeFlowConfig using DEFAULT_TXCODE
+  // 2) Else fall back to flows present in DTO (still enforce XOR)
+  const overrideAuthorizationServerUrl = issuerDetails?.authorizationServerUrl;
+  if (overrideAuthorizationServerUrl) {
+    if ('string' !== typeof overrideAuthorizationServerUrl || '' === overrideAuthorizationServerUrl.trim()) {
+      throw new Error('issuerDetails.authorizationServerUrl must be a non-empty string when provided');
+    }
+    return {
+      ...baseEnvelope,
+      preAuthorizedCodeFlowConfig: {
+        txCode: DEFAULT_TXCODE,
+        authorizationServerUrl: overrideAuthorizationServerUrl
+      }
+    };
+  }
+
+  // No override provided — use what DTO carries (must be XOR)
+  const hasPreAuthFromDto = Boolean(dto.preAuthorizedCodeFlowConfig);
+  const hasAuthCodeFromDto = Boolean(dto.authorizationCodeFlowConfig);
+  if (hasPreAuthFromDto === hasAuthCodeFromDto) {
+    throw new Error('Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.');
+  }
+  if (hasPreAuthFromDto) {
+    return {
+      ...baseEnvelope,
+      preAuthorizedCodeFlowConfig: dto.preAuthorizedCodeFlowConfig!
+    };
+  }
+  return {
+    ...baseEnvelope,
+    authorizationCodeFlowConfig: dto.authorizationCodeFlowConfig!
+  };
 }

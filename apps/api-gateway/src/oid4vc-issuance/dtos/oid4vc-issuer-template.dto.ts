@@ -9,40 +9,100 @@ import {
   IsNotEmpty,
   IsArray,
   ValidateIf,
-  IsEmpty
+  IsEmpty,
+  ArrayNotEmpty
 } from 'class-validator';
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { DisplayDto } from './oid4vc-issuer.dto';
 import { SignerOption } from '@prisma/client';
+import { CredentialFormat } from '@credebl/enum/enum';
+
+class CredentialAttributeDisplayDto {
+  @ApiPropertyOptional({ example: 'First Name' })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @ApiPropertyOptional({ example: 'en' })
+  @IsString()
+  @IsOptional()
+  locale?: string;
+}
+
+// export class CredentialAttributeDto {
+//   @ApiProperty({ required: false, description: 'Whether the attribute is mandatory' })
+//   @IsOptional()
+//   @IsBoolean()
+//   mandatory?: boolean;
+
+//   // TODO: Check how do we handle claims with only path rpoperty like email, etc.
+//   @ApiProperty({ description: 'Type of the attribute value (string, number, date, etc.)' })
+//   @IsString()
+//   value_type: string;
+
+//   @ApiProperty({
+//     type: [String],
+//     description:
+//       'Claims path pointer as per the draft 15 - https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID2.html#name-claims-path-pointer'
+//   })
+//   @IsArray()
+//   @IsString({ each: true })
+//   path: string[];
+
+//   @ApiProperty({ type: [CredentialAttributeDisplayDto], required: false, description: 'Localized display values' })
+//   @IsOptional()
+//   @ValidateNested({ each: true })
+//   @Type(() => CredentialAttributeDisplayDto)
+//   display?: CredentialAttributeDisplayDto[];
+// }
+
+export enum AttributeType {
+  STRING = 'string',
+  NUMBER = 'number',
+  BOOLEAN = 'boolean',
+  DATE = 'date',
+  OBJECT = 'object',
+  ARRAY = 'array',
+  IMAGE = 'image'
+}
 
 export class CredentialAttributeDto {
+  @ApiProperty({ description: 'Unique key for this attribute (e.g., full_name, org.iso.23220.photoID.1.birth_date)' })
+  @IsString()
+  key: string;
+
   @ApiProperty({ required: false, description: 'Whether the attribute is mandatory' })
   @IsOptional()
   @IsBoolean()
   mandatory?: boolean;
 
   // TODO: Check how do we handle claims with only path rpoperty like email, etc.
-  @ApiProperty({ description: 'Type of the attribute value (string, number, date, etc.)' })
-  @IsString()
+  @ApiProperty({ enum: AttributeType, description: 'Type of the attribute value (string, number, date, etc.)' })
+  @IsEnum(AttributeType)
   value_type: string;
 
-  @ApiProperty({
-    type: [String],
-    description:
-      'Claims path pointer as per the draft 15 - https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID2.html#name-claims-path-pointer'
-  })
-  @IsArray()
-  @IsString({ each: true })
-  path: string[];
+  @ApiProperty({ description: 'Whether this attribute should be disclosed (for SD-JWT)' })
+  @IsOptional()
+  @IsBoolean()
+  disclose?: boolean;
 
-  @ApiProperty({ type: [DisplayDto], required: false, description: 'Localized display values' })
+  @ApiProperty({ type: [CredentialAttributeDisplayDto], required: false, description: 'Localized display values' })
   @IsOptional()
   @ValidateNested({ each: true })
-  @Type(() => DisplayDto)
-  display?: DisplayDto[];
-}
+  @Type(() => CredentialAttributeDisplayDto)
+  display?: CredentialAttributeDisplayDto[];
 
+  @ApiProperty({
+    description: 'Nested attributes if type is object or array',
+    required: false,
+    type: () => [CredentialAttributeDto]
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CredentialAttributeDto)
+  children?: CredentialAttributeDto[];
+}
 class LogoDto {
   @ApiPropertyOptional({
     example: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg'
@@ -84,6 +144,23 @@ class CredentialDisplayDto {
   @ValidateNested()
   @Type(() => LogoDto)
   logo?: LogoDto;
+
+  @ApiPropertyOptional({ example: '#12107c' })
+  @IsString()
+  @IsOptional()
+  background_color?: string;
+
+  @ApiPropertyOptional({ example: '#FFFFFF' })
+  @IsString()
+  @IsOptional()
+  text_color?: string;
+
+  @ApiPropertyOptional({ example: { uri: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/ABC-2021-LOGO.svg' } })
+  @IsObject()
+  @IsOptional()
+  background_image?: {
+    uri: string;
+  };
 }
 
 export class AppearanceDto {
@@ -115,7 +192,55 @@ export class AppearanceDto {
   display: CredentialDisplayDto[];
 }
 
-@ApiExtraModels(CredentialAttributeDto)
+export class MdocNamespaceDto {
+  @ApiProperty({ description: 'Namespace key (e.g., org.iso.23220.photoID.1)' })
+  @IsString()
+  namespace: string;
+
+  @ApiProperty({ type: () => [CredentialAttributeDto] })
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CredentialAttributeDto)
+  attributes: CredentialAttributeDto[];
+}
+export class MdocTemplateDto {
+  @ApiProperty({
+    description: 'Document type (required when format is "mso_mdoc"; must NOT be provided when format is "vc+sd-jwt")',
+    example: 'org.iso.23220.photoID.1'
+  })
+  //@ValidateIf((o: CreateCredentialTemplateDto) => 'mso_mdoc' === o.format)
+  @IsString()
+  doctype: string;
+
+  @ApiProperty({ type: () => [MdocNamespaceDto] })
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => MdocNamespaceDto)
+  namespaces: MdocNamespaceDto[];
+}
+
+export class SdJwtTemplateDto {
+  @ApiProperty({
+    description:
+      'Verifiable Credential Type (required when format is "vc+sd-jwt"; must NOT be provided when format is "mso_mdoc")',
+    example: 'BirthCertificateCredential-sdjwt'
+  })
+  // @ValidateIf((o: CreateCredentialTemplateDto) => 'vc+sd-jwt' === o.format)
+  @IsString()
+  vct: string;
+
+  @ApiProperty({
+    type: 'array',
+    items: { $ref: getSchemaPath(CredentialAttributeDto) },
+    description: 'Attributes included in the credential template'
+  })
+  @IsArray()
+  attributes: CredentialAttributeDto[];
+}
+
+@ApiExtraModels(CredentialAttributeDto, SdJwtTemplateDto, MdocTemplateDto)
 export class CreateCredentialTemplateDto {
   @ApiProperty({ description: 'Template name' })
   @IsString()
@@ -134,46 +259,36 @@ export class CreateCredentialTemplateDto {
   @IsEnum(SignerOption)
   signerOption!: SignerOption;
 
-  @ApiProperty({ enum: ['mso_mdoc', 'vc+sd-jwt'], description: 'Credential format type' })
-  @IsEnum(['mso_mdoc', 'vc+sd-jwt'])
-  format: 'mso_mdoc' | 'vc+sd-jwt';
+  @ApiProperty({ enum: CredentialFormat, description: 'Credential format type' })
+  @IsEnum(CredentialFormat)
+  format: CredentialFormat;
 
-  @ApiPropertyOptional({
-    description: 'Document type (required when format is "mso_mdoc"; must NOT be provided when format is "vc+sd-jwt")',
-    example: 'org.iso.23220.photoID.1'
-  })
-  @ValidateIf((o: CreateCredentialTemplateDto) => 'mso_mdoc' === o.format)
-  @IsString()
-  doctype?: string;
-
-  @ValidateIf((o: CreateCredentialTemplateDto) => 'vc+sd-jwt' === o.format)
+  @ValidateIf((o: CreateCredentialTemplateDto) => CredentialFormat.SdJwtVc === o.format)
   @IsEmpty({ message: 'doctype must not be provided when format is "vc+sd-jwt"' })
   readonly _doctypeAbsentGuard?: unknown;
 
-  @ApiPropertyOptional({
-    description:
-      'Verifiable Credential Type (required when format is "vc+sd-jwt"; must NOT be provided when format is "mso_mdoc")',
-    example: 'BirthCertificateCredential-sdjwt'
-  })
-  @ValidateIf((o: CreateCredentialTemplateDto) => 'vc+sd-jwt' === o.format)
-  @IsString()
-  vct?: string;
-
-  @ValidateIf((o: CreateCredentialTemplateDto) => 'mso_mdoc' === o.format)
+  @ValidateIf((o: CreateCredentialTemplateDto) => CredentialFormat.Mdoc === o.format)
   @IsEmpty({ message: 'vct must not be provided when format is "mso_mdoc"' })
   readonly _vctAbsentGuard?: unknown;
+
+  @ApiProperty({
+    type: Object,
+    oneOf: [{ $ref: getSchemaPath(SdJwtTemplateDto) }, { $ref: getSchemaPath(MdocTemplateDto) }],
+    description: 'Credential template definition (depends on credentialFormat)'
+  })
+  @ValidateNested()
+  @Type(({ object }) => {
+    if (object.format === CredentialFormat.Mdoc) {
+      return MdocTemplateDto;
+    } else if (object.format === CredentialFormat.SdJwtVc) {
+      return SdJwtTemplateDto;
+    }
+  })
+  template: SdJwtTemplateDto | MdocTemplateDto;
 
   @ApiProperty({ default: false, description: 'Indicates whether credentials can be revoked' })
   @IsBoolean()
   canBeRevoked = false;
-
-  @ApiProperty({
-    type: 'array',
-    items: { $ref: getSchemaPath(CredentialAttributeDto) },
-    description: 'Attributes included in the credential template'
-  })
-  @IsArray()
-  attributes: CredentialAttributeDto[];
 
   @ApiProperty({
     type: Object,

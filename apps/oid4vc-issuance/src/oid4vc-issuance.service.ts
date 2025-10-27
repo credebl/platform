@@ -524,13 +524,15 @@ export class Oid4vcIssuanceService {
       }
       //TODO: Implement x509 support and discuss with team
       //TODO: add logic to pass the issuer info
+      const issuerDetailsFromDb = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
+      const { publicIssuerId, authorizationServerUrl } = issuerDetailsFromDb || {};
       const buildOidcCredentialOffer: CredentialOfferPayload = buildCredentialOfferPayload(
         createOidcCredentialOffer,
         //
         getAllOfferTemplates,
         {
-          publicId: 'photoIdIssuer',
-          authorizationServerUrl: 'http://localhost:4002/oid4vci/photoIdIssuer'
+          publicId: publicIssuerId,
+          authorizationServerUrl: `${authorizationServerUrl}/oid4vci/${publicIssuerId}`
         },
         signerOptions as any
       );

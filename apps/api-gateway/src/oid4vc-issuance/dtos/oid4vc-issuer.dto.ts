@@ -1,42 +1,7 @@
 /* eslint-disable camelcase */
-import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsBoolean,
-  IsArray,
-  ValidateNested,
-  IsUrl,
-  IsNotEmpty,
-  IsDefined,
-  IsInt
-} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsOptional, IsArray, ValidateNested, IsUrl, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
-
-export class ClaimDto {
-  @ApiProperty({
-    description: 'The path for nested claims',
-    example: ['address', 'street_number'],
-    type: [String]
-  })
-  @Type(() => String)
-  @IsArray()
-  path: string[];
-
-  @ApiProperty({
-    description: 'The display label for the claim',
-    example: 'Email Address'
-  })
-  @IsString()
-  label: string;
-
-  @ApiProperty({
-    description: 'Whether this claim is required for issuance',
-    example: true
-  })
-  @IsBoolean()
-  required: boolean;
-}
 
 export class LogoDto {
   @ApiProperty({
@@ -54,7 +19,7 @@ export class LogoDto {
   alt_text: string;
 }
 
-export class DisplayDto {
+export class IssuerDisplayDto {
   @ApiProperty({
     description: 'The locale for display text',
     example: 'en-US'
@@ -70,14 +35,6 @@ export class DisplayDto {
   name: string;
 
   @ApiPropertyOptional({
-    description: 'A short description for the credential/claim',
-    example: 'Digital credential issued to enrolled students'
-  })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiPropertyOptional({
     description: 'Logo display information for the issuer',
     type: LogoDto
   })
@@ -87,68 +44,68 @@ export class DisplayDto {
 }
 
 // TODO: Check where it is used, coz no reference found
-@ApiExtraModels(ClaimDto)
-export class CredentialConfigurationDto {
-  @ApiProperty({
-    description: 'The format of the credential',
-    example: 'jwt_vc_json'
-  })
-  @IsString()
-  @IsDefined({ message: 'format field is required' })
-  @IsNotEmpty({ message: 'format property is required' })
-  format: string;
+// @ApiExtraModels(ClaimDto)
+// export class CredentialConfigurationDto {
+//   @ApiProperty({
+//     description: 'The format of the credential',
+//     example: 'jwt_vc_json'
+//   })
+//   @IsString()
+//   @IsDefined({ message: 'format field is required' })
+//   @IsNotEmpty({ message: 'format property is required' })
+//   format: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  vct?: string;
+//   @ApiProperty({ required: false })
+//   @IsOptional()
+//   @IsString()
+//   vct?: string;
 
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  doctype?: string;
+//   @ApiProperty({ required: false })
+//   @IsOptional()
+//   @IsString()
+//   doctype?: string;
 
-  @ApiProperty()
-  @IsString()
-  scope: string;
+//   @ApiProperty()
+//   @IsString()
+//   scope: string;
 
-  @ApiProperty({
-    description: 'List of claims supported in this credential',
-    type: [ClaimDto]
-  })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ClaimDto)
-  claims: ClaimDto[];
-  // @ApiProperty({
-  //   description: 'Claims supported by this credential',
-  //   type: 'object',
-  //   additionalProperties: { $ref: getSchemaPath(ClaimDto) }
-  // })
-  // @IsObject()
-  // @ValidateNested({ each: true })
-  // @Transform(({ value }) =>
-  //   Object.fromEntries(Object.entries(value || {}).map(([k, v]) => [k, plainToInstance(ClaimDto, v)]))
-  // )
-  // claims: Record<string, ClaimDto>;
+//   @ApiProperty({
+//     description: 'List of claims supported in this credential',
+//     type: [ClaimDto]
+//   })
+//   @IsArray()
+//   @ValidateNested({ each: true })
+//   @Type(() => ClaimDto)
+//   claims: ClaimDto[];
+//   // @ApiProperty({
+//   //   description: 'Claims supported by this credential',
+//   //   type: 'object',
+//   //   additionalProperties: { $ref: getSchemaPath(ClaimDto) }
+//   // })
+//   // @IsObject()
+//   // @ValidateNested({ each: true })
+//   // @Transform(({ value }) =>
+//   //   Object.fromEntries(Object.entries(value || {}).map(([k, v]) => [k, plainToInstance(ClaimDto, v)]))
+//   // )
+//   // claims: Record<string, ClaimDto>;
 
-  @ApiProperty({ type: [String] })
-  @IsArray()
-  credential_signing_alg_values_supported: string[];
+//   @ApiProperty({ type: [String] })
+//   @IsArray()
+//   credential_signing_alg_values_supported: string[];
 
-  @ApiProperty({ type: [String] })
-  @IsArray()
-  cryptographic_binding_methods_supported: string[];
+//   @ApiProperty({ type: [String] })
+//   @IsArray()
+//   cryptographic_binding_methods_supported: string[];
 
-  @ApiProperty({
-    description: 'Localized display information for the credential',
-    type: [DisplayDto]
-  })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => DisplayDto)
-  display: DisplayDto[];
-}
+//   @ApiProperty({
+//     description: 'Localized display information for the credential',
+//     type: [DisplayDto]
+//   })
+//   @IsArray()
+//   @ValidateNested({ each: true })
+//   @Type(() => DisplayDto)
+//   display: DisplayDto[];
+// }
 
 // export class AuthorizationServerConfigDto {
 //   @ApiProperty({
@@ -239,12 +196,12 @@ export class IssuerCreationDto {
 
   @ApiProperty({
     description: 'Localized display information for the credential',
-    type: [DisplayDto]
+    type: [IssuerDisplayDto]
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => DisplayDto)
-  display: DisplayDto[];
+  @Type(() => IssuerDisplayDto)
+  display: IssuerDisplayDto[];
 
   @ApiProperty({ example: 'https://auth.example.org', description: 'Authorization URL' })
   @IsUrl({ require_tld: false })
@@ -265,12 +222,12 @@ export class IssuerUpdationDto {
 
   @ApiProperty({
     description: 'Localized display information for the credential',
-    type: [DisplayDto]
+    type: [IssuerDisplayDto]
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => DisplayDto)
-  display: DisplayDto[];
+  @Type(() => IssuerDisplayDto)
+  display: IssuerDisplayDto[];
 
   @ApiProperty({
     description: 'batchCredentialIssuanceSize',

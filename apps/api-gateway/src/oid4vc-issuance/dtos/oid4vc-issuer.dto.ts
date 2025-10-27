@@ -179,15 +179,15 @@ export enum AccessTokenSignerKeyType {
 // @ApiExtraModels(CredentialConfigurationDto)
 export class IssuerCreationDto {
   @ApiProperty({
-    description: 'Name of the issuer',
-    example: 'Credebl University'
+    description: 'Unique identifier of the issuer (usually a short code or DID-based identifier)',
+    example: 'credebl-university'
   })
-  @IsString({ message: 'issuerId from IssuerCreationDto -> issuerId, must be a string' })
+  @IsString({ message: 'issuerId must be a string' })
   issuerId: string;
 
   @ApiPropertyOptional({
-    description: 'Maximum number of credentials that can be issued in a batch',
-    example: 50,
+    description: 'Maximum number of credentials that can be issued in a single batch issuance operation',
+    example: 100,
     type: Number
   })
   @IsOptional()
@@ -195,21 +195,53 @@ export class IssuerCreationDto {
   batchCredentialIssuanceSize?: number;
 
   @ApiProperty({
-    description: 'Localized display information for the credential',
-    type: [IssuerDisplayDto]
+    description:
+      'Localized display information for the issuer — shown in wallet apps or credential metadata display (multi-lingual supported)',
+    type: [IssuerDisplayDto],
+    example: [
+      {
+        locale: 'en',
+        name: 'Credebl University',
+        description: 'Accredited institution issuing verified student credentials',
+        logo: {
+          uri: 'https://university.credebl.io/assets/logo-en.svg',
+          alt_text: 'Credebl University logo'
+        }
+      },
+      {
+        locale: 'de',
+        name: 'Credebl Universität',
+        description: 'Akkreditierte Institution für digitale Studentenausweise',
+        logo: {
+          uri: 'https://university.credebl.io/assets/logo-de.svg',
+          alt_text: 'Credebl Universität Logo'
+        }
+      }
+    ]
   })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => IssuerDisplayDto)
   display: IssuerDisplayDto[];
 
-  @ApiProperty({ example: 'https://auth.example.org', description: 'Authorization URL' })
-  @IsUrl({ require_tld: false })
+  @ApiProperty({
+    example: 'https://issuer.credebl.io/oid4vci',
+    description: 'Base URL of the Authorization Server supporting OID4VC issuance flows'
+  })
+  @IsUrl({ require_tld: false }, { message: 'authorizationServerUrl must be a valid URL' })
   authorizationServerUrl: string;
 
   @ApiProperty({
-    description: 'Configuration of the authorization server',
-    type: AuthorizationServerConfigDto
+    description:
+      'Additional configuration details for the authorization server (token endpoint, credential endpoint, grant types, etc.)',
+    type: AuthorizationServerConfigDto,
+    example: {
+      issuer: 'https://id.sovio.ae:8443/realms/sovioid',
+      clientAuthentication: {
+        clientId: 'issuer-server',
+        clientSecret: '1qKMWulZpMBzXIdfPO5AEs0xaTaKs1ym'
+      }
+    }
   })
   @IsOptional()
   @ValidateNested()

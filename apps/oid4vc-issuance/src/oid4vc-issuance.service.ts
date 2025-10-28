@@ -53,13 +53,14 @@ import {
   UpdateCredentialRequest
 } from '../interfaces/oid4vc-issuer-sessions.interfaces';
 import {
-  buildCredentialOfferPayload,
+  // buildCredentialOfferPayload,
   buildCredentialOfferPayloadNew,
   buildCredentialOfferUrl,
   CredentialOfferPayload
 } from '../libs/helpers/credential-sessions.builder';
 import { x5cKeyType } from '@credebl/enum/enum';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 
 type CredentialDisplayItem = {
   logo?: { uri: string; alt_text?: string };
@@ -309,7 +310,6 @@ export class Oid4vcIssuanceService {
         issuerId,
         signerOption
       };
-      console.log(`service - createTemplate: `, issuerId);
       // Persist in DB
       const createdTemplate = await this.oid4vcIssuanceRepository.createTemplate(issuerId, metadata);
       if (!createdTemplate) {
@@ -539,6 +539,7 @@ export class Oid4vcIssuanceService {
 
       //TDOD: signerOption should be under credentials change this with x509 support
       const signerOptions = [];
+      const activeCertificateDetails: X509CertificateRecord[] = [];
       for (const template of getAllOfferTemplates) {
         if (template.signerOption === SignerOption.DID) {
           signerOptions.push({
@@ -560,6 +561,7 @@ export class Oid4vcIssuanceService {
             method: SignerMethodOption.X5C,
             x5c: [activeCertificate.certificateBase64]
           });
+          activeCertificateDetails.push(activeCertificate);
         }
 
         if (template.signerOption == SignerOption.X509_ED25519) {
@@ -575,6 +577,7 @@ export class Oid4vcIssuanceService {
             method: SignerMethodOption.X5C,
             x5c: [activeCertificate.certificateBase64]
           });
+          activeCertificateDetails.push(activeCertificate);
         }
       }
       //TODO: Implement x509 support and discuss with team
@@ -589,7 +592,8 @@ export class Oid4vcIssuanceService {
           publicId: publicIssuerId,
           authorizationServerUrl: `${authorizationServerUrl}/oid4vci/${publicIssuerId}`
         },
-        signerOptions as any
+        signerOptions as any,
+        activeCertificateDetails
       );
       console.log('This is the buildOidcCredentialOffer:', JSON.stringify(buildOidcCredentialOffer, null, 2));
 
@@ -763,10 +767,7 @@ export class Oid4vcIssuanceService {
       const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
 
-      console.log(`---------------- emplates, configMetadata`, templates);
       const credentialConfigurationsSupported = buildCredentialConfigurationsSupportedNew(templates);
-
-      console.log(`-------------------credentialConfigurationsSupported`, credentialConfigurationsSupported);
 
       return buildIssuerPayload({ credentialConfigurationsSupported }, issuerDetails);
     } catch (error) {

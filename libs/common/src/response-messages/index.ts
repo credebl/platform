@@ -552,7 +552,8 @@ export const ResponseMessages = {
     error: {
       errorCreateOffer: 'Error while creating OID4VC credential offer on agent.',
       errorUpdateOffer: 'Error while updating OID4VC credential offer on agent.',
-      deleteFailed: 'Failed to delete OID4VC credential offer.'
+      deleteFailed: 'Failed to delete OID4VC credential offer.',
+      missingValidityInfo: 'Validity Info(validFrom, validTo) is required for validity of credential'
     }
   },
   x509: {

@@ -43,7 +43,7 @@ export interface ClaimDisplay {
 }
 
 export interface Claim {
-  path: string[];
+  path?: string[];
   display?: ClaimDisplay[];
   mandatory?: boolean;
 }

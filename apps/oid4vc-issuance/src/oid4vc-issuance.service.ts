@@ -322,19 +322,39 @@ export class Oid4vcIssuanceService {
       // if (doctype) {
       //   opts = { ...opts, doctype };
       // }
-      const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
-      console.log(`service - createTemplate: `, JSON.stringify(issuerTemplateConfig));
-      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
-      if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      let createTemplateOnAgent;
+      try {
+        const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
+        console.log(`service - createTemplate: `, JSON.stringify(issuerTemplateConfig));
+        const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
+        if (!agentDetails) {
+          throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+        }
+        const { agentEndPoint } = agentDetails;
+        const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
+        if (!issuerDetails) {
+          throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
+        }
+        const url = await getAgentUrl(
+          agentEndPoint,
+          CommonConstants.OIDC_ISSUER_TEMPLATE,
+          issuerDetails.publicIssuerId
+        );
+        createTemplateOnAgent = await this._createOIDCTemplate(issuerTemplateConfig, url, orgId);
+      } catch (agentError) {
+        try {
+          await this.oid4vcIssuanceRepository.deleteTemplate(createdTemplate.id);
+          this.logger.log(`${ResponseMessages.oidcTemplate.success.deleteTemplate}${createdTemplate.id}`);
+          throw new RpcException(agentError?.response ?? agentError);
+        } catch (cleanupError) {
+          this.logger.error(
+            `${ResponseMessages.oidcTemplate.error.failedDeleteTemplate}${createdTemplate.id} deleteError=${JSON.stringify(
+              cleanupError
+            )} originalAgentError=${JSON.stringify(agentError)}`
+          );
+          throw new RpcException('Template creation failed and cleanup also failed');
+        }
       }
-      const { agentEndPoint } = agentDetails;
-      const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
-      if (!issuerDetails) {
-        throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
-      }
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, issuerDetails.publicIssuerId);
-      const createTemplateOnAgent = await this._createOIDCTemplate(issuerTemplateConfig, url, orgId);
       console.log('createTemplateOnAgent::::::::::::::', createTemplateOnAgent);
       if (!createTemplateOnAgent) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -385,25 +405,59 @@ export class Oid4vcIssuanceService {
 
       const updatedTemplate = await this.oid4vcIssuanceRepository.updateTemplate(templateId, payload);
 
-      const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
-      if (!templates || 0 === templates.length) {
-        throw new NotFoundException(ResponseMessages.issuance.error.notFound);
-      }
-      const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
-      const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
-      if (!agentDetails) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
-      }
-      const { agentEndPoint } = agentDetails;
-      const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
-      if (!issuerDetails) {
-        throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
-      }
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, issuerDetails.publicIssuerId);
+      try {
+        const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
+        if (!templates || 0 === templates.length) {
+          throw new NotFoundException(ResponseMessages.issuance.error.notFound);
+        }
+        const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
+        const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
+        if (!agentDetails) {
+          throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+        }
+        const { agentEndPoint } = agentDetails;
+        const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
+        if (!issuerDetails) {
+          throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
+        }
+        const url = await getAgentUrl(
+          agentEndPoint,
+          CommonConstants.OIDC_ISSUER_TEMPLATE,
+          issuerDetails.publicIssuerId
+        );
 
-      const createTemplateOnAgent = await this._createOIDCTemplate(issuerTemplateConfig, url, orgId);
-      if (!createTemplateOnAgent) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+        const createTemplateOnAgent = await this._createOIDCTemplate(issuerTemplateConfig, url, orgId);
+        if (!createTemplateOnAgent) {
+          throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+        }
+      } catch (agentError) {
+        this.logger.error(`[updateTemplate] - error updating template on agent: ${JSON.stringify(agentError)}`);
+        try {
+          const rollbackPayload = {
+            name: template.name,
+            description: template.description,
+            format: template.format,
+            canBeRevoked: template.canBeRevoked,
+            attributes: template.attributes,
+            appearance: template.appearance,
+            issuerId: template.issuerId
+          };
+          await this.oid4vcIssuanceRepository.updateTemplate(templateId, rollbackPayload);
+          this.logger.log(`Rolled back template ${templateId} to previous state after agent error`);
+          throw new RpcException(agentError?.response ?? agentError);
+        } catch (revertError) {
+          this.logger.error(
+            `[updateTemplate] - rollback failed for template ${templateId}: ${JSON.stringify(revertError)} originalAgentError=${JSON.stringify(
+              agentError
+            )}`
+          );
+          const wrappedError = {
+            message: 'Template update failed and rollback also failed',
+            agentError: agentError?.response ?? agentError,
+            rollbackError: revertError?.response ?? revertError
+          };
+          throw new RpcException(wrappedError);
+        }
       }
 
       return updatedTemplate;

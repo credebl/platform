@@ -30,19 +30,19 @@ export enum AuthenticationType {
 export type DisclosureFrame = Record<string, boolean | Record<string, boolean>>;
 
 export interface CredentialPayload {
-  validityInfo: {
-    validFrom: Date;
-    validUntil: Date;
-  };
   [key: string]: unknown; // extensible for mDoc or other formats
 }
 
 export interface CredentialRequest {
-  credentialSupportedId?: string;
+  // credentialSupportedId?: string;
   templateId: string;
-  format: CredentialFormat; // "vc+sd-jwt" | "mso_mdoc"
+  // format: CredentialFormat; // "vc+sd-jwt" | "mso_mdoc"
   payload: CredentialPayload; // user-supplied payload (without vct)
-  disclosureFrame?: DisclosureFrame; // only relevant for vc+sd-jwt
+  // disclosureFrame?: DisclosureFrame; // only relevant for vc+sd-jwt
+  validityInfo?: {
+    validFrom: Date;
+    validUntil: Date;
+  };
 }
 
 export interface CreateOidcCredentialOffer {

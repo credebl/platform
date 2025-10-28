@@ -225,7 +225,7 @@ export class IssuerCreationDto {
   display: IssuerDisplayDto[];
 
   @ApiProperty({
-    example: 'https://issuer.credebl.io/oid4vci',
+    example: 'https://issuer.credebl.io',
     description: 'Base URL of the Authorization Server supporting OID4VC issuance flows'
   })
   @IsUrl({ require_tld: false }, { message: 'authorizationServerUrl must be a valid URL' })

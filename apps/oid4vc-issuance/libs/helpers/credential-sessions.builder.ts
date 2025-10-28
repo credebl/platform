@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
-import { Prisma, credential_templates } from '@prisma/client';
+import { credential_templates } from '@prisma/client';
 import { GetAllCredentialOffer, SignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
 import {
@@ -9,19 +9,22 @@ import {
   SdJwtTemplate
 } from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
 import { UnprocessableEntityException } from '@nestjs/common';
+import { ResponseMessages } from '@credebl/common/response-messages';
+import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { dateToSeconds } from '@credebl/common/date-only';
 
 /* ============================================================================
    Domain Types
 ============================================================================ */
 
-type ValueType = 'string' | 'date' | 'number' | 'boolean' | 'integer' | string;
+// type ValueType = 'string' | 'date' | 'number' | 'boolean' | 'integer' | string;
 
-interface TemplateAttribute {
-  display?: { name: string; locale: string }[];
-  mandatory?: boolean;
-  value_type?: ValueType;
-}
-type TemplateAttributes = Record<string, TemplateAttribute>;
+// interface TemplateAttribute {
+//   display?: { name: string; locale: string }[];
+//   mandatory?: boolean;
+//   value_type?: ValueType;
+// }
+// type TemplateAttributes = Record<string, TemplateAttribute>;
 
 export enum SignerMethodOption {
   DID = 'did',
@@ -30,10 +33,16 @@ export enum SignerMethodOption {
 
 export type DisclosureFrame = Record<string, boolean | Record<string, boolean>>;
 
+export interface validityInfo {
+  validFrom: Date;
+  validUntil: Date;
+}
+
 export interface CredentialRequestDtoLike {
   templateId: string;
   payload: Record<string, unknown>;
-  disclosureFrame?: DisclosureFrame;
+  validityInfo?: validityInfo;
+  // disclosureFrame?: DisclosureFrame;
 }
 
 export interface CreateOidcCredentialOfferDtoLike {
@@ -107,10 +116,10 @@ export const DEFAULT_TXCODE = {
    Small Utilities
 ============================================================================ */
 
-const isNil = (value: unknown): value is null | undefined => null == value;
-const isEmptyString = (value: unknown): boolean => 'string' === typeof value && '' === value.trim();
-const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && 'object' === typeof value && !Array.isArray(value);
+// const isNil = (value: unknown): value is null | undefined => null == value;
+// const isEmptyString = (value: unknown): boolean => 'string' === typeof value && '' === value.trim();
+// const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+//   Boolean(value) && 'object' === typeof value && !Array.isArray(value);
 
 /** Map DB format string -> API enum */
 function mapDbFormatToApiFormat(dbFormat: string): CredentialFormat {
@@ -141,78 +150,78 @@ function formatSuffix(apiFormat: CredentialFormat): 'sdjwt' | 'mdoc' {
  * - map: Record<string, TemplateAttribute>
  * - array: Array<{ path: string[], mandatory?: boolean, value_type?: string, display?: ... }>
  */
-function normalizeTemplateAttributes(rawAttributes: Prisma.JsonValue): TemplateAttributes {
-  // if already a plain record keyed by claim name, cast and return
-  if (isPlainRecord(rawAttributes) && !Array.isArray(rawAttributes)) {
-    // We still guard that values look like TemplateAttribute, but be permissive.
-    return rawAttributes as TemplateAttributes;
-  }
+// function normalizeTemplateAttributes(rawAttributes: Prisma.JsonValue): TemplateAttributes {
+//   // if already a plain record keyed by claim name, cast and return
+//   if (isPlainRecord(rawAttributes) && !Array.isArray(rawAttributes)) {
+//     // We still guard that values look like TemplateAttribute, but be permissive.
+//     return rawAttributes as TemplateAttributes;
+//   }
 
-  // If attributes are an array (draft-15 style), convert to map
-  if (Array.isArray(rawAttributes)) {
-    const attributesArray = rawAttributes as unknown as any[];
-    const normalizedMap: TemplateAttributes = {};
-    for (const attributeEntry of attributesArray) {
-      if (!isPlainRecord(attributeEntry)) {
-        continue; // skip invalid entries
-      }
+//   // If attributes are an array (draft-15 style), convert to map
+//   if (Array.isArray(rawAttributes)) {
+//     const attributesArray = rawAttributes as unknown as any[];
+//     const normalizedMap: TemplateAttributes = {};
+//     for (const attributeEntry of attributesArray) {
+//       if (!isPlainRecord(attributeEntry)) {
+//         continue; // skip invalid entries
+//       }
 
-      // draft-15: path is array like ["org.iso.23220.photoID.1","given_name"] or ["name"]
-      const pathValue = attributeEntry.path;
-      if (!Array.isArray(pathValue) || 0 === pathValue.length) {
-        continue;
-      }
+//       // draft-15: path is array like ["org.iso.23220.photoID.1","given_name"] or ["name"]
+//       const pathValue = attributeEntry.path;
+//       if (!Array.isArray(pathValue) || 0 === pathValue.length) {
+//         continue;
+//       }
 
-      // prefer last path element as local claim name (keeps namespace support)
-      const claimName = String(pathValue[pathValue.length - 1]);
+//       // prefer last path element as local claim name (keeps namespace support)
+//       const claimName = String(pathValue[pathValue.length - 1]);
 
-      normalizedMap[claimName] = {
-        mandatory: Boolean(attributeEntry.mandatory),
-        value_type: attributeEntry.value_type ? String(attributeEntry.value_type) : undefined,
-        display: Array.isArray(attributeEntry.display)
-          ? attributeEntry.display.map((d: any) => ({ name: d.name, locale: d.locale }))
-          : undefined
-      };
-    }
-    return normalizedMap;
-  }
+//       normalizedMap[claimName] = {
+//         mandatory: Boolean(attributeEntry.mandatory),
+//         value_type: attributeEntry.value_type ? String(attributeEntry.value_type) : undefined,
+//         display: Array.isArray(attributeEntry.display)
+//           ? attributeEntry.display.map((d: any) => ({ name: d.name, locale: d.locale }))
+//           : undefined
+//       };
+//     }
+//     return normalizedMap;
+//   }
 
-  // if it's a JSON string, try parse
-  if ('string' === typeof rawAttributes) {
-    try {
-      const parsed = JSON.parse(rawAttributes);
-      return normalizeTemplateAttributes(parsed as Prisma.JsonValue);
-    } catch {
-      throw new Error('Invalid template.attributes JSON string');
-    }
-  }
+//   // if it's a JSON string, try parse
+//   if ('string' === typeof rawAttributes) {
+//     try {
+//       const parsed = JSON.parse(rawAttributes);
+//       return normalizeTemplateAttributes(parsed as Prisma.JsonValue);
+//     } catch {
+//       throw new Error('Invalid template.attributes JSON string');
+//     }
+//   }
 
-  throw new Error('Unrecognized template.attributes shape');
-}
+//   throw new Error('Unrecognized template.attributes shape');
+// }
 
 /* ============================================================================
    Validation: Mandatory claims
 ============================================================================ */
 
-function assertMandatoryClaims(
-  payload: Record<string, unknown>,
-  attributes: TemplateAttributes,
-  context: { templateId: string }
-): void {
-  const missingClaims: string[] = [];
-  for (const [claimName, attributeDefinition] of Object.entries(attributes)) {
-    if (!attributeDefinition?.mandatory) {
-      continue;
-    }
-    const claimValue = payload[claimName];
-    if (isNil(claimValue) || isEmptyString(claimValue)) {
-      missingClaims.push(claimName);
-    }
-  }
-  if (missingClaims.length) {
-    throw new Error(`Missing mandatory claims for template "${context.templateId}": ${missingClaims.join(', ')}`);
-  }
-}
+// function assertMandatoryClaims(
+//   payload: Record<string, unknown>,
+//   attributes: TemplateAttributes,
+//   context: { templateId: string }
+// ): void {
+//   const missingClaims: string[] = [];
+//   for (const [claimName, attributeDefinition] of Object.entries(attributes)) {
+//     if (!attributeDefinition?.mandatory) {
+//       continue;
+//     }
+//     const claimValue = payload[claimName];
+//     if (isNil(claimValue) || isEmptyString(claimValue)) {
+//       missingClaims.push(claimName);
+//     }
+//   }
+//   if (missingClaims.length) {
+//     throw new Error(`Missing mandatory claims for template "${context.templateId}": ${missingClaims.join(', ')}`);
+//   }
+// }
 
 /* ============================================================================
    Per-format credential builders (separated for readability)
@@ -221,120 +230,120 @@ function assertMandatoryClaims(
 ============================================================================ */
 
 /** Build an SD-JWT credential object */
-function buildSdJwtCredential(
-  credentialRequest: CredentialRequestDtoLike,
-  templateRecord: credential_templates,
-  signerOptions?: SignerOption[]
-): BuiltCredential {
-  // For SD-JWT format we expect payload to be a flat map of claims (no namespaces)
-  const payloadCopy = { ...(credentialRequest.payload as Record<string, unknown>) };
-  // Validate mandatory claims using normalized attributes from templateRecord
-  const normalizedAttributes = normalizeTemplateAttributes(templateRecord.attributes);
-  assertMandatoryClaims(payloadCopy, normalizedAttributes, { templateId: credentialRequest.templateId });
+// function buildSdJwtCredential(
+//   credentialRequest: CredentialRequestDtoLike,
+//   templateRecord: credential_templates,
+//   signerOptions?: SignerOption[]
+// ): BuiltCredential {
+//   // For SD-JWT format we expect payload to be a flat map of claims (no namespaces)
+//   const payloadCopy = { ...(credentialRequest.payload as Record<string, unknown>) };
+//   // Validate mandatory claims using normalized attributes from templateRecord
+//   const normalizedAttributes = normalizeTemplateAttributes(templateRecord.attributes);
+//   assertMandatoryClaims(payloadCopy, normalizedAttributes, { templateId: credentialRequest.templateId });
 
-  // strip vct if present per requirement
-  delete payloadCopy.vct;
+//   // strip vct if present per requirement
+//   delete payloadCopy.vct;
 
-  const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
-  const idSuffix = formatSuffix(apiFormat);
-  const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
+//   const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
+//   const idSuffix = formatSuffix(apiFormat);
+//   const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
 
-  return {
-    credentialSupportedId,
-    signerOptions: signerOptions ? signerOptions[0] : undefined,
-    format: apiFormat,
-    payload: payloadCopy,
-    ...(credentialRequest.disclosureFrame ? { disclosureFrame: credentialRequest.disclosureFrame } : {})
-  };
-}
+//   return {
+//     credentialSupportedId,
+//     signerOptions: signerOptions ? signerOptions[0] : undefined,
+//     format: apiFormat,
+//     payload: payloadCopy,
+//     ...(credentialRequest.disclosureFrame ? { disclosureFrame: credentialRequest.disclosureFrame } : {})
+//   };
+// }
 
-/** Build an MSO mdoc credential object
- *  - For mdocs we expect the payload to include a `namespaces` map (draft-15 style)
- */
-function buildMdocCredential(
-  credentialRequest: CredentialRequestDtoLike,
-  templateRecord: credential_templates,
-  signerOptions?: SignerOption[]
-): BuiltCredential {
-  const incomingPayload = { ...(credentialRequest.payload as Record<string, unknown>) };
+// /** Build an MSO mdoc credential object
+//  *  - For mdocs we expect the payload to include a `namespaces` map (draft-15 style)
+//  */
+// function buildMdocCredential(
+//   credentialRequest: CredentialRequestDtoLike,
+//   templateRecord: credential_templates,
+//   signerOptions?: SignerOption[]
+// ): BuiltCredential {
+//   const incomingPayload = { ...(credentialRequest.payload as Record<string, unknown>) };
 
-  // Normalize attributes and ensure we know the expected claim names
-  const normalizedAttributes = normalizeTemplateAttributes(templateRecord.attributes);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const templateDoctype: string | undefined = (templateRecord as any).doctype ?? undefined;
-  const defaultNamespace = templateDoctype ?? templateRecord.name;
+//   // Normalize attributes and ensure we know the expected claim names
+//   const normalizedAttributes = normalizeTemplateAttributes(templateRecord.attributes);
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   const templateDoctype: string | undefined = (templateRecord as any).doctype ?? undefined;
+//   const defaultNamespace = templateDoctype ?? templateRecord.name;
 
-  // If caller provided already-namespaced payload, keep it; otherwise build a namespaces map
-  const workingPayload = { ...incomingPayload };
-  if (!workingPayload.namespaces) {
-    const namespacesMap: Record<string, Record<string, unknown>> = {};
-    // collect claims that match attribute names into the chosen namespace
-    for (const claimName of Object.keys(normalizedAttributes)) {
-      if (Object.prototype.hasOwnProperty.call(incomingPayload, claimName)) {
-        namespacesMap[defaultNamespace] = namespacesMap[defaultNamespace] ?? {};
-        namespacesMap[defaultNamespace][claimName] = (incomingPayload as any)[claimName];
-        // remove original flattened claim to avoid duplication
-        delete (workingPayload as any)[claimName];
-      }
-    }
-    if (0 < Object.keys(namespacesMap).length) {
-      (workingPayload as any).namespaces = namespacesMap;
-    }
-  } else {
-    // ensure namespaces is a plain object
-    if (!isPlainRecord((workingPayload as any).namespaces)) {
-      throw new Error(`Invalid mdoc payload: 'namespaces' must be an object`);
-    }
-  }
+//   // If caller provided already-namespaced payload, keep it; otherwise build a namespaces map
+//   const workingPayload = { ...incomingPayload };
+//   if (!workingPayload.namespaces) {
+//     const namespacesMap: Record<string, Record<string, unknown>> = {};
+//     // collect claims that match attribute names into the chosen namespace
+//     for (const claimName of Object.keys(normalizedAttributes)) {
+//       if (Object.prototype.hasOwnProperty.call(incomingPayload, claimName)) {
+//         namespacesMap[defaultNamespace] = namespacesMap[defaultNamespace] ?? {};
+//         namespacesMap[defaultNamespace][claimName] = (incomingPayload as any)[claimName];
+//         // remove original flattened claim to avoid duplication
+//         delete (workingPayload as any)[claimName];
+//       }
+//     }
+//     if (0 < Object.keys(namespacesMap).length) {
+//       (workingPayload as any).namespaces = namespacesMap;
+//     }
+//   } else {
+//     // ensure namespaces is a plain object
+//     if (!isPlainRecord((workingPayload as any).namespaces)) {
+//       throw new Error(`Invalid mdoc payload: 'namespaces' must be an object`);
+//     }
+//   }
 
-  // Validate mandatory claims exist somewhere inside namespaces
-  const missingMandatoryClaims: string[] = [];
-  for (const [claimName, attributeDef] of Object.entries(normalizedAttributes)) {
-    if (!attributeDef?.mandatory) {
-      continue;
-    }
+//   // Validate mandatory claims exist somewhere inside namespaces
+//   const missingMandatoryClaims: string[] = [];
+//   for (const [claimName, attributeDef] of Object.entries(normalizedAttributes)) {
+//     if (!attributeDef?.mandatory) {
+//       continue;
+//     }
 
-    let found = false;
-    const namespacesObj = (workingPayload as any).namespaces as Record<string, any>;
-    if (namespacesObj && isPlainRecord(namespacesObj)) {
-      for (const nsKey of Object.keys(namespacesObj)) {
-        const nsContent = namespacesObj[nsKey];
-        if (nsContent && Object.prototype.hasOwnProperty.call(nsContent, claimName)) {
-          const value = nsContent[claimName];
-          if (!isNil(value) && !('string' === typeof value && '' === value.trim())) {
-            found = true;
-            break;
-          }
-        }
-      }
-    }
-    if (!found) {
-      missingMandatoryClaims.push(claimName);
-    }
-  }
-  if (missingMandatoryClaims.length) {
-    throw new Error(
-      `Missing mandatory namespaced claims for template "${credentialRequest.templateId}": ${missingMandatoryClaims.join(
-        ', '
-      )}`
-    );
-  }
+//     let found = false;
+//     const namespacesObj = (workingPayload as any).namespaces as Record<string, any>;
+//     if (namespacesObj && isPlainRecord(namespacesObj)) {
+//       for (const nsKey of Object.keys(namespacesObj)) {
+//         const nsContent = namespacesObj[nsKey];
+//         if (nsContent && Object.prototype.hasOwnProperty.call(nsContent, claimName)) {
+//           const value = nsContent[claimName];
+//           if (!isNil(value) && !('string' === typeof value && '' === value.trim())) {
+//             found = true;
+//             break;
+//           }
+//         }
+//       }
+//     }
+//     if (!found) {
+//       missingMandatoryClaims.push(claimName);
+//     }
+//   }
+//   if (missingMandatoryClaims.length) {
+//     throw new Error(
+//       `Missing mandatory namespaced claims for template "${credentialRequest.templateId}": ${missingMandatoryClaims.join(
+//         ', '
+//       )}`
+//     );
+//   }
 
-  // strip vct if present
-  delete (workingPayload as Record<string, unknown>).vct;
+//   // strip vct if present
+//   delete (workingPayload as Record<string, unknown>).vct;
 
-  const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
-  const idSuffix = formatSuffix(apiFormat);
-  const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
+//   const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
+//   const idSuffix = formatSuffix(apiFormat);
+//   const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
 
-  return {
-    credentialSupportedId,
-    signerOptions: signerOptions ? signerOptions[0] : undefined,
-    format: apiFormat,
-    payload: workingPayload,
-    ...(credentialRequest.disclosureFrame ? { disclosureFrame: credentialRequest.disclosureFrame } : {})
-  };
-}
+//   return {
+//     credentialSupportedId,
+//     signerOptions: signerOptions ? signerOptions[0] : undefined,
+//     format: apiFormat,
+//     payload: workingPayload,
+//     ...(credentialRequest.disclosureFrame ? { disclosureFrame: credentialRequest.disclosureFrame } : {})
+//   };
+// }
 
 /* ============================================================================
    Main Builder: buildCredentialOfferPayload
@@ -342,137 +351,137 @@ function buildMdocCredential(
    - Accepts `authorizationServerUrl` parameter; txCode is a constant above
 ============================================================================ */
 
-export function buildCredentialOfferPayload(
-  dto: CreateOidcCredentialOfferDtoLike,
-  templates: credential_templates[],
-  issuerDetails?: {
-    publicId: string;
-    authorizationServerUrl?: string;
-  },
-  signerOptions?: SignerOption[]
-): CredentialOfferPayload {
-  // Index templates by id
-  const templatesById = new Map(templates.map((template) => [template.id, template]));
+// export function buildCredentialOfferPayload(
+//   dto: CreateOidcCredentialOfferDtoLike,
+//   templates: credential_templates[],
+//   issuerDetails?: {
+//     publicId: string;
+//     authorizationServerUrl?: string;
+//   },
+//   signerOptions?: SignerOption[]
+// ): CredentialOfferPayload {
+//   // Index templates by id
+//   const templatesById = new Map(templates.map((template) => [template.id, template]));
 
-  // Validate template ids
-  const missingTemplateIds = dto.credentials.map((c) => c.templateId).filter((id) => !templatesById.has(id));
-  if (missingTemplateIds.length) {
-    throw new Error(`Unknown template ids: ${missingTemplateIds.join(', ')}`);
-  }
+//   // Validate template ids
+//   const missingTemplateIds = dto.credentials.map((c) => c.templateId).filter((id) => !templatesById.has(id));
+//   if (missingTemplateIds.length) {
+//     throw new Error(`Unknown template ids: ${missingTemplateIds.join(', ')}`);
+//   }
 
-  // Build each credential using the template's format
-  const builtCredentials: BuiltCredential[] = dto.credentials.map((credentialRequest) => {
-    const templateRecord = templatesById.get(credentialRequest.templateId)!;
-    // we normalize attributes to support both draft-13 (map) and draft-15 (array) shapes
-    normalizeTemplateAttributes(templateRecord.attributes);
+//   // Build each credential using the template's format
+//   const builtCredentials: BuiltCredential[] = dto.credentials.map((credentialRequest) => {
+//     const templateRecord = templatesById.get(credentialRequest.templateId)!;
+//     // we normalize attributes to support both draft-13 (map) and draft-15 (array) shapes
+//     normalizeTemplateAttributes(templateRecord.attributes);
 
-    const templateFormat = (templateRecord as any).format ?? 'vc+sd-jwt';
-    const apiFormat = mapDbFormatToApiFormat(templateFormat);
+//     const templateFormat = (templateRecord as any).format ?? 'vc+sd-jwt';
+//     const apiFormat = mapDbFormatToApiFormat(templateFormat);
 
-    if (apiFormat === CredentialFormat.SdJwtVc) {
-      return buildSdJwtCredential(credentialRequest, templateRecord, signerOptions);
-    }
-    if (apiFormat === CredentialFormat.Mdoc) {
-      return buildMdocCredential(credentialRequest, templateRecord, signerOptions);
-    }
-    throw new Error(`Unsupported template format for ${templateFormat}`);
-  });
+//     if (apiFormat === CredentialFormat.SdJwtVc) {
+//       return buildSdJwtCredential(credentialRequest, templateRecord, signerOptions);
+//     }
+//     if (apiFormat === CredentialFormat.Mdoc) {
+//       return buildMdocCredential(credentialRequest, templateRecord, signerOptions);
+//     }
+//     throw new Error(`Unsupported template format for ${templateFormat}`);
+//   });
 
-  // Base envelope: allow explicit publicIssuerId from DTO or fallback to issuerDetails.publicId
-  const publicIssuerIdFromDto = dto.publicIssuerId;
-  const publicIssuerIdFromIssuerDetails = issuerDetails?.publicId;
-  const finalPublicIssuerId = publicIssuerIdFromDto ?? publicIssuerIdFromIssuerDetails;
+//   // Base envelope: allow explicit publicIssuerId from DTO or fallback to issuerDetails.publicId
+//   const publicIssuerIdFromDto = dto.publicIssuerId;
+//   const publicIssuerIdFromIssuerDetails = issuerDetails?.publicId;
+//   const finalPublicIssuerId = publicIssuerIdFromDto ?? publicIssuerIdFromIssuerDetails;
 
-  const baseEnvelope: BuiltCredentialOfferBase = {
-    credentials: builtCredentials,
-    ...(finalPublicIssuerId ? { publicIssuerId: finalPublicIssuerId } : {})
-  };
+//   const baseEnvelope: BuiltCredentialOfferBase = {
+//     credentials: builtCredentials,
+//     ...(finalPublicIssuerId ? { publicIssuerId: finalPublicIssuerId } : {})
+//   };
 
-  // Determine which authorization flow to return:
-  // Priority:
-  // 1) If issuerDetails.authorizationServerUrl is provided, return preAuthorizedCodeFlowConfig using DEFAULT_TXCODE
-  // 2) Else fall back to flows present in DTO (still enforce XOR)
-  const overrideAuthorizationServerUrl = issuerDetails?.authorizationServerUrl;
-  if (overrideAuthorizationServerUrl) {
-    if ('string' !== typeof overrideAuthorizationServerUrl || '' === overrideAuthorizationServerUrl.trim()) {
-      throw new Error('issuerDetails.authorizationServerUrl must be a non-empty string when provided');
-    }
-    return {
-      ...baseEnvelope,
-      preAuthorizedCodeFlowConfig: {
-        txCode: DEFAULT_TXCODE,
-        authorizationServerUrl: overrideAuthorizationServerUrl
-      }
-    };
-  }
+//   // Determine which authorization flow to return:
+//   // Priority:
+//   // 1) If issuerDetails.authorizationServerUrl is provided, return preAuthorizedCodeFlowConfig using DEFAULT_TXCODE
+//   // 2) Else fall back to flows present in DTO (still enforce XOR)
+//   const overrideAuthorizationServerUrl = issuerDetails?.authorizationServerUrl;
+//   if (overrideAuthorizationServerUrl) {
+//     if ('string' !== typeof overrideAuthorizationServerUrl || '' === overrideAuthorizationServerUrl.trim()) {
+//       throw new Error('issuerDetails.authorizationServerUrl must be a non-empty string when provided');
+//     }
+//     return {
+//       ...baseEnvelope,
+//       preAuthorizedCodeFlowConfig: {
+//         txCode: DEFAULT_TXCODE,
+//         authorizationServerUrl: overrideAuthorizationServerUrl
+//       }
+//     };
+//   }
 
-  // No override provided — use what DTO carries (must be XOR)
-  const hasPreAuthFromDto = Boolean(dto.preAuthorizedCodeFlowConfig);
-  const hasAuthCodeFromDto = Boolean(dto.authorizationCodeFlowConfig);
-  if (hasPreAuthFromDto === hasAuthCodeFromDto) {
-    throw new Error('Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.');
-  }
-  if (hasPreAuthFromDto) {
-    return {
-      ...baseEnvelope,
-      preAuthorizedCodeFlowConfig: dto.preAuthorizedCodeFlowConfig!
-    };
-  }
-  return {
-    ...baseEnvelope,
-    authorizationCodeFlowConfig: dto.authorizationCodeFlowConfig!
-  };
-}
+//   // No override provided — use what DTO carries (must be XOR)
+//   const hasPreAuthFromDto = Boolean(dto.preAuthorizedCodeFlowConfig);
+//   const hasAuthCodeFromDto = Boolean(dto.authorizationCodeFlowConfig);
+//   if (hasPreAuthFromDto === hasAuthCodeFromDto) {
+//     throw new Error('Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.');
+//   }
+//   if (hasPreAuthFromDto) {
+//     return {
+//       ...baseEnvelope,
+//       preAuthorizedCodeFlowConfig: dto.preAuthorizedCodeFlowConfig!
+//     };
+//   }
+//   return {
+//     ...baseEnvelope,
+//     authorizationCodeFlowConfig: dto.authorizationCodeFlowConfig!
+//   };
+// }
 
 /* ============================================================================
    Update Credential Offer builder (keeps behavior, clearer names)
 ============================================================================ */
 
-export function buildUpdateCredentialOfferPayload(
-  dto: CreateOidcCredentialOfferDtoLike,
-  templates: credential_templates[]
-): { credentials: BuiltCredential[] } {
-  const templatesById = new Map(templates.map((template) => [template.id, template]));
+// export function buildUpdateCredentialOfferPayload(
+//   dto: CreateOidcCredentialOfferDtoLike,
+//   templates: credential_templates[]
+// ): { credentials: BuiltCredential[] } {
+//   const templatesById = new Map(templates.map((template) => [template.id, template]));
 
-  const missingTemplateIds = dto.credentials.map((c) => c.templateId).filter((id) => !templatesById.has(id));
-  if (missingTemplateIds.length) {
-    throw new Error(`Unknown template ids: ${missingTemplateIds.join(', ')}`);
-  }
+//   const missingTemplateIds = dto.credentials.map((c) => c.templateId).filter((id) => !templatesById.has(id));
+//   if (missingTemplateIds.length) {
+//     throw new Error(`Unknown template ids: ${missingTemplateIds.join(', ')}`);
+//   }
 
-  const normalizedCredentials: BuiltCredential[] = dto.credentials.map((credentialRequest) => {
-    const templateRecord = templatesById.get(credentialRequest.templateId)!;
+//   const normalizedCredentials: BuiltCredential[] = dto.credentials.map((credentialRequest) => {
+//     const templateRecord = templatesById.get(credentialRequest.templateId)!;
 
-    // Normalize attributes shape and ensure it's valid
-    const attributesMap = normalizeTemplateAttributes(templateRecord.attributes);
+//     // Normalize attributes shape and ensure it's valid
+//     const attributesMap = normalizeTemplateAttributes(templateRecord.attributes);
 
-    // ensure payload keys match known attributes
-    const payloadKeys = Object.keys(credentialRequest.payload);
-    const invalidPayloadKeys = payloadKeys.filter((payloadKey) => !attributesMap[payloadKey]);
-    if (invalidPayloadKeys.length) {
-      throw new Error(
-        `Invalid attributes for template "${credentialRequest.templateId}": ${invalidPayloadKeys.join(', ')}`
-      );
-    }
+//     // ensure payload keys match known attributes
+//     const payloadKeys = Object.keys(credentialRequest.payload);
+//     const invalidPayloadKeys = payloadKeys.filter((payloadKey) => !attributesMap[payloadKey]);
+//     if (invalidPayloadKeys.length) {
+//       throw new Error(
+//         `Invalid attributes for template "${credentialRequest.templateId}": ${invalidPayloadKeys.join(', ')}`
+//       );
+//     }
 
-    // Validate mandatory claims
-    assertMandatoryClaims(credentialRequest.payload, attributesMap, { templateId: credentialRequest.templateId });
+//     // Validate mandatory claims
+//     assertMandatoryClaims(credentialRequest.payload, attributesMap, { templateId: credentialRequest.templateId });
 
-    const selectedApiFormat = mapDbFormatToApiFormat(templateRecord.format);
-    const idSuffix = formatSuffix(selectedApiFormat);
-    const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
+//     const selectedApiFormat = mapDbFormatToApiFormat(templateRecord.format);
+//     const idSuffix = formatSuffix(selectedApiFormat);
+//     const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
 
-    return {
-      credentialSupportedId,
-      format: selectedApiFormat,
-      payload: credentialRequest.payload,
-      ...(credentialRequest.disclosureFrame ? { disclosureFrame: credentialRequest.disclosureFrame } : {})
-    };
-  });
+//     return {
+//       credentialSupportedId,
+//       format: selectedApiFormat,
+//       payload: credentialRequest.payload,
+//       ...(credentialRequest.disclosureFrame ? { disclosureFrame: credentialRequest.disclosureFrame } : {})
+//     };
+//   });
 
-  return {
-    credentials: normalizedCredentials
-  };
-}
+//   return {
+//     credentials: normalizedCredentials
+//   };
+// }
 
 export function buildCredentialOfferUrl(baseUrl: string, getAllCredentialOffer: GetAllCredentialOffer): string {
   const criteriaParams: string[] = [];
@@ -576,16 +585,75 @@ function buildDisclosureFrameFromTemplate(template: { attributes: CredentialAttr
   return disclosureFrame;
 }
 
+function validateCredentialDatesInCertificateWindow(credentialValidityInfo: validityInfo, certificate) {
+  // Extract dates from credential
+  const credentialValidFrom = new Date(credentialValidityInfo.validFrom);
+  const credentialValidTo = new Date(credentialValidityInfo.validUntil);
+
+  // Extract dates from certificate
+  const certNotBefore = new Date(certificate.validFrom);
+  const certNotAfter = new Date(certificate.expiry);
+
+  // Validate that credential dates are within certificate validity period
+  const isCredentialStartValid = credentialValidFrom >= certNotBefore;
+  const isCredentialEndValid = credentialValidTo <= certNotAfter;
+  const isCredentialDurationValid = credentialValidFrom <= credentialValidTo;
+
+  return {
+    isValid: isCredentialStartValid && isCredentialEndValid && isCredentialDurationValid,
+    details: {
+      credentialStartValid: isCredentialStartValid,
+      credentialEndValid: isCredentialEndValid,
+      credentialDurationValid: isCredentialDurationValid,
+      credentialValidFrom: credentialValidFrom.toISOString(),
+      credentialValidTo: credentialValidTo.toISOString(),
+      certificateNotBefore: certNotBefore.toISOString(),
+      certificateNotAfter: certNotAfter.toISOString()
+    }
+  };
+}
+
 function buildSdJwtCredentialNew(
   credentialRequest: CredentialRequestDtoLike,
   templateRecord: any,
-  signerOptions?: SignerOption[]
+  signerOptions: SignerOption[],
+  activeCertificateDetails?: X509CertificateRecord[]
 ): BuiltCredential {
   // For SD-JWT format we expect payload to be a flat map of claims (no namespaces)
-  const payloadCopy = { ...(credentialRequest.payload as Record<string, unknown>) };
+  let payloadCopy = { ...(credentialRequest.payload as Record<string, unknown>) };
 
   // // strip vct if present per requirement
   // delete payloadCopy.vct;
+
+  if (signerOptions[0].method === SignerMethodOption.X5C && credentialRequest.validityInfo) {
+    const certificateDetail = activeCertificateDetails.find((x) => x.certificateBase64 === signerOptions[0].x5c[0]);
+    const validationResult = validateCredentialDatesInCertificateWindow(
+      credentialRequest.validityInfo,
+      certificateDetail
+    );
+    if (!validationResult.isValid) {
+      throw new UnprocessableEntityException(`${JSON.stringify(validationResult.details)}`);
+    }
+  }
+
+  if (credentialRequest.validityInfo) {
+    const credentialValidFrom = new Date(credentialRequest.validityInfo.validFrom);
+    const credentialValidTo = new Date(credentialRequest.validityInfo.validUntil);
+    const isCredentialDurationValid = credentialValidFrom <= credentialValidTo;
+    if (!isCredentialDurationValid) {
+      const errorDetails = {
+        credentialDurationValid: isCredentialDurationValid,
+        credentialValidFrom: credentialValidFrom.toISOString(),
+        credentialValidTo: credentialValidTo.toISOString()
+      };
+      throw new UnprocessableEntityException(`${JSON.stringify(errorDetails)}`);
+    }
+    payloadCopy = {
+      ...payloadCopy,
+      nbf: dateToSeconds(credentialValidFrom),
+      exp: dateToSeconds(credentialValidTo)
+    };
+  }
 
   const sdJwtTemplate = templateRecord.attributes as SdJwtTemplate;
   payloadCopy.vct = sdJwtTemplate.vct;
@@ -610,9 +678,32 @@ function buildSdJwtCredentialNew(
 function buildMdocCredentialNew(
   credentialRequest: CredentialRequestDtoLike,
   templateRecord: any,
-  signerOptions?: SignerOption[]
+  signerOptions: SignerOption[],
+  activeCertificateDetails: X509CertificateRecord[]
 ): BuiltCredential {
-  const incomingPayload = { ...(credentialRequest.payload as Record<string, unknown>) };
+  let incomingPayload = { ...(credentialRequest.payload as Record<string, unknown>) };
+
+  if (
+    !credentialRequest.validityInfo ||
+    !credentialRequest.validityInfo.validFrom ||
+    !credentialRequest.validityInfo.validUntil
+  ) {
+    throw new UnprocessableEntityException(`${ResponseMessages.oidcIssuerSession.error.missingValidityInfo}`);
+  }
+
+  const certificateDetail = activeCertificateDetails.find((x) => x.certificateBase64 === signerOptions[0].x5c[0]);
+  const validationResult = validateCredentialDatesInCertificateWindow(
+    credentialRequest.validityInfo,
+    certificateDetail
+  );
+
+  if (!validationResult.isValid) {
+    throw new UnprocessableEntityException(`${JSON.stringify(validationResult.details)}`);
+  }
+  incomingPayload = {
+    ...incomingPayload,
+    validityInfo: credentialRequest.validityInfo
+  };
 
   // // If caller provided already-namespaced payload, keep it; otherwise build a namespaces map
   // const workingPayload = { ...incomingPayload };
@@ -645,8 +736,7 @@ function buildMdocCredentialNew(
     credentialSupportedId,
     signerOptions: signerOptions ? signerOptions[0] : undefined,
     format: apiFormat,
-    payload: incomingPayload,
-    ...(credentialRequest.disclosureFrame ? { disclosureFrame: credentialRequest.disclosureFrame } : {})
+    payload: incomingPayload
   };
 }
 
@@ -657,7 +747,8 @@ export function buildCredentialOfferPayloadNew(
     publicId: string;
     authorizationServerUrl?: string;
   },
-  signerOptions?: SignerOption[]
+  signerOptions?: SignerOption[],
+  activeCertificateDetails?: X509CertificateRecord[]
 ): CredentialOfferPayload {
   // Index templates by id
   const templatesById = new Map(templates.map((template) => [template.id, template]));
@@ -679,12 +770,11 @@ export function buildCredentialOfferPayloadNew(
 
     const templateFormat = (templateRecord as any).format ?? 'vc+sd-jwt';
     const apiFormat = mapDbFormatToApiFormat(templateFormat);
-
     if (apiFormat === CredentialFormat.SdJwtVc) {
-      return buildSdJwtCredentialNew(credentialRequest, templateRecord, signerOptions);
+      return buildSdJwtCredentialNew(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);
     }
     if (apiFormat === CredentialFormat.Mdoc) {
-      return buildMdocCredentialNew(credentialRequest, templateRecord, signerOptions);
+      return buildMdocCredentialNew(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);
     }
     throw new Error(`Unsupported template format for ${templateFormat}`);
   });

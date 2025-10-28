@@ -526,7 +526,8 @@ export const ResponseMessages = {
       update: 'OID4VC template updated successfully.',
       delete: 'OID4VC template deleted successfully.',
       fetch: 'OID4VC template(s) fetched successfully.',
-      getById: 'OID4VC template details fetched successfully.'
+      getById: 'OID4VC template details fetched successfully.',
+      deleteTemplate: '[createTemplate] compensating delete succeeded for templateId=${templateId}'
     },
     error: {
       notFound: 'OID4VC template not found.',
@@ -537,7 +538,8 @@ export const ResponseMessages = {
       issuerDisplayNotFound: 'Issuer display not found.',
       issuerDetailsNotFound: 'Issuer details not found.',
       templateNameAlreadyExist: 'Template name already exists for this issuer.',
-      deleteTemplate: 'Error while deleting template.'
+      deleteTemplate: 'Error while deleting template.',
+      failedDeleteTemplate: '[createTemplate] compensating delete FAILED for templateId='
     }
   },
   oidcIssuerSession: {

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable quotes */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable yoda */
@@ -230,7 +231,7 @@ export class AgentServiceService {
       this.emitAgentSpinupInitiatedEvent(agentSpinupDto, socket);
 
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
-      agentProcess = await this.createOrgAgent(agentSpinUpStatus, userId);
+      agentProcess = await this.createOrgAgent(agentSpinUpStatus, userId, agentSpinupDto.orgId);
 
       // AFJ agent spin-up
       this._agentSpinup(
@@ -441,9 +442,9 @@ export class AgentServiceService {
     return socket;
   }
 
-  async createOrgAgent(agentSpinUpStatus: AgentSpinUpStatus, userId: string): Promise<ICreateOrgAgent> {
+  async createOrgAgent(agentSpinUpStatus: AgentSpinUpStatus, userId: string, orgId: string): Promise<ICreateOrgAgent> {
     try {
-      const agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, userId);
+      const agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, userId, orgId);
       this.logger.log(`Organization agent created with status: ${agentSpinUpStatus}`);
       return agentProcess;
     } catch (error) {
@@ -743,19 +744,21 @@ export class AgentServiceService {
    * @returns Get agent status
    */
   async createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<IAgentSpinUpSatus> {
+    console.log('🚀 ~ AgentServiceService ~ createTenant ~ payload:777777777777777777777777', payload);
     try {
       const agentStatusResponse = {
         agentSpinupStatus: AgentSpinUpStatus.PROCESSED
       };
       const getOrgAgent = await this.agentServiceRepository.getAgentDetails(payload.orgId);
+      console.log('🚀 ~ AgentServiceService ~ createTenant ~ getOrgAgent:888888888888', getOrgAgent);
 
-      if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
-        this.logger.error(`Your wallet is already been created.`);
-        throw new ConflictException(ResponseMessages.agent.error.walletAlreadyCreated, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.conflict
-        });
-      }
+      // if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
+      //   this.logger.error(`Your wallet is already been created.`);
+      //   throw new ConflictException(ResponseMessages.agent.error.walletAlreadyCreated, {
+      //     cause: new Error(),
+      //     description: ResponseMessages.errorMessages.conflict
+      //   });
+      // }
 
       if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
         this.logger.error(`Your wallet is already processing.`);
@@ -780,6 +783,7 @@ export class AgentServiceService {
    * @returns Get agent status
    */
   async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<void> {
+    console.log('🚀 ~ AgentServiceService ~ _createTenant ~ payload:9999999999999', payload);
     let agentProcess;
     let ledgerIdData = [];
     try {
@@ -804,7 +808,7 @@ export class AgentServiceService {
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
 
       // Create and stored agent details
-      agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, user?.id);
+      agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, user?.id, payload.orgId);
 
       // Get platform admin details
       const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
@@ -837,7 +841,7 @@ export class AgentServiceService {
         // did: tenantDetails.DIDCreationOption.did,
         isDidPublic: true,
         // didDoc: tenantDetails.DIDCreationOption.didDocument || tenantDetails.DIDCreationOption.didDoc, //changed the didDoc into didDocument
-        agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
+        agentSpinUpStatus: AgentSpinUpStatus.PROCESSED,
         agentsTypeId: agentTypeId,
         orgId: payload.orgId,
         agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
@@ -848,6 +852,7 @@ export class AgentServiceService {
         id: agentProcess?.id,
         apiKey: await this.commonService.dataEncryption(tenantDetails.walletResponseDetails['token'])
       };
+      console.log('🚀 ~ AgentServiceService ~ _createTenant ~ storeOrgAgentData:', storeOrgAgentData);
       // Get organization data
       const getOrganization = await this.agentServiceRepository.getOrgDetails(payload.orgId);
 
@@ -875,9 +880,9 @@ export class AgentServiceService {
     } catch (error) {
       this.handleError(error, payload.clientSocketId);
 
-      if (agentProcess && agentProcess?.id) {
-        this.agentServiceRepository.removeOrgAgent(agentProcess?.id);
-      }
+      // if (agentProcess && agentProcess?.id) {
+      //   this.agentServiceRepository.removeOrgAgent(agentProcess?.id);
+      // }
       throw error;
     }
   }

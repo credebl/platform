@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-param-reassign */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -259,7 +260,9 @@ export class AgentController {
     @Res() res: Response
   ): Promise<Response> {
     createTenantDto.orgId = orgId;
+    console.log('🚀 ~ AgentController ~ createTenant ~ orgId:', orgId);
     const tenantDetails = await this.agentService.createTenant(createTenantDto, user);
+    console.log('🚀 ~ AgentController ~ createTenant ~ tenantDetails:', tenantDetails);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,

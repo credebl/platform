@@ -101,13 +101,14 @@ export class AgentServiceRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async createOrgAgent(agentSpinUpStatus: number, userId: string): Promise<ICreateOrgAgent> {
+  async createOrgAgent(agentSpinUpStatus: number, userId: string, orgId: string): Promise<ICreateOrgAgent> {
     try {
       return this.prisma.org_agents.create({
         data: {
           agentSpinUpStatus,
           createdBy: userId,
-          lastChangedBy: userId
+          lastChangedBy: userId,
+          orgId
         },
         select: {
           id: true
@@ -158,10 +159,11 @@ export class AgentServiceRepository {
   // eslint-disable-next-line camelcase
   async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
     try {
-      const { id, userId, ledgerId, didDoc, ...commonFields } = storeOrgAgentDetails;
+      const { id, orgId, userId, ledgerId, didDoc, ...commonFields } = storeOrgAgentDetails;
       const firstLedgerId = Array.isArray(ledgerId) ? ledgerId[0] : null;
       const data = {
         ...commonFields,
+        orgId,
         ledgerId: firstLedgerId,
         createdBy: userId,
         lastChangedBy: userId,

@@ -34,11 +34,8 @@ export interface CredentialPayload {
 }
 
 export interface CredentialRequest {
-  // credentialSupportedId?: string;
   templateId: string;
-  // format: CredentialFormat; // "vc+sd-jwt" | "mso_mdoc"
-  payload: CredentialPayload; // user-supplied payload (without vct)
-  // disclosureFrame?: DisclosureFrame; // only relevant for vc+sd-jwt
+  payload: CredentialPayload;
   validityInfo?: {
     validFrom: Date;
     validUntil: Date;
@@ -47,7 +44,6 @@ export interface CredentialRequest {
 
 export interface CreateOidcCredentialOffer {
   // e.g. "abc-gov"
-  // signerMethod: SignerMethodOption;      // only option selector
   authenticationType: AuthenticationType; // only option selector
   credentials: CredentialRequest[]; // one or more credentials
 }

@@ -136,13 +136,13 @@ export class Oid4vpVerificationService {
     }
   }
 
-  async getVerifierById(verifierId?: string): Promise<object> {
+  async getVerifierById(orgId: string, verifierId?: string): Promise<object> {
     try {
-      const verifier = await this.oid4vpRepository.getVerifiersByVerifierId(verifierId);
-      if (!verifier || 0 === verifier.length) {
+      const verifiers = await this.oid4vpRepository.getVerifiersByVerifierId(orgId, verifierId);
+      if (!verifiers || 0 === verifiers.length) {
         throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
       }
-      return verifier[0];
+      return verifiers;
     } catch (error) {
       this.logger.error(`[getVerifierById] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error?.response ?? error);

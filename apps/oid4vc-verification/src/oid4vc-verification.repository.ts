@@ -113,11 +113,14 @@ export class Oid4vpRepository {
     }
   }
 
-  async getVerifiersByVerifierId(verifierId: string): Promise<oid4vp_verifier[] | null> {
+  async getVerifiersByVerifierId(orgId: string, verifierId?: string): Promise<oid4vp_verifier[] | null> {
     try {
       return await this.prisma.oid4vp_verifier.findMany({
         where: {
-          id: verifierId
+          id: verifierId,
+          orgAgent: {
+            orgId
+          }
         }
       });
     } catch (error) {

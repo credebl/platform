@@ -40,7 +40,7 @@ import {
   dpopSigningAlgValuesSupported
 } from '../constant/issuance';
 import {
-  buildCredentialConfigurationsSupportedNew,
+  buildCredentialConfigurationsSupported,
   buildIssuerPayload,
   encodeIssuerPublicId,
   extractTemplateIds,
@@ -53,8 +53,7 @@ import {
   UpdateCredentialRequest
 } from '../interfaces/oid4vc-issuer-sessions.interfaces';
 import {
-  // buildCredentialOfferPayload,
-  buildCredentialOfferPayloadNew,
+  buildCredentialOfferPayload,
   buildCredentialOfferUrl,
   CredentialOfferPayload
 } from '../libs/helpers/credential-sessions.builder';
@@ -315,13 +314,7 @@ export class Oid4vcIssuanceService {
       if (!createdTemplate) {
         throw new InternalServerErrorException(ResponseMessages.oidcTemplate.error.createFailed);
       }
-      // let opts = {};
-      // if (vct) {
-      //   opts = { ...opts, vct };
-      // }
-      // if (doctype) {
-      //   opts = { ...opts, doctype };
-      // }
+
       let createTemplateOnAgent;
       try {
         const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
@@ -584,7 +577,7 @@ export class Oid4vcIssuanceService {
       //TODO: add logic to pass the issuer info
       const issuerDetailsFromDb = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       const { publicIssuerId, authorizationServerUrl } = issuerDetailsFromDb || {};
-      const buildOidcCredentialOffer: CredentialOfferPayload = buildCredentialOfferPayloadNew(
+      const buildOidcCredentialOffer: CredentialOfferPayload = buildCredentialOfferPayload(
         createOidcCredentialOffer,
         //
         getAllOfferTemplates,
@@ -767,7 +760,7 @@ export class Oid4vcIssuanceService {
       const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
 
-      const credentialConfigurationsSupported = buildCredentialConfigurationsSupportedNew(templates);
+      const credentialConfigurationsSupported = buildCredentialConfigurationsSupported(templates);
 
       return buildIssuerPayload({ credentialConfigurationsSupported }, issuerDetails);
     } catch (error) {

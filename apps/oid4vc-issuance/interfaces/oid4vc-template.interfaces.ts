@@ -1,12 +1,5 @@
 import { Prisma, SignerOption } from '@prisma/client';
 import { CredentialFormat } from '@credebl/enum/enum';
-
-// export interface CredentialAttribute {
-//   mandatory?: boolean;
-//   value_type: string;
-//   display?: Display[];
-// }
-
 export interface SdJwtTemplate {
   vct: string;
   attributes: CredentialAttribute[];
@@ -23,15 +16,11 @@ export interface MdocTemplate {
 export interface CreateCredentialTemplate {
   name: string;
   description?: string;
-  signerOption?: SignerOption; //SignerOption;
+  signerOption?: SignerOption;
   format: CredentialFormat;
   canBeRevoked: boolean;
-  // attributes: Prisma.JsonValue;
   appearance?: Prisma.JsonValue;
   issuerId: string;
-  // vct?: string;
-  // doctype?: string;
-
   template: SdJwtTemplate | MdocTemplate;
 }
 

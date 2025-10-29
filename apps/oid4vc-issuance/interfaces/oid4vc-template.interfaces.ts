@@ -1,5 +1,5 @@
 import { Prisma, SignerOption } from '@prisma/client';
-import { CredentialFormat } from '@credebl/enum/enum';
+import { AttributeType, CredentialFormat } from '@credebl/enum/enum';
 export interface SdJwtTemplate {
   vct: string;
   attributes: CredentialAttribute[];
@@ -40,7 +40,7 @@ export interface Claim {
 export interface CredentialAttribute {
   key: string;
   mandatory?: boolean;
-  value_type: string;
+  value_type: AttributeType;
   disclose?: boolean;
   children?: CredentialAttribute[];
   display?: ClaimDisplay[];

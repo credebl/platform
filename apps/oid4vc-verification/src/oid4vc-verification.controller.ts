@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { Oid4vpVerificationService } from './oid4vc-verification.service';
 import { user } from '@prisma/client';
-import { CreateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
+import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
 import { MessagePattern } from '@nestjs/microservices';
 
 @Controller()
@@ -18,8 +18,19 @@ export class Oid4vpVerificationController {
     return this.oid4vpVerificationService.oid4vpCreateVerifier(createVerifier, orgId, userDetails);
   }
 
+  @MessagePattern({ cmd: 'oid4vp-verifier-update' })
+  async oid4vpUpdateVerifier(payload: {
+    updateVerifier: UpdateVerifier;
+    orgId: string;
+    verifierId: string;
+    userDetails: user;
+  }): Promise<object> {
+    const { updateVerifier, orgId, verifierId, userDetails } = payload;
+    return this.oid4vpVerificationService.oid4vpUpdateVerifier(updateVerifier, orgId, verifierId, userDetails);
+  }
+
   @MessagePattern({ cmd: 'oid4vp-verifier-get' })
-  async oid4vpGetVerifier(payload: { verifierId: string }): Promise<object> {
+  async oid4vpGetVerifier(payload: { verifierId?: string }): Promise<object> {
     const { verifierId } = payload;
     return this.oid4vpVerificationService.getVerifierById(verifierId);
   }

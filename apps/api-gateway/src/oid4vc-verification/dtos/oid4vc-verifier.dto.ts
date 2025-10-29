@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 
 class ClientMetadataDto {
   @ApiProperty({
@@ -40,3 +40,5 @@ export class CreateVerifierDto {
   @Type(() => ClientMetadataDto)
   clientMetadata?: ClientMetadataDto;
 }
+
+export class UpdateVerifierDto extends PartialType(OmitType(CreateVerifierDto, ['verifierId'])) {}

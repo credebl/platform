@@ -8,6 +8,10 @@ export interface CreateVerifier {
   clientMetadata?: ClientMetadata;
 }
 
+export interface UpdateVerifier extends Omit<CreateVerifier, 'verifierId'> {
+  publicVerifierId?: string;
+}
+
 export interface VerifierRecord {
   _tags: Record<string, unknown>;
   metadata: Record<string, unknown>;

@@ -21,6 +21,8 @@ export class CreateTenantSchemaDto {
   @IsArray({ message: 'attributes must be an array' })
   @IsString({ each: true })
   // TODO: IsNotEmpty won't work for array. Must use @ArrayNotEmpty() instead
+  // @ArrayNotEmpty({ message: 'please provide at least one attribute' })
+  // @IsNotEmpty({ each: true, message: 'attribute must not be empty' })
   @IsNotEmpty({ message: 'please provide valid attributes' })
   attributes: string[];
 

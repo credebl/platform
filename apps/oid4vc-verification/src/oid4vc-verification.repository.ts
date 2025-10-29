@@ -82,11 +82,42 @@ export class Oid4vpRepository {
     }
   }
 
+  async updateOid4vpVerifier(verifierDetails, userId: string, verifierId: string): Promise<object> {
+    try {
+      const { clientMetadata } = verifierDetails;
+      return this.prisma.oid4vp_verifier.update({
+        data: {
+          metadata: clientMetadata,
+          lastChangedBy: userId
+        },
+        where: {
+          id: verifierId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in createOid4vpVerifier: ${error.message}`);
+      throw error;
+    }
+  }
+
   async getVerifiersByPublicVerifierId(publicVerifierId: string): Promise<oid4vp_verifier[] | null> {
     try {
       return await this.prisma.oid4vp_verifier.findMany({
         where: {
           publicVerifierId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getVerifiersByPublicVerifierId: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getVerifiersByVerifierId(verifierId: string): Promise<oid4vp_verifier[] | null> {
+    try {
+      return await this.prisma.oid4vp_verifier.findMany({
+        where: {
+          id: verifierId
         }
       });
     } catch (error) {

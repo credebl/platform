@@ -17,7 +17,8 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
   ValidationArguments,
-  Validate
+  Validate,
+  IsDate
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -123,16 +124,18 @@ export class ValidityInfo {
     example: '2025-04-23T14:34:09.188Z',
     required: true
   })
-  @IsString()
   @IsNotEmpty()
+  @Type(() => Date)
+  @IsDate()
   validFrom: Date;
 
   @ApiProperty({
     example: '2026-05-03T14:34:09.188Z',
     required: true
   })
-  @IsString()
   @IsNotEmpty()
+  @Type(() => Date)
+  @IsDate()
   validUntil: Date;
 }
 

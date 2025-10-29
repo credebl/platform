@@ -15,7 +15,7 @@ import {
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { SignerOption } from '@prisma/client';
-import { CredentialFormat } from '@credebl/enum/enum';
+import { AttributeType, CredentialFormat } from '@credebl/enum/enum';
 
 class CredentialAttributeDisplayDto {
   @ApiPropertyOptional({ example: 'First Name' })
@@ -28,17 +28,6 @@ class CredentialAttributeDisplayDto {
   @IsOptional()
   locale?: string;
 }
-
-export enum AttributeType {
-  STRING = 'string',
-  NUMBER = 'number',
-  BOOLEAN = 'boolean',
-  DATE = 'date',
-  OBJECT = 'object',
-  ARRAY = 'array',
-  IMAGE = 'image'
-}
-
 export class CredentialAttributeDto {
   @ApiProperty({ description: 'Unique key for this attribute (e.g., full_name, org.iso.23220.photoID.1.birth_date)' })
   @IsString()
@@ -52,7 +41,8 @@ export class CredentialAttributeDto {
   // TODO: Check how do we handle claims with only path rpoperty like email, etc.
   @ApiProperty({ enum: AttributeType, description: 'Type of the attribute value (string, number, date, etc.)' })
   @IsEnum(AttributeType)
-  value_type: string;
+  // TODO: changes value_type: AttributeType;
+  value_type: AttributeType;
 
   @ApiProperty({ description: 'Whether this attribute should be disclosed (for SD-JWT)' })
   @IsOptional()
@@ -210,6 +200,8 @@ export class SdJwtTemplateDto {
     description: 'Attributes included in the credential template'
   })
   @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CredentialAttributeDto)
   attributes: CredentialAttributeDto[];
 }
 

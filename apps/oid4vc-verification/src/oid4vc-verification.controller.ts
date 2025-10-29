@@ -30,8 +30,8 @@ export class Oid4vpVerificationController {
   }
 
   @MessagePattern({ cmd: 'oid4vp-verifier-get' })
-  async oid4vpGetVerifier(payload: { verifierId?: string }): Promise<object> {
-    const { verifierId } = payload;
-    return this.oid4vpVerificationService.getVerifierById(verifierId);
+  async oid4vpGetVerifier(payload: { orgId: string; verifierId?: string }): Promise<object> {
+    const { orgId, verifierId } = payload;
+    return this.oid4vpVerificationService.getVerifierById(orgId, verifierId);
   }
 }

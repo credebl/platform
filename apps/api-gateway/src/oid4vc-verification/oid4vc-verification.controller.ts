@@ -16,7 +16,8 @@ import {
   ParseUUIDPipe,
   Get,
   Query,
-  Put
+  Put,
+  Delete
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -154,7 +155,6 @@ export class Oid4vcVerificationController {
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async getVerifierDetails(
-    // TODO: Can we remove this if its not being used??
     @Param(
       'orgId',
       new ParseUUIDPipe({
@@ -178,6 +178,45 @@ export class Oid4vcVerificationController {
     verifierId?: string
   ): Promise<Response> {
     const verifierDetails = await this.oid4vcVerificationService.oid4vpGetVerifier(orgId, verifierId);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.oid4vp.success.fetch,
+      data: verifierDetails
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Delete('/orgs/:orgId/oid4vp/verifier')
+  @ApiOperation({
+    summary: 'Delete OID4VP verifier details',
+    description: 'Delete a specific OID4VP verifier by its ID for the specified organization.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Verifier deleted successfully.', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async deleteVerifierDetails(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Res() res: Response,
+    @Query(
+      'verifierId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid verifier ID');
+        }
+      })
+    )
+    verifierId?: string
+  ): Promise<Response> {
+    const verifierDetails = await this.oid4vcVerificationService.oid4vpDeleteVerifier(orgId, verifierId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.oid4vp.success.fetch,

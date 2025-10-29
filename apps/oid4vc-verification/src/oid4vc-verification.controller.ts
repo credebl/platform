@@ -36,7 +36,7 @@ export class Oid4vpVerificationController {
   }
 
   @MessagePattern({ cmd: 'oid4vp-verifier-delete' })
-  async oid4vpDeleteVerifier(payload: { orgId: string; verifierId?: string }): Promise<object> {
+  async oid4vpDeleteVerifier(payload: { orgId: string; verifierId: string }): Promise<object> {
     const { orgId, verifierId } = payload;
     return this.oid4vpVerificationService.deleteVerifierById(orgId, verifierId);
   }

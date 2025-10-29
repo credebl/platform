@@ -149,16 +149,14 @@ export class Oid4vpVerificationService {
     }
   }
 
-  async deleteVerifierById(orgId: string, verifierId?: string): Promise<object> {
+  async deleteVerifierById(orgId: string, verifierId: string): Promise<object> {
     try {
-      const verifiers = await this.oid4vpRepository.deleteVerifierByVerifierId(orgId, verifierId);
-      if (!verifiers) {
-        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
-      }
-      return verifiers;
+      await this.getVerifierById(orgId, verifierId);
+      const verifier = await this.oid4vpRepository.deleteVerifierByVerifierId(orgId, verifierId);
+      return verifier;
     } catch (error) {
       this.logger.error(`[deleteVerifierById] - error: ${JSON.stringify(error)}`);
-      throw new RpcException(error?.response ?? error);
+      throw new RpcException(error?.response ?? error.error ?? error);
     }
   }
 

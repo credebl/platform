@@ -177,7 +177,7 @@ export class Oid4vcVerificationController {
     )
     verifierId?: string
   ): Promise<Response> {
-    const verifierDetails = await this.oid4vcVerificationService.oid4vpGetVerifier(verifierId);
+    const verifierDetails = await this.oid4vcVerificationService.oid4vpGetVerifier(orgId, verifierId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.oid4vp.success.fetch,

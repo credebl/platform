@@ -128,4 +128,20 @@ export class Oid4vpRepository {
       throw error;
     }
   }
+
+  async deleteVerifierByVerifierId(orgId: string, verifierId?: string): Promise<oid4vp_verifier | null> {
+    try {
+      return await this.prisma.oid4vp_verifier.delete({
+        where: {
+          id: verifierId,
+          orgAgent: {
+            orgId
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleteVerifierByVerifierId: ${error.message}`);
+      throw error;
+    }
+  }
 }

@@ -128,7 +128,7 @@ export enum CommonConstants {
 
   // OID4Vp URLs
   URL_OIDC_VERIFIER_CREATE = '/openid4vc/verifier', //TODO: correct this URL
-  URL_OIDC_VERIFIER_UPDATE = '/openid4vp/verifier/#',
+  URL_OIDC_VERIFIER_UPDATE = '/openid4vc/verifier/#',
   URL_OIDC_VERIFIER_GET = '/openid4vp/verifier/#',
 
   //X509 agent API URLs
@@ -421,6 +421,7 @@ export enum CommonConstants {
 
   // OID4VP
   OIDC_VERIFIER_CREATE = 'create-oid4vp-verifier',
+  OIDC_VERIFIER_UPDATE = 'update-oid4vp-verifier',
 
   //X509
   X509_CREATE_CERTIFICATE = 'create-x509-certificate',

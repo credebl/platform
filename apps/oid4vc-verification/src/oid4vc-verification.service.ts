@@ -22,7 +22,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { getAgentUrl } from '@credebl/common/common.utils';
 import { user } from '@prisma/client';
 import { map } from 'rxjs';
-import { CreateVerifier, VerifierRecord } from '@credebl/common/interfaces/oid4vp-verification';
+import { CreateVerifier, UpdateVerifier, VerifierRecord } from '@credebl/common/interfaces/oid4vp-verification';
 
 @Injectable()
 export class Oid4vpVerificationService {
@@ -81,9 +81,64 @@ export class Oid4vpVerificationService {
     }
   }
 
-  async getVerifierById(verifierId: string): Promise<object> {
+  async oid4vpUpdateVerifier(
+    updateVerifier: UpdateVerifier,
+    orgId: string,
+    verifierId: string,
+    userDetails: user
+  ): Promise<object> {
     try {
-      const verifier = await this.oid4vpRepository.getVerifiersByPublicVerifierId(verifierId);
+      let updatedVerifierDetails;
+      const existingVerifiers = await this.oid4vpRepository.getVerifiersByVerifierId(verifierId);
+      if (0 > existingVerifiers.length) {
+        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+      }
+      // updateVerifier['verifierId'] = existingVerifiers[0].publicVerifierId
+      const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+      const { agentEndPoint, id } = agentDetails;
+      const url = await getAgentUrl(
+        agentEndPoint,
+        CommonConstants.OIDC_VERIFIER_UPDATE,
+        existingVerifiers[0].publicVerifierId
+      );
+      console.log('url:::', url);
+      try {
+        updatedVerifierDetails = await this._updateOid4vpVerifier(updateVerifier, url, orgId);
+        if (!updatedVerifierDetails.response) {
+          throw new InternalServerErrorException(ResponseMessages.oid4vp.error.updateFailed);
+        }
+        updatedVerifierDetails = updatedVerifierDetails.response.data as VerifierRecord;
+      } catch (error) {
+        // We'll not need this
+        const status409 =
+          409 === error?.status?.message?.statusCode || 409 === error?.response?.status || 409 === error?.statusCode;
+
+        if (status409) {
+          throw new ConflictException(`Verifier with id '${updatedVerifierDetails.verifierId}' already exists`);
+        }
+        throw error;
+      }
+      const updateVerifierDetails = await this.oid4vpRepository.updateOid4vpVerifier(
+        updatedVerifierDetails,
+        userDetails.id,
+        verifierId
+      );
+      if (!updateVerifierDetails) {
+        throw new InternalServerErrorException(ResponseMessages.oid4vp.error.updateFailed);
+      }
+      return updateVerifierDetails;
+    } catch (error) {
+      this.logger.error(`[oid4vpUpdateVerifier] - error in oid4vpUpdateVerifier records: ${JSON.stringify(error)}`);
+      throw new RpcException(error?.response ?? error);
+    }
+  }
+
+  async getVerifierById(verifierId?: string): Promise<object> {
+    try {
+      const verifier = await this.oid4vpRepository.getVerifiersByVerifierId(verifierId);
       if (!verifier || 0 === verifier.length) {
         throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
       }
@@ -102,6 +157,19 @@ export class Oid4vpVerificationService {
     } catch (error) {
       this.logger.error(
         `[_createOID4VPVerifier] [NATS call]- error in create OID4VP Verifier : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
+  async _updateOid4vpVerifier(verifierDetails: UpdateVerifier, url: string, orgId: string): Promise<any> {
+    try {
+      const pattern = { cmd: 'agent-update-oid4vp-verifier' };
+      const payload = { verifierDetails, url, orgId };
+      return this.natsCall(pattern, payload);
+    } catch (error) {
+      this.logger.error(
+        `[_updateOid4vpVerifier] [NATS call]- error in update OID4VP Verifier : ${JSON.stringify(error)}`
       );
       throw error;
     }

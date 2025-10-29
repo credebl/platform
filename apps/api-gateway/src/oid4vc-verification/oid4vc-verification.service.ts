@@ -4,7 +4,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 // eslint-disable-next-line camelcase
 import { oid4vp_verifier, user } from '@prisma/client';
-import { CreateVerifierDto } from './dtos/oid4vc-verifier.dto';
+import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
 
 @Injectable()
 export class Oid4vcVerificationService extends BaseService {
@@ -25,7 +25,18 @@ export class Oid4vcVerificationService extends BaseService {
     return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verifier-create', payload);
   }
 
-  async oid4vpGetVerifier(verifierId: string): Promise<object> {
+  async oid4vpUpdateVerifier(
+    updateVerifier: UpdateVerifierDto,
+    orgId: string,
+    verifierId: string,
+    userDetails: user
+    // eslint-disable-next-line camelcase
+  ): Promise<oid4vp_verifier> {
+    const payload = { updateVerifier, orgId, verifierId, userDetails };
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verifier-update', payload);
+  }
+
+  async oid4vpGetVerifier(verifierId?: string): Promise<object> {
     const payload = { verifierId };
     return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verifier-get', payload);
   }

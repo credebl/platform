@@ -85,7 +85,7 @@ import {
   x509CertificateDecodeDto,
   X509CreateCertificateOptions
 } from '@credebl/common/interfaces/x509.interface';
-import { CreateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
+import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {
@@ -2281,6 +2281,19 @@ export class AgentServiceService {
       return createVerifier;
     } catch (error) {
       this.logger.error(`Error in creating oid4vp verifier in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateOid4vpVerifier(verifierDetails: UpdateVerifier, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const updateVerifier = await this.commonService
+        .httpPut(url, verifierDetails, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return updateVerifier;
+    } catch (error) {
+      this.logger.error(`Error in updating oid4vp verifier in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

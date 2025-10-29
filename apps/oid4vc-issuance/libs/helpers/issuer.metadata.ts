@@ -112,130 +112,6 @@ type TemplateRowPrisma = {
   updatedAt?: Date | string;
 };
 
-/**
- * Build agent payload from Prisma rows (attributes/appearance are Prisma.JsonValue).
- * Safely coerces JSON and then builds the same structure as Builder #2.
- */
-// export function buildCredentialConfigurationsSupported(
-//   templateRows: TemplateRowPrisma[],
-//   options?: {
-//     vct?: string;
-//     doctype?: string;
-//     scopeVct?: string;
-//     keyResolver?: (templateRow: TemplateRowPrisma) => string;
-//     format?: string;
-//   }
-// ): Record<string, CredentialConfig> {
-//   const defaultFormat = options?.format ?? 'vc+sd-jwt';
-//   const credentialConfigMap: Record<string, CredentialConfig> = {};
-
-//   for (const templateRow of templateRows) {
-//     // Extract and validate attributes (claims) and appearance (display configuration)
-//     const attributesJson = templateRow.attributes;
-//     const appearanceJson = coerceJsonObject<unknown>(templateRow.appearance);
-
-//     if (!isAttributesMap(attributesJson)) {
-//       throw new Error(`Template ${templateRow.id}: invalid attributes JSON`);
-//     }
-
-//     if (!isAppearance(appearanceJson)) {
-//       throw new Error(`Template ${templateRow.id}: invalid appearance JSON (missing display array)`);
-//     }
-
-//     // Determine credential format (either sd-jwt or mso_mdoc)
-//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//     const templateFormat: string = (templateRow as any).format ?? defaultFormat;
-//     const isMdocFormat = 'mso_mdoc' === templateFormat;
-//     const formatSuffix = isMdocFormat ? 'mdoc' : 'sdjwt';
-
-//     // Determine the unique key for this credential configuration
-//     const configKey =
-//       'function' === typeof options?.keyResolver
-//         ? options.keyResolver(templateRow)
-//         : `${templateRow.name}-${formatSuffix}`;
-
-//     // Resolve Doctype and VCT based on format type
-//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//     let resolvedDoctype: string | undefined = options?.doctype ?? (templateRow as any).doctype;
-//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//     const resolvedVct: string = options?.vct ?? (templateRow as any).vct ?? templateRow.name;
-
-//     if (isMdocFormat && !resolvedDoctype) {
-//       resolvedDoctype = templateRow.name; // fallback to template name
-//     }
-
-//     // Construct OIDC4VC scope
-//     const scopeBaseValue = options?.scopeVct ?? (isMdocFormat ? resolvedDoctype : resolvedVct);
-//     const credentialScope = `openid4vc:credential:${scopeBaseValue}-${formatSuffix}`;
-
-//     // Convert each attribute into a claim definition (map shape)
-//     const claimsObject: Record<string, Claim & { value_type?: string }> = {};
-//     for (const [claimName, attributeDefinition] of Object.entries(attributesJson)) {
-//       console.log(`claimName, attributeDefinition`, claimName, attributeDefinition);
-//       console.log(`attributesJson`, attributesJson);
-//       const parsedAttribute = attributeDefinition as AttributeDef;
-
-//       claimsObject[claimName] = {
-//         path: [claimName],
-//         mandatory: parsedAttribute.mandatory ?? false,
-//         display: Array.isArray(parsedAttribute.display)
-//           ? parsedAttribute.display.map((displayItem) => ({
-//               name: displayItem.name,
-//               locale: displayItem.locale
-//             }))
-//           : undefined,
-//         value_type: parsedAttribute.value_type
-//       };
-//     }
-
-//     // Prepare the display configuration
-//     const displayConfigurations =
-//       (appearanceJson as Appearance).display?.map((displayEntry) => ({
-//         name: displayEntry.name,
-//         description: displayEntry.description,
-//         locale: displayEntry.locale,
-//         logo: displayEntry.logo
-//           ? {
-//               uri: displayEntry.logo.uri,
-//               alt_text: displayEntry.logo.alt_text
-//             }
-//           : undefined
-//       })) ?? [];
-
-//     // Assemble final credential configuration
-//     credentialConfigMap[configKey] = {
-//       format: templateFormat,
-//       scope: credentialScope,
-//       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//       claims: Object.entries(claimsObject).map(([claimName, claimDef]) => ({
-//         path: claimDef.path,
-//         mandatory: claimDef.mandatory,
-//         display: claimDef.display
-//         // you can optionally expose claimDef.value_type here if your API schema allows
-//       })),
-//       credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS],
-//       cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS],
-//       display: displayConfigurations,
-//       ...(isMdocFormat ? { doctype: resolvedDoctype as string } : { vct: resolvedVct })
-//     };
-//   }
-
-//   return credentialConfigMap; // ✅ Return flat map, not nested object
-// }
-
-/**
- * Helper — Optional
- * Wraps the credential configurations map into the expected schema
- * for issuer metadata JSON:
- *
- * { "credentialConfigurationsSupported": { ... } }
- */
-export function wrapCredentialConfigurationsSupported(
-  configsMap: Record<string, CredentialConfig>
-): CredentialConfigurationsSupported {
-  return { credentialConfigurationsSupported: configsMap };
-}
-
 // Default DPoP list for issuer-level metadata (match your example)
 const ISSUER_DPOP_ALGS_DEFAULT = ['RS256', 'ES256'] as const;
 
@@ -499,7 +375,7 @@ export function buildCredentialConfig(name: string, template: SdJwtTemplate | Md
  */
 //TODO: Fix this eslint issue
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function buildCredentialConfigurationsSupportedNew(templateRows: any): Record<string, CredentialConfig> {
+export function buildCredentialConfigurationsSupported(templateRows: any): Record<string, CredentialConfig> {
   const credentialConfigMap: Record<string, CredentialConfig> = {};
 
   for (const templateRow of templateRows) {

@@ -149,6 +149,19 @@ export class Oid4vpVerificationService {
     }
   }
 
+  async deleteVerifierById(orgId: string, verifierId?: string): Promise<object> {
+    try {
+      const verifiers = await this.oid4vpRepository.deleteVerifierByVerifierId(orgId, verifierId);
+      if (!verifiers) {
+        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+      }
+      return verifiers;
+    } catch (error) {
+      this.logger.error(`[deleteVerifierById] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error?.response ?? error);
+    }
+  }
+
   async _createOid4vpVerifier(verifierDetails: CreateVerifier, url: string, orgId: string): Promise<any> {
     try {
       const pattern = { cmd: 'agent-create-oid4vp-verifier' };

@@ -214,7 +214,7 @@ export class Oid4vcVerificationController {
         }
       })
     )
-    verifierId?: string
+    verifierId: string
   ): Promise<Response> {
     const verifierDetails = await this.oid4vcVerificationService.oid4vpDeleteVerifier(orgId, verifierId);
     const finalResponse: IResponse = {

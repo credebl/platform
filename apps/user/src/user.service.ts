@@ -547,13 +547,11 @@ export class UserService {
         throw new UnauthorizedException(ResponseMessages.user.error.refreshTokenExpired);
       }
       const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
-      this.logger.debug(`User details::;${JSON.stringify(userByKeycloakId)}`);
       const tokenResponse = await this.clientRegistrationService.getAccessToken(
         refreshToken,
         userByKeycloakId?.['clientId'],
         userByKeycloakId?.['clientSecret']
       );
-      this.logger.debug(`tokenResponse::::${JSON.stringify(tokenResponse)}`);
       // Fetch the details from account table based on userid and refresh token
       const userAccountDetails = await this.userRepository.checkAccountDetails(userByKeycloakId?.['id']);
       // Update the account details with latest access token, refresh token and exp date

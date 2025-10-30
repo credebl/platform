@@ -279,12 +279,9 @@ function buildSdJwtCredential(
   // // strip vct if present per requirement
   // delete payloadCopy.vct;
 
-  let templateSignerOption: SignerOption;
-  if (templateRecord.signerOption.toLowerCase() === SignerMethodOption.X5C) {
-    templateSignerOption = signerOptions.find((x) => SignerMethodOption.X5C === x.method);
-  } else if (templateRecord.signerOption.toLowerCase() === SignerMethodOption.DID) {
-    templateSignerOption = signerOptions.find((x) => SignerMethodOption.DID === x.method);
-  }
+  const templateSignerOption: SignerOption = signerOptions.find(
+    (x) => templateRecord.signerOption.toLowerCase() === x.method
+  );
 
   if (templateRecord.signerOption === SignerMethodOption.X5C && credentialRequest.validityInfo) {
     const certificateDetail = activeCertificateDetails.find((x) => x.certificateBase64 === templateSignerOption.x5c[0]);

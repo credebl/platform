@@ -279,8 +279,16 @@ function buildSdJwtCredential(
   // // strip vct if present per requirement
   // delete payloadCopy.vct;
 
-  if (signerOptions[0].method === SignerMethodOption.X5C && credentialRequest.validityInfo) {
-    const certificateDetail = activeCertificateDetails.find((x) => x.certificateBase64 === signerOptions[0].x5c[0]);
+  let templateSignerOption: SignerOption;
+  if (templateRecord.signerOption.toLowerCase() === SignerMethodOption.X5C) {
+    templateSignerOption = signerOptions.find((x) => SignerMethodOption.X5C === x.method);
+  } else if (templateRecord.signerOption.toLowerCase() === SignerMethodOption.DID) {
+    templateSignerOption = signerOptions.find((x) => SignerMethodOption.DID === x.method);
+  }
+
+  if (templateRecord.signerOption === SignerMethodOption.X5C && credentialRequest.validityInfo) {
+    const certificateDetail = activeCertificateDetails.find((x) => x.certificateBase64 === templateSignerOption.x5c[0]);
+
     const validationResult = validateCredentialDatesInCertificateWindow(
       credentialRequest.validityInfo,
       certificateDetail
@@ -319,7 +327,7 @@ function buildSdJwtCredential(
 
   return {
     credentialSupportedId,
-    signerOptions: signerOptions ? signerOptions[0] : undefined,
+    signerOptions: templateSignerOption ? templateSignerOption : undefined,
     format: apiFormat,
     payload: payloadCopy,
     ...(disclosureFrame ? { disclosureFrame } : {})

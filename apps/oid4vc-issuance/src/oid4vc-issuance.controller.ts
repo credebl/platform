@@ -10,7 +10,7 @@ import {
   GetAllCredentialOffer
 } from '../interfaces/oid4vc-issuer-sessions.interfaces';
 import { CreateCredentialTemplate, UpdateCredentialTemplate } from '../interfaces/oid4vc-template.interfaces';
-import { CredentialOfferWebhookPayload } from '../interfaces/oid4vc-wh-interfaces';
+import { Oid4vcCredentialOfferWebhookPayload } from '../interfaces/oid4vc-wh-interfaces';
 
 @Controller()
 export class Oid4vcIssuanceController {
@@ -176,7 +176,7 @@ export class Oid4vcIssuanceController {
   }
 
   @MessagePattern({ cmd: 'webhook-oid4vc-issue-credential' })
-  async oidcIssueCredentialWebhook(payload: CredentialOfferWebhookPayload): Promise<object> {
+  async oidcIssueCredentialWebhook(payload: Oid4vcCredentialOfferWebhookPayload): Promise<object> {
     return this.oid4vcIssuanceService.storeOidcCredentialWebhook(payload);
   }
 }

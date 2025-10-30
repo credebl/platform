@@ -1,38 +1,14 @@
-export interface CredentialOfferPayload {
-  credential_issuer: string;
-  credential_configuration_ids: string[];
-  grants: Record<string, unknown>;
-  credentials: Record<string, unknown>[];
-}
-
-export interface IssuanceMetadata {
-  issuerDid: string;
-  credentials: Record<string, unknown>[];
-}
-
-export interface OidcIssueCredential {
-  _tags: Record<string, unknown>;
-  metadata: Record<string, unknown>;
-  issuedCredentials: Record<string, unknown>[];
+export interface Oid4vcCredentialOfferWebhookPayload {
   id: string;
-  createdAt: string; // ISO date string
-  issuerId: string;
-  userPin: string;
-  preAuthorizedCode: string;
-  credentialOfferUri: string;
-  credentialOfferId: string;
-  credentialOfferPayload: CredentialOfferPayload;
-  issuanceMetadata: IssuanceMetadata;
-  state: string;
-  updatedAt: string; // ISO date string
-  contextCorrelationId: string;
-}
-
-export interface CredentialOfferWebhookPayload {
-  credentialOfferId: string;
-  id: string;
-  State: string;
-  contextCorrelationId: string;
+  credentialOfferId?: string;
+  issuedCredentials?: Record<string, unknown>[];
+  createdAt?: string;
+  updatedAt?: string;
+  credentialOfferPayload?: {
+    credential_configuration_ids?: string[];
+  };
+  state?: string;
+  contextCorrelationId?: string;
 }
 
 export interface CredentialPayload {

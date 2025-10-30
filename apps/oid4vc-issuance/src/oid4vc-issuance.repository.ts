@@ -65,18 +65,40 @@ export class Oid4vcIssuanceRepository {
     }
   }
 
-  async storeOidcCredentialDetails(credentialPayload): Promise<object> {
+  async storeOidcCredentialDetails(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    credentialPayload:
+      | {
+          id: string;
+          credentialOfferId?: string;
+          state?: string;
+          contextCorrelationId?: string;
+          credentialConfigurationIds?: string[];
+          issuedCredentials?: string[];
+        }
+      | any,
+    orgId: string
+  ): Promise<object> {
     try {
-      const { credentialOfferId, state, offerId, contextCorrelationId, orgId } = credentialPayload;
+      const payload = credentialPayload?.oidcIssueCredentialDto ?? credentialPayload ?? {};
+      const {
+        credentialOfferId,
+        state,
+        id: issuanceSessionId,
+        contextCorrelationId,
+        credentialOfferPayload,
+        issuedCredentials
+      } = payload;
+
       const credentialDetails = await this.prisma.oid4vc_credentials.upsert({
         where: {
-          offerId
+          issuanceSessionId
         },
         update: {
           lastChangedBy: orgId,
-          credentialOfferId,
-          contextCorrelationId,
-          state
+          state,
+          credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
+          ...(issuedCredentials !== undefined ? { issuedCredentials } : {})
         },
         create: {
           lastChangedBy: orgId,
@@ -84,14 +106,16 @@ export class Oid4vcIssuanceRepository {
           state,
           orgId,
           credentialOfferId,
-          offerId,
-          contextCorrelationId
+          contextCorrelationId,
+          issuanceSessionId,
+          credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
+          ...(issuedCredentials !== undefined ? { issuedCredentials } : {})
         }
       });
 
       return credentialDetails;
     } catch (error) {
-      this.logger.error(`Error in get storeOidcCredentialDetails: ${error.message} `);
+      this.logger.error(`Error in storeOidcCredentialDetails in issuance repository: ${error.message} `);
       throw error;
     }
   }

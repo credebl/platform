@@ -92,6 +92,8 @@ import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
+import { redisStore } from 'cache-manager-ioredis-yet';
+
 @Injectable()
 export class IssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
@@ -107,6 +109,7 @@ export class IssuanceService {
     private readonly emailData: EmailDto,
     private readonly awsService: AwsService,
     @InjectQueue('bulk-issuance') private readonly bulkIssuanceQueue: Queue,
+    // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     @Inject(ContextStorageServiceKey)
     private readonly contextStorageService: ContextStorageService,
@@ -125,6 +128,7 @@ export class IssuanceService {
   }
 
   async getW3CSchemaAttributes(schemaUrl: string): Promise<ISchemaAttributes[]> {
+    this.logger.debug('Getting w3c schema attributes from schemaUrl', schemaUrl);
     const schemaRequest = await this.commonService.httpGet(schemaUrl).then(async (response) => response);
     if (!schemaRequest) {
       throw new NotFoundException(ResponseMessages.schema.error.W3CSchemaNotFOund, {
@@ -140,6 +144,7 @@ export class IssuanceService {
     }
 
     const schemaAttributes = JSON.parse(getSchemaDetails?.attributes);
+    this.logger.debug('Schema attributes fetched successfully', JSON.stringify(schemaAttributes, null, 2));
 
     return schemaAttributes;
   }
@@ -246,7 +251,7 @@ export class IssuanceService {
           const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
 
           if (isValidateSchema) {
-            validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+            validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes, this.logger);
           }
         }
 
@@ -447,7 +452,7 @@ export class IssuanceService {
         const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
 
         if (isValidateSchema) {
-          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes, this.logger);
         }
       }
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
@@ -762,21 +767,27 @@ export class IssuanceService {
         isValidateSchema
       } = outOfBandCredential;
 
+      this.logger.debug('Request reaced isuance microservice service');
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
+      this.logger.debug('The credential to be issued is of type:', credentialType);
       if (IssueCredentialType.JSONLD === credentialType) {
         await validateAndUpdateIssuanceDates(credentialOffer);
 
+        this.logger.debug('Validated/Updated Issuance dates credential offer');
         const schemaIds = credentialOffer?.map((item) => {
           const context: string[] = item?.credential?.['@context'];
           return Array.isArray(context) && 1 < context.length ? context[1] : undefined;
         });
 
+        this.logger.debug('Issuing credential with schemaIds', schemaIds);
         const schemaDetails = await this._getSchemaDetails(schemaIds);
 
         const ledgerIds = schemaDetails?.map((item) => item?.ledgerId);
+        this.logger.debug('Issuance will be done with the following schemas: ', JSON.stringify(schemaDetails, null, 2));
 
         for (const ledgerId of ledgerIds) {
+          this.logger.debug('Checking ledger compatibility of schemas and issuer agent');
           if (agentDetails?.ledgerId !== ledgerId) {
             throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
           }
@@ -787,6 +798,10 @@ export class IssuanceService {
         const schemaResponse: SchemaDetails =
           await this.issuanceRepository.getCredentialDefinitionDetails(credentialDefinitionId);
 
+        this.logger.debug(
+          'Schema details for indy based credential received:',
+          JSON.stringify(schemaResponse, null, 2)
+        );
         let attributesArray: IAttributes[] = [];
         if (schemaResponse?.attributes) {
           attributesArray = JSON.parse(schemaResponse.attributes);
@@ -803,6 +818,7 @@ export class IssuanceService {
             }
           });
           if (0 < attrError.length) {
+            this.logger.debug('Error validating attributes. Number of errors:', attrError.length);
             throw new BadRequestException(attrError);
           }
         }
@@ -839,6 +855,7 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.organizationNotFound);
       }
       const errors = [];
+      this.logger.debug('Creating offer response for agent on url: ', url);
       let credentialOfferResponse;
       const arraycredentialOfferResponse = [];
       const sendEmailCredentialOffer: {
@@ -890,12 +907,14 @@ export class IssuanceService {
       };
 
       if (credentialOffer) {
+        this.logger.debug('Iterating over credentials offers: ', credentialOffer.entries());
         for (const [index, iterator] of credentialOffer.entries()) {
           sendEmailCredentialOffer['iterator'] = iterator;
           sendEmailCredentialOffer['emailId'] = iterator.emailId;
           sendEmailCredentialOffer['index'] = index;
 
           await this.delay(500); // Wait for 0.5 seconds
+          this.logger.debug(`Sending offer number: index: ${index}, iterator: ${iterator}`);
           const sendOobOffer = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
           arraycredentialOfferResponse.push(sendOobOffer);
         }
@@ -905,6 +924,7 @@ export class IssuanceService {
 
         return arraycredentialOfferResponse.every((result) => true === result);
       } else {
+        this.logger.debug('Sending a single OOB email offer');
         credentialOfferResponse = await this.sendEmailForCredentialOffer(sendEmailCredentialOffer);
         return credentialOfferResponse;
       }
@@ -957,6 +977,7 @@ export class IssuanceService {
     try {
       let invitationDid: string | undefined;
       if (true === isReuseConnection) {
+        this.logger.debug('This is a reuse connection, fetching invitation did');
         const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
         if (data && 0 < data.length) {
           const [firstElement] = data;
@@ -965,6 +986,7 @@ export class IssuanceService {
       }
 
       let outOfBandIssuancePayload;
+      this.logger.debug('This is an email issuance of type', credentialType);
       if (IssueCredentialType.INDY === credentialType) {
         outOfBandIssuancePayload = {
           protocolVersion: protocolVersion || 'v1',
@@ -1016,10 +1038,12 @@ export class IssuanceService {
         const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
 
         if (isValidateSchema) {
-          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes);
+          validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes, this.logger);
         }
       }
+      this.logger.debug('Payload created for issuance');
       const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
+      this.logger.debug('Offer created successfully');
 
       if (!credentialCreateOfferDetails) {
         errors.push(new NotFoundException(ResponseMessages.issuance.error.credentialOfferNotFound));
@@ -1027,9 +1051,11 @@ export class IssuanceService {
       }
 
       const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
+      this.logger.debug('Shortening invitation url');
       const shortenUrl: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
 
       const deepLinkURL = convertUrlToDeepLinkUrl(shortenUrl);
+      this.logger.debug('Deeplink URL created successfully');
 
       if (!invitationUrl) {
         errors.push(new NotFoundException(ResponseMessages.issuance.error.invitationNotFound));
@@ -1061,6 +1087,7 @@ export class IssuanceService {
           disposition: 'attachment'
         }
       ];
+      this.logger.debug('Invitation url and deeplink created successfully. Sending email');
 
       const isEmailSent = await sendEmail(this.emailData);
 
@@ -1084,6 +1111,10 @@ export class IssuanceService {
           }
         }
       }
+      this.logger.debug(
+        'Email sent successfully for credential threadId:',
+        credentialCreateOfferDetails.response.credentialRequestThId ?? ''
+      );
 
       return isEmailSent;
     } catch (error) {
@@ -1123,9 +1154,12 @@ export class IssuanceService {
     response;
   }> {
     try {
+      this.logger.debug('Issuance service call to the agent controller for creating an OOB offer');
       const pattern = { cmd: 'agent-out-of-band-credential-offer' };
       const payload = { outOfBandIssuancePayload, url, orgId };
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsCall(pattern, payload);
+      this.logger.debug('Success: Issuance service call to the agent controller for creating an OOB offer');
+      return result;
     } catch (error) {
       this.logger.error(`[_outOfBandCredentialOffer] [NATS call]- error in out of band  : ${JSON.stringify(error)}`);
       throw error;
@@ -1215,6 +1249,7 @@ export class IssuanceService {
 
   async uploadCSVTemplate(importFileDetails: ImportFileDetails, orgId: string, requestId?: string): Promise<string> {
     try {
+      this.logger.debug('REached here in:: uploadCSVTemplate ');
       let credentialDetails;
       const credentialPayload: ICredentialPayload = {
         schemaLedgerId: '',
@@ -1226,11 +1261,9 @@ export class IssuanceService {
       };
 
       const orgDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
-
       const { fileName, templateId, type, isValidateSchema } = importFileDetails;
       if (type === SchemaType.W3C_Schema) {
         credentialDetails = await this.issuanceRepository.getSchemaDetailsBySchemaIdentifier(templateId);
-
         if (orgDetails?.ledgerId !== credentialDetails?.ledgerId) {
           throw new BadRequestException(ResponseMessages.issuance.error.ledgerMismatched);
         }
@@ -1258,7 +1291,6 @@ export class IssuanceService {
       }
 
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
-
       const csvData: string = getFileDetails.Body.toString();
 
       const parsedData = paParse(csvData, {
@@ -1324,7 +1356,7 @@ export class IssuanceService {
           return { email_identifier, ...newRow };
         });
       }
-
+      this.logger.debug(`validatedData::::${JSON.stringify(validatedData)}`);
       const finalFileData = {
         data: validatedData,
         errors: [],
@@ -1338,13 +1370,20 @@ export class IssuanceService {
 
       credentialPayload.fileData = type === SchemaType.W3C_Schema ? finalFileData : parsedData;
       credentialPayload.fileName = fileName;
+      this.logger.debug(`credentialPayload:::${JSON.stringify(credentialPayload)}`);
       const newCacheKey = uuidv4();
       const cacheTTL = Number(process.env.FILEUPLOAD_CACHE_TTL) || CommonConstants.DEFAULT_CACHE_TTL;
-      await this.cacheManager.set(requestId || newCacheKey, JSON.stringify(credentialPayload), cacheTTL);
-
+      const store = await redisStore({
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT)
+      });
+      await store.set(requestId || newCacheKey, JSON.stringify(credentialPayload), cacheTTL).catch((error) => {
+        this.logger.error(`Error in setting the cache${error}`);
+        throw new RpcException('Failed to set cache');
+      });
       return newCacheKey;
     } catch (error) {
-      this.logger.error(`error in validating credentials : ${error.response}`);
+      this.logger.error(`error in validating credentials : ${error}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -1352,7 +1391,11 @@ export class IssuanceService {
   async previewFileDataForIssuance(requestId: string, previewRequest: PreviewRequest): Promise<object> {
     try {
       if ('' !== requestId.trim()) {
-        const cachedData = await this.cacheManager.get(requestId);
+        const store = await redisStore({
+          host: process.env.REDIS_HOST,
+          port: Number(process.env.REDIS_PORT)
+        });
+        const cachedData = await store.get(requestId);
         if (!cachedData) {
           throw new NotFoundException(ResponseMessages.issuance.error.emptyFileData);
         }
@@ -1386,6 +1429,7 @@ export class IssuanceService {
 
   async getFileDetailsByFileId(fileId: string, getAllfileDetails: PreviewRequest): Promise<object> {
     try {
+      this.logger.log('getFileDetailsByFileId: get file details by fileId');
       const fileData = await this.issuanceRepository.getFileDetailsByFileId(fileId, getAllfileDetails);
 
       const fileResponse = {
@@ -1411,6 +1455,7 @@ export class IssuanceService {
 
   async issuedFileDetails(orgId: string, getAllfileDetails: PreviewRequest): Promise<object> {
     try {
+      this.logger.log('issuedFileDetails: Get issued file details');
       const fileDetails = await this.issuanceRepository.getAllFileDetails(orgId, getAllfileDetails);
 
       const templateIds = fileDetails?.fileList.map((file) => file.templateId);
@@ -1582,16 +1627,20 @@ export class IssuanceService {
     let csvFileDetail;
 
     try {
-      let cachedData = await this.cacheManager.get(requestId);
+      const store = await redisStore({
+        host: process.env.REDIS_HOST,
+        port: Number(process.env.REDIS_PORT)
+      });
+      let cachedData = await store.get(requestId);
       if (!cachedData) {
         throw new BadRequestException(ResponseMessages.issuance.error.cacheTimeOut);
       }
 
       // For demo UI
       if (cachedData && clientDetails?.isSelectiveIssuance) {
-        await this.cacheManager.del(requestId);
+        await store.del(requestId);
         await this.uploadCSVTemplate(reqPayload, requestId);
-        cachedData = await this.cacheManager.get(requestId);
+        cachedData = await store.get(requestId);
       }
 
       const parsedData = JSON.parse(cachedData as string).fileData.data;
@@ -1823,7 +1872,12 @@ export class IssuanceService {
             clientId: jobDetails.clientId,
             fileUploadId: jobDetails.fileUploadId
           });
-          this.cacheManager.del(jobDetails.cacheId);
+
+          const store = await redisStore({
+            host: process.env.REDIS_HOST,
+            port: Number(process.env.REDIS_PORT)
+          });
+          store.del(jobDetails.cacheId);
         } else {
           socket.emit('bulk-issuance-process-retry-completed', {
             clientId: jobDetails.clientId,

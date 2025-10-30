@@ -131,7 +131,10 @@ export const ResponseMessages = {
       primaryDid: 'This DID is already set to primary DID',
       didNotFound: 'DID does not exist in organiation',
       organizationNotFound: 'Organization not found',
-      MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.'
+      MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
+      adminTokenDetails: 'Error in generating admin token details',
+      clientDetails: 'Error in fetching client details',
+      invalidClientCredentials: 'Invalid client credentials'
     }
   },
 

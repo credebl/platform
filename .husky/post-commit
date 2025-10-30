@@ -1,0 +1,42 @@
+#!/usr/bin/env sh
+RESET="\033[0m"
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+YELLOW="\033[0;33m"
+BLUE="\033[0;34m"
+CYAN="\033[0;36m"
+
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "${BLUE}Checking last commit signature...${RESET}"
+
+last_commit=$(git rev-parse HEAD)
+
+# Count parents to detect merge commits
+parent_count=$(git rev-list --parents -n 1 $last_commit | awk '{print NF-1}')
+
+if [ "$parent_count" -gt 1 ]; then
+  echo "${BLUE}Skipping merge commit $last_commit${RESET}"
+  exit 0
+fi
+
+sig_status=$(git log --format='%G?' -n 1 $last_commit)
+
+if [ "$sig_status" != "G" ]; then
+  echo "${RED}❌ Commit $last_commit is not verified!${RESET}"
+  echo
+  echo "${YELLOW}👉 How to fix:${RESET}"
+  echo "   1. Re-sign your last commit with both sign-off (-s) and signature (-S):"
+  echo "      git commit --amend -sS --no-edit"
+  echo
+  echo "   2. If you haven't set up commit signing yet:"
+  echo "      - GPG/SSH signing setup: https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits"
+  echo
+  echo "${CYAN}💡 Tip: You can enable automatic signing for all commits with:${RESET}"
+  echo "   git config --global commit.gpgsign true"
+  echo
+  exit 1
+  # In post-commit we usually *warn* not block, but you can `exit 1` if you want strict enforcement
+else
+  echo "${GREEN}Commit $last_commit is signed and verified.${RESET}"
+fi

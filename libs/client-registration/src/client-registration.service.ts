@@ -9,6 +9,7 @@ import * as qs from 'qs';
 import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 import { ClientCredentialTokenPayloadDto } from './dtos/client-credential-token-payload.dto';
+import { ClientTokenDto } from './dtos/client-token.dto';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
 import { CreateUserDto } from './dtos/create-user.dto';
@@ -721,5 +722,35 @@ export class ClientRegistrationService {
     this.logger.debug(`userInfo ${JSON.stringify(userInfo)}`);
 
     return userInfo;
+  }
+
+  async generateTokenUsingAdminCredentials(clientDetails: ClientTokenDto) {
+    const realmName = process.env.KEYCLOAK_REALM;
+    const payload = {
+      client_id: clientDetails.clientId,
+      client_secret: clientDetails.clientSecret,
+      grant_type: clientDetails.grantType ?? 'client_credentials'
+    };
+    const config = {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    };
+    const generatedTokenDetails = await this.commonService.httpPost(
+      await this.keycloakUrlService.GetSATURL(realmName),
+      qs.stringify(payload),
+      config
+    );
+    return generatedTokenDetails;
+  }
+
+  async fetchClientDetails(clientId: string, token: string) {
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    const clientDetails = await this.commonService.httpGet(
+      await this.keycloakUrlService.GetClientURL(realmName, clientId),
+      this.getAuthHeader(token)
+    );
+    return clientDetails;
   }
 }

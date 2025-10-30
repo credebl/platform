@@ -65,6 +65,7 @@ import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import * as jwt from 'jsonwebtoken';
+import { ClientTokenDto } from '../dtos/client-token.dto';
 
 @Injectable()
 export class OrganizationService {
@@ -78,6 +79,7 @@ export class OrganizationService {
     private readonly awsService: AwsService,
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
+    // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly clientRegistrationService: ClientRegistrationService,
     private readonly userActivityRepository: UserActivityRepository,
@@ -2027,6 +2029,72 @@ export class OrganizationService {
     } catch (error) {
       this.logger.error(`Error in getOrgAgentDetailsForEcosystem: ${error}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async generateClientApiToken(generateTokenDetails: ClientTokenDto): Promise<{ token: string }> {
+    try {
+      // Fetch organization and fail fast if not found
+      const orgDetails = await this.organizationRepository.getOrganizationDetails(generateTokenDetails.orgId);
+      if (!orgDetails) {
+        throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
+      }
+
+      // Compose keys
+      const clientIdKey = `${generateTokenDetails.clientAlias}_KEYCLOAK_MANAGEMENT_CLIENT_ID`;
+      const clientSecretKey = `${generateTokenDetails.clientAlias}_KEYCLOAK_MANAGEMENT_CLIENT_SECRET`;
+
+      // Fetch env vars once
+      const encryptedClientId = process.env[clientIdKey];
+      const encryptedClientSecret = process.env[clientSecretKey];
+
+      // Fail fast if not present
+      if (!encryptedClientId || !encryptedClientSecret) {
+        throw new NotFoundException(ResponseMessages.organisation.error.invalidClientCredentials);
+      }
+
+      // Decrypt env vars once
+      const decryptedClientId = await this.commonService.decryptPassword(encryptedClientId);
+      if (!decryptedClientId) {
+        throw new NotFoundException(ResponseMessages.organisation.error.invalidClientCredentials);
+      }
+      const decryptedSecret = await this.commonService.decryptPassword(encryptedClientSecret);
+      if (!decryptedSecret) {
+        throw new NotFoundException(ResponseMessages.organisation.error.invalidClientCredentials);
+      }
+
+      // Guard clauses for validation
+      if (generateTokenDetails.clientAlias.toLowerCase() !== decryptedClientId.toLowerCase()) {
+        throw new NotFoundException(ResponseMessages.organisation.error.invalidClientCredentials);
+      }
+      if (generateTokenDetails.clientSecret !== decryptedSecret) {
+        throw new NotFoundException(ResponseMessages.organisation.error.invalidClientCredentials);
+      }
+
+      // Generate admin token
+      const adminTokenDetails =
+        await this.clientRegistrationService.generateTokenUsingAdminCredentials(generateTokenDetails);
+      if (!adminTokenDetails?.access_token) {
+        throw new InternalServerErrorException(ResponseMessages.organisation.error.adminTokenDetails);
+      }
+
+      // Fetch client details
+      const clientDetails = await this.clientRegistrationService.fetchClientDetails(
+        generateTokenDetails.orgId,
+        adminTokenDetails.access_token
+      );
+      if (!clientDetails?.length) {
+        throw new NotFoundException(ResponseMessages.organisation.error.clientDetails);
+      }
+
+      // Authenticate client
+      const { secret } = clientDetails[0];
+      const authenticationResult = await this.authenticateClientKeycloak(generateTokenDetails.orgId, secret);
+
+      return { token: authenticationResult.access_token };
+    } catch (error) {
+      this.logger.error(`in generating issuer api token: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response || error);
     }
   }
 }

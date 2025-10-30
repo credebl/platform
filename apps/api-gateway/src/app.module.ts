@@ -16,12 +16,10 @@ import { VerificationModule } from './verification/verification.module';
 import { RevocationController } from './revocation/revocation.controller';
 import { RevocationModule } from './revocation/revocation.module';
 import { SchemaModule } from './schema/schema.module';
-// import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CacheModule } from '@nestjs/cache-manager';
-import * as redisStore from 'cache-manager-redis-store';
 import { WebhookModule } from './webhook/webhook.module';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { NotificationModule } from './notification/notification.module';
@@ -62,7 +60,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
     WebhookModule,
     NotificationModule,
     GlobalConfigModule,
-    CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
+    CacheModule.register(),
     GeoLocationModule,
     CloudWalletModule
   ],
@@ -73,7 +71,8 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
       provide: MICRO_SERVICE_NAME,
       useValue: 'APIGATEWAY'
     }
-  ]
+  ],
+  exports: [CacheModule]
 })
 export class AppModule {
   configure(userContext: MiddlewareConsumer): void {

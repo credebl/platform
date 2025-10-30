@@ -60,6 +60,7 @@ import {
 import { x5cKeyType } from '@credebl/enum/enum';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { Oid4vcCredentialOfferWebhookPayload } from '../interfaces/oid4vc-wh-interfaces';
 
 type CredentialDisplayItem = {
   logo?: { uri: string; alt_text?: string };
@@ -953,33 +954,60 @@ export class Oid4vcIssuanceService {
     return agentDetails.agentEndPoint;
   }
 
-  async storeOidcCredentialWebhook(CredentialOfferWebhookPayload): Promise<object> {
+  async storeOidcCredentialWebhook(
+    CredentialOfferWebhookPayload: Oid4vcCredentialOfferWebhookPayload
+  ): Promise<object> {
     try {
-      console.log('Storing OID4VC Credential Webhook:', CredentialOfferWebhookPayload);
-      const { credentialOfferId, state, id, contextCorrelationId } = CredentialOfferWebhookPayload;
+      // pick fields
+      const {
+        credentialOfferId,
+        state,
+        id: issuanceSessionId,
+        contextCorrelationId,
+        credentialOfferPayload,
+        issuedCredentials
+      } = CredentialOfferWebhookPayload ?? {};
+
+      // ensure we only store credential_configuration_ids in the payload for logging and storage
+      const cfgIds: string[] = Array.isArray(credentialOfferPayload?.credential_configuration_ids)
+        ? credentialOfferPayload.credential_configuration_ids
+        : [];
+
+      // convert issuedCredentials to string[] when schema expects string[]
+      const issuedCredentialsArr: string[] | undefined =
+        Array.isArray(issuedCredentials) && 0 < issuedCredentials.length
+          ? issuedCredentials.map((c: any) => ('string' === typeof c ? c : JSON.stringify(c)))
+          : issuedCredentials && Array.isArray(issuedCredentials) && 0 === issuedCredentials.length
+            ? []
+            : undefined;
+
+      const sanitized = {
+        ...CredentialOfferWebhookPayload,
+        credentialOfferPayload: {
+          credential_configuration_ids: cfgIds
+        }
+      };
+
+      console.log('Storing OID4VC Credential Webhook:', JSON.stringify(sanitized, null, 2));
+
+      // resolve orgId (unchanged logic)
       let orgId: string;
       if ('default' !== contextCorrelationId) {
         const getOrganizationId = await this.oid4vcIssuanceRepository.getOrganizationByTenantId(contextCorrelationId);
         orgId = getOrganizationId?.orgId;
       } else {
-        orgId = id;
+        orgId = issuanceSessionId;
       }
 
-      const credentialPayload = {
-        orgId,
-        offerId: id,
-        credentialOfferId,
-        state,
-        contextCorrelationId
-      };
-
-      const agentDetails = await this.oid4vcIssuanceRepository.storeOidcCredentialDetails(credentialPayload);
+      // hand off to repository for persistence (repository will perform the upsert)
+      const agentDetails = await this.oid4vcIssuanceRepository.storeOidcCredentialDetails(
+        CredentialOfferWebhookPayload,
+        orgId
+      );
       return agentDetails;
     } catch (error) {
-      this.logger.error(
-        `[getIssueCredentialsbyCredentialRecordId] - error in get credentials : ${JSON.stringify(error)}`
-      );
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`[storeOidcCredentialWebhook] - error: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 }

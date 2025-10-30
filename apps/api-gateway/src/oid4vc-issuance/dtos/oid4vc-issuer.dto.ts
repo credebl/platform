@@ -108,7 +108,7 @@ export class IssuerCreationDto {
         name: 'Credebl University',
         description: 'Accredited institution issuing verified student credentials',
         logo: {
-          uri: 'https://university.credebl.io/assets/logo-en.svg',
+          uri: 'https://university.example.io/assets/logo-en.svg',
           alt_text: 'Credebl University logo'
         }
       },
@@ -117,7 +117,7 @@ export class IssuerCreationDto {
         name: 'Credebl Universität',
         description: 'Akkreditierte Institution für digitale Studentenausweise',
         logo: {
-          uri: 'https://university.credebl.io/assets/logo-de.svg',
+          uri: 'https://university.example.io/assets/logo-de.svg',
           alt_text: 'Credebl Universität Logo'
         }
       }
@@ -129,7 +129,7 @@ export class IssuerCreationDto {
   display: IssuerDisplayDto[];
 
   @ApiProperty({
-    example: 'https://issuer.credebl.io',
+    example: 'https://issuer.example.io',
     description: 'Base URL of the Authorization Server supporting OID4VC issuance flows'
   })
   @IsUrl({ require_tld: false }, { message: 'authorizationServerUrl must be a valid URL' })
@@ -140,10 +140,10 @@ export class IssuerCreationDto {
       'Additional configuration details for the authorization server (token endpoint, credential endpoint, grant types, etc.)',
     type: AuthorizationServerConfigDto,
     example: {
-      issuer: 'https://id.sovio.ae:8443/realms/sovioid',
+      issuer: 'https://example.com/realms/abc',
       clientAuthentication: {
         clientId: 'issuer-server',
-        clientSecret: '1qKMWulZpMBzXIdfPO5AEs0xaTaKs1ym'
+        clientSecret: 'issuer-client-secret'
       }
     }
   })

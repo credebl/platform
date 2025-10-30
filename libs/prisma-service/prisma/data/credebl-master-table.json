@@ -1,5 +1,5 @@
 {
- "platformConfigData": {
+  "platformConfigData": {
     "externalIp": "##Machine Ip Address/Domain for agent setup##",
     "inboundEndpoint": "##Machine Ip Address/Domain for agent setup##",
     "username": "credebl",

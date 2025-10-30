@@ -45,7 +45,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { user } from '@prisma/client';
 import { IssuerCreationDto, IssuerUpdationDto } from './dtos/oid4vc-issuer.dto';
 import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oid4vc-issuer-template.dto';
-import { OidcIssueCredentialDto } from './dtos/oid4vc-credential-wh.dto';
+import { OidcIssueCredentialDto, sanitizeOidcIssueCredentialDto } from './dtos/oid4vc-credential-wh.dto';
 import { Oid4vcIssuanceService } from './oid4vc-issuance.service';
 import {
   CreateCredentialOfferD2ADto,
@@ -437,7 +437,7 @@ export class Oid4vcIssuanceController {
   @Post('/orgs/:orgId/oid4vc/:issuerId/create-offer')
   @ApiOperation({
     summary: 'Create OID4VC Credential Offer',
-    description: 'Creates a new OIDC4VCI credential-offer for a given issuer.'
+    description: 'Creates a new OID4VC credential-offer for a given issuer.'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Credential offer created successfully.' })
   @ApiBearerAuth()
@@ -630,7 +630,7 @@ export class Oid4vcIssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
-    console.log('Webhook received:', JSON.stringify(oidcIssueCredentialDto, null, 2));
+    // const sanitized = sanitizeOidcIssueCredentialDto(oidcIssueCredentialDto);
     const getCredentialDetails = await this.oid4vcIssuanceService.oidcIssueCredentialWebhook(
       oidcIssueCredentialDto,
       id

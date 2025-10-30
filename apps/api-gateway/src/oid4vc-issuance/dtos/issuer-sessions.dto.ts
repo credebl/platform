@@ -17,10 +17,12 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
   ValidationArguments,
-  Validate
+  Validate,
+  IsDate
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { dateToSeconds } from '@credebl/common/date-only';
 
 /* ========= disclosureFrame custom validator ========= */
 function isDisclosureFrameValue(v: unknown): boolean {
@@ -117,6 +119,26 @@ function ExactlyOneOf(keys: string[], options?: ValidationOptions) {
   return Validate(ExactlyOneOfConstraint, keys, options);
 }
 
+export class ValidityInfo {
+  @ApiProperty({
+    example: '2025-04-23T14:34:09.188Z',
+    required: true
+  })
+  @IsNotEmpty()
+  @Type(() => Date)
+  @IsDate()
+  validFrom: Date;
+
+  @ApiProperty({
+    example: '2026-05-03T14:34:09.188Z',
+    required: true
+  })
+  @IsNotEmpty()
+  @Type(() => Date)
+  @IsDate()
+  validUntil: Date;
+}
+
 /* ========= Request DTOs ========= */
 export class CredentialRequestDto {
   @ApiProperty({
@@ -137,13 +159,20 @@ export class CredentialRequestDto {
   payload!: Record<string, unknown>;
 
   @ApiPropertyOptional({
-    description: 'Selective disclosure: claim -> boolean (or nested map)',
-    example: { name: true, DOB: true, additionalProp3: false },
+    example: { validFrom: '2025-04-23T14:34:09.188Z', validUntil: '2026-05-03T14:34:09.188Z' },
     required: false
   })
   @IsOptional()
-  @IsDisclosureFrame()
-  disclosureFrame?: Record<string, boolean | Record<string, boolean>>;
+  validityInfo?: ValidityInfo;
+
+  // @ApiPropertyOptional({
+  //   description: 'Selective disclosure: claim -> boolean (or nested map)',
+  //   example: { name: true, DOB: true, additionalProp3: false },
+  //   required: false
+  // })
+  // @IsOptional()
+  // @IsDisclosureFrame()
+  // disclosureFrame?: Record<string, boolean | Record<string, boolean>>;
 }
 
 export class CreateOidcCredentialOfferDto {
@@ -157,25 +186,16 @@ export class CreateOidcCredentialOfferDto {
   @Type(() => CredentialRequestDto)
   credentials!: CredentialRequestDto[];
 
-  // XOR: exactly one present
-  @ApiPropertyOptional({ type: PreAuthorizedCodeFlowConfigDto })
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => PreAuthorizedCodeFlowConfigDto)
-  preAuthorizedCodeFlowConfig?: PreAuthorizedCodeFlowConfigDto;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => AuthorizationCodeFlowConfigDto)
-  authorizationCodeFlowConfig?: AuthorizationCodeFlowConfigDto;
+  @ApiProperty({
+    example: 'preAuthorizedCodeFlow',
+    enum: ['preAuthorizedCodeFlow', 'authorizationCodeFlow'],
+    description: 'Authorization type'
+  })
+  @IsString()
+  @IsIn(['preAuthorizedCodeFlow', 'authorizationCodeFlow'])
+  authorizationType!: 'preAuthorizedCodeFlow' | 'authorizationCodeFlow';
 
   issuerId?: string;
-
-  // host XOR rule
-  @ExactlyOneOf(['preAuthorizedCodeFlowConfig', 'authorizationCodeFlowConfig'], {
-    message: 'Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.'
-  })
-  private readonly _exactlyOne?: unknown;
 }
 
 export class GetAllCredentialOfferDto {
@@ -266,20 +286,33 @@ export class CredentialDto {
 
   @ApiProperty({
     description: 'Credential payload (namespace data, validity info, etc.)',
-    example: {
-      namespaces: {
-        'org.iso.23220.photoID.1': {
-          birth_date: '1970-02-14',
-          family_name: 'Müller-Lüdenscheid',
-          given_name: 'Ford Praxibetel',
-          document_number: 'LA001801M'
+    example: [
+      {
+        namespaces: {
+          'org.iso.23220.photoID.1': {
+            birth_date: '1970-02-14',
+            family_name: 'Müller-Lüdenscheid',
+            given_name: 'Ford Praxibetel',
+            document_number: 'LA001801M'
+          }
+        },
+        validityInfo: {
+          validFrom: '2025-04-23T14:34:09.188Z',
+          validUntil: '2026-05-03T14:34:09.188Z'
         }
       },
-      validityInfo: {
-        validFrom: '2025-04-23T14:34:09.188Z',
-        validUntil: '2026-05-03T14:34:09.188Z'
+      {
+        full_name: 'Garry',
+        address: {
+          street_address: 'M.G. Road',
+          locality: 'Pune',
+          country: 'India'
+        },
+        iat: 1698151532,
+        nbf: dateToSeconds(new Date()),
+        exp: dateToSeconds(new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000))
       }
-    }
+    ]
   })
   @ValidateNested()
   payload: object;

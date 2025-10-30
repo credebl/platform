@@ -1,25 +1,47 @@
 import { Prisma, SignerOption } from '@prisma/client';
-import { Display } from './oid4vc-issuance.interfaces';
-import { CredentialFormat } from '@credebl/enum/enum';
+import { AttributeType, CredentialFormat } from '@credebl/enum/enum';
+export interface SdJwtTemplate {
+  vct: string;
+  attributes: CredentialAttribute[];
+}
 
-export interface CredentialAttribute {
-  mandatory?: boolean;
-  value_type: string;
-  display?: Display[];
+export interface MdocTemplate {
+  doctype: string;
+  namespaces: {
+    namespace: string;
+    attributes: CredentialAttribute[];
+  }[];
 }
 
 export interface CreateCredentialTemplate {
   name: string;
   description?: string;
-  signerOption?: SignerOption; //SignerOption;
+  signerOption?: SignerOption;
   format: CredentialFormat;
-  issuer: string;
   canBeRevoked: boolean;
-  attributes: Prisma.JsonValue;
   appearance?: Prisma.JsonValue;
   issuerId: string;
-  vct?: string;
-  doctype?: string;
+  template: SdJwtTemplate | MdocTemplate;
 }
 
 export interface UpdateCredentialTemplate extends Partial<CreateCredentialTemplate> {}
+
+export interface ClaimDisplay {
+  name: string;
+  locale?: string;
+}
+
+export interface Claim {
+  path?: string[];
+  display?: ClaimDisplay[];
+  mandatory?: boolean;
+}
+
+export interface CredentialAttribute {
+  key: string;
+  mandatory?: boolean;
+  value_type: AttributeType;
+  disclose?: boolean;
+  children?: CredentialAttribute[];
+  display?: ClaimDisplay[];
+}

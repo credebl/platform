@@ -322,3 +322,19 @@ export enum CredentialFormat {
   SdJwtVc = 'vc+sd-jwt',
   Mdoc = 'mso_mdoc'
 }
+
+export enum AttributeType {
+  STRING = 'string',
+  NUMBER = 'number',
+  BOOLEAN = 'boolean',
+  DATE = 'date',
+  OBJECT = 'object',
+  ARRAY = 'array',
+  IMAGE = 'image'
+}
+
+// export enum SignerOption {
+//   DID,
+//   X509_P256,
+//   X509_ED25519
+// }

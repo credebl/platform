@@ -1,41 +1,7 @@
 /* eslint-disable camelcase */
-import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsBoolean,
-  IsArray,
-  ValidateNested,
-  IsObject,
-  IsUrl,
-  IsNotEmpty,
-  IsDefined,
-  IsInt
-} from 'class-validator';
-import { plainToInstance, Transform, Type } from 'class-transformer';
-
-export class ClaimDto {
-  @ApiProperty({
-    description: 'The unique key for the claim (e.g. email, name)',
-    example: 'email'
-  })
-  @IsString()
-  key: string;
-
-  @ApiProperty({
-    description: 'The display label for the claim',
-    example: 'Email Address'
-  })
-  @IsString()
-  label: string;
-
-  @ApiProperty({
-    description: 'Whether this claim is required for issuance',
-    example: true
-  })
-  @IsBoolean()
-  required: boolean;
-}
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsOptional, IsArray, ValidateNested, IsUrl, IsInt } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class LogoDto {
   @ApiProperty({
@@ -53,7 +19,7 @@ export class LogoDto {
   alt_text: string;
 }
 
-export class DisplayDto {
+export class IssuerDisplayDto {
   @ApiProperty({
     description: 'The locale for display text',
     example: 'en-US'
@@ -69,14 +35,6 @@ export class DisplayDto {
   name: string;
 
   @ApiPropertyOptional({
-    description: 'A short description for the credential/claim',
-    example: 'Digital credential issued to enrolled students'
-  })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiPropertyOptional({
     description: 'Logo display information for the issuer',
     type: LogoDto
   })
@@ -84,101 +42,6 @@ export class DisplayDto {
   @Type(() => LogoDto)
   logo?: LogoDto;
 }
-
-@ApiExtraModels(ClaimDto)
-export class CredentialConfigurationDto {
-  @ApiProperty({
-    description: 'The format of the credential',
-    example: 'jwt_vc_json'
-  })
-  @IsString()
-  @IsDefined({ message: 'format field is required' })
-  @IsNotEmpty({ message: 'format property is required' })
-  format: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  vct?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  doctype?: string;
-
-  @ApiProperty()
-  @IsString()
-  scope: string;
-
-  // @ApiProperty({
-  //   description: 'List of claims supported in this credential',
-  //   type: [ClaimDto],
-  // })
-  // @IsArray()
-  // @ValidateNested({ each: true })
-  // @Type(() => ClaimDto)
-  // claims: ClaimDto[]
-  @ApiProperty({
-    description: 'Claims supported by this credential',
-    type: 'object',
-    additionalProperties: { $ref: getSchemaPath(ClaimDto) }
-  })
-  @IsObject()
-  @ValidateNested({ each: true })
-  @Transform(({ value }) =>
-    Object.fromEntries(Object.entries(value || {}).map(([k, v]) => [k, plainToInstance(ClaimDto, v)]))
-  )
-  claims: Record<string, ClaimDto>;
-
-  @ApiProperty({ type: [String] })
-  @IsArray()
-  credential_signing_alg_values_supported: string[];
-
-  @ApiProperty({ type: [String] })
-  @IsArray()
-  cryptographic_binding_methods_supported: string[];
-
-  @ApiProperty({
-    description: 'Localized display information for the credential',
-    type: [DisplayDto]
-  })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => DisplayDto)
-  display: DisplayDto[];
-}
-
-// export class AuthorizationServerConfigDto {
-//   @ApiProperty({
-//     description: 'Authorization server issuer URL',
-//     example: 'https://auth.credebl.com',
-//   })
-//   @IsUrl()
-//   issuer: string
-
-//   @ApiPropertyOptional({
-//     description: 'Token endpoint of the authorization server',
-//     example: 'https://auth.credebl.com/oauth/token',
-//   })
-//   @IsOptional()
-//   @IsUrl()
-//   token_endpoint: string
-
-//   @ApiProperty({
-//     description: 'Authorization endpoint of the server',
-//     example: 'https://auth.credebl.com/oauth/authorize',
-//   })
-//   @IsUrl()
-//   authorization_endpoint: string
-
-//   @ApiProperty({
-//     description: 'Supported scopes',
-//     example: ['openid', 'profile', 'email'],
-//   })
-//   @IsArray()
-//   @IsString({ each: true })
-//   scopes_supported: string[]
-// }
 
 export class ClientAuthenticationDto {
   @ApiProperty({
@@ -217,18 +80,18 @@ export enum AccessTokenSignerKeyType {
   ED25519 = 'ed25519'
 }
 
-@ApiExtraModels(CredentialConfigurationDto)
+// @ApiExtraModels(CredentialConfigurationDto)
 export class IssuerCreationDto {
   @ApiProperty({
-    description: 'Name of the issuer',
-    example: 'Credebl University'
+    description: 'Unique identifier of the issuer (usually a short code or DID-based identifier)',
+    example: 'credebl-university'
   })
-  @IsString({ message: 'issuerId from IssuerCreationDto -> issuerId, must be a string' })
+  @IsString({ message: 'issuerId must be a string' })
   issuerId: string;
 
   @ApiPropertyOptional({
-    description: 'Maximum number of credentials that can be issued in a batch',
-    example: 50,
+    description: 'Maximum number of credentials that can be issued in a single batch issuance operation',
+    example: 100,
     type: Number
   })
   @IsOptional()
@@ -236,17 +99,53 @@ export class IssuerCreationDto {
   batchCredentialIssuanceSize?: number;
 
   @ApiProperty({
-    description: 'Localized display information for the credential',
-    type: [DisplayDto]
+    description:
+      'Localized display information for the issuer — shown in wallet apps or credential metadata display (multi-lingual supported)',
+    type: [IssuerDisplayDto],
+    example: [
+      {
+        locale: 'en',
+        name: 'Credebl University',
+        description: 'Accredited institution issuing verified student credentials',
+        logo: {
+          uri: 'https://university.credebl.io/assets/logo-en.svg',
+          alt_text: 'Credebl University logo'
+        }
+      },
+      {
+        locale: 'de',
+        name: 'Credebl Universität',
+        description: 'Akkreditierte Institution für digitale Studentenausweise',
+        logo: {
+          uri: 'https://university.credebl.io/assets/logo-de.svg',
+          alt_text: 'Credebl Universität Logo'
+        }
+      }
+    ]
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => DisplayDto)
-  display: DisplayDto[];
+  @Type(() => IssuerDisplayDto)
+  display: IssuerDisplayDto[];
 
   @ApiProperty({
-    description: 'Configuration of the authorization server',
-    type: AuthorizationServerConfigDto
+    example: 'https://issuer.credebl.io',
+    description: 'Base URL of the Authorization Server supporting OID4VC issuance flows'
+  })
+  @IsUrl({ require_tld: false }, { message: 'authorizationServerUrl must be a valid URL' })
+  authorizationServerUrl: string;
+
+  @ApiProperty({
+    description:
+      'Additional configuration details for the authorization server (token endpoint, credential endpoint, grant types, etc.)',
+    type: AuthorizationServerConfigDto,
+    example: {
+      issuer: 'https://id.sovio.ae:8443/realms/sovioid',
+      clientAuthentication: {
+        clientId: 'issuer-server',
+        clientSecret: '1qKMWulZpMBzXIdfPO5AEs0xaTaKs1ym'
+      }
+    }
   })
   @IsOptional()
   @ValidateNested()
@@ -259,12 +158,12 @@ export class IssuerUpdationDto {
 
   @ApiProperty({
     description: 'Localized display information for the credential',
-    type: [DisplayDto]
+    type: [IssuerDisplayDto]
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => DisplayDto)
-  display: DisplayDto[];
+  @Type(() => IssuerDisplayDto)
+  display: IssuerDisplayDto[];
 
   @ApiProperty({
     description: 'batchCredentialIssuanceSize',

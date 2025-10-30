@@ -1,4 +1,5 @@
 import { organisation } from '@prisma/client';
+import { Claim } from './oid4vc-template.interfaces';
 
 export interface OrgAgent {
   organisation: organisation;
@@ -15,12 +16,6 @@ export interface OrgAgent {
   ledgerId: string;
   orgAgentTypeId: string;
   tenantId: string;
-}
-
-export interface Claim {
-  key: string;
-  label: string;
-  required: boolean;
 }
 
 export interface Logo {
@@ -40,7 +35,7 @@ export interface CredentialConfiguration {
   vct?: string;
   doctype?: string;
   scope: string;
-  claims: Record<string, Claim>;
+  claims: Claim[];
   credential_signing_alg_values_supported: string[];
   cryptographic_binding_methods_supported: string[];
   display: Display[];
@@ -57,11 +52,11 @@ export interface AuthorizationServerConfig {
 }
 
 export interface IssuerCreation {
+  authorizationServerUrl: string;
   issuerId: string;
   accessTokenSignerKeyType?: AccessTokenSignerKeyType;
   display: Display[];
   dpopSigningAlgValuesSupported?: string[];
-  credentialConfigurationsSupported?: Record<string, CredentialConfiguration>;
   authorizationServerConfigs: AuthorizationServerConfig;
   batchCredentialIssuanceSize: number;
 }
@@ -79,6 +74,7 @@ export interface IssuerInitialConfig {
 }
 
 export interface IssuerMetadata {
+  authorizationServerUrl: string;
   publicIssuerId: string;
   createdById: string;
   orgAgentId: string;
@@ -113,17 +109,6 @@ export interface TagMap {
   [key: string]: string;
 }
 
-export interface ClaimDisplay {
-  name: string;
-  locale: string;
-  description?: string;
-}
-
-export interface ClaimDefinition {
-  value_type: string;
-  mandatory: boolean;
-  display: ClaimDisplay[];
-}
 export interface Logo {
   uri: string;
   alt_text: string;

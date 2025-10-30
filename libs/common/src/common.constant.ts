@@ -129,7 +129,10 @@ export enum CommonConstants {
   // OID4Vp URLs
   URL_OIDC_VERIFIER_CREATE = '/openid4vc/verifier', //TODO: correct this URL
   URL_OIDC_VERIFIER_UPDATE = '/openid4vc/verifier/#',
-  URL_OIDC_VERIFIER_GET = '/openid4vp/verifier/#',
+  URL_OIDC_VERIFIER_GET = '/openid4vc/verifier/#',
+
+  URL_OIDC_VERIFIER_SESSION_GET_BY_ID = '/openid4vc/verification-sessions/#',
+  URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY = '/openid4vc/verification-sessions',
 
   //X509 agent API URLs
   URL_CREATE_X509_CERTIFICATE = '/x509',
@@ -422,6 +425,8 @@ export enum CommonConstants {
   // OID4VP
   OIDC_VERIFIER_CREATE = 'create-oid4vp-verifier',
   OIDC_VERIFIER_UPDATE = 'update-oid4vp-verifier',
+  OIDC_VERIFIER_SESSION_GET_BY_ID = 'get-oid4vp-verifier-session-id',
+  OIDC_VERIFIER_SESSION_GET_BY_QUERY = 'get-oid4vp-verifier-session-query',
 
   //X509
   X509_CREATE_CERTIFICATE = 'create-x509-certificate',

@@ -45,7 +45,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { user } from '@prisma/client';
 import { IssuerCreationDto, IssuerUpdationDto } from './dtos/oid4vc-issuer.dto';
 import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oid4vc-issuer-template.dto';
-import { OidcIssueCredentialDto } from './dtos/oid4vc-credential-wh.dto';
+import { OidcIssueCredentialDto, sanitizeOidcIssueCredentialDto } from './dtos/oid4vc-credential-wh.dto';
 import { Oid4vcIssuanceService } from './oid4vc-issuance.service';
 import {
   CreateCredentialOfferD2ADto,
@@ -630,7 +630,7 @@ export class Oid4vcIssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
-    console.log('Webhook received:', JSON.stringify(oidcIssueCredentialDto, null, 2));
+    // const sanitized = sanitizeOidcIssueCredentialDto(oidcIssueCredentialDto);
     const getCredentialDetails = await this.oid4vcIssuanceService.oidcIssueCredentialWebhook(
       oidcIssueCredentialDto,
       id

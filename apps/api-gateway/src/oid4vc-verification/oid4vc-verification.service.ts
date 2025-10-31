@@ -51,4 +51,8 @@ export class Oid4vcVerificationService extends BaseService {
     const payload = { orgId, query };
     return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verifier-session-get', payload);
   }
+  async getVerificationSessionResponse(orgId, verificationSessionId: string): Promise<object> {
+    const payload = { orgId, verificationSessionId };
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verifier-session-response-get', payload);
+  }
 }

@@ -47,4 +47,10 @@ export class Oid4vpVerificationController {
     const { orgId, query } = payload;
     return this.oid4vpVerificationService.getVerifierSession(orgId, query);
   }
+
+  @MessagePattern({ cmd: 'oid4vp-verifier-session-response-get' })
+  async getVerificationSessionResponse(payload: { orgId: string; verificationSessionId: string }): Promise<object> {
+    const { orgId, verificationSessionId } = payload;
+    return this.oid4vpVerificationService.getVerificationSessionResponse(orgId, verificationSessionId);
+  }
 }

@@ -123,6 +123,7 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
       String(CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID),
       String(CommonConstants.URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID)
     ]
+    [String(CommonConstants.OID4VP_VERIFICATION_SESSION), String(CommonConstants.URL_OID4VP_VERIFICATION_SESSION)]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);

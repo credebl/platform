@@ -130,10 +130,10 @@ export enum CommonConstants {
   URL_OIDC_VERIFIER_CREATE = '/openid4vc/verifier', //TODO: correct this URL
   URL_OIDC_VERIFIER_UPDATE = '/openid4vc/verifier/#',
   URL_OIDC_VERIFIER_GET = '/openid4vc/verifier/#',
-
   URL_OIDC_VERIFIER_SESSION_GET_BY_ID = '/openid4vc/verification-sessions/#',
   URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY = '/openid4vc/verification-sessions',
   URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = '/openid4vc/verification-sessions/response#',
+  URL_OID4VP_VERIFICATION_SESSION = '/openid4vc/verification-sessions/create-presentation-request',
 
   //X509 agent API URLs
   URL_CREATE_X509_CERTIFICATE = '/x509',
@@ -389,6 +389,7 @@ export enum CommonConstants {
   CLOUD_WALLET_SERVICE = 'cloud-wallet',
   OIDC4VC_ISSUANCE_SERVICE = 'oid4vc-issuance',
   OIDC4VC_VERIFICATION_SERVICE = 'oid4vc-verification',
+  OID4VP_VERIFICATION_SESSION = 'oid4vp-verification-session',
   X509_SERVICE = 'x509-service',
 
   ACCEPT_OFFER = '/didcomm/credentials/accept-offer',

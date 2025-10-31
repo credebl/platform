@@ -7,7 +7,7 @@ import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfac
 
 @Controller()
 export class Oid4vpVerificationController {
-  constructor(private readonly oid4vpVerificationService: Oid4vpVerificationService) {}
+  constructor(private readonly oid4vpVerificationService: Oid4vpVerificationService) { }
 
   @MessagePattern({ cmd: 'oid4vp-verifier-create' })
   async oid4vpCreateVerifier(payload: {
@@ -52,5 +52,22 @@ export class Oid4vpVerificationController {
   async getVerificationSessionResponse(payload: { orgId: string; verificationSessionId: string }): Promise<object> {
     const { orgId, verificationSessionId } = payload;
     return this.oid4vpVerificationService.getVerificationSessionResponse(orgId, verificationSessionId);
+  }
+
+  @MessagePattern({ cmd: 'oid4vp-verification-session-create' })
+  async oid4vpCreateVerificationSession(payload: {
+    orgId: string;
+    verifierId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sessionRequest: any;
+    userDetails: user;
+  }): Promise<object> {
+    const { orgId, verifierId, sessionRequest, userDetails } = payload;
+    return this.oid4vpVerificationService.oid4vpCreateVerificationSession(
+      orgId,
+      verifierId,
+      sessionRequest,
+      userDetails
+    );
   }
 }

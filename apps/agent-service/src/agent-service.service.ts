@@ -99,7 +99,7 @@ export class AgentServiceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly natsClient: NATSClient
-  ) { }
+  ) {}
 
   async ReplaceAt(input, search, replace, start, end): Promise<string> {
     return input.slice(0, start) + input.slice(start, end).replace(search, replace) + input.slice(end);
@@ -2281,6 +2281,17 @@ export class AgentServiceService {
       return createVerifier;
     } catch (error) {
       this.logger.error(`Error in creating oid4vp verifier in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteOid4vpVerifier(url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const deleteVerifier = await this.commonService.httpDelete(url, { headers: { authorization: getApiKey } });
+      return deleteVerifier.data ?? deleteVerifier;
+    } catch (error) {
+      this.logger.error(`Error in deleting oid4vp verifier in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

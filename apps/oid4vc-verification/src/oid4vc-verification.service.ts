@@ -32,7 +32,7 @@ export class Oid4vpVerificationService {
   constructor(
     @Inject('NATS_CLIENT') private readonly oid4vpVerificationServiceProxy: ClientProxy,
     private readonly oid4vpRepository: Oid4vpRepository
-  ) { }
+  ) {}
 
   async oid4vpCreateVerifier(createVerifier: CreateVerifier, orgId: string, userDetails: user): Promise<object> {
     try {
@@ -153,7 +153,21 @@ export class Oid4vpVerificationService {
 
   async deleteVerifierById(orgId: string, verifierId: string): Promise<object> {
     try {
-      await this.getVerifierById(orgId, verifierId);
+      const checkIdExist = await this.oid4vpRepository.getVerifiersByVerifierId(orgId, verifierId);
+      if (0 == checkIdExist.length) {
+        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+      }
+
+      const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+      const { agentEndPoint, id } = agentDetails;
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_DELETE, checkIdExist[0].verifierId);
+      console.log('url:::', url);
+
+      await this._deleteOid4vpVerifier(url, orgId);
+
       const verifier = await this.oid4vpRepository.deleteVerifierByVerifierId(orgId, verifierId);
       return verifier;
     } catch (error) {
@@ -164,10 +178,6 @@ export class Oid4vpVerificationService {
 
   async oid4vpCreateVerificationSession(orgId, verifierId, sessionRequest, userDetails: user): Promise<object> {
     try {
-      // console.log('sessionRequest', JSON.stringify(sessionRequest, null, 2));
-      // console.log('orgId', orgId);
-      // console.log('userDetails', JSON.stringify(userDetails, null, 2));
-      // console.log('verifierId', verifierId);
       const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -258,6 +268,19 @@ export class Oid4vpVerificationService {
     } catch (error) {
       this.logger.error(
         `[_createOID4VPVerifier] [NATS call]- error in create OID4VP Verifier : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
+  async _deleteOid4vpVerifier(url: string, orgId: string): Promise<any> {
+    try {
+      const pattern = { cmd: 'agent-delete-oid4vp-verifier' };
+      const payload = { url, orgId };
+      return this.natsCall(pattern, payload);
+    } catch (error) {
+      this.logger.error(
+        `[_deleteOid4vpVerifier] [NATS call]- error in delete OID4VP Verifier : ${JSON.stringify(error)}`
       );
       throw error;
     }

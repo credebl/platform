@@ -423,6 +423,11 @@ export class AgentServiceController {
     return this.agentServiceService.createOid4vpVerifier(payload.verifierDetails, payload.url, payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'agent-delete-oid4vp-verifier' })
+  async deleteOid4vpVerifier(payload: { url: string; orgId: string }): Promise<object> {
+    return this.agentServiceService.deleteOid4vpVerifier(payload.url, payload.orgId);
+  }
+
   @MessagePattern({ cmd: 'agent-update-oid4vp-verifier' })
   async updateOid4vpVerifier(payload: {
     verifierDetails: UpdateVerifier;
@@ -433,10 +438,7 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-get-oid4vp-verifier-session' })
-  async getOid4vpVerifierSession(payload: {
-    url: string;
-    orgId: string;
-  }): Promise<object> {
+  async getOid4vpVerifierSession(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.getOid4vpVerifierSession(payload.url, payload.orgId);
   }
 

@@ -3,6 +3,7 @@ import { Oid4vpVerificationService } from './oid4vc-verification.service';
 import { user } from '@prisma/client';
 import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
 import { MessagePattern } from '@nestjs/microservices';
+import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 
 @Controller()
 export class Oid4vpVerificationController {
@@ -39,5 +40,17 @@ export class Oid4vpVerificationController {
   async oid4vpDeleteVerifier(payload: { orgId: string; verifierId: string }): Promise<object> {
     const { orgId, verifierId } = payload;
     return this.oid4vpVerificationService.deleteVerifierById(orgId, verifierId);
+  }
+
+  @MessagePattern({ cmd: 'oid4vp-verifier-session-get' })
+  async oid4vpGetVerifierSession(payload: { orgId: string; query?: VerificationSessionQuery }): Promise<object> {
+    const { orgId, query } = payload;
+    return this.oid4vpVerificationService.getVerifierSession(orgId, query);
+  }
+
+  @MessagePattern({ cmd: 'oid4vp-verifier-session-response-get' })
+  async getVerificationSessionResponse(payload: { orgId: string; verificationSessionId: string }): Promise<object> {
+    const { orgId, verificationSessionId } = payload;
+    return this.oid4vpVerificationService.getVerificationSessionResponse(orgId, verificationSessionId);
   }
 }

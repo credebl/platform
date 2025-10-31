@@ -67,7 +67,7 @@ export const networkNamespace = (did: string): string => {
   return segments[1];
 };
 
-export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramId?: string): Promise<string> => {
+export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: string): string => {
   if (!agentEndPoint) {
     throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
   }
@@ -110,7 +110,19 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
     [String(CommonConstants.X509_DECODE_CERTIFICATE), String(CommonConstants.URL_DECODE_X509_CERTIFICATE)],
     [String(CommonConstants.X509_IMPORT_CERTIFICATE), String(CommonConstants.URL_IMPORT_X509_CERTIFICATE)],
     [String(CommonConstants.OIDC_VERIFIER_CREATE), String(CommonConstants.URL_OIDC_VERIFIER_CREATE)],
-    [String(CommonConstants.OIDC_VERIFIER_UPDATE), String(CommonConstants.URL_OIDC_VERIFIER_UPDATE)]
+    [String(CommonConstants.OIDC_VERIFIER_UPDATE), String(CommonConstants.URL_OIDC_VERIFIER_UPDATE)],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_ID)
+    ],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY)
+    ],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID)
+    ]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);

@@ -111,12 +111,21 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
     [String(CommonConstants.X509_IMPORT_CERTIFICATE), String(CommonConstants.URL_IMPORT_X509_CERTIFICATE)],
     [String(CommonConstants.OIDC_VERIFIER_CREATE), String(CommonConstants.URL_OIDC_VERIFIER_CREATE)],
     [String(CommonConstants.OIDC_VERIFIER_UPDATE), String(CommonConstants.URL_OIDC_VERIFIER_UPDATE)],
-    [String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID), String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_ID)],
-    [String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY), String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY)]
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_ID)
+    ],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY)
+    ],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID)
+    ]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);
-  console.log("urlSuffix:::", urlSuffix)
 
   if (!urlSuffix) {
     throw new NotFoundException(ResponseMessages.common.error.invalidUrl);

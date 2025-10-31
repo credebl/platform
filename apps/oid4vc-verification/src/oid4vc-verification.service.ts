@@ -170,12 +170,12 @@ export class Oid4vpVerificationService {
       }
       const { agentEndPoint, id } = agentDetails;
 
-      let url = query.id 
+      let url = query.id
         ? getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID, query.id)
-        : getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY)
+        : getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY);
 
       if (!query.id) {
-        url = buildUrlWithQuery(url, query)
+        url = buildUrlWithQuery(url, query);
       }
       console.log('url:::', url);
 
@@ -186,6 +186,28 @@ export class Oid4vpVerificationService {
       return verifiers;
     } catch (error) {
       this.logger.error(`[getVerifierSession] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error?.response ?? error);
+    }
+  }
+
+  async getVerificationSessionResponse(orgId: string, verificationSessionId: string): Promise<object> {
+    try {
+      const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+      const { agentEndPoint, id } = agentDetails;
+
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID, verificationSessionId);
+      console.log('url:::', url);
+
+      const verifiers = await await this._getOid4vpVerifierSession(url, orgId);
+      if (!verifiers || 0 === verifiers.length) {
+        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+      }
+      return verifiers;
+    } catch (error) {
+      this.logger.error(`[getVerificationSessionResponse] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error?.response ?? error);
     }
   }
@@ -224,6 +246,19 @@ export class Oid4vpVerificationService {
     } catch (error) {
       this.logger.error(
         `[_getOid4vpVerifierSession] [NATS call]- error in get OID4VP Verifier Session : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
+  async _getVerificationSessionResponse(url: string, orgId: string): Promise<any> {
+    try {
+      const pattern = { cmd: 'agent-get-oid4vp-verifier-session' };
+      const payload = { url, orgId };
+      return this.natsCall(pattern, payload);
+    } catch (error) {
+      this.logger.error(
+        `[_getVerificationSessionResponse] [NATS call]- error in get OID4VP Verifier Session : ${JSON.stringify(error)}`
       );
       throw error;
     }

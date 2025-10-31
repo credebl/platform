@@ -99,7 +99,7 @@ export class AgentServiceService {
     @Inject(CACHE_MANAGER) private cacheService: Cache,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly natsClient: NATSClient
-  ) {}
+  ) { }
 
   async ReplaceAt(input, search, replace, start, end): Promise<string> {
     return input.slice(0, start) + input.slice(start, end).replace(search, replace) + input.slice(end);
@@ -2307,6 +2307,18 @@ export class AgentServiceService {
       return updateVerifier;
     } catch (error) {
       this.logger.error(`Error in getting oid4vp verifier session in agent service : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async createOid4vpVerificationSession(sessionRequest: object, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const createSession = await this.commonService
+        .httpPost(url, sessionRequest, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return createSession;
+    } catch (error) {
+      this.logger.error(`Error in creating oid4vp verification session in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

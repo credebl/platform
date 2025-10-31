@@ -44,7 +44,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { user } from '@prisma/client';
 import { Oid4vcVerificationService } from './oid4vc-verification.service';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
-import { VerificationSessionQueryDto } from './dtos/oid4vc-verifier-session.dto';
+import { PresentationRequestDto, VerificationSessionQueryDto } from './dtos/oid4vc-verifier-session.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('OID4VP')
@@ -224,6 +224,57 @@ export class Oid4vcVerificationController {
       data: verifierDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/oid4vp/session')
+  @ApiOperation({
+    summary: 'Create verification session',
+    description: 'Creates a new OID4VP verification session for the specified organization.'
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Verification session created successfully.',
+    type: ApiResponseDto
+  })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async createVerificationSession(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Query(
+      'verifierId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid verifier ID');
+        }
+      })
+    )
+    verifierId: string,
+    @User() user: user,
+    @Body() createSessionDto: PresentationRequestDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    console.log('Creating verification session with DTO:', JSON.stringify(createSessionDto, null, 2));
+    const session = await this.oid4vcVerificationService.oid4vpCreateVerificationSession(
+      createSessionDto,
+      orgId,
+      verifierId,
+      user
+    );
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.oid4vp.success.create,
+      data: session
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   @Get('/orgs/:orgId/oid4vp/verifier-session')

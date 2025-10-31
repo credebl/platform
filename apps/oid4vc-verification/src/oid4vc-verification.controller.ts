@@ -40,4 +40,21 @@ export class Oid4vpVerificationController {
     const { orgId, verifierId } = payload;
     return this.oid4vpVerificationService.deleteVerifierById(orgId, verifierId);
   }
+
+  @MessagePattern({ cmd: 'oid4vp-verification-session-create' })
+  async oid4vpCreateVerificationSession(payload: {
+    orgId: string;
+    verifierId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sessionRequest: any;
+    userDetails: user;
+  }): Promise<object> {
+    const { orgId, verifierId, sessionRequest, userDetails } = payload;
+    return this.oid4vpVerificationService.oid4vpCreateVerificationSession(
+      orgId,
+      verifierId,
+      sessionRequest,
+      userDetails
+    );
+  }
 }

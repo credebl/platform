@@ -45,4 +45,15 @@ export class Oid4vcVerificationService extends BaseService {
     const payload = { orgId, verifierId };
     return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verifier-delete', payload);
   }
+
+  async oid4vpCreateVerificationSession(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sessionRequest: any,
+    orgId: string,
+    verifierId?: string,
+    userDetails?: user
+  ): Promise<object> {
+    const payload = { sessionRequest, orgId, verifierId, userDetails };
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verification-session-create', payload);
+  }
 }

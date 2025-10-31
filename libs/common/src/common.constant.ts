@@ -129,6 +129,7 @@ export enum CommonConstants {
   // OID4Vp URLs
   URL_OIDC_VERIFIER_CREATE = '/openid4vc/verifier', //TODO: correct this URL
   URL_OIDC_VERIFIER_UPDATE = '/openid4vc/verifier/#',
+  URL_OIDC_VERIFIER_DELETE = '/openid4vc/verifier/#',
   URL_OIDC_VERIFIER_GET = '/openid4vc/verifier/#',
   URL_OIDC_VERIFIER_SESSION_GET_BY_ID = '/openid4vc/verification-sessions/#',
   URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY = '/openid4vc/verification-sessions',
@@ -427,6 +428,7 @@ export enum CommonConstants {
   // OID4VP
   OIDC_VERIFIER_CREATE = 'create-oid4vp-verifier',
   OIDC_VERIFIER_UPDATE = 'update-oid4vp-verifier',
+  OIDC_VERIFIER_DELETE = 'delete-oid4vp-verifier',
   OIDC_VERIFIER_SESSION_GET_BY_ID = 'get-oid4vp-verifier-session-id',
   OIDC_VERIFIER_SESSION_GET_BY_QUERY = 'get-oid4vp-verifier-session-query',
   OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = 'get-oid4vp-verifier-session-response-id',

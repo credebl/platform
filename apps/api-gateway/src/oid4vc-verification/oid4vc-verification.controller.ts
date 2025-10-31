@@ -44,6 +44,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { user } from '@prisma/client';
 import { Oid4vcVerificationService } from './oid4vc-verification.service';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
+import { VerificationSessionQueryDto } from './dtos/oid4vc-verifier-session.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('OID4VP')
@@ -223,5 +224,95 @@ export class Oid4vcVerificationController {
       data: verifierDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/orgs/:orgId/oid4vp/verifier-session')
+  @ApiOperation({
+    summary: 'Get OID4VP verifier session details',
+    description:
+      'Retrieves details of all OID4VP verifier sessions or a single session by its ID for the specified organization.'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Verifier details retrieved successfully.',
+    type: ApiResponseDto
+  })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getVerificationSession(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Query() query: VerificationSessionQueryDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+      const { id, state, publicVerifierId } = query;
+
+      const result = await this.oid4vcVerificationService.oid4vpGetVerifierSession(orgId, query);
+
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        message: 'Verifier details retrieved successfully.',
+        data: result
+      });
+    } catch (error) {
+      throw new BadRequestException(error.message || 'Failed to fetch verifier session.');
+    }
+  }
+
+  @Get('/orgs/:orgId/oid4vp/verifier-session-response')
+  @ApiOperation({
+    summary: 'Get OID4VP verifier session response details',
+    description:
+      'Retrieves details of OID4VP verifier sessions response by its verification session ID for the specified organization.'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Verifier session response details retrieved successfully.',
+    type: ApiResponseDto
+  })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async getVerificationSessionResponse(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Query(
+      'verificationSessionId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid verificationSessionId ID');
+        }
+      })
+    )
+    verificationSessionId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    try {
+      const result = await this.oid4vcVerificationService.getVerificationSessionResponse(orgId, verificationSessionId);
+
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        message: 'Verifier session response details retrieved successfully.',
+        data: result
+      });
+    } catch (error) {
+      throw new BadRequestException(error.message || 'Failed to fetch verifier session response details.');
+    }
   }
 }

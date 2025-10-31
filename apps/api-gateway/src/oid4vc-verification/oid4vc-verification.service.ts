@@ -5,6 +5,7 @@ import { BaseService } from 'libs/service/base.service';
 // eslint-disable-next-line camelcase
 import { oid4vp_verifier, user } from '@prisma/client';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
+import { VerificationSessionQueryDto } from './dtos/oid4vc-verifier-session.dto';
 
 @Injectable()
 export class Oid4vcVerificationService extends BaseService {
@@ -44,5 +45,14 @@ export class Oid4vcVerificationService extends BaseService {
   async oid4vpDeleteVerifier(orgId, verifierId: string): Promise<object> {
     const payload = { orgId, verifierId };
     return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verifier-delete', payload);
+  }
+
+  async oid4vpGetVerifierSession(orgId, query?: VerificationSessionQueryDto): Promise<object> {
+    const payload = { orgId, query };
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verifier-session-get', payload);
+  }
+  async getVerificationSessionResponse(orgId, verificationSessionId: string): Promise<object> {
+    const payload = { orgId, verificationSessionId };
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verifier-session-response-get', payload);
   }
 }

@@ -1,3 +1,4 @@
+import { OpenId4VcVerificationSessionState } from '@credebl/common/interfaces/oid4vp-verification';
 import { organisation } from '@prisma/client';
 export interface OrgAgent {
   organisation: organisation;
@@ -14,4 +15,13 @@ export interface OrgAgent {
   ledgerId: string;
   orgAgentTypeId: string;
   tenantId: string;
+}
+
+export interface VerificationSessionQuery {
+  publicVerifierId?: string;
+  payloadState?: string;
+  state?: OpenId4VcVerificationSessionState;
+  authorizationRequestUri?: string;
+  nonce?: string;
+  id?: string;
 }

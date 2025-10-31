@@ -2297,4 +2297,17 @@ export class AgentServiceService {
       throw error;
     }
   }
+
+  async getOid4vpVerifierSession(url: string, orgId: string): Promise<object> {
+    try {
+      const agentToken = await this.getOrgAgentApiKey(orgId);
+      const updateVerifier = await this.commonService
+        .httpGet(url, { headers: { authorization: agentToken } })
+        .then(async (response) => response);
+      return updateVerifier;
+    } catch (error) {
+      this.logger.error(`Error in getting oid4vp verifier session in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

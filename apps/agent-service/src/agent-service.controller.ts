@@ -431,4 +431,12 @@ export class AgentServiceController {
   }): Promise<object> {
     return this.agentServiceService.updateOid4vpVerifier(payload.verifierDetails, payload.url, payload.orgId);
   }
+
+  @MessagePattern({ cmd: 'agent-get-oid4vp-verifier-session' })
+  async getOid4vpVerifierSession(payload: {
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.getOid4vpVerifierSession(payload.url, payload.orgId);
+  }
 }

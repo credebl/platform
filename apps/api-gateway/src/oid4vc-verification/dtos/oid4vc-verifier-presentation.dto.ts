@@ -1,4 +1,4 @@
-import { OpenId4VcVerificationSessionState } from '@credebl/common/interfaces/oid4vp-verification';
+import { OpenId4VcVerificationPresentationState } from '@credebl/common/interfaces/oid4vp-verification';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, IsUrl } from 'class-validator';
 /* eslint-disable camelcase */
@@ -16,13 +16,13 @@ import {
 import { Type } from 'class-transformer';
 
 /**
- * DTO for verification-session query parameters.
+ * DTO for verification-presentation query parameters.
  * Use with @Query() in your controller and enable ValidationPipe globally or on the route.
  */
-export class VerificationSessionQueryDto {
+export class VerificationPresentationQueryDto {
   @ApiPropertyOptional({
     description: 'Public identifier of the verifier',
-    example: 'verifier_0x123',
+    example: 'verifier_0x123'
   })
   @IsOptional()
   @IsString()
@@ -30,40 +30,40 @@ export class VerificationSessionQueryDto {
 
   @ApiPropertyOptional({
     description: 'Opaque payload state used by the client / verifier',
-    example: 'payload-state-xyz',
+    example: 'payload-state-xyz'
   })
   @IsOptional()
   @IsString()
   payloadState?: string;
 
   @ApiPropertyOptional({
-    description: 'Session state',
-    enum: OpenId4VcVerificationSessionState,
-    example: OpenId4VcVerificationSessionState.RequestCreated,
+    description: 'Presentation state',
+    enum: OpenId4VcVerificationPresentationState,
+    example: OpenId4VcVerificationPresentationState.RequestCreated
   })
   @IsOptional()
-  @IsEnum(OpenId4VcVerificationSessionState)
-  state?: OpenId4VcVerificationSessionState;
+  @IsEnum(OpenId4VcVerificationPresentationState)
+  state?: OpenId4VcVerificationPresentationState;
 
   @ApiPropertyOptional({
     description: 'Authorization request URI (if present)',
-    example: 'https://auth.example.com/request/abc123',
+    example: 'https://auth.example.com/request/abc123'
   })
   @IsOptional()
   @IsUrl()
   authorizationRequestUri?: string;
 
   @ApiPropertyOptional({
-    description: 'Nonce associated with the session',
-    example: 'n-0S6_WzA2Mj',
+    description: 'Nonce associated with the presentation',
+    example: 'n-0S6_WzA2Mj'
   })
   @IsOptional()
   @IsString()
   nonce?: string;
 
   @ApiPropertyOptional({
-    description: 'Optional id to target a specific session/resource',
-    example: 'session-id-987',
+    description: 'Optional id to target a specific presentation/resource',
+    example: 'presentation-id-987'
   })
   @IsOptional()
   @IsString()

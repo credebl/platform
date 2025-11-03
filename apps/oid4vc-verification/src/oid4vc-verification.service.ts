@@ -25,6 +25,7 @@ import { map } from 'rxjs';
 import { CreateVerifier, UpdateVerifier, VerifierRecord } from '@credebl/common/interfaces/oid4vp-verification';
 import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
+import { RequestSignerMethod } from '@credebl/enum/enum';
 
 @Injectable()
 export class Oid4vpVerificationService {
@@ -190,12 +191,13 @@ export class Oid4vpVerificationService {
         throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
       }
       sessionRequest.verifierId = getVerifierDetails.publicVerifierId;
-      if ('did' === sessionRequest.requestSigner.method) {
+      if (RequestSignerMethod.DID === sessionRequest.requestSigner.method) {
         sessionRequest.requestSigner.didUrl = orgDid;
+      } else if (RequestSignerMethod.X509 === sessionRequest.requestSigner.method) {
+        throw new NotFoundException('X509 request signer method not implemented yet');
       }
       const url = await getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
       this.logger.log(`[oid4vpCreateVerificationSession] calling agent url: ${url}`);
-      // console.log('Final sessionRequest', JSON.stringify(sessionRequest, null, 2));
       const createdSession = await this._createVerificationSession(sessionRequest, url, orgId);
       if (!createdSession?.response) {
         throw new InternalServerErrorException(ResponseMessages.oid4vp.error.createFailed);

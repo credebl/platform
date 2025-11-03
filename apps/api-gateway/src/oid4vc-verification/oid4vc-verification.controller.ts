@@ -44,7 +44,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { user } from '@prisma/client';
 import { Oid4vcVerificationService } from './oid4vc-verification.service';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
-import { PresentationRequestDto, VerificationSessionQueryDto } from './dtos/oid4vc-verifier-session.dto';
+import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos/oid4vc-verifier-presentation.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('OID4VP')
@@ -226,20 +226,20 @@ export class Oid4vcVerificationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Post('/orgs/:orgId/oid4vp/session')
+  @Post('/orgs/:orgId/oid4vp/presentation')
   @ApiOperation({
-    summary: 'Create verification session',
-    description: 'Creates a new OID4VP verification session for the specified organization.'
+    summary: 'Create verification presentation',
+    description: 'Creates a new OID4VP verification presentation for the specified organization.'
   })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    description: 'Verification session created successfully.',
+    description: 'Verification presentation created successfully.',
     type: ApiResponseDto
   })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  async createVerificationSession(
+  async createVerificationPresentation(
     @Param(
       'orgId',
       new ParseUUIDPipe({
@@ -259,12 +259,12 @@ export class Oid4vcVerificationController {
     )
     verifierId: string,
     @User() user: user,
-    @Body() createSessionDto: PresentationRequestDto,
+    @Body() createPresentationDto: PresentationRequestDto,
     @Res() res: Response
   ): Promise<Response> {
-    console.log('Creating verification session with DTO:', JSON.stringify(createSessionDto, null, 2));
-    const session = await this.oid4vcVerificationService.oid4vpCreateVerificationSession(
-      createSessionDto,
+    console.log('Creating verification presentation with DTO:', JSON.stringify(createPresentationDto, null, 2));
+    const presentation = await this.oid4vcVerificationService.oid4vpCreateVerificationSession(
+      createPresentationDto,
       orgId,
       verifierId,
       user
@@ -272,16 +272,16 @@ export class Oid4vcVerificationController {
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.oid4vp.success.create,
-      data: session
+      data: presentation
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Get('/orgs/:orgId/oid4vp/verifier-session')
+  @Get('/orgs/:orgId/oid4vp/verifier-presentation')
   @ApiOperation({
-    summary: 'Get OID4VP verifier session details',
+    summary: 'Get OID4VP verifier presentation details',
     description:
-      'Retrieves details of all OID4VP verifier sessions or a single session by its ID for the specified organization.'
+      'Retrieves details of all OID4VP verifier presentations or a single presentation by its ID for the specified organization.'
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -291,7 +291,7 @@ export class Oid4vcVerificationController {
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  async getVerificationSession(
+  async getVerificationPresentation(
     @Param(
       'orgId',
       new ParseUUIDPipe({
@@ -301,12 +301,10 @@ export class Oid4vcVerificationController {
       })
     )
     orgId: string,
-    @Query() query: VerificationSessionQueryDto,
+    @Query() query: VerificationPresentationQueryDto,
     @Res() res: Response
   ): Promise<Response> {
     try {
-      const { id, state, publicVerifierId } = query;
-
       const result = await this.oid4vcVerificationService.oid4vpGetVerifierSession(orgId, query);
 
       return res.status(HttpStatus.OK).json({
@@ -315,25 +313,25 @@ export class Oid4vcVerificationController {
         data: result
       });
     } catch (error) {
-      throw new BadRequestException(error.message || 'Failed to fetch verifier session.');
+      throw new BadRequestException(error.message || 'Failed to fetch verifier presentation.');
     }
   }
 
-  @Get('/orgs/:orgId/oid4vp/verifier-session-response')
+  @Get('/orgs/:orgId/oid4vp/verifier-presentation-response')
   @ApiOperation({
-    summary: 'Get OID4VP verifier session response details',
+    summary: 'Get OID4VP verifier presentation response details',
     description:
-      'Retrieves details of OID4VP verifier sessions response by its verification session ID for the specified organization.'
+      'Retrieves details of OID4VP verifier presentations response by its verification presentation ID for the specified organization.'
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Verifier session response details retrieved successfully.',
+    description: 'Verifier presentation response details retrieved successfully.',
     type: ApiResponseDto
   })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  async getVerificationSessionResponse(
+  async getVerificationPresentationResponse(
     @Param(
       'orgId',
       new ParseUUIDPipe({
@@ -344,26 +342,29 @@ export class Oid4vcVerificationController {
     )
     orgId: string,
     @Query(
-      'verificationSessionId',
+      'verificationPresentationId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException('Invalid verificationSessionId ID');
+          throw new BadRequestException('Invalid verificationPresentationId ID');
         }
       })
     )
-    verificationSessionId: string,
+    verificationPresentationId: string,
     @Res() res: Response
   ): Promise<Response> {
     try {
-      const result = await this.oid4vcVerificationService.getVerificationSessionResponse(orgId, verificationSessionId);
+      const result = await this.oid4vcVerificationService.getVerificationSessionResponse(
+        orgId,
+        verificationPresentationId
+      );
 
       return res.status(HttpStatus.OK).json({
         success: true,
-        message: 'Verifier session response details retrieved successfully.',
+        message: 'Verifier presentation response details retrieved successfully.',
         data: result
       });
     } catch (error) {
-      throw new BadRequestException(error.message || 'Failed to fetch verifier session response details.');
+      throw new BadRequestException(error.message || 'Failed to fetch verifier presentation response details.');
     }
   }
 }

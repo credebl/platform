@@ -570,8 +570,8 @@ export const ResponseMessages = {
       createFailed: 'Failed to create OID4VP verifier.',
       updateFailed: 'Failed to update OID4VP verifier.',
       deleteFailed: 'Failed to delete OID4VP verifier.',
-      issuerDisplayNotFound: 'Issuer display not found.',
-      issuerDetailsNotFound: 'Issuer details not found.',
+      notFoundIssuerDisplay: 'Issuer display not found.',
+      notFoundIssuerDetails: 'Issuer details not found.',
       verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.',
       deleteTemplate: 'Error while deleting template.'
     }

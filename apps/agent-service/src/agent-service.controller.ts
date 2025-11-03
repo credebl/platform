@@ -1,32 +1,33 @@
-import { Controller } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
-import { AgentServiceService } from './agent-service.service';
 import {
+  IAgentConfigure,
+  IAgentProofRequest,
+  IAgentSpinupDto,
   IAgentStatus,
   IConnectionDetails,
-  IUserRequestInterface,
-  ISendProofRequestPayload,
-  IAgentSpinUpSatus,
+  ICreateConnectionInvitation,
+  IDidCreate,
   IGetCredDefAgentRedirection,
   IGetSchemaAgentRedirection,
-  IAgentSpinupDto,
   IIssuanceCreateOffer,
+  IOutOfBandCredentialOffer,
+  ISendProofRequestPayload,
+  IStoreAgent,
+  IStoreOrgAgentDetails,
   ITenantCredDef,
   ITenantDto,
-  ITenantSchema,
-  IOutOfBandCredentialOffer,
-  IAgentProofRequest,
-  IDidCreate,
-  IWallet,
   ITenantRecord,
-  ICreateConnectionInvitation,
-  IStoreAgent,
-  IAgentConfigure
+  ITenantSchema,
+  IUserRequestInterface,
+  IWallet
 } from './interface/agent-service.interface';
-import { user } from '@prisma/client';
-import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
+
+import { AgentServiceService } from './agent-service.service';
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
+import { Controller } from '@nestjs/common';
+import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
+import { MessagePattern } from '@nestjs/microservices';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
+import { user } from '@prisma/client';
 
 @Controller()
 export class AgentServiceController {
@@ -49,7 +50,7 @@ export class AgentServiceController {
   async createTenant(payload: {
     createTenantDto: ITenantDto;
     user: IUserRequestInterface;
-  }): Promise<IAgentSpinUpSatus> {
+  }): Promise<IStoreOrgAgentDetails> {
     return this.agentServiceService.createTenant(payload.createTenantDto, payload.user);
   }
 

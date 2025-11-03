@@ -111,6 +111,7 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
     [String(CommonConstants.X509_IMPORT_CERTIFICATE), String(CommonConstants.URL_IMPORT_X509_CERTIFICATE)],
     [String(CommonConstants.OIDC_VERIFIER_CREATE), String(CommonConstants.URL_OIDC_VERIFIER_CREATE)],
     [String(CommonConstants.OIDC_VERIFIER_UPDATE), String(CommonConstants.URL_OIDC_VERIFIER_UPDATE)],
+    [String(CommonConstants.OIDC_VERIFIER_DELETE), String(CommonConstants.URL_OIDC_VERIFIER_DELETE)],
     [
       String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID),
       String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_ID)
@@ -122,7 +123,8 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
     [
       String(CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID),
       String(CommonConstants.URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID)
-    ]
+    ],
+    [String(CommonConstants.OID4VP_VERIFICATION_SESSION), String(CommonConstants.URL_OID4VP_VERIFICATION_SESSION)]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);

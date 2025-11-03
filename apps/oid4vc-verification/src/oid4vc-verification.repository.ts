@@ -129,6 +129,22 @@ export class Oid4vpRepository {
     }
   }
 
+  async getVerifierById(orgId: string, verifierId?: string): Promise<oid4vp_verifier | null> {
+    try {
+      return await this.prisma.oid4vp_verifier.findUnique({
+        where: {
+          id: verifierId,
+          orgAgent: {
+            orgId
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getVerifiersByPublicVerifierId: ${error.message}`);
+      throw error;
+    }
+  }
+
   async deleteVerifierByVerifierId(orgId: string, verifierId?: string): Promise<oid4vp_verifier | null> {
     try {
       return await this.prisma.oid4vp_verifier.delete({

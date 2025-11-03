@@ -153,12 +153,60 @@ export class Oid4vpVerificationService {
 
   async deleteVerifierById(orgId: string, verifierId: string): Promise<object> {
     try {
-      await this.getVerifierById(orgId, verifierId);
+      const checkIdExist = await this.oid4vpRepository.getVerifiersByVerifierId(orgId, verifierId);
+      if (0 == checkIdExist.length) {
+        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+      }
+
+      const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+      const { agentEndPoint, id } = agentDetails;
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_DELETE, checkIdExist[0].verifierId);
+      console.log('url:::', url);
+
+      await this._deleteOid4vpVerifier(url, orgId);
+
       const verifier = await this.oid4vpRepository.deleteVerifierByVerifierId(orgId, verifierId);
       return verifier;
     } catch (error) {
       this.logger.error(`[deleteVerifierById] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error?.response ?? error.error ?? error);
+    }
+  }
+
+  async oid4vpCreateVerificationSession(orgId, verifierId, sessionRequest, userDetails: user): Promise<object> {
+    try {
+      const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+      const { agentEndPoint, orgDid } = agentDetails;
+
+      const getVerifierDetails = await this.oid4vpRepository.getVerifierById(orgId, verifierId);
+
+      if (!getVerifierDetails) {
+        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+      }
+      sessionRequest.verifierId = getVerifierDetails.publicVerifierId;
+      if ('did' === sessionRequest.requestSigner.method) {
+        sessionRequest.requestSigner.didUrl = orgDid;
+      }
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
+      this.logger.log(`[oid4vpCreateVerificationSession] calling agent url: ${url}`);
+      // console.log('Final sessionRequest', JSON.stringify(sessionRequest, null, 2));
+      const createdSession = await this._createVerificationSession(sessionRequest, url, orgId);
+      if (!createdSession?.response) {
+        throw new InternalServerErrorException(ResponseMessages.oid4vp.error.createFailed);
+      }
+
+      return createdSession.response;
+    } catch (error) {
+      this.logger.error(
+        `[oid4vpCreateVerificationSession] - error creating verification session: ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error?.response ?? error);
     }
   }
 
@@ -225,6 +273,19 @@ export class Oid4vpVerificationService {
     }
   }
 
+  async _deleteOid4vpVerifier(url: string, orgId: string): Promise<any> {
+    try {
+      const pattern = { cmd: 'agent-delete-oid4vp-verifier' };
+      const payload = { url, orgId };
+      return this.natsCall(pattern, payload);
+    } catch (error) {
+      this.logger.error(
+        `[_deleteOid4vpVerifier] [NATS call]- error in delete OID4VP Verifier : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
   async _updateOid4vpVerifier(verifierDetails: UpdateVerifier, url: string, orgId: string): Promise<any> {
     try {
       const pattern = { cmd: 'agent-update-oid4vp-verifier' };
@@ -233,6 +294,19 @@ export class Oid4vpVerificationService {
     } catch (error) {
       this.logger.error(
         `[_updateOid4vpVerifier] [NATS call]- error in update OID4VP Verifier : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
+  async _createVerificationSession(sessionRequest: any, url: string, orgId: string): Promise<any> {
+    try {
+      const pattern = { cmd: 'agent-create-oid4vp-verification-session' };
+      const payload = { sessionRequest, url, orgId };
+      return this.natsCall(pattern, payload);
+    } catch (error) {
+      this.logger.error(
+        `[_createVerificationSession] [NATS call]- error in create verification session : ${JSON.stringify(error)}`
       );
       throw error;
     }

@@ -2285,6 +2285,17 @@ export class AgentServiceService {
     }
   }
 
+  async deleteOid4vpVerifier(url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const deleteVerifier = await this.commonService.httpDelete(url, { headers: { authorization: getApiKey } });
+      return deleteVerifier.data ?? deleteVerifier;
+    } catch (error) {
+      this.logger.error(`Error in deleting oid4vp verifier in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async updateOid4vpVerifier(verifierDetails: UpdateVerifier, url: string, orgId: string): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
@@ -2307,6 +2318,18 @@ export class AgentServiceService {
       return updateVerifier;
     } catch (error) {
       this.logger.error(`Error in getting oid4vp verifier session in agent service : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async createOid4vpVerificationSession(sessionRequest: object, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const createSession = await this.commonService
+        .httpPost(url, sessionRequest, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return createSession;
+    } catch (error) {
+      this.logger.error(`Error in creating oid4vp verification session in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

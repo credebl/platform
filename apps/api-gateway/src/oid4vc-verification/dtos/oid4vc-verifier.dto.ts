@@ -6,14 +6,14 @@ import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs
 class ClientMetadataDto {
   @ApiProperty({
     description: 'Name of the client application or verifier',
-    example: 'Credebl Verifier App'
+    example: 'Example Verifier App'
   })
   @IsString()
   client_name: string;
 
   @ApiProperty({
     description: 'Logo URL of the client application',
-    example: 'https://credebl.io/logo.png'
+    example: 'https://example.com/logo.png'
   })
   @IsString()
   logo_uri: string;
@@ -31,8 +31,8 @@ export class CreateVerifierDto {
     description: 'Optional metadata for the verifier’s client configuration',
     type: () => ClientMetadataDto,
     example: {
-      client_name: 'Credebl Verifier App',
-      logo_uri: 'https://credebl.io/logo.png'
+      client_name: 'Example Verifier App',
+      logo_uri: 'https://example.com/logo.png'
     }
   })
   @IsOptional()

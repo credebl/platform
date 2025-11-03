@@ -556,6 +556,26 @@ export const ResponseMessages = {
       missingValidityInfo: 'Validity Info(validFrom, validTo) is required for validity of credential'
     }
   },
+  oid4vp: {
+    success: {
+      create: 'OID4VP verifier created successfully.',
+      update: 'OID4VP verifier updated successfully.',
+      delete: 'OID4VP verifier deleted successfully.',
+      fetch: 'OID4VP verifier(s) fetched successfully.',
+      getById: 'OID4VP verifier details fetched successfully.'
+    },
+    error: {
+      notFound: 'OID4VP verifier not found.',
+      invalidId: 'Invalid OID4VP verifier ID.',
+      createFailed: 'Failed to create OID4VP verifier.',
+      updateFailed: 'Failed to update OID4VP verifier.',
+      deleteFailed: 'Failed to delete OID4VP verifier.',
+      notFoundIssuerDisplay: 'Issuer display not found.',
+      notFoundIssuerDetails: 'Issuer details not found.',
+      verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.',
+      deleteTemplate: 'Error while deleting template.'
+    }
+  },
   x509: {
     success: {
       create: 'x509 certificate created successfully',

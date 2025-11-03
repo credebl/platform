@@ -333,6 +333,11 @@ export enum AttributeType {
   IMAGE = 'image'
 }
 
+export enum RequestSignerMethod {
+  DID = 'did',
+  X509 = 'x509'
+}
+
 // export enum SignerOption {
 //   DID,
 //   X509_P256,

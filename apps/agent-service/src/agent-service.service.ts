@@ -743,7 +743,7 @@ export class AgentServiceService {
    * @param user
    * @returns Get agent status
    */
-  async createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<IAgentSpinUpSatus> {
+  async createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<IStoreOrgAgentDetails> {
     console.log('🚀 ~ AgentServiceService ~ createTenant ~ payload:777777777777777777777777', payload);
     try {
       const agentStatusResponse = {
@@ -768,8 +768,8 @@ export class AgentServiceService {
         });
       }
       // Create tenant
-      this._createTenant(payload, user);
-      return agentStatusResponse;
+      const createdTenant = await this._createTenant(payload, user);
+      return createdTenant;
     } catch (error) {
       this.logger.error(`error in create tenant : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
@@ -782,7 +782,7 @@ export class AgentServiceService {
    * @param user
    * @returns Get agent status
    */
-  async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<void> {
+  async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<IStoreOrgAgentDetails> {
     console.log('🚀 ~ AgentServiceService ~ _createTenant ~ payload:9999999999999', payload);
     let agentProcess;
     let ledgerIdData = [];
@@ -839,7 +839,7 @@ export class AgentServiceService {
       const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
       const storeOrgAgentData: IStoreOrgAgentDetails = {
         // did: tenantDetails.DIDCreationOption.did,
-        isDidPublic: true,
+        // isDidPublic: true,
         // didDoc: tenantDetails.DIDCreationOption.didDocument || tenantDetails.DIDCreationOption.didDoc, //changed the didDoc into didDocument
         agentSpinUpStatus: AgentSpinUpStatus.PROCESSED,
         agentsTypeId: agentTypeId,
@@ -852,13 +852,14 @@ export class AgentServiceService {
         id: agentProcess?.id,
         apiKey: await this.commonService.dataEncryption(tenantDetails.walletResponseDetails['token'])
       };
-      console.log('🚀 ~ AgentServiceService ~ _createTenant ~ storeOrgAgentData:', storeOrgAgentData);
+      console.log('🚀 ~ AgentServiceService ~ _createTenant ~ storeOrgAgentData:111111111111111111', storeOrgAgentData);
       // Get organization data
       const getOrganization = await this.agentServiceRepository.getOrgDetails(payload.orgId);
 
       this.notifyClientSocket('agent-spinup-process-completed', payload.clientSocketId);
 
       const orgAgentDetails = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
+      console.log('🚀 ~ AgentServiceService ~ _createTenant ~ orgAgentDetails:222222222222222222222', orgAgentDetails);
 
       // const createdDidDetails = {
       //   orgId: payload.orgId,
@@ -877,6 +878,7 @@ export class AgentServiceService {
       // await this._createConnectionInvitation(payload.orgId, user, getOrganization.name);
 
       // this.notifyClientSocket('invitation-url-creation-success', payload.clientSocketId);
+      return orgAgentDetails;
     } catch (error) {
       this.handleError(error, payload.clientSocketId);
 

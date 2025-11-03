@@ -157,7 +157,14 @@ export class AgentServiceRepository {
    * @returns
    */
   // eslint-disable-next-line camelcase
-  async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
+  async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<{
+    orgId: string;
+    agentSpinUpStatus: number;
+    agentEndPoint: string;
+    tenantId: string;
+    walletName: string;
+    id: string;
+  }> {
     try {
       const { id, orgId, userId, ledgerId, didDoc, ...commonFields } = storeOrgAgentDetails;
       const firstLedgerId = Array.isArray(ledgerId) ? ledgerId[0] : null;
@@ -172,14 +179,32 @@ export class AgentServiceRepository {
       };
 
       // eslint-disable-next-line camelcase
-      const query: Promise<org_agents> = id
+      const query = id
         ? this.prisma.org_agents.update({
             where: { id },
-            data
+            data,
+            select: {
+              id: true,
+              orgId: true,
+              agentSpinUpStatus: true,
+              agentEndPoint: true,
+              tenantId: true,
+              walletName: true
+            }
           })
-        : this.prisma.org_agents.create({ data });
+        : this.prisma.org_agents.create({
+            data,
+            select: {
+              id: true,
+              orgId: true,
+              agentSpinUpStatus: true,
+              agentEndPoint: true,
+              tenantId: true,
+              walletName: true
+            }
+          });
 
-      return { id: (await query).id };
+      return await query;
     } catch (error) {
       this.logger.error(`[storeAgentDetails] - store agent details: ${JSON.stringify(error)}`);
       throw error;

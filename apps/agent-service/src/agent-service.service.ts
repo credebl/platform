@@ -82,6 +82,7 @@ import {
   x509CertificateDecodeDto,
   X509CreateCertificateOptions
 } from '@credebl/common/interfaces/x509.interface';
+import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {
@@ -2210,6 +2211,68 @@ export class AgentServiceService {
       return x509Certificate;
     } catch (error) {
       this.logger.error(`Error in creating x509 certificate in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async createOid4vpVerifier(verifierDetails: CreateVerifier, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const createVerifier = await this.commonService
+        .httpPost(url, verifierDetails, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return createVerifier;
+    } catch (error) {
+      this.logger.error(`Error in creating oid4vp verifier in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteOid4vpVerifier(url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const deleteVerifier = await this.commonService.httpDelete(url, { headers: { authorization: getApiKey } });
+      return deleteVerifier.data ?? deleteVerifier;
+    } catch (error) {
+      this.logger.error(`Error in deleting oid4vp verifier in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateOid4vpVerifier(verifierDetails: UpdateVerifier, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const updateVerifier = await this.commonService
+        .httpPut(url, verifierDetails, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return updateVerifier;
+    } catch (error) {
+      this.logger.error(`Error in updating oid4vp verifier in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getOid4vpVerifierSession(url: string, orgId: string): Promise<object> {
+    try {
+      const agentToken = await this.getOrgAgentApiKey(orgId);
+      const updateVerifier = await this.commonService
+        .httpGet(url, { headers: { authorization: agentToken } })
+        .then(async (response) => response);
+      return updateVerifier;
+    } catch (error) {
+      this.logger.error(`Error in getting oid4vp verifier session in agent service : ${JSON.stringify(error)}`);
+    }
+  }
+
+  async createOid4vpVerificationSession(sessionRequest: object, url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const createSession = await this.commonService
+        .httpPost(url, sessionRequest, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return createSession;
+    } catch (error) {
+      this.logger.error(`Error in creating oid4vp verification session in agent service : ${JSON.stringify(error)}`);
       throw error;
     }
   }

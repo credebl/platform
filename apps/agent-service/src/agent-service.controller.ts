@@ -33,6 +33,7 @@ import {
   x509CertificateDecodeDto,
   X509CreateCertificateOptions
 } from '@credebl/common/interfaces/x509.interface';
+import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
 
 @Controller()
 export class AgentServiceController {
@@ -412,5 +413,42 @@ export class AgentServiceController {
     orgId: string;
   }): Promise<object> {
     return this.agentServiceService.importX509Certificate(payload.options, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-create-oid4vp-verifier' })
+  async createOid4vpVerifier(payload: {
+    verifierDetails: CreateVerifier;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.createOid4vpVerifier(payload.verifierDetails, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-delete-oid4vp-verifier' })
+  async deleteOid4vpVerifier(payload: { url: string; orgId: string }): Promise<object> {
+    return this.agentServiceService.deleteOid4vpVerifier(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-update-oid4vp-verifier' })
+  async updateOid4vpVerifier(payload: {
+    verifierDetails: UpdateVerifier;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.updateOid4vpVerifier(payload.verifierDetails, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-get-oid4vp-verifier-session' })
+  async getOid4vpVerifierSession(payload: { url: string; orgId: string }): Promise<object> {
+    return this.agentServiceService.getOid4vpVerifierSession(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-create-oid4vp-verification-session' })
+  async oid4vpCreateVerificationSession(payload: {
+    sessionRequest: object;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.createOid4vpVerificationSession(payload.sessionRequest, payload.url, payload.orgId);
   }
 }

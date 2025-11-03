@@ -232,6 +232,7 @@ model org_agents {
   org_dids            org_dids[]
   oidc_issuer         oidc_issuer[]
   x509_certificates   x509_certificates[]
+  oid4vp_verifiers    oid4vp_verifier[]
 }
 
 model org_dids {
@@ -647,4 +648,18 @@ model x509_certificates {
   createdBy           String   @db.Uuid
   lastChangedDateTime DateTime @updatedAt
   lastChangedBy       String   @db.Uuid
+}
+
+model oid4vp_verifier {
+  id                  String     @id @default(uuid()) @db.Uuid
+  publicVerifierId    String
+  metadata            Json
+  verifierId          String     @unique
+  createDateTime      DateTime   @default(now()) @db.Timestamptz(6)
+  createdBy           String     @default("1")
+  lastChangedDateTime DateTime   @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String     @default("1")
+  orgAgentId          String     @db.Uuid
+  orgAgent            org_agents @relation(fields: [orgAgentId], references: [id])
+  @@index([orgAgentId])
 }

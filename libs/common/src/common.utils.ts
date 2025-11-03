@@ -67,7 +67,7 @@ export const networkNamespace = (did: string): string => {
   return segments[1];
 };
 
-export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramId?: string): Promise<string> => {
+export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: string): string => {
   if (!agentEndPoint) {
     throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
   }
@@ -108,7 +108,23 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
     [String(CommonConstants.OIDC_DELETE_CREDENTIAL_OFFER), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)],
     [String(CommonConstants.X509_CREATE_CERTIFICATE), String(CommonConstants.URL_CREATE_X509_CERTIFICATE)],
     [String(CommonConstants.X509_DECODE_CERTIFICATE), String(CommonConstants.URL_DECODE_X509_CERTIFICATE)],
-    [String(CommonConstants.X509_IMPORT_CERTIFICATE), String(CommonConstants.URL_IMPORT_X509_CERTIFICATE)]
+    [String(CommonConstants.X509_IMPORT_CERTIFICATE), String(CommonConstants.URL_IMPORT_X509_CERTIFICATE)],
+    [String(CommonConstants.OIDC_VERIFIER_CREATE), String(CommonConstants.URL_OIDC_VERIFIER_CREATE)],
+    [String(CommonConstants.OIDC_VERIFIER_UPDATE), String(CommonConstants.URL_OIDC_VERIFIER_UPDATE)],
+    [String(CommonConstants.OIDC_VERIFIER_DELETE), String(CommonConstants.URL_OIDC_VERIFIER_DELETE)],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_ID)
+    ],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY)
+    ],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID)
+    ],
+    [String(CommonConstants.OID4VP_VERIFICATION_SESSION), String(CommonConstants.URL_OID4VP_VERIFICATION_SESSION)]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);

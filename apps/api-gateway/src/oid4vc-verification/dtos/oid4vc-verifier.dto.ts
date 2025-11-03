@@ -13,7 +13,7 @@ class ClientMetadataDto {
 
   @ApiProperty({
     description: 'Logo URL of the client application',
-    example: 'https://credebl.io/logo.png'
+    example: 'https://example.com/logo.png'
   })
   @IsString()
   logo_uri: string;
@@ -32,7 +32,7 @@ export class CreateVerifierDto {
     type: () => ClientMetadataDto,
     example: {
       client_name: 'Credebl Verifier App',
-      logo_uri: 'https://credebl.io/logo.png'
+      logo_uri: 'https://example.com/logo.png'
     }
   })
   @IsOptional()

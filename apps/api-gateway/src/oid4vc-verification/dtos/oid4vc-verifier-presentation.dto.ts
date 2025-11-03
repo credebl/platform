@@ -14,6 +14,7 @@ import {
   Validate
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { RequestSignerMethod } from '@credebl/enum/enum';
 
 /**
  * DTO for verification-presentation query parameters.
@@ -269,11 +270,6 @@ export class DcqlDto {
 /**
  * ----------- ROOT DTO -----------
  */
-export enum RequestSignerMethod {
-  DID = 'DID',
-  X509 = 'X509'
-}
-
 /**
  * Class-level validator: exactly one of the specified properties must be present.
  */

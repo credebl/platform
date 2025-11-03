@@ -26,10 +26,7 @@ import { user } from '@prisma/client';
 @Controller()
 export class IssuanceController {
   private readonly logger = new Logger('IssueCredentialController');
-  constructor(
-    private readonly issuanceService: IssuanceService,
-    private readonly oidcIssuanceService: OIDCIssuanceService
-  ) {}
+  constructor(private readonly issuanceService: IssuanceService) {}
 
   @MessagePattern({ cmd: 'get-issuance-records' })
   async getIssuanceRecordsByOrgId(payload: { orgId: string; userId: string }): Promise<number> {

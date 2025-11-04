@@ -52,10 +52,6 @@ import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos
 @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class Oid4vcVerificationController {
-  /**
-   * Not really sure, if we want to have the below
-   * [API-gateway] [Oid4vpController]
-   */
   private readonly logger = new Logger('Oid4vpVerificationController');
 
   constructor(private readonly oid4vcVerificationService: Oid4vcVerificationService) {}
@@ -90,13 +86,11 @@ export class Oid4vcVerificationController {
     @Body() createVerifier: CreateVerifierDto,
     @Res() res: Response
   ): Promise<Response> {
-    this.logger.debug(
-      `[API-gateway] [Oid4vpController] [oidcIssuerCreate] Called with orgId=${orgId}, user=${user.id}`
-    );
+    this.logger.debug(`[oidcIssuerCreate] Called with orgId=${orgId}, user=${user.id}`);
 
     const createVerifierRes = await this.oid4vcVerificationService.oid4vpCreateVerifier(createVerifier, orgId, user);
 
-    this.logger.debug(`[API-gateway] [Oid4vpController] [oidcIssuerCreate] Verifier created: ${createVerifierRes.id}`);
+    this.logger.debug(`[oidcIssuerCreate] Verifier created: ${createVerifierRes.id}`);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
@@ -139,9 +133,7 @@ export class Oid4vcVerificationController {
     @Body() updateVerifier: UpdateVerifierDto,
     @Res() res: Response
   ): Promise<Response> {
-    this.logger.debug(
-      `[API-gateway] [Oid4vpController] [oidcIssuerUpdate] Called with orgId=${orgId}, verifierId=${verifierId}, user=${user.id}`
-    );
+    this.logger.debug(`[oidcIssuerUpdate] Called with orgId=${orgId}, verifierId=${verifierId}, user=${user.id}`);
     const updateVerifierRes = await this.oid4vcVerificationService.oid4vpUpdateVerifier(
       updateVerifier,
       orgId,
@@ -149,7 +141,7 @@ export class Oid4vcVerificationController {
       user
     );
 
-    this.logger.debug(`[API-gateway] [Oid4vpController] [oidcIssuerUpdate] Verifier updated: ${updateVerifierRes.id}`);
+    this.logger.debug(`[oidcIssuerUpdate] Verifier updated: ${updateVerifierRes.id}`);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
@@ -197,13 +189,11 @@ export class Oid4vcVerificationController {
     )
     verifierId?: string
   ): Promise<Response> {
-    this.logger.debug(
-      `[API-gateway] [Oid4vpController] [getVerifierDetails] Called with orgId=${orgId}, verifierId=${verifierId}`
-    );
+    this.logger.debug(`[getVerifierDetails] Called with orgId=${orgId}, verifierId=${verifierId}`);
 
     const verifierDetails = await this.oid4vcVerificationService.oid4vpGetVerifier(orgId, verifierId);
 
-    this.logger.debug(`[API-gateway] [Oid4vpController] [getVerifierDetails] Result fetched successfully`);
+    this.logger.debug(`[getVerifierDetails] Result fetched successfully`);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.oid4vp.success.fetch,
@@ -242,13 +232,11 @@ export class Oid4vcVerificationController {
     )
     verifierId: string
   ): Promise<Response> {
-    this.logger.debug(
-      `[API-gateway] [Oid4vpController] [deleteVerifierDetails] Called with orgId=${orgId}, verifierId=${verifierId}`
-    );
+    this.logger.debug(`[deleteVerifierDetails] Called with orgId=${orgId}, verifierId=${verifierId}`);
 
     const verifierDetails = await this.oid4vcVerificationService.oid4vpDeleteVerifier(orgId, verifierId);
 
-    this.logger.debug(`[API-gateway] [Oid4vpController] [deleteVerifierDetails] Deleted verifier: ${verifierId}`);
+    this.logger.debug(`[deleteVerifierDetails] Deleted verifier: ${verifierId}`);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.oid4vp.success.fetch,
@@ -294,7 +282,7 @@ export class Oid4vcVerificationController {
     @Res() res: Response
   ): Promise<Response> {
     this.logger.debug(
-      `[API-gateway] [Oid4vpController] [createVerificationPresentation] Called with orgId=${orgId}, verifierId=${verifierId}, user=${user.id}`
+      `[createVerificationPresentation] Called with orgId=${orgId}, verifierId=${verifierId}, user=${user.id}`
     );
 
     const presentation = await this.oid4vcVerificationService.oid4vpCreateVerificationSession(
@@ -304,9 +292,7 @@ export class Oid4vcVerificationController {
       verifierId
     );
 
-    this.logger.debug(
-      `[API-gateway] [Oid4vpController] [createVerificationPresentation] Presentation created successfully`
-    );
+    this.logger.debug(`[createVerificationPresentation] Presentation created successfully`);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,

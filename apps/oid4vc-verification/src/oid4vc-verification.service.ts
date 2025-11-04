@@ -26,15 +26,16 @@ import { CreateVerifier, UpdateVerifier, VerifierRecord } from '@credebl/common/
 import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 import { RequestSignerMethod } from '@credebl/enum/enum';
+import { BaseService } from 'libs/service/base.service';
 
 @Injectable()
-// TODO: Can extend base service, that way the Logger would appear from it
-export class Oid4vpVerificationService {
-  private readonly logger = new Logger('IssueCredentialService');
+export class Oid4vpVerificationService extends BaseService {
   constructor(
     @Inject('NATS_CLIENT') private readonly oid4vpVerificationServiceProxy: ClientProxy,
     private readonly oid4vpRepository: Oid4vpRepository
-  ) {}
+  ) {
+    super('Oid4vpVerificationService');
+  }
 
   async oid4vpCreateVerifier(createVerifier: CreateVerifier, orgId: string, userDetails: user): Promise<object> {
     this.logger.debug(`[oid4vpCreateVerifier] called for orgId=${orgId}, user=${userDetails?.id ?? 'unknown'}`);

@@ -362,6 +362,7 @@ export class Oid4vpVerificationService {
   }
 
   async _getOid4vpVerifierSession(url: string, orgId: string): Promise<any> {
+    this.logger.debug(`[_getOid4vpVerifierSession] sending NATS message for orgId=${orgId}`);
     try {
       const pattern = { cmd: 'agent-get-oid4vp-verifier-session' };
       const payload = { url, orgId };
@@ -377,6 +378,7 @@ export class Oid4vpVerificationService {
   }
 
   async _getVerificationSessionResponse(url: string, orgId: string): Promise<any> {
+    this.logger.debug(`[_getVerificationSessionResponse] sending NATS message for orgId=${orgId}`);
     try {
       const pattern = { cmd: 'agent-get-oid4vp-verifier-session' };
       const payload = { url, orgId };

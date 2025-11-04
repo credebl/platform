@@ -14,8 +14,8 @@ export const getNatsOptions = (
   const baseOptions = {
     servers: `${process.env.NATS_URL}`.split(','),
     maxReconnectAttempts: NATSReconnects.maxReconnectAttempts,
-    reconnectTimeWait: NATSReconnects.reconnectTimeWait
-    // queue: serviceName
+    reconnectTimeWait: NATSReconnects.reconnectTimeWait,
+    queue: serviceName
   };
 
   if (nkeySeed) {

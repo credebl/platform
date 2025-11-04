@@ -88,7 +88,7 @@ import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4v
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {
-  private readonly logger = new Logger('WalletService');
+  private readonly logger = new Logger('AgentServiceService');
 
   constructor(
     private readonly agentServiceRepository: AgentServiceRepository,

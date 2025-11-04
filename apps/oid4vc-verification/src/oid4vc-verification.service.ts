@@ -59,10 +59,10 @@ export class Oid4vpVerificationService extends BaseService {
 
       try {
         createdVerifierDetails = await this._createOid4vpVerifier(createVerifier, url, orgId);
-        if (!createdVerifierDetails.response) {
+        if (!createdVerifierDetails) {
           throw new InternalServerErrorException(ResponseMessages.oid4vp.error.createFailed);
         }
-        createdVerifierDetails = createdVerifierDetails.response as VerifierRecord;
+        createdVerifierDetails = createdVerifierDetails as VerifierRecord;
         this.logger.debug('[oid4vpCreateVerifier] verifier creation response received successfully from agent');
       } catch (error) {
         const status409 =
@@ -88,7 +88,7 @@ export class Oid4vpVerificationService extends BaseService {
       return saveVerifierDetails;
     } catch (error) {
       this.logger.error(
-        `[oid4vpCreateVerifier] - error in oid4vpCreateVerifier issuance records: ${JSON.stringify(error)}`
+        `[oid4vpCreateVerifier] - error in oid4vpCreateVerifier issuance records: ${error?.response?.message ?? JSON.stringify(error?.response ?? error)}`
       );
       throw new RpcException(error?.response ?? error);
     }
@@ -102,7 +102,7 @@ export class Oid4vpVerificationService extends BaseService {
   ): Promise<object> {
     try {
       let updatedVerifierDetails;
-      const existingVerifiers = await this.oid4vpRepository.getVerifiersByVerifierId(verifierId);
+      const existingVerifiers = await this.oid4vpRepository.getVerifiersByVerifierId(orgId, verifierId);
       if (0 > existingVerifiers.length) {
         throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
       }
@@ -121,10 +121,10 @@ export class Oid4vpVerificationService extends BaseService {
 
       try {
         updatedVerifierDetails = await this._updateOid4vpVerifier(updateVerifier, url, orgId);
-        if (!updatedVerifierDetails.response) {
+        if (!updatedVerifierDetails) {
           throw new InternalServerErrorException(ResponseMessages.oid4vp.error.updateFailed);
         }
-        updatedVerifierDetails = updatedVerifierDetails.response.data as VerifierRecord;
+        updatedVerifierDetails = updatedVerifierDetails.data as VerifierRecord;
       } catch (error) {
         // We'll not need this
         const status409 =
@@ -394,20 +394,11 @@ export class Oid4vpVerificationService extends BaseService {
     }
   }
 
-  async natsCall(
-    pattern: object,
-    payload: object
-  ): Promise<{
-    response: string;
-  }> {
+  async natsCall(pattern: object, payload: object): Promise<string> {
     try {
       return this.oid4vpVerificationServiceProxy
         .send<string>(pattern, payload)
-        .pipe(
-          map((response) => ({
-            response
-          }))
-        )
+        .pipe(map((response) => response))
         .toPromise()
         .catch((error) => {
           this.logger.error(`catch: ${JSON.stringify(error)}`);

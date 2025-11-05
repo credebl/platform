@@ -415,28 +415,4 @@ export class Oid4vpVerificationService extends BaseService {
       throw error;
     }
   }
-
-  // Can have an alternate function, like below
-  /**
-   * async natsCall(pattern: object, payload: object): Promise<{ response: string }> {
-  this.logger.debug(`[natsCall] sending NATS request with pattern=${JSON.stringify(pattern)}`);
-  try {
-    const result = await this.oid4vpVerificationServiceProxy
-      .send<string>(pattern, payload)
-      .pipe(map((response) => ({ response })))
-      .toPromise();
-
-    this.logger.debug(`[natsCall] NATS response received successfully`);
-    return result;
-  } catch (error) {
-    this.logger.error(`[natsCall] error: ${error?.message ?? error}`);
-    throw new HttpException(
-      {
-        status: error?.statusCode,
-        error: error?.message
-      },
-      error?.error
-    );
-  }
-   */
 }

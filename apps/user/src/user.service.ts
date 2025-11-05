@@ -451,7 +451,7 @@ export class UserService {
       if (true === isPasskey && false === userData?.isFidoVerified) {
         throw new UnauthorizedException(ResponseMessages.user.error.registerFido);
       }
-      // called seprate method to delete exp session
+
       this.userRepository.deleteInactiveSessions(userData?.id);
       const userSessionDetails = await this.userRepository.fetchUserSessions(userData?.id);
       if (Number(process.env.SESSIONS_LIMIT) <= userSessionDetails?.length) {
@@ -466,8 +466,10 @@ export class UserService {
         const decryptedPassword = await this.commonService.decryptPassword(password);
         tokenDetails = await this.generateToken(email.toLowerCase(), decryptedPassword, userData);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const decodedToken: any = jwt.decode(tokenDetails?.access_token);
+      const decodedToken = jwt.decode(tokenDetails?.refresh_token);
+      if (!decodedToken || 'object' !== typeof decodedToken || !decodedToken.exp || !decodedToken.sid) {
+        throw new UnauthorizedException(ResponseMessages.user.error.refreshTokenExpired);
+      }
       const expiresAt = new Date(decodedToken.exp * 1000);
 
       const sessionData = {
@@ -537,53 +539,47 @@ export class UserService {
 
   async refreshTokenDetails(refreshToken: string): Promise<ISignInUser> {
     try {
-      try {
-        const data = jwt.decode(refreshToken) as jwt.JwtPayload;
-        const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
-        this.logger.debug(`User details::;${JSON.stringify(userByKeycloakId)}`);
-        const tokenResponse = await this.clientRegistrationService.getAccessToken(
-          refreshToken,
-          userByKeycloakId?.['clientId'],
-          userByKeycloakId?.['clientSecret']
-        );
-        this.logger.debug(`tokenResponse::::${JSON.stringify(tokenResponse)}`);
-        // Fetch the details from account table based on userid and refresh token
-        const userAccountDetails = await this.userRepository.checkAccountDetails(userByKeycloakId?.['id']);
-        // Update the account details with latest access token, refresh token and exp date
-        if (!userAccountDetails) {
-          throw new NotFoundException(ResponseMessages.user.error.userAccountNotFound);
-        }
-        // Fetch session details
-        const sessionDetails = await this.userRepository.fetchSessionByRefreshToken(refreshToken);
-        if (!sessionDetails) {
-          throw new NotFoundException(ResponseMessages.user.error.userSeesionNotFound);
-        }
-        // Delete previous session
-        const deletePreviousSession = await this.userRepository.deleteSession(sessionDetails.id);
-        if (!deletePreviousSession) {
-          throw new InternalServerErrorException(ResponseMessages.user.error.errorInDeleteSession);
-        }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const decodedToken: any = jwt.decode(tokenResponse?.access_token);
-        const expiresAt = new Date(decodedToken.exp * 1000);
-        const sessionData = {
-          sessionToken: tokenResponse.access_token,
-          userId: userByKeycloakId?.['id'],
-          expires: tokenResponse.expires_in,
-          refreshToken: tokenResponse.refresh_token,
-          sessionType: SessionType.USER_SESSION,
-          accountId: userAccountDetails.id,
-          expiresAt
-        };
-        const addSessionDetails = await this.userRepository.createSession(sessionData);
-        if (!addSessionDetails) {
-          throw new InternalServerErrorException(ResponseMessages.user.error.errorInSessionCreation);
-        }
-
-        return tokenResponse;
-      } catch (error) {
-        throw new BadRequestException(ResponseMessages.user.error.invalidRefreshToken);
+      const data = jwt.decode(refreshToken) as jwt.JwtPayload;
+      const refreshTokenExp = new Date(data.exp * 1000);
+      const currentTime = new Date();
+      if (refreshTokenExp < currentTime) {
+        await this.userRepository.deleteSession(data?.sid);
+        throw new UnauthorizedException(ResponseMessages.user.error.refreshTokenExpired);
       }
+      const userByKeycloakId = await this.userRepository.getUserByKeycloakId(data?.sub);
+      const tokenResponse = await this.clientRegistrationService.getAccessToken(
+        refreshToken,
+        userByKeycloakId?.['clientId'],
+        userByKeycloakId?.['clientSecret']
+      );
+      // Fetch the details from account table based on userid and refresh token
+      const userAccountDetails = await this.userRepository.checkAccountDetails(userByKeycloakId?.['id']);
+      // Update the account details with latest access token, refresh token and exp date
+      if (!userAccountDetails) {
+        throw new NotFoundException(ResponseMessages.user.error.userAccountNotFound);
+      }
+      // Fetch session details
+
+      const sessionDetails = await this.userRepository.getSession(data.sid);
+      if (!sessionDetails) {
+        throw new NotFoundException(ResponseMessages.user.error.userSessionNotFound);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const decodedToken: any = jwt.decode(tokenResponse?.refresh_token);
+      const expiresAt = new Date(decodedToken.exp * 1000);
+      const sessionData = {
+        sessionToken: tokenResponse.access_token,
+        expires: tokenResponse.expires_in,
+        refreshToken: tokenResponse.refresh_token,
+        expiresAt
+      };
+      const addSessionDetails = await this.userRepository.updateSessionToken(tokenResponse.session_state, sessionData);
+      if (!addSessionDetails) {
+        throw new InternalServerErrorException(ResponseMessages.user.error.errorInSessionCreation);
+      }
+
+      return tokenResponse;
     } catch (error) {
       this.logger.error(`In refreshTokenDetails : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

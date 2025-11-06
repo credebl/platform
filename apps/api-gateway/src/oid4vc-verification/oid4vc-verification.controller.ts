@@ -27,14 +27,15 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiUnauthorizedResponse,
-  ApiQuery
+  ApiQuery,
+  ApiExcludeEndpoint
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { Response } from 'express';
-import { IResponse } from '@credebl/common/interfaces/response.interface';
+import IResponseType, { IResponse } from '@credebl/common/interfaces/response.interface';
 import { User } from '../authz/decorators/user.decorator';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
@@ -46,6 +47,7 @@ import { user } from '@prisma/client';
 import { Oid4vcVerificationService } from './oid4vc-verification.service';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
 import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos/oid4vc-verifier-presentation.dto';
+import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('OID4VP')
@@ -296,7 +298,7 @@ export class Oid4vcVerificationController {
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.oid4vp.success.create,
+      message: ResponseMessages.oid4vpSession.success.create,
       data: presentation
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
@@ -407,5 +409,31 @@ export class Oid4vcVerificationController {
       );
       throw new BadRequestException(error.message || 'Failed to fetch verifier presentation response details.');
     }
+  }
+  /**
+   * Catch issue credential webhook responses
+   * @param oid4vpPresentationWhDto The details of the oid4vp presentation webhook
+   * @param id The ID of the organization
+   * @param res The response object
+   * @returns The details of the oid4vp presentation webhook
+   */
+  @Post('wh/:id/openid4vc-verification')
+  @ApiExcludeEndpoint()
+  @ApiOperation({
+    summary: 'Catch OID4VP presentation states',
+    description: 'Handles webhook responses for OID4VP presentation states.'
+  })
+  async storePresentationWebhook(
+    @Body() oid4vpPresentationWhDto: Oid4vpPresentationWhDto,
+    @Param('id') id: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.oid4vcVerificationService.oid4vpPresentationWebhook(oid4vpPresentationWhDto, id);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.oid4vpSession.success.webhookReceived,
+      data: []
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 }

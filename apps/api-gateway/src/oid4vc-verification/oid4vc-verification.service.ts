@@ -6,6 +6,7 @@ import { BaseService } from 'libs/service/base.service';
 import { oid4vp_verifier, user } from '@prisma/client';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
 import { VerificationPresentationQueryDto } from './dtos/oid4vc-verifier-presentation.dto';
+import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 
 @Injectable()
 export class Oid4vcVerificationService extends BaseService {
@@ -80,5 +81,15 @@ export class Oid4vcVerificationService extends BaseService {
       `[oid4vpCreateVerificationSession] Called with orgId=${orgId}, verifierId=${verifierId ?? 'N/A'}, user=${userDetails?.id ?? 'N/A'}`
     );
     return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verification-session-create', payload);
+  }
+
+  oid4vpPresentationWebhook(
+    oid4vpPresentationWhDto: Oid4vpPresentationWhDto,
+    id: string
+  ): Promise<{
+    response: object;
+  }> {
+    const payload = { oid4vpPresentationWhDto, id };
+    return this.natsClient.sendNats(this.oid4vpProxy, 'webhook-oid4vp-presentation', payload);
   }
 }

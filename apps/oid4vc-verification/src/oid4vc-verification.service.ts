@@ -306,6 +306,9 @@ export class Oid4vpVerificationService extends BaseService {
       let orgId: string;
       if ('default' !== contextCorrelationId) {
         const getOrganizationId = await this.oid4vpRepository.getOrganizationByTenantId(contextCorrelationId);
+        if (!getOrganizationId) {
+          throw new NotFoundException(ResponseMessages.organisation.error.notFound);
+        }
         orgId = getOrganizationId?.orgId;
       } else {
         orgId = id;
@@ -313,7 +316,7 @@ export class Oid4vpVerificationService extends BaseService {
       const agentDetails = await this.oid4vpRepository.storeOid4vpPresentationDetails(oid4vpPresentation, orgId);
       return agentDetails;
     } catch (error) {
-      this.logger.error(`[storeOidcCredentialWebhook] - error: ${JSON.stringify(error)}`);
+      this.logger.error(`[storeOid4vpPresentationWebhook] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

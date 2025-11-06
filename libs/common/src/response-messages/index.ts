@@ -579,10 +579,11 @@ export const ResponseMessages = {
   oid4vpSession: {
     success: {
       create: 'OID4VP session verifier created successfully.',
-      update: 'OID4V session verifier updated successfully.',
+      update: 'OID4VP session verifier updated successfully.',
       delete: 'OID4VP session verifier deleted successfully.',
       fetch: 'OID4VP session verifier(s) fetched successfully.',
-      getById: 'OID4VP session verifier details fetched successfully.'
+      getById: 'OID4VP session verifier details fetched successfully.',
+      webhookReceived: 'OID4VP presentation webhook stored successfully.'
     },
     error: {
       notFound: 'OID4VP session verifier not found.',

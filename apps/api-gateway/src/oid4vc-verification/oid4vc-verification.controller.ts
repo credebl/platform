@@ -431,7 +431,7 @@ export class Oid4vcVerificationController {
     await this.oid4vcVerificationService.oid4vpPresentationWebhook(oid4vpPresentationWhDto, id);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.issuance.success.create,
+      message: ResponseMessages.oid4vpSession.success.webhookReceived,
       data: []
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);

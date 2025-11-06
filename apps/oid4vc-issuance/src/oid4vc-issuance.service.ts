@@ -99,10 +99,14 @@ export class Oid4vcIssuanceService {
         authorizationServerConfigs: issuerCreation?.authorizationServerConfigs || undefined,
         accessTokenSignerKeyType,
         dpopSigningAlgValuesSupported,
-        batchCredentialIssuance: {
-          batchSize: batchCredentialIssuanceSize ?? batchCredentialIssuanceDefault
-        },
-        credentialConfigurationsSupported
+        credentialConfigurationsSupported,
+        ...(batchCredentialIssuanceSize && 0 < batchCredentialIssuanceSize
+          ? {
+              batchCredentialIssuance: {
+                batchSize: batchCredentialIssuanceSize
+              }
+            }
+          : {})
       };
       let createdIssuer;
       try {

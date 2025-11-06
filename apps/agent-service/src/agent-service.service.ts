@@ -88,7 +88,7 @@ import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4v
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {
-  private readonly logger = new Logger('WalletService');
+  private readonly logger = new Logger('AgentServiceService');
 
   constructor(
     private readonly agentServiceRepository: AgentServiceRepository,
@@ -2273,6 +2273,7 @@ export class AgentServiceService {
   }
 
   async createOid4vpVerifier(verifierDetails: CreateVerifier, url: string, orgId: string): Promise<object> {
+    this.logger.log(`[createOid4vpVerifier] Creating OID4VP verifier for orgId=${orgId || 'N/A'}`);
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const createVerifier = await this.commonService
@@ -2280,23 +2281,29 @@ export class AgentServiceService {
         .then(async (response) => response);
       return createVerifier;
     } catch (error) {
-      this.logger.error(`Error in creating oid4vp verifier in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[createOid4vpVerifier] Error in creating oid4vp verifier in agent service : ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }
 
   async deleteOid4vpVerifier(url: string, orgId: string): Promise<object> {
+    this.logger.log(`[deleteOid4vpVerifier] Deleting OID4VP verifier for orgId=${orgId || 'N/A'}`);
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const deleteVerifier = await this.commonService.httpDelete(url, { headers: { authorization: getApiKey } });
       return deleteVerifier.data ?? deleteVerifier;
     } catch (error) {
-      this.logger.error(`Error in deleting oid4vp verifier in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[deleteOid4vpVerifier] Error in deleting oid4vp verifier in agent service : ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }
 
   async updateOid4vpVerifier(verifierDetails: UpdateVerifier, url: string, orgId: string): Promise<object> {
+    this.logger.log(`[updateOid4vpVerifier] Updating OID4VP verifier for orgId=${orgId || 'N/A'}`);
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const updateVerifier = await this.commonService
@@ -2304,12 +2311,15 @@ export class AgentServiceService {
         .then(async (response) => response);
       return updateVerifier;
     } catch (error) {
-      this.logger.error(`Error in updating oid4vp verifier in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[updateOid4vpVerifier] Error in updating oid4vp verifier in agent service : ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }
 
   async getOid4vpVerifierSession(url: string, orgId: string): Promise<object> {
+    this.logger.log(`[getOid4vpVerifierSession] Fetching OID4VP verifier session for orgId=${orgId || 'N/A'}`);
     try {
       const agentToken = await this.getOrgAgentApiKey(orgId);
       const updateVerifier = await this.commonService
@@ -2317,11 +2327,16 @@ export class AgentServiceService {
         .then(async (response) => response);
       return updateVerifier;
     } catch (error) {
-      this.logger.error(`Error in getting oid4vp verifier session in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[getOid4vpVerifierSession] Error in getting oid4vp verifier session in agent service : ${JSON.stringify(error)}`
+      );
     }
   }
 
   async createOid4vpVerificationSession(sessionRequest: object, url: string, orgId: string): Promise<object> {
+    this.logger.log(
+      `[createOid4vpVerificationSession] Creating OID4VP verification session for orgId=${orgId || 'N/A'}`
+    );
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const createSession = await this.commonService
@@ -2329,7 +2344,9 @@ export class AgentServiceService {
         .then(async (response) => response);
       return createSession;
     } catch (error) {
-      this.logger.error(`Error in creating oid4vp verification session in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[createOid4vpVerificationSession] Error in creating oid4vp verification session in agent service : ${JSON.stringify(error)}`
+      );
       throw error;
     }
   }

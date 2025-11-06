@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AgentServiceService } from './agent-service.service';
 import {
@@ -36,6 +36,7 @@ import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4v
 
 @Controller()
 export class AgentServiceController {
+  private readonly logger = new Logger('AgentServiceController');
   constructor(private readonly agentServiceService: AgentServiceService) {}
 
   /**
@@ -420,11 +421,17 @@ export class AgentServiceController {
     url: string;
     orgId: string;
   }): Promise<object> {
+    this.logger.log(
+      `[createOid4vpVerifier] Received 'agent-create-oid4vp-verifier' request for orgId=${payload?.orgId || 'N/A'}`
+    );
     return this.agentServiceService.createOid4vpVerifier(payload.verifierDetails, payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-delete-oid4vp-verifier' })
   async deleteOid4vpVerifier(payload: { url: string; orgId: string }): Promise<object> {
+    this.logger.log(
+      `[deleteOid4vpVerifier] Received 'agent-delete-oid4vp-verifier' request for orgId=${payload?.orgId || 'N/A'}`
+    );
     return this.agentServiceService.deleteOid4vpVerifier(payload.url, payload.orgId);
   }
 
@@ -434,11 +441,17 @@ export class AgentServiceController {
     url: string;
     orgId: string;
   }): Promise<object> {
+    this.logger.log(
+      `[updateOid4vpVerifier] Received 'agent-update-oid4vp-verifier' request for orgId=${payload?.orgId || 'N/A'}`
+    );
     return this.agentServiceService.updateOid4vpVerifier(payload.verifierDetails, payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-get-oid4vp-verifier-session' })
   async getOid4vpVerifierSession(payload: { url: string; orgId: string }): Promise<object> {
+    this.logger.log(
+      `[getOid4vpVerifierSession] Received 'agent-get-oid4vp-verifier-session' request for orgId=${payload?.orgId || 'N/A'}`
+    );
     return this.agentServiceService.getOid4vpVerifierSession(payload.url, payload.orgId);
   }
 
@@ -448,6 +461,9 @@ export class AgentServiceController {
     url: string;
     orgId: string;
   }): Promise<object> {
+    this.logger.log(
+      `[oid4vpCreateVerificationSession] Received 'agent-create-oid4vp-verification-session' request for orgId=${payload?.orgId || 'N/A'}`
+    );
     return this.agentServiceService.createOid4vpVerificationSession(payload.sessionRequest, payload.url, payload.orgId);
   }
 }

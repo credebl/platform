@@ -133,7 +133,7 @@ export enum CommonConstants {
   URL_OIDC_VERIFIER_GET = '/openid4vc/verifier/#',
   URL_OIDC_VERIFIER_SESSION_GET_BY_ID = '/openid4vc/verification-sessions/#',
   URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY = '/openid4vc/verification-sessions',
-  URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = '/openid4vc/verification-sessions/response#',
+  URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = '/openid4vc/verification-sessions/response/#',
   URL_OID4VP_VERIFICATION_SESSION = '/openid4vc/verification-sessions/create-presentation-request',
 
   //X509 agent API URLs

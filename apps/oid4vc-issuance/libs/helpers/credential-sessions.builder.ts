@@ -349,7 +349,6 @@ function buildMdocCredential(
   ) {
     throw new UnprocessableEntityException(`${ResponseMessages.oidcIssuerSession.error.missingValidityInfo}`);
   }
-
   const certificateDetail = activeCertificateDetails.find((x) => x.certificateBase64 === signerOptions[0].x5c[0]);
   const validationResult = validateCredentialDatesInCertificateWindow(
     credentialRequest.validityInfo,

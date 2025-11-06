@@ -5,6 +5,7 @@ import { oid4vp_verifier, org_agents } from '@prisma/client';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrgAgent } from '../interfaces/oid4vp-verifier.interfaces';
+import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
 
 @Injectable()
 export class Oid4vpRepository {
@@ -185,6 +186,43 @@ export class Oid4vpRepository {
       return deleted;
     } catch (error) {
       this.logger.error(`[deleteVerifierByVerifierId] Error in deleteVerifierByVerifierId: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async storeOid4vpPresentationDetails(
+    oid4vpPresentationPayload: Oid4vpPresentationWh,
+    orgId: string
+  ): Promise<object> {
+    try {
+      const {
+        state,
+        id: verificationSessionId,
+        contextCorrelationId,
+        authorizationRequestId
+      } = oid4vpPresentationPayload;
+      const credentialDetails = await this.prisma.oid4vp_presentations.upsert({
+        where: {
+          verificationSessionId
+        },
+        update: {
+          lastChangedBy: orgId,
+          state
+        },
+        create: {
+          lastChangedBy: orgId,
+          createdBy: orgId,
+          state,
+          orgId,
+          contextCorrelationId,
+          verificationSessionId,
+          presentationId: authorizationRequestId
+        }
+      });
+
+      return credentialDetails;
+    } catch (error) {
+      this.logger.error(`Error in storeOid4vpPresentationDetails in oid4vp-presentation repository: ${error.message} `);
       throw error;
     }
   }

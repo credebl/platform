@@ -10,7 +10,9 @@ import {
   IsArray,
   ValidateIf,
   IsEmpty,
-  ArrayNotEmpty
+  ArrayNotEmpty,
+  IsDefined,
+  NotEquals
 } from 'class-validator';
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -216,12 +218,11 @@ export class CreateCredentialTemplateDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({
-    description: 'Signer option (did or x509)',
-    enum: SignerOption,
-    example: SignerOption.DID
-  })
+  @ApiProperty({ enum: SignerOption, description: 'Signer option type' })
   @IsEnum(SignerOption)
+  @ValidateIf((o) => o.format === CredentialFormat.Mdoc)
+  @IsDefined({ message: 'signerOption is required when format is Mdoc' })
+  @NotEquals(SignerOption.DID, { message: 'signerOption must NOT be DID when format is Mdoc' })
   signerOption!: SignerOption;
 
   @ApiProperty({ enum: CredentialFormat, description: 'Credential format type' })

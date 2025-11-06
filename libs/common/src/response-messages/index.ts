@@ -577,6 +577,27 @@ export const ResponseMessages = {
       deleteTemplate: 'Error while deleting template.'
     }
   },
+  oid4vpSession: {
+    success: {
+      create: 'OID4VP session verifier created successfully.',
+      update: 'OID4VP session verifier updated successfully.',
+      delete: 'OID4VP session verifier deleted successfully.',
+      fetch: 'OID4VP session verifier(s) fetched successfully.',
+      getById: 'OID4VP session verifier details fetched successfully.',
+      webhookReceived: 'OID4VP presentation webhook stored successfully.'
+    },
+    error: {
+      notFound: 'OID4VP session verifier not found.',
+      invalidId: 'Invalid OID4VP session verifier ID.',
+      createFailed: 'Failed to create OID4VP session verifier.',
+      updateFailed: 'Failed to update OID4VP session verifier.',
+      deleteFailed: 'Failed to delete OID4VP session verifier.',
+      notFoundIssuerDisplay: 'Issuer display not found.',
+      notFoundIssuerDetails: 'Issuer details not found.',
+      verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.',
+      deleteTemplate: 'Error while deleting template.'
+    }
+  },
   x509: {
     success: {
       create: 'x509 certificate created successfully',

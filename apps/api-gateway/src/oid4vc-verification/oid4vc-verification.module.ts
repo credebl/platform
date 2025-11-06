@@ -16,7 +16,7 @@ import { LoggerModule } from '@credebl/logger';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.ISSUANCE_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.OIDC4VC_VERIFICATION_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
       }
     ])
   ],

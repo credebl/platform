@@ -6,10 +6,12 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { HttpModule } from '@nestjs/axios';
+import { LoggerModule } from '@credebl/logger';
 
 @Module({
   imports: [
     HttpModule,
+    LoggerModule,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',

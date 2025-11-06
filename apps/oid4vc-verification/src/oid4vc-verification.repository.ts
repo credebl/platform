@@ -8,12 +8,11 @@ import { OrgAgent } from '../interfaces/oid4vp-verifier.interfaces';
 
 @Injectable()
 export class Oid4vpRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly logger: Logger
-  ) {}
+  private readonly logger = new Logger('Oid4vpRepository');
+  constructor(private readonly prisma: PrismaService) {}
 
   async getAgentEndPoint(orgId: string): Promise<OrgAgent> {
+    this.logger.debug(`[getAgentEndPoint] called with orgId=${orgId}`);
     try {
       const agentDetails = await this.prisma.org_agents.findFirst({
         where: {
@@ -25,17 +24,20 @@ export class Oid4vpRepository {
       });
 
       if (!agentDetails) {
+        this.logger.warn(`[getAgentEndPoint] No agent endpoint found for orgId=${orgId}`);
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
+      this.logger.debug(`[getAgentEndPoint] Found agent endpoint with id=${agentDetails.id}`);
       return agentDetails;
     } catch (error) {
-      this.logger.error(`Error in get getAgentEndPoint: ${error.message} `);
+      this.logger.error(`[getAgentEndPoint] Error in get getAgentEndPoint: ${error.message} `);
       throw error;
     }
   }
 
   async getOrgAgentType(orgAgentId: string): Promise<string> {
+    this.logger.debug(`[getOrgAgentType] called with orgAgentId=${orgAgentId}`);
     try {
       const { agent } = await this.prisma.org_agents_type.findFirst({
         where: {
@@ -43,6 +45,7 @@ export class Oid4vpRepository {
         }
       });
 
+      this.logger.debug(`[getOrgAgentType] Found type=${agent}`);
       return agent;
     } catch (error) {
       this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
@@ -51,22 +54,30 @@ export class Oid4vpRepository {
   }
 
   async getOrganizationByTenantId(tenantId: string): Promise<org_agents> {
+    this.logger.debug(`[getOrganizationByTenantId] called with tenantId=${tenantId}`);
     try {
-      return this.prisma.org_agents.findFirst({
+      const record = await this.prisma.org_agents.findFirst({
         where: {
           tenantId
         }
       });
+      this.logger.debug(`[getOrganizationByTenantId] Found orgAgent id=${record?.id ?? 'none'}`);
+      return record;
     } catch (error) {
-      this.logger.error(`Error in getOrganization in issuance repository: ${error.message} `);
+      this.logger.error(
+        `[getOrganizationByTenantId] Error in getOrganization in issuance repository: ${error.message} `
+      );
       throw error;
     }
   }
 
   async createOid4vpVerifier(verifierDetails, orgId: string, userId: string): Promise<object> {
+    this.logger.debug(
+      `[createOid4vpVerifier] called for orgId=${orgId}, userId=${userId}, verifierId=${verifierDetails?.verifierId}`
+    );
     try {
       const { id, clientMetadata, verifierId } = verifierDetails;
-      return this.prisma.oid4vp_verifier.create({
+      const created = await this.prisma.oid4vp_verifier.create({
         data: {
           metadata: clientMetadata,
           publicVerifierId: verifierId,
@@ -76,16 +87,19 @@ export class Oid4vpRepository {
           orgAgentId: orgId
         }
       });
+      this.logger.debug(`[createOid4vpVerifier] Created verifier record with id=${created.id}`);
+      return created;
     } catch (error) {
-      this.logger.error(`Error in createOid4vpVerifier: ${error.message}`);
+      this.logger.error(`[createOid4vpVerifier] Error in createOid4vpVerifier: ${error?.message ?? error}`);
       throw error;
     }
   }
 
   async updateOid4vpVerifier(verifierDetails, userId: string, verifierId: string): Promise<object> {
+    this.logger.debug(`[updateOid4vpVerifier] called with verifierId=${verifierId}, userId=${userId}`);
     try {
       const { clientMetadata } = verifierDetails;
-      return this.prisma.oid4vp_verifier.update({
+      const updated = await this.prisma.oid4vp_verifier.update({
         data: {
           metadata: clientMetadata,
           lastChangedBy: userId
@@ -94,28 +108,34 @@ export class Oid4vpRepository {
           id: verifierId
         }
       });
+      this.logger.debug(`[updateOid4vpVerifier] Updated verifier id=${updated.id}`);
+      return updated;
     } catch (error) {
-      this.logger.error(`Error in createOid4vpVerifier: ${error.message}`);
+      this.logger.error(`[updateOid4vpVerifier] Error in createOid4vpVerifier: ${error.message}`);
       throw error;
     }
   }
 
   async getVerifiersByPublicVerifierId(publicVerifierId: string): Promise<oid4vp_verifier[] | null> {
+    this.logger.debug(`[getVerifiersByPublicVerifierId] called with publicVerifierId=${publicVerifierId}`);
     try {
-      return await this.prisma.oid4vp_verifier.findMany({
+      const result = await this.prisma.oid4vp_verifier.findMany({
         where: {
           publicVerifierId
         }
       });
+      this.logger.debug(`[getVerifiersByPublicVerifierId] Found ${result.length} records`);
+      return result;
     } catch (error) {
-      this.logger.error(`Error in getVerifiersByPublicVerifierId: ${error.message}`);
+      this.logger.error(`[getVerifiersByPublicVerifierId] Error in getVerifiersByPublicVerifierId: ${error.message}`);
       throw error;
     }
   }
 
   async getVerifiersByVerifierId(orgId: string, verifierId?: string): Promise<oid4vp_verifier[] | null> {
+    this.logger.debug(`[getVerifiersByVerifierId] called with orgId=${orgId}, verifierId=${verifierId ?? 'N/A'}`);
     try {
-      return await this.prisma.oid4vp_verifier.findMany({
+      const result = await this.prisma.oid4vp_verifier.findMany({
         where: {
           id: verifierId,
           orgAgent: {
@@ -123,15 +143,18 @@ export class Oid4vpRepository {
           }
         }
       });
+      this.logger.debug(`[getVerifiersByVerifierId] Found ${result.length} records`);
+      return result;
     } catch (error) {
-      this.logger.error(`Error in getVerifiersByPublicVerifierId: ${error.message}`);
+      this.logger.error(`[getVerifiersByVerifierId] Error in getVerifiersByPublicVerifierId: ${error.message}`);
       throw error;
     }
   }
 
   async getVerifierById(orgId: string, verifierId?: string): Promise<oid4vp_verifier | null> {
+    this.logger.debug(`[getVerifierById] called with orgId=${orgId}, verifierId=${verifierId ?? 'N/A'}`);
     try {
-      return await this.prisma.oid4vp_verifier.findUnique({
+      const result = await this.prisma.oid4vp_verifier.findUnique({
         where: {
           id: verifierId,
           orgAgent: {
@@ -139,15 +162,18 @@ export class Oid4vpRepository {
           }
         }
       });
+      this.logger.debug(`[getVerifierById] Found record id=${result?.id ?? 'none'}`);
+      return result;
     } catch (error) {
-      this.logger.error(`Error in getVerifiersByPublicVerifierId: ${error.message}`);
+      this.logger.error(`[getVerifierById] Error in getVerifiersByPublicVerifierId: ${error.message}`);
       throw error;
     }
   }
 
   async deleteVerifierByVerifierId(orgId: string, verifierId?: string): Promise<oid4vp_verifier | null> {
+    this.logger.debug(`[deleteVerifierByVerifierId] called with orgId=${orgId}, verifierId=${verifierId ?? 'N/A'}`);
     try {
-      return await this.prisma.oid4vp_verifier.delete({
+      const deleted = await this.prisma.oid4vp_verifier.delete({
         where: {
           id: verifierId,
           orgAgent: {
@@ -155,8 +181,10 @@ export class Oid4vpRepository {
           }
         }
       });
+      this.logger.debug(`[deleteVerifierByVerifierId] Deleted verifier id=${deleted?.id ?? 'none'}`);
+      return deleted;
     } catch (error) {
-      this.logger.error(`Error in deleteVerifierByVerifierId: ${error.message}`);
+      this.logger.error(`[deleteVerifierByVerifierId] Error in deleteVerifierByVerifierId: ${error.message}`);
       throw error;
     }
   }

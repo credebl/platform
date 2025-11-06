@@ -17,7 +17,8 @@ import {
   Get,
   Query,
   Put,
-  Delete
+  Delete,
+  Logger
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -51,6 +52,8 @@ import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos
 @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class Oid4vcVerificationController {
+  private readonly logger = new Logger('Oid4vpVerificationController');
+
   constructor(private readonly oid4vcVerificationService: Oid4vcVerificationService) {}
   /**
    * Create issuer against a org(tenant)
@@ -83,7 +86,12 @@ export class Oid4vcVerificationController {
     @Body() createVerifier: CreateVerifierDto,
     @Res() res: Response
   ): Promise<Response> {
+    this.logger.debug(`[oidcIssuerCreate] Called with orgId=${orgId}, user=${user.id}`);
+
     const createVerifierRes = await this.oid4vcVerificationService.oid4vpCreateVerifier(createVerifier, orgId, user);
+
+    this.logger.debug(`[oidcIssuerCreate] Verifier created: ${createVerifierRes.id}`);
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.oid4vp.success.create,
@@ -125,17 +133,20 @@ export class Oid4vcVerificationController {
     @Body() updateVerifier: UpdateVerifierDto,
     @Res() res: Response
   ): Promise<Response> {
-    console.log('This is updateVerifier', JSON.stringify(updateVerifier, null, 2));
-    const createVerifierRes = await this.oid4vcVerificationService.oid4vpUpdateVerifier(
+    this.logger.debug(`[oidcIssuerUpdate] Called with orgId=${orgId}, verifierId=${verifierId}, user=${user.id}`);
+    const updateVerifierRes = await this.oid4vcVerificationService.oid4vpUpdateVerifier(
       updateVerifier,
       orgId,
       verifierId,
       user
     );
+
+    this.logger.debug(`[oidcIssuerUpdate] Verifier updated: ${updateVerifierRes.id}`);
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.oid4vp.success.update,
-      data: createVerifierRes
+      data: updateVerifierRes
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
@@ -178,7 +189,11 @@ export class Oid4vcVerificationController {
     )
     verifierId?: string
   ): Promise<Response> {
+    this.logger.debug(`[getVerifierDetails] Called with orgId=${orgId}, verifierId=${verifierId}`);
+
     const verifierDetails = await this.oid4vcVerificationService.oid4vpGetVerifier(orgId, verifierId);
+
+    this.logger.debug(`[getVerifierDetails] Result fetched successfully`);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.oid4vp.success.fetch,
@@ -217,7 +232,11 @@ export class Oid4vcVerificationController {
     )
     verifierId: string
   ): Promise<Response> {
+    this.logger.debug(`[deleteVerifierDetails] Called with orgId=${orgId}, verifierId=${verifierId}`);
+
     const verifierDetails = await this.oid4vcVerificationService.oid4vpDeleteVerifier(orgId, verifierId);
+
+    this.logger.debug(`[deleteVerifierDetails] Deleted verifier: ${verifierId}`);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.oid4vp.success.fetch,
@@ -262,13 +281,19 @@ export class Oid4vcVerificationController {
     @Body() createPresentationDto: PresentationRequestDto,
     @Res() res: Response
   ): Promise<Response> {
-    console.log('Creating verification presentation with DTO:', JSON.stringify(createPresentationDto, null, 2));
+    this.logger.debug(
+      `[createVerificationPresentation] Called with orgId=${orgId}, verifierId=${verifierId}, user=${user.id}`
+    );
+
     const presentation = await this.oid4vcVerificationService.oid4vpCreateVerificationSession(
       createPresentationDto,
       orgId,
-      verifierId,
-      user
+      user,
+      verifierId
     );
+
+    this.logger.debug(`[createVerificationPresentation] Presentation created successfully`);
+
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.oid4vp.success.create,
@@ -305,7 +330,10 @@ export class Oid4vcVerificationController {
     @Res() res: Response
   ): Promise<Response> {
     try {
+      this.logger.debug(`getVerificationPresentation() called with orgId: ${orgId}`);
       const result = await this.oid4vcVerificationService.oid4vpGetVerifierSession(orgId, query);
+
+      this.logger.debug(`Verifier session details fetched successfully for orgId: ${orgId}`);
 
       return res.status(HttpStatus.OK).json({
         success: true,
@@ -313,6 +341,9 @@ export class Oid4vcVerificationController {
         data: result
       });
     } catch (error) {
+      this.logger.debug(
+        `Error in getVerificationPresentation(): ${error.message || 'Failed to fetch verifier presentation.'}`
+      );
       throw new BadRequestException(error.message || 'Failed to fetch verifier presentation.');
     }
   }
@@ -353,9 +384,16 @@ export class Oid4vcVerificationController {
     @Res() res: Response
   ): Promise<Response> {
     try {
+      this.logger.debug(
+        `getVerificationPresentationResponse() called with orgId: ${orgId}, verificationPresentationId: ${verificationPresentationId}`
+      );
       const result = await this.oid4vcVerificationService.getVerificationSessionResponse(
         orgId,
         verificationPresentationId
+      );
+
+      this.logger.debug(
+        `Verifier presentation response details fetched successfully for verificationPresentationId: ${verificationPresentationId}`
       );
 
       return res.status(HttpStatus.OK).json({
@@ -364,6 +402,9 @@ export class Oid4vcVerificationController {
         data: result
       });
     } catch (error) {
+      this.logger.debug(
+        `Error in getVerificationPresentationResponse(): ${error.message || 'Failed to fetch verifier presentation response details.'}`
+      );
       throw new BadRequestException(error.message || 'Failed to fetch verifier presentation response details.');
     }
   }

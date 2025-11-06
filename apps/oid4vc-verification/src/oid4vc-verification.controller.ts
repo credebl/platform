@@ -4,6 +4,7 @@ import { user } from '@prisma/client';
 import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
 import { MessagePattern } from '@nestjs/microservices';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
+import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
 
 @Controller()
 export class Oid4vpVerificationController {
@@ -90,5 +91,13 @@ export class Oid4vpVerificationController {
       sessionRequest,
       userDetails
     );
+  }
+
+  @MessagePattern({ cmd: 'webhook-oid4vp-presentation' })
+  async oid4vpPresentationWebhook(payload: {
+    oid4vpPresentationWhDto: Oid4vpPresentationWh;
+    id: string;
+  }): Promise<object> {
+    return this.oid4vpVerificationService.oid4vpPresentationWebhook(payload.oid4vpPresentationWhDto, payload.id);
   }
 }

@@ -27,6 +27,7 @@ import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 import { RequestSignerMethod } from '@credebl/enum/enum';
 import { BaseService } from 'libs/service/base.service';
+import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
 
 @Injectable()
 export class Oid4vpVerificationService extends BaseService {
@@ -282,10 +283,11 @@ export class Oid4vpVerificationService extends BaseService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint, id } = agentDetails;
-
-      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID, verificationSessionId);
-      this.logger.debug(`[getVerificationSessionResponse] calling agent URL=${url}`);
-
+      const url = getAgentUrl(
+        agentEndPoint,
+        CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID,
+        verificationSessionId
+      );
       const verifiers = await await this._getOid4vpVerifierSession(url, orgId);
       if (!verifiers || 0 === verifiers.length) {
         throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
@@ -295,6 +297,24 @@ export class Oid4vpVerificationService extends BaseService {
     } catch (error) {
       this.logger.error(`[getVerificationSessionResponse] - error: ${JSON.stringify(error?.response ?? error)}`);
       throw new RpcException(error?.response ?? error);
+    }
+  }
+
+  async oid4vpPresentationWebhook(oid4vpPresentation: Oid4vpPresentationWh, id: string): Promise<object> {
+    try {
+      const { contextCorrelationId } = oid4vpPresentation ?? {};
+      let orgId: string;
+      if ('default' !== contextCorrelationId) {
+        const getOrganizationId = await this.oid4vpRepository.getOrganizationByTenantId(contextCorrelationId);
+        orgId = getOrganizationId?.orgId;
+      } else {
+        orgId = id;
+      }
+      const agentDetails = await this.oid4vpRepository.storeOid4vpPresentationDetails(oid4vpPresentation, orgId);
+      return agentDetails;
+    } catch (error) {
+      this.logger.error(`[storeOidcCredentialWebhook] - error: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

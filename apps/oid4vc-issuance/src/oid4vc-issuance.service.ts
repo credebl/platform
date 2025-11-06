@@ -694,7 +694,6 @@ export class Oid4vcIssuanceService {
 
       return updateCredentialOfferOnAgent.response;
     } catch (error) {
-      this.logger.error(`[createOidcCredentialOffer] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
   }
@@ -967,13 +966,9 @@ export class Oid4vcIssuanceService {
         credentialOfferPayload,
         issuedCredentials
       } = CredentialOfferWebhookPayload ?? {};
-
-      // ensure we only store credential_configuration_ids in the payload for logging and storage
       const cfgIds: string[] = Array.isArray(credentialOfferPayload?.credential_configuration_ids)
         ? credentialOfferPayload.credential_configuration_ids
         : [];
-
-      // convert issuedCredentials to string[] when schema expects string[]
       const issuedCredentialsArr: string[] | undefined =
         Array.isArray(issuedCredentials) && 0 < issuedCredentials.length
           ? issuedCredentials.map((c: any) => ('string' === typeof c ? c : JSON.stringify(c)))
@@ -989,8 +984,6 @@ export class Oid4vcIssuanceService {
       };
 
       console.log('Storing OID4VC Credential Webhook:', JSON.stringify(sanitized, null, 2));
-
-      // resolve orgId (unchanged logic)
       let orgId: string;
       if ('default' !== contextCorrelationId) {
         const getOrganizationId = await this.oid4vcIssuanceRepository.getOrganizationByTenantId(contextCorrelationId);
@@ -998,8 +991,6 @@ export class Oid4vcIssuanceService {
       } else {
         orgId = issuanceSessionId;
       }
-
-      // hand off to repository for persistence (repository will perform the upsert)
       const agentDetails = await this.oid4vcIssuanceRepository.storeOidcCredentialDetails(
         CredentialOfferWebhookPayload,
         orgId

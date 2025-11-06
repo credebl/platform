@@ -1,0 +1,27 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString } from 'class-validator';
+export class Oid4vpPresentationWhDto {
+  @ApiProperty()
+  @IsString()
+  id!: string;
+
+  @ApiProperty()
+  @IsString()
+  state!: string;
+
+  @ApiProperty()
+  @IsString()
+  authorizationRequestId!: string;
+
+  @ApiProperty()
+  @IsString()
+  createdAt!: string;
+
+  @ApiProperty()
+  @IsString()
+  updatedAt!: string;
+
+  @ApiProperty()
+  @IsString()
+  contextCorrelationId!: string;
+}

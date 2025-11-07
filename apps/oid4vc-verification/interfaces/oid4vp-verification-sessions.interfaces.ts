@@ -5,4 +5,5 @@ export interface Oid4vpPresentationWh {
   updatedAt: string;
   contextCorrelationId: string;
   authorizationRequestId: string;
+  verifierId: string;
 }

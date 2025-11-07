@@ -199,7 +199,8 @@ export class Oid4vpRepository {
         state,
         id: verificationSessionId,
         contextCorrelationId,
-        authorizationRequestId
+        authorizationRequestId,
+        verifierId
       } = oid4vpPresentationPayload;
       const credentialDetails = await this.prisma.oid4vp_presentations.upsert({
         where: {
@@ -216,7 +217,8 @@ export class Oid4vpRepository {
           orgId,
           contextCorrelationId,
           verificationSessionId,
-          presentationId: authorizationRequestId
+          presentationId: authorizationRequestId,
+          publicVerifierId: verifierId
         }
       });
 

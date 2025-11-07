@@ -9,6 +9,7 @@ export interface Oid4vcCredentialOfferWebhookPayload {
   };
   state?: string;
   contextCorrelationId?: string;
+  issuerId?: string;
 }
 
 export interface CredentialPayload {
@@ -21,4 +22,22 @@ export interface CredentialPayload {
   lastChangedBy: string;
   state: string;
   credentialExchangeId: string;
+}
+
+export interface OidcIssueCredentialPayload {
+  oidcIssueCredentialDto: {
+    id: string;
+    credentialOfferId?: string;
+    state?: string;
+    contextCorrelationId?: string;
+    credentialConfigurationIds?: string[];
+    issuedCredentials?: string[];
+    issuerId?: string;
+    credentialOfferPayload?: {
+      credential_issuer?: string;
+      credential_configuration_ids?: string[];
+      grants?: Record<string, unknown>;
+      credentials?: string[];
+    };
+  };
 }

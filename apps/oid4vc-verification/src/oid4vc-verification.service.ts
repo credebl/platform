@@ -227,14 +227,13 @@ export class Oid4vpVerificationService extends BaseService {
       const url = await getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
       this.logger.debug(`[oid4vpCreateVerificationSession] calling agent URL=${url}`);
       const createdSession = await this._createVerificationSession(sessionRequest, url, orgId);
-      if (!createdSession?.response) {
+      if (!createdSession) {
         throw new InternalServerErrorException(ResponseMessages.oid4vp.error.createFailed);
       }
-
       this.logger.debug(
         `[oid4vpCreateVerificationSession] verification session created successfully for orgId=${orgId}`
       );
-      return createdSession.response;
+      return createdSession;
     } catch (error) {
       this.logger.error(
         `[oid4vpCreateVerificationSession] - error creating verification session: ${JSON.stringify(error?.response ?? error)}`

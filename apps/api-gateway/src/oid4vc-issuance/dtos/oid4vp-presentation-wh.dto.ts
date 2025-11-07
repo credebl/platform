@@ -24,4 +24,8 @@ export class Oid4vpPresentationWhDto {
   @ApiProperty()
   @IsString()
   contextCorrelationId!: string;
+
+  @ApiProperty()
+  @IsString()
+  verifierId!: string;
 }

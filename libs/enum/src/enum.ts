@@ -334,8 +334,14 @@ export enum AttributeType {
 }
 
 export enum RequestSignerMethod {
+  DID = 'DID',
+  X509_P256 = 'X509_P256',
+  X509_ED25519 = 'X509_ED25519'
+}
+
+export enum SignerMethodOption {
   DID = 'did',
-  X509 = 'x509'
+  X5C = 'x5c'
 }
 
 // export enum SignerOption {

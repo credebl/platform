@@ -7,6 +7,7 @@
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   Inject,
@@ -25,10 +26,10 @@ import { map } from 'rxjs';
 import { CreateVerifier, UpdateVerifier, VerifierRecord } from '@credebl/common/interfaces/oid4vp-verification';
 import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
-import { RequestSignerMethod } from '@credebl/enum/enum';
+import { RequestSignerMethod, SignerMethodOption, x5cKeyType } from '@credebl/enum/enum';
 import { BaseService } from 'libs/service/base.service';
-import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
-
+import { Oid4vpPresentationWh, RequestSigner } from '../interfaces/oid4vp-verification-sessions.interfaces';
+import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 @Injectable()
 export class Oid4vpVerificationService extends BaseService {
   constructor(
@@ -207,29 +208,60 @@ export class Oid4vpVerificationService extends BaseService {
       `[oid4vpCreateVerificationSession] called for orgId=${orgId}, verifierId=${verifierId}, user=${userDetails?.id ?? 'unknown'}`
     );
     try {
+      const activeCertificateDetails: X509CertificateRecord[] = [];
       const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint, orgDid } = agentDetails;
 
-      const getVerifierDetails = await this.oid4vpRepository.getVerifierById(orgId, verifierId);
-
-      if (!getVerifierDetails) {
+      const verifier = await this.oid4vpRepository.getVerifierById(orgId, verifierId);
+      if (!verifier) {
         throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
       }
-      sessionRequest.verifierId = getVerifierDetails.publicVerifierId;
-      if (RequestSignerMethod.DID === sessionRequest.requestSigner.method) {
-        sessionRequest.requestSigner.didUrl = orgDid;
-      } else if (RequestSignerMethod.X509 === sessionRequest.requestSigner.method) {
-        throw new NotFoundException('X509 request signer method not implemented yet');
+
+      sessionRequest.verifierId = verifier.publicVerifierId;
+
+      let requestSigner: RequestSigner | undefined;
+
+      if (sessionRequest.requestSigner.method === RequestSignerMethod.DID) {
+        requestSigner = {
+          method: SignerMethodOption.DID,
+          didUrl: orgDid
+        };
+      } else if (sessionRequest.requestSigner.method === RequestSignerMethod.X509_P256) {
+        this.logger.debug('X509_P256 request signer method selected');
+
+        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(orgId, x5cKeyType.P256);
+        this.logger.debug(`activeCertificate=${JSON.stringify(activeCertificate)}`);
+
+        if (!activeCertificate) {
+          throw new NotFoundException('No active certificate(p256) found for issuer');
+        }
+
+        requestSigner = {
+          method: SignerMethodOption.X5C, // "x5c"
+          x5c: [activeCertificate.certificateBase64] // array with PEM/DER base64
+        };
+
+        activeCertificateDetails.push(activeCertificate);
+      } else {
+        throw new BadRequestException(`Unsupported requestSigner method: ${sessionRequest.requestSigner.method}`);
       }
+
+      // assign the single object (not an array)
+      sessionRequest.requestSigner = requestSigner;
+
+      console.log(`[oid4vpCreateVerificationSession] sessionRequest=${JSON.stringify(sessionRequest)}`);
+
       const url = await getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
-      this.logger.debug(`[oid4vpCreateVerificationSession] calling agent URL=${url}`);
+      console.log(`[oid4vpCreateVerificationSession] calling agent URL=${url}`);
+
       const createdSession = await this._createVerificationSession(sessionRequest, url, orgId);
       if (!createdSession) {
         throw new InternalServerErrorException(ResponseMessages.oid4vp.error.createFailed);
       }
+
       this.logger.debug(
         `[oid4vpCreateVerificationSession] verification session created successfully for orgId=${orgId}`
       );

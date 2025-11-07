@@ -50,6 +50,10 @@ export class OidcIssueCredentialDto {
   @ApiProperty()
   @IsString()
   contextCorrelationId!: string;
+
+  @ApiProperty()
+  @IsString()
+  issuerId!: string;
 }
 
 /**

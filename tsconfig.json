@@ -103,6 +103,12 @@
       ],
       "@credebl/context/*": [
         "libs/context/src/*"
+      ],
+      "@credebl/storage": [
+        "libs/storage/src"
+      ],
+      "@credebl/storage/*": [
+        "libs/storage/src/*"
       ]
     }
   },

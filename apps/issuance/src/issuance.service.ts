@@ -66,7 +66,7 @@ import { convertUrlToDeepLinkUrl, getAgentUrl, paginator } from '@credebl/common
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import {
@@ -89,7 +89,6 @@ import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
-import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
 import { redisStore } from 'cache-manager-ioredis-yet';
@@ -107,12 +106,10 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
-    private readonly awsService: AwsService,
+    private readonly storageService: StorageService,
     @InjectQueue('bulk-issuance') private readonly bulkIssuanceQueue: Queue,
     // TODO: Remove duplicate, unused variable
-    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     @Inject(ContextStorageServiceKey)
-    private readonly contextStorageService: ContextStorageService,
     private readonly natsClient: NATSClient
   ) {}
 
@@ -1290,8 +1287,8 @@ export class IssuanceService {
         credentialPayload.schemaName = credentialDetails.schemaName;
       }
 
-      const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
-      const csvData: string = getFileDetails.Body.toString();
+      const getFileDetails = await this.storageService.getFile(importFileDetails.fileKey);
+      const csvData: string = getFileDetails.toString();
 
       const parsedData = paParse(csvData, {
         header: true,

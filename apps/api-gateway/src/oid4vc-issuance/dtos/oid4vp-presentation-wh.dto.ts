@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 export class Oid4vpPresentationWhDto {
   @ApiProperty()
   @IsString()
@@ -28,4 +28,12 @@ export class Oid4vpPresentationWhDto {
   @ApiProperty()
   @IsString()
   verifierId!: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  type: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  orgId: string;
 }

@@ -962,14 +962,24 @@ export class Oid4vcIssuanceService {
   ): Promise<object> {
     try {
       // pick fields
+      let organisationId: string;
+      const { oidcIssueCredentialDto, id } = CredentialOfferWebhookPayload;
+
+      if ('default' !== oidcIssueCredentialDto?.contextCorrelationId) {
+        const getOrganizationId = await this.oid4vcIssuanceRepository.getOrganizationByTenantId(
+          oidcIssueCredentialDto?.contextCorrelationId
+        );
+        organisationId = getOrganizationId?.orgId;
+      } else {
+        organisationId = id;
+      }
+
       const {
-        credentialOfferId,
-        state,
-        id: issuanceSessionId,
         contextCorrelationId,
         credentialOfferPayload,
-        issuedCredentials
-      } = CredentialOfferWebhookPayload ?? {};
+        issuedCredentials,
+        id: issuanceSessionId
+      } = oidcIssueCredentialDto ?? {};
       const cfgIds: string[] = Array.isArray(credentialOfferPayload?.credential_configuration_ids)
         ? credentialOfferPayload.credential_configuration_ids
         : [];

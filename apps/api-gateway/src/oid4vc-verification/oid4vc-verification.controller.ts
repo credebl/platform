@@ -428,12 +428,32 @@ export class Oid4vcVerificationController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
+    oid4vpPresentationWhDto.type = 'Oid4vpPresentation';
+    if (id && 'default' === oid4vpPresentationWhDto.contextCorrelationId) {
+      oid4vpPresentationWhDto.orgId = id;
+    }
+
     await this.oid4vcVerificationService.oid4vpPresentationWebhook(oid4vpPresentationWhDto, id);
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.oid4vpSession.success.webhookReceived,
       data: []
     };
+
+    const webhookUrl = await this.oid4vcVerificationService
+      ._getWebhookUrl(oid4vpPresentationWhDto?.contextCorrelationId, id)
+      .catch((error) => {
+        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+      });
+
+    if (webhookUrl) {
+      await this.oid4vcVerificationService
+        ._postWebhookResponse(webhookUrl, { data: oid4vpPresentationWhDto })
+        .catch((error) => {
+          this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
+        });
+    }
+
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 }

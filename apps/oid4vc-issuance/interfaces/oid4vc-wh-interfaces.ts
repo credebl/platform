@@ -1,4 +1,9 @@
 export interface Oid4vcCredentialOfferWebhookPayload {
+  oidcIssueCredentialDto: Oid4vcCredentialOfferWebhookDto;
+  id: string;
+}
+
+export interface Oid4vcCredentialOfferWebhookDto {
   id: string;
   credentialOfferId?: string;
   issuedCredentials?: Record<string, unknown>[];

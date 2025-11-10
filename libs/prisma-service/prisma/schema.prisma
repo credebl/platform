@@ -601,6 +601,7 @@ model oid4vc_credentials {
   lastChangedBy              String   @db.Uuid
   credentialConfigurationIds String[]
   issuedCredentials          String[]
+  publicIssuerId              String
 
   organisation organisation @relation(fields: [orgId], references: [id])
 
@@ -618,6 +619,7 @@ model oid4vp_presentations {
   createDateTime        DateTime @default(now()) @db.Timestamptz(6)
   lastChangedDateTime   DateTime @default(now()) @db.Timestamptz(6)
   lastChangedBy         String   @db.Uuid
+  publicVerifierId    String
   organisation organisation @relation(fields: [orgId], references: [id])
 }
 

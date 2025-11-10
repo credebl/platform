@@ -997,17 +997,9 @@ export class Oid4vcIssuanceService {
         }
       };
 
-      console.log('Storing OID4VC Credential Webhook:', JSON.stringify(sanitized, null, 2));
-      let orgId: string;
-      if ('default' !== contextCorrelationId) {
-        const getOrganizationId = await this.oid4vcIssuanceRepository.getOrganizationByTenantId(contextCorrelationId);
-        orgId = getOrganizationId?.orgId;
-      } else {
-        orgId = issuanceSessionId;
-      }
       const agentDetails = await this.oid4vcIssuanceRepository.storeOidcCredentialDetails(
         CredentialOfferWebhookPayload,
-        orgId
+        organisationId
       );
       return agentDetails;
     } catch (error) {

@@ -21,15 +21,15 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { getAgentUrl } from '@credebl/common/common.utils';
-import { user } from '@prisma/client';
+import { SignerOption, user } from '@prisma/client';
 import { map } from 'rxjs';
 import { CreateVerifier, UpdateVerifier, VerifierRecord } from '@credebl/common/interfaces/oid4vp-verification';
 import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
-import { RequestSignerMethod, SignerMethodOption, x5cKeyType } from '@credebl/enum/enum';
 import { BaseService } from 'libs/service/base.service';
 import { Oid4vpPresentationWh, RequestSigner } from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { SignerMethodOption } from '@credebl/enum/enum';
 @Injectable()
 export class Oid4vpVerificationService extends BaseService {
   constructor(
@@ -224,19 +224,27 @@ export class Oid4vpVerificationService extends BaseService {
 
       let requestSigner: RequestSigner | undefined;
 
-      if (sessionRequest.requestSigner.method === RequestSignerMethod.DID) {
+      if (sessionRequest.requestSigner.method === SignerOption.DID) {
         requestSigner = {
           method: SignerMethodOption.DID,
           didUrl: orgDid
         };
-      } else if (sessionRequest.requestSigner.method === RequestSignerMethod.X509_P256) {
-        this.logger.debug('X509_P256 request signer method selected');
+      } else if (
+        sessionRequest.requestSigner.method === SignerOption.X509_P256 ||
+        sessionRequest.requestSigner.method === SignerOption.X509_ED25519
+      ) {
+        this.logger.debug('X5C based request signer method selected');
 
-        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(orgId, x5cKeyType.P256);
+        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(
+          orgId,
+          sessionRequest.requestSigner.methodv
+        );
         this.logger.debug(`activeCertificate=${JSON.stringify(activeCertificate)}`);
 
         if (!activeCertificate) {
-          throw new NotFoundException('No active certificate(p256) found for issuer');
+          throw new NotFoundException(
+            `No active certificate(${sessionRequest.requestSigner.method}}) found for issuer`
+          );
         }
 
         requestSigner = {

@@ -7,8 +7,10 @@ import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfac
 
 @Controller()
 export class Oid4vpVerificationController {
-  private readonly logger = new Logger('Oid4vpVerificationController');
-  constructor(private readonly oid4vpVerificationService: Oid4vpVerificationService) {}
+  constructor(
+    private readonly oid4vpVerificationService: Oid4vpVerificationService,
+    private logger: Logger
+  ) {}
 
   @MessagePattern({ cmd: 'oid4vp-verifier-create' })
   async oid4vpCreateVerifier(payload: {

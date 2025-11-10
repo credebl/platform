@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Logger, Module } from '@nestjs/common';
 import { v4 } from 'uuid';
 import { ClsModule } from 'nestjs-cls';
 
@@ -13,7 +13,13 @@ import NestjsClsContextStorageService from './nestjsClsContextStorageService';
       middleware: {
         mount: true,
         generateId: true,
-        idGenerator: (req: Request) => req.headers['x-correlation-id'] ?? v4()
+        idGenerator: (req: Request) => {
+          const logger = new Logger('ContextInterceptorModule');
+          // TODO: Check if we want the x-correlation-id or the correlationId
+          const headers = req.headers['contextId'] ?? req.headers['x-correlation-id'] ?? v4();
+          logger.log('Headers received/generated::::', headers);
+          return headers;
+        }
       }
     })
   ],

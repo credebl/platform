@@ -1,20 +1,19 @@
 import { NATSClient } from '@credebl/common/NATSClient';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
 // eslint-disable-next-line camelcase
 import { oid4vp_verifier, user } from '@prisma/client';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
 import { VerificationPresentationQueryDto } from './dtos/oid4vc-verifier-presentation.dto';
 
 @Injectable()
-export class Oid4vcVerificationService extends BaseService {
+export class Oid4vcVerificationService {
+  private readonly logger = new Logger('Oid4vcVerificationService');
+
   constructor(
     @Inject('NATS_CLIENT') private readonly oid4vpProxy: ClientProxy,
     private readonly natsClient: NATSClient
-  ) {
-    super('Oid4vcVerificationService');
-  }
+  ) {}
 
   async oid4vpCreateVerifier(
     createVerifier: CreateVerifierDto,

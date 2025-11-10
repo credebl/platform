@@ -52,7 +52,7 @@ import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos
 @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class Oid4vcVerificationController {
-  private readonly logger = new Logger('Oid4vpVerificationController');
+  private readonly logger = new Logger('Oid4vcVerificationController');
 
   constructor(private readonly oid4vcVerificationService: Oid4vcVerificationService) {}
   /**

@@ -6,15 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 
-import {
-  ConflictException,
-  HttpException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  NotFoundException
-} from '@nestjs/common';
+import { ConflictException, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { Oid4vpRepository } from './oid4vc-verification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -27,11 +19,13 @@ import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 import { RequestSignerMethod } from '@credebl/enum/enum';
 import { BaseService } from 'libs/service/base.service';
+import { NATSClient } from '@credebl/common/NATSClient';
 
 @Injectable()
 export class Oid4vpVerificationService extends BaseService {
   constructor(
     @Inject('NATS_CLIENT') private readonly oid4vpVerificationServiceProxy: ClientProxy,
+    private readonly natsClient: NATSClient,
     private readonly oid4vpRepository: Oid4vpRepository
   ) {
     super('Oid4vpVerificationService');
@@ -301,9 +295,12 @@ export class Oid4vpVerificationService extends BaseService {
   async _createOid4vpVerifier(verifierDetails: CreateVerifier, url: string, orgId: string): Promise<any> {
     this.logger.debug(`[_createOid4vpVerifier] sending NATS message for orgId=${orgId}`);
     try {
-      const pattern = { cmd: 'agent-create-oid4vp-verifier' };
       const payload = { verifierDetails, url, orgId };
-      const response = await this.natsCall(pattern, payload);
+      const response = await this.natsClient.sendNatsMessage(
+        this.oid4vpVerificationServiceProxy,
+        'agent-create-oid4vp-verifier',
+        payload
+      );
       this.logger.debug(`[_createOid4vpVerifier] NATS response received`);
       return response;
     } catch (error) {
@@ -317,9 +314,12 @@ export class Oid4vpVerificationService extends BaseService {
   async _deleteOid4vpVerifier(url: string, orgId: string): Promise<any> {
     this.logger.debug(`[_deleteOid4vpVerifier] sending NATS message for orgId=${orgId}`);
     try {
-      const pattern = { cmd: 'agent-delete-oid4vp-verifier' };
       const payload = { url, orgId };
-      const response = await this.natsCall(pattern, payload);
+      const response = await this.natsClient.sendNatsMessage(
+        this.oid4vpVerificationServiceProxy,
+        'agent-delete-oid4vp-verifier',
+        payload
+      );
       this.logger.debug(`[_deleteOid4vpVerifier] NATS response received`);
       return response;
     } catch (error) {
@@ -333,9 +333,12 @@ export class Oid4vpVerificationService extends BaseService {
   async _updateOid4vpVerifier(verifierDetails: UpdateVerifier, url: string, orgId: string): Promise<any> {
     this.logger.debug(`[_updateOid4vpVerifier] sending NATS message for orgId=${orgId}`);
     try {
-      const pattern = { cmd: 'agent-update-oid4vp-verifier' };
       const payload = { verifierDetails, url, orgId };
-      const response = await this.natsCall(pattern, payload);
+      const response = await this.natsClient.sendNatsMessage(
+        this.oid4vpVerificationServiceProxy,
+        'agent-update-oid4vp-verifier',
+        payload
+      );
       this.logger.debug(`[_updateOid4vpVerifier] NATS response received`);
       return response;
     } catch (error) {
@@ -349,9 +352,12 @@ export class Oid4vpVerificationService extends BaseService {
   async _createVerificationSession(sessionRequest: any, url: string, orgId: string): Promise<any> {
     this.logger.debug(`[_createVerificationSession] sending NATS message for orgId=${orgId}`);
     try {
-      const pattern = { cmd: 'agent-create-oid4vp-verification-session' };
       const payload = { sessionRequest, url, orgId };
-      const response = await this.natsCall(pattern, payload);
+      const response = await this.natsClient.sendNatsMessage(
+        this.oid4vpVerificationServiceProxy,
+        'agent-create-oid4vp-verification-session',
+        payload
+      );
       this.logger.debug(`[_createVerificationSession] NATS response received`);
       return response;
     } catch (error) {
@@ -365,9 +371,12 @@ export class Oid4vpVerificationService extends BaseService {
   async _getOid4vpVerifierSession(url: string, orgId: string): Promise<any> {
     this.logger.debug(`[_getOid4vpVerifierSession] sending NATS message for orgId=${orgId}`);
     try {
-      const pattern = { cmd: 'agent-get-oid4vp-verifier-session' };
       const payload = { url, orgId };
-      const response = await this.natsCall(pattern, payload);
+      const response = await this.natsClient.sendNatsMessage(
+        this.oid4vpVerificationServiceProxy,
+        'agent-get-oid4vp-verifier-session',
+        payload
+      );
       this.logger.debug(`[_getOid4vpVerifierSession] NATS response received`);
       return response;
     } catch (error) {
@@ -381,37 +390,18 @@ export class Oid4vpVerificationService extends BaseService {
   async _getVerificationSessionResponse(url: string, orgId: string): Promise<any> {
     this.logger.debug(`[_getVerificationSessionResponse] sending NATS message for orgId=${orgId}`);
     try {
-      const pattern = { cmd: 'agent-get-oid4vp-verifier-session' };
       const payload = { url, orgId };
-      const response = await this.natsCall(pattern, payload);
+      const response = await this.natsClient.sendNatsMessage(
+        this.oid4vpVerificationServiceProxy,
+        'agent-get-oid4vp-verifier-session',
+        payload
+      );
       this.logger.debug(`[_getVerificationSessionResponse] NATS response received`);
       return response;
     } catch (error) {
       this.logger.error(
         `[_getVerificationSessionResponse] [NATS call]- error in get OID4VP Verifier Session : ${JSON.stringify(error)}`
       );
-      throw error;
-    }
-  }
-
-  async natsCall(pattern: object, payload: object): Promise<string> {
-    try {
-      return this.oid4vpVerificationServiceProxy
-        .send<string>(pattern, payload)
-        .pipe(map((response) => response))
-        .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            },
-            error.error
-          );
-        });
-    } catch (error) {
-      this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
       throw error;
     }
   }

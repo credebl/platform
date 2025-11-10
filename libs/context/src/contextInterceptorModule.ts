@@ -1,13 +1,13 @@
-import { ExecutionContext, Global, Module} from '@nestjs/common';
-import { v4 } from 'uuid';
+import { ExecutionContext, Global, Logger, Module } from '@nestjs/common';
+import { v4 as uuid } from 'uuid';
 import { ClsModule } from 'nestjs-cls';
 
 import { ContextStorageServiceKey } from './contextStorageService.interface';
 import NestjsClsContextStorageService from './nestjsClsContextStorageService';
 
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isNullUndefinedOrEmpty = (obj: any): boolean => null === obj || obj === undefined || ('object' === typeof obj && 0 === Object.keys(obj).length);
+const isNullUndefinedOrEmpty = (obj: any): boolean =>
+  null === obj || obj === undefined || ('object' === typeof obj && 0 === Object.keys(obj).length);
 
 @Global()
 @Module({
@@ -17,17 +17,28 @@ const isNullUndefinedOrEmpty = (obj: any): boolean => null === obj || obj === un
       interceptor: {
         mount: true,
 
-         generateId: true,
-         idGenerator: (context: ExecutionContext) => {
-          const rpcContext = context.switchToRpc().getContext();
-          const headers = rpcContext.getHeaders();    
-          if (!isNullUndefinedOrEmpty(headers)) {
-            return context.switchToRpc().getContext().getHeaders()['_description'];
-          } else {
-            return v4();
+        generateId: true,
+        idGenerator: (context: ExecutionContext) => {
+          try {
+            const logger = new Logger('ContextInterceptorModule');
+            const rpcContext = context.switchToRpc().getContext();
+            const headers = rpcContext.getHeaders();
+            if (!isNullUndefinedOrEmpty(headers)) {
+              logger.debug('[idGenerator] Received contextId in header: ', headers.get('contextId'));
+              return headers.get('contextId');
+            } else {
+              const uuidGenerated = uuid();
+              logger.debug(
+                '[idGenerator] Did not receive contextId in header, generated new contextId: ',
+                uuidGenerated
+              );
+              return uuidGenerated;
+            }
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.log('[idGenerator] Error in idGenerator: ', error);
           }
-         }
-         
+        }
       }
     })
   ],
@@ -40,6 +51,4 @@ const isNullUndefinedOrEmpty = (obj: any): boolean => null === obj || obj === un
   ],
   exports: [ContextStorageServiceKey]
 })
-
 export class ContextInterceptorModule {}
-

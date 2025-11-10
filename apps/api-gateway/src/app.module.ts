@@ -33,6 +33,8 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { Oid4vcIssuanceModule } from './oid4vc-issuance/oid4vc-issuance.module';
 import { X509Module } from './x509/x509.module';
 import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { NatsInterceptor } from '@credebl/common';
 
 @Module({
   imports: [
@@ -76,6 +78,10 @@ import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
     {
       provide: MICRO_SERVICE_NAME,
       useValue: 'APIGATEWAY'
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: NatsInterceptor
     }
   ],
   exports: [CacheModule]

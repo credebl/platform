@@ -5,6 +5,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { oid4vp_verifier, user } from '@prisma/client';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
 import { VerificationPresentationQueryDto } from './dtos/oid4vc-verifier-presentation.dto';
+import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 
 @Injectable()
 export class Oid4vcVerificationService {
@@ -79,5 +80,44 @@ export class Oid4vcVerificationService {
       `[oid4vpCreateVerificationSession] Called with orgId=${orgId}, verifierId=${verifierId ?? 'N/A'}, user=${userDetails?.id ?? 'N/A'}`
     );
     return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-verification-session-create', payload);
+  }
+
+  oid4vpPresentationWebhook(
+    oid4vpPresentationWhDto: Oid4vpPresentationWhDto,
+    id: string
+  ): Promise<{
+    response: object;
+  }> {
+    const payload = { oid4vpPresentationWhDto, id };
+    return this.natsClient.sendNats(this.oid4vpProxy, 'webhook-oid4vp-presentation', payload);
+  }
+
+  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
+    const pattern = { cmd: 'get-webhookurl' };
+    const payload = { tenantId, orgId };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.oid4vpProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async _postWebhookResponse(webhookUrl: string, data: object): Promise<string> {
+    const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
+    const payload = { webhookUrl, data };
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const message = await this.oid4vpProxy.send<any>(pattern, payload).toPromise();
+      return message;
+    } catch (error) {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+
+      throw error;
+    }
   }
 }

@@ -12,15 +12,17 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { getAgentUrl } from '@credebl/common/common.utils';
-import { user } from '@prisma/client';
+import { SignerOption, user } from '@prisma/client';
 import { map } from 'rxjs';
 import { CreateVerifier, UpdateVerifier, VerifierRecord } from '@credebl/common/interfaces/oid4vp-verification';
 import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
-import { RequestSignerMethod } from '@credebl/enum/enum';
 import { BaseService } from 'libs/service/base.service';
 import { NATSClient } from '@credebl/common/NATSClient';
 
+import { Oid4vpPresentationWh, RequestSigner } from '../interfaces/oid4vp-verification-sessions.interfaces';
+import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { SignerMethodOption } from '@credebl/enum/enum';
 @Injectable()
 export class Oid4vpVerificationService extends BaseService {
   constructor(
@@ -200,34 +202,72 @@ export class Oid4vpVerificationService extends BaseService {
       `[oid4vpCreateVerificationSession] called for orgId=${orgId}, verifierId=${verifierId}, user=${userDetails?.id ?? 'unknown'}`
     );
     try {
+      const activeCertificateDetails: X509CertificateRecord[] = [];
       const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint, orgDid } = agentDetails;
 
-      const getVerifierDetails = await this.oid4vpRepository.getVerifierById(orgId, verifierId);
-
-      if (!getVerifierDetails) {
+      const verifier = await this.oid4vpRepository.getVerifierById(orgId, verifierId);
+      if (!verifier) {
         throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
       }
-      sessionRequest.verifierId = getVerifierDetails.publicVerifierId;
-      if (RequestSignerMethod.DID === sessionRequest.requestSigner.method) {
-        sessionRequest.requestSigner.didUrl = orgDid;
-      } else if (RequestSignerMethod.X509 === sessionRequest.requestSigner.method) {
-        throw new NotFoundException('X509 request signer method not implemented yet');
+
+      sessionRequest.verifierId = verifier.publicVerifierId;
+
+      let requestSigner: RequestSigner | undefined;
+
+      if (sessionRequest.requestSigner.method === SignerOption.DID) {
+        requestSigner = {
+          method: SignerMethodOption.DID,
+          didUrl: orgDid
+        };
+      } else if (
+        sessionRequest.requestSigner.method === SignerOption.X509_P256 ||
+        sessionRequest.requestSigner.method === SignerOption.X509_ED25519
+      ) {
+        this.logger.debug('X5C based request signer method selected');
+
+        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(
+          orgId,
+          sessionRequest.requestSigner.methodv
+        );
+        this.logger.debug(`activeCertificate=${JSON.stringify(activeCertificate)}`);
+
+        if (!activeCertificate) {
+          throw new NotFoundException(
+            `No active certificate(${sessionRequest.requestSigner.method}}) found for issuer`
+          );
+        }
+
+        requestSigner = {
+          method: SignerMethodOption.X5C, // "x5c"
+          x5c: [activeCertificate.certificateBase64] // array with PEM/DER base64
+        };
+
+        activeCertificateDetails.push(activeCertificate);
+      } else {
+        throw new BadRequestException(`Unsupported requestSigner method: ${sessionRequest.requestSigner.method}`);
       }
+
+      // assign the single object (not an array)
+      sessionRequest.requestSigner = requestSigner;
+
+      console.log(`[oid4vpCreateVerificationSession] sessionRequest=${JSON.stringify(sessionRequest)}`);
+
       const url = await getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
-      this.logger.debug(`[oid4vpCreateVerificationSession] calling agent URL=${url}`);
+      console.log(`[oid4vpCreateVerificationSession] calling agent URL=${url}`);
+
       const createdSession = await this._createVerificationSession(sessionRequest, url, orgId);
-      if (!createdSession?.response) {
+      if (!createdSession) {
         throw new InternalServerErrorException(ResponseMessages.oid4vp.error.createFailed);
       }
 
       this.logger.debug(
         `[oid4vpCreateVerificationSession] verification session created successfully for orgId=${orgId}`
       );
-      return createdSession.response;
+      return createdSession;
     } catch (error) {
       this.logger.error(
         `[oid4vpCreateVerificationSession] - error creating verification session: ${JSON.stringify(error?.response ?? error)}`
@@ -276,10 +316,11 @@ export class Oid4vpVerificationService extends BaseService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint, id } = agentDetails;
-
-      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID, verificationSessionId);
-      this.logger.debug(`[getVerificationSessionResponse] calling agent URL=${url}`);
-
+      const url = getAgentUrl(
+        agentEndPoint,
+        CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID,
+        verificationSessionId
+      );
       const verifiers = await await this._getOid4vpVerifierSession(url, orgId);
       if (!verifiers || 0 === verifiers.length) {
         throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
@@ -289,6 +330,27 @@ export class Oid4vpVerificationService extends BaseService {
     } catch (error) {
       this.logger.error(`[getVerificationSessionResponse] - error: ${JSON.stringify(error?.response ?? error)}`);
       throw new RpcException(error?.response ?? error);
+    }
+  }
+
+  async oid4vpPresentationWebhook(oid4vpPresentation: Oid4vpPresentationWh, id: string): Promise<object> {
+    try {
+      const { contextCorrelationId } = oid4vpPresentation ?? {};
+      let orgId: string;
+      if ('default' !== contextCorrelationId) {
+        const getOrganizationId = await this.oid4vpRepository.getOrganizationByTenantId(contextCorrelationId);
+        if (!getOrganizationId) {
+          throw new NotFoundException(ResponseMessages.organisation.error.notFound);
+        }
+        orgId = getOrganizationId?.orgId;
+      } else {
+        orgId = id;
+      }
+      const agentDetails = await this.oid4vpRepository.storeOid4vpPresentationDetails(oid4vpPresentation, orgId);
+      return agentDetails;
+    } catch (error) {
+      this.logger.error(`[storeOid4vpPresentationWebhook] - error: ${JSON.stringify(error)}`);
+      throw error;
     }
   }
 

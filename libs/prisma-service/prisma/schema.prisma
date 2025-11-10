@@ -152,6 +152,7 @@ model organisation {
   credential_definition credential_definition[]
   file_upload           file_upload[]
   oid4vc_credentials    oid4vc_credentials[]
+  oid4vp_presentations  oid4vp_presentations[]
 }
 
 model org_invitations {
@@ -588,22 +589,38 @@ model oidc_issuer {
 }
 
 model oid4vc_credentials {
-  id                   String   @id @default(uuid()) @db.Uuid
-  orgId                String   @db.Uuid
-  issuanceSessionId    String   @unique
-  credentialOfferId    String
-  state                String
-  contextCorrelationId String
-  createdBy            String   @db.Uuid
-  createDateTime       DateTime @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime  DateTime @default(now()) @db.Timestamptz(6)
-  lastChangedBy        String   @db.Uuid
+  id                         String   @id @default(uuid()) @db.Uuid
+  orgId                      String   @db.Uuid
+  issuanceSessionId          String   @unique
+  credentialOfferId          String
+  state                      String
+  contextCorrelationId       String
+  createdBy                  String   @db.Uuid
+  createDateTime             DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime        DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedBy              String   @db.Uuid
   credentialConfigurationIds String[]
   issuedCredentials          String[]
+  publicIssuerId              String
 
   organisation organisation @relation(fields: [orgId], references: [id])
 
   @@index([credentialConfigurationIds], type: Gin)
+}
+
+model oid4vp_presentations {
+  id                    String   @id @default(uuid()) @db.Uuid
+  orgId                 String   @db.Uuid
+  verificationSessionId String   @unique
+  presentationId        String
+  state                 String
+  contextCorrelationId  String
+  createdBy             String   @db.Uuid
+  createDateTime        DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime   DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedBy         String   @db.Uuid
+  publicVerifierId    String
+  organisation organisation @relation(fields: [orgId], references: [id])
 }
 
 enum SignerOption {
@@ -661,5 +678,6 @@ model oid4vp_verifier {
   lastChangedBy       String     @default("1")
   orgAgentId          String     @db.Uuid
   orgAgent            org_agents @relation(fields: [orgAgentId], references: [id])
+
   @@index([orgAgentId])
 }

@@ -69,7 +69,7 @@ export interface IssuerInitialConfig {
   authorizationServerConfigs: AuthorizationServerConfig | {};
   accessTokenSignerKeyType: AccessTokenSignerKeyType;
   dpopSigningAlgValuesSupported: string[];
-  batchCredentialIssuance: object;
+  batchCredentialIssuance?: object;
   credentialConfigurationsSupported: object;
 }
 

@@ -18,7 +18,8 @@ import {
   Delete,
   Patch,
   Query,
-  Put
+  Put,
+  Logger
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -59,6 +60,7 @@ import {
 @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class Oid4vcIssuanceController {
+  private readonly logger = new Logger('Oid4vcIssuanceController');
   constructor(private readonly oid4vcIssuanceService: Oid4vcIssuanceService) {}
   /**
    * Create issuer against a org(tenant)
@@ -630,6 +632,9 @@ export class Oid4vcIssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
+    if (id && 'default' === oidcIssueCredentialDto.contextCorrelationId) {
+      oidcIssueCredentialDto.orgId = id;
+    }
     // const sanitized = sanitizeOidcIssueCredentialDto(oidcIssueCredentialDto);
     const getCredentialDetails = await this.oid4vcIssuanceService.oidcIssueCredentialWebhook(
       oidcIssueCredentialDto,
@@ -641,6 +646,21 @@ export class Oid4vcIssuanceController {
       message: ResponseMessages.issuance.success.create,
       data: getCredentialDetails
     };
+
+    const webhookUrl = await this.oid4vcIssuanceService
+      ._getWebhookUrl(oidcIssueCredentialDto.contextCorrelationId, id)
+      .catch((error) => {
+        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+      });
+    console.log(`webhookUrl `, webhookUrl);
+    if (webhookUrl) {
+      console.log(`Org webhook found `, JSON.stringify(webhookUrl), JSON.stringify(oidcIssueCredentialDto));
+      const plainIssuanceDto = JSON.parse(JSON.stringify(oidcIssueCredentialDto));
+
+      await this.oid4vcIssuanceService._postWebhookResponse(webhookUrl, { data: plainIssuanceDto }).catch((error) => {
+        this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
+      });
+    }
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

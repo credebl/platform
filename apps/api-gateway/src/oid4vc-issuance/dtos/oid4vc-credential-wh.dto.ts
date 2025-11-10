@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsObject, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class CredentialOfferPayloadDto {
   @ApiProperty({ type: [String] })
@@ -50,6 +50,18 @@ export class OidcIssueCredentialDto {
   @ApiProperty()
   @IsString()
   contextCorrelationId!: string;
+
+  @ApiProperty()
+  @IsString()
+  issuerId!: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  type: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  orgId: string;
 }
 
 /**

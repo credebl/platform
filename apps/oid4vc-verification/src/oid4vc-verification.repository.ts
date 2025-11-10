@@ -6,6 +6,8 @@ import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrgAgent } from '../interfaces/oid4vp-verifier.interfaces';
 import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
+import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
+import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 
 @Injectable()
 export class Oid4vpRepository {
@@ -199,7 +201,8 @@ export class Oid4vpRepository {
         state,
         id: verificationSessionId,
         contextCorrelationId,
-        authorizationRequestId
+        authorizationRequestId,
+        verifierId
       } = oid4vpPresentationPayload;
       const credentialDetails = await this.prisma.oid4vp_presentations.upsert({
         where: {
@@ -216,13 +219,43 @@ export class Oid4vpRepository {
           orgId,
           contextCorrelationId,
           verificationSessionId,
-          presentationId: authorizationRequestId
+          presentationId: authorizationRequestId,
+          publicVerifierId: verifierId
         }
       });
 
       return credentialDetails;
     } catch (error) {
       this.logger.error(`Error in storeOid4vpPresentationDetails in oid4vp-presentation repository: ${error.message} `);
+      throw error;
+    }
+  }
+
+  async getCurrentActiveCertificate(orgId: string, keyType: x5cKeyType): Promise<X509CertificateRecord> {
+    try {
+      const now = new Date();
+
+      const certificate = await this.prisma.x509_certificates.findFirst({
+        where: {
+          org_agents: {
+            orgId
+          },
+          status: x5cRecordStatus.Active,
+          keyType,
+          validFrom: {
+            lte: now
+          },
+          expiry: {
+            gte: now
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+      return certificate;
+    } catch (error) {
+      this.logger.error(`Error in getCurrentActiveCertificate: ${error.message}`);
       throw error;
     }
   }

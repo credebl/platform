@@ -14,7 +14,7 @@ import {
   Validate
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { RequestSignerMethod } from '@credebl/enum/enum';
+import { SignerOption } from '@prisma/client';
 
 /**
  * DTO for verification-presentation query parameters.
@@ -298,12 +298,13 @@ export class OnlyOneOfConstraint implements ValidatorConstraintInterface {
 export class PresentationRequestDto {
   @ApiPropertyOptional({
     example: {
-      method: 'did'
-    }
+      method: 'DID'
+    },
+    description: 'Signer option type'
   })
   @IsOptional()
   requestSigner?: {
-    method: RequestSignerMethod;
+    method: SignerOption;
   };
 
   @ApiPropertyOptional({

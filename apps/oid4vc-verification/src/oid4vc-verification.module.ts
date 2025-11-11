@@ -3,7 +3,7 @@ import { Oid4vpVerificationController } from './oid4vc-verification.controller';
 import { Oid4vpVerificationService } from './oid4vc-verification.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { CommonModule, NatsInterceptor } from '@credebl/common';
+import { CommonModule } from '@credebl/common';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/config';
 import { ContextInterceptorModule } from '@credebl/context';
@@ -13,7 +13,6 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { PrismaService, PrismaServiceModule } from '@credebl/prisma-service';
 import { Oid4vpRepository } from './oid4vc-verification.repository';
-import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -47,10 +46,6 @@ import { ConfigModule } from '@nestjs/config';
     {
       provide: MICRO_SERVICE_NAME,
       useValue: 'Oid4vc-verification-service'
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: NatsInterceptor
     }
   ]
 })

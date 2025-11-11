@@ -22,9 +22,9 @@ const isNullUndefinedOrEmpty = (obj: any): boolean =>
           try {
             const logger = new Logger('ContextInterceptorModule');
             const rpcContext = context.switchToRpc().getContext();
-            const headers = rpcContext.getHeaders();
+            const headers = rpcContext.getHeaders() ?? {};
             if (!isNullUndefinedOrEmpty(headers)) {
-              logger.debug('[idGenerator] Received contextId in header: ', headers.get('contextId'));
+              logger.debug(`[idGenerator] Received contextId in headers: ${headers.get('contextId')}`);
               return headers.get('contextId');
             } else {
               const uuidGenerated = uuid();

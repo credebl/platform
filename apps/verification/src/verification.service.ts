@@ -32,7 +32,6 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';
 import { OutOfBandVerification } from '../templates/out-of-band-verification.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
@@ -54,6 +53,7 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { from } from 'rxjs';
+import { EmailService } from '@credebl/common/email.service';
 
 @Injectable()
 export class VerificationService {
@@ -69,7 +69,8 @@ export class VerificationService {
     private readonly emailData: EmailDto,
     // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
-    private readonly natsClient: NATSClient
+    private readonly natsClient: NATSClient,
+    private readonly emailService: EmailService
   ) {}
 
   /**
@@ -661,7 +662,7 @@ export class VerificationService {
         disposition: 'attachment'
       }
     ];
-    const isEmailSent = await sendEmail(this.emailData);
+    const isEmailSent = await this.emailService.sendEmail(this.emailData);
 
     if (!isEmailSent) {
       throw new Error(ResponseMessages.verification.error.emailSend);

@@ -281,7 +281,7 @@ export enum CommonConstants {
   PLATFORM_ADMIN_EMAIL = 'platform.admin@yopmail.com',
   PLATFORM_ADMIN_ORG = 'Platform-admin',
   PLATFORM_ADMIN_ORG_ROLE = 'platform_admin',
-
+  DEFAULT_EMAIL_PROVIDER = 'sendgrid',
   USER_HOLDER_ROLE = 'holder',
 
   //onBoarding Type

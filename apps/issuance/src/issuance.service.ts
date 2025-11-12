@@ -84,7 +84,6 @@ import {
   validateAndUpdateIssuanceDates,
   validateEmail
 } from '@credebl/common/cast.helper';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import * as pLimit from 'p-limit';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
@@ -93,6 +92,7 @@ import ContextStorageService, { ContextStorageServiceKey } from '@credebl/contex
 import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
 import { redisStore } from 'cache-manager-ioredis-yet';
+import { EmailService } from '@credebl/common/email.service';
 
 @Injectable()
 export class IssuanceService {
@@ -113,7 +113,8 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     @Inject(ContextStorageServiceKey)
     private readonly contextStorageService: ContextStorageService,
-    private readonly natsClient: NATSClient
+    private readonly natsClient: NATSClient,
+    private readonly emailService: EmailService
   ) {}
 
   async getIssuanceRecords(orgId: string): Promise<number> {
@@ -1089,7 +1090,7 @@ export class IssuanceService {
       ];
       this.logger.debug('Invitation url and deeplink created successfully. Sending email');
 
-      const isEmailSent = await sendEmail(this.emailData);
+      const isEmailSent = await this.emailService.sendEmail(this.emailData);
 
       this.logger.log(`isEmailSent ::: ${JSON.stringify(isEmailSent)}-${this.counter}`);
       this.counter++;

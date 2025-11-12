@@ -23,7 +23,6 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrganizationInviteTemplate } from '../templates/organization-invitation.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
@@ -66,6 +65,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import * as jwt from 'jsonwebtoken';
 import { ClientTokenDto } from '../dtos/client-token.dto';
+import { EmailService } from '@credebl/common/email.service';
 
 @Injectable()
 export class OrganizationService {
@@ -84,7 +84,8 @@ export class OrganizationService {
     private readonly clientRegistrationService: ClientRegistrationService,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly natsClient: NATSClient,
-    private readonly userRepository: UserRepository
+    private readonly userRepository: UserRepository,
+    private readonly emailService: EmailService
   ) {}
 
   async getPlatformConfigDetails(): Promise<object> {
@@ -1119,7 +1120,7 @@ export class OrganizationService {
     );
 
     //Email is sent to user for the verification through emailData
-    const isEmailSent = await sendEmail(emailData);
+    const isEmailSent = await this.emailService.sendEmail(emailData);
 
     return isEmailSent;
   }
@@ -1748,7 +1749,7 @@ export class OrganizationService {
     emailData.emailHtml = urlEmailTemplate.sendDeleteOrgMemberEmailTemplate(email, orgName, orgRole);
 
     //Email is sent to user for the verification through emailData
-    const isEmailSent = await sendEmail(emailData);
+    const isEmailSent = await this.emailService.sendEmail(emailData);
 
     return isEmailSent;
   }

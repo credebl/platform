@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { CommonConstants } from './common.constant';
 import { EmailDto } from './dtos/email.dto';
 import { sendWithResend } from './resend-helper-file';
 import { sendWithSendGrid } from './send-grid-helper-file';
@@ -9,10 +10,7 @@ export class EmailService {
   private readonly logger = new Logger(EmailService.name);
 
   async sendEmail(emailDto: EmailDto): Promise<boolean> {
-    const provider = process.env.EMAIL_PROVIDER?.toLowerCase();
-    if (!provider) {
-      throw new Error('EMAIL_PROVIDER not set in environment variables.');
-    }
+    const provider = process.env.EMAIL_PROVIDER?.toLowerCase() || CommonConstants.DEFAULT_EMAIL_PROVIDER;
 
     this.logger.debug(`Email Provider is: ${provider}`);
     let result: boolean;

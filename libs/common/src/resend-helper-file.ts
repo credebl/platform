@@ -6,9 +6,13 @@ import { Resend } from 'resend';
 
 dotenv.config();
 
-export const sendWithResend = async (emailDto: EmailDto): Promise<boolean> => {
-  const resend = new Resend(process.env.RESEND_API_KEY);
+const apiKey = process.env.RESEND_API_KEY;
+if (!apiKey) {
+  throw new Error('Missing RESEND_API_KEY in environment variables.');
+}
+const resend = new Resend(process.env.RESEND_API_KEY);
 
+export const sendWithResend = async (emailDto: EmailDto): Promise<boolean> => {
   try {
     const response = await resend.emails.send({
       from: emailDto.emailFrom,

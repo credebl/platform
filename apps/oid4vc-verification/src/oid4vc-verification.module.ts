@@ -4,18 +4,24 @@ import { Oid4vpVerificationService } from './oid4vc-verification.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonModule } from '@credebl/common';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/config';
 import { ContextInterceptorModule } from '@credebl/context';
-import { LoggerModule } from '@credebl/logger';
+import { LoggerModule } from '@credebl/logger/logger.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { NATSClient } from '@credebl/common/NATSClient';
-import { PrismaService } from '@credebl/prisma-service';
+import { PrismaService, PrismaServiceModule } from '@credebl/prisma-service';
 import { Oid4vpRepository } from './oid4vc-verification.repository';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
+    ContextInterceptorModule,
+    PlatformConfig,
+    LoggerModule,
+    CacheModule.register(),
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -28,12 +34,19 @@ import { Oid4vpRepository } from './oid4vc-verification.repository';
     ]),
     CommonModule,
     GlobalConfigModule,
-    LoggerModule,
-    PlatformConfig,
-    ContextInterceptorModule,
-    CacheModule.register()
+    PrismaServiceModule
   ],
   controllers: [Oid4vpVerificationController],
-  providers: [Oid4vpVerificationService, Oid4vpRepository, PrismaService, Logger, NATSClient]
+  providers: [
+    Oid4vpVerificationService,
+    Oid4vpRepository,
+    PrismaService,
+    Logger,
+    NATSClient,
+    {
+      provide: MICRO_SERVICE_NAME,
+      useValue: 'Oid4vc-verification-service'
+    }
+  ]
 })
 export class Oid4vpModule {}

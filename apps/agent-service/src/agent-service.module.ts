@@ -1,4 +1,4 @@
-import { CommonModule } from '@credebl/common';
+import { CommonModule, NatsInterceptor } from '@credebl/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { Logger, Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -17,13 +17,15 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { NATSClient } from '@credebl/common/NATSClient';
-
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -47,7 +49,11 @@ import { NATSClient } from '@credebl/common/NATSClient';
       provide: MICRO_SERVICE_NAME,
       useValue: 'Agent-service'
     },
-    NATSClient
+    NATSClient,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: NatsInterceptor
+    }
   ],
   exports: [AgentServiceService, AgentServiceRepository, AgentServiceModule]
 })

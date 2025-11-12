@@ -24,7 +24,6 @@ import { URLUserEmailTemplate } from '../templates/user-email-template';
 import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
-import { sendEmail } from '@credebl/common/send-grid-helper-file';
 // eslint-disable-next-line camelcase
 import { client_aliases, RecordType, session, user, user_org_roles } from '@prisma/client';
 import {
@@ -70,6 +69,7 @@ import { toNumber } from '@credebl/common/cast.helper';
 import * as jwt from 'jsonwebtoken';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { getCredentialsByAlias } from 'apps/api-gateway/src/user/utils';
+import { EmailService } from '@credebl/common/email.service';
 
 @Injectable()
 export class UserService {
@@ -86,7 +86,8 @@ export class UserService {
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
-    private readonly natsClient: NATSClient
+    private readonly natsClient: NATSClient,
+    private readonly emailService: EmailService
   ) {}
 
   /**
@@ -230,7 +231,7 @@ export class UserService {
         redirectTo,
         clientAlias
       );
-      const isEmailSent = await sendEmail(emailData);
+      const isEmailSent = await this.emailService.sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;
       } else {
@@ -695,7 +696,7 @@ export class UserService {
         verificationCode,
         clientAlias
       );
-      const isEmailSent = await sendEmail(emailData);
+      const isEmailSent = await this.emailService.sendEmail(emailData);
       if (isEmailSent) {
         return isEmailSent;
       } else {

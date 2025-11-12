@@ -2,8 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { EmailDto } from './dtos/email.dto';
 import { sendWithResend } from './resend-helper-file';
-import { sendWithSES } from './aws-ses-helper-file';
-import { sendWithSMTP } from './smtp-helper-file';
 import { sendWithSendGrid } from './send-grid-helper-file';
 
 @Injectable()
@@ -21,14 +19,8 @@ export class EmailService {
 
     try {
       switch (provider) {
-        case 'ses':
-          result = await sendWithSES(emailDto);
-          break;
         case 'sendgrid':
           result = await sendWithSendGrid(emailDto);
-          break;
-        case 'smtp':
-          result = await sendWithSMTP(emailDto);
           break;
         case 'resend':
           result = await sendWithResend(emailDto);

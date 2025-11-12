@@ -5,10 +5,6 @@ import { ClsModule } from 'nestjs-cls';
 import { ContextStorageServiceKey } from './contextStorageService.interface';
 import NestjsClsContextStorageService from './nestjsClsContextStorageService';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isNullUndefinedOrEmpty = (obj: any): boolean =>
-  null === obj || obj === undefined || ('object' === typeof obj && 0 === Object.keys(obj).length);
-
 @Global()
 @Module({
   imports: [
@@ -23,9 +19,11 @@ const isNullUndefinedOrEmpty = (obj: any): boolean =>
             const logger = new Logger('ContextInterceptorModule');
             const rpcContext = context.switchToRpc().getContext();
             const headers = rpcContext.getHeaders() ?? {};
-            if (!isNullUndefinedOrEmpty(headers)) {
-              logger.debug(`[idGenerator] Received contextId in headers: ${headers.get('contextId')}`);
-              return headers.get('contextId');
+            const contextId = headers.get?.('contextId');
+
+            if (contextId) {
+              logger.debug(`[idGenerator] Received contextId in headers: ${contextId}`);
+              return contextId;
             } else {
               const uuidGenerated = uuid();
               logger.debug(

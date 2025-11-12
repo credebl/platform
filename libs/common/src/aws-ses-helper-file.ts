@@ -1,6 +1,7 @@
-import * as AWS from 'aws-sdk';
 import * as dotenv from 'dotenv';
 import * as nodemailer from 'nodemailer';
+
+import { SESClient, SendRawEmailCommand } from '@aws-sdk/client-ses';
 
 import { EmailDto } from './dtos/email.dto';
 import { Logger } from '@nestjs/common';
@@ -8,8 +9,7 @@ import { Logger } from '@nestjs/common';
 dotenv.config();
 
 export const sendWithSES = async (emailDto: EmailDto): Promise<boolean> => {
-  const awsSES = new AWS.SES({
-    apiVersion: '2010-12-01',
+  const sesClient = new SESClient({
     region: process.env.AWS_SES_REGION,
     credentials: {
       accessKeyId: process.env.AWS_SES_ACCESS_KEY,
@@ -17,21 +17,19 @@ export const sendWithSES = async (emailDto: EmailDto): Promise<boolean> => {
     }
   });
   const transporter = nodemailer.createTransport({
-    SES: awsSES
+    SES: { ses: sesClient, aws: { SendRawEmailCommand } }
   });
 
   try {
-    return await transporter
-      .sendMail({
-        from: emailDto.emailFrom,
-        to: emailDto.emailTo,
-        subject: emailDto.emailSubject,
-        text: emailDto.emailText,
-        html: emailDto.emailHtml,
-        attachments: emailDto.emailAttachments
-      })
-      .then(() => true)
-      .catch(() => false);
+    await transporter.sendMail({
+      from: emailDto.emailFrom,
+      to: emailDto.emailTo,
+      subject: emailDto.emailSubject,
+      text: emailDto.emailText,
+      html: emailDto.emailHtml,
+      attachments: emailDto.emailAttachments
+    });
+    return true;
   } catch (error) {
     Logger.error('Error while sending email with Amazon SES', error);
     return false;

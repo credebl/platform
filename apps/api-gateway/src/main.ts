@@ -14,7 +14,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import helmet from 'helmet';
 import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
-import { NatsInterceptor } from '@credebl/common';
 import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-validation-pipe';
 import * as useragent from 'express-useragent';
 
@@ -117,7 +116,6 @@ async function bootstrap(): Promise<void> {
       xssFilter: true
     })
   );
-  app.useGlobalInterceptors(new NatsInterceptor());
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
   Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`);
 }

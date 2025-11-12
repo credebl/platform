@@ -17,26 +17,28 @@ export class LoggingInterceptor implements NestInterceptor {
     private readonly clsService: ClsService,
     @Inject(ContextStorageServiceKey)
     private readonly contextStorageService: ContextStorageService,
-    @Inject(LoggerKey) private readonly _logger: Logger
+    @Inject(LoggerKey) private readonly logger: Logger
   ) {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return this.clsService.run(() => {
-      this._logger.info('In LoggingInterceptor configuration');
+      this.logger.info('In LoggingInterceptor configuration');
       const rpcContext = context.switchToRpc().getContext();
       const headers = rpcContext.getHeaders();
 
-      if (!isNullUndefinedOrEmpty(headers) && headers._description) {
-        this.contextStorageService.set('x-correlation-id', headers._description);
-        this.contextStorageService.setContextId(headers._description);
+      if (!isNullUndefinedOrEmpty(headers)) {
+        this.logger.debug('We found context Id in header of logger Interceptor', headers.get('contextId'));
+        this.contextStorageService.setContextId(headers.get('contextId'));
       } else {
         const newContextId = v4();
+        this.logger.debug('Not found context Id in header of logger Interceptor, generating a new one: ', newContextId);
         this.contextStorageService.set('x-correlation-id', newContextId);
+        this.contextStorageService.set('contextId', newContextId);
         this.contextStorageService.setContextId(newContextId);
       }
       return next.handle().pipe(
         catchError((err) => {
-          this._logger.error(err);
+          this.logger.error('[intercept] Error in LoggingInterceptor', err);
           return throwError(() => err);
         })
       );

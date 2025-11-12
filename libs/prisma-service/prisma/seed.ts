@@ -12,7 +12,10 @@ const prisma = new PrismaClient();
 const logger = new Logger('Init seed DB');
 let platformUserId = '';
 
-const configData = fs.readFileSync(`${process.cwd()}/prisma/data/credebl-master-table.json`, 'utf8');
+const configData = fs.readFileSync(
+  `${process.cwd()}/prisma/data/credebl-master-table/credebl-master-table.json`,
+  'utf8'
+);
 const createPlatformConfig = async (): Promise<void> => {
   try {
     const existPlatformAdmin = await prisma.platform_config.findMany();

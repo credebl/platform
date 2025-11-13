@@ -47,7 +47,6 @@ import {
   IDidCreate,
   IWallet,
   ITenantRecord,
-  LedgerListResponse,
   ICreateConnectionInvitation,
   IStoreAgent,
   AgentHealthData,
@@ -55,7 +54,9 @@ import {
   IAgentConfigure,
   OrgDid,
   IBasicMessage,
-  WalletDetails
+  WalletDetails,
+  ILedger,
+  IStoreOrgAgent
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -497,8 +498,8 @@ export class AgentServiceService {
       if (agentSpinupDto.method !== DidMethod.KEY && agentSpinupDto.method !== DidMethod.WEB) {
         const { network } = agentSpinupDto;
         const ledger = await ledgerName(network);
-        const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse;
-        const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
+        const ledgerList = await this._getALlLedgerDetails();
+        const isLedgerExist = ledgerList.find((existingLedgers) => existingLedgers.name === ledger);
         if (!isLedgerExist) {
           throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {
             cause: new Error(),
@@ -511,15 +512,14 @@ export class AgentServiceService {
       /**
        * Invoke wallet create and provision with agent
        */
-      const walletProvision = await this._walletProvision(walletProvisionPayload);
-      if (!walletProvision?.response) {
+      const agentDetails = await this._walletProvision(walletProvisionPayload);
+      if (!agentDetails) {
         this.logger.error(`Agent not able to spin-up`);
         throw new BadRequestException(ResponseMessages.agent.error.notAbleToSpinup, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.badRequest
         });
       }
-      const agentDetails = walletProvision.response;
       const agentEndPoint = `${process.env.API_GATEWAY_PROTOCOL}://${agentDetails.agentEndPoint}`;
       /**
        * Socket connection
@@ -693,48 +693,38 @@ export class AgentServiceService {
     }
   }
 
-  async _createConnectionInvitation(
-    orgId: string,
-    user: IUserRequestInterface,
-    label: string
-  ): Promise<{
-    response;
-  }> {
+  async _createConnectionInvitation(orgId: string, user: IUserRequestInterface, label: string): Promise<object> {
     try {
       const pattern = {
         cmd: 'create-connection-invitation'
       };
       const payload = { createOutOfBandConnectionInvitation: { orgId, user, label } };
-      return await this.natsCall(pattern, payload);
+      return this.natsClient.send(this.agentServiceProxy, pattern, payload);
     } catch (error) {
-      this.logger.error(`error in create-connection in wallet provision : ${JSON.stringify(error)}`);
+      this.logger.error(`[natsCall] - error in create-connection in wallet provision : ${JSON.stringify(error)}`);
     }
   }
 
-  async _getALlLedgerDetails(): Promise<{
-    response;
-  }> {
+  async _getALlLedgerDetails(): Promise<ILedger[]> {
     try {
       const pattern = {
         cmd: 'get-all-ledgers'
       };
       const payload = {};
-      return await this.natsCall(pattern, payload);
+      return this.natsClient.send(this.agentServiceProxy, pattern, payload);
     } catch (error) {
-      this.logger.error(`error in while fetching all the ledger details : ${JSON.stringify(error)}`);
+      this.logger.error(`[natsCall] - error in while fetching all the ledger details : ${JSON.stringify(error)}`);
     }
   }
 
-  async _walletProvision(payload: IWalletProvision): Promise<{
-    response;
-  }> {
+  async _walletProvision(payload: IWalletProvision): Promise<Partial<IStoreOrgAgent>> {
     try {
       const pattern = {
         cmd: 'wallet-provisioning'
       };
-      return await this.natsCall(pattern, payload);
+      return this.natsClient.send(this.agentServiceProxy, pattern, payload);
     } catch (error) {
-      this.logger.error(`error in wallet provision : ${JSON.stringify(error)}`);
+      this.logger.error(`[natsCall] - error in wallet provision : ${JSON.stringify(error)}`);
       throw error;
     }
   }
@@ -795,8 +785,8 @@ export class AgentServiceService {
         ledger = Ledgers.Not_Applicable;
       }
 
-      const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse;
-      const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
+      const ledgerList = await this._getALlLedgerDetails();
+      const isLedgerExist = ledgerList.find((existingLedgers) => existingLedgers.name === ledger);
       if (!isLedgerExist) {
         throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {
           cause: new Error(),
@@ -2187,32 +2177,6 @@ export class AgentServiceService {
       return createConnectionInvitation;
     } catch (error) {
       this.logger.error(`Error in create connection invitation in agent service : ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
-  async natsCall(
-    pattern: object,
-    payload: object
-  ): Promise<{
-    response: string;
-  }> {
-    try {
-      return from(this.natsClient.send<string>(this.agentServiceProxy, pattern, payload))
-        .pipe(map((response) => ({ response })))
-        .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            },
-            error.error
-          );
-        });
-    } catch (error) {
-      this.logger.error(`[natsCall] - error in nats call : ${JSON.stringify(error)}`);
       throw error;
     }
   }

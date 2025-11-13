@@ -213,6 +213,7 @@ export interface IStoreOrgAgent {
   id?: string;
   clientSocketId?: string;
   agentEndPoint?: string;
+  agentToken?: string;
   apiKey?: string;
   seed?: string;
   did?: string;
@@ -556,7 +557,7 @@ export interface IQuestionPayload {
 export interface IBasicMessage {
   content: string;
 }
-interface Ledger {
+export interface ILedger {
   id: string;
   createDateTime: string;
   lastChangedDateTime: string;
@@ -568,10 +569,6 @@ interface Ledger {
   nymTxnEndpoint: string;
   indyNamespace: string;
   networkUrl: string | null;
-}
-
-export interface LedgerListResponse {
-  response: Ledger[];
 }
 
 export interface ICreateConnectionInvitation {

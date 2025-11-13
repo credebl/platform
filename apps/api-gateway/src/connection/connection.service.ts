@@ -32,7 +32,7 @@ export class ConnectionService extends BaseService {
     try {
       return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'send-question', questionDto);
     } catch (error) {
-      throw new RpcException(error.response);
+      throw new RpcException(error?.response ?? error);
     }
   }
 

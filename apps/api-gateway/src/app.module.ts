@@ -33,6 +33,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { Oid4vcIssuanceModule } from './oid4vc-issuance/oid4vc-issuance.module';
 import { X509Module } from './x509/x509.module';
 import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
+import { shouldLoadOidcModules } from '@credebl/common/common.utils';
 
 @Module({
   imports: [
@@ -66,21 +67,9 @@ import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
     CacheModule.register(),
     GeoLocationModule,
     CloudWalletModule,
-    ConditionalModule.registerWhen(Oid4vcIssuanceModule, () => {
-      const raw = process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS ?? 'true';
-      const hide = 'true' === raw.toLowerCase();
-      return !hide;
-    }),
-    ConditionalModule.registerWhen(Oid4vpModule, () => {
-      const raw = process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS ?? 'true';
-      const hide = 'true' === raw.toLowerCase();
-      return !hide;
-    }),
-    ConditionalModule.registerWhen(X509Module, () => {
-      const raw = process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS ?? 'true';
-      const hide = 'true' === raw.toLowerCase();
-      return !hide;
-    })
+    ConditionalModule.registerWhen(Oid4vcIssuanceModule, shouldLoadOidcModules),
+    ConditionalModule.registerWhen(Oid4vpModule, shouldLoadOidcModules),
+    ConditionalModule.registerWhen(X509Module, shouldLoadOidcModules)
   ],
   controllers: [AppController],
   providers: [

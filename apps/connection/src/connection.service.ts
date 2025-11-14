@@ -67,7 +67,8 @@ export class ConnectionService {
     const payload = { connectionPayload, url, orgId };
 
     try {
-      return this.natsClient.send(this.connectionServiceProxy, pattern, payload);
+      const result = await this.natsClient.send(this.connectionServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(
@@ -226,7 +227,8 @@ export class ConnectionService {
     try {
       const pattern = { cmd: 'agent-get-all-connections' };
       const payload = { url, orgId };
-      return this.natsClient.send(this.connectionServiceProxy, pattern, payload);
+      const result = await this.natsClient.send<IConnectionList>(this.connectionServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(
         `[_getAllConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
@@ -288,7 +290,8 @@ export class ConnectionService {
     try {
       const pattern = { cmd: 'agent-get-question-answer-record' };
       const payload = { url, orgId };
-      return this.natsClient.send(this.connectionServiceProxy, pattern, payload);
+      const result = await this.natsClient.send<object>(this.connectionServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(
         `[_getQuestionAnswersRecord ] [NATS call]- error in get question and answer records : ${JSON.stringify(error)}`
@@ -342,7 +345,12 @@ export class ConnectionService {
     const payload = { url, orgId, receiveInvitationUrl };
 
     try {
-      return this.natsClient.send(this.connectionServiceProxy, pattern, payload);
+      const result = await this.natsClient.send<IReceiveInvitationResponse>(
+        this.connectionServiceProxy,
+        pattern,
+        payload
+      );
+      return result;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(
@@ -440,7 +448,7 @@ export class ConnectionService {
     const payload = { persistent, storeObj };
 
     try {
-      const message = this.natsClient.send<string>(this.connectionServiceProxy, pattern, payload);
+      const message = await this.natsClient.send<string>(this.connectionServiceProxy, pattern, payload);
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -572,7 +580,8 @@ export class ConnectionService {
     const payload = { connectionPayload, url, orgId };
 
     try {
-      return this.natsClient.send(this.connectionServiceProxy, pattern, payload);
+      const result = await this.natsClient.send(this.connectionServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(

@@ -181,12 +181,11 @@ export class VerificationService {
    * @param payload
    * @returns Get all proof presentation
    */
-  async _getProofPresentations(payload: IGetAllProofPresentations): Promise<{
-    response: string;
-  }> {
+  async _getProofPresentations(payload: IGetAllProofPresentations): Promise<object> {
     try {
       const pattern = { cmd: 'agent-get-proof-presentations' };
-      return this.natsClient.send(this.verificationServiceProxy, pattern, payload);
+      const result = await this.natsClient.send<object>(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[_getProofPresentations] - error in get proof presentations : ${JSON.stringify(error)}`);
       throw error;
@@ -260,7 +259,8 @@ export class VerificationService {
         cmd: 'agent-get-proof-presentation-by-id'
       };
 
-      return this.natsClient.send(this.verificationServiceProxy, pattern, payload);
+      const result = await this.natsClient.send<object>(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(
         `[_getProofPresentationById] - error in get proof presentation by id : ${JSON.stringify(error)}`
@@ -382,9 +382,10 @@ export class VerificationService {
         cmd: 'agent-send-proof-request'
       };
 
-      return this.natsClient.send(this.verificationServiceProxy, pattern, payload);
+      const result = await this.natsClient.send<object>(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
-      this.logger.error(`[_sendProofRequest] - error in verify presentation : ${JSON.stringify(error)}`);
+      this.logger.error(`[_sendProofRequest] - error in nats in verify presentation : ${JSON.stringify(error)}`);
       throw error;
     }
   }
@@ -432,7 +433,8 @@ export class VerificationService {
         cmd: 'agent-verify-presentation'
       };
 
-      return this.natsClient.send(this.verificationServiceProxy, pattern, payload);
+      const result = await this.natsClient.send<object>(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[_verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
       throw error;
@@ -677,7 +679,8 @@ export class VerificationService {
         cmd: 'agent-send-out-of-band-proof-request'
       };
 
-      return this.natsClient.send(this.verificationServiceProxy, pattern, payload);
+      const result = await this.natsClient.send(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[_sendOutOfBandProofRequest] - error in Out Of Band Presentation : ${JSON.stringify(error)}`);
       throw error;
@@ -940,7 +943,8 @@ export class VerificationService {
         cmd: 'get-agent-verified-proof-details'
       };
 
-      return this.natsClient.send(this.verificationServiceProxy, pattern, payload);
+      const result = await this.natsClient.send(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[_getVerifiedProofDetails] - error in verified proof details : ${JSON.stringify(error)}`);
       throw error;

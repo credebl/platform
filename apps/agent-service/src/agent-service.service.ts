@@ -699,7 +699,8 @@ export class AgentServiceService {
         cmd: 'create-connection-invitation'
       };
       const payload = { createOutOfBandConnectionInvitation: { orgId, user, label } };
-      return this.natsClient.send(this.agentServiceProxy, pattern, payload);
+      const result = await this.natsClient.send<object>(this.agentServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[natsCall] - error in create-connection in wallet provision : ${JSON.stringify(error)}`);
     }
@@ -711,7 +712,8 @@ export class AgentServiceService {
         cmd: 'get-all-ledgers'
       };
       const payload = {};
-      return this.natsClient.send(this.agentServiceProxy, pattern, payload);
+      const result = await this.natsClient.send<ILedger[]>(this.agentServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[natsCall] - error in while fetching all the ledger details : ${JSON.stringify(error)}`);
     }
@@ -722,7 +724,8 @@ export class AgentServiceService {
       const pattern = {
         cmd: 'wallet-provisioning'
       };
-      return this.natsClient.send(this.agentServiceProxy, pattern, payload);
+      const result = await this.natsClient.send<Partial<IStoreOrgAgent>>(this.agentServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[natsCall] - error in wallet provision : ${JSON.stringify(error)}`);
       throw error;

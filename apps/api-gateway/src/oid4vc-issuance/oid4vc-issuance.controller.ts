@@ -28,7 +28,8 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiUnauthorizedResponse,
-  ApiExcludeEndpoint
+  ApiExcludeEndpoint,
+  ApiExcludeController
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -54,6 +55,8 @@ import {
   GetAllCredentialOfferDto,
   UpdateCredentialRequestDto
 } from './dtos/issuer-sessions.dto';
+
+@ApiExcludeController('true' === (process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS || 'true').trim().toLowerCase())
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('OID4VC')

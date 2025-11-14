@@ -385,7 +385,7 @@ export class VerificationService {
       const result = await this.natsClient.send<object>(this.verificationServiceProxy, pattern, payload);
       return result;
     } catch (error) {
-      this.logger.error(`[_sendProofRequest] - error in nats in verify presentation : ${JSON.stringify(error)}`);
+      this.logger.error(`[_sendProofRequest] - nats error in sending proof request : ${JSON.stringify(error)}`);
       throw error;
     }
   }

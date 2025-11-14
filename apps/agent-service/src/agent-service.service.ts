@@ -499,6 +499,13 @@ export class AgentServiceService {
         const { network } = agentSpinupDto;
         const ledger = await ledgerName(network);
         const ledgerList = await this._getALlLedgerDetails();
+        if (!ledgerList) {
+          throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.notFound
+          });
+        }
+
         const isLedgerExist = ledgerList.find((existingLedgers) => existingLedgers.name === ledger);
         if (!isLedgerExist) {
           throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {
@@ -703,6 +710,7 @@ export class AgentServiceService {
       return result;
     } catch (error) {
       this.logger.error(`[natsCall] - error in create-connection in wallet provision : ${JSON.stringify(error)}`);
+      throw new RpcException(error?.response ? error.response : error);
     }
   }
 
@@ -716,6 +724,7 @@ export class AgentServiceService {
       return result;
     } catch (error) {
       this.logger.error(`[natsCall] - error in while fetching all the ledger details : ${JSON.stringify(error)}`);
+      throw new RpcException(error?.response ? error.response : error);
     }
   }
 
@@ -789,6 +798,12 @@ export class AgentServiceService {
       }
 
       const ledgerList = await this._getALlLedgerDetails();
+      if (!ledgerList) {
+        throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
+        });
+      }
       const isLedgerExist = ledgerList.find((existingLedgers) => existingLedgers.name === ledger);
       if (!isLedgerExist) {
         throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {

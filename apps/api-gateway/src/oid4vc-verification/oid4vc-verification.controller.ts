@@ -28,8 +28,7 @@ import {
   ApiForbiddenResponse,
   ApiUnauthorizedResponse,
   ApiQuery,
-  ApiExcludeEndpoint,
-  ApiExcludeController
+  ApiExcludeEndpoint
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -51,7 +50,6 @@ import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 
 @Controller()
-@ApiExcludeController('true' === (process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS || 'true').trim().toLowerCase())
 @UseFilters(CustomExceptionFilter)
 @ApiTags('OID4VP')
 @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })

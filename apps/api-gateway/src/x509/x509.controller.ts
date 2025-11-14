@@ -1,6 +1,5 @@
 import {
   ApiBearerAuth,
-  ApiExcludeController,
   ApiForbiddenResponse,
   ApiOperation,
   ApiQuery,
@@ -51,7 +50,6 @@ import { SortFields, x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 @UseFilters(CustomExceptionFilter)
 @Controller('x509')
 @ApiTags('x509')
-@ApiExcludeController('true' === (process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS || 'true').trim().toLowerCase())
 @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class X509Controller {

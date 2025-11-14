@@ -46,15 +46,15 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'get-all-agent-connection-list' })
-  async getConnectionListFromAgent(payload: GetAllConnections): Promise<string> {
-    const {orgId, connectionSearchCriteria } = payload;
+  async getConnectionListFromAgent(payload: GetAllConnections): Promise<IConnectionList> {
+    const { orgId, connectionSearchCriteria } = payload;
     return this.connectionService.getAllConnectionListFromAgent(orgId, connectionSearchCriteria);
   }
 
   /**
-   * 
+   *
    * @param connectionId
-   * @param orgId 
+   * @param orgId
    * @returns connection details by connection Id
    */
   @MessagePattern({ cmd: 'get-connection-details-by-connectionId' })
@@ -64,7 +64,7 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'get-connection-records' })
-  async getConnectionRecordsByOrgId(payload: { orgId: string, userId: string }): Promise<number> {
+  async getConnectionRecordsByOrgId(payload: { orgId: string; userId: string }): Promise<number> {
     const { orgId } = payload;
     return this.connectionService.getConnectionRecords(orgId);
   }
@@ -80,7 +80,7 @@ export class ConnectionController {
     const { user, receiveInvitation, orgId } = payload;
     return this.connectionService.receiveInvitation(user, receiveInvitation, orgId);
   }
-  
+
   @MessagePattern({ cmd: 'send-question' })
   async sendQuestion(payload: IQuestionPayload): Promise<object> {
     return this.connectionService.sendQuestion(payload);
@@ -97,13 +97,13 @@ export class ConnectionController {
   }
 
   @MessagePattern({ cmd: 'delete-connection-records' })
-  async deleteConnectionRecords(payload: {orgId: string, userDetails: user}): Promise<IDeletedConnectionsRecord> {  
+  async deleteConnectionRecords(payload: { orgId: string; userDetails: user }): Promise<IDeletedConnectionsRecord> {
     const { orgId, userDetails } = payload;
     return this.connectionService.deleteConnectionRecords(orgId, userDetails);
   }
 
   @MessagePattern({ cmd: 'send-basic-message-on-connection' })
-  async sendBasicMessage(payload: {content: string, orgId: string, connectionId: string}): Promise<object> {
-    return this.connectionService.sendBasicMesage(payload);
+  async sendBasicMessage(payload: { content: string; orgId: string; connectionId: string }): Promise<object> {
+    return this.connectionService.sendBasicMessage(payload);
   }
 }

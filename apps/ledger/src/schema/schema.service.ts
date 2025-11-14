@@ -402,6 +402,7 @@ export class SchemaService extends BaseService {
     };
     const schemaResponse = await from(this.natsClient.send<string>(this.schemaServiceProxy, pattern, payload))
       .pipe(
+        // TODO: remove nested mapping
         map((response) => ({
           response
         }))
@@ -429,6 +430,7 @@ export class SchemaService extends BaseService {
     };
     const W3CSchemaResponse = await from(this.natsClient.send<string>(this.schemaServiceProxy, natsPattern, payload))
       .pipe(
+        // TODO: remove nested mapping
         map((response) => ({
           response
         }))
@@ -553,6 +555,7 @@ export class SchemaService extends BaseService {
       };
       const schemaResponse = await from(this.natsClient.send<string>(this.schemaServiceProxy, pattern, payload))
         .pipe(
+          // TODO: remove nested mapping
           map((response) => ({
             response
           }))

@@ -236,6 +236,11 @@ export interface IProofRequestSearchCriteria {
 }
 
 export interface IInvitation {
+  outOfBandRecord?: {
+    id: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } & Record<string, any>;
+  proofRecordThId?: string;
   invitationUrl?: string;
   deepLinkURL?: string;
 }

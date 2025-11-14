@@ -118,5 +118,12 @@ async function bootstrap(): Promise<void> {
   );
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
   Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`);
+
+  if ('true' === (process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS || 'true').trim().toLowerCase()) {
+    Logger.warn('Hiding experimental OIDC Controllers: OID4VC, OID4VP, x509 in OpenAPI docs');
+    Logger.verbose(
+      "To enable the use of experimental OIDC controllers. Set, 'HIDE_EXPERIMENTAL_OIDC_CONTROLLERS' env variable to false"
+    );
+  }
 }
 bootstrap();

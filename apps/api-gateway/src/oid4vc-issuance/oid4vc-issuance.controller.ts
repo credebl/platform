@@ -54,6 +54,7 @@ import {
   GetAllCredentialOfferDto,
   UpdateCredentialRequestDto
 } from './dtos/issuer-sessions.dto';
+
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('OID4VC')

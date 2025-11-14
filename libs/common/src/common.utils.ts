@@ -138,3 +138,9 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
   const url = `${agentEndPoint}${resolvedUrlPath}`;
   return url;
 };
+
+export function shouldLoadOidcModules(): boolean {
+  const raw = process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS ?? 'true';
+  const hide = 'true' === raw.toLowerCase();
+  return !hide;
+}

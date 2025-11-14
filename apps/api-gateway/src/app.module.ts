@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 import { AuthzMiddleware } from './authz/authz.middleware';
 import { AuthzModule } from './authz/authz.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ConfigModule } from '@nestjs/config';
+import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { CredentialDefinitionModule } from './credential-definition/credential-definition.module';
 import { FidoModule } from './fido/fido.module';
 import { IssuanceModule } from './issuance/issuance.module';
@@ -33,6 +33,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { Oid4vcIssuanceModule } from './oid4vc-issuance/oid4vc-issuance.module';
 import { X509Module } from './x509/x509.module';
 import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
+import { shouldLoadOidcModules } from '@credebl/common/common.utils';
 
 @Module({
   imports: [
@@ -66,9 +67,9 @@ import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
     CacheModule.register(),
     GeoLocationModule,
     CloudWalletModule,
-    Oid4vcIssuanceModule,
-    Oid4vpModule,
-    X509Module
+    ConditionalModule.registerWhen(Oid4vcIssuanceModule, shouldLoadOidcModules),
+    ConditionalModule.registerWhen(Oid4vpModule, shouldLoadOidcModules),
+    ConditionalModule.registerWhen(X509Module, shouldLoadOidcModules)
   ],
   controllers: [AppController],
   providers: [

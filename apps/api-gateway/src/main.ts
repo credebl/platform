@@ -122,9 +122,17 @@ async function bootstrap(): Promise<void> {
   if ('true' === process.env.DB_ALERT_ENABLE?.trim()?.toLowerCase()) {
     // in case it is enabled, log that
     Logger.log(
-      "We have enabled DB alert for 'ledger_null' instances. This would send email in case the 'ledger_id' column in 'org_agents' table is set to null",
+      'We have enabled DB alert for \'ledger_null\' instances. This would send email in case the \'ledger_id\' column in \'org_agents\' table is set to null',
       'DB alert enabled'
     );
   }
+
+  if ('true' === (process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS || 'true').trim().toLowerCase()) {
+    Logger.warn('Hiding experimental OIDC Controllers: OID4VC, OID4VP, x509 in OpenAPI docs');
+    Logger.verbose(
+      'To enable the use of experimental OIDC controllers. Set, \'HIDE_EXPERIMENTAL_OIDC_CONTROLLERS\' env variable to false'
+    );
+  }
+
 }
 bootstrap();

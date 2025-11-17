@@ -1,12 +1,11 @@
 import { Prisma } from '@prisma/client';
-import { JsonValue } from '@prisma/client/runtime/library';
 
 export interface IUserOrgRoles {
-  id: string;
-  userId: string;
-  orgRoleId: string;
-  orgId: string | null;
-  orgRole: IOrgRole;
+  id: string
+  userId: string
+  orgRoleId: string
+  orgId: string | null,
+  orgRole: IOrgRole
 }
 
 export interface IClientCredentials {
@@ -21,11 +20,9 @@ export interface IUpdateOrganization {
   logo?: string;
   website?: string;
   orgSlug?: string;
-  isPublic?: boolean;
+  isPublic?:boolean;
   userId?: string;
-  countryId?: number;
-  cityId?: number;
-  stateId?: number;
+
 }
 
 export interface ICreateConnectionUrl {
@@ -45,7 +42,8 @@ export interface IOrgAgent {
   apiKey: string;
 }
 
-export interface IGetOrgById {
+
+export interface IGetOrgById { 
   id: string;
   name: string;
   description: string;
@@ -63,7 +61,7 @@ interface ISchema {
 }
 
 interface IOrgAgents {
-  agent_invitations: IAgentInvitation[];
+  agent_invitations?: IAgentInvitation[];
   ledgers: ILedgers;
   org_agent_type: IOrgAgentType;
 }
@@ -89,33 +87,33 @@ interface IOrgAgentType {
 interface ILedgers {
   id: string;
   name: string;
-  networkType: string;
+  networkType: string
 }
 
 export interface IGetOrganization {
-  totalCount: number;
-  totalPages: number;
-  organizations: IGetAllOrganizations[];
+  totalCount:number;
+  totalPages:number;
+  organizations : IGetAllOrganizations[];
 }
 
-interface IGetAllOrganizations {
-  id: string;
-  name: string;
-  description: string;
-  logoUrl: string;
-  orgSlug: string;
+interface IGetAllOrganizations{
+  id: string,
+  name: string,
+  description: string,
+  logoUrl: string,
+  orgSlug: string,
   userOrgRoles: IUserOrganizationRoles[];
 }
 
 interface IUserOrganizationRoles {
-  id: string;
-  orgRole: IOrgRole;
+  id: string,
+  orgRole :IOrgRole;
 }
 
 export interface IOrgRole {
-  id: string;
-  name: string;
-  description: string;
+  id: string
+  name: string
+  description: string
 }
 
 export interface IOrgInvitationsPagination {
@@ -124,14 +122,14 @@ export interface IOrgInvitationsPagination {
 }
 
 interface IInvitation {
-  id: string;
-  orgId: string;
-  email: string;
-  userId: string;
-  status: string;
-  orgRoles: string[];
-  createDateTime: Date;
-  createdBy: string;
+  id: string,
+  orgId: string,
+  email: string,
+  userId: string,
+  status: string,
+  orgRoles: string[],
+  createDateTime: Date,
+  createdBy:string,
   organisation: IOrganizationPagination;
 }
 
@@ -157,15 +155,15 @@ export interface IDidList {
 }
 
 export interface IPrimaryDid {
-  orgId: string;
-  did: string;
+  orgId: string,
+  did: string
 }
 
 export interface IDidDetails {
   id: string;
-  createDateTime: Date;
+  createDateTime: Date; 
   createdBy: string;
-  lastChangedDateTime: Date;
+  lastChangedDateTime: Date; 
   lastChangedBy: string;
   orgId: string;
   isPrimaryDid: boolean;
@@ -175,9 +173,9 @@ export interface IDidDetails {
 }
 
 export interface IPrimaryDidDetails extends IPrimaryDid {
-  id: string;
-  networkId: string;
-  didDocument: Prisma.JsonValue;
+  id: string
+  networkId: string
+  didDocument: Prisma.JsonValue
 }
 
 export interface OrgInvitation {
@@ -195,17 +193,17 @@ export interface OrgInvitation {
 }
 
 export interface ILedgerNameSpace {
-  id: string;
-  createDateTime: Date;
-  lastChangedDateTime: Date;
-  name: string;
-  networkType: string;
-  poolConfig: string;
-  isActive: boolean;
-  networkString: string;
-  nymTxnEndpoint: string;
-  indyNamespace: string;
-  networkUrl: string;
+    id: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    nymTxnEndpoint: string;
+    indyNamespace: string;
+    networkUrl: string;
 }
 
 export interface IGetDids {
@@ -233,7 +231,9 @@ export interface ILedgerDetails {
   nymTxnEndpoint: string;
   indyNamespace: string;
   networkUrl: string;
+
 }
+
 export interface IOrgRoleDetails {
   id: string;
   name: string;
@@ -244,65 +244,10 @@ export interface IOrgRoleDetails {
   lastChangedBy: string;
   deletedAt: Date;
 }
-export interface IEcosystemOrgStatus {
-  ecosystemId: string;
-  orgId: string;
-  status: string;
-}
-
-interface IDidDocument {
-  id: string;
-  '@context': string[];
-  authentication: string[];
-  verificationMethod: IVerificationMethod[];
-}
 
 export interface IVerificationMethod {
   id: string;
   type: string;
   controller: string;
   publicKeyBase58: string;
-}
-
-interface IOrgAgentDetails {
-  id: string;
-  createDateTime: Date;
-  createdBy: string;
-  lastChangedDateTime: Date;
-  lastChangedBy: string;
-  orgDid: string;
-  verkey: string | null;
-  agentEndPoint: string;
-  agentId: string | null;
-  isDidPublic: boolean;
-  agentSpinUpStatus: number;
-  agentOptions: string | Buffer | null;
-  walletName: string;
-  tenantId: string;
-  apiKey: string | null;
-  agentsTypeId: string;
-  orgId: string;
-  orgAgentTypeId: string;
-  ledgerId: string;
-  didDocument: IDidDocument | JsonValue;
-  webhookUrl: string | null;
-}
-
-interface IOrganisation {
-  id: string;
-  name: string;
-  orgSlug: string;
-}
-
-interface IUserOrgRolesDetails {
-  id: string;
-  userId: string;
-  orgRoleId: string;
-  orgId: string | null;
-  idpRoleId: string;
-}
-export interface IOrgDetails {
-  organisations: IOrganisation[];
-  orgAgents: IOrgAgentDetails[];
-  userOrgRoles: IUserOrgRolesDetails[];
 }

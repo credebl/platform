@@ -11,12 +11,16 @@ export class BulkIssuanceProcessor {
 
   @OnQueueActive()
   onActive(job: Job): void {
-    this.logger.log(`Emitting job status${job.id} of type ${job.name} ...`);
+    this.logger.log(
+      `Emitting job status${job.id} of type ${job.name} with data ${JSON.stringify(job.data)}...`
+    );
   }
 
   @Process()
-  async issueCredential(job: Job<IQueuePayload>): Promise<void> {
-    this.logger.log(`Processing job ${job.id} of type ${job.name} ...`);
+  async issueCredential(job: Job<IQueuePayload>):Promise<void> {
+    this.logger.log(
+      `Processing job ${job.id} of type ${job.name} with data ${JSON.stringify(job.data)}...`
+    );
 
     this.issuanceService.processIssuanceData(job.data);
   }

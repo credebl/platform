@@ -1,18 +1,17 @@
 import * as dotenv from 'dotenv';
-import * as jwt from 'jsonwebtoken';
 
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, NotFoundException } from '@nestjs/common';
 
-import { AuthzService } from './authz.service';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { IOrganization } from '@credebl/common/interfaces/organization.interface';
 import { JwtPayload } from './jwt-payload.interface';
-import { OrganizationService } from '../organization/organization.service';
 import { PassportStrategy } from '@nestjs/passport';
-import { ResponseMessages } from '@credebl/common/response-messages';
 import { UserService } from '../user/user.service';
+import * as jwt from 'jsonwebtoken';
 import { passportJwtSecret } from 'jwks-rsa';
+import { CommonConstants } from '@credebl/common/common.constant';
+import { OrganizationService } from '../organization/organization.service';
+import { IOrganization } from '@credebl/common/interfaces/organization.interface';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 dotenv.config();
 
@@ -22,15 +21,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   constructor(
     private readonly usersService: UserService,
-    private readonly organizationService: OrganizationService,
-    private readonly authzService: AuthzService
-  ) {
+    private readonly organizationService: OrganizationService
+    ) {
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKeyProvider: async (request, jwtToken, done) => {
-        // Todo: We need to add this logic in seprate jwt gurd to handle the token expiration functionality.
+      secretOrKeyProvider: (request, jwtToken, done) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const decodedToken: any = jwt.decode(jwtToken);
+
         if (!decodedToken) {
           throw new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken);
         }
@@ -50,38 +49,26 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
       },
       algorithms: ['RS256']
-    });
+    });  
   }
 
   async validate(payload: JwtPayload): Promise<object> {
+
     let userDetails = null;
     let userInfo;
 
-    const sessionId = payload?.sid;
-    let sessionDetails = null;
-    if (sessionId) {
-      try {
-        sessionDetails = await this.authzService.checkSession(sessionId);
-      } catch (error) {
-        this.logger.log('Error in JWT Stratergy while fetching session details', JSON.stringify(error, null, 2));
-      }
-      if (!sessionDetails) {
-        throw new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken);
-      }
+    if (payload && !(payload.preferred_username.includes('service-account'))) {
+      userInfo = await this.usersService.getUserByUserIdInKeycloak(payload?.preferred_username);
     }
-
-    if (payload?.email) {
-      userInfo = await this.usersService.getUserByUserIdInKeycloak(payload?.email);
-    }
-
+    
     if (payload.hasOwnProperty('client_id')) {
       const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id']);
-
+      
       this.logger.log('Organization details fetched');
       if (!orgDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
       }
-
+  
       // eslint-disable-next-line prefer-destructuring
       const userOrgDetails = 0 < orgDetails.userOrgRoles.length && orgDetails.userOrgRoles[0];
 
@@ -96,10 +83,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       });
 
       this.logger.log('User details set');
+
     } else {
       userDetails = await this.usersService.findUserinKeycloak(payload.sub);
     }
-
+    
     if (!userDetails) {
       throw new NotFoundException(ResponseMessages.user.error.notFound);
     }

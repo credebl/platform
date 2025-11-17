@@ -80,7 +80,7 @@ export interface IWallet {
 }
 
 export interface IDidCreate {
-  keyType: KeyType;
+  keyType: string;
   seed: string;
   domain?: string;
   network?: string;
@@ -343,8 +343,14 @@ export interface IAgentStatus {
 export interface ISchema {
   uri: string;
 }
+
+export interface IFilter {
+  type: string;
+  pattern: string;
+}
 export interface IFields {
   path: string[];
+  filter: IFilter;
 }
 export interface IConstraints {
   fields: IFields[];
@@ -361,7 +367,7 @@ export interface IInputDescriptors {
 export interface IProofRequestPresentationDefinition {
   id: string;
   name: string;
-  purpose?: string;
+  purpose: string;
   input_descriptors: IInputDescriptors[];
 }
 
@@ -434,8 +440,6 @@ export interface ICreateTenant {
   tenantRecord: ITenantRecord;
   did: string;
   verkey: string;
-  didDocument?: Record<string, string>;
-  didDoc?: Record<string, string>;
 }
 
 export interface IOrgAgent {
@@ -645,21 +649,16 @@ export interface OrgDid {
 }
 
 export interface ILedgers {
-  id: string;
-  createDateTime: Date;
-  lastChangedDateTime: Date;
-  name: string;
-  networkType: string;
-  poolConfig: string;
-  isActive: boolean;
-  networkString: string;
-  nymTxnEndpoint: string;
-  indyNamespace: string;
-  networkUrl: string;
-}
-export interface WalletDetails {
-  agentEndPoint: string;
-  apiKey: string;
-  tenantId: string;
-  orgId: string;
+    id: string;
+    createDateTime: Date;
+    lastChangedDateTime: Date;
+    name: string;
+    networkType: string;
+    poolConfig: string;
+    isActive: boolean;
+    networkString: string;
+    nymTxnEndpoint: string;
+    indyNamespace: string;
+    networkUrl: string;
+
 }

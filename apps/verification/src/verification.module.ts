@@ -11,13 +11,7 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { CacheModule } from '@nestjs/cache-manager';
 import { UserActivityService } from '@credebl/user-activity';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { NATSClient } from '@credebl/common/NATSClient';
-
+import { CommonConstants } from '@credebl/common/common.constant';
 @Module({
   imports: [
     ClientsModule.register([
@@ -29,18 +23,10 @@ import { NATSClient } from '@credebl/common/NATSClient';
       }
     ]),
 
-    GlobalConfigModule,
-    CommonModule, LoggerModule, PlatformConfig, ContextInterceptorModule,
+    CommonModule,
     CacheModule.register()
   ],
   controllers: [VerificationController],
-  providers: [
-    VerificationService, VerificationRepository, PrismaService, UserActivityService, 
-  UserActivityRepository, Logger, OutOfBandVerification, EmailDto, NATSClient,
-  {
-    provide: MICRO_SERVICE_NAME,
-    useValue: 'Verification-Service'
-  }
-]
+  providers: [VerificationService, VerificationRepository, PrismaService, UserActivityService, UserActivityRepository, Logger, OutOfBandVerification, EmailDto]
 })
 export class VerificationModule { }

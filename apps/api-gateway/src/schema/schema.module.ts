@@ -6,7 +6,6 @@ import { SchemaController } from './schema.controller';
 import { SchemaService } from './schema.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [
@@ -21,6 +20,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ])
   ],
   controllers: [SchemaController],
-  providers: [SchemaService, NATSClient]
+  providers: [SchemaService]
 })
 export class SchemaModule { }

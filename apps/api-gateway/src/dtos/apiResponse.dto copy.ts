@@ -8,6 +8,7 @@ export class ApiResponseDto {
     success: boolean;
 
     @ApiProperty()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: any;
 
     @ApiProperty({ example: 200 })

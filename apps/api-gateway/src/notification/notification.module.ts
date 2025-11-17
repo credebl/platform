@@ -8,7 +8,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [
@@ -25,6 +24,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ])
   ],
   controllers: [NotificationController],
-  providers: [NotificationService, CommonService, NATSClient]
+  providers: [NotificationService, CommonService]
 })
 export class NotificationModule { }

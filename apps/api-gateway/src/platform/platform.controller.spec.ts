@@ -1,6 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
-import { plainToClass } from 'class-transformer';
-import { validate } from 'class-validator';
 import { PlatformController } from './platform.controller';
 import { PlatformService } from './platform.service';
 import { SortValue } from './platform.model';

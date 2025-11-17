@@ -1,5 +1,6 @@
+/* eslint-disable camelcase */
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString, IsNotEmpty, IsObject } from 'class-validator';
+import { IsString, IsNotEmpty, IsObject } from 'class-validator';
 
 interface IssueCredAttrSpec {
     'mime-type': string,

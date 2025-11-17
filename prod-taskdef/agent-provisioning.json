@@ -1,0 +1,80 @@
+{
+    "family": "PRODUCTION_AGENT_PROVISIONING_SERVICE_TASKDEFINITION",
+    "containerDefinitions": [
+        {
+            "name": "agent-provisioning",
+            "image": "%REPOSITORY_URI%:AGENT-PROVISIONING_V_%BUILD_NUMBER%",
+            "cpu": 2048,
+            "memory": 8192,
+            "portMappings": [],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [
+                {
+                    "value": "arn:aws:s3:::env-prodbucket/PROD.env",
+                    "type": "s3"
+                }
+            ],
+            "mountPoints": [
+                {
+                    "sourceVolume": "AGNET-CONFIG",
+                    "containerPath": "/app/agent-provisioning/AFJ/agent-config",
+                    "readOnly": false
+                },
+                {
+                    "sourceVolume": "port-file",
+                    "containerPath": "/agent-provisioning/AFJ/port-file",
+                    "readOnly": false
+                }
+            ],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/PRODUCTION_AGENT_PROVISIONING_SERVICE_TASKDEFINITION",
+                    "awslogs-region": "ap-southeast-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            }
+        }
+        
+    ],
+   
+    "executionRoleArn": "arn:aws:iam::id:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "volumes": [
+        {
+            "name": "AGNET-CONFIG",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "fs-0224b1b9d5777bf1d",
+                "rootDirectory": "/",
+                "transitEncryption": "ENABLED",
+                "authorizationConfig": {
+                    "accessPointId": "fsap-01a39a7ecc928968d",
+                    "iam": "DISABLED"
+                }
+            }
+        },
+        {
+            "name": "port-file",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "fs-0224b1b9d5777bf1d",
+                "rootDirectory": "/",
+                "transitEncryption": "ENABLED",
+                "authorizationConfig": {
+                    "accessPointId": "fsap-0e509a2f6a1296cdc",
+                    "iam": "DISABLED"
+                }
+            }
+        }
+    ],
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "2048",
+    "memory": "8192"
+}

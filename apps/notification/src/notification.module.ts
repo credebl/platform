@@ -9,10 +9,6 @@ import { NotificationService } from './notification.service';
 import { PrismaService } from '@credebl/prisma-service';
 import { NotificationRepository } from './notification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 
 @Module({
   imports: [
@@ -25,8 +21,6 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
       }
     ]),
     CommonModule,
-    GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
     CacheModule.register({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT })
   ],
   controllers: [NotificationController],

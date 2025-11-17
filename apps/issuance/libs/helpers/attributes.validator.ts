@@ -1,14 +1,11 @@
-/* eslint-disable no-console */
 import { W3CSchemaDataType } from '@credebl/enum/enum';
-import { BadRequestException, Logger } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { IIssuanceAttributes, ISchemaAttributes } from 'apps/issuance/interfaces/issuance.interfaces';
 
 export function validateW3CSchemaAttributes(
   filteredIssuanceAttributes: IIssuanceAttributes,
-  schemaUrlAttributes: ISchemaAttributes[],
-  logger: Logger
+  schemaUrlAttributes: ISchemaAttributes[]
 ): void {
-  logger.debug('Validating w3c schema attributes');
   const mismatchedAttributes: string[] = [];
   const missingAttributes: string[] = [];
   const extraAttributes: string[] = [];
@@ -33,10 +30,9 @@ export function validateW3CSchemaAttributes(
       const actualType = typeof attributeValue;
 
       // Check if the schemaDataType is 'datetime-local' and treat it as a string
-      if (
-        (W3CSchemaDataType.DATE_TIME === schemaDataType && W3CSchemaDataType.STRING !== actualType) ||
-        (W3CSchemaDataType.DATE_TIME !== schemaDataType && actualType !== schemaDataType)
-      ) {
+      if ((W3CSchemaDataType.DATE_TIME === schemaDataType && W3CSchemaDataType.STRING !== actualType) || 
+          (W3CSchemaDataType.DATE_TIME !== schemaDataType && actualType !== schemaDataType)) {
+
         mismatchedAttributes.push(
           `Attribute ${attributeName} has type ${actualType} but expected type ${schemaDataType}`
         );
@@ -61,6 +57,4 @@ export function validateW3CSchemaAttributes(
   if (0 < extraAttributes.length) {
     throw new BadRequestException(`Validation failed: ${extraAttributes.join(', ')}`);
   }
-  // TODO: Maybe we can have a try catch here, so that instead of directly throwing the erros
-  logger.debug('W3c schema attributes validated successfully');
 }

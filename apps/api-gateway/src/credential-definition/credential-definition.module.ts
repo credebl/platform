@@ -5,7 +5,6 @@ import { CredentialDefinitionController } from './credential-definition.controll
 import { CredentialDefinitionService } from './credential-definition.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports:[
@@ -18,7 +17,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ])
   ],
   controllers: [CredentialDefinitionController],
-  providers: [CredentialDefinitionService, NATSClient]
+  providers: [CredentialDefinitionService]
 })
 export class CredentialDefinitionModule {
   constructor() {

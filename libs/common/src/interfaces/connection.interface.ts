@@ -1,3 +1,4 @@
+
 export interface IConnectionsListCount {
     connectionCount: number;
     connectionsList: IConnectionItem[];
@@ -19,6 +20,33 @@ export interface IConnectionsListCount {
     lastPage: number;
     data: IConnectionItem[];
   }
+ 
+export interface JsonArray extends Array<JsonValue> {}
+export type JsonObject = {[Key in string]?: JsonValue}
+export type JsonValue = string | number | boolean | JsonObject | JsonArray | null
+ export interface orgAgents  {
+    id: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    orgDid: string;
+    verkey: string;
+    agentEndPoint: string;
+    agentId: string;
+    isDidPublic: boolean;
+    agentSpinUpStatus: number;
+    agentOptions: Buffer;
+    walletName: string | null;
+    tenantId: string | null;
+    apiKey: string | null;
+    agentsTypeId: string | null;
+    orgId: string | null;
+    orgAgentTypeId: string | null;
+    ledgerId: string | null;
+    didDocument: JsonValue;
+    webhookUrl: string | null;
+}
 
   export interface ICreateConnectionUrl {
     id: string;

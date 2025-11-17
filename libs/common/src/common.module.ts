@@ -1,13 +1,11 @@
-import { Logger, Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
+import { Module } from '@nestjs/common';
 
 import { CommonService } from './common.service';
-import { EmailService } from './email.service';
-import { HttpModule } from '@nestjs/axios';
-import { LoggerModule } from '@credebl/logger/logger.module';
 
 @Module({
-  imports: [HttpModule, LoggerModule],
-  providers: [CommonService, Logger, EmailService],
-  exports: [CommonService, EmailService]
+  imports: [HttpModule],
+  providers: [CommonService],
+  exports: [CommonService]
 })
 export class CommonModule {}

@@ -15,7 +15,7 @@ export class NotFoundErrorDto {
     success: boolean;
 
     @ApiProperty()
-    data?: boolean | {} | [];
+    data?: boolean | object | [];
 
     @ApiProperty({ example: 404 })
     code: number;

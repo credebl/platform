@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable camelcase */
 import { Test, TestingModule } from '@nestjs/testing';
-
-import { Any } from 'typeorm';
 import { CreateSchemaDto } from '../dtos/create-schema.dto';
 import { SchemaController } from './schema.controller';
 import { SchemaService } from './schema.service';
@@ -32,7 +32,7 @@ describe('schemaController Test Cases', () => {
     });
     /////////////////////--------Create Schema -------------------//////////////////////
     describe('createSchema', () => {
-        const user: any = {};
+        const user: unknown = {};
 
         it('should return an expected schema', async () => {
             const createSchemaDto: CreateSchemaDto = new CreateSchemaDto;
@@ -164,7 +164,6 @@ describe('schemaController Test Cases', () => {
 
 /////////////////////////-----  get schemas with organization id ----------
     describe('getSchemasByOrgId', () => {
-        const user: any = {};
         const page = 1;
         const search_text = 'test search';
         const items_per_page = 1;

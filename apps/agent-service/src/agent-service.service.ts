@@ -54,8 +54,7 @@ import {
   IAgentStore,
   IAgentConfigure,
   OrgDid,
-  IBasicMessage,
-  WalletDetails
+  IBasicMessage
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -70,16 +69,16 @@ import { WebSocketGateway } from '@nestjs/websockets';
 import * as retry from 'async-retry';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { IProofPresentationDetails } from '@credebl/common/interfaces/verification.interface';
+import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { ledgerName } from '@credebl/common/cast.helper';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import * as CryptoJS from 'crypto-js';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { PrismaService } from '@credebl/prisma-service';
-import { from } from 'rxjs';
-import { NATSClient } from '@credebl/common/NATSClient';
-import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
+import { SignDataDto, VerifySignatureDto } from 'apps/api-gateway/src/agent-service/dto/agent-service.dto';
 import { IVerificationMethod } from 'apps/organization/interfaces/organization.interface';
-import { getAgentUrl } from '@credebl/common/common.utils';
+
 @Injectable()
 @WebSocketGateway()
 export class AgentServiceService {
@@ -89,27 +88,14 @@ export class AgentServiceService {
     private readonly agentServiceRepository: AgentServiceRepository,
     private readonly prisma: PrismaService,
     private readonly commonService: CommonService,
-    // TODO: Remove duplicate, unused variable
     private readonly connectionService: ConnectionService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
-    // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private cacheService: Cache,
-    private readonly userActivityRepository: UserActivityRepository,
-    private readonly natsClient: NATSClient
+    private readonly userActivityRepository: UserActivityRepository
   ) {}
 
   async ReplaceAt(input, search, replace, start, end): Promise<string> {
     return input.slice(0, start) + input.slice(start, end).replace(search, replace) + input.slice(end);
-  }
-
-  async getAgentDetails(orgId: string): Promise<org_agents> {
-    try {
-      const agentDetails = await this.agentServiceRepository.getAgentDetailsByOrgId(orgId);
-      return agentDetails;
-    } catch (error) {
-      this.logger.error(`in getAgentDetails ::: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ?? error);
-    }
   }
 
   /**
@@ -424,7 +410,7 @@ export class AgentServiceService {
       credoImage: process.env.AFJ_VERSION || '',
       protocol: process.env.AGENT_PROTOCOL || '',
       tenant: agentSpinupDto.tenant || false,
-      apiKey: process.env.AGENT_API_KEY
+      apiKey: agentSpinupDto.apiKey
     };
     return walletProvisionPayload;
   }
@@ -528,17 +514,9 @@ export class AgentServiceService {
         socket.emit('did-publish-process-initiated', { clientId: agentSpinupDto.clientSocketId });
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
-      const agentBaseWalletToken = await this.commonService.getBaseAgentToken(
-        agentDetails.agentEndPoint,
-        agentDetails?.agentToken
-      );
-      if (!agentBaseWalletToken) {
-        throw new BadRequestException(ResponseMessages.agent.error.baseWalletToken, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.badRequest
-        });
-      }
-      const encryptedToken = await this.tokenEncryption(agentBaseWalletToken);
+
+      const encryptedToken = await this.tokenEncryption(agentDetails?.agentToken);
+
       const agentPayload: IStoreOrgAgentDetails = {
         agentEndPoint,
         seed: agentSpinupDto.seed,
@@ -578,6 +556,9 @@ export class AgentServiceService {
           socket.emit('did-publish-process-completed', { clientId: agentSpinupDto.clientSocketId });
         }
 
+        const getOrganization = await this.agentServiceRepository.getOrgDetails(orgData?.id);
+
+        await this._createConnectionInvitation(orgData?.id, user, getOrganization.name);
         if (agentSpinupDto.clientSocketId) {
           socket.emit('invitation-url-creation-success', { clientId: agentSpinupDto.clientSocketId });
         }
@@ -605,11 +586,21 @@ export class AgentServiceService {
 
   async _storeOrgAgentDetails(payload: IStoreOrgAgentDetails): Promise<object> {
     try {
-      const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.DEDICATED);
+      /**
+       * Get orgaization agent type and agent details
+       */
+      const [agentDid, orgAgentTypeId] = await Promise.all([
+        this._getAgentDid(payload),
+        this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.DEDICATED)
+      ]);
+      /**
+       * Get DID method by agent
+       */
+      const getDidMethod = await this._getDidMethod(payload, agentDid);
       /**
        * Organization storage data
        */
-      const storeOrgAgentData = this._buildStoreOrgAgentData(payload, `${orgAgentTypeId}`);
+      const storeOrgAgentData = await this._buildStoreOrgAgentData(payload, getDidMethod, `${orgAgentTypeId}`);
       /**
        * Store org agent details
        */
@@ -621,10 +612,39 @@ export class AgentServiceService {
     }
   }
 
-  private _buildStoreOrgAgentData(payload: IStoreOrgAgentDetails, orgAgentTypeId: string): IStoreOrgAgentDetails {
+  private async _getAgentDid(payload: IStoreOrgAgentDetails): Promise<object> {
+    const { agentEndPoint, apiKey, ledgerId, seed, keyType, method, network, role, did } = payload;
+    const writeDid = 'write-did';
+    const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(ledgerId);
+    const agentDidWriteUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
+    return this._retryAgentSpinup(agentDidWriteUrl, apiKey, writeDid, seed, keyType, method, network, role, did);
+  }
+
+  private async _getDidMethod(payload: IStoreOrgAgentDetails, agentDid: object): Promise<object> {
+    const { agentEndPoint, apiKey, seed, keyType, method, network, role } = payload;
+    const getDidDoc = 'get-did-doc';
+    const getDidMethodUrl = `${agentEndPoint}${CommonConstants.URL_AGENT_GET_DID}/${agentDid['did']}`;
+    return this._retryAgentSpinup(
+      getDidMethodUrl,
+      apiKey,
+      getDidDoc,
+      seed,
+      keyType,
+      method,
+      network,
+      role,
+      `${agentDid['did']}`
+    );
+  }
+
+  private _buildStoreOrgAgentData(
+    payload: IStoreOrgAgentDetails,
+    getDidMethod: object,
+    orgAgentTypeId: string
+  ): IStoreOrgAgentDetails {
     return {
-      did: '',
-      verkey: '',
+      did: getDidMethod['didDocument']?.id,
+      verkey: getDidMethod['didDocument']?.verificationMethod[0]?.publicKeyBase58,
       isDidPublic: true,
       agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
       walletName: payload.walletName,
@@ -747,6 +767,7 @@ export class AgentServiceService {
       const agentStatusResponse = {
         agentSpinupStatus: AgentSpinUpStatus.PROCESSED
       };
+
       const getOrgAgent = await this.agentServiceRepository.getAgentDetails(payload.orgId);
 
       if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
@@ -785,23 +806,23 @@ export class AgentServiceService {
     let ledgerIdData = [];
     try {
       let ledger;
-      const { network } = payload;
-      if (network) {
-        ledger = await ledgerName(network);
-      } else {
-        ledger = Ledgers.Not_Applicable;
-      }
+        const { network } = payload;
+        if (network) {
+          ledger = await ledgerName(network);
+        } else {
+          ledger = Ledgers.Not_Applicable;
+        }
 
-      const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse;
-      const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
-      if (!isLedgerExist) {
-        throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.notFound
-        });
-      }
-      ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledger);
-
+        const ledgerList = (await this._getALlLedgerDetails()) as unknown as LedgerListResponse;
+        const isLedgerExist = ledgerList.response.find((existingLedgers) => existingLedgers.name === ledger);
+        if (!isLedgerExist) {
+          throw new BadRequestException(ResponseMessages.agent.error.invalidLedger, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.notFound
+          });
+        }
+        ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledger);
+  
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
 
       // Create and stored agent details
@@ -832,6 +853,7 @@ export class AgentServiceService {
       const orgAgentTypeId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
       // Get agent type details
       const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
+
       const storeOrgAgentData: IStoreOrgAgentDetails = {
         did: tenantDetails.DIDCreationOption.did,
         isDidPublic: true,
@@ -844,9 +866,9 @@ export class AgentServiceService {
         tenantId: tenantDetails.walletResponseDetails['id'],
         walletName: payload.label,
         ledgerId: ledgerIdData.map((item) => item.id),
-        id: agentProcess?.id,
-        apiKey: await this.commonService.dataEncryption(tenantDetails.walletResponseDetails['token'])
+        id: agentProcess?.id
       };
+
       // Get organization data
       const getOrganization = await this.agentServiceRepository.getOrgDetails(payload.orgId);
 
@@ -932,9 +954,15 @@ export class AgentServiceService {
       }
 
       const getApiKey = await this.getOrgAgentApiKey(orgId);
-      const url = this.constructUrl(agentDetails);
+      const getOrgAgentType = await this.agentServiceRepository.getOrgAgentType(agentDetails?.orgAgentTypeId);
+
+      const url = this.constructUrl(agentDetails, getOrgAgentType);
 
       if (createDidPayload.method === DidMethod.POLYGON) {
+        createDidPayload.endpoint = agentDetails.agentEndPoint;
+      }
+
+        if (createDidPayload.method === DidMethod.ETHEREUM) {
         createDidPayload.endpoint = agentDetails.agentEndPoint;
       }
 
@@ -977,8 +1005,12 @@ export class AgentServiceService {
     }
   }
 
-  private constructUrl(agentDetails): string {
-    return `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
+  private constructUrl(agentDetails, getOrgAgentType): string {
+    if (getOrgAgentType.agent === OrgAgentType.DEDICATED) {
+      return `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_WRITE_DID}`;
+    } else if (getOrgAgentType.agent === OrgAgentType.SHARED) {
+      return `${agentDetails.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${agentDetails.tenantId}`;
+    }
   }
 
   private async getDidDetails(url, payload, apiKey): Promise<object> {
@@ -1057,7 +1089,7 @@ export class AgentServiceService {
       const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
 
       const url = `${getPlatformAgentEndPoint}${CommonConstants.CREATE_POLYGON_SECP256k1_KEY}`;
-      this.logger.log(`Creating Secp256k1 key pair at URL: ${url}`);
+
       const createKeyPairResponse = await this.commonService.httpPost(
         url,
         {},
@@ -1066,6 +1098,33 @@ export class AgentServiceService {
       return createKeyPairResponse;
     } catch (error) {
       this.logger.error(`error in createSecp256k1KeyPair : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+
+  /**
+   * @returns ethereum key pair for Ethr DID
+   */
+  async createEthereumKeyPair(orgId: string): Promise<object> {
+    try {
+      const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
+        CommonConstants.PLATFORM_ADMIN_ORG
+      );
+
+      const getPlatformAgentEndPoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
+      const getDcryptedToken = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
+
+      const url = `${getPlatformAgentEndPoint}${CommonConstants.CREATE_ETH_KEY}`;
+
+      const createKeyPairResponse = await this.commonService.httpPost(
+        url,
+        {},
+        { headers: { authorization: getDcryptedToken } }
+      );
+      return createKeyPairResponse;
+    } catch (error) {
+      this.logger.error(`error in create ethereum KeyPair : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -1119,13 +1178,14 @@ export class AgentServiceService {
       platformAdminSpinnedUp.org_agents[0].agentEndPoint,
       getDcryptedToken
     );
-    if (!walletResponseDetails && !walletResponseDetails.id && !walletResponseDetails.token) {
+    if (!walletResponseDetails && !walletResponseDetails.id) {
       throw new InternalServerErrorException('Error while creating the wallet');
     }
     const didCreateOption = {
       didPayload: WalletSetupPayload,
       agentEndpoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
-      apiKey: walletResponseDetails.token
+      apiKey: getDcryptedToken,
+      tenantId: walletResponseDetails.id
     };
     const DIDCreationOption = await this._createDID(didCreateOption);
     if (!DIDCreationOption) {
@@ -1158,47 +1218,21 @@ export class AgentServiceService {
     return tenantDetails;
   }
 
-  private async handleCreateDid(
-    agentEndpoint: string,
-    didPayload: Record<string, string>,
-    apiKey: string
-  ): Promise<ICreateTenant> {
-    try {
-      return await this.commonService.httpPost(`${agentEndpoint}${CommonConstants.URL_AGENT_WRITE_DID}`, didPayload, {
-        headers: { authorization: apiKey }
-      });
-    } catch (error) {
-      this.logger.error('Error creating did:', error.message || error);
-      throw new RpcException(error.response ? error.response : error);
-    }
-  }
-
   /**
    * Create tenant wallet on the agent
    * @param _createDID
    * @returns Get tanant status
    */
   private async _createDID(didCreateOption): Promise<ICreateTenant> {
-    const { didPayload, agentEndpoint, apiKey } = didCreateOption;
+    const { didPayload, agentEndpoint, apiKey, tenantId } = didCreateOption;
     // Invoke an API request from the agent to create multi-tenant agent
-
-    //To Do : this is a temporary fix in normal case the api should return correct data in first attempt , to be removed in future on fixing did/write api response
-    const retryOptions = {
-      retries: 2
-    };
-
-    const didDetails = await retry(async () => {
-      const data = await this.handleCreateDid(agentEndpoint, didPayload, apiKey);
-      if (data?.didDocument || data?.didDoc) {
-        return data;
-      }
-
-      throw new Error('Invalid response, retrying...');
-    }, retryOptions);
-
+    const didDetails = await this.commonService.httpPost(
+      `${agentEndpoint}${CommonConstants.URL_SHAGENT_CREATE_DID}${tenantId}`,
+      didPayload,
+      { headers: { authorization: apiKey } }
+    );
     return didDetails;
   }
-
   private async createSocketInstance(): Promise<Socket> {
     return io(`${process.env.SOCKET_HOST}`, {
       reconnection: true,
@@ -1225,6 +1259,7 @@ export class AgentServiceService {
     }
   }
 
+
   async createSchema(payload: ITenantSchema): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(payload.orgId);
@@ -1248,7 +1283,7 @@ export class AgentServiceService {
             });
           });
       } else if (OrgAgentType.SHARED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_CREATE_SCHEMA}`.replace(
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_SCHEMA}`.replace(
           '#',
           `${payload.tenantId}`
         );
@@ -1289,10 +1324,9 @@ export class AgentServiceService {
           .httpGet(url, { headers: { authorization: getApiKey } })
           .then(async (schema) => schema);
       } else if (OrgAgentType.SHARED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_SCHEMA_BY_ID}`.replace(
-          '#',
-          `${payload.payload.schemaId}`
-        );
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_SCHEMA}`
+          .replace('@', `${payload.payload.schemaId}`)
+          .replace('#', `${payload.tenantId}`);
 
         schemaResponse = await this.commonService
           .httpGet(url, { headers: { authorization: getApiKey } })
@@ -1322,7 +1356,10 @@ export class AgentServiceService {
           .httpPost(url, credDefPayload, { headers: { authorization: getApiKey } })
           .then(async (credDef) => credDef);
       } else if (OrgAgentType.SHARED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_CREATE_CRED_DEF}`;
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_CREATE_CRED_DEF}`.replace(
+          '#',
+          `${payload.tenantId}`
+        );
         const credDefPayload = {
           tag: payload.payload.tag,
           schemaId: payload.payload.schemaId,
@@ -1354,10 +1391,9 @@ export class AgentServiceService {
           .httpGet(url, { headers: { authorization: getApiKey } })
           .then(async (credDef) => credDef);
       } else if (OrgAgentType.SHARED === payload.agentType) {
-        const url = `${payload.agentEndPoint}${CommonConstants.URL_SCHM_GET_CRED_DEF_BY_ID}`.replace(
-          '#',
-          `${payload.payload.credentialDefinitionId}`
-        );
+        const url = `${payload.agentEndPoint}${CommonConstants.URL_SHAGENT_GET_CRED_DEF}`
+          .replace('@', `${payload.payload.credentialDefinitionId}`)
+          .replace('#', `${payload.tenantId}`);
         credDefResponse = await this.commonService
           .httpGet(url, { headers: { authorization: getApiKey } })
           .then(async (credDef) => credDef);
@@ -1543,109 +1579,6 @@ export class AgentServiceService {
     }
   }
 
-  /**
-   * Get agent health
-   * @param orgId
-   * @returns agent status
-   */
-  async signDataFromAgent(data: SignDataDto, orgId: string): Promise<IAgentStatus> {
-    try {
-      // Get organization agent details
-      const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-      let agentApiKey;
-      if (orgAgentDetails) {
-        agentApiKey = await this.getOrgAgentApiKey(orgId);
-      }
-
-      if (!orgAgentDetails) {
-        throw new NotFoundException(ResponseMessages.agent.error.agentNotExists, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.notFound
-        });
-      }
-
-      if (!orgAgentDetails?.agentEndPoint) {
-        throw new NotFoundException(ResponseMessages.agent.error.agentUrl, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.notFound
-        });
-      }
-      const url = await getAgentUrl(orgAgentDetails.agentEndPoint, CommonConstants.SIGN_DATA_FROM_AGENT);
-
-      const { dataTypeToSign, credentialPayload, rawPayload, storeCredential } = data;
-
-      if (dataTypeToSign === 'jsonLd' && credentialPayload) {
-        // Currently, get only primary did for issuance
-        const diddoc = await this.agentServiceRepository.getOrgDid(orgId, true);
-        const verificationMethod = diddoc[0].didDocument['verificationMethod'] as IVerificationMethod[];
-        // For now, we are strictly restricting dids and verification method associated with the primary did
-        // We can optionally modify it to be taken from the payload itself
-        credentialPayload.verificationMethod = verificationMethod[0].id;
-      }
-
-      const dataToSign = dataTypeToSign === 'jsonLd' ? credentialPayload : rawPayload;
-
-      // Invoke an API request from the agent to assess its current status
-      const signedDataFromAgent = await this.commonService
-        .httpPost(
-          `${url}?dataTypeToSign=${dataTypeToSign}&storeCredential=${storeCredential}`,
-          { ...dataToSign },
-          {
-            headers: { authorization: agentApiKey }
-          }
-        )
-        .then(async (response) => response);
-
-      return signedDataFromAgent;
-    } catch (error) {
-      this.logger.error(`Agent signature request details : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ?? error);
-    }
-  }
-
-  /**
-   * Get agent health
-   * @param orgId
-   * @returns agent status
-   */
-  async verifysignature(data: unknown, orgId: string): Promise<IAgentStatus> {
-    try {
-      // Get organization agent details
-      const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
-      let agentApiKey;
-      if (orgAgentDetails) {
-        agentApiKey = await this.getOrgAgentApiKey(orgId);
-      }
-
-      if (!orgAgentDetails) {
-        throw new NotFoundException(ResponseMessages.agent.error.agentNotExists, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.notFound
-        });
-      }
-
-      if (!orgAgentDetails?.agentEndPoint) {
-        throw new NotFoundException(ResponseMessages.agent.error.agentUrl, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.notFound
-        });
-      }
-      const url = await getAgentUrl(orgAgentDetails.agentEndPoint, CommonConstants.VERIFY_SIGNED_DATA_FROM_AGENT);
-
-      // Invoke an API request from the agent to assess its current status
-      const signedDataFromAgent = await this.commonService
-        .httpPost(`${url}`, data, {
-          headers: { authorization: agentApiKey }
-        })
-        .then(async (response) => response);
-
-      return signedDataFromAgent;
-    } catch (error) {
-      this.logger.error(`Agent signature request details : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ?? error);
-    }
-  }
-
   async getLedgerConfigDetails(user: IUserRequestInterface): Promise<object> {
     try {
       const getLedgerConfigData = await this.agentServiceRepository.getLedgerConfigByOrgId();
@@ -1663,6 +1596,7 @@ export class AgentServiceService {
   ): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
+      this.logger.log(`sendOutOfBandProofRequest: payload: ${JSON.stringify(proofRequestPayload)}`);
       const sendProofRequest = await this.commonService
         .httpPost(url, proofRequestPayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
@@ -1758,121 +1692,81 @@ export class AgentServiceService {
 
   async deleteWallet(orgId: string, user: user): Promise<object> {
     try {
-      // Retrieve the API key and agent information
-      const [getApiKeyResult, orgAgentResult] = await Promise.allSettled([
-        this.getOrgAgentApiKey(orgId),
-        this.agentServiceRepository.getAgentApiKey(orgId)
-      ]);
+        // Retrieve the API key and agent information
+        const [getApiKeyResult, orgAgentResult] = await Promise.allSettled([
+            this.getOrgAgentApiKey(orgId),
+            this.agentServiceRepository.getAgentApiKey(orgId)
+        ]);
 
-      if (orgAgentResult.status === PromiseResult.FULFILLED && !orgAgentResult.value) {
-        throw new NotFoundException(ResponseMessages.agent.error.walletDoesNotExists);
+        if (orgAgentResult.status === PromiseResult.FULFILLED && !orgAgentResult.value) {
+          throw new NotFoundException(ResponseMessages.agent.error.walletDoesNotExists);
       }
 
-      if (getApiKeyResult.status === PromiseResult.REJECTED) {
-        throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
-      }
-
-      if (orgAgentResult.status === PromiseResult.REJECTED) {
-        throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
-      }
-
-      const orgAgent = orgAgentResult?.value;
-
-      const orgAgentTypeResult = await this.agentServiceRepository.getOrgAgentType(orgAgent.orgAgentTypeId);
-
-      if (!orgAgentTypeResult) {
-        throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
-      }
-
-      let getApiKey;
-      if (OrgAgentType.SHARED) {
-        const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
-          CommonConstants.PLATFORM_ADMIN_ORG
-        );
-
-        getApiKey = await this.commonService.decryptPassword(platformAdminSpinnedUp?.org_agents[0].apiKey);
-      } else {
-        getApiKey = getApiKeyResult?.value;
-      }
-
-      // Determine the URL based on the agent type
-      const url =
-        orgAgentTypeResult.agent === OrgAgentType.SHARED
-          ? `${orgAgent.agentEndPoint}${CommonConstants.URL_SHAGENT_DELETE_SUB_WALLET}`.replace('#', orgAgent?.tenantId)
-          : `${orgAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
-
-      // Perform the deletion in a transaction
-      return await this.prisma.$transaction(async (prisma) => {
-        // Delete org agent and related records
-        const { orgDid, agentInvitation, deleteOrgAgent } =
-          await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
-
-        // Make the HTTP DELETE request
-        const deleteWallet = await this.commonService.httpDelete(url, {
-          headers: { authorization: getApiKey }
-        });
-
-        if (deleteWallet.status !== HttpStatus.NO_CONTENT) {
-          throw new InternalServerErrorException(ResponseMessages.agent.error.walletNotDeleted);
+        if (getApiKeyResult.status === PromiseResult.REJECTED) {
+            throw new InternalServerErrorException(`Failed to get API key: ${getApiKeyResult.reason}`);
         }
 
-        const deletions = [
-          { records: orgDid.count, tableName: 'org_dids' },
-          { records: agentInvitation.count, tableName: 'agent_invitations' },
-          { records: deleteOrgAgent ? 1 : 0, tableName: 'org_agents' }
-        ];
+        if (orgAgentResult.status === PromiseResult.REJECTED) {
+            throw new InternalServerErrorException(`Failed to get agent information: ${orgAgentResult.reason}`);
+        }
 
-        const did = orgAgent?.orgDid;
+        const getApiKey = getApiKeyResult?.value;
+        const orgAgent = orgAgentResult?.value;
 
-        //archive schemas
-        await this._updateIsSchemaArchivedFlag(did);
+        const orgAgentTypeResult = await this.agentServiceRepository.getOrgAgentType(orgAgent.orgAgentTypeId);
 
-        const logDeletionActivity = async (records, tableName): Promise<void> => {
-          if (records) {
-            const txnMetadata = {
-              deletedRecordsCount: records,
-              deletedRecordInTable: tableName
+        if (!orgAgentTypeResult) {
+            throw new NotFoundException(ResponseMessages.agent.error.orgAgentNotFound);
+        }
+
+        // Determine the URL based on the agent type
+        const url =
+            orgAgentTypeResult.agent === OrgAgentType.SHARED
+                ? `${orgAgent.agentEndPoint}${CommonConstants.URL_SHAGENT_DELETE_SUB_WALLET}`.replace('#', orgAgent?.tenantId)
+                : `${orgAgent.agentEndPoint}${CommonConstants.URL_DELETE_WALLET}`;
+
+        // Perform the deletion in a transaction
+        return await this.prisma.$transaction(async (prisma) => {
+            // Delete org agent and related records
+            const { orgDid, agentInvitation, deleteOrgAgent } = await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
+
+            // Make the HTTP DELETE request
+            const deleteWallet = await this.commonService.httpDelete(url, {
+                headers: { authorization: getApiKey }
+            });
+
+            if (deleteWallet.status !== HttpStatus.NO_CONTENT) {
+                throw new InternalServerErrorException(ResponseMessages.agent.error.walletNotDeleted);
+            }
+
+            const deletions = [
+                { records: orgDid.count, tableName: 'org_dids' },
+                { records: agentInvitation.count, tableName: 'agent_invitations' },
+                { records: deleteOrgAgent ? 1 : 0, tableName: 'org_agents' }
+            ];
+
+            const logDeletionActivity = async (records, tableName): Promise<void> => {
+                if (records) {
+                    const txnMetadata = {
+                        deletedRecordsCount: records,
+                        deletedRecordInTable: tableName
+                    };
+                    const recordType = RecordType.WALLET;
+                    await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
+                }
             };
-            const recordType = RecordType.WALLET;
-            await this.userActivityRepository._orgDeletedActivity(orgId, user, txnMetadata, recordType);
-          }
-        };
 
-        for (const { records, tableName } of deletions) {
-          await logDeletionActivity(records, tableName);
-        }
+            for (const { records, tableName } of deletions) {
+                await logDeletionActivity(records, tableName);
+            }
 
-        return deleteOrgAgent;
-      });
+            return deleteOrgAgent;
+        });
     } catch (error) {
-      this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
-      throw new RpcException(error.response ? error.response : error);
+        this.logger.error(`Error in delete wallet in agent service: ${JSON.stringify(error.message)}`);
+        throw new RpcException(error.response ? error.response : error);
     }
-  }
-
-  async _updateIsSchemaArchivedFlag(did: string): Promise<{
-    count: number;
-  }> {
-    const pattern = { cmd: 'archive-schemas' };
-
-    const payload = {
-      did
-    };
-    const updatedSchemaInfo = await this.agentServiceProxy
-      .send(pattern, payload)
-      .toPromise()
-      .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
-        throw new HttpException(
-          {
-            status: error.status,
-            error: error.message
-          },
-          error.status
-        );
-      });
-    return updatedSchemaInfo;
-  }
+}
 
   async receiveInvitationUrl(receiveInvitationUrl: IReceiveInvitationUrl, url: string, orgId: string): Promise<string> {
     try {
@@ -1902,68 +1796,29 @@ export class AgentServiceService {
 
   async getOrgAgentApiKey(orgId: string): Promise<string> {
     try {
-      const orgAgentDetails = await this.agentServiceRepository.getAgentApiKey(orgId);
+      const orgAgentApiKey = await this.agentServiceRepository.getAgentApiKey(orgId);
       const orgAgentId = await this.agentServiceRepository.getOrgAgentTypeDetails(OrgAgentType.SHARED);
-      let agentApiKey;
-      if (
-        orgAgentDetails?.orgAgentTypeId === orgAgentId &&
-        (orgAgentDetails.apiKey === '' || orgAgentDetails.apiKey === null)
-      ) {
+      let apiKey;
+      if (orgAgentApiKey?.orgAgentTypeId === orgAgentId) {
         const platformAdminSpinnedUp = await this.agentServiceRepository.platformAdminAgent(
           CommonConstants.PLATFORM_ADMIN_ORG
         );
         if (!platformAdminSpinnedUp) {
-          throw new InternalServerErrorException(ResponseMessages.agent.error.notConfigured);
+          throw new InternalServerErrorException('Agent not able to spin-up');
         }
-        const walletDetails: WalletDetails = {
-          agentEndPoint: platformAdminSpinnedUp.org_agents[0]?.agentEndPoint,
-          apiKey: await this.commonService.decryptPassword(platformAdminSpinnedUp.org_agents[0]?.apiKey),
-          tenantId: orgAgentDetails.tenantId,
-          orgId: orgAgentDetails.orgId
-        };
-        const { apiKey } = await this.getTenantToken(walletDetails);
-        if (!apiKey) {
-          throw new NotFoundException(ResponseMessages.agent.error.tenantWalletToken, {
-            cause: new Error(),
-            description: ResponseMessages.errorMessages.notFound
-          });
-        }
-        agentApiKey = apiKey;
+        apiKey = platformAdminSpinnedUp.org_agents[0]?.apiKey;
       } else {
-        if (!orgAgentDetails?.apiKey) {
-          throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
-        }
-        agentApiKey = orgAgentDetails?.apiKey;
+        apiKey = orgAgentApiKey?.apiKey;
       }
-      const decryptedToken = await this.commonService.decryptPassword(agentApiKey);
+
+      if (!apiKey) {
+        throw new NotFoundException(ResponseMessages.agent.error.apiKeyNotExist);
+      }
+
+      const decryptedToken = await this.commonService.decryptPassword(apiKey);
       return decryptedToken;
     } catch (error) {
       this.logger.error(`Agent api key details : ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
-  async getTenantToken(walletDetails: WalletDetails): Promise<org_agents> {
-    try {
-      const { agentEndPoint, apiKey, tenantId, orgId } = walletDetails;
-      if (!agentEndPoint || !apiKey || !tenantId || !orgId) {
-        throw new BadRequestException(ResponseMessages.agent.error.invalidTenantDetails, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.badRequest
-        });
-      }
-      const tenantWalletToken = await this.commonService.getTenantWalletToken(agentEndPoint, apiKey, tenantId);
-      if (!tenantWalletToken) {
-        throw new NotFoundException(ResponseMessages.agent.error.tenantWalletToken, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.notFound
-        });
-      }
-      const EncryptedTenantToken = await this.tokenEncryption(tenantWalletToken);
-      const updatedTenantDetails = await this.agentServiceRepository.updateTenantToken(orgId, EncryptedTenantToken);
-      return updatedTenantDetails;
-    } catch (error) {
-      this.logger.error(`Error in getting org agent type : ${JSON.stringify(error)}`);
       throw error;
     }
   }
@@ -2046,6 +1901,7 @@ export class AgentServiceService {
   ): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
+
       const createConnectionInvitation = await this.commonService
         .httpPost(url, connectionPayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
@@ -2063,7 +1919,8 @@ export class AgentServiceService {
     response: string;
   }> {
     try {
-      return from(this.natsClient.send<string>(this.agentServiceProxy, pattern, payload))
+      return this.agentServiceProxy
+        .send<string>(pattern, payload)
         .pipe(map((response) => ({ response })))
         .toPromise()
         .catch((error) => {
@@ -2091,4 +1948,174 @@ export class AgentServiceService {
       throw error;
     }
   }
+
+
+  /**
+   * Sign data from agent
+   * @param orgId
+   * @returns agent status
+   */
+  async signDataFromAgent(data: SignDataDto, orgId: string): Promise<IAgentStatus> {
+    try {
+      // Get organization agent details
+      const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      let agentApiKey;
+      if (orgAgentDetails) {
+        agentApiKey = await this.getOrgAgentApiKey(orgId);
+      }
+
+      if (!orgAgentDetails) {
+        throw new NotFoundException(ResponseMessages.agent.error.agentNotExists, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
+        });
+      }
+
+      if (!orgAgentDetails?.agentEndPoint) {
+        throw new NotFoundException(ResponseMessages.agent.error.agentUrl, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
+        });
+      }
+      const orgAgentType = await this.agentServiceRepository.getOrgAgentType(orgAgentDetails?.orgAgentTypeId);
+
+      const url = this.getAgentUrl(
+        'sign-data-from-agent',
+        orgAgentType.agent,
+        orgAgentDetails.agentEndPoint,
+        orgAgentDetails.tenantId
+      );
+
+      const { dataTypeToSign, credentialPayload, rawPayload, storeCredential } = data;
+
+      // Currently, get only primary did for issuance
+      const diddoc: OrgDid[] = await this.agentServiceRepository.getOrgDid(orgId);
+      const verificationMethod = diddoc[0].didDocument['verificationMethod'] as IVerificationMethod[];
+      this.logger.debug(`primary did document - diddoc[0]:: ${JSON.stringify(diddoc[0])}`);
+      if (dataTypeToSign === 'jsonLd' && credentialPayload) {
+        // For now, we are strictly restricting dids and verification method associated with the primary did
+        // We can optionally modify it to be taken from the payload itself
+        credentialPayload.verificationMethod = verificationMethod[0].id;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      if (dataTypeToSign === 'rawData' && rawPayload) {
+        this.logger.debug(`updating raw data : diddoc[0].didDocument ${JSON.stringify(diddoc[0].didDocument)}`);
+        rawPayload.did = diddoc[0].didDocument['id'];
+        rawPayload.keyType = verificationMethod[0].type.toLowerCase().includes('ed25519') ? 'ed25519' : 'k256';
+        this.logger.debug(`rawPayload.keyType is set as:: ${rawPayload.keyType}`);
+      }
+      const dataToSign = dataTypeToSign === 'jsonLd' ? credentialPayload : rawPayload;
+
+      // Invoke an API request from the agent to assess its current status
+      const signedDataFromAgent = await this.commonService
+        .httpPost(
+          `${url}?dataTypeToSign=${dataTypeToSign}&storeCredential=${storeCredential}`,
+          { ...dataToSign },
+          {
+            headers: { authorization: agentApiKey }
+          }
+        )
+        .then(async (response) => response);
+
+      return signedDataFromAgent;
+    } catch (error) {
+      this.logger.error(`Agent signature request details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
+  /**
+   * Verify signature from agent
+   * @param orgId
+   * @returns agent status
+   */
+  async verifySignature(data: VerifySignatureDto, orgId: string): Promise<IAgentStatus> {
+    try {
+      // Get organization agent details
+      delete data['orgId'];
+      this.logger.debug(`In agent-service to verifySignature with data ::: ${JSON.stringify(data)}`);
+      const orgAgentDetails: org_agents = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      let agentApiKey;
+      if (orgAgentDetails) {
+        agentApiKey = await this.getOrgAgentApiKey(orgId);
+      }
+
+      if (!orgAgentDetails) {
+        throw new NotFoundException(ResponseMessages.agent.error.agentNotExists, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
+        });
+      }
+
+      if (!orgAgentDetails?.agentEndPoint) {
+        throw new NotFoundException(ResponseMessages.agent.error.agentUrl, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.notFound
+        });
+      }
+      const orgAgentType = await this.agentServiceRepository.getOrgAgentType(orgAgentDetails?.orgAgentTypeId);
+
+      const url = this.getAgentUrl(
+        'verify-signed-data-from-agent',
+        orgAgentType.agent,
+        orgAgentDetails.agentEndPoint,
+        orgAgentDetails.tenantId
+      );
+
+      // Invoke an API request from the agent to assess its current status
+      const signedDataFromAgent = await this.commonService
+        .httpPost(`${url}`, data, {
+          headers: { authorization: agentApiKey }
+        })
+        .then(async (response) => response);
+
+      return signedDataFromAgent;
+    } catch (error) {
+      this.logger.error(`Agent signature request details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
+    /**
+   * Description: Fetch agent url
+   * @param referenceId
+   * @returns agent URL
+   */
+  getAgentUrl(agentMethodLabel: string, orgAgentType: string, agentEndPoint: string, tenantId: string): string {
+    try {
+      let url;
+      switch (agentMethodLabel) {
+        case 'sign-data-from-agent': {
+          url =
+            orgAgentType === OrgAgentType.DEDICATED
+              ? `${agentEndPoint}${CommonConstants.URL_AGENT_SIGN_DATA}`
+              : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHARED_AGENT_SIGN_DATA}`.replace('#', tenantId)
+              : null;
+          break;
+        }
+        case 'verify-signed-data-from-agent': {
+          url =
+            orgAgentType === OrgAgentType.DEDICATED
+              ? `${agentEndPoint}${CommonConstants.URL_AGENT_VERIFY_SIGNED_DATA}`
+              : orgAgentType === OrgAgentType.SHARED
+              ? `${agentEndPoint}${CommonConstants.URL_SHARED_AGENT_VERIFY_SIGNED_DATA}`.replace('#', tenantId)
+              : null;
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+      if (!url) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentUrlNotFound);
+      }
+      return url;
+    } catch (error) {
+      this.logger.error(`Error in get agent url: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
 }

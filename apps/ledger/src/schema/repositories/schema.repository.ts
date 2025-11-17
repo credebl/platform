@@ -1,14 +1,12 @@
-import { AgentDetails, ISchemasWithCount, IUpdateSchema, UpdateSchemaResponse } from '../interfaces/schema.interface';
 /* eslint-disable camelcase */
 import { ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { ICredDefWithCount, IPlatformSchemasWithOrg } from '@credebl/common/interfaces/schema.interface';
-import { ISaveSchema, ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
-import { Prisma, ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
-import { SchemaType, SortValue } from '@credebl/enum/enum';
-
-import { ISchemaId } from '../schema.interface';
 import { PrismaService } from '@credebl/prisma-service';
+import { ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
+import { ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { AgentDetails, ISchemasWithCount } from '../interfaces/schema.interface';
+import { SchemaType, SortValue } from '@credebl/enum/enum';
+import { ICredDefWithCount, IPlatformSchemas } from '@credebl/common/interfaces/schema.interface';
 
 @Injectable()
 export class SchemaRepository {
@@ -38,9 +36,7 @@ export class SchemaRepository {
             publisherDid: schemaResult.issuerId.split(':')[4] || schemaResult.issuerId,
             orgId: schemaResult.orgId,
             ledgerId: schemaResult.ledgerId,
-            type: schemaResult.type,
-            isSchemaArchived: false,
-            alias: schemaResult.alias
+            type: schemaResult.type
           }
         });
         return saveResult;
@@ -51,37 +47,11 @@ export class SchemaRepository {
     }
   }
 
-  // Todo: Need to remove this to make the above function 'saveSchema' generic that only saves schemas and not makes any changes
-  async saveSchemaRecord(schemaDetails: ISaveSchema): Promise<schema> {
-    try {
-      const saveResult = await this.prisma.schema.create({
-        data: {
-          name: schemaDetails.name,
-          version: schemaDetails.version,
-          attributes: schemaDetails.attributes,
-          schemaLedgerId: schemaDetails.schemaLedgerId,
-          issuerId: schemaDetails.issuerId,
-          createdBy: schemaDetails.createdBy,
-          lastChangedBy: schemaDetails.lastChangedBy,
-          publisherDid: schemaDetails.publisherDid,
-          orgId: String(schemaDetails.orgId),
-          ledgerId: schemaDetails.ledgerId,
-          type: schemaDetails.type
-        }
-      });
-      return saveResult;
-    } catch (error) {
-      this.logger.error(`Error in saveSchemaRecord: ${error}`);
-      throw error;
-    }
-  }
-
   async schemaExists(schemaName: string, schemaVersion: string): Promise<schema[]> {
     try {
       return this.prisma.schema.findMany({
         where: {
           type: SchemaType.INDY,
-          isSchemaArchived: false,
           name: {
             contains: schemaName,
             mode: 'insensitive'
@@ -103,7 +73,6 @@ export class SchemaRepository {
       const schemasResult = await this.prisma.schema.findMany({
         where: {
           organisation: { id: orgId },
-          isSchemaArchived: false,
           OR: [
             { name: { contains: payload.searchByText, mode: 'insensitive' } },
             { version: { contains: payload.searchByText, mode: 'insensitive' } },
@@ -121,9 +90,8 @@ export class SchemaRepository {
           publisherDid: true,
           orgId: true,
           issuerId: true,
-          alias: true,
           organisation: {
-            select: {
+            select:{
               name: true,
               userOrgRoles: {
                 select: {
@@ -160,19 +128,6 @@ export class SchemaRepository {
     }
   }
 
-  async getSchemasDetailsBySchemaName(schemaName: string, orgId: string): Promise<ISchemaId[]> {
-    const schemaDetails = await this.prisma.schema.findMany({
-      where: {
-        orgId,
-        name: { contains: schemaName, mode: 'insensitive' }
-      },
-
-      select: { schemaLedgerId: true }
-    });
-
-    return schemaDetails;
-  }
-
   async getSchemasDetailsBySchemaIds(templateIds: string[]): Promise<schema[]> {
     try {
       const schemasResult = await this.prisma.schema.findMany({
@@ -192,24 +147,6 @@ export class SchemaRepository {
       return schemasResult;
     } catch (error) {
       this.logger.error(`Error in getting agent DID: ${error}`);
-      throw error;
-    }
-  }
-
-  async archiveSchemasByDid(did: string): Promise<Prisma.BatchPayload> {
-    try {
-      const schemasResult = await this.prisma.schema.updateMany({
-        where: {
-          issuerId: did
-        },
-        data: {
-          isSchemaArchived: true
-        }
-      });
-
-      return schemasResult;
-    } catch (error) {
-      this.logger.error(`Error in archive schemas: ${error}`);
       throw error;
     }
   }
@@ -298,29 +235,27 @@ export class SchemaRepository {
     }
   }
 
-  async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<IPlatformSchemasWithOrg> {
+  async getAllSchemaDetails(payload: ISchemaSearchCriteria): Promise<IPlatformSchemas> {
     try {
       const { ledgerId, schemaType, searchByText, sortField, sortBy, pageSize, pageNumber } = payload;
       let schemaResult;
-      /**
-       * This is made so because the default pageNumber is set to 1 in DTO,
+      /** 
+       * This is made so because the default pageNumber is set to 1 in DTO, 
        * If there is any 'searchByText' field, we ignore the pageNumbers and search
        * in all available records.
-       *
+       * 
        * Because in that case pageNumber would be insignificant.
        */
       if (searchByText) {
         schemaResult = await this.prisma.schema.findMany({
           where: {
             ledgerId,
-            isSchemaArchived: false,
             type: schemaType,
             OR: [
               { name: { contains: searchByText, mode: 'insensitive' } },
               { version: { contains: searchByText, mode: 'insensitive' } },
               { schemaLedgerId: { contains: searchByText, mode: 'insensitive' } },
-              { issuerId: { contains: searchByText, mode: 'insensitive' } },
-              { alias: { contains: searchByText, mode: 'insensitive' } }
+              { issuerId: { contains: searchByText, mode: 'insensitive' } }
             ]
           },
           select: {
@@ -329,18 +264,11 @@ export class SchemaRepository {
             version: true,
             attributes: true,
             schemaLedgerId: true,
-            isSchemaArchived: true,
             createdBy: true,
             publisherDid: true,
-            orgId: true, // This field can be null
+            orgId: true,  // This field can be null
             issuerId: true,
-            type: true,
-            alias: true,
-            organisation: {
-              select: {
-                name: true
-              }
-            }
+            type: true
           },
           orderBy: {
             [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
@@ -354,7 +282,6 @@ export class SchemaRepository {
         schemaResult = await this.prisma.schema.findMany({
           where: {
             ledgerId,
-            isSchemaArchived: false,
             type: schemaType
           },
           select: {
@@ -363,18 +290,11 @@ export class SchemaRepository {
             version: true,
             attributes: true,
             schemaLedgerId: true,
-            isSchemaArchived: true,
             createdBy: true,
             publisherDid: true,
-            orgId: true, // This field can be null
+            orgId: true,  // This field can be null
             issuerId: true,
-            type: true,
-            alias: true,
-            organisation: {
-              select: {
-                name: true
-              }
-            }
+            type: true
           },
           orderBy: {
             [sortField]: SortValue.DESC === sortBy ? SortValue.DESC : SortValue.ASC
@@ -392,7 +312,7 @@ export class SchemaRepository {
       });
 
       // Handle null orgId in the response
-      const schemasWithDefaultOrgId = schemaResult.map((schema) => ({
+      const schemasWithDefaultOrgId = schemaResult.map(schema => ({
         ...schema,
         orgId: schema.orgId || null // Replace null orgId with 'N/A' or any default value
       }));
@@ -445,23 +365,21 @@ export class SchemaRepository {
     }
   }
 
-  async schemaExist(payload: ISchemaExist): Promise<
-    {
-      id: string;
-      createDateTime: Date;
-      createdBy: string;
-      lastChangedDateTime: Date;
-      lastChangedBy: string;
-      name: string;
-      version: string;
-      attributes: string;
-      schemaLedgerId: string;
-      publisherDid: string;
-      issuerId: string;
-      orgId: string;
-      ledgerId: string;
-    }[]
-  > {
+  async schemaExist(payload: ISchemaExist): Promise<{
+    id: string;
+    createDateTime: Date;
+    createdBy: string;
+    lastChangedDateTime: Date;
+    lastChangedBy: string;
+    name: string;
+    version: string;
+    attributes: string;
+    schemaLedgerId: string;
+    publisherDid: string;
+    issuerId: string;
+    orgId: string;
+    ledgerId: string;
+  }[]> {
     try {
       return this.prisma.schema.findMany({
         where: {
@@ -471,20 +389,6 @@ export class SchemaRepository {
       });
     } catch (error) {
       this.logger.error(`Error in getting get schema by name and version: ${error}`);
-      throw error;
-    }
-  }
-
-  async updateSchema(schemaDetails: IUpdateSchema): Promise<UpdateSchemaResponse> {
-    const { alias, schemaLedgerId, orgId } = schemaDetails;
-
-    try {
-      return await this.prisma.schema.updateMany({
-        where: orgId ? { schemaLedgerId, orgId } : { schemaLedgerId },
-        data: { alias }
-      });
-    } catch (error) {
-      this.logger.error(`Error in updating schema details: ${error}`);
       throw error;
     }
   }

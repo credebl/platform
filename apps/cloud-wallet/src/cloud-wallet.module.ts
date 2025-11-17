@@ -7,39 +7,21 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { PrismaService } from '@credebl/prisma-service';
 import { CloudWalletRepository } from './cloud-wallet.repository';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
-    ClientsModule.register([
-      {
-        name: 'NATS_CLIENT',
-        transport: Transport.NATS,
-        options: getNatsOptions(process.env.CLOUD_WALLET_NKEY_SEED)
-      }
-    ]),
-
-    CommonModule,
-    GlobalConfigModule,
-    LoggerModule,
-    PlatformConfig,
-    ContextInterceptorModule,
-    CacheModule.register()
-  ],
-  controllers: [CloudWalletController],
-  providers: [
-    CloudWalletService,
-    CloudWalletRepository,
-    PrismaService,
-    Logger,
+ClientsModule.register([
     {
-      provide: MICRO_SERVICE_NAME,
-      useValue: 'cloud-wallet'
+      name: 'NATS_CLIENT',
+      transport: Transport.NATS,
+      options: getNatsOptions(process.env.CLOUD_WALLET_NKEY_SEED)
     }
-  ]
+  ]),
+
+  CommonModule,
+  CacheModule.register()
+],
+  controllers: [CloudWalletController],
+  providers: [CloudWalletService, CloudWalletRepository, PrismaService, Logger]
 })
 export class CloudWalletModule {}

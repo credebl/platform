@@ -85,8 +85,6 @@ export interface IIssuedCredential {
       certificate: string;
       size: string;
       orientation: string;
-      height?: string;
-      width?: string;
     }
 
     interface ICredentialSubject {
@@ -94,7 +92,7 @@ export interface IIssuedCredential {
     }
     
     interface ICredential {
-      "@context": string[];
+      '@context': string[];
       type: string[];
       issuer?: {
         id: string;

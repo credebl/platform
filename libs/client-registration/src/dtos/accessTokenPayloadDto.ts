@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 export class accessTokenPayloadDto {
     client_id: string;
     client_secret: string;

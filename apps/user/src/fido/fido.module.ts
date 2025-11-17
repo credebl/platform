@@ -20,7 +20,6 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../../repositories/user.repository';
 import { UserService } from '../user.service';
 import { AwsService } from '@credebl/aws';
-import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [
@@ -54,8 +53,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
     OrgRolesRepository,
     UserOrgRolesRepository,
     UserActivityService,
-    UserActivityRepository,
-    NATSClient
+    UserActivityRepository
 ]
 })
 export class FidoModule { }

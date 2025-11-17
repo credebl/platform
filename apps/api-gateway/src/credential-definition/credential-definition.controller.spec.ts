@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable camelcase */
 import { Test, TestingModule } from '@nestjs/testing';
-
-import { Any } from 'typeorm';
 import { CredentialDefinitionController } from './credential-definition.controller';
 import { CredentialDefinitionService } from './credential-definition.service';
 

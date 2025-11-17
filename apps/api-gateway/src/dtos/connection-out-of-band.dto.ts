@@ -1,5 +1,6 @@
+/* eslint-disable camelcase */
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString, IsNotEmpty, IsObject, IsNegative } from 'class-validator';
+import { IsArray, IsNotEmpty } from 'class-validator';
 
 
 interface attachmentsObject{

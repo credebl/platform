@@ -1,0 +1,137 @@
+name: Build and deploy CLOUD-WALLET app to PROD ECS 
+
+on:
+  push:
+    tags:
+      - 'prod-cloud-wallet*'
+    
+env:
+  ECR_IMAGE_TAG: "CLOUD-WALLET_V_${{ github.run_number }}"
+  ECR_REPOSITORY: "prod-services"
+  AWS_REGION: "ap-southeast-1"
+  CLUSTER: "PROD-BACKEND-CLUSTER"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Check if tag creator is allowed
+        id: check-user
+        run: |
+          ALLOWED_USERS=("Chimi1999" "devdgna")
+          echo "Tag pushed by: ${{ github.actor }}"
+          is_allowed="false"
+          for user in "${ALLOWED_USERS[@]}"; do
+            if [[ "${{ github.actor }}" == "$user" ]]; then
+              is_allowed="true"
+              break
+            fi
+          done
+          echo "is_allowed=$is_allowed" >> $GITHUB_OUTPUT
+
+      - name: Delete tag if unauthorized
+        if: steps.check-user.outputs.is_allowed != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "Unauthorized tag push detected by ${{ github.actor }}. Deleting tag: $TAG_NAME"
+          curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }}/git/refs/tags/$TAG_NAME
+          exit 1
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          aws-region: ap-southeast-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: prod-services
+          IMAGE_TAG: "CLOUD-WALLET_V_${{ github.run_number }}"
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfiles/Dockerfile.cloud-wallet .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker image list
+          
+      - name: Set environment variables
+        run: |
+          echo "ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY=prod-services" >> $GITHUB_ENV
+          echo "IMAGE_TAG=CLOUD-WALLET_V_${{ github.run_number }}" >> $GITHUB_ENV
+   
+      - name: Print environment variables
+        run: |
+          echo "ECR_REGISTRY: $ECR_REGISTRY"
+          echo "ECR_REPOSITORY: $ECR_REPOSITORY"
+          echo "IMAGE_TAG: $IMAGE_TAG"
+     
+      - name: Retrieve Repository URI
+        run: |
+          REPOSITORY_URI=$(aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} | jq -r '.repositories[].repositoryUri')
+          echo "REPOSITORY_URI=${REPOSITORY_URI}" >> $GITHUB_ENV
+      
+      - name: Replace executionRoleArn in task definition
+        run: |
+          sed -i "s#\"executionRoleArn\": \"arn:aws:iam::.*:role/ecsTaskExecutionRole\"#\"executionRoleArn\": \"arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole\"#" prod-taskdef/cloud-wallet-service.json
+
+      - name: Update Task Definition and service
+        run: |
+          FAMILY=$(sed -n 's/.*"family": "\(.*\)",/\1/p' prod-taskdef/cloud-wallet-service.json)
+          NAME=$(sed -n 's/.*"name": "\(.*\)",/\1/p' prod-taskdef/cloud-wallet-service.json)
+          # Production service name is "cloud-wallet-service"
+          SERVICE_NAME="cloud-wallet-service"
+          
+          echo "Family: $FAMILY"
+          echo "Container Name: $NAME"
+          echo "Service Name: $SERVICE_NAME"
+          echo "Cluster: ${CLUSTER}"
+          
+          # Replace placeholders in the JSON file
+          sed -e "s;%BUILD_NUMBER%;${{ github.run_number }};g" -e "s;%REPOSITORY_URI%;${REPOSITORY_URI};g" prod-taskdef/cloud-wallet-service.json > ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+ 
+          # Debug: Print the content of the modified JSON file
+          cat ${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json
+
+          # Register the task definition using the modified JSON file
+          aws ecs register-task-definition --family ${FAMILY} --cli-input-json file://${GITHUB_WORKSPACE}/${NAME}-v_${{ github.run_number }}.json --region ${{ env.AWS_REGION }}
+      
+          # Check if the service exists and get service info
+          SERVICE_COUNT=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ap-southeast-1 | jq -r '.services | length')
+          
+          if [ "$SERVICE_COUNT" -eq "0" ]; then
+            echo "Service ${SERVICE_NAME} does not exist in cluster ${CLUSTER}."
+            echo "Please create the service manually first, then re-run the deployment."
+            exit 1
+          else
+            echo "Service exists, updating existing service..."
+            # Extract desired count from the service info
+            DESIRED_COUNT=$(aws ecs describe-services --services ${SERVICE_NAME} --cluster ${CLUSTER} --region ap-southeast-1 | jq -r '.services[0].desiredCount')
+            
+            # Ensure desired count is at least 1
+            if [ "$DESIRED_COUNT" = "0" ] || [ "$DESIRED_COUNT" = "null" ] || [ -z "$DESIRED_COUNT" ]; then
+              DESIRED_COUNT="1"
+            fi
+            
+            echo "Current desired count: $DESIRED_COUNT"
+            
+            # Update the existing service
+            REVISION=$(aws ecs describe-task-definition --task-definition ${FAMILY} --region ap-southeast-1 | jq -r '.taskDefinition.revision')
+            echo "Updating service ${SERVICE_NAME} with task definition ${FAMILY}:${REVISION} and desired count ${DESIRED_COUNT}"
+            aws ecs update-service --cluster ${CLUSTER} --region ap-southeast-1 --service ${SERVICE_NAME} --task-definition ${FAMILY}:${REVISION} --desired-count ${DESIRED_COUNT}
+          fi

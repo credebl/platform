@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { CredDefPayload, GetAllCredDefsDto, IPlatformCredDefs, ISaveCredDef } from '../interfaces/create-credential-definition.interface';
+import { CredDefPayload, GetAllCredDefsDto, IPlatformCredDefs } from '../interfaces/create-credential-definition.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { credential_definition, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
 import { Injectable, Logger } from '@nestjs/common';
@@ -243,8 +243,7 @@ export class CredentialDefinitionRepository {
                     version: true,
                     schemaLedgerId: true,
                     orgId: true,
-                    attributes: true,
-                    isSchemaArchived: true
+                    attributes: true
                 }
             });
 
@@ -255,13 +254,11 @@ export class CredentialDefinitionRepository {
                 if (matchingSchema) {
                     return {
                         credentialDefinitionId: credDef.credentialDefinitionId,
-                        credentialDefinition: credDef.tag,
                         schemaCredDefName: `${matchingSchema.name}:${matchingSchema.version}-${credDef.tag}`,
                         schemaName: matchingSchema.name,
                         schemaVersion: matchingSchema.version,
                         schemaAttributes: matchingSchema.attributes,
-                        schemaLedgerId: matchingSchema.schemaLedgerId,
-                        isSchemaArchived: matchingSchema.isSchemaArchived
+                        credentialDefinition: credDef.tag
                     };
                 }
                 return null;
@@ -280,7 +277,6 @@ export class CredentialDefinitionRepository {
             return await this.prisma.schema.findMany({
                 where: {
                     orgId,
-                    isSchemaArchived: false,
                     type: schemaType 
                 },
                 select: {
@@ -330,27 +326,5 @@ export class CredentialDefinitionRepository {
         }
       }
 
-    async storeCredDefRecord(credDefDetails: ISaveCredDef): Promise<credential_definition> {
-      try {
-        const saveResult = await this.prisma.credential_definition.create({
-            data: {
-                schemaLedgerId: credDefDetails.schemaLedgerId,
-                tag: credDefDetails.tag,
-                credentialDefinitionId: credDefDetails.credentialDefinitionId,
-                revocable: credDefDetails.revocable,
-                createdBy: credDefDetails.createdBy,
-                lastChangedBy: credDefDetails.lastChangedBy,
-                orgId: credDefDetails.orgId,
-                schemaId: credDefDetails.schemaId
-            }
-          });
-          return saveResult;
-        } catch (error) {
-          this.logger.error(
-            `Error in saving credential-definition: ${error.message} `
-          );
-          throw error;
-        }
-    }
 
 }

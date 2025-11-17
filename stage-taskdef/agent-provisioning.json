@@ -1,0 +1,54 @@
+{
+    "family": "STAGE_AGENT_PROVISIONING_SERVICE_TASKDEFINITION",
+    "containerDefinitions": [
+        {
+            "name": "agent-provisioning",
+            "image": "%REPOSITORY_URI%:AGENT-PROVISIONING_V_%BUILD_NUMBER%",
+            "cpu": 1024,
+            "memory": 2048,
+            "portMappings": [],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [
+                {
+                    "value": "arn:aws:s3:::env-stagebucket/.env",
+                    "type": "s3"
+                }
+            ],
+            "mountPoints": [
+                {
+                    "sourceVolume": "AGNET-CONFIG",
+                    "containerPath": "/app/agent-provisioning/AFJ/agent-config",
+                    "readOnly": false
+                },
+                {
+                    "sourceVolume": "port-file",
+                    "containerPath": "/agent-provisioning/AFJ/port-file",
+                    "readOnly": false
+                }
+            ],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/STAGE_AGENT_PROVISIONING_SERVICE_TASKDEFINITION",
+                    "awslogs-region": "ap-southeast-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            }
+        }
+        
+    ],
+   
+    "executionRoleArn": "arn:aws:iam::id:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "2048"
+}

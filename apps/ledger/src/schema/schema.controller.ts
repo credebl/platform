@@ -5,10 +5,9 @@ import {
   ISchema,
   ISchemaCredDeffSearchInterface,
   ISchemaExist,
-  ISchemaSearchPayload,
-  SaveSchemaPayload
+  ISchemaSearchPayload
 } from './interfaces/schema-payload.interface';
-import { Prisma, schema } from '@prisma/client';
+import { schema } from '@prisma/client';
 import {
   ICredDefWithPagination,
   ISchemaData,
@@ -16,9 +15,6 @@ import {
   ISchemasWithPagination
 } from '@credebl/common/interfaces/schema.interface';
 import { IschemaPayload } from './interfaces/schema.interface';
-import { ISchemaId } from './schema.interface';
-import { UpdateSchemaDto } from 'apps/api-gateway/src/schema/dtos/update-schema-dto';
-
 
 @Controller('schema')
 export class SchemaController {
@@ -34,12 +30,6 @@ export class SchemaController {
   async getSchemasDetails(payload: {templateIds: string[]}): Promise<schema[]> {
     const { templateIds } = payload;
     return this.schemaService.getSchemaDetails(templateIds);
-  }
-
-  @MessagePattern({ cmd: 'get-schemas-details-by-name' })
-  async getSchemasDetailsBySchemaName(payload:{schemaName:string, orgId:string}): Promise<ISchemaId[]> {
-    const {orgId, schemaName} = payload;
-    return this.schemaService.getSchemaDetailsBySchemaName(schemaName, orgId);
   }
 
   @MessagePattern({ cmd: 'get-schema-by-id' })
@@ -82,25 +72,5 @@ export class SchemaController {
     ledgerId: string;
   }[]> {
     return this.schemaService.schemaExist(payload);
-  }
-
-  @MessagePattern({ cmd: 'archive-schemas' })
-  async archiveSchemas(payload: {did: string}): Promise<Prisma.BatchPayload> {
-    return this.schemaService.archiveSchemas(payload.did);
-  }
-
-  @MessagePattern({ cmd: 'store-schema-record' })
-  async saveSchemaRecord(payload: SaveSchemaPayload): Promise<schema> {
-    return this.schemaService.storeSchemaDetails(payload.schemaDetails);
-  }
-
-  @MessagePattern({ cmd: 'get-schema-record-by-schema-id' })
-  async getSchemaRecordBySchemaId(payload: {schemaId: string}): Promise<schema> {
-    return this.schemaService.getSchemaBySchemaId(payload.schemaId);
-  }
-
-@MessagePattern({ cmd: 'update-schema' })
-  updateSchema(payload:{schemaDetails:UpdateSchemaDto}): Promise<object> {
-    return this.schemaService.updateSchema(payload.schemaDetails);
   }
 }

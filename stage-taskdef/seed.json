@@ -1,0 +1,43 @@
+{
+    "family": "STAGE_SEED_TASKDEFINITON",
+    "containerDefinitions": [
+        {
+            "name": "seed",
+            "image": "%REPOSITORY_URI%:SEED_V_%BUILD_NUMBER%",
+            "cpu": 1024,
+            "memory": 2048,
+            "portMappings": [],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [
+                {
+                    "value": "arn:aws:s3:::env-stagebucket/.env",
+                    "type": "s3"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/STAGE_SEED_TASKDEFINITON",
+                    "awslogs-region": "ap-southeast-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            }
+        }
+        
+    ],
+   
+    "executionRoleArn": "arn:aws:iam::id:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "2048"
+}

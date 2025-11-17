@@ -4,7 +4,7 @@ dist
 sonar-project.properties
 .scannerwork/*
 coverage
-libs/prisma-service/prisma/data/credebl-master-table/credebl-master-table.json
+libs/prisma-service/prisma/data/credebl-master-table.json
 uploadedFles/exports
 uploadedFles/import
 uploadedFles/export

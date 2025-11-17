@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  agent:
+    image: 
+
+    container_name: 160bacc1-11d6-4f9f-b1bb-a398d63e6c6d_
+    restart: always
+    environment:
+      AFJ_REST_LOG_LEVEL: 1
+    ports:
+     - 9001:9001
+     - 8001:8001
+   
+    volumes: 
+      - ./agent-config/160bacc1-11d6-4f9f-b1bb-a398d63e6c6d_.json:/config.json   
+      
+    command: --auto-accept-connections --config /config.json
+      
+volumes:
+  pgdata:
+  agent-indy_client:
+  agent-tmp:

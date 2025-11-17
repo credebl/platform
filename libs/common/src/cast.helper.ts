@@ -1,16 +1,7 @@
-import * as CryptoJS from 'crypto-js';
-
-import { BadRequestException, Logger, PipeTransform } from '@nestjs/common';
-import {
-  DidMethod,
-  JSONSchemaType,
-  ProofType,
-  TemplateIdentifier,
-  W3CSchemaDataType,
-  ledgerLessDIDType,
-  schemaRequestType
-} from '../../enum/src/enum';
-import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import { DidMethod, JSONSchemaType, ledgerLessDIDType, ProofType, schemaRequestType, TemplateIdentifier } from '@credebl/enum/enum';
+import { ISchemaFields } from './interfaces/schema.interface';
+import { BadRequestException, PipeTransform } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
 import {
   ValidationArguments,
   ValidationOptions,
@@ -20,12 +11,9 @@ import {
   isMimeType,
   registerDecorator
 } from 'class-validator';
-
-import { ISchemaFields } from './interfaces/schema.interface';
 import { ResponseMessages } from './response-messages';
-import { plainToClass } from 'class-transformer';
+import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
 
-const logger = new Logger();
 interface ToNumberOptions {
   default?: number;
   min?: number;
@@ -94,8 +82,7 @@ export function isSafeString(value: string): boolean {
 }
 
 export const IsNotSQLInjection =
-  (validationOptions?: ValidationOptions): PropertyDecorator =>
-  (object: object, propertyName: string) => {
+  (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
     registerDecorator({
       name: 'isNotSQLInjection',
       target: object.constructor,
@@ -103,22 +90,21 @@ export const IsNotSQLInjection =
       options: validationOptions,
       validator: {
         validate(value) {
-          // Check if the value is a string
-          if ('string' === typeof value) {
-            // Regex to check for SQL injection keywords at the start
-            const startInjectionRegex = new RegExp(
-              `^\\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|EXEC|FROM|WHERE|AND|OR)\\b`,
-              'i'
-            );
-
-            // Check if the SQL injection pattern is present at the start
-            if (startInjectionRegex.test(value)) {
-              return false; // SQL keyword present at the start
+          // Check if the value contains any common SQL injection keywords
+          const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'UNION', 'WHERE', 'AND', 'OR'];
+        if ('string' === typeof value) {
+          // Convert the value to upper case for case-insensitive comparison
+          const upperCaseValue = value.toUpperCase();
+          // Use a regular expression to check for whole words
+          for (const keyword of sqlKeywords) {
+            const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+            if (regex.test(upperCaseValue)) {
+              return false; // Value contains a SQL injection keyword
             }
           }
-
-          return true; // Value does not contain any SQL injection keywords
-        },
+        }
+        return true; // Value does not contain any SQL injection keywords
+      },
         defaultMessage(args: ValidationArguments) {
           return `${args.property} contains SQL injection keywords.`;
         }
@@ -171,33 +157,6 @@ export class TrimStringParamPipe implements PipeTransform {
   }
 }
 
-//TODO: Need to add this logic in `trimstringpipe`
-export class EmptyStringParamPipe implements PipeTransform {
-  private paramName: string;
-
-  static forParam(paramName: string): PipeTransform {
-    return new EmptyStringParamPipe(paramName);
-  }
-
-  private constructor(paramName: string) {
-    this.paramName = paramName;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
-  transform(value: string) {
-    const trimmedValue = value.trim();
-
-    if (!trimmedValue) {
-      if (!this.paramName || 'string' !== typeof this.paramName) {
-        throw new BadRequestException(`Parameter is required and cannot be empty`);
-      }
-      throw new BadRequestException(`${this.paramName[0].toUpperCase() + this.paramName.slice(1)} is required`);
-    }
-
-    return plainToClass(String, trimmedValue);
-  }
-}
-
 // export const IsNotUUID = (validationOptions?: ValidationOptions): PropertyDecorator => (object: object, propertyName: string) => {
 //   registerDecorator({
 //     name: 'isNotUUID',
@@ -211,6 +170,7 @@ export class EmptyStringParamPipe implements PipeTransform {
 //     }
 //   });
 // };
+
 
 export function validateSchemaPayload(schemaPayload: ISchemaFields, schemaType: string): void {
   const errors: string[] = [];
@@ -331,6 +291,7 @@ export class AgentSpinupValidator {
   public static validate(agentSpinupDto): void {
     this.validateWalletName(agentSpinupDto.walletName);
   }
+
 }
 
 export const validateEmail = (email: string): boolean => {
@@ -338,12 +299,13 @@ export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
 export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential, prettyVc: IPrettyVc) => {
-  const { credentialData, orgDid, orgId, schemaLedgerId, schemaName, isReuseConnection } = JsonldCredentialDetails;
-  const credentialSubject = {};
+  const {credentialData, orgDid, orgId, schemaLedgerId, schemaName, isReuseConnection} = JsonldCredentialDetails;
+  const credentialSubject = { };
 
-  const proofType = orgDid?.includes(DidMethod.POLYGON) ? ProofType.POLYGON_PROOFTYPE : ProofType.NO_LEDGER_PROOFTYPE;
+  const proofType = (orgDid?.includes(DidMethod.POLYGON)) ? ProofType.POLYGON_PROOFTYPE : ProofType.NO_LEDGER_PROOFTYPE;
 
   for (const key in credentialData) {
     if (credentialData.hasOwnProperty(key) && TemplateIdentifier.EMAIL_COLUMN !== key) {
@@ -354,39 +316,41 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
   return {
     credentialOffer: [
       {
-        emailId: `${credentialData.email_identifier}`,
-        credential: {
+        'emailId': `${credentialData.email_identifier}`,
+        'credential': {
           '@context': ['https://www.w3.org/2018/credentials/v1', `${schemaLedgerId}`],
-          type: ['VerifiableCredential', `${schemaName}`],
-          issuer: {
-            id: `${orgDid}`
+          'type': [
+            'VerifiableCredential',
+            `${schemaName}`
+          ],
+          'issuer': {
+            'id': `${orgDid}`
           },
-          issuanceDate: new Date().toISOString(),
+          'issuanceDate': new Date().toISOString(),
           credentialSubject,
           prettyVc
         },
-        options: {
+        'options': {
           proofType,
-          proofPurpose: 'assertionMethod'
+          'proofPurpose': 'assertionMethod'
         }
       }
     ],
-    comment: 'string',
-    protocolVersion: 'v2',
-    credentialType: 'jsonld',
+    'comment': 'string',
+    'protocolVersion': 'v2',
+    'credentialType': 'jsonld',
     orgId,
     isReuseConnection
   };
 };
 
+
 @ValidatorConstraint({ name: 'isHostPortOrDomain', async: false })
 export class IsHostPortOrDomainConstraint implements ValidatorConstraintInterface {
   validate(value: string): boolean {
     // Regular expression for validating URL with host:port or domain
-    const hostPortRegex =
-      /^(http:\/\/|https:\/\/)?(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)):(?:\d{1,5})(\/[^\s]*)?$/;
-    const domainRegex =
-      /^(http:\/\/|https:\/\/)?(?:localhost|(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})(:\d{1,5})?(\/[^\s]*)?$/;
+    const hostPortRegex = /^(http:\/\/|https:\/\/)?(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)):(?:\d{1,5})(\/[^\s]*)?$/;
+    const domainRegex = /^(http:\/\/|https:\/\/)?(?:localhost|(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,})(:\d{1,5})?(\/[^\s]*)?$/;
 
     return hostPortRegex.test(value) || domainRegex.test(value);
   }
@@ -409,13 +373,18 @@ export function IsHostPortOrDomain(validationOptions?: ValidationOptions) {
 }
 
 export function checkDidLedgerAndNetwork(schemaType: string, did: string): boolean {
+
   const cleanSchemaType = schemaType.trim().toLowerCase();
   const cleanDid = did.trim().toLowerCase();
-
+  
   if (JSONSchemaType.POLYGON_W3C === cleanSchemaType) {
     return cleanDid.includes(JSONSchemaType.POLYGON_W3C);
   }
 
+  if (JSONSchemaType.ETHEREUM_W3C === cleanSchemaType) {
+    return cleanDid.includes(JSONSchemaType.ETHEREUM_W3C);
+  }
+  
   if (JSONSchemaType.LEDGER_LESS === cleanSchemaType) {
     return cleanDid.startsWith(ledgerLessDIDType.DID_KEY) || cleanDid.startsWith(ledgerLessDIDType.DID_WEB);
   }
@@ -440,86 +409,4 @@ export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICreden
 
     return item;
   });
-}
-
-export const encryptClientCredential = async (clientCredential: string): Promise<string> => {
-  try {
-    const encryptedToken = CryptoJS.AES.encrypt(
-      JSON.stringify(clientCredential),
-      process.env.CRYPTO_PRIVATE_KEY
-    ).toString();
-
-    logger.debug('Client credentials encrypted successfully');
-
-    return encryptedToken;
-  } catch (error) {
-    logger.error('An error occurred during encryptClientCredential:', error);
-    throw error;
-  }
-};
-
-export function ValidateNestedStructureFields(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string): void {
-    registerDecorator({
-      name: 'validateNestedStructureFields',
-      target: object.constructor,
-      propertyName,
-      options: validationOptions,
-      validator: {
-        validate(_, args: ValidationArguments) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const obj = args.object as any;
-          const { schemaDataType, properties, items } = obj;
-
-          // object: must only have properties
-          if (W3CSchemaDataType.OBJECT === schemaDataType) {
-            return properties !== undefined && items === undefined;
-          }
-
-          // array: must only have items
-          if (W3CSchemaDataType.ARRAY === schemaDataType) {
-            return items !== undefined && properties === undefined;
-          }
-
-          // Others: neither properties nor items should be present
-          return items === undefined && properties === undefined;
-        },
-
-        defaultMessage(args: ValidationArguments) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const obj = args.object as any;
-          const { schemaDataType, properties, items } = obj;
-
-          if (W3CSchemaDataType.OBJECT === schemaDataType) {
-            if (items !== undefined) {
-              return `'items' is not allowed when schemaDataType is object`;
-            }
-            if (properties === undefined) {
-              return `'properties' is required when schemaDataType is object`;
-            }
-          }
-
-          if (W3CSchemaDataType.ARRAY === schemaDataType) {
-            if (properties !== undefined) {
-              return `'properties' is not allowed when schemaDataType is array`;
-            }
-            if (items === undefined) {
-              return `'items' is required when schemaDataType is array`;
-            }
-          }
-
-          if (W3CSchemaDataType.OBJECT !== schemaDataType && W3CSchemaDataType.ARRAY !== schemaDataType) {
-            if (properties !== undefined) {
-              return `'properties' is only allowed when schemaDataType is object`;
-            }
-            if (items !== undefined) {
-              return `'items' is only allowed when schemaDataType is array`;
-            }
-          }
-
-          return 'Invalid structure based on schemaDataType';
-        }
-      }
-    });
-  };
 }

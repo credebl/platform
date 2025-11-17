@@ -20,11 +20,6 @@ import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [
@@ -37,8 +32,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ]),
     
     CommonModule,
-    GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
     FidoModule,
     OrgRolesModule
 ],
@@ -58,8 +51,8 @@ import { NATSClient } from '@credebl/common/NATSClient';
     UserOrgRolesRepository,
     UserActivityService,
     UserActivityRepository,
-    UserDevicesRepository,
-    NATSClient
-  ]
+    UserDevicesRepository
+  ],
+  exports: [ClientRegistrationService]
 })
 export class UserModule {}

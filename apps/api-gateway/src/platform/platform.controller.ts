@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, HttpStatus, Logger, Param, Query, Res, UseFilters, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Logger, Param, Query, Res, UseFilters, UseGuards } from '@nestjs/common';
 import { PlatformService } from './platform.service';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -14,7 +14,6 @@ import { AuthGuard } from '@nestjs/passport';
 import * as QRCode from 'qrcode';
 import { CredDefSortFields, SchemaType, SortFields } from '@credebl/enum/enum';
 import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
-import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @Controller('')
 @UseFilters(CustomExceptionFilter)
@@ -23,19 +22,11 @@ export class PlatformController {
 
     private readonly logger = new Logger('PlatformController');
 
-    /**
-     * Retrieves all schemas available on the platform with optional filters and sorting.
-     *
-     * @param ledgerId The ID of the ledger.
-     * @param schemaType Type of schema to filter results.
-     * 
-     * @returns A paginated list of schemas based on the provided criteria.
-     */
     @Get('/platform/schemas')
     @ApiTags('schemas')
     @ApiOperation({
         summary: 'Get all schemas from platform.',
-        description: 'Retrieves all schemas available on the platform'
+        description: 'Get all schemas from platform.'
     })
     @ApiQuery({
         name: 'sortField',
@@ -74,16 +65,12 @@ export class PlatformController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-/**
-     * Retrieves all credential definitions available on the platform.
-     * 
-     * @returns A list of credential definitions and their details.
-     */
+
     @Get('/platform/cred-defs')
     @ApiTags('credential-definitions')
     @ApiOperation({
         summary: 'Get all credential-definitions from platform.',
-        description: 'Retrieves all credential definitions available on the platform'
+        description: 'Get all credential-definitions list from platform.'
     })
     @ApiQuery({
         name: 'sortField',
@@ -107,16 +94,12 @@ export class PlatformController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-    /**
-     * Retrieves all available ledgers from the platform.
-     *
-     * @returns A list of ledgers and their details.
-     */
+
     @Get('/platform/ledgers')
     @ApiTags('ledgers')
     @ApiOperation({
         summary: 'Get all ledgers from platform.',
-        description: 'Retrieves a list of all available ledgers on platform.'
+        description: 'Get all ledgers from platform.'
     })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
@@ -134,28 +117,19 @@ export class PlatformController {
         return res.status(HttpStatus.OK).json(finalResponse);
     }
 
-    /**
-     * Retrieves the network URL associated with a specific ledger namespace.
-     *
-     * @param indyNamespace The namespace of the ledger.
-     * @returns The network URL for the specified ledger.
-     */
     @Get('/platform/network/url/:indyNamespace')
     @ApiTags('ledgers')
     @ApiOperation({
         summary: 'Get network url from platform.',
-        description: 'Retrieves the network URL for a specified ledger namespace.'
+        description: 'Get network url from platform.'
     })
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'))
     @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
     async getNetwrkUrl(
-        @Param('indyNamespace', TrimStringParamPipe) indyNamespace: string,
+        @Param('indyNamespace') indyNamespace: string,
         @Res() res: Response
     ): Promise<Response> {
-        if (!indyNamespace) {
-            throw new BadRequestException(ResponseMessages.ledger.error.indyNamespaceisRequired);
-        }
         const networksResponse = await this.platformService.getNetworkUrl(indyNamespace);
 
         const finalResponse: IResponse = {

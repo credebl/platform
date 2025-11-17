@@ -1,0 +1,43 @@
+{
+    "family": "PRODUCTION_NOTIFICATION-WEBHOOK_SERVICE_TASKDEFINITION",
+    "containerDefinitions": [
+        {
+            "name": "notification-webhook",
+            "image": "%REPOSITORY_URI%:NOTIFICATION-WEBHOOK_V_%BUILD_NUMBER%",
+            "cpu": 2048,
+            "memory": 8192,
+            "portMappings": [],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [
+                {
+                    "value": "arn:aws:s3:::env-prodbucket/PROD.env",
+                    "type": "s3"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/PRODUCTION_NOTIFICATION-WEBHOOK_SERVICE_TASKDEFINITION",
+                    "awslogs-region": "ap-southeast-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            }
+        }
+        
+    ],
+   
+    "executionRoleArn": "arn:aws:iam::id:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "2048",
+    "memory": "8192"
+}

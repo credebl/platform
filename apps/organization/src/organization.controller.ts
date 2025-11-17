@@ -4,27 +4,11 @@ import { OrganizationService } from './organization.service';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import {
-  IDidList,
-  IGetOrgById,
-  IGetOrganization,
-  IOrgDetails,
-  IUpdateOrganization,
-  Payload
-} from '../interfaces/organization.interface';
-import {
-  IOrgCredentials,
-  IOrganizationInvitations,
-  IOrganization,
-  IOrganizationDashboard,
-  IDeleteOrganization,
-  IOrgActivityCount
-} from '@credebl/common/interfaces/organization.interface';
+import { IDidList, IGetOrgById, IGetOrganization, IUpdateOrganization, Payload } from '../interfaces/organization.interface';
+import { IOrgCredentials, IOrganizationInvitations, IOrganization, IOrganizationDashboard, IDeleteOrganization, IOrgActivityCount } from '@credebl/common/interfaces/organization.interface';
 import { organisation, user } from '@prisma/client';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
-import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
-import { ClientTokenDto } from '../dtos/client-token.dto';
 
 @Controller()
 export class OrganizationController {
@@ -38,9 +22,7 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'create-organization' })
-  async createOrganization(
-    @Body() payload: { createOrgDto: CreateOrganizationDto; userId: string; keycloakUserId: string }
-  ): Promise<organisation> {
+  async createOrganization(@Body() payload: { createOrgDto: CreateOrganizationDto; userId: string, keycloakUserId: string }): Promise<organisation> {
     return this.organizationService.createOrganization(payload.createOrgDto, payload.userId, payload.keycloakUserId);
   }
 
@@ -51,19 +33,17 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'set-primary-did' })
-  async setPrimaryDid(@Body() payload: { orgId: string; did: string; id: string }): Promise<string> {
+  async setPrimaryDid(@Body() payload: { orgId:string, did:string, id:string}): Promise<string> {
     return this.organizationService.setPrimaryDid(payload.orgId, payload.did, payload.id);
   }
 
   /**
-   *
-   * @param payload
+   * 
+   * @param payload 
    * @returns organization client credentials
    */
   @MessagePattern({ cmd: 'create-org-credentials' })
-  async createOrgCredentials(
-    @Body() payload: { orgId: string; userId: string; keycloakUserId: string }
-  ): Promise<IOrgCredentials> {
+  async createOrgCredentials(@Body() payload: { orgId: string; userId: string, keycloakUserId: string }): Promise<IOrgCredentials> {
     return this.organizationService.createOrgCredentials(payload.orgId, payload.userId, payload.keycloakUserId);
   }
 
@@ -74,11 +54,7 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'update-organization' })
-  async updateOrganization(payload: {
-    updateOrgDto: IUpdateOrganization;
-    userId: string;
-    orgId: string;
-  }): Promise<organisation> {
+  async updateOrganization(payload: { updateOrgDto: IUpdateOrganization; userId: string, orgId: string }): Promise<organisation> {
     return this.organizationService.updateOrganization(payload.updateOrgDto, payload.userId, payload.orgId);
   }
 
@@ -88,7 +64,7 @@ export class OrganizationController {
    * @returns organization's did list
    */
   @MessagePattern({ cmd: 'fetch-organization-dids' })
-  async getOrgDidList(payload: { orgId: string }): Promise<IDidList[]> {
+  async getOrgDidList(payload: {orgId:string}): Promise<IDidList[]> {
     return this.organizationService.getOrgDidList(payload.orgId);
   }
 
@@ -98,7 +74,9 @@ export class OrganizationController {
    * @returns Get created organization details
    */
   @MessagePattern({ cmd: 'get-organizations' })
-  async getOrganizations(@Body() payload: { userId: string } & Payload): Promise<IGetOrganization> {
+  async getOrganizations(
+    @Body() payload: { userId: string} & Payload
+  ): Promise<IGetOrganization> {
     const { userId, pageNumber, pageSize, search, role } = payload;
     return this.organizationService.getOrganizations(userId, pageNumber, pageSize, search, role);
   }
@@ -108,9 +86,12 @@ export class OrganizationController {
    * @returns Get created organization details
    */
   @MessagePattern({ cmd: 'get-organizations-count' })
-  async countTotalOrgs(@Body() payload: { userId: string }): Promise<number> {
+  async countTotalOrgs(
+    @Body() payload: { userId: string}
+  ): Promise<number> {
+    
     const { userId } = payload;
-
+    
     return this.organizationService.countTotalOrgs(userId);
   }
 
@@ -118,7 +99,9 @@ export class OrganizationController {
    * @returns Get public organization details
    */
   @MessagePattern({ cmd: 'get-public-organizations' })
-  async getPublicOrganizations(@Body() payload: Payload): Promise<IGetOrganization> {
+  async getPublicOrganizations(
+    @Body() payload: Payload
+  ): Promise<IGetOrganization> {
     const { pageNumber, pageSize, search } = payload;
     return this.organizationService.getPublicOrganizations(pageNumber, pageSize, search);
   }
@@ -129,13 +112,13 @@ export class OrganizationController {
    * @returns Get created organization details
    */
   @MessagePattern({ cmd: 'get-organization-by-id' })
-  async getOrganization(@Body() payload: { orgId: string; userId: string }): Promise<IGetOrgById> {
+  async getOrganization(@Body() payload: { orgId: string; userId: string}): Promise<IGetOrgById> {
     return this.organizationService.getOrganization(payload.orgId);
   }
-  /**
-   * @param orgSlug
-   * @returns organization details
-   */
+/**
+ * @param orgSlug 
+ * @returns organization details
+ */
   @MessagePattern({ cmd: 'get-organization-public-profile' })
   async getPublicProfile(payload: { orgSlug }): Promise<IGetOrgById> {
     return this.organizationService.getPublicProfile(payload);
@@ -147,7 +130,9 @@ export class OrganizationController {
    * @returns Get created invitation details
    */
   @MessagePattern({ cmd: 'get-invitations-by-orgId' })
-  async getInvitationsByOrgId(@Body() payload: { orgId: string } & Payload): Promise<IOrganizationInvitations> {
+  async getInvitationsByOrgId(
+    @Body() payload: { orgId: string } & Payload
+  ): Promise<IOrganizationInvitations> {
     return this.organizationService.getInvitationsByOrgId(
       payload.orgId,
       payload.pageNumber,
@@ -157,11 +142,11 @@ export class OrganizationController {
   }
 
   /**
-   * @returns Get org-roles
+   * @returns Get org-roles 
    */
 
   @MessagePattern({ cmd: 'get-org-roles' })
-  async getOrgRoles(payload: { orgId: string; user: user }): Promise<IClientRoles[]> {
+  async getOrgRoles(payload: {orgId: string, user: user}): Promise<IClientRoles[]> {
     return this.organizationService.getOrgRoles(payload.orgId, payload.user);
   }
 
@@ -177,7 +162,7 @@ export class OrganizationController {
    */
   @MessagePattern({ cmd: 'send-invitation' })
   async createInvitation(
-    @Body() payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string; userEmail: string }
+    @Body() payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string, userEmail: string }
   ): Promise<string> {
     return this.organizationService.createInvitation(payload.bulkInvitationDto, payload.userId, payload.userEmail);
   }
@@ -212,7 +197,7 @@ export class OrganizationController {
    */
 
   @MessagePattern({ cmd: 'update-user-roles' })
-  async updateUserRoles(payload: { orgId: string; roleIds: string[]; userId: string }): Promise<boolean> {
+  async updateUserRoles(payload: { orgId: string; roleIds: string[]; userId: string}): Promise<boolean> {
     return this.organizationService.updateUserRoles(payload.orgId, payload.roleIds, payload.userId);
   }
 
@@ -226,9 +211,9 @@ export class OrganizationController {
     return this.organizationService.getOrganizationActivityCount(payload.orgId, payload.userId);
   }
 
-  /**
-   * @returns organization profile details
-   */
+/**
+ * @returns organization profile details
+ */
   @MessagePattern({ cmd: 'fetch-organization-profile' })
   async getOrgPofile(payload: { orgId: string }): Promise<organisation> {
     return this.organizationService.getOrgPofile(payload.orgId);
@@ -245,67 +230,27 @@ export class OrganizationController {
   }
 
   @MessagePattern({ cmd: 'get-organization-details' })
-  async getOrgData(payload: { orgId: string }): Promise<organisation> {
+  async getOrgData(payload: { orgId: string; }): Promise<organisation> {
     return this.organizationService.getOrgDetails(payload.orgId);
   }
-
+  
   @MessagePattern({ cmd: 'delete-organization' })
-  async deleteOrganization(payload: { orgId: string; user: user }): Promise<IDeleteOrganization> {
+  async deleteOrganization(payload: { orgId: string, user: user }): Promise<IDeleteOrganization> {
     return this.organizationService.deleteOrganization(payload.orgId, payload.user);
   }
 
   @MessagePattern({ cmd: 'delete-org-client-credentials' })
-  async deleteOrganizationCredentials(payload: { orgId: string; user: user }): Promise<string> {
+  async deleteOrganizationCredentials(payload: { orgId: string, user: user }): Promise<string> {
     return this.organizationService.deleteClientCredentials(payload.orgId, payload.user);
   }
 
   @MessagePattern({ cmd: 'delete-organization-invitation' })
-  async deleteOrganizationInvitation(payload: { orgId: string; invitationId: string }): Promise<boolean> {
+  async deleteOrganizationInvitation(payload: { orgId: string; invitationId: string; }): Promise<boolean> {
     return this.organizationService.deleteOrganizationInvitation(payload.orgId, payload.invitationId);
   }
 
   @MessagePattern({ cmd: 'authenticate-client-credentials' })
-  async clientLoginCredentails(payload: { clientId: string; clientSecret: string }): Promise<IAccessTokenData> {
+  async clientLoginCredentails(payload: { clientId: string; clientSecret: string;}): Promise<IAccessTokenData> {
     return this.organizationService.clientLoginCredentails(payload);
-  }
-
-  @MessagePattern({ cmd: 'get-platform-config-details' })
-  async getPlatformConfigDetails(): Promise<object> {
-    return this.organizationService.getPlatformConfigDetails();
-  }
-
-  @MessagePattern({ cmd: 'get-agent-type-by-org-agent-type-id' })
-  async getAgentTypeByAgentTypeId(payload: { orgAgentTypeId: string }): Promise<string> {
-    return this.organizationService.getAgentTypeByAgentTypeId(payload.orgAgentTypeId);
-  }
-
-  @MessagePattern({ cmd: 'get-org-roles-details' })
-  async getOrgRolesDetails(payload: { roleName: string }): Promise<object> {
-    return this.organizationService.getOrgRolesDetails(payload.roleName);
-  }
-
-  @MessagePattern({ cmd: 'get-all-org-roles-details' })
-  async getAllOrgRoles(): Promise<IOrgRoles[]> {
-    return this.organizationService.getAllOrgRoles();
-  }
-
-  @MessagePattern({ cmd: 'get-org-roles-by-id' })
-  async getOrgRolesDetailsByIds(orgRoles: string[]): Promise<object[]> {
-    return this.organizationService.getOrgRolesDetailsByIds(orgRoles);
-  }
-
-  @MessagePattern({ cmd: 'get-organization-by-org-id' })
-  async getOrganisationsByIds(payload: { organisationIds }): Promise<object[]> {
-    return this.organizationService.getOrganisationsByIds(payload.organisationIds);
-  }
-
-  @MessagePattern({ cmd: 'get-org-agents-and-user-roles' })
-  async getOrgAgentDetailsForEcosystem(payload: { orgIds: string[]; search: string }): Promise<IOrgDetails> {
-    return this.organizationService.getOrgAgentDetailsForEcosystem(payload);
-  }
-
-  @MessagePattern({ cmd: 'generate-client-api-token' })
-  async generateClientApiToken(payload: ClientTokenDto): Promise<{ token: string }> {
-    return this.organizationService.generateClientApiToken(payload);
   }
 }

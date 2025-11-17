@@ -17,14 +17,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
-
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { NATSClient } from '@credebl/common/NATSClient';
 @Module({
   imports: [
     ClientsModule.register([
@@ -35,8 +29,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
       }
     ]),
     CommonModule,
-    GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [OrganizationController],
@@ -46,8 +38,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
      UserActivityRepository, UserOrgRolesRepository, UserRepository, UserActivityService,
       ClientRegistrationService,
       KeycloakUrlService,
-      AwsService,
-      NATSClient
+      AwsService
     ]
 
 })

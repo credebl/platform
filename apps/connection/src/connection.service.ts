@@ -528,12 +528,12 @@ export class ConnectionService {
         throw new NotFoundException(ResponseMessages.connection.error.agentEndPointNotFound);
       }
 
-      let legacyInvitationDid;
+      let legacyInvitationDid: string | undefined;
       if (IsReuseConnection) {
         const data: agent_invitations = await this.connectionRepository.getInvitationDidByOrgId(orgId);
-        legacyInvitationDid = data.invitationDid ?? undefined;
+        legacyInvitationDid = data?.invitationDid ?? undefined;
       }
-      const connectionInvitationDid = invitationDid ? invitationDid : legacyInvitationDid;
+      const connectionInvitationDid = invitationDid ?? legacyInvitationDid;
 
       this.logger.debug('connectionInvitationDid:', connectionInvitationDid);
 

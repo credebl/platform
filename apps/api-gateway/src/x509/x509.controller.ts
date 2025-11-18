@@ -7,7 +7,6 @@ import {
   ApiTags,
   ApiUnauthorizedResponse
 } from '@nestjs/swagger';
-import { CommonService } from '@credebl/common';
 import {
   Controller,
   Get,
@@ -53,10 +52,7 @@ import { SortFields, x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
 export class X509Controller {
-  constructor(
-    private readonly x509Service: X509Service,
-    private readonly commonService: CommonService
-  ) {}
+  constructor(private readonly x509Service: X509Service) {}
 
   /**
    * Create a new x509

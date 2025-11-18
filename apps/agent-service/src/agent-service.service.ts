@@ -2144,7 +2144,12 @@ export class AgentServiceService {
 
   private async tokenEncryption(token: string): Promise<string> {
     try {
-      const encryptedToken = CryptoJS.AES.encrypt(JSON.stringify(token), process.env.CRYPTO_PRIVATE_KEY).toString();
+      const secret = process.env.CRYPTO_PRIVATE_KEY;
+      if (!secret) {
+        this.logger.error('CRYPTO_PRIVATE_KEY is not configured');
+        throw new InternalServerErrorException('Encryption key is not configured');
+      }
+      const encryptedToken = CryptoJS.AES.encrypt(JSON.stringify(token), secret).toString();
 
       return encryptedToken;
     } catch (error) {
@@ -2255,6 +2260,7 @@ export class AgentServiceService {
       this.logger.error(
         `[getOid4vpVerifierSession] Error in getting oid4vp verifier session in agent service : ${JSON.stringify(error)}`
       );
+      throw error;
     }
   }
 

@@ -1,4 +1,4 @@
-import { X509ExtendedKeyUsage, X509KeyUsage, x5cKeyType } from '@credebl/enum/enum';
+import { X509ExtendedKeyUsage, X509KeyUsage, x5cKeyType, KeyType } from '@credebl/enum/enum';
 
 // Enum remains the same
 export enum GeneralNameType {

@@ -8,17 +8,28 @@ import * as ecsFormat from '@elastic/ecs-winston-format';
 export const WinstonLoggerTransportsKey = Symbol();
 let esTransport;
 if ('true' === process.env.ELK_LOG?.toLowerCase()) {
-  const esTransportOpts = {
-    level: `${process.env.LOG_LEVEL}`,
-    clientOpts: {
-      node: `${process.env.ELK_LOG_PATH}`,
-      auth: {
-        username: `${process.env.ELK_USERNAME}`,
-        password: `${process.env.ELK_PASSWORD}`
+  const requiredVars = ['LOG_LEVEL', 'ELK_LOG_PATH', 'ELK_USERNAME', 'ELK_PASSWORD'];
+  const missingVars = requiredVars.filter((v) => !process.env[v]);
+  if (0 < missingVars.length) {
+    // eslint-disable-next-line no-console
+    console.warn(`Elasticsearch logging disabled: missing env vars [${missingVars.join(', ')}]`);
+  } else {
+    const esTransportOpts = {
+      level: `${process.env.LOG_LEVEL}`,
+      clientOpts: {
+        node: `${process.env.ELK_LOG_PATH}`,
+        auth: {
+          username: `${process.env.ELK_USERNAME}`,
+          password: `${process.env.ELK_PASSWORD}`
+        }
       }
-    }
-  };
-  esTransport = new Elasticsearch.ElasticsearchTransport(esTransportOpts);
+    };
+    esTransport = new Elasticsearch.ElasticsearchTransport(esTransportOpts);
+    esTransport.on('error', (error) => {
+      // eslint-disable-next-line no-console
+      console.error('Elasticsearch transport error:', error);
+    });
+  }
 }
 
 @Injectable()

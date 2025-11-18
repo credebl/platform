@@ -724,7 +724,7 @@ export class Oid4vcIssuanceService {
     try {
       const url = await getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.OIDC_ISSUER_SESSIONS);
       const credentialOfferUrl = buildCredentialOfferUrl(url, getAllCredentialOffer);
-      const offers = await this._oidcGetCredentialOfferById(credentialOfferUrl, orgId);
+      const offers = await this._oidcGetCredentialOffers(credentialOfferUrl, orgId);
       if ('string' === typeof offers.response) {
         offers.response = JSON.parse(offers.response);
       }

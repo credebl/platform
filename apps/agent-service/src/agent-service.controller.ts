@@ -372,7 +372,7 @@ export class AgentServiceController {
 
   @MessagePattern({ cmd: 'agent-service-oid4vc-get-credential-offer-by-id' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async oidcGetCredentialOfferById(payload: { url: string; orgId: string; offerId: string }): Promise<any> {
+  async oidcGetCredentialOfferById(payload: { url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcGetCredentialOfferById(payload.url, payload.orgId);
   }
 

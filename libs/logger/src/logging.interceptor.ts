@@ -7,10 +7,6 @@ import Logger, { LoggerKey } from './logger.interface';
 import { ClsService } from 'nestjs-cls';
 import { v4 } from 'uuid';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isNullUndefinedOrEmpty = (obj: any): boolean =>
-  null === obj || obj === undefined || ('object' === typeof obj && 0 === Object.keys(obj).length);
-
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   constructor(
@@ -24,18 +20,18 @@ export class LoggingInterceptor implements NestInterceptor {
     return this.clsService.run(() => {
       this.logger.info('In LoggingInterceptor configuration');
       const rpcContext = context.switchToRpc().getContext();
-      const headers = rpcContext.getHeaders();
+      const headers = rpcContext.getHeaders?.() ?? rpcContext.getHeaders;
+      const contextIdFromHeader = headers && 'function' === typeof headers.get ? headers.get('contextId') : undefined;
 
-      if (!isNullUndefinedOrEmpty(headers)) {
-        this.logger.debug('We found context Id in header of logger Interceptor', headers.get('contextId'));
-        this.contextStorageService.setContextId(headers.get('contextId'));
+      if (contextIdFromHeader) {
+        this.logger.debug('We found context Id in header of logger Interceptor', contextIdFromHeader);
+        this.setupContextId(contextIdFromHeader);
       } else {
         const newContextId = v4();
-        this.logger.debug('Not found context Id in header of logger Interceptor, generating a new one: ', newContextId);
-        this.contextStorageService.set('x-correlation-id', newContextId);
-        this.contextStorageService.set('contextId', newContextId);
-        this.contextStorageService.setContextId(newContextId);
+        this.logger.debug('Not found context Id in header of logger Interceptor, generating a new one:', newContextId);
+        this.setupContextId(newContextId);
       }
+
       return next.handle().pipe(
         catchError((err) => {
           this.logger.error('[intercept] Error in LoggingInterceptor', err);
@@ -43,5 +39,11 @@ export class LoggingInterceptor implements NestInterceptor {
         })
       );
     });
+  }
+
+  private setupContextId(contextIdFromHeader: string | undefined): void {
+    this.contextStorageService.set('x-correlation-id', contextIdFromHeader);
+    this.contextStorageService.set('contextId', contextIdFromHeader);
+    this.contextStorageService.setContextId(contextIdFromHeader);
   }
 }

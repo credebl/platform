@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsArray, ArrayNotEmpty } from 'class-validator';
 
 export class CreateTenantSchemaDto {
   @ApiProperty()
@@ -19,11 +19,9 @@ export class CreateTenantSchemaDto {
 
   @ApiProperty()
   @IsArray({ message: 'attributes must be an array' })
-  @IsString({ each: true })
-  // TODO: IsNotEmpty won't work for array. Must use @ArrayNotEmpty() instead
-  // @ArrayNotEmpty({ message: 'please provide at least one attribute' })
-  // @IsNotEmpty({ each: true, message: 'attribute must not be empty' })
-  @IsNotEmpty({ message: 'please provide valid attributes' })
+  @ArrayNotEmpty({ message: 'please provide at least one attribute' })
+  @IsString({ each: true, message: 'each attribute must be a string' })
+  @IsNotEmpty({ each: true, message: 'attribute must not be empty' })
   attributes: string[];
 
   @ApiProperty()

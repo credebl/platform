@@ -15,8 +15,8 @@ import NestjsClsContextStorageService from './nestjsClsContextStorageService';
 
         generateId: true,
         idGenerator: (context: ExecutionContext) => {
+          const logger = new Logger('ContextInterceptorModule');
           try {
-            const logger = new Logger('ContextInterceptorModule');
             const rpcContext = context.switchToRpc().getContext();
             const headers = rpcContext.getHeaders() ?? {};
             const contextId = headers.get?.('contextId');
@@ -34,7 +34,8 @@ import NestjsClsContextStorageService from './nestjsClsContextStorageService';
             }
           } catch (error) {
             // eslint-disable-next-line no-console
-            console.log('[idGenerator] Error in idGenerator: ', error);
+            logger.error('[idGenerator] Error in idGenerator, generating fallback UUID', error);
+            return uuid();
           }
         }
       }

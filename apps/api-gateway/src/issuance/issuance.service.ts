@@ -1,6 +1,3 @@
-/* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-// TODO: Remove this
 import { Injectable, Inject } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';

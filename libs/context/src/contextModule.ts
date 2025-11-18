@@ -4,6 +4,7 @@ import { ClsModule } from 'nestjs-cls';
 
 import { ContextStorageServiceKey } from './contextStorageService.interface';
 import NestjsClsContextStorageService from './nestjsClsContextStorageService';
+import { Request } from 'express';
 
 @Global()
 @Module({

@@ -25,6 +25,7 @@ export class CreateTenantSchemaDto {
   attributes: string[];
 
   @ApiProperty()
+  @IsString({ message: 'orgId must be a string' })
   @IsNotEmpty({ message: 'please provide orgId' })
   orgId: string;
 }

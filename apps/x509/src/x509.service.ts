@@ -321,7 +321,7 @@ export class X509CertificateService extends BaseService {
               status: error.statusCode,
               error: error.message
             },
-            error.error
+            error.statusCode
           );
         });
     } catch (error) {

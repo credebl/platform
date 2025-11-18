@@ -164,15 +164,6 @@ export class CredentialRequestDto {
   })
   @IsOptional()
   validityInfo?: ValidityInfo;
-
-  // @ApiPropertyOptional({
-  //   description: 'Selective disclosure: claim -> boolean (or nested map)',
-  //   example: { name: true, DOB: true, additionalProp3: false },
-  //   required: false
-  // })
-  // @IsOptional()
-  // @IsDisclosureFrame()
-  // disclosureFrame?: Record<string, boolean | Record<string, boolean>>;
 }
 
 export class CreateOidcCredentialOfferDto {
@@ -206,15 +197,6 @@ export class GetAllCredentialOfferDto {
   @ApiProperty({ required: false, example: '568345' })
   @IsOptional()
   preAuthorizedCode: string = '';
-
-  // @ApiPropertyOptional({
-  //   example: OpenId4VcIssuanceSessionState.OfferCreated,
-  //   enum: OpenId4VcIssuanceSessionState,
-  //   required: false,
-  // })
-  // @IsOptional()
-  // @IsEnum(OpenId4VcIssuanceSessionState)
-  // state?: OpenId4VcIssuanceSessionState;
 
   @ApiProperty({ required: false, example: 'openid-credential-offer://?credential_offer_uri=http%3A%2F%2.....' })
   @IsOptional()

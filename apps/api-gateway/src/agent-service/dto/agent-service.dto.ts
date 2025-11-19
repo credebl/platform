@@ -4,7 +4,6 @@ import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
-  IsEnum,
   IsIn,
   IsISO8601,
   IsNotEmpty,
@@ -21,9 +20,9 @@ import {
   ValidatorConstraintInterface
 } from 'class-validator';
 import { CreateDidDto } from './create-did.dto';
-import { KeyType } from '@credebl/enum/enum';
 import { RewriteValidationOptions } from '@credebl/common/custom-overrideable-validation-pipe';
 import { BadRequestException } from '@nestjs/common';
+
 const regex = /^[a-zA-Z0-9 ]*$/;
 export class AgentSpinupDto extends CreateDidDto {
   @ApiProperty()
@@ -58,15 +57,9 @@ export class AgentSpinupDto extends CreateDidDto {
   @IsOptional()
   @IsBoolean()
   tenant?: boolean;
-
+  
   orgId: string;
 }
-
-// class W3cIssuerDto {
-//   @ApiProperty()
-//   @IsString()
-//   id: string;
-// }
 
 class W3cCredentialSubjectDto {
   @ApiPropertyOptional()
@@ -160,9 +153,9 @@ export class SignRawDataDto {
   @IsString()
   data: string;
 
-  @ApiProperty({ enum: KeyType, enumName: 'KeyType' })
-  @IsEnum(KeyType, { message: 'keyType must be a valid KeyType value' })
-  keyType: KeyType;
+  @ApiProperty({ description: 'keyType either ed25519, x25519, k256 or p256' })
+  @IsString()
+  keyType: string;
 
   @ApiPropertyOptional({ description: 'Base58-encoded public key' })
   @IsOptional()
@@ -186,11 +179,11 @@ export class SignRawDataDto {
 @RewriteValidationOptions({ whitelist: false })
 export class SignDataDto {
   @ApiProperty({
-    description: "Type of data being signed. Use 'jsonLd' for W3C credentials or 'rawData' for any other JSON.",
+    description: 'Type of data being signed. Use \'jsonLd\' for W3C credentials or \'rawData\' for any other JSON.',
     enum: ['jsonLd', 'rawData']
   })
   @IsIn(['jsonLd', 'rawData'])
-  dataTypeToSign: 'jsonLd' | 'rawData';
+  dataTypeToSign: 'jsonLd' | 'rawData' = 'rawData';
 
   @ApiProperty({
     description: 'Store credential boolean if we want to credential after signing it',
@@ -216,84 +209,53 @@ export class SignDataDto {
 
 export class VerifySignatureDto {
   @ApiProperty({
-    description: 'This is the signed w3c-jsonLd credential, which we want to verify',
-    example: {
-      id: 'http://example.com/credential/9290ae08-8959-4723-a26a-921aab97de6e',
-      name: 'Teamwork v2',
-      type: ['VerifiableCredential', 'OpenBadgeCredential'],
-      image: {
-        id: 'https://example.com/BadgeDesigns/a99a4121-e04e-477c-a890-15e9af789f73/1c61a4b2-dca4-4684-8f63-221333fd5c86-Teamwork%20v2.png',
-        type: 'Image'
-      },
-      proof: {
-        jws: 'eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..PN0gqrfiMhO_2AIT9i3Tv1Qt9Owlh5ZBPnplCrta49-6oyEpHg4aQwjGADe-B2RADb_cvdgVqTJe1G-ds9UYDg',
-        type: 'Ed25519Signature2018',
-        created: '2025-06-13T13:47:35Z',
-        proofPurpose: 'assertionMethod',
-        verificationMethod:
-          'did:key:z6MkwSMgqptU9M5AiymSSXv3HLhEhXfE6RonJwMSG2dmURdE#z6MkwSMgqptU9M5AiymSSXv3HLhEhXfE6RonJwMSG2dmURdE'
-      },
-      issuer: {
-        id: 'did:key:z6MkwSMgqptU9M5AiymSSXv3HLhEhXfE6RonJwMSG2dmURdE'
-      },
-      '@context': [
-        'https://www.w3.org/2018/credentials/v1',
-        'https://w3id.org/security/data-integrity/v2',
-        'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json'
-      ],
-      validFrom: '2025-06-13T13:47:35.201Z',
-      awardedDate: '2025-06-12T18:30:00.000Z',
-      description:
-        'EricTech is a cutting-edge product innovation company specialising in Web 3.0 development with extensive expertise in modern technologies. Our unique approach to product invention involves a comprehensive process, starting from the discovery phase and progressing through planning, research, development, marketing, and launch, all tailored to assist businesses in achieving their goals.',
-      issuanceDate: '2025-06-13T13:47:35.201Z',
-      expirationDate: '2026-12-30T18:30:00.000Z',
-      credentialStatus: {
-        id: 'http://example.com/revocation/addfc5a0-258f-4977-a138-f0d9f33d6dc6',
-        type: '1EdTechRevocationList'
-      },
-      credentialSubject: {
-        type: ['AchievementSubject'],
-        identifier: [
-          {
-            type: 'IdentityObject',
-            hashed: 'FALSE',
-            identityHash: 'test@yopmail.com',
-            identityType: 'emailAddress'
-          }
-        ],
-        achievement: {
-          id: 'ds',
-          Tag: ['fghfgh', 'fhfgh'],
-          Type: ['Achievement'],
-          name: 'sddgh',
-          image: {
-            id: 'sdsd',
-            type: 'sdd'
-          },
-          version: '2',
-          criteria: {
-            narrative: 'sdd'
-          },
-          humanCode: 'sd',
-          description: 'sdd',
-          fieldOfStudy: 'sdsd',
-          specialization: 'fghfg',
-          achievementType: 'LearningProgram',
-          otherIdentifier: [
-            {
-              type: 'fhgf',
-              identifier: 'fghfgh',
-              identifierType: 'fghfgh'
-            }
-          ]
-        }
-      }
-    }
+    type: String,
+    description: 'Data to verify for given signature',
+    example: 'test data'
   })
-  credential: unknown;
+  data: string;
 
-  @ApiPropertyOptional({ default: false })
-  @IsOptional()
-  @IsBoolean()
-  verifyCredentialStatus?: boolean;
+  @ApiProperty({
+    type: String,
+    description: 'This is the signature to validate with the given key',
+    example: 'p256'
+  })
+  keyType?: string;
+  
+  @ApiProperty({
+    type: String,
+    description: 'Base58 of public key to verify the signature',
+    example: 'aSzvTBobJJoaBiwS9aGY76gkxqgNjqEmEvBiRQyBaee'
+  })
+  publicKeyBase58: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Signature to verify',
+    example: 'p52JT9PacBjIrv4Zia/RQBgT8OYGTC7dSek66pSIXQRX4ffv06wFBaQ=='
+  })
+  signature: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'DID used during signature to verify the provided signature',
+    example: 'did:key:z6MkhbXESQ6QqSJZ7g9tzdag7gJ6voBonGnWsEVmvsUBmjfC'
+  })
+  did?: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'DID Method',
+    example: 'Ed25519'
+  })
+  method?: string;
+}
+
+export interface IVerifySignature {
+  data: string
+  keyType?: string
+  publicKeyBase58: string
+  signature: string
+  did?: string
+  method?: string
 }

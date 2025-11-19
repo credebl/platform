@@ -4,7 +4,6 @@ import { MessagePattern } from '@nestjs/microservices';
 import { ledgers } from '@prisma/client';
 import { LedgerDetails } from './interfaces/ledgers.interface';
 import { INetworkUrl } from '@credebl/common/interfaces/schema.interface';
-import { ISchemasList } from './schema/interfaces/schema.interface';
 
 @Controller()
 export class LedgerController {
@@ -23,10 +22,5 @@ export class LedgerController {
   @MessagePattern({ cmd: 'get-network-details-by-id' })
   async getNetworkDetailsById(payload: {id: string}): Promise<LedgerDetails> {
     return this.ledgerService.getLedgerDetailsById(payload.id);
-  }
-
-  @MessagePattern({ cmd: 'get-schema-details-for-ecosystem' })
-  async schemaDetailsForEcosystem(payload: {schemaArray: string[], search: string, pageSize: number, pageNumber: number}): Promise<ISchemasList> {
-    return this.ledgerService.schemaDetailsForEcosystem(payload);
   }
 }

@@ -8,14 +8,13 @@ export class UserRoleGuard implements CanActivate {
 
     const { user } = request;
 
-    if (!user?.userRole) {
+    if (!user?.realm_access.roles) {
       throw new ForbiddenException('This role is not a holder.');
     }
     
-    if (!user?.userRole.includes('holder')) {
+    if (!user?.realm_access.roles.includes('holder')) {
       throw new ForbiddenException('This role is not a holder.');
     }
-
     return true;
   }
 }

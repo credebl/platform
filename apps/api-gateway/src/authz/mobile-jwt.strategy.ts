@@ -2,13 +2,12 @@ import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
 
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
 import { CommonConstants } from '@credebl/common/common.constant';
 import { PassportStrategy } from '@nestjs/passport';
 import { passportJwtSecret } from 'jwks-rsa';
 dotenv.config();
-const logger = new Logger();
 
 @Injectable()
 export class MobileJwtStrategy extends PassportStrategy(Strategy, 'mobile-jwt') {
@@ -18,6 +17,7 @@ export class MobileJwtStrategy extends PassportStrategy(Strategy, 'mobile-jwt') 
     super({
 
       secretOrKeyProvider: (request, jwtToken, done) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const decodedToken: any = jwt.decode(jwtToken);       
         const audiance = decodedToken.iss.toString();      
         const jwtOptions = {
@@ -38,6 +38,7 @@ export class MobileJwtStrategy extends PassportStrategy(Strategy, 'mobile-jwt') 
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-function-return-type
   validate(payload: any) {
     if ('adeyaClient' !== payload.azp) {
       throw new UnauthorizedException(

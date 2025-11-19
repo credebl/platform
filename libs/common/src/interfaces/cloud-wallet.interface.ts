@@ -1,35 +1,42 @@
-import { CloudWalletType } from '../../../enum/src/enum';
+import { CloudWalletType } from '@credebl/enum/enum';
 import { $Enums } from '@prisma/client';
+import { JsonValue, SingleOrArray } from 'apps/api-gateway/src/issuance/utils/helper';
 
 export class ICreateCloudWallet {
-  label: string;
-  connectionImageUrl?: string;
-  email?: string;
-  userId?: string;
-}
+    label: string;
+    connectionImageUrl?: string;
+    email?: string;
+    userId?: string;
+  }
+
+  export class IDeleteCloudWallet {
+    email?: string;
+    userId?: string;
+    deleteHolder: boolean;
+  }
 
 export interface ICloudWalletDetails {
-  label: string;
-  tenantId: string;
-  email?: string;
-  type: CloudWalletType;
-  createdBy: string;
-  lastChangedBy: string;
-  userId: string;
-  agentEndpoint?: string;
-  agentApiKey?: string;
-  key?: string;
-  connectionImageUrl?: string;
-}
+    label: string;
+    tenantId: string;
+    email?: string;
+    type: CloudWalletType;
+    createdBy: string;
+    lastChangedBy: string;
+    userId: string;
+    agentEndpoint?: string;
+    agentApiKey?: string;
+    key?: string;
+    connectionImageUrl?: string;
+  }
 
 export interface IStoredWalletDetails {
-  email: string;
-  connectionImageUrl: string;
-  createDateTime: Date;
-  id: string;
-  tenantId: string;
-  label: string;
-  lastChangedDateTime: Date;
+  email: string,
+  connectionImageUrl: string,
+  createDateTime: Date,
+  id: string,
+  tenantId: string,
+  label: string,
+  lastChangedDateTime: Date
 }
 
 export interface IReceiveInvitation {
@@ -44,6 +51,7 @@ export interface IReceiveInvitation {
   invitationUrl: string;
   email?: string;
   userId?: string;
+  connectionType?: string;
 }
 
 export interface IAcceptOffer {
@@ -68,6 +76,7 @@ export interface ICreateCloudWalletDid {
   endorserDid?: string;
   email?: string;
   userId?: string;
+  isDefault?: boolean;
 }
 export interface IGetStoredWalletInfo {
   email: string;
@@ -95,9 +104,10 @@ export interface IStoreWalletInfo {
   agentApiKey: string;
   agentEndpoint: string;
   type: CloudWalletType;
-  userId: string;
-  createdBy: string;
-  lastChangedBy: string;
+  userId?: string;
+  createdBy: string; 
+  lastChangedBy: string,
+  maxSubWallets: number
 }
 
 export interface IGetStoredWalletInfo {
@@ -117,6 +127,18 @@ export interface IAcceptProofRequest {
   comment?: string;
 }
 
+export interface ICheckCloudWalletStatus {
+  userId: string;
+  email: string;
+}
+
+export interface IDeclineProofRequest {
+  proofRecordId: string;
+  userId: string;
+  email: string;
+  sendProblemReport?: boolean;
+  problemReportDescription?: string;
+}
 export interface IAcceptProofRequestPayload {
   acceptProofRequest: IAcceptProofRequest;
   userId: string;
@@ -138,6 +160,26 @@ export interface IGetProofPresentationById {
   proofRecordId: string;
 }
 
+export interface IProofPresentationPayloadWithCred {
+  userId: string;
+  email: string;
+  proof: {
+    proofFormats: {
+      presentationExchange: {
+        credentials: Record<string, string>;
+      }
+    },
+    comment?: string,
+    proofRecordId: string;
+  } 
+}
+
+export interface IGetCredentialsForRequest {
+  userId: string;
+  email: string;
+  proofRecordId: string;
+}
+
 export interface IGetProofPresentation {
   userId: string;
   email: string;
@@ -148,8 +190,11 @@ export interface ICloudBaseWalletConfigure {
   walletKey: string;
   apiKey: string;
   agentEndpoint: string;
+  maxSubWallets: number;
   userId: string;
   email: string;
+  // webhookUrl: string;
+  // orgId: string;
 }
 
 export interface Tags {
@@ -192,6 +237,7 @@ export interface CloudWallet {
 export interface IWalletDetailsForDidList {
   userId: string;
   email: string;
+  isDefault: boolean
 }
 
 export interface IConnectionDetailsById {
@@ -212,6 +258,12 @@ export interface ICredentialDetails {
   userId: string;
   email: string;
   credentialRecordId: string;
+}
+
+export interface IProofPresentationDetails {
+  userId: string;
+  email: string;
+  proofRecordId: string;
 }
 export interface Thread {
   pthid: string;
@@ -328,5 +380,123 @@ export interface IBasicMessageDetails {
   userId?: string;
   email?: string;
   content: string;
+  connectionId: string
+}
+
+
+export interface ICredentialForRequestRes {
+  proofFormats: ProofFormats;
+}
+
+interface ProofFormats {
+  presentationExchange: PresentationExchange;
+}
+
+interface PresentationExchange {
+  requirements:             Requirement[];
+  areRequirementsSatisfied: boolean;
+  name:                     string;
+  purpose:                  string;
+}
+
+interface Requirement {
+  rule:                   string;
+  needsCount:             number;
+  submissionEntry:        SubmissionEntry[];
+  isRequirementSatisfied: boolean;
+}
+
+interface SubmissionEntry {
+  inputDescriptorId:     string;
+  verifiableCredentials: VerifiableCredential[];
+}
+
+interface VerifiableCredential {
+  type:             object;
+  credentialRecord: CredentialRecord;
+}
+
+interface CredentialRecord {
+  _tags:      ITags;
+  metadata:   object;
+  id:         string;
+  createdAt:  Date;
+  credential: Credential;
+  updatedAt:  Date;
+}
+
+interface ITags {
+  claimFormat:   object;
+  contexts:      string[];
+  expandedTypes: string[];
+  issuerId:      string;
+  proofTypes:    string[];
+  subjectIds:    string[];
+  types:         string[];
+}
+
+
+interface Credential {
+  '@context':        string[];
+  type:              string[];
+  issuer:            Issuer;
+  issuanceDate:      Date;
+  credentialSubject: object;
+  proof:             Proof;
+}
+
+
+interface Issuer {
+  id: string;
+}
+
+interface Proof {
+  verificationMethod: string;
+  type:               string;
+  created:            Date;
+  proofPurpose:       string;
+  jws:                string;
+}
+
+export interface BaseAgentInfo {
+  agentEndpoint: string;
+  useCount: number;
+  maxSubWallets: number;
+}
+interface JsonObject {
+    [property: string]: JsonValue
+}
+
+export interface ISelfAttestedCredential {
+  '@context': Array<string | JsonObject>;
+
+  type: string[];
+
+  credentialSubject: SingleOrArray<JsonObject>;
+  [key: string]: unknown;
+
+  proofType: string;
+
+  userId: string;
+  email: string;
+}
+
+export interface IW3cCredentials {
+  userId: string;
+  email: string;
+  credentialRecordId?: string;
+}
+
+export interface IExportCloudWallet {
+  passKey: string;
+  walletID: string;
+  userId: string;
+  email: string;
+}
+
+export interface IAddConnectionType {
+  connectionType: string;
   connectionId: string;
+  userId: string;
+  email: string;
 }

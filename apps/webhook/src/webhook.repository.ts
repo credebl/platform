@@ -46,7 +46,10 @@ export class WebhookRepository {
         webhookUrlInfo = await this.prisma.org_agents.findFirstOrThrow({
 
           where: {
-            tenantId
+            OR:[
+              { tenantId },
+              { orgId }
+            ]
           }
         });
       }

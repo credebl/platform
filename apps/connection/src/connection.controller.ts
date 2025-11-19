@@ -11,9 +11,10 @@ import {
   IReceiveInvitationByUrlOrg,
   IReceiveInvitationResponse
 } from './interfaces/connection.interfaces';
-import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
+import { IConnectionList, IDeletedConnectionsRecord, orgAgents } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/messaging.interfaces';
+// eslint-disable-next-line camelcase
 import { user } from '@prisma/client';
 @Controller()
 export class ConnectionController {
@@ -25,7 +26,8 @@ export class ConnectionController {
    * @returns Callback URL for connection and created connections details
    */
   @MessagePattern({ cmd: 'webhook-get-connection' })
-  async getConnectionWebhook(payload: ICreateConnection): Promise<object> {
+  // eslint-disable-next-line camelcase
+  async getConnectionWebhook(payload: ICreateConnection): Promise<orgAgents> {
     return this.connectionService.getConnectionWebhook(payload);
   }
 

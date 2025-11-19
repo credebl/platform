@@ -1,0 +1,55 @@
+{
+    "cluster": "CREDO_CLUSTER",
+    "serviceName": "credo-service",
+    "taskDefinition": "arn:aws:ecs:ap-southeast-1:992382584134:task-definition/CREDO_CONTROLLER_TASKDEFITION:8",
+    "launchType": "FARGATE",
+    "platformVersion": "LATEST",
+    "networkConfiguration": {
+        "awsvpcConfiguration": {
+            "assignPublicIp": "DISABLED",
+            "securityGroups": ["sg-0634513669767bd91"],
+            "subnets": ["subnet-09e61777aa487b165"]
+        }
+    },
+    "serviceConnectConfiguration": {
+        "enabled": true,
+        "services": [
+            {
+                "portName": "ngicredo-8001-tcp",
+                "clientAliases": [
+                    {
+                        "port": 8001
+                    }
+                ]
+            },
+            {
+                "portName": "credo-9001-tcp",
+                "clientAliases": [
+                    {
+                        "port": 9001
+                    }
+                ]
+            }
+        ]
+    },
+    "loadBalancers": [
+        {
+            "targetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:992382584134:targetgroup/Credo-agent-Tg/7d137d5163cfd512",
+            "containerName": "credo",
+            "containerPort": 8002
+        },
+        {
+            "targetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:992382584134:targetgroup/Credo-Inbound-Tg/d6f706e48bea4f39",
+            "containerName": "credo",
+            "containerPort": 9002
+        }
+    ],
+    "desiredCount": 1,
+    "healthCheckGracePeriodSeconds": 300,
+    "tags": [
+        {
+            "key": "Name",
+            "value": "credo"
+        }
+    ]
+}

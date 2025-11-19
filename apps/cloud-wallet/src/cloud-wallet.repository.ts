@@ -2,8 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CloudWalletType } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
-import { cloud_wallet_user_info, user } from '@prisma/client';
-import { ICloudWalletDetails, IGetStoredWalletInfo, IStoredWalletDetails, IStoreWalletInfo } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { cloud_wallet_user_info, Prisma, user } from '@prisma/client';
+import { BaseAgentInfo, ICloudWalletDetails, IGetStoredWalletInfo, IStoredWalletDetails, IStoreWalletInfo } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { UpdateBaseWalletDto } from 'apps/api-gateway/src/cloud-wallet/dtos/cloudWallet.dto';
 
 
 @Injectable()
@@ -15,11 +16,12 @@ export class CloudWalletRepository {
 
  
   // eslint-disable-next-line camelcase
-  async getCloudWalletDetails(type: CloudWalletType): Promise<cloud_wallet_user_info> {
+  async getCloudWalletDetails(type: CloudWalletType): Promise<cloud_wallet_user_info | null> {
     try {
-      const agentDetails = await this.prisma.cloud_wallet_user_info.findFirstOrThrow({
+      const agentDetails = await this.prisma.cloud_wallet_user_info.findFirst({
         where: {
-          type
+          type,
+          isActive:true
         }
       });
       return agentDetails;
@@ -28,13 +30,80 @@ export class CloudWalletRepository {
       throw error;
     }
   }
+  
 
   // eslint-disable-next-line camelcase
-  async checkUserExist(email: string): Promise<cloud_wallet_user_info> {
+  async getBaseWalletDetails(type: CloudWalletType, user:user): Promise<BaseAgentInfo[]> {
+    try {
+      const agentDetails = await this.prisma.cloud_wallet_user_info.findMany({
+        where: {
+          type,
+          isActive:true,
+          createdBy:user.id
+        },
+        select: {
+          id:true,
+          agentEndpoint:true,
+          useCount:true,
+          maxSubWallets:true
+        }
+      });
+      return agentDetails;
+    } catch (error) {
+      this.logger.error(`Error in getCloudWalletBaseAgentDetails: ${error.message}`);
+      throw error;
+    }
+  }
+  
+  // eslint-disable-next-line camelcase
+  async updateBaseWalletDetails(type: CloudWalletType, updateBaseWalletDto:UpdateBaseWalletDto): Promise<BaseAgentInfo> {
+    try {
+      const agentDetails = await this.prisma.cloud_wallet_user_info.update({
+        where: {
+          id:updateBaseWalletDto.walletId,
+          createdBy:updateBaseWalletDto.userId
+        },
+        data: {
+          isActive: updateBaseWalletDto.isActive,
+          maxSubWallets:updateBaseWalletDto.maxSubWallets
+        },
+        select:{
+          id:true,
+          agentEndpoint:true,
+          useCount:true,
+          maxSubWallets:true
+        }
+      });
+      return agentDetails;
+    } catch (error) {
+      this.logger.error(`Error in UpdateCloudWalletBaseAgentDetails: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateCloudWalletDetails(
+    where: Prisma.cloud_wallet_user_infoWhereUniqueInput,
+    data: Prisma.cloud_wallet_user_infoUpdateInput
+  // eslint-disable-next-line camelcase
+  ): Promise<cloud_wallet_user_info> {
+    try {
+      const agentDetails = await this.prisma.cloud_wallet_user_info.update({
+        where,
+        data
+      });
+      return agentDetails;
+    } catch (error) {
+      this.logger.error(`Error in UpdateCloudWalletAgentDetails: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async checkUserExist(userId: string): Promise<cloud_wallet_user_info> {
     try {
       const agentDetails = await this.prisma.cloud_wallet_user_info.findUnique({
         where: {
-          email
+          userId
         }
       });
       return agentDetails;
@@ -80,11 +149,11 @@ export class CloudWalletRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getCloudWalletInfo(email: string): Promise<cloud_wallet_user_info> {
+  async getCloudWalletInfo(userId: string): Promise<cloud_wallet_user_info> {
     try {
       const walletInfoData = await this.prisma.cloud_wallet_user_info.findUnique({
         where: {
-          email
+          userId
         }
       });
       return walletInfoData;
@@ -96,7 +165,7 @@ export class CloudWalletRepository {
 
   async storeCloudWalletInfo(cloudWalletInfoPayload: IStoreWalletInfo): Promise<IGetStoredWalletInfo> {
     try {
-      const { agentEndpoint, agentApiKey, email, type, userId, key, createdBy, lastChangedBy } = cloudWalletInfoPayload;
+      const { agentEndpoint, agentApiKey, email, type, userId, key, createdBy, lastChangedBy, maxSubWallets } = cloudWalletInfoPayload;
       const walletInfoData = await this.prisma.cloud_wallet_user_info.create({
         data: {
           type,
@@ -106,7 +175,8 @@ export class CloudWalletRepository {
           userId,
           key,
           createdBy,
-          lastChangedBy
+          lastChangedBy,
+          maxSubWallets
         },
         select: {
           id: true,
@@ -138,6 +208,25 @@ export class CloudWalletRepository {
     }
   }
 
+  // eslint-disable-next-line camelcase
+  async deleteCloudSubWallet(userId: string): Promise<cloud_wallet_user_info> {
+    try {
+
+
+          const res = this.prisma.cloud_wallet_user_info.delete({
+          where: {
+            userId
+          } 
+          });
+
+      
+      return res;
+    } catch (error) {
+      this.logger.error(`Error in getCloudSubWallet: ${error}`);
+      throw error;
+    }
+  }
+
   async getUserInfo(email: string): Promise<user> {
     try {
       const userDetails = await this.prisma.user.findUnique({
@@ -151,4 +240,5 @@ export class CloudWalletRepository {
       throw error;
     }
   }
+  
 }

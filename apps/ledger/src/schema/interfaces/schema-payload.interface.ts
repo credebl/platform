@@ -18,7 +18,6 @@ export interface ISchema {
     endorserWriteTxn?: string;
     orgDid?: string;
     type?: string;
-    alias?: string;
 }
 
 export interface IAttributeValue {
@@ -88,21 +87,6 @@ export interface SchemaPayload {
     title: string,
  }
   
- export interface ISchemaAttributesFormat extends W3CSchemaAttributes{
-    order: number,
-    description: string;
-    exclusiveMinimum?: number;
-    multipleOf?: number;
-    pattern?: string;
-    minLength?: number;
-    maxLength?: number;
-    items?: object[] | string [] | number [];
-    properties?: object;
-    format?: string;
-    minItems?: number;
-    maxItems?: number;
-    uniqueItems?: boolean;
- }
 export interface W3CSchemaPayload {
     schemaPayload: SchemaPayload,
     orgId: string,
@@ -120,21 +104,3 @@ export interface IdAttribute extends W3CSchemaAttributes {
     order?: string
 }   
 
-
-export interface ISaveSchema {
-    name: string;
-    version: string;
-    attributes: string;
-    schemaLedgerId: string;
-    issuerId: string;
-    createdBy: string;
-    lastChangedBy: string;
-    publisherDid: string;
-    orgId: string;
-    ledgerId: string;
-    type?: string;
-}
-
-export interface SaveSchemaPayload {
-    schemaDetails: ISaveSchema
-}

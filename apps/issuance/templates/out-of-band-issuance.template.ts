@@ -56,7 +56,7 @@ export class OutOfBandIssuance {
 <a href="${process.env.IOS_DOWNLOAD_LINK}" target="_blank">iOS App Store.</a> (Skip, if already downloaded)
 </li>
                           <li>Complete the onboarding process in ${process.env.MOBILE_APP}.</li>
-                          <li>Open the “Accept Credential” link below in this email <i>(This will open the link in the ${process.env.MOBILE_APP})</i></li>
+                          <li>Open the “Accept Credential” link below in this email <i>(This will open the link in the ${process.env.MOBILE_APP} App)</i></li>
                           <li><b>Accept</b> the Credential in ${process.env.MOBILE_APP}.</li>
                           <li>Check <b>"Credentials"</b> tab in ${process.env.MOBILE_APP} to view the issued credential.</li>
                       </ul>

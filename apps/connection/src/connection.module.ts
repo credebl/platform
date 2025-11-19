@@ -11,11 +11,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { CommonConstants } from '@credebl/common/common.constant';
 // import { nkeyAuthenticator } from 'nats';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [
@@ -28,11 +23,9 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ]),
 
      CommonModule,
-     GlobalConfigModule,
-     LoggerModule, PlatformConfig, ContextInterceptorModule,
      CacheModule.register()
   ],
   controllers: [ConnectionController],
-  providers: [ConnectionService, ConnectionRepository, UserActivityRepository, PrismaService, Logger, NATSClient]
+  providers: [ConnectionService, ConnectionRepository, UserActivityRepository, PrismaService, Logger]
 })
 export class ConnectionModule { }

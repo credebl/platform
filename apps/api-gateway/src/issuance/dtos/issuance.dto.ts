@@ -13,12 +13,10 @@ import {
   IsObject,
   IsOptional,
   IsString,
-  IsUUID,
   IsUrl,
   MaxLength,
   ValidateNested
 } from 'class-validator';
-import { AutoAccept, SchemaType, SortValue } from '@credebl/enum/enum';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import {
   IssueCredentialType,
@@ -28,6 +26,7 @@ import {
 } from '../interfaces';
 import { Transform, Type } from 'class-transformer';
 
+import { AutoAccept, SchemaType, SortValue } from '@credebl/enum/enum';
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { trim } from '@credebl/common/cast.helper';
 
@@ -56,18 +55,6 @@ class PrettyVc {
   @Transform(({ value }) => trim(value))
   @IsString({ message: 'orientation must be in string format.' })
   orientation: string;
-
-  @ApiPropertyOptional({ example: '60px' })
-  @IsOptional()
-  @Transform(({ value }) => trim(value))
-  @IsString({ message: 'height must be in string format.' })
-  height?: string;
-
-  @ApiPropertyOptional({ example: '60px' })
-  @IsOptional()
-  @Transform(({ value }) => trim(value))
-  @IsString({ message: 'width must be in string format.' })
-  width?: string;
 }
 export class Credential {
   @ApiProperty()
@@ -250,8 +237,6 @@ export class CredentialsIssuanceDto {
   reuseConnection?: boolean;
 
   orgId: string;
-
-  isValidateSchema?: boolean;
 }
 
 export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
@@ -487,8 +472,6 @@ export class OOBCredentialDtoWithEmail {
 
   imageUrl?: string;
 
-  isValidateSchema?: boolean;
-
   orgId: string;
 }
 
@@ -596,18 +579,6 @@ export class ClientDetails {
   @IsOptional()
   @IsString({ message: 'Orientation should be string' })
   orientation?: string;
-
-  @ApiPropertyOptional({ example: '60px' })
-  @IsOptional()
-  @Transform(({ value }) => trim(value))
-  @IsString({ message: 'height must be in string format.' })
-  height?: string;
-
-  @ApiPropertyOptional({ example: '60px' })
-  @IsOptional()
-  @Transform(({ value }) => trim(value))
-  @IsString({ message: 'width must be in string format.' })
-  width?: string;
 }
 
 export class TemplateDetails {
@@ -650,13 +621,13 @@ export class FileQuery {
   @ApiProperty({ required: true })
   @IsString({ message: 'fileId should be string' })
   @IsNotEmpty({ message: 'fileId Id is required' })
-  @IsUUID('4', { message: 'Invalid format for file Id' })
   @Transform(({ value }) => trim(value))
   fileId: string;
 }
 
 export class RequestIdQuery {
-  @ApiProperty()
+  @ApiPropertyOptional({ required: false })
+  @IsOptional()
   @IsString({ message: 'requestId should be string' })
   @IsNotEmpty({ message: 'requestId Id is required' })
   @Transform(({ value }) => trim(value))

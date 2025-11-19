@@ -1,45 +1,27 @@
-/* eslint-disable camelcase */
 /* eslint-disable prefer-destructuring */
 
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  NotFoundException
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   IOrgUsers,
-  IRestrictedUserSession,
-  ISendVerificationEmail,
-  ISession,
-  IShareUserCertificate,
-  ITokenData,
-  IUserDeletedActivity,
-  IUserInformation,
-  IUsersProfile,
-  IVerifyUserEmail,
   PlatformSettings,
+  IShareUserCertificate,
   UpdateUserProfile,
+  IUserCredentials,
+  ISendVerificationEmail,
+  IUsersProfile,
+  IUserInformation,
+  IVerifyUserEmail,
+  IUserDeletedActivity,
   UserKeycloakId,
+  UserRoleMapping,
   UserRoleDetails,
-  UserRoleMapping
+  IUserInformationUsernameBased
 } from '../interfaces/user.interface';
-import {
-  Prisma,
-  RecordType,
-  account,
-  client_aliases,
-  schema,
-  session,
-  token,
-  user,
-  user_org_roles
-} from '@prisma/client';
-import { ProviderType, UserRole } from '@credebl/enum/enum';
-
+import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
-import { RpcException } from '@nestjs/microservices';
+// eslint-disable-next-line camelcase
+import { RecordType, schema, token, user } from '@prisma/client';
+import { UserRole } from '@credebl/enum/enum';
 
 interface UserQueryOptions {
   id?: string; // Use the appropriate type based on your data model
@@ -54,21 +36,6 @@ export class UserRepository {
     private readonly prisma: PrismaService,
     private readonly logger: Logger
   ) {}
-
-  /**
-   *
-   * @returns Client alias and its url
-   */
-
-  // eslint-disable-next-line camelcase
-  async fetchClientAliases(): Promise<client_aliases[]> {
-    try {
-      return this.prisma.client_aliases.findMany();
-    } catch (error) {
-      this.logger.error(`checkUserExist: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
 
   /**
    *
@@ -101,6 +68,36 @@ export class UserRepository {
     }
   }
 
+  deleteUser(userId:string): Promise<user> {
+
+     return this.prisma.user.delete({
+        where:{
+          id: userId
+        }
+      });
+  }
+
+
+  async createUserWithoutVerification(user: IUserInformationUsernameBased): Promise<user> {
+    try {
+      const saveResponse = await this.prisma.user.create({
+        data: {
+          username: user.username,
+          clientId: user.clientId,
+          clientSecret: user.clientSecret,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          publicProfile: true
+        }
+      });
+
+      return saveResponse;
+    } catch (error) {
+      this.logger.error(`In Create User Repository------: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   /**
    *
    * @param email
@@ -112,7 +109,11 @@ export class UserRepository {
     try {
       return this.prisma.user.findFirst({
         where: {
-          email
+          OR:[
+            {email},
+            {username: email}
+          ]
+          
         }
       });
     } catch (error) {
@@ -139,31 +140,24 @@ export class UserRepository {
     }
   }
 
-  /**
-   *
-   * @param sessionId
-   * @returns Session details
-   */
-  async getSession(sessionId: string): Promise<session> {
-    try {
-      return await this.prisma.session.findUnique({
-        where: {
-          id: sessionId
-        }
-      });
-    } catch (error) {
-      this.logger.error(`Not Found: ${JSON.stringify(error)}`);
-      throw new NotFoundException(error);
-    }
-  }
 
-  async validateSession(sessionId: string): Promise<object> {
-    const session = await this.prisma.session.findUnique({
-      where: { id: sessionId },
-      include: { user: true }
-    });
-    return session;
-  }
+    /**
+   *
+   * @param username
+   * @returns User details
+   */
+    async getUserDetailsByUsername(username: string): Promise<user> {
+      try {
+        return this.prisma.user.findFirst({
+          where: {
+            username
+          }
+        });
+      } catch (error) {
+        this.logger.error(`Not Found: ${JSON.stringify(error)}`);
+        throw new NotFoundException(error);
+      }
+    }
 
   /**
    *
@@ -183,6 +177,19 @@ export class UserRepository {
    * @param id
    * @returns User profile data
    */
+  async getUserCredentialsById(credentialId: string): Promise<IUserCredentials> {
+    return this.prisma.user_credentials.findUnique({
+      where: {
+        credentialId
+      }
+    });
+  }
+
+  /**
+   *
+   * @param id
+   * @returns User profile data
+   */
   async getUserPublicProfile(username: string): Promise<IUsersProfile> {
     const queryOptions: UserQueryOptions = {
       username
@@ -193,7 +200,7 @@ export class UserRepository {
 
   /**
    *
-   * @body updateUserProfile
+   * @Body updateUserProfile
    * @returns Update user profile data
    */
   async updateUserProfile(updateUserProfile: UpdateUserProfile): Promise<user> {
@@ -465,6 +472,31 @@ export class UserRepository {
     }
   }
 
+
+    /**
+   *
+   * @param userInfo
+   * @returns Updates user details
+   */
+  // eslint-disable-next-line camelcase
+  async updateUserInfoByUserName(username: string, userInfo: IUserInformation): Promise<user> {
+    try {
+      const updateUserDetails = await this.prisma.user.update({
+        where: {
+          username
+        },
+        data: {
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName
+        }
+      });
+      return updateUserDetails;
+    } catch (error) {
+      this.logger.error(`Error in update isEmailVerified: ${error.message} `);
+      throw error;
+    }
+  }
+
   /**
    *
    * @param queryOptions
@@ -608,6 +640,20 @@ export class UserRepository {
     }
   }
 
+  async saveCertificateImageUrl(imageUrl: string, credentialId: string): Promise<unknown> {
+    try {
+      const saveImageUrl = await this.prisma.user_credentials.create({
+        data: {
+          imageUrl,
+          credentialId
+        }
+      });
+      return saveImageUrl;
+    } catch (error) {
+      throw new Error(`Error saving certificate image URL: ${error.message}`);
+    }
+  }
+
   async checkUniqueUserExist(email: string): Promise<user> {
     try {
       return this.prisma.user.findUnique({
@@ -661,6 +707,31 @@ export class UserRepository {
     }
   }
 
+
+    /**
+   *
+   * @param userInfo
+   * @returns Updates user credentials
+   */
+  // eslint-disable-next-line camelcase
+  async addUserPasswordByUserName(username: string, userInfo: string): Promise<user> {
+    try {
+      const updateUserDetails = await this.prisma.user.update({
+        where: {
+          username
+        },
+        data: {
+          password: userInfo
+        }
+      });
+      return updateUserDetails;
+    } catch (error) {
+      this.logger.error(`Error in update isEmailVerified: ${error.message} `);
+      throw error;
+    }
+  }
+
+
   /**
    *
    * @param userId
@@ -680,97 +751,6 @@ export class UserRepository {
       return createResetPasswordToken;
     } catch (error) {
       this.logger.error(`Error in createTokenForResetPassword: ${error.message} `);
-      throw error;
-    }
-  }
-
-  async createSession(tokenDetails: ISession): Promise<session> {
-    try {
-      const { sessionToken, userId, expires, refreshToken, accountId, sessionType, expiresAt } = tokenDetails;
-      const sessionResponse = await this.prisma.session.create({
-        data: {
-          id: tokenDetails.id,
-          sessionToken,
-          expires,
-          userId,
-          refreshToken,
-          accountId,
-          sessionType,
-          expiresAt,
-          ...(tokenDetails.clientInfo ? { clientInfo: tokenDetails.clientInfo } : { clientInfo: { clientToken: true } })
-        }
-      });
-      return sessionResponse;
-    } catch (error) {
-      this.logger.error(`Error in creating session: ${error.message} `);
-      throw error;
-    }
-  }
-
-  async fetchUserSessions(userId: string): Promise<IRestrictedUserSession[]> {
-    try {
-      const userSessionCount = await this.prisma.session.findMany({
-        where: {
-          userId
-        },
-        select: {
-          id: true,
-          userId: true,
-          expiresAt: true,
-          createdAt: true,
-          clientInfo: true,
-          sessionType: true
-        }
-      });
-      return userSessionCount;
-    } catch (error) {
-      this.logger.error(`Error in getting user session details: ${error.message} `);
-      throw error;
-    }
-  }
-
-  //this function is to fetch all session details for a user including token details without any restriction
-  async fetchUserSessionDetails(userId: string): Promise<ISession[]> {
-    try {
-      const userSessionCount = await this.prisma.session.findMany({
-        where: {
-          userId
-        }
-      });
-      return userSessionCount;
-    } catch (error) {
-      this.logger.error(`Error in getting user session details: ${error.message} `);
-      throw error;
-    }
-  }
-
-  async checkAccountDetails(userId: string): Promise<account> {
-    try {
-      const accountDetails = await this.prisma.account.findUnique({
-        where: {
-          userId
-        }
-      });
-      return accountDetails;
-    } catch (error) {
-      this.logger.error(`Error in getting account details: ${error.message} `);
-      throw error;
-    }
-  }
-
-  async addAccountDetails(accountDetails: ISession): Promise<account> {
-    try {
-      const userAccountDetails = await this.prisma.account.create({
-        data: {
-          userId: accountDetails.userId,
-          provider: ProviderType.KEYCLOAK,
-          providerAccountId: accountDetails.keycloakUserId,
-          tokenType: accountDetails.type
-        }
-      });
-      return userAccountDetails;
-    } catch (error) {
-      this.logger.error(`Error in creating account: ${error.message}`);
       throw error;
     }
   }
@@ -817,7 +797,7 @@ export class UserRepository {
 
   /**
    *
-   * @body updatePlatformSettings
+   * @Body updatePlatformSettings
    * @returns Update platform settings
    */
   async updatePlatformSettings(updatePlatformSettings: PlatformSettings): Promise<object> {
@@ -843,6 +823,37 @@ export class UserRepository {
     }
   }
 
+  /**
+   *
+   * @Body updatePlatformSettings
+   * @returns Update ecosystem settings
+   */
+  async updateEcosystemSettings(eosystemKeys: string[], ecosystemObj: object): Promise<boolean> {
+    try {
+      for (const key of eosystemKeys) {
+        const ecosystemKey = await this.prisma.ecosystem_config.findFirst({
+          where: {
+            key
+          }
+        });
+
+        await this.prisma.ecosystem_config.update({
+          where: {
+            id: ecosystemKey.id
+          },
+          data: {
+            value: ecosystemObj[key].toString()
+          }
+        });
+      }
+
+      return true;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
   async getPlatformSettings(): Promise<object> {
     try {
       const getPlatformSettingsList = await this.prisma.platform_config.findMany();
@@ -853,14 +864,17 @@ export class UserRepository {
     }
   }
 
-  async updateOrgDeletedActivity(
-    orgId: string,
-    userId: string,
-    deletedBy: string,
-    recordType: RecordType,
-    userEmail: string,
-    txnMetadata: object
-  ): Promise<IUserDeletedActivity> {
+  async getEcosystemSettings(): Promise<object> {
+    try {
+      const getEcosystemSettingsList = await this.prisma.ecosystem_config.findMany();
+      return getEcosystemSettingsList;
+    } catch (error) {
+      this.logger.error(`error in getEcosystemSettings: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async updateOrgDeletedActivity(orgId: string, userId: string, deletedBy: string, recordType: RecordType, userEmail: string, txnMetadata: object): Promise<IUserDeletedActivity> {
     try {
       const orgDeletedActivity = await this.prisma.user_org_delete_activity.create({
         data: {
@@ -914,12 +928,10 @@ export class UserRepository {
       });
 
       // Create a map for quick lookup of keycloakUserId, id, and email by email
-      const userMap = new Map(
-        users.map((user) => [user.email, { id: user.id, keycloakUserId: user.keycloakUserId, email: user.email }])
-      );
+      const userMap = new Map(users.map(user => [user.email, { id: user.id, keycloakUserId: user.keycloakUserId, email: user.email }]));
 
       // Collect the keycloakUserId, id, and email in the order of input emails
-      const result = userEmails.map((email) => {
+      const result = userEmails.map(email => {
         const user = userMap.get(email);
         return { id: user?.id || null, keycloakUserId: user?.keycloakUserId || null, email };
       });
@@ -930,7 +942,7 @@ export class UserRepository {
       throw error;
     }
   }
-
+  
   async storeUserRole(userId: string, userRoleId: string): Promise<UserRoleMapping> {
     try {
       const userRoleMapping = await this.prisma.user_role_mapping.create({
@@ -956,128 +968,6 @@ export class UserRepository {
       return getUserRole;
     } catch (error) {
       this.logger.error(`Error in getUserRole: ${error.message} `);
-      throw error;
-    }
-  }
-
-  // eslint-disable-next-line camelcase
-  async handleGetUserOrganizations(userId: string): Promise<user_org_roles[]> {
-    try {
-      const getUserOrgs = await this.prisma.user_org_roles.findMany({
-        where: {
-          userId
-        }
-      });
-
-      return getUserOrgs;
-    } catch (error) {
-      this.logger.error(`Error in handleGetUserOrganizations: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async destroySession(sessions: string[]): Promise<Prisma.BatchPayload> {
-    try {
-      const userSessions = await this.prisma.session.deleteMany({
-        where: {
-          id: {
-            in: sessions
-          }
-        }
-      });
-
-      return userSessions;
-    } catch (error) {
-      this.logger.error(`Error in logging out user: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async deleteSession(sessionId: string): Promise<session> {
-    try {
-      const userSession = await this.prisma.session.delete({
-        where: {
-          id: sessionId
-        }
-      });
-      return userSession;
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && 'P2025' === error.code) {
-        this.logger.warn(`Session not found for deletion: ${sessionId}`);
-        throw new NotFoundException('Record to be deleted not found');
-      } else {
-        this.logger.error(`Error in logging out user: ${error.message}`);
-        throw error;
-      }
-    }
-  }
-
-  async deleteSessionBySessionId(sessionId: string, userId: string): Promise<{ message: string }> {
-    try {
-      await this.prisma.session.delete({
-        where: { id: sessionId, userId }
-      });
-
-      return { message: 'Session deleted successfully' };
-    } catch (error) {
-      if ('P2025' === error.code) {
-        throw new RpcException(new NotFoundException(`Session not found for userId: ${userId}`));
-      }
-      this.logger.error(`Error in Deleting Session: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async fetchSessionByRefreshToken(refreshToken: string): Promise<session> {
-    try {
-      const sessionDetails = await this.prisma.session.findFirst({
-        where: {
-          refreshToken
-        }
-      });
-      return sessionDetails;
-    } catch (error) {
-      this.logger.error(`Error in fetching session details::${error.message}`);
-      throw error;
-    }
-  }
-
-  async deleteInactiveSessions(userId: string): Promise<Prisma.BatchPayload> {
-    try {
-      const response = await this.prisma.session.deleteMany({
-        where: {
-          expiresAt: {
-            lt: new Date()
-          },
-          userId
-        }
-      });
-      this.logger.debug('Deleted inactive sessions::', response);
-      return response;
-    } catch (error) {
-      this.logger.error(`Error in deleting the in active sessions::${error.message}`);
-      throw error;
-    }
-  }
-
-  async updateSessionToken(id: string, tokenData: ITokenData): Promise<session> {
-    if (!id || !tokenData) {
-      throw new BadRequestException(`Missing id or tokenData for session details update`);
-    }
-    try {
-      const sessionResponse = await this.prisma.session.update({
-        where: {
-          id
-        },
-        data: tokenData
-      });
-      return sessionResponse;
-    } catch (error) {
-      this.logger.error(`Error in creating session: ${error.message} `);
-      if (error instanceof Prisma.PrismaClientKnownRequestError && 'P2025' === error.code) {
-        this.logger.warn(`Session not found for update: ${id}`);
-        throw new NotFoundException('Session not found');
-      }
       throw error;
     }
   }

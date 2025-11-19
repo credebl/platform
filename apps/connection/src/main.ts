@@ -5,7 +5,6 @@ import { Logger } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 
 const logger = new Logger();
 
@@ -15,8 +14,7 @@ async function bootstrap(): Promise<void> {
     transport: Transport.NATS,
     options: getNatsOptions(CommonConstants.CONNECTION_SERVICE, process.env.CONNECTION_NKEY_SEED)
   });
-  
-  app.useLogger(app.get(NestjsLoggerServiceAdapter));
+
   app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen();

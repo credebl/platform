@@ -1,15 +1,12 @@
 # Stage 1: Build the application
 FROM node:18-alpine as build
-# Install OpenSSL
-RUN apk update && apk upgrade
-RUN apk add --no-cache openssl
+
 RUN set -eux \
     && apk --no-cache add \
         openssh-client \
         aws-cli \
         docker \
         docker-compose \
-        jq \
     && npm install -g pnpm --ignore-scripts \
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
     && rm -rf /var/cache/apk/*
@@ -19,19 +16,16 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package.json ./
-COPY pnpm-workspace.yaml ./
 
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-
-# Install dependencies while ignoring scripts (including Puppeteer's installation)
-RUN pnpm i --ignore-scripts
+# Install dependencies
+RUN pnpm i
 
 # Copy the rest of the application code
 COPY . .
 
 # Generate Prisma client
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
-RUN cd libs/prisma-service && npx prisma generate
+RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
 RUN ls -R /app/apps/agent-provisioning/AFJ/
 
 # Build the user service
@@ -39,16 +33,13 @@ RUN pnpm run build agent-provisioning
 
 # Stage 2: Create the final image
 FROM node:18-alpine as prod
-# Install OpenSSL
-RUN apk update && apk upgrade
-RUN apk add --no-cache openssl
+
 RUN set -eux \
     && apk --no-cache add \
         openssh-client \
         aws-cli \
         docker \
         docker-compose \
-        jq \
     && npm install -g pnpm --ignore-scripts \
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
     && rm -rf /var/cache/apk/*
@@ -71,7 +62,6 @@ COPY --from=build /app/apps/agent-provisioning/AFJ/port-file ./agent-provisionin
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/start_agent.sh
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/start_agent_ecs.sh
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/docker_start_agent.sh
-RUN chmod +x /app/agent-provisioning/AFJ/scripts/fargate.sh
 RUN chmod 777 /app/agent-provisioning/AFJ/endpoints
 RUN chmod 777 /app/agent-provisioning/AFJ/agent-config
 RUN chmod 777 /app/agent-provisioning/AFJ/token
@@ -80,4 +70,7 @@ RUN chmod 777 /app/agent-provisioning/AFJ/token
 COPY libs/ ./libs/
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/agent-provisioning/main.js"]
+
+# docker build -t agent-provisioning-service -f Dockerfiles/Dockerfile.agent-provisioning .
+# docker run -d --env-file .env --name agent-provisioning-service docker.io/library/agent-provisioning-service

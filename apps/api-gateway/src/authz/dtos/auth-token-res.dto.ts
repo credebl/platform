@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { ApiResponseProperty } from '@nestjs/swagger';
 
 export class AuthTokenResponse {

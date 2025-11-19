@@ -1,5 +1,5 @@
-import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsOptional } from "class-validator";
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
 
 interface IWebhookPresentationProof {
     threadId: string;
@@ -44,7 +44,7 @@ export class WebhookPresentationProofDto {
     @ApiPropertyOptional()
     @IsOptional()
     parentThreadId?: string;
-    
+
     @ApiPropertyOptional()
     @IsOptional()
     presentationId: string;
@@ -76,8 +76,4 @@ export class WebhookPresentationProofDto {
     @ApiPropertyOptional()
     @IsOptional()
     orgId: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    errorMessage: string;
 }

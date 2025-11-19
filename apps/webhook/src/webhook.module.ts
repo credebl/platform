@@ -8,10 +8,6 @@ import { WebhookRepository } from './webhook.repository';
 import { WebhookService } from './webhook.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 
 @Module({
   imports: [
@@ -23,9 +19,7 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
         options: getNatsOptions(CommonConstants.WEBHOOK_SERVICE, process.env.ISSUANCE_NKEY_SEED)
       }
     ]),
-    CommonModule,
-    GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule
+    CommonModule
   ],
   controllers: [WebhookController],
   providers: [WebhookService, WebhookRepository, PrismaService, Logger]

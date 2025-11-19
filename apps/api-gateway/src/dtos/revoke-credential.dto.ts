@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsBoolean, IsNumber } from 'class-validator';
 export class RevokeCredentialDto {

@@ -210,8 +210,8 @@ interface OutOfBandInvitationService {
 }
 
 interface OutOfBandInvitation {
-  "@type": string;
-  "@id": string;
+  '@type': string;
+  '@id': string;
   label: string;
   accept: string[];
   handshake_protocols: string[];

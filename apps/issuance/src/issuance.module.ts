@@ -11,15 +11,11 @@ import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { BullModule } from '@nestjs/bull';
 import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
 import { BulkIssuanceProcessor } from './issuance.processor';
 import { AwsService } from '@credebl/aws';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -32,11 +28,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
       }
     ]),
     CommonModule,
-    GlobalConfigModule,
-    LoggerModule,
-    PlatformConfig,
-    ContextInterceptorModule,
-    CacheModule.register(),
+    CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
     BullModule.forRoot({
       redis: {
         host: process.env.REDIS_HOST,
@@ -48,22 +40,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     })
   ],
   controllers: [IssuanceController],
-  providers: [
-    IssuanceService,
-    IssuanceRepository,
-    UserActivityRepository,
-    PrismaService,
-    Logger,
-    OutOfBandIssuance,
-    EmailDto,
-    BulkIssuanceProcessor,
-    AwsService,
-    NATSClient,
-    {
-      provide: MICRO_SERVICE_NAME,
-      useValue: 'IssuanceService'
-    }
-  ],
-  exports: [CacheModule]
+  providers: [IssuanceService, IssuanceRepository, UserActivityRepository, PrismaService, Logger, OutOfBandIssuance, EmailDto, BulkIssuanceProcessor, AwsService]
 })
-export class IssuanceModule {}
+export class IssuanceModule { }

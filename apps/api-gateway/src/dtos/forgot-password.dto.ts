@@ -6,7 +6,7 @@ import { trim } from '@credebl/common/cast.helper';
 
 export class ForgotPasswordDto {
 
-    @ApiProperty({ example: 'awqx@yopmail.com' })
+    @ApiProperty({ example: 'awqx@getnada.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })

@@ -16,27 +16,23 @@ import { VerificationModule } from './verification/verification.module';
 import { RevocationController } from './revocation/revocation.controller';
 import { RevocationModule } from './revocation/revocation.module';
 import { SchemaModule } from './schema/schema.module';
+// import { commonNatsOptions } from 'libs/service/nats.options';
 import { UserModule } from './user/user.module';
 import { ConnectionModule } from './connection/connection.module';
+import { EcosystemModule } from './ecosystem/ecosystem.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
 import { WebhookModule } from './webhook/webhook.module';
 import { UtilitiesModule } from './utilities/utilities.module';
 import { NotificationModule } from './notification/notification.module';
 import { GeoLocationModule } from './geo-location/geo-location.module';
-import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { CommonConstants } from '@credebl/common/common.constant';
 import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
-import { ContextModule } from '@credebl/context/contextModule';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    ContextModule,
-    PlatformConfig,
-    LoggerModule,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -56,31 +52,24 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
     UserModule,
     ConnectionModule,
     IssuanceModule,
+    EcosystemModule,
     UtilitiesModule,
     WebhookModule,
     NotificationModule,
-    GlobalConfigModule,
-    CacheModule.register(),
+    CacheModule.register({ store: redisStore, host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
     GeoLocationModule,
     CloudWalletModule
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: MICRO_SERVICE_NAME,
-      useValue: 'APIGATEWAY'
-    }
-  ],
-  exports: [CacheModule]
+  providers: [AppService]
 })
 export class AppModule {
   configure(userContext: MiddlewareConsumer): void {
     userContext
       .apply(AuthzMiddleware)
       .exclude(
-        // The below excludes authz with all its subpaths
-        { path: 'authz/(.*)', method: RequestMethod.ALL },
+        { path: 'authz', method: RequestMethod.ALL },
+        'authz/:splat*',
         'admin/subscriptions',
         'registry/organizations/',
         'email/user/verify',

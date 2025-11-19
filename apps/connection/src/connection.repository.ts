@@ -114,15 +114,23 @@ export class ConnectionRepository {
    * @returns Get connection details
    */
   // eslint-disable-next-line camelcase
-  async saveConnectionWebhook(payload: ICreateConnection): Promise<object> {
+  async saveConnectionWebhook(payload: ICreateConnection): Promise<org_agents> {
     try {
+      // eslint-disable-next-line camelcase
+      let agentOrg: org_agents;
       let organisationId;
       const { connectionDto, orgId } = payload;
 
       if ('default' !== connectionDto?.contextCorrelationId) {
-        const getOrganizationId = await this.getOrganization(connectionDto?.contextCorrelationId);
-        organisationId = getOrganizationId?.orgId;
+        agentOrg = await this.getOrganizationByTenantId(connectionDto?.contextCorrelationId);
+        if (agentOrg?.orgId) {
+          organisationId = agentOrg?.orgId;
+        } else {
+          agentOrg = await this.getOrganizationByOrgId(orgId);
+          organisationId = orgId;
+        }
       } else {
+        agentOrg = await this.getOrganizationByOrgId(orgId);
         organisationId = orgId;
       }
 
@@ -165,7 +173,7 @@ export class ConnectionRepository {
           break;
       }
 
-      return this.prisma.connections.upsert({
+      await this.prisma.connections.upsert({
         where: {
           connectionId: connectionDto?.id
         },
@@ -185,6 +193,7 @@ export class ConnectionRepository {
           orgId: organisationId
         }
       });
+      return agentOrg;
     } catch (error) {
       this.logger.error(`Error in saveConnectionWebhook: ${error.message} `);
       throw error;
@@ -213,7 +222,7 @@ export class ConnectionRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getOrganization(tenantId: string): Promise<org_agents> {
+  async getOrganizationByTenantId(tenantId: string): Promise<org_agents> {
     try {
       return this.prisma.org_agents.findFirst({
         where: {
@@ -222,6 +231,20 @@ export class ConnectionRepository {
       });
     } catch (error) {
       this.logger.error(`Error in getOrganization in connection repository: ${error.message} `);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getOrganizationByOrgId(orgId: string): Promise<org_agents> {
+    try {
+      return this.prisma.org_agents.findFirst({
+        where: {
+          orgId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getOrganization in issuance repository: ${error.message} `);
       throw error;
     }
   }
@@ -379,11 +402,20 @@ export class ConnectionRepository {
   }
 
    // eslint-disable-next-line camelcase
-   async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
+  async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations> {
     try {
-      return this.prisma.agent_invitations.findMany({
+      return this.prisma.agent_invitations.findFirst({
         where: {
-          orgId
+          AND: [
+            {
+            orgId
+            },
+            {
+              invitationDid: {
+                not: null
+              }
+            }
+          ]
         },
         orderBy: {
           createDateTime: 'asc'

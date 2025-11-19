@@ -1,15 +1,11 @@
 import { CountryInterface, StateInterface, CityInterface } from '@credebl/common/interfaces/geolocation.interface';
 import { Inject, Injectable } from '@nestjs/common';
-import { BaseService } from 'libs/service/base.service';
-import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
+import { BaseService } from 'libs/service/base.service';
 
 @Injectable()
 export class GeoLocationService extends BaseService {
-  constructor(
-    @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
-    private readonly natsClient: NATSClient
-  ) {
+  constructor(@Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy) {
     super('GeoLocationService');
   }
 
@@ -20,7 +16,7 @@ export class GeoLocationService extends BaseService {
    */
   async getAllCountries(): Promise<CountryInterface[]> {
     this.logger.log(`Finding all countries,GeoLocationService::getAllCountries`);
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-countries', '');
+    return this.sendNatsMessage(this.serviceProxy, 'get-all-countries', '');
   }
 
   /**
@@ -31,7 +27,7 @@ export class GeoLocationService extends BaseService {
   async getStatesByCountryId(countryId: number): Promise<StateInterface[]> {
     const payload = { countryId };
     this.logger.log(`Finding cities for countryId= ${countryId},GeoLocationService::getCitiesByStateAndCountry`);
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-states', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-all-states', payload);
   }
 
   /**
@@ -45,6 +41,6 @@ export class GeoLocationService extends BaseService {
     this.logger.log(
       `Finding cities for stateId= ${stateId} and countryId= ${countryId},GeoLocationService::getCitiesByStateAndCountry`
     );
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-cities', payload);
+    return this.sendNatsMessage(this.serviceProxy, 'get-all-cities', payload);
   }
 }

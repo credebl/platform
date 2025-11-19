@@ -19,14 +19,11 @@ AFJ_VERSION=${14}
 INDY_LEDGER=${15}
 INBOUND_ENDPOINT=${16}
 SCHEMA_FILE_SERVER_URL=${17}
-AGENT_API_KEY=${18}
+AGENT_HOST=${18}
 AWS_ACCOUNT_ID=${19}
 S3_BUCKET_ARN=${20}
 CLUSTER_NAME=${21}
-TASKDEFINITION_FAMILY=${22}
-ADMIN_TG_ARN=${23}
-INBOUND_TG_ARN=${24}
-FILESYSTEMID=${25}
+TESKDEFINITION_FAMILY=${22}
 
 DESIRED_COUNT=1
 
@@ -40,7 +37,7 @@ random_string=$(generate_random_string)
 # Print the generated random string
 echo "Random String: $random_string"
 
-SERVICE_NAME="${CONTAINER_NAME}-service"
+SERVICE_NAME="${AGENCY}-${CONTAINER_NAME}-service-${random_string}"
 EXTERNAL_IP=$(echo "$2" | tr -d '[:space:]')
 ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
 INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
@@ -127,16 +124,16 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "walletScheme": "DatabasePerWallet",
   "indyLedger": $INDY_LEDGER,
   "endpoint": [
-    "$INBOUND_ENDPOINT"
+    "$AGENT_ENDPOINT"
   ],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",
   "autoAcceptProofs": "contentApproved",
-  "logLevel": 2,
+  "logLevel": 5,
   "inboundTransport": [
     {
       "transport": "$PROTOCOL",
-      "port": $INBOUND_PORT
+      "port": "$INBOUND_PORT"
     }
   ],
   "outboundTransport": [
@@ -145,10 +142,10 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
   "adminPort": $ADMIN_PORT,
   "tenancy": $TENANT,
-  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL",
-  "apiKey": "$AGENT_API_KEY"
+  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL"
 }
 EOF
+# scp ${PWD}/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.json ${AGENT_HOST}:/home/ec2-user/config/
 
 # Construct the container definitions dynamically
 CONTAINER_DEFINITIONS=$(
@@ -156,9 +153,9 @@ CONTAINER_DEFINITIONS=$(
 [
   {
     "name": "$CONTAINER_NAME",
-    "image": "${AFJ_VERSION}",
-    "cpu": 307,
-    "memory": 358,
+    "image": "${AFJ_IMAGE_URL}",
+    "cpu": 154,
+    "memory": 307,
     "portMappings": [
       {
         "containerPort": $ADMIN_PORT,
@@ -175,7 +172,7 @@ CONTAINER_DEFINITIONS=$(
     "command": [
                 "--auto-accept-connections",
                 "--config",
-                "/config/${AGENCY}_${CONTAINER_NAME}.json"
+                "/config.json"
             ],
     "environment": [
       {
@@ -192,22 +189,13 @@ CONTAINER_DEFINITIONS=$(
     "mountPoints": [
                 {
                     "sourceVolume": "config",
-                    "containerPath": "/config",
+                    "containerPath": "/config.json",
                     "readOnly": true
                 }
             ],
     "volumesFrom": [],
-    "logConfiguration": {
-    "logDriver": "awslogs",
-    "options": {
-      "awslogs-group": "/ecs/$TASKDEFINITION_FAMILY",
-      "awslogs-create-group": "true",
-      "awslogs-region": "$AWS_PUBLIC_REGION",
-      "awslogs-stream-prefix": "ecs"
-    }
-  },
-  "ulimits": []
-}
+    "ulimits": []
+  }
 ]
 EOF
 )
@@ -216,27 +204,23 @@ EOF
 TASK_DEFINITION=$(
   cat <<EOF
 {
-  "family": "$TASKDEFINITION_FAMILY",
+  "family": "$TESKDEFINITION_FAMILY",
   "containerDefinitions": $CONTAINER_DEFINITIONS,
   "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
   "volumes": [
         {
-        "efsVolumeConfiguration": {
-          "fileSystemId": "$FILESYSTEMID",
-          "rootDirectory": "/"
-        },
-        "name": "config"
-      }
+            "name": "config",
+            "host": {
+                "sourcePath": "/home/ec2-user/config/${AGENCY}_${CONTAINER_NAME}.json"
+            }
+        }
     ],
+  "networkMode": "host",
   "requiresCompatibilities": [
     "EC2"
   ],
-  "runtimePlatform": {
-    "cpuArchitecture": "ARM64",
-    "operatingSystemFamily": "LINUX"
-  },
-  "cpu": "307",
-  "memory": "358"
+  "cpu": "154",
+  "memory": "307"
 }
 EOF
 )
@@ -247,56 +231,14 @@ echo "$TASK_DEFINITION" >task_definition.json
 # Register the task definition and retrieve the ARN
 TASK_DEFINITION_ARN=$(aws ecs register-task-definition --cli-input-json file://task_definition.json --query 'taskDefinition.taskDefinitionArn' --output text)
 
-SERVICE_JSON=$(
-  cat <<EOF
-  {
-    "cluster": "$CLUSTER_NAME",
-    "serviceName": "$SERVICE_NAME",
-    "taskDefinition": "$TASK_DEFINITION_ARN",
-    "launchType": "EC2",
-    "loadBalancers": [
-        {
-            "targetGroupArn": "$ADMIN_TG_ARN",
-            "containerName": "$CONTAINER_NAME",
-            "containerPort": $ADMIN_PORT
-        },
-        {
-            "targetGroupArn": "$INBOUND_TG_ARN",
-            "containerName": "$CONTAINER_NAME",
-            "containerPort": $INBOUND_PORT
-        }
-    ],
-    "desiredCount": $DESIRED_COUNT,
-    "healthCheckGracePeriodSeconds": 300
-}
-EOF
-)
-
-# Save the service JSON to a file
-echo "$SERVICE_JSON" > service.json
-
-# Check if the service file was created successfully
-if [ -f "service.json" ]; then
-    echo "Service file created successfully: service.json"
-else
-    echo "Failed to create service file: service.json"
-fi 
-
 # Create the service
 aws ecs create-service \
-  --cli-input-json file://service.json \
-  --region $AWS_PUBLIC_REGION
-
-# Describe the ECS service and filter by service name
-service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluster $CLUSTER_NAME --region $AWS_PUBLIC_REGION)
-
-# Check if the service creation was successful
-if [ $? -eq 0 ]; then
-    echo "Service creation successful"
-else
-    echo "Failed to create service"
-    exit 1
-fi
+  --cluster $CLUSTER_NAME \
+  --service-name $SERVICE_NAME \
+  --task-definition $TASK_DEFINITION_ARN \
+  --desired-count $DESIRED_COUNT \
+  --launch-type EC2 \
+  --deployment-configuration "maximumPercent=200,minimumHealthyPercent=100"
 
 if [ $? -eq 0 ]; then
 
@@ -321,81 +263,17 @@ if [ $? -eq 0 ]; then
     fi
   done
 
-# Describe the ECS service and filter by service name
-service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluster $CLUSTER_NAME --region $AWS_PUBLIC_REGION)
-echo "service_description=$service_description"
-
-
-# Extract Task ID from the service description events
-task_id=$(echo "$service_description" | jq -r '
-  .services[0].events[] 
-  | select(.message | test("has started 1 tasks")) 
-  | .message 
-  | capture("\\(task (?<id>[^)]+)\\)") 
-  | .id
-')
-
-# to fetch log group of container 
-log_group=/ecs/$TASKDEFINITION_FAMILY
-echo "log_group=$log_group"
-
-# Get Log Stream Name
-log_stream=ecs/$CONTAINER_NAME/$task_id
-
-echo "logstrem=$log_stream"
-
-# Check if the token folder exists, and create it if it doesn't
-token_folder="$PWD/agent-provisioning/AFJ/token"
-if [ ! -d "$token_folder" ]; then
-    mkdir -p "$token_folder"
-fi
-
-# Set maximum retry attempts
-RETRIES=3
-
-# Loop to attempt retrieving token from logs
-for attempt in $(seq 1 $RETRIES); do
-    echo "Attempt $attempt: Checking service logs for token..."
-    
-    # Fetch logs and grep for API token
-    token=$(aws logs get-log-events \
-    --log-group-name "$log_group" \
-    --log-stream-name "$log_stream" \
-    --region $AWS_PUBLIC_REGION \
-    --query 'events[*].message' \
-    --output text \
-    | tr -d '\033' \
-    | grep 'API Key:' \
-    | sed -E 's/.*API Key:[[:space:]]*([a-zA-Z0-9._:-]*).*/\1/' \
-    | head -n 1
-)
-   # echo "token=$token"
-    if [ -n "$token" ]; then
-        echo "Token found: $token"
-        # Write token to a file
-        echo "{\"token\": \"$token\"}" > "$PWD/agent-provisioning/AFJ/token/${AGENCY}_${CONTAINER_NAME}.json"
-        break  # Exit loop if token is found
-    else
-        echo "Token not found in logs. Retrying..."
-        if [ $attempt -eq $RETRIES ]; then
-            echo "Reached maximum retry attempts. Token not found."
-        fi
-    fi
-    # Add a delay of 10 seconds between retries
-    sleep 10
-done
-
-
   echo "Creating agent config"
   cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
-        "CONTROLLER_ENDPOINT":"$EXTERNAL_IP"
+        "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}",
+        "AGENT_ENDPOINT" : "${INTERNAL_IP}:${ADMIN_PORT}"
     }
 EOF
 
   cat <<EOF >${PWD}/agent-provisioning/AFJ/token/${AGENCY}_${CONTAINER_NAME}.json
     {
-        "token" : "$token"
+        "token" : ""
     }
 EOF
 

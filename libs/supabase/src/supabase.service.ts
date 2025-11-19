@@ -10,7 +10,7 @@ export class SupabaseService {
     ) { }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getClient(): SupabaseClient<any, "public", any> {
+    getClient(): SupabaseClient {
         this.logger.log('getting supabase client...');
 
         if (this.clientInstance) {
@@ -21,7 +21,6 @@ export class SupabaseService {
         this.logger.log('initialising new supabase client for new Scope.REQUEST');
 
         this.clientInstance = createClient(
-          
             process.env.SUPABASE_URL,
             process.env.SUPABASE_KEY
         );

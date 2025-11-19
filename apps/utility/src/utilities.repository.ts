@@ -1,7 +1,7 @@
-import { PrismaService } from "@credebl/prisma-service";
-import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from '@credebl/prisma-service';
+import { Injectable, Logger } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { shortening_url } from "@prisma/client";
+import { shortening_url } from '@prisma/client';
 
 @Injectable()
 export class UtilitiesRepository {

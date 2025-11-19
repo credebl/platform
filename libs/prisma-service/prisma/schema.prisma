@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+provider      = "prisma-client-js"
+ binaryTargets = ["native", "linux-musl"]
 }
 
 datasource db {
@@ -15,7 +16,7 @@ model user {
   firstName              String?                  @db.VarChar(500)
   lastName               String?                  @db.VarChar(500)
   email                  String?                  @unique(map: "UQ_e12875dfb3b1d92d7d7c5377e22") @db.VarChar(500)
-  username               String?                  @db.VarChar(500)
+  username               String?                  @unique(map: "UQ_username") @db.VarChar(255)
   verificationCode       String?                  @db.VarChar(500)
   isEmailVerified        Boolean                  @default(false)
   supabaseUserId         String?                  @db.VarChar(500)
@@ -34,40 +35,6 @@ model user {
   token                  token[]
   user_role_mapping      user_role_mapping[]
   cloud_wallet_user_info cloud_wallet_user_info[]
-  accounts               account[]
-  sessions               session[]
-}
-
-model account {
-  id                String      @id @default(uuid()) @db.Uuid
-  userId            String      @unique @db.Uuid
-  type              String?
-  provider          String
-  providerAccountId String      
-  tokenType         String?
-  scope             String?
-  idToken           String?
-  sessionState      String?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt 
-  user              user         @relation(fields: [userId], references: [id])
-  sessions          session[]
- }
-
-model session {
-  id               String      @id @default(uuid()) @db.Uuid
-  sessionToken     String      
-  userId           String      @db.Uuid
-  expires          Int
-  refreshToken     String?     
-  user             user        @relation(fields: [userId], references: [id])
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  accountId        String?     @db.Uuid
-  sessionType      String?
-  account          account?    @relation(fields: [accountId], references:[id])
-  expiresAt        DateTime?   @db.Timestamp(6)
-  clientInfo       Json? 
 }
 
 model token {
@@ -94,6 +61,15 @@ model user_activity {
   user                user         @relation(fields: [userId], references: [id])
 }
 
+model user_credentials {
+  id                  String    @id @default(uuid()) @db.Uuid
+  imageUrl            String?
+  credentialId        String    @unique
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  deletedAt           DateTime? @db.Timestamp(6)
+}
+
 model org_roles {
   id                  String           @id @default(uuid()) @db.Uuid
   name                String           @unique
@@ -114,7 +90,7 @@ model user_org_roles {
   idpRoleId    String?       @db.Uuid
   organisation organisation? @relation(fields: [orgId], references: [id])
   orgRole      org_roles     @relation(fields: [orgRoleId], references: [id])
-  user         user          @relation(fields: [userId], references: [id])
+  user         user          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model organisation {
@@ -133,7 +109,6 @@ model organisation {
   clientId              String?                 @db.VarChar(500)
   clientSecret          String?                 @db.VarChar(500)
   registrationNumber    String?                 @db.VarChar(100)
-  appLaunchDetails      Json?
   countryId             Int?
   countries             countries?              @relation(fields: [countryId], references: [id])
   stateId               Int?
@@ -151,6 +126,7 @@ model organisation {
   agent_invitations     agent_invitations[]
   credential_definition credential_definition[]
   file_upload           file_upload[]
+  ecosystemOrgs         ecosystem_orgs[]
 }
 
 model org_invitations {
@@ -302,9 +278,7 @@ model schema {
   ledgers               ledgers?                @relation(fields: [ledgerId], references: [id])
   ledgerId              String?                 @db.Uuid
   type                  String?                 @db.VarChar
-  isSchemaArchived      Boolean                 @default(false)
   credential_definition credential_definition[]
-  alias                 String?                 
 }
 
 model credential_definition {
@@ -360,8 +334,6 @@ model connections {
   state               String
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
-  presentations       presentations[]
-  credentials         credentials[]
 }
 
 model credentials {
@@ -378,7 +350,6 @@ model credentials {
   credDefId            String        @default("")
   orgId                String?       @db.Uuid
   organisation         organisation? @relation(fields: [orgId], references: [id])
-  connections          connections?  @relation(fields: [connectionId], references: [connectionId])
 }
 
 model presentations {
@@ -387,18 +358,118 @@ model presentations {
   createdBy           String        @db.Uuid
   lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
   lastChangedBy       String        @db.Uuid
-  connectionId        String?       
+  connectionId        String?
   state               String?
   threadId            String        @unique
   isVerified          Boolean?
   presentationId      String?
   schemaId            String?       @db.VarChar
-  errorMessage        String?       @db.VarChar
   emailId             String?
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
-  connections         connections?  @relation(fields: [connectionId], references: [connectionId])
+}
 
+model ecosystem_roles {
+  id                  String           @id @default(uuid()) @db.Uuid
+  name                String           @unique
+  description         String
+  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
+  deletedAt           DateTime?        @db.Timestamp(6)
+  ecosystemOrgs       ecosystem_orgs[]
+}
+
+model ecosystem {
+  id                   String                  @id @default(uuid()) @db.Uuid
+  name                 String
+  description          String
+  tags                 String?
+  createDateTime       DateTime                @default(now()) @db.Timestamptz(6)
+  createdBy            String                  @db.Uuid
+  lastChangedDateTime  DateTime                @default(now()) @db.Timestamptz(6)
+  lastChangedBy        String                  @db.Uuid
+  deletedAt            DateTime?               @db.Timestamp(6)
+  logoUrl              String?
+  autoEndorsement      Boolean                 @default(false)
+  ecosystemInvitations ecosystem_invitations[]
+  ecosystemOrgs        ecosystem_orgs[]
+  ecosystemUsers       ecosystem_users[]
+  ledgers              Json?
+}
+
+model ecosystem_invitations {
+  id                  String    @id @default(uuid()) @db.Uuid
+  email               String
+  status              String
+  ecosystemId         String    @db.Uuid
+  userId              String
+  orgId               String
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           String    @db.Uuid
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String    @db.Uuid
+  deletedAt           DateTime? @db.Timestamp(6)
+  ecosystem           ecosystem @relation(fields: [ecosystemId], references: [id])
+}
+
+model ecosystem_users {
+  id                  String    @id @default(uuid()) @db.Uuid
+  userId              String
+  ecosystemId         String    @db.Uuid
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           String    @db.Uuid
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String    @db.Uuid
+  deletedAt           DateTime? @db.Timestamp(6)
+  ecosystem           ecosystem @relation(fields: [ecosystemId], references: [id])
+}
+
+model ecosystem_orgs {
+  id                     String                    @id @default(uuid()) @db.Uuid
+  orgId                  String                    @db.Uuid
+  status                 String
+  deploymentMode         String?
+  ecosystemId            String                    @db.Uuid
+  ecosystemRoleId        String                    @db.Uuid
+  createDateTime         DateTime                  @default(now()) @db.Timestamptz(6)
+  createdBy              String                    @db.Uuid
+  lastChangedDateTime    DateTime                  @default(now()) @db.Timestamptz(6)
+  lastChangedBy          String                    @db.Uuid
+  deletedAt              DateTime?                 @db.Timestamp(6)
+  ecosystem              ecosystem                 @relation(fields: [ecosystemId], references: [id])
+  ecosystemRole          ecosystem_roles           @relation(fields: [ecosystemRoleId], references: [id])
+  endorsementTransaction endorsement_transaction[]
+  organisation           organisation?             @relation(fields: [orgId], references: [id])
+}
+
+model endorsement_transaction {
+  id                  String         @id @default(uuid()) @db.Uuid
+  endorserDid         String
+  authorDid           String
+  requestPayload      String
+  responsePayload     String
+  type                String?
+  createDateTime      DateTime       @default(now()) @db.Timestamptz(6)
+  createdBy           String         @db.Uuid
+  lastChangedDateTime DateTime       @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String         @db.Uuid
+  deletedAt           DateTime?      @db.Timestamp(6)
+  status              String
+  ecosystemOrgId      String         @db.Uuid
+  requestBody         Json?
+  resourceId          String?
+  ecosystemOrgs       ecosystem_orgs @relation(fields: [ecosystemOrgId], references: [id])
+}
+
+model ecosystem_config {
+  id                  String    @id @default(uuid()) @db.Uuid
+  key                 String?
+  value               String?
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           String    @default("1")
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String    @default("1")
+  deletedAt           DateTime? @db.Timestamp(6)
 }
 
 model file_upload {
@@ -533,7 +604,7 @@ enum UserRole {
 model user_role_mapping {
   id         String    @id @default(uuid()) @db.Uuid
   userId     String    @db.Uuid
-  user       user      @relation(fields: [userId], references: [id])
+  user       user      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userRoleId String    @db.Uuid
   user_role  user_role @relation(fields: [userRoleId], references: [id])
 }
@@ -542,29 +613,24 @@ model cloud_wallet_user_info {
   id                  String          @id @default(uuid()) @db.Uuid
   label               String?
   tenantId            String?
-  email               String?         @unique() @db.VarChar(500)
+  email               String?         @db.VarChar(500)
   type                CloudWalletType
   createDateTime      DateTime        @default(now()) @db.Timestamptz(6)
   createdBy           String          @db.Uuid
   lastChangedDateTime DateTime        @default(now()) @db.Timestamptz(6)
   lastChangedBy       String          @db.Uuid
-  userId              String?          @db.Uuid
+  userId              String?         @unique() @db.Uuid
   agentEndpoint       String?
   agentApiKey         String?
   key                 String?
   connectionImageUrl  String?
   user                user?            @relation(fields: [userId], references: [id])
+  isActive            Boolean         @default(true) // Active/Deactive flag
+  useCount            Int             @default(0) // Current usage count
+  maxSubWallets       Int             @default(5000) // Max allowed count
 }
 
 enum CloudWalletType {
   CLOUD_BASE_WALLET
   CLOUD_SUB_WALLET
-}
-
-model client_aliases {
-  id                   String        @id @default(uuid()) @db.Uuid
-  createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
-  clientAlias          String?
-  clientUrl            String        
 }

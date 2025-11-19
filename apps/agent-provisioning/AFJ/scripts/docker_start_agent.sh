@@ -17,13 +17,6 @@ PROTOCOL=${12}
 TENANT=${13}
 AFJ_VERSION=${14}
 INDY_LEDGER=${15}
-INBOUND_ENDPOINT=${16}
-SCHEMA_FILE_SERVER_URL=${17}
-AGENT_API_KEY=${18}
-ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
-INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
-ADMIN_PORT=8001
-INBOUND_PORT=9001
 
 echo "AGENCY: $AGENCY"
 echo "EXTERNAL_IP: $EXTERNAL_IP"
@@ -40,6 +33,11 @@ echo "PROTOCOL: $PROTOCOL"
 echo "TENANT: $TENANT"
 echo "AFJ_VERSION: $AFJ_VERSION"
 echo "INDY_LEDGER: $INDY_LEDGER"
+
+ADMIN_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-admin-port.txt"
+INBOUND_PORT_FILE="$PWD/agent-provisioning/AFJ/port-file/last-inbound-port.txt"
+ADMIN_PORT=8001
+INBOUND_PORT=9001
 
 increment_port() {
     local port="$1"
@@ -93,14 +91,14 @@ if [ -d "${PWD}/agent-provisioning/AFJ/endpoints" ]; then
   echo "Endpoints directory exists."
 else
   echo "Error: Endpoints directory does not exists."
-  mkdir -p ${PWD}/agent-provisioning/AFJ/endpoints
+  mkdir ${PWD}/agent-provisioning/AFJ/endpoints
 fi
 
 if [ -d "${PWD}/agent-provisioning/AFJ/agent-config" ]; then
   echo "Endpoints directory exists."
 else
   echo "Error: Endpoints directory does not exists."
-  mkdir -p ${PWD}/agent-provisioning/AFJ/agent-config
+  mkdir ${PWD}/agent-provisioning/AFJ/agent-config
 fi
 
 AGENT_ENDPOINT="${PROTOCOL}://${EXTERNAL_IP}:${INBOUND_PORT}"
@@ -134,21 +132,19 @@ cat <<EOF >${CONFIG_FILE}
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "contentApproved",
   "autoAcceptProofs": "contentApproved",
-  "logLevel": 2,
+  "logLevel": 5,
   "inboundTransport": [
     {
       "transport": "$PROTOCOL",
-      "port": $INBOUND_PORT
+      "port": "$INBOUND_PORT"
     }
   ],
   "outboundTransport": [
     "$PROTOCOL"
   ],
   "webhookUrl": "$WEBHOOK_HOST/wh/$AGENCY",
-  "adminPort": $ADMIN_PORT,
-  "tenancy": $TENANT,
-  "schemaFileServerURL": "$SCHEMA_FILE_SERVER_URL",
-  "apiKey": "$AGENT_API_KEY"
+  "adminPort": "$ADMIN_PORT",
+  "tenancy": $TENANT
 }
 EOF
 
@@ -174,8 +170,6 @@ services:
     environment:
       AFJ_REST_LOG_LEVEL: 1
       ROOT_PATH: ${ROOT_PATH}
-    env_file:
-      - /app/agent.env
     ports:
      - ${INBOUND_PORT}:${INBOUND_PORT}
      - ${ADMIN_PORT}:${ADMIN_PORT}
@@ -200,7 +194,7 @@ if [ $? -eq 0 ]; then
   echo "container-name::::::${CONTAINER_NAME}"
   echo "file-name::::::$FILE_NAME"
 
-  docker-compose -f $FILE_NAME up -d
+  docker compose -f $FILE_NAME up -d
   if [ $? -eq 0 ]; then
 
     n=0
@@ -229,7 +223,7 @@ if [ $? -eq 0 ]; then
     container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
 
     # Extract the token from the logs using sed
-    token=$(echo "$container_logs" | sed -nE 's/.*** API Key: ([^ ]+).*/\1/p')
+    token=$(echo "$container_logs" | sed -nE 's/.*API Toekn: ([^ ]+).*/\1/p')
 
     # Print the extracted token
     echo "Token: $token"

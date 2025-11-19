@@ -8,7 +8,6 @@ import { AgentController } from './agent-service.controller';
 import { AgentService } from './agent-service.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [
@@ -25,6 +24,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ])
   ],
   controllers: [AgentController],
-  providers: [AgentService, CommonService, NATSClient]
+  providers: [AgentService, CommonService]
 })
 export class AgentModule { }

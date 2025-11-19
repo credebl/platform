@@ -1,5 +1,17 @@
 /* eslint-disable camelcase */
 import { ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '@credebl/prisma-service';
+// eslint-disable-next-line camelcase
+import {
+  agent_invitations,
+  file_data,
+  file_upload,
+  org_agents,
+  organisation,
+  platform_config,
+  schema
+} from '@prisma/client';
+import { ResponseMessages } from '@credebl/common/response-messages';
 import {
   FileUpload,
   FileUploadData,
@@ -9,28 +21,11 @@ import {
   PreviewRequest,
   SchemaDetails
 } from '../interfaces/issuance.interfaces';
-import { IssueCredentials, IssuedCredentialStatus } from '../enum/issuance.enum';
-// eslint-disable-next-line camelcase
-import {
-  Prisma,
-  agent_invitations,
-  credentials,
-  file_data,
-  file_upload,
-  org_agents,
-  organisation,
-  platform_config,
-  schema
-} from '@prisma/client';
-import { PrismaTables, SortValue } from '@credebl/enum/enum';
-
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';
-import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
-import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { PrismaService } from '@credebl/prisma-service';
-import { ResponseMessages } from '@credebl/common/response-messages';
-
+import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
+import { PrismaTables, SortValue } from '@credebl/enum/enum';
+import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
 @Injectable()
 export class IssuanceRepository {
   constructor(
@@ -93,11 +88,34 @@ export class IssuanceRepository {
     }
   }
 
-  async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
+  async getOrganizationByOrgId(orgId: string): Promise<org_agents> {
     try {
-      return this.prisma.agent_invitations.findMany({
+      return this.prisma.org_agents.findFirst({
         where: {
           orgId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getOrganization in issuance repository: ${error.message} `);
+      throw error;
+    }
+  }
+  
+
+  async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations> {
+    try {
+      return this.prisma.agent_invitations.findFirst({
+        where: {
+          AND: [
+            {
+            orgId
+            },
+            {
+              invitationDid: {
+                not: null
+              }
+            }
+          ]
         },
         orderBy: {
           createDateTime: 'asc'
@@ -112,8 +130,7 @@ export class IssuanceRepository {
   async getAllIssuedCredentials(
     user: IUserRequest,
     orgId: string,
-    issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams,
-    schemaIds?: string[]
+    issuedCredentialsSearchCriteria: IIssuedCredentialSearchParams
   ): Promise<{
     issuedCredentialsCount: number;
     issuedCredentialsList: {
@@ -123,72 +140,17 @@ export class IssuanceRepository {
       schemaId: string;
       state: string;
       orgId: string;
-      connections: {
-        theirLabel: string;
-      };
     }[];
   }> {
     try {
-      const schemas = await this.prisma.schema.findMany({
-        where: {
-          name: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
-        },
-        select: { schemaLedgerId: true }
-      });
-
-      const schemaIdsMatched = schemas.map((s) => s.schemaLedgerId);
-      let stateInfo = null;
-      switch (issuedCredentialsSearchCriteria.search.toLowerCase()) {
-        case IssuedCredentialStatus.offerSent.toLowerCase():
-          stateInfo = IssueCredentials.offerSent;
-          break;
-
-        case IssuedCredentialStatus.done.toLowerCase():
-          stateInfo = IssueCredentials.done;
-          break;
-
-        case IssuedCredentialStatus.abandoned.toLowerCase():
-          stateInfo = IssueCredentials.abandoned;
-          break;
-
-        case IssuedCredentialStatus.received.toLowerCase():
-          stateInfo = IssueCredentials.requestReceived;
-          break;
-
-        case IssuedCredentialStatus.proposalReceived.toLowerCase():
-          stateInfo = IssueCredentials.proposalReceived;
-          break;
-
-        case IssuedCredentialStatus.credIssued.toLowerCase():
-          stateInfo = IssueCredentials.offerSent;
-          break;
-
-        default:
-          break;
-      }
-
-      const issuanceWhereClause: Prisma.credentialsWhereInput = {
-        orgId,
-        ...(schemaIds?.length ? { schemaId: { in: schemaIds } } : {}),
-        ...(!schemaIds?.length && issuedCredentialsSearchCriteria.search
-          ? {
-              OR: [
-                { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                { schemaId: { in: schemaIdsMatched } },
-                {
-                  connections: {
-                    theirLabel: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
-                  }
-                },
-                { state: { contains: stateInfo ?? issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
-              ]
-            }
-          : {})
-      };
-
       const issuedCredentialsList = await this.prisma.credentials.findMany({
-        where: issuanceWhereClause,
+        where: {
+          orgId,
+          OR: [
+            { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+            { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
+          ]
+        },
         select: {
           credentialExchangeId: true,
           createDateTime: true,
@@ -196,12 +158,7 @@ export class IssuanceRepository {
           orgId: true,
           state: true,
           schemaId: true,
-          connectionId: true,
-          connections: {
-            select: {
-              theirLabel: true
-            }
-          }
+          connectionId: true
         },
         orderBy: {
           [issuedCredentialsSearchCriteria?.sortField]:
@@ -210,8 +167,15 @@ export class IssuanceRepository {
         take: Number(issuedCredentialsSearchCriteria.pageSize),
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize
       });
+
       const issuedCredentialsCount = await this.prisma.credentials.count({
-        where: issuanceWhereClause
+        where: {
+          orgId,
+          OR: [
+            { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+            { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
+          ]
+        }
       });
 
       return { issuedCredentialsCount, issuedCredentialsList };
@@ -227,30 +191,33 @@ export class IssuanceRepository {
    * @returns Get saved credential details
    */
   // eslint-disable-next-line camelcase
-  async saveIssuedCredentialDetails(payload: IssueCredentialWebhookPayload): Promise<credentials> {
+  async saveIssuedCredentialDetails(payload: IssueCredentialWebhookPayload): Promise<org_agents> {
     try {
       let organisationId: string;
+      let agentOrg: org_agents;
       const { issueCredentialDto, id } = payload;
-
       if ('default' !== issueCredentialDto?.contextCorrelationId) {
-        const getOrganizationId = await this.getOrganizationByTenantId(issueCredentialDto?.contextCorrelationId);
-        organisationId = getOrganizationId?.orgId;
+        agentOrg = await this.getOrganizationByTenantId(issueCredentialDto?.contextCorrelationId);
+        if (agentOrg?.orgId) {
+          organisationId = agentOrg?.orgId;
+        } else {
+          agentOrg = await this.getOrganizationByOrgId(id);
+          organisationId = id;
+        }
       } else {
+        agentOrg = await this.getOrganizationByOrgId(id);
         organisationId = id;
       }
 
       let schemaId = '';
 
-      if (
-        issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId ||
-        issueCredentialDto?.['credentialData']?.offer?.jsonld?.credential?.['@context'][1] ||
-        (issueCredentialDto?.state &&
-          issueCredentialDto?.['credentialData']?.proposal?.jsonld?.credential?.['@context'][1])
-      ) {
-        schemaId =
-          issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId ||
-          issueCredentialDto?.['credentialData']?.offer?.jsonld?.credential?.['@context'][1] ||
-          issueCredentialDto?.['credentialData']?.proposal?.jsonld?.credential?.['@context'][1];
+        if (
+          (issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId ||
+           issueCredentialDto?.['credentialData']?.offer?.jsonld?.credential?.['@context'][1]) ||
+          (issueCredentialDto?.state &&
+           issueCredentialDto?.['credentialData']?.proposal?.jsonld?.credential?.['@context'][1])
+        ) {
+        schemaId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.schemaId || issueCredentialDto?.['credentialData']?.offer?.jsonld?.credential?.['@context'][1] || issueCredentialDto?.['credentialData']?.proposal?.jsonld?.credential?.['@context'][1];
       }
 
       let credDefId = '';
@@ -258,7 +225,7 @@ export class IssuanceRepository {
         credDefId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId;
       }
 
-      const credentialDetails = await this.prisma.credentials.upsert({
+      await this.prisma.credentials.upsert({
         where: {
           threadId: issueCredentialDto?.threadId
         },
@@ -268,8 +235,8 @@ export class IssuanceRepository {
           threadId: issueCredentialDto?.threadId,
           connectionId: issueCredentialDto?.connectionId,
           state: issueCredentialDto?.state,
-          credDefId,
-          ...(schemaId ? { schemaId } : {})
+          schemaId,
+          credDefId
         },
         create: {
           createDateTime: issueCredentialDto?.createDateTime,
@@ -285,7 +252,7 @@ export class IssuanceRepository {
         }
       });
 
-      return credentialDetails;
+      return agentOrg;
     } catch (error) {
       this.logger.error(`Error in get saveIssuedCredentialDetails: ${error.message} `);
       throw error;
@@ -322,8 +289,7 @@ export class IssuanceRepository {
 
   async getSchemaDetails(schemaId: string): Promise<schema> {
     try {
-      //Todo: Enhance this query by using FindFirstOrThrow
-      const schemaDetails = await this.prisma.schema.findFirst({
+      const schemaDetails = await this.prisma.schema.findFirstOrThrow({
         where: {
           schemaLedgerId: schemaId
         }
@@ -350,6 +316,7 @@ export class IssuanceRepository {
 
       const schemaDetails = await this.getSchemaDetailsBySchemaIdentifier(credentialDefinitionDetails.schemaLedgerId);
 
+      
       if (!schemaDetails) {
         throw new NotFoundException(`Schema not found for credential definition ID: ${credentialDefinitionId}`);
       }
@@ -365,12 +332,12 @@ export class IssuanceRepository {
       return credentialDefRes;
     } catch (error) {
       this.logger.error(`Error in getCredentialDefinitionDetails: ${error.message}`);
-      throw error;
+      throw new InternalServerErrorException(error.message);
     }
   }
 
   async getSchemaDetailsBySchemaIdentifier(schemaIdentifier: string): Promise<schema> {
-    const schemaDetails = await this.prisma.schema.findFirst({
+    const schemaDetails = await this.prisma.schema.findFirstOrThrow({
       where: {
         schemaLedgerId: schemaIdentifier
       }
@@ -692,6 +659,7 @@ export class IssuanceRepository {
   async deleteFileUploadData(fileUploadIds: string[], orgId: string): Promise<IDeletedFileUploadRecords> {
     try {
       return await this.prisma.$transaction(async (prisma) => {
+
         const deleteFileDetails = await prisma.file_data.deleteMany({
           where: {
             fileUploadId: {
@@ -707,6 +675,7 @@ export class IssuanceRepository {
         });
 
         return { deleteFileDetails, deleteFileUploadDetails };
+    
       });
     } catch (error) {
       this.logger.error(`[Error in deleting file data] - error: ${JSON.stringify(error)}`);
@@ -739,6 +708,7 @@ export class IssuanceRepository {
       }
 
       return await this.prisma.$transaction(async (prisma) => {
+        
         const recordsToDelete = await this.prisma.credentials.findMany({
           where: { orgId },
           select: {
@@ -755,41 +725,10 @@ export class IssuanceRepository {
           where: { orgId }
         });
 
-        return { deleteResult, recordsToDelete };
+        return { deleteResult, recordsToDelete};
       });
     } catch (error) {
       this.logger.error(`Error in deleting issuance records: ${error.message}`);
-      throw error;
-    }
-  }
-  async getFileDetailsAndFileDataByFileId(fileId: string, orgId: string): Promise<object> {
-    try {
-      const fileDetails = await this.prisma.file_upload.findUnique({
-        where: {
-          id: fileId,
-          orgId
-        },
-        include: {
-          file_data: true
-        }
-      });
-      return fileDetails;
-    } catch (error) {
-      this.logger.error(`[getFileDetailsAndFileDataByFileId] - error: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
-  async updateSchemaIdByThreadId(threadId: string, schemaId: string): Promise<void> {
-    try {
-      await this.prisma.credentials.update({
-        where: { threadId },
-        data: {
-          schemaId
-        }
-      });
-    } catch (error) {
-      this.logger.error(`[updateSchemaIdByThreadId] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

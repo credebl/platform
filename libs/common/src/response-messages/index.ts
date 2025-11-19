@@ -4,9 +4,7 @@ export const ResponseMessages = {
       create: 'User registered successfully',
       update: 'User details updated successfully',
       emaiVerified: 'Email verified successfully',
-      fetchClientAliases: 'Client aliases fetched successfully',
       login: 'User login successfully',
-      fetchSession: 'Session details fetched successfully',
       fetchProfile: 'User fetched successfully',
       fetchInvitations: 'Org invitations fetched successfully',
       invitationReject: 'Organization invitation rejected',
@@ -16,33 +14,33 @@ export const ResponseMessages = {
       checkEmail: 'User email checked successfully.',
       sendVerificationCode: 'Verification link has been successfully sent on the email. Please verify',
       userActivity: 'User activities fetched successfully',
-      platformSettings: 'Platform settings updated',
+      userCredentials: 'User credentials fetched successfully',
+      platformEcosystemettings: 'Platform and ecosystem settings updated',
       fetchPlatformSettings: 'Platform settings fetched',
       signUpUser: 'User created successfully',
+      shareUserCertificate: 'Certificate URL generated successfully',
       updateUserProfile: 'User profile updated successfully',
       resetPassword: 'Password reset successfully',
+      degreeCertificate: 'Degree Certificate shared successfully',
       resetPasswordLink: 'Reset password link has been sent to your mail',
       refreshToken: 'Token details fetched successfully',
       countriesVerificationCode: 'All countries has been fetched successfully',
       stateVerificationCode: 'All states has been fetched successfully',
-      cityVerificationCode: 'All cities has been fetched successfully',
-      logout: 'User logout successfully',
-      fetchAllSession: 'User Sessions fetched Successfully',
-      sessionDelete: 'Session deleted Successfully'
+      cityVerificationCode: 'All cities has been fetched successfully'
     },
     error: {
       exists: 'User already exists',
       profileNotFound: 'User public profile not found',
       notUpdatePlatformSettings: 'Unable to update platform config settings',
       platformSetttingsNotFound: 'Unable to get platform settings',
+      ecosystemSetttingsNotFound: 'Unable to get ecosystem settings',
+      notUpdateEcosystemSettings: 'Unable to update ecosystem config settings',
       verificationAlreadySent: 'The verification link has already been sent to your email address',
       emailSend: 'Unable to send email to the user',
       redirectUrlNotFound: 'Redirect URL not found',
       invalidEmailUrl: 'Invalid verification code or EmailId!',
       verifiedEmail: 'Email already verified',
       notFound: 'User not found',
-      sessionLimitReached:
-        'You have reached the maximum number of allowed sessions. Please remove an existing session to add a new one',
       verifyMail: 'Please verify your email',
       invalidCredentials: 'Invalid Credentials',
       registerFido: 'Please complete your fido registration',
@@ -52,12 +50,14 @@ export const ResponseMessages = {
       invalidInvitationStatus: 'Invalid invitation status',
       invalidKeycloakId: 'keycloakId is invalid',
       invalidEmail: 'Invalid Email Id!',
+      invalidUsername: 'Invalid Email Id!',
       adduser: 'Unable to add user details',
       userRoleNotFound: 'User role not found',
       verifyEmail: 'The verification link has already been sent to your email address. please verify',
       emailNotVerified: 'The verification link has already been sent to your email address. please verify',
       userNotRegisterd: 'The user has not yet completed the registration process',
       InvalidEmailDomain: 'Email from this domain is not allowed',
+      credentialNotFound: 'User credentials not found',
       invalidOrgId: 'Organization does not exist',
       invalidInvitationId: 'Organization invitation does not exist',
       invitationAlreadyPending: 'Organization invitation is already in pending state',
@@ -68,13 +68,7 @@ export const ResponseMessages = {
       invalidResetLink: 'Invalid or expired reset password link',
       invalidAccessToken: 'Authentication failed',
       invalidRefreshToken: 'Invalid refreshToken provided',
-      userOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
-      errorInUpdateAccountDetails: 'Error in updating the account details',
-      errorInDeleteSession: 'Error in deleting the session',
-      errorInSessionCreation: 'Error in create session',
-      userAccountNotFound: 'User account not found',
-      userSessionNotFound: 'User session not found',
-      refreshTokenExpired: 'Refresh token has expired'
+      userOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.'
     }
   },
   organisation: {
@@ -91,7 +85,7 @@ export const ResponseMessages = {
       updateUserRoles: 'User roles updated successfully',
       delete: 'Organization deleted successfully',
       orgInvitationDeleted: 'Organization invitation deleted successfully',
-      orgCredentials: 'Client credentials created successfully',
+      orgCredentials: 'Organization credentials created successfully',
       fetchedOrgCredentials: 'Organization credentials fetched successfully',
       clientCredentials: 'Client credentials fetched successfully',
       deleteCredentials: 'Organization client credentials deleted',
@@ -125,16 +119,14 @@ export const ResponseMessages = {
       notExistClientCred: 'Organization does not have client credentials',
       invalidUserId: 'Invalid format of userId',
       invalidInvitationId: 'Invalid format for invitation id',
+      ecosystemIdIsRequired: 'ecosystemId is required',
       roleNotMatch: 'User does not have access',
       orgDoesNotMatch: 'Organization does not match',
       invalidClient: 'Invalid client credentials',
       primaryDid: 'This DID is already set to primary DID',
       didNotFound: 'DID does not exist in organiation',
-      organizationNotFound: 'Organization not found',
       MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
-      adminTokenDetails: 'Error in generating admin token details',
-      clientDetails: 'Error in fetching client details',
-      invalidClientCredentials: 'Invalid client credentials'
+      organizationEcosystemValidate: 'This organization is an ecosystem lead or ecosystem owner.'
     }
   },
 
@@ -164,11 +156,10 @@ export const ResponseMessages = {
   schema: {
     success: {
       fetch: 'Schema retrieved successfully.',
-      create: 'Schema created successfully.',
-      update: 'Schema updated successfully'
+      create: 'Schema created successfully.'
     },
     error: {
-      invalidSchemaId: 'Please provide valid schema Id',
+      invalidSchemaId: 'Invalid schema Id provided.',
       invalidData: 'Invalid data provided.',
       nameNotEmpty: 'Schema name is required',
       versionNotEmpty: 'Schema version is required',
@@ -217,8 +208,7 @@ export const ResponseMessages = {
       fetchNetworkUrl: 'Network url retrieved successfully'
     },
     error: {
-      NotFound: 'No ledgers found.',
-      indyNamespaceisRequired: 'indyNamespace is a required'
+      NotFound: 'No ledgers found.'
     }
   },
   agent: {
@@ -226,14 +216,15 @@ export const ResponseMessages = {
       create: 'Agent process initiated successfully. Please wait',
       createWallet: 'Wallet created successfully',
       createDid: 'Did created successfully',
+      exportWallet: 'Wallet Exported successfully',
       health: 'Agent health details retrieved successfully.',
       ledgerConfig: 'Ledger config details fetched successfully.',
-      sign: 'Payload signed successfully.',
-      verify: 'Payload verified successfully.',
       webhookUrlRegister: 'Webhook Url registered successfully',
       getWebhookUrl: 'Webhook Url fetched successfully',
       createKeys: 'Key-pair created successfully',
-      walletDelete: 'The wallet has been deleted.'
+      walletDelete: 'The wallet has been deleted.',
+      sign: 'Payload signed successfully.',
+      verify: 'Payload verified successfully.'
     },
     error: {
       exists: 'An agent name is already exist',
@@ -255,7 +246,6 @@ export const ResponseMessages = {
       ledgerNotFound: 'Ledgers not found',
       agentNotExists: 'Agent not spun up for this organization',
       agentDown: 'Agent is down or not spun up',
-      notConfigured: 'Agent is not configured properly',
       walletAlreadyCreated: 'Your wallet is already been created',
       walletAlreadyProcessing: 'Your wallet is already processing',
       notAbleToSpinp: 'Agent not able to spun up',
@@ -278,18 +268,7 @@ export const ResponseMessages = {
       failedOrganization: 'Failed to fetch organization agent type details',
       promiseReject: 'One or more promises were rejected.',
       orgAgentNotFound: 'Org agent type not found',
-      walletDoesNotExists: 'Organization wallet does not exists',
-      requiredDomain: 'Domain is required for Web method',
-      requiredNetwork: 'Network is required',
-      keyType: 'Only ed25519 key type is supported',
-      keyTypeWeb: 'Only ed25519 and bls12381g2 key type is supported',
-      requiredEndorserDid: 'Role or endorser DID is required',
-      requiredPrivateKey: 'Privatekey is required for polygon method',
-      privateKeyLength: 'Private key must be exactly 64 characters long',
-      requiredSeed: 'Seed is required',
-      baseWalletToken: 'Error while fetching base wallet token',
-      tenantWalletToken: 'Error while fetching tenant wallet token',
-      invalidTenantDetails: 'Invalid wallet details provided'
+      walletDoesNotExists: 'Organization wallet does not exists'
     }
   },
   connection: {
@@ -304,7 +283,6 @@ export const ResponseMessages = {
       basicMessage: 'Basic message sent successfully'
     },
     error: {
-      invalidConnectionId: 'Invalid format for connectionId',
       exists: 'Connection is already exist',
       connectionNotFound: 'Connection not found',
       agentEndPointNotFound: 'agentEndPoint Not Found',
@@ -324,11 +302,9 @@ export const ResponseMessages = {
       bulkIssuance: 'Issuance process started. It will take some time',
       notFound: 'Schema records not found',
       bulkProcess: 'Process initiated for bulk issuance',
-      deleteIssuanceRecords: 'Issuance records deleted',
-      fileDetailsAndFileData: 'File details and File data fetched successfully'
+      deleteIssuanceRecords: 'Issuance records deleted'
     },
     error: {
-      invalidCredentialRecordId: 'Please provide valid credential Record Id',
       exists: 'Credentials is already exist',
       credentialsNotFound: 'Credentials not found',
       agentEndPointNotFound: 'Agent details not found',
@@ -361,8 +337,7 @@ export const ResponseMessages = {
       cachedfileData: 'Cached file data does not exist',
       storeBulkData: 'Error while storing the bulk deata',
       issuanceRecordsNotFound: 'Issuance records does not exists',
-      removeIssuanceData: 'First you have to remove issuance data',
-      ledgerMismatched: `Organization ledger mismatch detected. This template cannot be used. Please use a template created with the organization's specific ledger`
+      removeIssuanceData: 'First you have to remove issuance data'
     }
   },
   verification: {
@@ -377,7 +352,6 @@ export const ResponseMessages = {
     error: {
       notFound: 'Organization agent not found',
       proofNotSend: 'Proof request is not sent',
-      invalidProofId: 'Please provide valid proofId',
       agentUrlNotFound: 'agent url not found',
       schemaIdNotFound: 'Schema Id is required',
       predicatesValueNotNumber: 'Attribute value is not a number',
@@ -389,11 +363,93 @@ export const ResponseMessages = {
       batchEmailSend: 'Unable to send email in batches',
       emailSend: 'Unable to send email to the user',
       verificationRecordsNotFound: 'Verification records does not exists',
-      removeVerificationData: 'First you have to remove verification data',
-      uniqueAttributes: 'Please provide unique attribute names'
+      removeVerificationData: 'First you have to remove verification data'
     }
   },
-
+  ecosystem: {
+    success: {
+      create: 'Ecosystem created successfully',
+      update: 'Ecosystem details updated successfully',
+      add: 'Organization added successfully',
+      delete: 'Ecosystem invitations deleted successfully',
+      fetch: 'Ecosystem fetched successfully',
+      getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
+      getInvitation: 'Ecosystem invitations fetched successfully',
+      createInvitation: 'Ecosystem invitations sent',
+      schemaRequest: 'Schema transaction request created successfully',
+      credDefRequest: 'Credential definition transaction request created successfully',
+      sign: 'Endorsement request approved',
+      submit: 'Endorsement request is submitted to ledger',
+      submitNoLedgerSchema: 'Endorsement request is submitted',
+      invitationReject: 'Ecosystem invitation rejected',
+      invitationAccept: 'Ecosystem invitation accepted successfully',
+      deleteEcosystemMember: 'You are deleted as a ecosystem member',
+      fetchEndorsors: 'Endorser transactions fetched successfully',
+      DeclineEndorsementTransaction: 'Endorsement request declined',
+      AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
+      fetchMembers: 'Ecosystem members fetched successfully',
+      allschema: 'Schema details fetched successfully',
+      AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger'
+    },
+    error: {
+      notCreated: 'Error while creating ecosystem',
+      agentNotSpunUp: 'Agent is not spun up for this organization',
+      userNotHaveAccess: 'You do not have access',
+      orgAlreadyExists: 'Organization is already exists in ecosystem',
+      unableToAdd: 'Unable to add organization',
+      partiallyAdded: 'Organization(s) are partially added',
+      orgNotExist: 'Organization does not exist',
+      orgDidNotExist: 'Organization did does not exist',
+      exists: 'An ecosystem name is already exist',
+      update: 'Error while updating ecosystem',
+      invalidInvitationStatus: 'Invalid invitation status',
+      invitationNotFound: 'Ecosystem Invitation not found',
+      invitationNotUpdate: 'Ecosystem Invitation not updated',
+      ledgerNotMatch: 'Organization ledger network not matched with Ecosystem',
+      orgsNotUpdate: 'Ecosystem Orgs not updated',
+      ecosystemNotEnabled: 'Ecosystem service is not enabled',
+      sumbitTransaction: 'Error while submitting transaction',
+      signTransactionNotApplicable: 'Signing transaction for w3c schema is not aapllicable',
+      requestSchemaTransaction: 'Error while request schema transaction',
+      requestCredDefTransaction: 'Error while submitting transaction',
+      notFound: 'Organization not found',
+      platformConfigNotFound: 'Platform configurations not found',
+      schemaNotFound: 'Schema not found',
+      ecosystemNotFound: 'Ecosystem not found',
+      ecosystemOrgNotFound: 'Ecosystem org not found',
+      ecosystemConfigNotFound: 'Ecosystem config not found',
+      credentialDefinitionNotFound: 'Credential definition found',
+      leadNotFound: 'Lead details not found',
+      signRequestError: 'Error while signing the transaction',
+      updateTransactionError: 'Error while update the transaction',
+      schemaAlreadyExist: 'Schema name and schema version already exist',
+      schemaNameAlreadyExist: 'Schema name already exist',
+      credDefAlreadyExist: 'Credential definition already exist',
+      saveSchema: 'Error while storing the schema details',
+      saveCredDef: 'Error while storing the credential-definition details',
+      invalidOrgId: 'Invalid organization Id',
+      invalidEcosystemId: 'Invalid ecosystem Id',
+      invalidTransaction: 'Transaction does not exist',
+      transactionSubmitted: 'Transaction already submitted',
+      transactionAlreadySigned: 'Transaction already signed',
+      transactionNotSigned: 'Transaction request is not signed',
+      transactionNotRequested: 'Transaction is not requested',
+      invalidAgentUrl: 'Invalid agent url',
+      EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
+      OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',
+      ecosystemOrgAlready:
+        'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.',
+      updateSchemaId: 'Error while updating the schema id',
+      updateCredDefId: 'Error while updating the credential-definition',
+      invalidMessage: 'Invalid transaction details. Missing "message" property.',
+      invalidTransactionMessage: 'Invalid transaction details',
+      ecosystemRoleNotMatch: 'Ecosystem role not match',
+      orgEcoIdRequired: 'OrgId & EcosystemId is required',
+      ecosystemMembersNotExists: 'Ecosystem members does not exists',
+      notAbleToDeleteEcosystem: 'You cannot delete the ecosystem, because you are the ecosystem lead',
+      ecosystemNotExists: 'Ecosystem does not exists'
+    }
+  },
   bulkIssuance: {
     success: {
       create: 'Issuance process initiated successfully',
@@ -407,7 +463,6 @@ export const ResponseMessages = {
       emailColumn: '1st column of the file should always be email_identifier.',
       attributeNumber: 'Number of supplied values is different from the number of schema attributes.',
       mismatchedAttributes: 'Schema attributes are mismatched in the file header.',
-      mismatchedSchemaType: 'The provided schema type does not match the template ID schema type',
       fileDetailsNotFound: 'File details not found.',
       emptyFile: 'File data is empty',
       emptyheader: 'File header is empty',
@@ -422,7 +477,6 @@ export const ResponseMessages = {
     notFound: 'Not Found',
     serverError: 'Internal Server error'
   },
-
   webhook: {
     success: {
       webhookUrlRegister: 'Webhook Url registered successfully',
@@ -472,51 +526,48 @@ export const ResponseMessages = {
   cloudWallet: {
     success: {
       create: 'Cloud wallet created successfully',
-      receive: 'Received invitation successfully',
+      delete: 'Cloud wallet deleted successfully',
+      receive:'Received invitation successfully',
+      getBaseWalletInfo: 'Fetched base wallet info',
       configureBaseWallet: 'Successfully configure the base wallet.',
       acceptProofRequest: 'Proof request has been successfully accepted.',
+      checkCloudWalletStatus: 'Cloud wallet exists',
+      declineProofRequest: 'Proof request has been successfully declined.',
       createConnection: 'Connection created successfully.',
+      createSelfAttestedW3cCredential: 'Self-attested W3C credential created successfully',
       basicMessage: 'Basic message send successfully',
       getProofById: 'Proof presentation has been successfully received.',
+      getCredentialsByProofId: 'Credentials fetch by proof request id',
       getProofPresentation: 'Proof presentations has been successfully received.',
       didList: 'DID list fetched sucessfully',
       connectionById: 'Connection record fetched successfully',
+      addConnectionTypeById: 'Added connection Type successfully',
       credentials: 'Credentials fetched successfully',
       credentialByRecordId: 'Credential fetched successfully',
+      proofPresentationByRecordId: 'Proof presentation fetched successfully',
+      deleteCredential: 'Credential deleted successfully',
       connectionList: 'Connection list fetched successfully',
       basicMessageByConnectionId: 'Basic message fetched successfully'
     },
     error: {
       baseWalletNotFound: 'Base wallet configuration not found',
       createCloudWallet: 'Error while creating cloud wallet on agent',
+      BaseWalletLimitExceeded :'Limit exceeded for base wallet to create subwallet',
       encryptCloudWalletKey: 'Error while creating encrypting wallet key',
       userExist: 'Wallet already exist for the user',
       walletNotExist: 'Wallet not exist for the user',
       agentDetails: 'Invalid agent details',
       agentNotRunning: 'Agent is not up and running',
       receiveInvitation: 'Error while receiving invitation by url',
+      exportWallet: 'Error while exporting wallet',
       AcceptOffer: 'Error while  invitation by url',
       notReachable: 'The agent endpoint is not reachable.',
       agentAlreadyExist: 'Agent already exist.',
       platformAdminRecordNotFound: 'Platform admin reocrd not exist.',
       notFoundBaseWallet: 'The base wallet record is missing.',
-      walletRecordNotFound: 'Wallet record not found.'
-    }
-  },
-  nats: {
-    success: {},
-    error: {
-      noSubscribers:
-        'No subscribers for the requested message. Error while connecting to NATS, service might not be started',
-      natsConnect: 'Empty response. There are no subscribers listening to that message'
-    }
-  },
-  common: {
-    error: {
-      invalidUrl: 'Please check the url suffix.',
-      invalidEndpoint: 'Invalid agent endpoint provided',
-      fetchBaseWalletToken: 'Error while fetching base wallet token',
-      fetchTenantWalletToken: 'Error while fetching tenant wallet token'
+      walletRecordNotFound: 'Wallet record not found.',
+      createSelfAttestedW3cCredential: 'Error while creating self-attested credential.'
     }
   }
 };
+

@@ -1,4 +1,4 @@
-import { IUserRequestInterface } from "../../interfaces/IUserRequestInterface";
+import { IUserRequestInterface } from '../../interfaces/IUserRequestInterface';
 
 export interface IProofRequestAttribute {
     attributeName: string;

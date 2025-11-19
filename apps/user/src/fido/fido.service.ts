@@ -6,8 +6,6 @@ import { FidoUserRepository } from '../../repositories/fido-user.repository';
 import { GenerateRegistrationDto, VerifyRegistrationPayloadDto, VerifyAuthenticationPayloadDto, UpdateFidoUserDetailsDto, credentialDto, updateDeviceDto } from './dtos/fido-user.dto';
 import { UserDevicesRepository } from '../../repositories/user-device.repository';
 import { PrismaService } from '@credebl/prisma-service';
-import { LoginUserDto } from 'apps/user/dtos/login-user.dto';
-import { UserService } from '../user.service';
 
 @Injectable()
 export class FidoService {
@@ -16,7 +14,6 @@ export class FidoService {
         private readonly fidoUserRepository: FidoUserRepository,
         private readonly userDevicesRepository: UserDevicesRepository,
         private readonly commonService: CommonService,
-        private readonly userService: UserService,
         private readonly prisma: PrismaService
     ) { }
     async generateRegistration(payload: GenerateRegistrationDto): Promise<object> {
@@ -150,16 +147,8 @@ export class FidoService {
                         .then(async (response) => {
                             if (true === response.verified) {
                                 await this.userDevicesRepository.updateFidoAuthCounter(credentialId, loginCounter);
-                                const userDetails: LoginUserDto = {
-                                    email,
-                                    isPasskey: response.verified
-                                };
-                                const authDetails = await this.userService.login(userDetails);
-                                return authDetails;
-                            } else {
-                                throw new BadRequestException(ResponseMessages.fido.error.deviceNotFound);
                             }
-                            
+                            return response;
                         });
                 }
             } else {

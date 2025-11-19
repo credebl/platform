@@ -9,7 +9,7 @@ export class CreatedResponseDto {
     success: boolean;
 
     @ApiProperty()
-    data?: any;
+    data?: unknown;
 
     @ApiProperty({ example: HttpStatus.CREATED })
     code?: number;

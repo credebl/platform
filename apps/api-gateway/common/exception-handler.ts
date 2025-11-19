@@ -12,6 +12,8 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
     
     let errorResponse;
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    
+    this.logger.error(`exception ::: ${JSON.stringify(exception)}`);
 
     if (!exception || '{}' === JSON.stringify(exception)) {
       errorResponse = {
@@ -22,21 +24,16 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
     }
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      
     }
 
-    let exceptionResponse: ExceptionResponse = {} as ExceptionResponse;
-    const exceptionResponseData = exception.getResponse ? exception.getResponse() : exception;
+    let exceptionResponse: ExceptionResponse;
 
-    if ('string' === typeof exceptionResponseData) {
-      exceptionResponse.message = exceptionResponseData;
+    if (exception['response']) {
+      exceptionResponse = exception['response'];
     } else {
-      exceptionResponse = exceptionResponseData as unknown as ExceptionResponse;
+      exceptionResponse = exception as unknown as ExceptionResponse;
     }
 
-    if (exceptionResponse.message && exceptionResponse.message.includes(ResponseMessages.nats.error.noSubscribers)) {
-      exceptionResponse.message = ResponseMessages.nats.error.noSubscribers;
-    }
     errorResponse = {
       statusCode: exceptionResponse.statusCode ? exceptionResponse.statusCode : status,
       message: exceptionResponse.message
@@ -46,6 +43,7 @@ export class CustomExceptionFilter extends BaseExceptionFilter {
         ? exceptionResponse.error
         : ResponseMessages.errorMessages.serverError
     };
+
     response.status(errorResponse.statusCode).json(errorResponse);
   }
 }

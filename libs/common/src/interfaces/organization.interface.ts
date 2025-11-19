@@ -106,6 +106,7 @@ export interface IOrganizationDashboard {
     issuanceRecordsCount: number;
     connectionRecordsCount: number;
     orgUsersCount: number;
+    orgEcosystemsCount: number;
     orgInvitationsCount: number;
   }
   

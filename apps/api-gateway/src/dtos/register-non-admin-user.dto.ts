@@ -14,7 +14,7 @@ export class RegisterNonAdminUserDto {
     @IsString({message:'LastName should be string'})
     lastName: string;
 
-    @ApiProperty({ example: 'awqx@yopmail.com' })
+    @ApiProperty({ example: 'awqx@getnada.com' })
     @IsEmail({}, { message: 'Please provide a valid email' })
     @IsNotEmpty({ message: 'Email is required' })
     @IsString({ message: 'Email should be a string' })

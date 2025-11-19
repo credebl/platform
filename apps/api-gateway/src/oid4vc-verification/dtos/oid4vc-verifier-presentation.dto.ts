@@ -1,5 +1,5 @@
 import { OpenId4VcVerificationPresentationState } from '@credebl/common/interfaces/oid4vp-verification';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiHideProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, IsUrl } from 'class-validator';
 /* eslint-disable camelcase */
 import { ApiProperty } from '@nestjs/swagger';
@@ -338,6 +338,7 @@ export class PresentationRequestDto {
    * This property is not serialized into requests/responses but is required so `class-validator`
    * executes the validator with access to the whole object.
    */
+  @ApiHideProperty()
   @ApiPropertyOptional({
     description: 'Internal: ensures exactly one of dcql or presentationExchange is present'
   })

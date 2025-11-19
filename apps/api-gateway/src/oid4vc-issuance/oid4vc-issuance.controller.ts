@@ -197,7 +197,7 @@ export class Oid4vcIssuanceController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Delete('/orgs/:orgId/oid4vc/:id')
+  @Delete('/orgs/:orgId/oid4vc/issuers/:id')
   @ApiOperation({
     summary: 'Delete OID4VC issuer',
     description: 'Deletes an OID4VC issuer for the specified organization.'

@@ -306,7 +306,7 @@ export class BasicX509CreateCertificateConfig {
 
   @ApiPropertyOptional({ type: () => AuthorityAndSubjectKeyDto })
   @IsOptional()
-  @ValidateNested({ each: true })
+  @ValidateNested()
   @Type(() => AuthorityAndSubjectKeyDto)
   subjectKey?: AuthorityAndSubjectKeyDto;
 }

@@ -33,7 +33,6 @@ export class X509Service extends BaseService {
     reqUser: user
   ): Promise<X509CertificateRecord> {
     this.logger.log(`Start creating x509 certficate`);
-    this.logger.debug(`payload : `, createDto, reqUser);
     const payload = { options: createDto, user: reqUser, orgId };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-x509-certificate', payload);
   }

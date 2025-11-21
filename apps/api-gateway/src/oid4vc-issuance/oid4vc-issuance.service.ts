@@ -53,8 +53,8 @@ export class Oid4vcIssuanceService extends BaseService {
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-delete-issuer', payload);
   }
 
-  async deleteTemplate(userDetails: user, orgId: string, templateId: string): Promise<object> {
-    const payload = { templateId, orgId, userDetails };
+  async deleteTemplate(userDetails: user, orgId: string, templateId: string, issuerId: string): Promise<object> {
+    const payload = { templateId, orgId, userDetails, issuerId };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-template-delete', payload);
   }
 

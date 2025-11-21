@@ -120,7 +120,7 @@ export enum CommonConstants {
   // OID4VC URLs
   URL_OIDC_ISSUER_CREATE = '/openid4vc/issuer',
   /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase, @typescript-eslint/no-duplicate-enum-values */
-  URL_OIDC_GET_ISSUES = '/openid4vc/issuer',
+  URL_OIDC_GET_ISSUERS = '/openid4vc/issuer',
   URL_OIDC_ISSUER_UPDATE = '/openid4vc/issuer/#',
   URL_OIDC_ISSUER_SESSIONS_CREATE = '/openid4vc/issuance-sessions/create-credential-offer',
   URL_OIDC_ISSUER_SESSIONS_GET = '/openid4vc/issuance-sessions/#',

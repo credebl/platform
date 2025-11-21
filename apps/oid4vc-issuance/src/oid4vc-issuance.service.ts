@@ -200,7 +200,7 @@ export class Oid4vcIssuanceService {
   async oidcIssuerGetById(id: string, orgId: string): Promise<IssuerResponse> {
     try {
       const getIssuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(id);
-      if (!getIssuerDetails && getIssuerDetails.publicIssuerId) {
+      if (!getIssuerDetails && !getIssuerDetails.publicIssuerId) {
         throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
       }
       const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
@@ -533,6 +533,9 @@ export class Oid4vcIssuanceService {
       }
 
       const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
       //TDOD: signerOption should be under credentials change this with x509 support
 
       //TDOD: signerOption should be under credentials change this with x509 support

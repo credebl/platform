@@ -46,7 +46,7 @@ import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler
 import { user } from '@prisma/client';
 import { IssuerCreationDto, IssuerUpdationDto } from './dtos/oid4vc-issuer.dto';
 import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oid4vc-issuer-template.dto';
-import { OidcIssueCredentialDto, sanitizeOidcIssueCredentialDto } from './dtos/oid4vc-credential-wh.dto';
+import { OidcIssueCredentialDto } from './dtos/oid4vc-credential-wh.dto';
 import { Oid4vcIssuanceService } from './oid4vc-issuance.service';
 import {
   CreateCredentialOfferD2ADto,
@@ -428,7 +428,7 @@ export class Oid4vcIssuanceController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    await this.oid4vcIssuanceService.deleteTemplate(user, orgId, templateId);
+    await this.oid4vcIssuanceService.deleteTemplate(user, orgId, templateId, issuerId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.oidcTemplate.success.delete
@@ -636,7 +636,7 @@ export class Oid4vcIssuanceController {
     if (id && 'default' === oidcIssueCredentialDto.contextCorrelationId) {
       oidcIssueCredentialDto.orgId = id;
     }
-    // const sanitized = sanitizeOidcIssueCredentialDto(oidcIssueCredentialDto);
+
     const getCredentialDetails = await this.oid4vcIssuanceService.oidcIssueCredentialWebhook(
       oidcIssueCredentialDto,
       id
@@ -653,9 +653,8 @@ export class Oid4vcIssuanceController {
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
-    console.log(`webhookUrl `, webhookUrl);
     if (webhookUrl) {
-      console.log(`Org webhook found `, JSON.stringify(webhookUrl), JSON.stringify(oidcIssueCredentialDto));
+      this.logger.log(`Posting response to the webhook url`);
       const plainIssuanceDto = JSON.parse(JSON.stringify(oidcIssueCredentialDto));
 
       await this.oid4vcIssuanceService._postWebhookResponse(webhookUrl, { data: plainIssuanceDto }).catch((error) => {

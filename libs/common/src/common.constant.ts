@@ -203,7 +203,8 @@ export enum CommonConstants {
   URL_REVOC_REG_BYID = '/revocation/registry/#',
 
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-  DEFAULT_CACHE_TTL = 60000,
+  // the below value for uploaded redis ttl is in milliseconds
+  DEFAULT_CACHE_TTL = 900000,
   DEFAULT_FIELD_UPLOAD_SIZE = 10485760,
 
   // SUBSCRIPTION TYPES

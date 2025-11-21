@@ -229,7 +229,12 @@ if [ $? -eq 0 ]; then
     container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
 
     # Extract the token from the logs using sed
-    token=$(echo "$container_logs" | awk '/API KEY:/ {print $NF}')
+    token=$(printf "%s" "$container_logs" \
+  | sed -En 's/.*[Kk][Ee][Yy]: *\([^ ]*\).*/\1/p')
+
+  # fallback
+  [ -z "$token" ] && \
+  token=$(printf "%s" "$container_logs" | awk '/[Aa][Pp][Ii][ -]*[Kk][Ee][Yy]/ {print $NF; exit}')
 
     # Print the extracted token
     echo "Token: $token"

@@ -1516,7 +1516,7 @@ export class IssuanceService {
     return schemaDetails;
   }
 
-  async delay(ms): Promise<unknown> {
+  async delay(ms: number): Promise<unknown> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 

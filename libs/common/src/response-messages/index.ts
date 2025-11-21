@@ -571,10 +571,7 @@ export const ResponseMessages = {
       createFailed: 'Failed to create OID4VP verifier.',
       updateFailed: 'Failed to update OID4VP verifier.',
       deleteFailed: 'Failed to delete OID4VP verifier.',
-      notFoundIssuerDisplay: 'Issuer display not found.',
-      notFoundIssuerDetails: 'Issuer details not found.',
-      verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.',
-      deleteTemplate: 'Error while deleting template.'
+      verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.'
     }
   },
   oid4vpSession: {
@@ -592,8 +589,6 @@ export const ResponseMessages = {
       createFailed: 'Failed to create OID4VP session verifier.',
       updateFailed: 'Failed to update OID4VP session verifier.',
       deleteFailed: 'Failed to delete OID4VP session verifier.',
-      notFoundIssuerDisplay: 'Issuer display not found.',
-      notFoundIssuerDetails: 'Issuer details not found.',
       verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.',
       deleteTemplate: 'Error while deleting template.'
     }
@@ -610,7 +605,7 @@ export const ResponseMessages = {
     error: {
       errorCreate: 'Error while creating x509 certificate.',
       errorUpdateStatus: 'Error while updating x509 certificate.',
-      errorActivation: 'Failed to activate x509 certificate..',
+      errorActivation: 'Failed to activate x509 certificate.',
       agentEndPointNotFound: 'Agent details not found',
       collision: 'Certificate date range collides with existing certificates for this organization',
       collisionForActivatingX5c:

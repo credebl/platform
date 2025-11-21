@@ -71,7 +71,7 @@ export class Oid4vcVerificationController {
     summary: 'Create OID4VP verifier',
     description: 'Creates a new OID4VP verifier for the specified organization.'
   })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Verifier created successfully.', type: ApiResponseDto })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Verifier created successfully.', type: ApiResponseDto })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -151,7 +151,7 @@ export class Oid4vcVerificationController {
       message: ResponseMessages.oid4vp.success.update,
       data: updateVerifierRes
     };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Get('/orgs/:orgId/oid4vp/verifier')
@@ -242,7 +242,7 @@ export class Oid4vcVerificationController {
     this.logger.debug(`[deleteVerifierDetails] Deleted verifier: ${verifierId}`);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.oid4vp.success.fetch,
+      message: ResponseMessages.oid4vp.success.delete,
       data: verifierDetails
     };
     return res.status(HttpStatus.OK).json(finalResponse);

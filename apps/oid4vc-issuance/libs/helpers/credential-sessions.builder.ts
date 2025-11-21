@@ -282,9 +282,22 @@ function buildSdJwtCredential(
   const templateSignerOption: SignerOption = signerOptions.find(
     (x) => templateRecord.signerOption.toLowerCase() === x.method
   );
+  if (!templateSignerOption) {
+    throw new UnprocessableEntityException(
+      `Signer option "${templateRecord.signerOption}" is not configured for template ${templateRecord.id}`
+    );
+  }
 
   if (templateRecord.signerOption === SignerMethodOption.X5C && credentialRequest.validityInfo) {
-    const certificateDetail = activeCertificateDetails.find((x) => x.certificateBase64 === templateSignerOption.x5c[0]);
+    if (!activeCertificateDetails?.length) {
+      throw new UnprocessableEntityException('Active x.509 certificate details are required for x5c signer templates.');
+    }
+    const certificateDetail = activeCertificateDetails.find(
+      (x) => x.certificateBase64 === templateSignerOption.x5c?.[0]
+    );
+    if (!certificateDetail) {
+      throw new UnprocessableEntityException('No active x.509 certificate matches the configured signer option.');
+    }
 
     const validationResult = validateCredentialDatesInCertificateWindow(
       credentialRequest.validityInfo,
@@ -349,7 +362,17 @@ function buildMdocCredential(
   ) {
     throw new UnprocessableEntityException(`${ResponseMessages.oidcIssuerSession.error.missingValidityInfo}`);
   }
+
+  if (!signerOptions?.length || !signerOptions[0].x5c?.length) {
+    throw new UnprocessableEntityException('An x5c signer configuration is required for mdoc credentials.');
+  }
+  if (!activeCertificateDetails?.length) {
+    throw new UnprocessableEntityException('Active x.509 certificate details are required for mdoc credentials.');
+  }
   const certificateDetail = activeCertificateDetails.find((x) => x.certificateBase64 === signerOptions[0].x5c[0]);
+  if (!certificateDetail) {
+    throw new UnprocessableEntityException('No active x.509 certificate matches the configured signer option.');
+  }
   const validationResult = validateCredentialDatesInCertificateWindow(
     credentialRequest.validityInfo,
     certificateDetail

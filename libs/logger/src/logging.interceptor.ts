@@ -41,7 +41,7 @@ export class LoggingInterceptor implements NestInterceptor {
     });
   }
 
-  private setupContextId(contextIdFromHeader: string | undefined): void {
+  private setupContextId(contextIdFromHeader: string): void {
     this.contextStorageService.set('x-correlation-id', contextIdFromHeader);
     this.contextStorageService.set('contextId', contextIdFromHeader);
     this.contextStorageService.setContextId(contextIdFromHeader);

@@ -283,7 +283,7 @@ export class Oid4vpVerificationService extends BaseService {
     }
   }
 
-  async getVerifierSession(orgId: string, query?: VerificationSessionQuery): Promise<object> {
+  async getVerifierSession(orgId: string, query: VerificationSessionQuery): Promise<object> {
     this.logger.debug(`[getVerifierSession] called for orgId=${orgId}, potentially with a query`);
     try {
       const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);

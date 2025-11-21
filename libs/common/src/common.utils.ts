@@ -94,7 +94,7 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
     [String(CommonConstants.SEND_QUESTION), String(CommonConstants.URL_SEND_QUESTION)],
     [String(CommonConstants.SEND_BASIC_MESSAGE), String(CommonConstants.URL_SEND_BASIC_MESSAGE)],
     [String(CommonConstants.OIDC_ISSUER_CREATE), String(CommonConstants.URL_OIDC_ISSUER_CREATE)],
-    [String(CommonConstants.OIDC_GET_ALL_ISSUERS), String(CommonConstants.URL_OIDC_GET_ISSUES)],
+    [String(CommonConstants.OIDC_GET_ALL_ISSUERS), String(CommonConstants.URL_OIDC_GET_ISSUERS)],
     [String(CommonConstants.OIDC_ISSUER_DELETE), String(CommonConstants.URL_OIDC_ISSUER_UPDATE)],
     [String(CommonConstants.OIDC_ISSUER_BY_ID), String(CommonConstants.URL_OIDC_ISSUER_UPDATE)],
     [String(CommonConstants.OIDC_ISSUER_TEMPLATE), String(CommonConstants.URL_OIDC_ISSUER_UPDATE)],

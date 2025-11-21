@@ -174,7 +174,7 @@ export function buildIssuerPayload(
   return {
     display,
     dpopSigningAlgValuesSupported: opts?.dpopAlgs ?? [...ISSUER_DPOP_ALGS_DEFAULT],
-    credentialConfigurationsSupported: credentialConfigurations.credentialConfigurationsSupported ?? [],
+    credentialConfigurationsSupported: credentialConfigurations.credentialConfigurationsSupported ?? {},
     batchCredentialIssuance: {
       batchSize: oidcIssuer?.batchCredentialIssuanceSize ?? batchCredentialIssuanceDefault
     }

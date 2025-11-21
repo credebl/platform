@@ -71,16 +71,3 @@ export function extractCredentialConfigurationIds(payload: Partial<OidcIssueCred
   const cfg = payload?.credentialOfferPayload?.credential_configuration_ids;
   return Array.isArray(cfg) ? cfg : [];
 }
-
-export function sanitizeOidcIssueCredentialDto(
-  payload: Partial<OidcIssueCredentialDto>
-): Partial<OidcIssueCredentialDto> {
-  const ids = extractCredentialConfigurationIds(payload);
-  return {
-    ...payload,
-    credentialOfferPayload: {
-      // eslint-disable-next-line camelcase
-      credential_configuration_ids: ids
-    }
-  };
-}

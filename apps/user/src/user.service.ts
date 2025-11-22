@@ -114,7 +114,7 @@ export class UserService {
 
   async sendVerificationMail(userEmailVerification: ISendVerificationEmail): Promise<user> {
     try {
-      const { email, brandLogoUrl, platformName, clientAlias } = userEmailVerification;
+      const { email, brandLogoUrl, platformName, clientAlias, isDefaultVerified } = userEmailVerification;
 
       if ('PROD' === process.env.PLATFORM_PROFILE_MODE) {
         // eslint-disable-next-line prefer-destructuring
@@ -151,27 +151,32 @@ export class UserService {
         if (!redirectUrl) {
           throw new NotFoundException(ResponseMessages.user.error.redirectUrlNotFound);
         }
-
-        sendVerificationMail = await this.sendEmailForVerification({
-          email,
-          verificationCode: verifyCode,
-          redirectUrl,
-          clientId: clientDetails.clientId,
-          brandLogoUrl,
-          platformName,
-          redirectTo: clientDetails.domain,
-          clientAlias
-        });
+        if (!isDefaultVerified) {
+          sendVerificationMail = await this.sendEmailForVerification({
+            email,
+            verificationCode: verifyCode,
+            redirectUrl,
+            clientId: clientDetails.clientId,
+            brandLogoUrl,
+            platformName,
+            redirectTo: clientDetails.domain,
+            clientAlias
+          });
+        }
       } catch (error) {
         throw new InternalServerErrorException(ResponseMessages.user.error.emailSend);
       }
 
-      if (sendVerificationMail) {
+      if (sendVerificationMail || isDefaultVerified) {
         const uniqueUsername = await this.createUsername(email, verifyCode);
         userEmailVerification.username = uniqueUsername;
         userEmailVerification.clientId = clientDetails.clientId;
         userEmailVerification.clientSecret = clientDetails.clientSecret;
         const resUser = await this.userRepository.createUser(userEmailVerification, verifyCode);
+        if (isDefaultVerified) {
+          this.logger.debug('In isDefaultVerified block');
+          await this.verifyEmail({ email, verificationCode: verifyCode });
+        }
         return resUser;
       }
     } catch (error) {

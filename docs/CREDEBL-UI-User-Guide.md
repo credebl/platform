@@ -66,7 +66,9 @@ This guide helps users navigate the CREDEBL User Interface (UI) efficiently.
 ## Additional Resources
 - [CREDEBL GitHub Repository](https://github.com/credebl/platform)
 - [Backend Setup & Environment Guide](README.md)
-- [Docker & NATS Documentation](https://docs.docker.com/)
+- [Docker Documentation](https://docs.docker.com/)
+- [NATS Documentation](https://docs.nats.io/)
+
 
 ---
 

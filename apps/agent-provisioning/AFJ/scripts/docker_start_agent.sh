@@ -230,11 +230,13 @@ if [ $? -eq 0 ]; then
 
     # Extract the token from the logs using sed
     token=$(printf "%s" "$container_logs" \
-  | sed -En 's/.*[Kk][Ee][Yy]: *\([^ ]*\).*/\1/p')
+  | sed -En 's/.*[Kk][Ee][Yy]: *([^ ]*).*/\1/p')
 
-  # fallback
-  [ -z "$token" ] && \
-  token=$(printf "%s" "$container_logs" | awk '/[Aa][Pp][Ii][ -]*[Kk][Ee][Yy]/ {print $NF; exit}')
+    # Fallback (macOS BSD sed often fails)
+    if [ -z "$token" ]; then
+      token=$(printf "%s" "$container_logs" \
+        | awk '/[Aa][Pp][Ii][ -]*[Kk][Ee][Yy]/ {print $NF; exit}')
+    fi
 
     # Print the extracted token
     echo "Token: $token"

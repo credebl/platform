@@ -3,30 +3,42 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 // eslint-disable-next-line camelcase
-const {createInterface} = require('readline');
+const { createInterface } = require('readline');
 
-const { PrismaClient } = require('@prisma/client'); 
-const { createClient } = require('@supabase/supabase-js'); 
+const { PrismaClient } = require('@prisma/client');
+const { createClient } = require('@supabase/supabase-js');
 
-const prisma = new PrismaClient();
-
-const clientInstance = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY,
+const prisma = new PrismaClient({
+  // Added prisma logging for better debugging
+  log: [
     {
-      auth: {
-        persistSession: false //or true
-      }
+      emit: 'stdout',
+      level: 'error'
+    },
+    {
+      emit: 'stdout',
+      level: 'info'
+    },
+    {
+      emit: 'stdout',
+      level: 'warn'
     }
-);
+  ]
+});
+const clientInstance = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+  auth: {
+    persistSession: false //or true
+  }
+});
 
 const readline = createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
-const readLineAsync = msg => new Promise(resolve => {
-    readline.question(msg, userRes => {
+const readLineAsync = (msg) =>
+  new Promise((resolve) => {
+    readline.question(msg, (userRes) => {
       resolve(userRes);
     });
   });
@@ -45,7 +57,7 @@ const getRole = async (roleName) => {
   }
 };
 
-const createUserOrgRole = async(userId, roleId) => {
+const createUserOrgRole = async (userId, roleId) => {
   try {
     const data = {
       orgRole: { connect: { id: roleId } },
@@ -78,26 +90,25 @@ const createUser = async () => {
 
     const user = await prisma.user.create({
       data: {
-        'firstName': firstName.toString(),
-        'lastName': lastName.toString(),
-        'email': email.toString(),
-        'username': email.toString(),
-        'password': '',
-        'verificationCode': '',
-        'isEmailVerified': true,
-        'supabaseUserId': supaId
+        firstName: firstName.toString(),
+        lastName: lastName.toString(),
+        email: email.toString(),
+        username: email.toString(),
+        password: '',
+        verificationCode: '',
+        isEmailVerified: true,
+        supabaseUserId: supaId
       }
     });
 
     const platformRoleData = await getRole('platform_admin');
-    
-    await createUserOrgRole(user.id, platformRoleData['id']);
-    
-    console.log('Platform admin user created');
 
-} catch (e) {
-  console.error('An error occurred in createUser:', e);
-}
+    await createUserOrgRole(user.id, platformRoleData['id']);
+
+    console.log('Platform admin user created');
+  } catch (e) {
+    console.error('An error occurred in createUser:', e);
+  }
 };
 
 async function main() {

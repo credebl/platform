@@ -29,16 +29,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     await this.$connect();
     if (this.enable('error')) {
       (this as any).$on('error', (e: Prisma.LogEvent) => {
-        this.logger.debug(JSON.stringify(e.message, null, 2), '(Prisma Error) Message:');
-        this.logger.debug(e.target, '(Prisma Error) Target:');
-        this.logger.debug(`${e.timestamp}ms`, '(Prisma Error) Timestamp:');
+        this.logger.error(JSON.stringify(e.message, null, 2), '', '(Prisma Error) Message:');
+        this.logger.error(e.target, '', '(Prisma Error) Target:');
+        this.logger.error(`${e.timestamp}ms`, '', '(Prisma Error) Timestamp:');
       });
     }
     if (this.enable('warn')) {
       (this as any).$on('warn', (e: Prisma.LogEvent) => {
-        this.logger.debug(JSON.stringify(e.message, null, 2), '(Prisma Warn) Message:');
-        this.logger.debug(e.target, '(Prisma Warn) Target:');
-        this.logger.debug(`${e.timestamp}ms`, '(Prisma Warn) Timestamp:');
+        this.logger.warn(JSON.stringify(e.message, null, 2), '(Prisma Warn) Message:');
+        this.logger.warn(e.target, '(Prisma Warn) Target:');
+        this.logger.warn(`${e.timestamp}ms`, '(Prisma Warn) Timestamp:');
       });
     }
     if (this.enable('query')) {

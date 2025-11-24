@@ -8,7 +8,23 @@ import { exec } from 'child_process';
 import * as util from 'util';
 const execPromise = util.promisify(exec);
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  // Added prisma logging for better debugging
+  log: [
+    {
+      emit: 'stdout',
+      level: 'error'
+    },
+    {
+      emit: 'stdout',
+      level: 'info'
+    },
+    {
+      emit: 'stdout',
+      level: 'warn'
+    }
+  ]
+});
 const logger = new Logger('Init seed DB');
 let platformUserId = '';
 

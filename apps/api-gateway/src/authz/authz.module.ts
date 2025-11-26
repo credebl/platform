@@ -22,7 +22,9 @@ import { UserRepository } from 'apps/user/repositories/user.repository';
 import { UserService } from '../user/user.service';
 import { VerificationService } from '../verification/verification.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
-
+import { OrgRolesGuard } from './guards/org-roles.guard';
+import { OrganizationModule } from '../organization/organization.module';
+import { RolesGuard } from './roles.guard';
 @Module({
   imports: [
     HttpModule,
@@ -39,6 +41,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       CommonModule
     ]),
     UserModule,
+    OrganizationModule,
     PrismaServiceModule
   ],
   providers: [
@@ -55,9 +58,11 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     SupabaseService,
     OrganizationService,
     UserRepository,
-    Logger
+    Logger,
+    OrgRolesGuard,
+    RolesGuard
   ],
-  exports: [PassportModule, AuthzService],
+  exports: [PassportModule, AuthzService, OrgRolesGuard, RolesGuard],
   controllers: [AuthzController]
 })
 export class AuthzModule {}

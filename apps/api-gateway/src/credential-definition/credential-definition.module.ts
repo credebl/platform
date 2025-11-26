@@ -6,9 +6,11 @@ import { CredentialDefinitionService } from './credential-definition.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { OrganizationModule } from '../organization/organization.module';
 
 @Module({
   imports:[
+    OrganizationModule,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',

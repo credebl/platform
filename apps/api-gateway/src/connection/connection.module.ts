@@ -5,10 +5,10 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
-
+import { OrganizationModule } from '../organization/organization.module';
 @Module({
     imports: [
-
+        OrganizationModule,
         ClientsModule.register([
             {
                 name: 'NATS_CLIENT',

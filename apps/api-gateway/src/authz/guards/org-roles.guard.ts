@@ -6,10 +6,14 @@ import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Reflector } from '@nestjs/core';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { validate as isValidUUID } from 'uuid';
+import { OrganizationService } from '../../organization/organization.service';
+// import { Inject, forwardRef } from '@nestjs/common';
 @Injectable()
 export class OrgRolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) { }            // eslint-disable-next-line array-callback-return
-
+  constructor(
+    private reflector: Reflector,
+    private organizationService: OrganizationService
+  ) {} // eslint-disable-next-line array-callback-return
 
   private logger = new Logger('Org Role Guard');
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -17,6 +21,7 @@ export class OrgRolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass()
     ]);
+    console.log('requiredRoles', requiredRoles);
     const requiredRolesNames = Object.values(requiredRoles) as string[];
 
     if (!requiredRolesNames) {
@@ -25,7 +30,7 @@ export class OrgRolesGuard implements CanActivate {
 
     const req = context.switchToHttp().getRequest();
     const { user } = req;
-  
+
     if (user?.userRole && user?.userRole.includes('holder')) {
       throw new ForbiddenException('This role is a holder.');
     }
@@ -36,22 +41,27 @@ export class OrgRolesGuard implements CanActivate {
 
     const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
 
-    if (orgId) {  
-
-    if (!isValidUUID(orgId)) {
-      throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-    }    
+    if (orgId) {
+      if (!isValidUUID(orgId)) {
+        throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+      }
+      // fetch orhanization roles from database and match with required roles
+      // remove token base role dependency here
+      const organizationDetails = await this.organizationService.getOrganization(orgId, user.id);
+      this.logger.debug(`Organization Details: ${JSON.stringify(organizationDetails)}`);
       
+      if (user.hasOwnProperty('resource_access') && user.resource_access[orgId]) {
+        const orgRoles: string[] = user.resource_access[orgId].roles;
+        const roleAccess = requiredRoles.some((role) => orgRoles.includes(role));
 
-        if (user.hasOwnProperty('resource_access') && user.resource_access[orgId]) {
-          const orgRoles: string[] = user.resource_access[orgId].roles;
-          const roleAccess = requiredRoles.some((role) => orgRoles.includes(role));
-    
-          if (!roleAccess) {
-            throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
-          }
-          return roleAccess;
+        if (!roleAccess) {
+          throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.forbidden
+          });
         }
+        return roleAccess;
+      }
 
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
@@ -59,9 +69,12 @@ export class OrgRolesGuard implements CanActivate {
         }
         return orgDetails.orgId.toString().trim() === orgId.toString().trim();
       });
-      
+
       if (!specificOrg) {
-        throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+        throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.forbidden
+        });
       }
 
       user.selectedOrg = specificOrg;
@@ -71,9 +84,7 @@ export class OrgRolesGuard implements CanActivate {
           return orgRoleItem.orgRole.name;
         }
       });
-
-    } else if (requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {      
-
+    } else if (requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {
       // eslint-disable-next-line array-callback-return
       const isPlatformAdmin = user.userOrgRoles.find((orgDetails) => {
         if (orgDetails.orgRole.name === OrgRoles.PLATFORM_ADMIN) {
@@ -86,7 +97,6 @@ export class OrgRolesGuard implements CanActivate {
       }
 
       return false;
-
     } else {
       throw new BadRequestException('Please provide valid orgId');
     }
@@ -94,7 +104,10 @@ export class OrgRolesGuard implements CanActivate {
     // Sending user friendly message if a user attempts to access an API that is inaccessible to their role
     const roleAccess = requiredRoles.some((role) => user.selectedOrg?.orgRoles.includes(role));
     if (!roleAccess) {
-      throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+      throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.forbidden
+      });
     }
 
     return roleAccess;

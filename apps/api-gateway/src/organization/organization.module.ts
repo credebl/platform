@@ -4,6 +4,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
+import { forwardRef } from '@nestjs/common';
+import { AuthzModule } from '../authz/authz.module';
 import { OrganizationController } from './organization.controller';
 import { OrganizationService } from './organization.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
@@ -21,9 +23,11 @@ import { NATSClient } from '@credebl/common/NATSClient';
         options: getNatsOptions(CommonConstants.ORGANIZATION_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
       },
       CommonModule
-    ])
+    ]),
+    forwardRef(() => AuthzModule)
   ],
   controllers: [OrganizationController],
-  providers: [OrganizationService, CommonService, AwsService, NATSClient]
+  providers: [OrganizationService, CommonService, AwsService, NATSClient],
+  exports: [OrganizationService]
 })
 export class OrganizationModule {}

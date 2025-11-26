@@ -7,9 +7,13 @@ import { VerificationService } from './verification.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { OrganizationModule } from '../organization/organization.module';
+import { AuthzModule } from '../authz/authz.module';
 
 @Module({
   imports: [
+    OrganizationModule,
+    AuthzModule,
     ConfigModule.forRoot(),
     ClientsModule.register([
       {

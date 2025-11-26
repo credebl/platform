@@ -473,12 +473,16 @@ export class UserService {
       }
       const expiresAt = new Date(decodedToken.exp * 1000);
 
+      // Encrypt the token before storing in database
+      const encryptedToken = await this.commonService.dataEncryption(tokenDetails?.access_token);
+      const encryptedRefreshToken = await this.commonService.dataEncryption(tokenDetails?.refresh_token);
+
       const sessionData = {
         id: decodedToken.sid,
-        sessionToken: tokenDetails?.access_token,
+        sessionToken: encryptedToken,
         userId: userData?.id,
         expires: tokenDetails?.expires_in,
-        refreshToken: tokenDetails?.refresh_token,
+        refreshToken: encryptedRefreshToken,
         sessionType: SessionType.USER_SESSION,
         expiresAt,
         clientInfo
@@ -505,6 +509,8 @@ export class UserService {
 
       const finalResponse = {
         ...tokenDetails,
+        accessToken: addSessionDetails.sessionToken,
+        refreshToken: addSessionDetails.refreshToken,
         sessionId: addSessionDetails.id
       };
 
@@ -569,10 +575,12 @@ export class UserService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const decodedToken: any = jwt.decode(tokenResponse?.refresh_token);
       const expiresAt = new Date(decodedToken.exp * 1000);
+      const encryptedToken = await this.commonService.dataEncryption(tokenResponse.access_token);
+      const encryptedRefreshToken = await this.commonService.dataEncryption(tokenResponse.refresh_token);
       const sessionData = {
-        sessionToken: tokenResponse.access_token,
+        sessionToken: encryptedToken,
         expires: tokenResponse.expires_in,
-        refreshToken: tokenResponse.refresh_token,
+        refreshToken: encryptedRefreshToken,
         expiresAt
       };
       const addSessionDetails = await this.userRepository.updateSessionToken(tokenResponse.session_state, sessionData);

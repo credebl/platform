@@ -733,8 +733,10 @@ export class OrganizationService {
     const decodedToken: any = jwt.decode(authenticationResult?.access_token);
     const expiresAt = new Date(decodedToken.exp * 1000);
     // Session payload
+    // encrypt the token before storing in database
+    const encryptedToken = await this.commonService.dataEncryption(authenticationResult?.access_token);
     const sessionData = {
-      sessionToken: authenticationResult?.access_token,
+      sessionToken: encryptedToken,
       userId: orgRoleDetails['user'].id,
       expires: authenticationResult?.expires_in,
       sessionType: SessionType.ORG_SESSION,

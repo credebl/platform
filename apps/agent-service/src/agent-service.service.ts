@@ -128,7 +128,7 @@ export class AgentServiceService {
     let agentProcess: ICreateOrgAgent;
     try {
       await this.processWalletProvision(agentSpinupDto, user);
-      return { agentSpinupStatus: AgentSpinUpStatus.PROCESSED };
+      return { agentSpinupStatus: AgentSpinUpStatus.COMPLETED };
     } catch (error) {
       this.handleErrorOnWalletProvision(agentSpinupDto, error, agentProcess);
       throw new RpcException(error.response ?? error);
@@ -145,6 +145,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
+          // TODO: Do we want to get first element from ledgerName
           agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
         )
       ]);
@@ -967,6 +968,9 @@ export class AgentServiceService {
 
       if (isPrimaryDid) {
         await this.setPrimaryDidAndLedger(orgId, storeDidDetails, createDidPayload.network, createDidPayload.method);
+      }
+      if (agentDetails.agentSpinUpStatus === AgentSpinUpStatus.PROCESSED) {
+        await this.agentServiceRepository.updateAgentSpinupStatus(orgId);
       }
 
       return storeDidDetails;

@@ -59,6 +59,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
     await this.pg.connect();
 
+    // Listen to the notification channel
+    await this.pg.query('LISTEN ledger_null');
+
     this.pg.on('notification', async (msg) => {
       if ('ledger_null' === msg.channel) {
         await this.handleLedgerAlert();

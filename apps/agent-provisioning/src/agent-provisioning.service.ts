@@ -1,9 +1,11 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
-import { IWalletProvision } from './interface/agent-provisioning.interfaces';
 import * as dotenv from 'dotenv';
-import { AgentType } from '@credebl/enum/enum';
 import * as fs from 'fs';
+
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+
+import { AgentType } from '@credebl/enum/enum';
+import { IWalletProvision } from './interface/agent-provisioning.interfaces';
+import { RpcException } from '@nestjs/microservices';
 import { exec } from 'child_process';
 dotenv.config();
 
@@ -16,7 +18,7 @@ export class AgentProvisioningService {
    * @param payload
    * @returns Get DID and verkey
    */
-  async walletProvision(payload: IWalletProvision): Promise<object> {
+  async  walletProvision(payload: IWalletProvision): Promise<object> {
     try {
       const {
         containerName,

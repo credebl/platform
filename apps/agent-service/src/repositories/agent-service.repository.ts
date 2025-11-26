@@ -1,4 +1,4 @@
-import { AgentType, PrismaTables } from '@credebl/enum/enum';
+import { AgentSpinUpStatus, AgentType, PrismaTables } from '@credebl/enum/enum';
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import {
   ICreateOrgAgent,
@@ -166,7 +166,7 @@ export class AgentServiceRepository {
     id: string;
   }> {
     try {
-      const { id, orgId, userId, ledgerId, didDoc, ...commonFields } = storeOrgAgentDetails;
+      const { id, orgId, did, userId, ledgerId, didDoc, ...commonFields } = storeOrgAgentDetails;
       const firstLedgerId = Array.isArray(ledgerId) ? ledgerId[0] : null;
       const data = {
         ...commonFields,
@@ -174,8 +174,8 @@ export class AgentServiceRepository {
         ledgerId: firstLedgerId,
         createdBy: userId,
         lastChangedBy: userId,
-        didDocument: didDoc
-        // orgDid: ''
+        didDocument: didDoc,
+        orgDid: did
       };
 
       // eslint-disable-next-line camelcase
@@ -253,6 +253,29 @@ export class AgentServiceRepository {
         data: {
           orgDid,
           didDocument
+        }
+      });
+    } catch (error) {
+      this.logger.error(`[setprimaryDid] - Update DID details: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+
+  /**
+   * Set primary DID
+   * @param did
+   * @returns did details
+   */
+  // eslint-disable-next-line camelcase
+  async updateAgentSpinupStatus(orgId: string): Promise<org_agents> {
+    try {
+      return await this.prisma.org_agents.update({
+        where: {
+          orgId
+        },
+        data: {
+          agentSpinUpStatus: AgentSpinUpStatus.COMPLETED
         }
       });
     } catch (error) {

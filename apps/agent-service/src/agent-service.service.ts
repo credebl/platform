@@ -834,9 +834,6 @@ export class AgentServiceService {
       // Get agent type details
       const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
       const storeOrgAgentData: IStoreOrgAgentDetails = {
-        // did: tenantDetails.DIDCreationOption.did,
-        // isDidPublic: true,
-        // didDoc: tenantDetails.DIDCreationOption.didDocument || tenantDetails.DIDCreationOption.didDoc, //changed the didDoc into didDocument
         agentSpinUpStatus: AgentSpinUpStatus.PROCESSED,
         agentsTypeId: agentTypeId,
         orgId: payload.orgId,
@@ -844,7 +841,6 @@ export class AgentServiceService {
         orgAgentTypeId,
         tenantId: tenantDetails.walletResponseDetails['id'],
         walletName: payload.label,
-        // ledgerId: ledgerIdData.map((item) => item.id),
         id: agentProcess?.id,
         apiKey: await this.commonService.dataEncryption(tenantDetails.walletResponseDetails['token'])
       };
@@ -855,30 +851,10 @@ export class AgentServiceService {
 
       const orgAgentDetails = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
 
-      // const createdDidDetails = {
-      //   orgId: payload.orgId,
-      //   did: tenantDetails.DIDCreationOption.did,
-      //   didDocument: tenantDetails.DIDCreationOption.didDocument || tenantDetails.DIDCreationOption.didDoc,
-      //   isPrimaryDid: true,
-      //   orgAgentId: orgAgentDetails.id,
-      //   userId: user.id
-      // };
-
-      // await this.agentServiceRepository.storeDidDetails(createdDidDetails);
-
-      // this.notifyClientSocket('invitation-url-creation-started', payload.clientSocketId);
-
-      // Create the legacy connection invitation
-      // await this._createConnectionInvitation(payload.orgId, user, getOrganization.name);
-
-      // this.notifyClientSocket('invitation-url-creation-success', payload.clientSocketId);
       return orgAgentDetails;
     } catch (error) {
       this.handleError(error, payload.clientSocketId);
 
-      // if (agentProcess && agentProcess?.id) {
-      //   this.agentServiceRepository.removeOrgAgent(agentProcess?.id);
-      // }
       throw error;
     }
   }
@@ -1126,19 +1102,8 @@ export class AgentServiceService {
     if (!walletResponseDetails && !walletResponseDetails.id && !walletResponseDetails.token) {
       throw new InternalServerErrorException('Error while creating the wallet');
     }
-    // const didCreateOption = {
-    //   didPayload: WalletSetupPayload,
-    //   agentEndpoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
-    //   apiKey: walletResponseDetails.token
-    // };
-    // const DIDCreationOption = await this._createDID(didCreateOption);
-    // if (!DIDCreationOption) {
-    //   throw new InternalServerErrorException('Error while creating the wallet');
-    // }
-
     return {
       walletResponseDetails
-      // DIDCreationOption
     };
   }
   //

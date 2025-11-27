@@ -6,7 +6,6 @@ import {
   IOrgAgent,
   IOrgAgentsResponse,
   IOrgLedgers,
-  IStoreAgent,
   IStoreDidDetails,
   IStoreOrgAgentDetails,
   LedgerNameSpace,
@@ -261,11 +260,9 @@ export class AgentServiceRepository {
     }
   }
 
-
   /**
-   * Set primary DID
-   * @param did
-   * @returns did details
+   * Update agent spinup status
+   * @param orgId
    */
   // eslint-disable-next-line camelcase
   async updateAgentSpinupStatus(orgId: string): Promise<org_agents> {
@@ -279,7 +276,7 @@ export class AgentServiceRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`[setprimaryDid] - Update DID details: ${JSON.stringify(error)}`);
+      this.logger.error(`[updateAgentSpinupStatus] - Update agent spinup status: ${JSON.stringify(error)}`);
       throw error;
     }
   }

@@ -7,6 +7,7 @@ import { AgentType } from '@credebl/enum/enum';
 import { IWalletProvision } from './interface/agent-provisioning.interfaces';
 import { RpcException } from '@nestjs/microservices';
 import { exec } from 'child_process';
+
 dotenv.config();
 
 @Injectable()
@@ -18,7 +19,7 @@ export class AgentProvisioningService {
    * @param payload
    * @returns Get DID and verkey
    */
-  async  walletProvision(payload: IWalletProvision): Promise<object> {
+  async walletProvision(payload: IWalletProvision): Promise<object> {
     try {
       const {
         containerName,

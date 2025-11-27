@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /* eslint-disable quotes */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable yoda */
@@ -745,13 +744,11 @@ export class AgentServiceService {
    * @returns Get agent status
    */
   async createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<IStoreOrgAgentDetails> {
-    console.log('🚀 ~ AgentServiceService ~ createTenant ~ payload:777777777777777777777777', payload);
     try {
       const agentStatusResponse = {
         agentSpinupStatus: AgentSpinUpStatus.PROCESSED
       };
       const getOrgAgent = await this.agentServiceRepository.getAgentDetails(payload.orgId);
-      console.log('🚀 ~ AgentServiceService ~ createTenant ~ getOrgAgent:888888888888', getOrgAgent);
 
       // if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
       //   this.logger.error(`Your wallet is already been created.`);
@@ -784,7 +781,6 @@ export class AgentServiceService {
    * @returns Get agent status
    */
   async _createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<IStoreOrgAgentDetails> {
-    console.log('🚀 ~ AgentServiceService ~ _createTenant ~ payload:9999999999999', payload);
     let agentProcess;
     let ledgerIdData = [];
     try {
@@ -853,14 +849,12 @@ export class AgentServiceService {
         id: agentProcess?.id,
         apiKey: await this.commonService.dataEncryption(tenantDetails.walletResponseDetails['token'])
       };
-      console.log('🚀 ~ AgentServiceService ~ _createTenant ~ storeOrgAgentData:111111111111111111', storeOrgAgentData);
       // Get organization data
       const getOrganization = await this.agentServiceRepository.getOrgDetails(payload.orgId);
 
       this.notifyClientSocket('agent-spinup-process-completed', payload.clientSocketId);
 
       const orgAgentDetails = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
-      console.log('🚀 ~ AgentServiceService ~ _createTenant ~ orgAgentDetails:222222222222222222222', orgAgentDetails);
 
       // const createdDidDetails = {
       //   orgId: payload.orgId,

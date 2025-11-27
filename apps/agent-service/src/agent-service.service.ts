@@ -811,8 +811,7 @@ export class AgentServiceService {
       const platformAdminSpinnedUp = await this.getPlatformAdminAndNotify(payload.clientSocketId);
 
       payload.endpoint = platformAdminSpinnedUp.org_agents[0].agentEndPoint;
-      // Create tenant wallet and DID
-      // wallet create step
+      // Create tenant wallet
       const tenantDetails = await this.createTenantAndNotify(payload, platformAdminSpinnedUp);
 
       if (!tenantDetails?.walletResponseDetails?.id) {

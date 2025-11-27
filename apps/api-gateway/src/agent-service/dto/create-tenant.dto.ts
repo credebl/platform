@@ -15,7 +15,7 @@ export class CreateTenantDto {
   @ApiProperty({ example: 'ojIckSD2jqNzOqIrAGzL' })
   @IsOptional()
   @ApiPropertyOptional()
-  @IsString({ message: 'did must be in string format.' })
+  @IsString({ message: 'clientSocketId must be in string format.' })
   clientSocketId?: string;
 
   @ApiProperty({ example: 'XzFjo1RTZ2h9UVFCnPUyaQ' })

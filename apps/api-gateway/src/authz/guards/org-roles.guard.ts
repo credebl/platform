@@ -17,20 +17,20 @@ export class OrgRolesGuard implements CanActivate {
 
   private logger = new Logger('Org Role Guard');
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    this.logger.debug('OrgRolesGuard#canActivate called');
     const requiredRoles = this.reflector.getAllAndOverride<OrgRoles[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass()
     ]);
-    console.log('requiredRoles', requiredRoles);
     const requiredRolesNames = Object.values(requiredRoles) as string[];
-
+    this.logger.debug(`Required Roles: ${JSON.stringify(requiredRolesNames)}`);
     if (!requiredRolesNames) {
       return true;
     }
 
     const req = context.switchToHttp().getRequest();
     const { user } = req;
-
+    this.logger.debug(`User Details in OrgRolesGuard: ${JSON.stringify(user)}`);
     if (user?.userRole && user?.userRole.includes('holder')) {
       throw new ForbiddenException('This role is a holder.');
     }
@@ -45,14 +45,14 @@ export class OrgRolesGuard implements CanActivate {
       if (!isValidUUID(orgId)) {
         throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
       }
-      // fetch orhanization roles from database and match with required roles
+      // fetch organization roles from database and match with required roles
       // remove token base role dependency here
-      const organizationDetails = await this.organizationService.getOrganization(orgId, user.id);
+      const organizationDetails = await this.organizationService.getUserOrgRoles(user.id, orgId);
       this.logger.debug(`Organization Details: ${JSON.stringify(organizationDetails)}`);
-      
-      if (user.hasOwnProperty('resource_access') && user.resource_access[orgId]) {
-        const orgRoles: string[] = user.resource_access[orgId].roles;
-        const roleAccess = requiredRoles.some((role) => orgRoles.includes(role));
+
+      if (organizationDetails && organizationDetails.orgRole) {
+        const { orgRole } = organizationDetails;
+        const roleAccess = requiredRoles.some((role) => orgRole.name === role);
 
         if (!roleAccess) {
           throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, {

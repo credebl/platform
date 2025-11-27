@@ -1,6 +1,6 @@
 /* eslint-disable prefer-destructuring */
 // eslint-disable-next-line camelcase
-import { RecordType, org_invitations, organisation, user } from '@prisma/client';
+import { RecordType, org_invitations, organisation, user, user_org_roles } from '@prisma/client';
 import {
   Injectable,
   Logger,
@@ -37,7 +37,7 @@ import {
   IDidList,
   IPrimaryDidDetails,
   IEcosystemOrgStatus,
-  IOrgDetails
+  IOrgDetails,
 } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
@@ -2098,6 +2098,16 @@ export class OrganizationService {
     } catch (error) {
       this.logger.error(`in generating issuer api token: ${JSON.stringify(error)}`);
       throw new RpcException(error.response || error);
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  getUserOrgRoles(userId: string, orgId: string): Promise<user_org_roles> {
+    try {
+      return this.organizationRepository.getUserOrgRoleDetails(userId, orgId);
+    } catch (error) {
+      this.logger.error(`in getting user organization roles : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

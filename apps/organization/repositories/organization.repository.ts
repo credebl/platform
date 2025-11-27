@@ -1095,6 +1095,21 @@ export class OrganizationRepository {
     }
   }
 
+  async getUserOrgRoleDetails(userId: string, orgId: string): Promise<user_org_roles> {
+    try {
+      const userOrgRoleDetails = await this.prisma.user_org_roles.findFirst({where:{userId, orgId},
+        include: {
+          orgRole: true
+        }
+      });
+
+      return userOrgRoleDetails;
+    } catch (error) {
+      this.logger.error(`[getUserOrgRoleDetails] - get user org role details: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async getAgentTypeByAgentTypeId(orgAgentTypeId: string): Promise<string> {
     try {
       const { agent } = await this.prisma.org_agents_type.findFirst({

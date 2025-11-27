@@ -20,10 +20,14 @@ export class UtilitiesService extends BaseService {
   }
 
   async onModuleInit(): Promise<void> {
-    await this.pg.connect();
-
-    // Listen to the notification channel
-    await this.pg.query('LISTEN ledger_null');
+    try {
+      await this.pg.connect();
+      await this.pg.query('LISTEN ledger_null');
+      this.logger.log('PostgreSQL notification listener connected');
+    } catch (err) {
+      this.logger.error(`Failed to connect PostgreSQL listener: ${err?.message}`);
+      throw err;
+    }
 
     // NATS is not available → skip silently
     this.pg.on('notification', async (msg) => {

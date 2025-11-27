@@ -59,6 +59,17 @@ export class UtilitiesService extends BaseService {
               .map((e) => e.trim())
               .filter((e) => 0 < e.length) || [];
 
+          if (0 === alertEmails.length) {
+            this.logger.warn('DB_ALERT_EMAILS is empty, skipping alert');
+            return;
+          }
+
+          // TODO: Check if the to email is actually this or we need to take it from DB
+          if (!process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL) {
+            this.logger.warn('PUBLIC_PLATFORM_SUPPORT_EMAIL not configured, skipping alert');
+            return;
+          }
+
           const emailDto = {
             emailFrom: process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL,
             emailTo: alertEmails,

@@ -49,6 +49,12 @@ export class UtilitiesService extends BaseService {
           const totalRes = await this.pg.query('SELECT COUNT(*) FROM org_agents');
           const total = Number(totalRes.rows[0].count);
 
+          // If the org_agents table has no records, total will be 0, causing a division by zero resulting in Infinity or NaN
+          if (0 === total) {
+            this.logger.debug('No org_agents records found, skipping alert check');
+            return;
+          }
+
           // Step 2: Count NULL ledgerId records
           const nullRes = await this.pg.query('SELECT COUNT(*) FROM org_agents WHERE "ledgerId" IS NULL');
           const nullCount = Number(nullRes.rows[0].count);

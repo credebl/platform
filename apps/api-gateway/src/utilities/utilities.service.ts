@@ -37,44 +37,44 @@ export class UtilitiesService extends BaseService {
       }
 
       if ('ledger_null' === msg.channel) {
-        // Step 1: Count total records
-        const totalRes = await this.pg.query('SELECT COUNT(*) FROM org_agents');
-        const total = Number(totalRes.rows[0].count);
-
-        // Step 2: Count NULL ledgerId records
-        const nullRes = await this.pg.query('SELECT COUNT(*) FROM org_agents WHERE "ledgerId" IS NULL');
-        const nullCount = Number(nullRes.rows[0].count);
-
-        // Step 3: Calculate %
-        const percent = (nullCount / total) * 100;
-
-        // Condition: > 30%
-        if (30 >= percent) {
-          return;
-        }
-
-        const alertEmails =
-          process.env.DB_ALERT_EMAILS?.split(',')
-            .map((e) => e.trim())
-            .filter((e) => 0 < e.length) || [];
-
-        const emailDto = {
-          emailFrom: process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL,
-          emailTo: alertEmails,
-          emailSubject: '[ALERT] More than 30% org_agents ledgerId is NULL',
-          emailText: `ALERT: ${percent.toFixed(2)}% of org_agents records currently have ledgerId = NULL.`,
-          emailHtml: `<p><strong>ALERT:</strong> ${percent.toFixed(
-            2
-          )}% of <code>org_agents</code> have <code>ledgerId</code> = NULL.</p>`
-        };
-
         try {
+          // Step 1: Count total records
+          const totalRes = await this.pg.query('SELECT COUNT(*) FROM org_agents');
+          const total = Number(totalRes.rows[0].count);
+
+          // Step 2: Count NULL ledgerId records
+          const nullRes = await this.pg.query('SELECT COUNT(*) FROM org_agents WHERE "ledgerId" IS NULL');
+          const nullCount = Number(nullRes.rows[0].count);
+
+          // Step 3: Calculate %
+          const percent = (nullCount / total) * 100;
+
+          // Condition: > 30%
+          if (30 >= percent) {
+            return;
+          }
+
+          const alertEmails =
+            process.env.DB_ALERT_EMAILS?.split(',')
+              .map((e) => e.trim())
+              .filter((e) => 0 < e.length) || [];
+
+          const emailDto = {
+            emailFrom: process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL,
+            emailTo: alertEmails,
+            emailSubject: '[ALERT] More than 30% org_agents ledgerId is NULL',
+            emailText: `ALERT: ${percent.toFixed(2)}% of org_agents records currently have ledgerId = NULL.`,
+            emailHtml: `<p><strong>ALERT:</strong> ${percent.toFixed(
+              2
+            )}% of <code>org_agents</code> have <code>ledgerId</code> = NULL.</p>`
+          };
+
           const result = await this.natsClient.sendNatsMessage(this.serviceProxy, 'alert-db-ledgerId-null', {
             emailDto
           });
           this.logger.debug('Received result', JSON.stringify(result, null, 2));
         } catch (err) {
-          this.logger.error(err?.message ?? 'Some error occurred while sending prisma ledgerId alert email');
+          this.logger.error(err?.message ?? 'Error in ledgerId alert handler');
         }
       }
     });

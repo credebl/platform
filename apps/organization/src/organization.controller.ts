@@ -20,7 +20,8 @@ import {
   IDeleteOrganization,
   IOrgActivityCount
 } from '@credebl/common/interfaces/organization.interface';
-import { organisation, user } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import { organisation, user, user_org_roles } from '@prisma/client';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
@@ -307,5 +308,11 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'generate-client-api-token' })
   async generateClientApiToken(payload: ClientTokenDto): Promise<{ token: string }> {
     return this.organizationService.generateClientApiToken(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-user-organization-roles' })
+  // eslint-disable-next-line camelcase
+  async getUserOrgRoles(payload: { userId: string; orgId: string }): Promise<user_org_roles> {
+    return this.organizationService.getUserOrgRoles(payload.userId, payload.orgId);
   }
 }

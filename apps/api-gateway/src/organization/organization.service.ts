@@ -5,6 +5,7 @@ import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
+// eslint-disable-next-line camelcase
 import { organisation, user } from '@prisma/client';
 import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
@@ -25,6 +26,7 @@ import { PrimaryDid } from './dtos/set-primary-did.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 import { ClientTokenDto } from './dtos/client-token.dto';
+import { IUserOrganizationRole } from 'libs/org-roles/interfaces/org-roles.interface';
 
 @Injectable()
 export class OrganizationService extends BaseService {
@@ -241,5 +243,11 @@ export class OrganizationService extends BaseService {
   }
   async generateClientApiToken(clientTokenDto: ClientTokenDto): Promise<{ token: string }> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'generate-client-api-token', clientTokenDto);
+  }
+
+  // eslint-disable-next-line camelcase
+  async getUserOrgRoles(userId: string, orgId: string): Promise<IUserOrganizationRole> {
+    const payload = { userId, orgId };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-user-organization-roles', payload);
   }
 }

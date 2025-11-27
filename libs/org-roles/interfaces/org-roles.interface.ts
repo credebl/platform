@@ -7,3 +7,12 @@ export interface IOrgRoles {
     lastChangedDateTime?: Date;
     lastChangedBy?: string;
 }
+
+export interface IUserOrganizationRole {
+     id: string
+     userId: string
+     orgRoleId: string
+     orgId: string
+     idpRoleId: string
+     orgRole: IOrgRoles
+}

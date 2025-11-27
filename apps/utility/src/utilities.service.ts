@@ -77,10 +77,10 @@ export class UtilitiesService {
       this.logger.log(`ALERT EMAIL ALREADY SENT at ${this.lastAlertTime}, ledgerId WAS SET TO NULL`);
       return;
     }
-    this.lastAlertTime = now;
 
     // Send Email
     await this.emailService.sendEmail(emailDto);
+    this.lastAlertTime = now;
 
     this.logger.log('ALERT EMAIL SENT, ledgerId WAS SET TO NULL');
   }

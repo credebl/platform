@@ -3,14 +3,81 @@ import { BaseService } from 'libs/service/base.service';
 import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
+import { Client as PgClient } from 'pg';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
+  private pg: PgClient;
+
   constructor(
     @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {
-    super('OrganizationService');
+    super('UtilitiesService');
+    this.pg = new PgClient({
+      connectionString: process.env.DATABASE_URL
+    });
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.pg.connect();
+
+    // Listen to the notification channel
+    await this.pg.query('LISTEN ledger_null');
+
+    // NATS is not available → skip silently
+    this.pg.on('notification', async (msg) => {
+      if ('true' !== process.env.DB_ALERT_ENABLE?.trim()?.toLocaleLowerCase()) {
+        // in case it is not enabled, return
+        return;
+      }
+
+      if ('ledger_null' === msg.channel) {
+        // Step 1: Count total records
+        const totalRes = await this.pg.query('SELECT COUNT(*) FROM org_agents');
+        const total = Number(totalRes.rows[0].count);
+
+        // Step 2: Count NULL ledgerId records
+        const nullRes = await this.pg.query('SELECT COUNT(*) FROM org_agents WHERE "ledgerId" IS NULL');
+        const nullCount = Number(nullRes.rows[0].count);
+
+        // Step 3: Calculate %
+        const percent = (nullCount / total) * 100;
+
+        // Condition: > 30%
+        if (30 >= percent) {
+          return;
+        }
+
+        const alertEmails =
+          process.env.DB_ALERT_EMAILS?.split(',')
+            .map((e) => e.trim())
+            .filter((e) => 0 < e.length) || [];
+
+        const emailDto = {
+          emailFrom: process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL,
+          emailTo: alertEmails,
+          emailSubject: '[ALERT] More than 30% org_agents ledgerId is NULL',
+          emailText: `ALERT: ${percent.toFixed(2)}% of org_agents records currently have ledgerId = NULL.`,
+          emailHtml: `<p><strong>ALERT:</strong> ${percent.toFixed(
+            2
+          )}% of <code>org_agents</code> have <code>ledgerId</code> = NULL.</p>`
+        };
+
+        try {
+          const result = await this.natsClient.sendNatsMessage(this.serviceProxy, 'alert-db-ledgerId-null', {
+            emailDto
+          });
+          this.logger.debug('Received result', JSON.stringify(result, null, 2));
+        } catch (err) {
+          this.logger.error(err?.message ?? 'Some error occurred while sending prisma ledgerId alert email');
+        }
+      }
+    });
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.pg?.end();
   }
 
   async createShorteningUrl(shorteningUrlDto: UtilitiesDto): Promise<string> {

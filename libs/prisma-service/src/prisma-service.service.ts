@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NATSClient } from '@credebl/common/NATSClient';
-import { INestApplication, Inject, Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { INestApplication, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
@@ -11,10 +9,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
   private enable = (type: string): boolean => this.prismaLogs.includes(type);
 
-  constructor(
-    @Optional() @Inject('NATS_CLIENT') private readonly prismaProxy: ClientProxy | null,
-    @Optional() private readonly natsClient: NATSClient
-  ) {
+  constructor() {
     super({
       log: [
         { level: 'query', emit: 'event' },

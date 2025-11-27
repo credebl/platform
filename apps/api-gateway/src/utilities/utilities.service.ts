@@ -14,13 +14,21 @@ export class UtilitiesService extends BaseService {
     private readonly natsClient: NATSClient
   ) {
     super('UtilitiesService');
-    this.pg = new PgClient({
-      connectionString: process.env.DATABASE_URL
-    });
+    if ('true' === process.env.DB_ALERT_ENABLE?.trim()?.toLowerCase() && !process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is required');
+    } else {
+      this.pg = new PgClient({
+        connectionString: process.env.DATABASE_URL
+      });
+    }
   }
 
   async onModuleInit(): Promise<void> {
     try {
+      if ('true' !== process.env.DB_ALERT_ENABLE?.trim()?.toLowerCase()) {
+        // in case it is not enabled, return
+        return;
+      }
       await this.pg.connect();
       await this.pg.query('LISTEN ledger_null');
       this.logger.log('PostgreSQL notification listener connected');
@@ -29,7 +37,6 @@ export class UtilitiesService extends BaseService {
       throw err;
     }
 
-    // NATS is not available → skip silently
     this.pg.on('notification', async (msg) => {
       if ('true' !== process.env.DB_ALERT_ENABLE?.trim()?.toLocaleLowerCase()) {
         // in case it is not enabled, return

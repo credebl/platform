@@ -24,7 +24,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       .map((l) => l.trim());
   }
 
-  UserDevicesRepository: any;
   async onModuleInit(): Promise<void> {
     await this.$connect();
     if (this.enable('error')) {

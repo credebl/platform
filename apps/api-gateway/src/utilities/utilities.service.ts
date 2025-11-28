@@ -15,12 +15,14 @@ export class UtilitiesService extends BaseService {
     private readonly natsClient: NATSClient
   ) {
     super('UtilitiesService');
-    if ('true' === process.env.DB_ALERT_ENABLE?.trim()?.toLowerCase() && !process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL environment variable is required');
-    } else {
-      this.pg = new PgClient({
-        connectionString: process.env.DATABASE_URL
-      });
+    if ('true' === process.env.DB_ALERT_ENABLE?.trim()?.toLowerCase()) {
+      if (!process.env.DATABASE_URL) {
+        throw new Error('DATABASE_URL environment variable is required');
+      } else {
+        this.pg = new PgClient({
+          connectionString: process.env.DATABASE_URL
+        });
+      }
     }
   }
 

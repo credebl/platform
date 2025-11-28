@@ -523,3 +523,20 @@ export function ValidateNestedStructureFields(validationOptions?: ValidationOpti
     });
   };
 }
+
+export function buildUrlWithQuery<T extends Record<string, any>>(baseUrl: string, queryParams: T): string {
+  const criteriaParams: string[] = [];
+
+  if (!queryParams || (queryParams?.length >= 0)) {
+    return baseUrl
+  }
+
+  for (const [key, value] of Object.entries(queryParams)) {
+    // Skip undefined or null values
+    if (value !== undefined && value !== null) {
+      criteriaParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+    }
+  }
+
+  return criteriaParams.length > 0 ? `${baseUrl}?${criteriaParams.join('&')}` : baseUrl;
+}

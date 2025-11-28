@@ -1,0 +1,178 @@
+{
+  "platformConfigData": {
+    "externalIp": "##Machine Ip Address/Domain for agent setup##",
+    "inboundEndpoint": "##Machine Ip Address/Domain for agent setup##",
+    "username": "credebl",
+    "sgApiKey": "###Sendgrid Key###",
+    "emailFrom": "##Senders Mail ID##",
+    "apiEndpoint": "## Platform API Ip Address##",
+    "tailsFileServer": "##Machine Ip Address for agent setup##"
+  },
+  "platformAdminData": {
+    "firstName": "CREDEBL",
+    "lastName": "CREDEBL",
+    "email": "",
+    "username": "",
+    "password": "####Please provide encrypted password using crypto-js###",
+    "verificationCode": "",
+    "isEmailVerified": true,
+    "supabaseUserId": "96cef763-e106-46c1-ac78-fadf2803b11f"
+  },
+  "platformAdminOrganizationData": {
+    "name": "Platform-admin",
+    "description": "Platform-admin",
+    "logoUrl": "",
+    "website": "",
+    "createdBy": "",
+    "lastChangedBy": ""
+  },
+  "orgRoleData": [
+    {
+      "name": "owner",
+      "description": "Organization Owner"
+    },
+    {
+      "name": "admin",
+      "description": "Organization Admin"
+    },
+    {
+      "name": "issuer",
+      "description": "Organization Credential Issuer"
+    },
+    {
+      "name": "verifier",
+      "description": "Organization Credential Verifier"
+    },
+    {
+      "name": "holder",
+      "description": "Receives credentials issued by organization"
+    },
+    {
+      "name": "member",
+      "description": "Joins the organization as member"
+    },
+    {
+      "name": "platform_admin",
+      "description": "To setup all the platform of the user"
+    }
+  ],
+  "agentTypeData": [
+    {
+      "agent": "AFJ"
+    },
+    {
+      "agent": "ACAPY"
+    }
+  ],
+  "orgAgentTypeData": [
+    {
+      "agent": "DEDICATED"
+    },
+    {
+      "agent": "SHARED"
+    }
+  ],
+  "ledgerData": [
+    {
+      "name": "Bcovrin Testnet",
+      "networkType": "testnet",
+      "poolConfig": "https://raw.githubusercontent.com/bcgov/von-network/main/BCovrin/genesis_test",
+      "isActive": true,
+      "networkString": "testnet",
+      "nymTxnEndpoint": "http://test.bcovrin.vonx.io/register",
+      "indyNamespace": "bcovrin:testnet"
+    },
+    {
+      "name": "Indicio Testnet",
+      "networkType": "testnet",
+      "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_testnet_genesis",
+      "isActive": true,
+      "networkString": "testnet",
+      "nymTxnEndpoint": "https://selfserve.indiciotech.io/nym",
+      "indyNamespace": "indicio:testnet"
+    },
+    {
+      "name": "Indicio Demonet",
+      "networkType": "demonet",
+      "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_demonet_genesis",
+      "isActive": true,
+      "networkString": "demonet",
+      "nymTxnEndpoint": "https://selfserve.indiciotech.io/nym",
+      "indyNamespace": "indicio:demonet"
+    },
+    {
+      "name": "Indicio Mainnet",
+      "networkType": "mainnet",
+      "poolConfig": "https://raw.githubusercontent.com/Indicio-tech/indicio-network/main/genesis_files/pool_transactions_mainnet_genesis",
+      "isActive": true,
+      "networkString": "mainnet",
+      "nymTxnEndpoint": "https://selfserve.indiciotech.io/nym",
+      "indyNamespace": "indicio:mainnet"
+    },
+    {
+      "name": "Polygon Testnet",
+      "networkType": "testnet",
+      "poolConfig": "",
+      "isActive": true,
+      "networkString": "testnet",
+      "nymTxnEndpoint": "",
+      "indyNamespace": "polygon:testnet"
+    },
+    {
+      "name": "Polygon Mainnet",
+      "networkType": "mainnet",
+      "poolConfig": "",
+      "isActive": true,
+      "networkString": "mainnet",
+      "nymTxnEndpoint": "",
+      "indyNamespace": "polygon:mainnet"
+    },
+    {
+      "name": "NA",
+      "networkType": "NA",
+      "poolConfig": "NA",
+      "isActive": true,
+      "networkString": "NA",
+      "nymTxnEndpoint": "NA",
+      "indyNamespace": "no_ledger"
+    }
+  ],
+  "ledgerConfig": [
+    {
+      "name": "indy",
+      "details":  {
+        "did:indy": {
+            "bcovrin:testnet":"did:indy:bcovrin:testnet",
+            "indicio:demonet":"did:indy:indicio:demonet",
+            "indicio:mainnet":"did:indy:indicio:mainnet",
+            "indicio:testnet":"did:indy:indicio:testnet"
+        }
+    }
+    },
+    {
+      "name": "polygon",
+      "details":  {
+        "did:polygon": {
+            "mainnet":"did:polygon:mainnet",
+            "testnet":"did:polygon:testnet"
+        }
+    }
+    },
+    {
+      "name": "noLedger",
+      "details":  {
+        "did:key": "did:key",
+        "did:web": "did:web"
+    }
+    }
+  ],
+
+  "userRoleData": [
+    {
+      "role": "HOLDER"
+    },
+    {
+      "role": "DEFAULT_USER"
+    }
+  ]
+}

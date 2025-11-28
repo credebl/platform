@@ -32,7 +32,7 @@ export class ConnectionService extends BaseService {
     try {
       return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'send-question', questionDto);
     } catch (error) {
-      throw new RpcException(error.response);
+      throw new RpcException(error?.response ?? error);
     }
   }
 
@@ -44,7 +44,7 @@ export class ConnectionService extends BaseService {
         basicMessageDto
       );
     } catch (error) {
-      throw new RpcException(error.response);
+      throw new RpcException(error?.response ?? error);
     }
   }
 
@@ -60,7 +60,7 @@ export class ConnectionService extends BaseService {
       const connectionDetails = { referenceId };
       return this.natsClient.sendNats(this.connectionServiceProxy, 'get-connection-url', connectionDetails);
     } catch (error) {
-      throw new RpcException(error.response);
+      throw new RpcException(error?.response ?? error);
     }
   }
 

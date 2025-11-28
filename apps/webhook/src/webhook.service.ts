@@ -1,27 +1,16 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import { CommonService } from '@credebl/common';
 import { WebhookRepository } from './webhook.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { RpcException } from '@nestjs/microservices';
 import AsyncRetry = require('async-retry');
 import { ICreateWebhookUrl, IGetWebhookUrl, IWebhookDto } from '../interfaces/webhook.interfaces';
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  NotFoundException
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
 
 @Injectable()
 export class WebhookService {
   private readonly logger = new Logger('WebhookService');
-  constructor(
-    @Inject('NATS_CLIENT') private readonly webhookProxy: ClientProxy,
-    private readonly commonService: CommonService,
-    private readonly webhookRepository: WebhookRepository
-  ) {}
+  constructor(private readonly webhookRepository: WebhookRepository) {}
 
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   retryOptions(logger: Logger) {

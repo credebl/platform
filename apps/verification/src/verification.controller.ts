@@ -45,7 +45,7 @@ export class VerificationController {
    * @returns Proof presentation details by proofId
    */
   @MessagePattern({ cmd: 'get-proof-presentations-by-proofId' })
-  async getProofPresentationById(payload: { proofId: string; orgId: string; user: IUserRequest }): Promise<string> {
+  async getProofPresentationById(payload: { proofId: string; orgId: string; user: IUserRequest }): Promise<object> {
     return this.verificationService.getProofPresentationById(payload.proofId, payload.orgId);
   }
 
@@ -68,7 +68,7 @@ export class VerificationController {
   async sendProofRequest(payload: {
     requestProofDto: IProofRequestData;
     user: IUserRequest;
-  }): Promise<string | string[]> {
+  }): Promise<object | object[]> {
     return this.verificationService.sendProofRequest(payload.requestProofDto);
   }
 
@@ -79,7 +79,7 @@ export class VerificationController {
    * @returns Verified proof presentation details
    */
   @MessagePattern({ cmd: 'verify-presentation' })
-  async verifyPresentation(payload: { proofId: string; orgId: string; user: IUserRequest }): Promise<string> {
+  async verifyPresentation(payload: { proofId: string; orgId: string; user: IUserRequest }): Promise<object> {
     return this.verificationService.verifyPresentation(payload.proofId, payload.orgId);
   }
 

@@ -33,7 +33,6 @@ import {
   ISendProofRequestPayload,
   IIssuanceCreateOffer,
   IOutOfBandCredentialOffer,
-  IAgentSpinUpSatus,
   ICreateTenant,
   IAgentStatus,
   ICreateOrgAgent,
@@ -144,7 +143,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          // TODO: Do we want to get first element from ledgerName
+          // FIXME: Do we want to get first element from ledgerName
           agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
         )
       ]);
@@ -745,18 +744,7 @@ export class AgentServiceService {
    */
   async createTenant(payload: ITenantDto, user: IUserRequestInterface): Promise<IStoreOrgAgentDetails> {
     try {
-      const agentStatusResponse = {
-        agentSpinupStatus: AgentSpinUpStatus.PROCESSED
-      };
       const getOrgAgent = await this.agentServiceRepository.getAgentDetails(payload.orgId);
-
-      // if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
-      //   this.logger.error(`Your wallet is already been created.`);
-      //   throw new ConflictException(ResponseMessages.agent.error.walletAlreadyCreated, {
-      //     cause: new Error(),
-      //     description: ResponseMessages.errorMessages.conflict
-      //   });
-      // }
 
       if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
         this.logger.error(`Your wallet is already processing.`);
@@ -844,8 +832,6 @@ export class AgentServiceService {
         id: agentProcess?.id,
         apiKey: await this.commonService.dataEncryption(tenantDetails.walletResponseDetails['token'])
       };
-      // Get organization data
-      const getOrganization = await this.agentServiceRepository.getOrgDetails(payload.orgId);
 
       this.notifyClientSocket('agent-spinup-process-completed', payload.clientSocketId);
 

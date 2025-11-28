@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { UtilitiesRepository } from './utilities.repository';
 import { AwsService } from '@credebl/aws';
@@ -6,17 +6,20 @@ import { S3 } from 'aws-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from '@credebl/common/email.service';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { BaseService } from 'libs/service/base.service';
 
 @Injectable()
-export class UtilitiesService {
+export class UtilitiesService extends BaseService {
   private lastAlertTime: number | null = null;
+  private isSendingAlert = false; // Prevent concurrent retries
 
   constructor(
-    private readonly logger: Logger,
     private readonly utilitiesRepository: UtilitiesRepository,
     private readonly awsService: AwsService,
     private readonly emailService: EmailService
-  ) {}
+  ) {
+    super('UtilitiesService');
+  }
 
   async createAndStoreShorteningUrl(payload): Promise<string> {
     try {
@@ -71,17 +74,57 @@ export class UtilitiesService {
   }
 
   async handleLedgerAlert(emailDto: EmailDto): Promise<void> {
-    // Avoid spamming: send only once every 2 hours
     const now = Date.now();
+
+    // 1. Avoid more than once every 2 hours
     if (this.lastAlertTime && now - this.lastAlertTime < 2 * 60 * 60 * 1000) {
-      this.logger.log(`ALERT EMAIL ALREADY SENT at ${this.lastAlertTime}, ledgerId WAS SET TO NULL`);
+      this.logger.log(`ALERT EMAIL ALREADY SENT at ${new Date(this.lastAlertTime).toISOString()}`);
       return;
     }
 
-    // Send Email
-    await this.emailService.sendEmail(emailDto);
-    this.lastAlertTime = now;
+    // 2. If a retry flow is already in progress, do NOT start another
+    if (this.isSendingAlert) {
+      this.logger.log('Alert email sending already in progress, skipping...');
+      return;
+    }
 
-    this.logger.log('ALERT EMAIL SENT, ledgerId WAS SET TO NULL');
+    // 3. Start async retry flow — do not block the caller
+    this.isSendingAlert = true;
+    this.sendWithRetry(emailDto).finally(() => {
+      this.isSendingAlert = false;
+    });
+
+    // immediate return
+  }
+
+  private async sendWithRetry(emailDto: EmailDto, retries = 3, delayMs = 3000): Promise<void> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const result = await this.emailService.sendEmail(emailDto);
+
+        if (true !== result) {
+          throw new Error('Email not sent');
+        }
+
+        // Success
+        this.lastAlertTime = Date.now();
+        this.logger.log(`ALERT EMAIL SENT SUCCESSFULLY (attempt ${attempt})`);
+        return;
+      } catch (err) {
+        this.logger.error(
+          `Email send failed (attempt ${attempt} of ${retries})`,
+          err instanceof Error ? err.stack : err
+        );
+
+        // If last attempt → throw
+        if (attempt === retries) {
+          this.logger.error('All email retry attempts failed.');
+          return;
+        }
+
+        // Wait before retrying
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
   }
 }

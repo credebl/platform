@@ -8,6 +8,7 @@ import { Client as PgClient } from 'pg';
 @Injectable()
 export class UtilitiesService extends BaseService {
   private pg: PgClient;
+  private isSendingNatsAlert = false;
 
   constructor(
     @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
@@ -45,6 +46,13 @@ export class UtilitiesService extends BaseService {
 
       if ('ledger_null' === msg.channel) {
         try {
+          if (this.isSendingNatsAlert) {
+            this.logger.warn('Skipping duplicate NATS alert send...');
+            return;
+          }
+
+          this.isSendingNatsAlert = true;
+
           // Step 1: Count total records
           const totalRes = await this.pg.query('SELECT COUNT(*) FROM org_agents');
           const total = Number(totalRes.rows[0].count);
@@ -73,7 +81,10 @@ export class UtilitiesService extends BaseService {
               .filter((e) => 0 < e.length) || [];
 
           if (0 === alertEmails.length) {
-            this.logger.warn('DB_ALERT_EMAILS is empty, skipping alert');
+            this.logger.error(
+              `DB_ALERT_EMAILS is empty, skipping alert. There is a ${percent}% records are set to null for 'ledgerId' in 'org_agents' table`,
+              'DB alert'
+            );
             return;
           }
 

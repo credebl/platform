@@ -7,7 +7,7 @@ import { Client as PgClient } from 'pg';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
-  private pg: PgClient;
+  private readonly pg: PgClient;
   private isSendingNatsAlert = false;
 
   constructor(

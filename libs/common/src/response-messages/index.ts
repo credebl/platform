@@ -590,7 +590,8 @@ export const ResponseMessages = {
       updateFailed: 'Failed to update OID4VP session verifier.',
       deleteFailed: 'Failed to delete OID4VP session verifier.',
       verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.',
-      deleteTemplate: 'Error while deleting template.'
+      deleteTemplate: 'Error while deleting template.',
+      responseNotFound: 'Verification session response not found.'
     }
   },
   x509: {

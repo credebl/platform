@@ -41,7 +41,7 @@ export class UtilitiesService extends BaseService {
     }
 
     this.pg.on('notification', async (msg) => {
-      if ('true' !== process.env.DB_ALERT_ENABLE?.trim()?.toLocaleLowerCase()) {
+      if ('true' !== process.env.DB_ALERT_ENABLE?.trim()?.toLowerCase()) {
         // in case it is not enabled, return
         return;
       }

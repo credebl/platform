@@ -110,6 +110,9 @@ export class UtilitiesService extends BaseService {
           this.logger.debug('Received result', JSON.stringify(result, null, 2));
         } catch (err) {
           this.logger.error(err?.message ?? 'Error in ledgerId alert handler');
+        } finally {
+          // Once its done, reset the flag
+          this.isSendingNatsAlert = false;
         }
       }
     });

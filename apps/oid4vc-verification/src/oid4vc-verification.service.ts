@@ -330,7 +330,7 @@ export class Oid4vpVerificationService extends BaseService {
       );
       const verifiers = await await this._getOid4vpVerifierSession(url, orgId);
       if (!verifiers || 0 === verifiers.length) {
-        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+        throw new NotFoundException(ResponseMessages.oid4vpSession.error.responseNotFound);
       }
       this.logger.debug(`[getVerificationSessionResponse] response fetched successfully for orgId=${orgId}`);
       return verifiers;

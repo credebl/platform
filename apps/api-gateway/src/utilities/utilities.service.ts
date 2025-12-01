@@ -90,14 +90,8 @@ export class UtilitiesService extends BaseService {
             return;
           }
 
-          // TODO: Check if the to email is actually this or we need to take it from DB
-          if (!process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL) {
-            this.logger.warn('PUBLIC_PLATFORM_SUPPORT_EMAIL not configured, skipping alert');
-            return;
-          }
-
           const emailDto = {
-            emailFrom: process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL,
+            emailFrom: '',
             emailTo: alertEmails,
             emailSubject: '[ALERT] More than 30% org_agents ledgerId is NULL',
             emailText: `ALERT: ${percent.toFixed(2)}% of org_agents records currently have ledgerId = NULL.`,

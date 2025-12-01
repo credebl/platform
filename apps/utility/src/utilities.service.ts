@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { UtilitiesRepository } from './utilities.repository';
 import { AwsService } from '@credebl/aws';
@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from '@credebl/common/email.service';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { BaseService } from 'libs/service/base.service';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
@@ -88,13 +89,18 @@ export class UtilitiesService extends BaseService {
       return;
     }
 
+    const platformConfigData = await this.utilitiesRepository.getPlatformConfigDetails();
+    if (!platformConfigData) {
+      throw new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound);
+    }
+
+    emailDto.emailFrom = platformConfigData?.emailFrom;
+
     // 3. Start async retry flow — do not block the caller
     this.isSendingAlert = true;
     this.sendWithRetry(emailDto).finally(() => {
       this.isSendingAlert = false;
     });
-
-    // immediate return
   }
 
   private async sendWithRetry(emailDto: EmailDto, retries = 3, delayMs = 3000): Promise<void> {

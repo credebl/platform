@@ -203,7 +203,7 @@ export class AgentServiceRepository {
             }
           });
 
-      return await query;
+      return query;
     } catch (error) {
       this.logger.error(`[storeAgentDetails] - store agent details: ${JSON.stringify(error)}`);
       throw error;

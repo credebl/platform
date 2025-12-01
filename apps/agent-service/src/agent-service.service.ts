@@ -232,7 +232,7 @@ export class AgentServiceService {
       const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
       agentProcess = await this.createOrgAgent(agentSpinUpStatus, userId, agentSpinupDto.orgId);
 
-      // AFJ agent spin-up
+      // Credo agent spin-up
       this._agentSpinup(
         walletProvisionPayload,
         agentSpinupDto,
@@ -747,8 +747,8 @@ export class AgentServiceService {
       const getOrgAgent = await this.agentServiceRepository.getAgentDetails(payload.orgId);
 
       if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
-        this.logger.error(`Your wallet is already processing.`);
-        throw new ConflictException(ResponseMessages.agent.error.walletAlreadyProcessing, {
+        this.logger.error(`Your wallet is already created.`);
+        throw new ConflictException(ResponseMessages.agent.error.walletAlreadyCreated, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.conflict
         });

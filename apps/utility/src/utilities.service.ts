@@ -46,6 +46,10 @@ export class UtilitiesService extends BaseService {
     try {
       const getShorteningUrl = await this.utilitiesRepository.getShorteningUrl(referenceId);
 
+      if (!getShorteningUrl) {
+        throw new NotFoundException(`Shortening URL not found for referenceId: ${referenceId}`);
+      }
+
       const getInvitationUrl = {
         referenceId: getShorteningUrl.referenceId,
         invitationPayload: getShorteningUrl.invitationPayload
@@ -70,7 +74,9 @@ export class UtilitiesService extends BaseService {
       return url;
     } catch (error) {
       this.logger.error(error);
-      throw new Error('An error occurred while uploading data to S3. Error::::::');
+      throw new Error(
+        `An error occurred while uploading data to S3: ${error instanceof Error ? error?.message : error}`
+      );
     }
   }
 

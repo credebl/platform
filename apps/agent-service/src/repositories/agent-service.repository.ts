@@ -272,7 +272,7 @@ export class AgentServiceRepository {
           orgId
         },
         data: {
-          agentSpinUpStatus: AgentSpinUpStatus.COMPLETED
+          agentSpinUpStatus: AgentSpinUpStatus.DID_CREATED
         }
       });
     } catch (error) {

@@ -87,8 +87,8 @@ export enum OrgAgentType {
 
 export enum AgentSpinUpStatus {
   PENDING = 0,
-  PROCESSED = 1,
-  COMPLETED = 2
+  WALLET_CREATED = 1,
+  DID_CREATED = 2
 }
 
 export enum UserCertificateId {

@@ -126,7 +126,7 @@ export class AgentServiceService {
     let agentProcess: ICreateOrgAgent;
     try {
       await this.provisionWallet(agentSpinupDto, user);
-      return { agentSpinupStatus: AgentSpinUpStatus.COMPLETED };
+      return { agentSpinupStatus: AgentSpinUpStatus.DID_CREATED };
     } catch (error) {
       this.handleErrorOnWalletProvision(agentSpinupDto, error, agentProcess);
       throw new RpcException(error.response ?? error);
@@ -182,17 +182,10 @@ export class AgentServiceService {
       // Get genesis URL and ledger details
       const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
 
-      if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
-        throw new BadRequestException(ResponseMessages.agent.error.walletAlreadyProcessing, {
+      if (AgentSpinUpStatus.WALLET_CREATED === getOrgAgent?.agentSpinUpStatus) {
+        throw new BadRequestException(ResponseMessages.agent.error.walletAlreadyCreated, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.badRequest
-        });
-      }
-
-      if (AgentSpinUpStatus.COMPLETED === getOrgAgent?.agentSpinUpStatus) {
-        throw new ConflictException(ResponseMessages.agent.error.walletAlreadyCreated, {
-          cause: new Error(),
-          description: ResponseMessages.errorMessages.conflict
         });
       }
 
@@ -229,7 +222,7 @@ export class AgentServiceService {
       const socket: Socket = await this.initSocketConnection(`${process.env.SOCKET_HOST}`);
       this.emitAgentSpinupInitiatedEvent(agentSpinupDto, socket);
 
-      const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
+      const agentSpinUpStatus = AgentSpinUpStatus.WALLET_CREATED;
       agentProcess = await this.createOrgAgent(agentSpinUpStatus, userId, agentSpinupDto.orgId);
 
       // Credo agent spin-up
@@ -298,7 +291,7 @@ export class AgentServiceService {
       const storeAgentConfig = await this.agentServiceRepository.storeOrgAgentDetails({
         did,
         isDidPublic: true,
-        agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
+        agentSpinUpStatus: AgentSpinUpStatus.DID_CREATED,
         walletName,
         agentsTypeId,
         orgId,
@@ -626,7 +619,7 @@ export class AgentServiceService {
       did: '',
       verkey: '',
       isDidPublic: true,
-      agentSpinUpStatus: AgentSpinUpStatus.COMPLETED,
+      agentSpinUpStatus: AgentSpinUpStatus.DID_CREATED,
       walletName: payload.walletName,
       agentsTypeId: payload.agentsTypeId,
       orgId: payload.orgId,
@@ -746,7 +739,7 @@ export class AgentServiceService {
     try {
       const getOrgAgent = await this.agentServiceRepository.getAgentDetails(payload.orgId);
 
-      if (AgentSpinUpStatus.PROCESSED === getOrgAgent?.agentSpinUpStatus) {
+      if (AgentSpinUpStatus.WALLET_CREATED === getOrgAgent?.agentSpinUpStatus) {
         this.logger.error(`Your wallet is already created.`);
         throw new ConflictException(ResponseMessages.agent.error.walletAlreadyCreated, {
           cause: new Error(),
@@ -790,7 +783,7 @@ export class AgentServiceService {
       }
       ledgerIdData = await this.agentServiceRepository.getLedgerDetails(ledger);
 
-      const agentSpinUpStatus = AgentSpinUpStatus.PROCESSED;
+      const agentSpinUpStatus = AgentSpinUpStatus.WALLET_CREATED;
 
       // Create and stored agent details
       agentProcess = await this.agentServiceRepository.createOrgAgent(agentSpinUpStatus, user?.id, payload.orgId);
@@ -810,7 +803,7 @@ export class AgentServiceService {
         });
       }
 
-      if (AgentSpinUpStatus.COMPLETED !== platformAdminSpinnedUp.org_agents[0].agentSpinUpStatus) {
+      if (AgentSpinUpStatus.DID_CREATED !== platformAdminSpinnedUp.org_agents[0].agentSpinUpStatus) {
         this.logger.error(`Platform-admin agent is not spun-up`);
         throw new NotFoundException(ResponseMessages.agent.error.platformAdminNotAbleToSpinp, {
           cause: new Error(),
@@ -822,7 +815,7 @@ export class AgentServiceService {
       // Get agent type details
       const agentTypeId = await this.agentServiceRepository.getAgentTypeId(AgentType.AFJ);
       const storeOrgAgentData: IStoreOrgAgentDetails = {
-        agentSpinUpStatus: AgentSpinUpStatus.PROCESSED,
+        agentSpinUpStatus: AgentSpinUpStatus.WALLET_CREATED,
         agentsTypeId: agentTypeId,
         orgId: payload.orgId,
         agentEndPoint: platformAdminSpinnedUp.org_agents[0].agentEndPoint,
@@ -933,7 +926,7 @@ export class AgentServiceService {
       if (isPrimaryDid) {
         await this.setPrimaryDidAndLedger(orgId, storeDidDetails, createDidPayload.network, createDidPayload.method);
       }
-      if (agentDetails.agentSpinUpStatus === AgentSpinUpStatus.PROCESSED) {
+      if (agentDetails.agentSpinUpStatus === AgentSpinUpStatus.WALLET_CREATED) {
         await this.agentServiceRepository.updateAgentSpinupStatus(orgId);
       }
 

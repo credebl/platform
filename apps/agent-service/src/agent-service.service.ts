@@ -17,7 +17,6 @@ import {
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
 import { map } from 'rxjs/operators';
 dotenv.config();
 import {

@@ -488,7 +488,7 @@ export class AgentServiceService {
     ledgerId: string[],
     agentProcess: ICreateOrgAgent
   ): Promise<void> {
-    let ledgerIdData = [];
+    let ledgerIdData;
 
     try {
       if (agentSpinupDto.method !== DidMethod.KEY && agentSpinupDto.method !== DidMethod.WEB) {

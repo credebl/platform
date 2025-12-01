@@ -143,7 +143,7 @@ export class AgentServiceService {
         this.agentServiceRepository.getPlatformConfigDetails(),
         this.agentServiceRepository.getAgentTypeDetails(),
         this.agentServiceRepository.getLedgerDetails(
-          // FIXME: Do we want to get first element from ledgerName
+          // TODO: Do we want to get first element from ledgerName
           agentSpinupDto.ledgerName ? agentSpinupDto.ledgerName : [Ledgers.Indicio_Demonet]
         )
       ]);
@@ -1085,7 +1085,7 @@ export class AgentServiceService {
       platformAdminSpinnedUp.org_agents[0].agentEndPoint,
       getDcryptedToken
     );
-    if (!walletResponseDetails && !walletResponseDetails.id && !walletResponseDetails.token) {
+    if (!walletResponseDetails || !walletResponseDetails.id || !walletResponseDetails.token) {
       throw new InternalServerErrorException('Error while creating the wallet');
     }
     return {

@@ -265,6 +265,7 @@ export class AgentServiceRepository {
    * @param orgId
    */
   // eslint-disable-next-line camelcase
+  // TODO: Combine these org_agents update functions into one common update method.
   async updateAgentSpinupStatus(orgId: string): Promise<org_agents> {
     try {
       return await this.prisma.org_agents.update({
@@ -282,6 +283,7 @@ export class AgentServiceRepository {
   }
 
   // eslint-disable-next-line camelcase
+  // TODO: Combine these org_agents update functions into one common update method.
   async updateLedgerId(orgId: string, ledgerId: string): Promise<org_agents> {
     try {
       return await this.prisma.org_agents.update({

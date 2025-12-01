@@ -833,14 +833,23 @@ export class AgentServiceService {
         apiKey: await this.commonService.dataEncryption(tenantDetails.walletResponseDetails['token'])
       };
 
+      // Get organization data
+      const getOrganization = await this.agentServiceRepository.getOrgDetails(payload.orgId);
+
       this.notifyClientSocket('agent-spinup-process-completed', payload.clientSocketId);
 
       const orgAgentDetails = await this.agentServiceRepository.storeOrgAgentDetails(storeOrgAgentData);
 
+      this.notifyClientSocket('invitation-url-creation-started', payload.clientSocketId);
+
+      // Create the legacy connection invitation
+      await this._createConnectionInvitation(payload.orgId, user, getOrganization.name);
+
+      this.notifyClientSocket('invitation-url-creation-success', payload.clientSocketId);
+
       return orgAgentDetails;
     } catch (error) {
       this.handleError(error, payload.clientSocketId);
-
       throw error;
     }
   }

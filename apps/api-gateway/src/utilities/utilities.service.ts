@@ -4,6 +4,7 @@ import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 import { Client as PgClient } from 'pg';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
@@ -26,6 +27,7 @@ export class UtilitiesService extends BaseService {
     }
   }
 
+  // TODO: I think it would be better, if we add all the event listening and email sending logic in a common library instead of it being scattered across here and the utility microservice
   async onModuleInit(): Promise<void> {
     try {
       if ('true' !== process.env.DB_ALERT_ENABLE?.trim()?.toLowerCase()) {
@@ -72,8 +74,8 @@ export class UtilitiesService extends BaseService {
           // Step 3: Calculate %
           const percent = (nullCount / total) * 100;
 
-          // Condition: > 30%
-          if (30 >= percent) {
+          // Condition: > 30% for now
+          if (CommonConstants.AFFECTED_RECORDS_THRESHOLD_PERCENTAGE_FOR_DB_ALERT >= percent) {
             return;
           }
 

@@ -119,6 +119,14 @@ async function bootstrap(): Promise<void> {
   );
   app.useGlobalInterceptors(new NatsInterceptor());
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
-  Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`);
+  Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`, 'Success');
+
+  if ('true' === process.env.DB_ALERT_ENABLE?.trim()?.toLowerCase()) {
+    // in case it is enabled, log that
+    Logger.log(
+      "We have enabled DB alert for 'ledger_null' instances. This would send email in case the 'ledger_id' column in 'org_agents' table is set to null",
+      'DB alert enabled'
+    );
+  }
 }
 bootstrap();

@@ -10,7 +10,7 @@ const apiKey = process.env.RESEND_API_KEY;
 if (!apiKey) {
   throw new Error('Missing RESEND_API_KEY in environment variables.');
 }
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(apiKey);
 
 export const sendWithResend = async (emailDto: EmailDto): Promise<boolean> => {
   try {

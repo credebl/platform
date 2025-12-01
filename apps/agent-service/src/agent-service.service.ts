@@ -125,7 +125,7 @@ export class AgentServiceService {
   }> {
     let agentProcess: ICreateOrgAgent;
     try {
-      await this.processWalletProvision(agentSpinupDto, user);
+      await this.agentWalletProvision(agentSpinupDto, user);
       return { agentSpinupStatus: AgentSpinUpStatus.COMPLETED };
     } catch (error) {
       this.handleErrorOnWalletProvision(agentSpinupDto, error, agentProcess);
@@ -133,7 +133,7 @@ export class AgentServiceService {
     }
   }
 
-  private async processWalletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<void> {
+  private async agentWalletProvision(agentSpinupDto: IAgentSpinupDto, user: IUserRequestInterface): Promise<void> {
     let platformAdminUser;
     let userId: string;
     let agentProcess: ICreateOrgAgent;

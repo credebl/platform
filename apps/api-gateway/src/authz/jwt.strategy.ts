@@ -31,6 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         // Todo: We need to add this logic in seprate jwt gurd to handle the token expiration functionality.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const decodedToken: any = jwt.decode(jwtToken);
+        this.logger.log('Decoded Token', JSON.stringify(decodedToken, null, 2));
         if (!decodedToken) {
           throw new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken);
         }
@@ -59,6 +60,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     const sessionId = payload?.sid;
     let sessionDetails = null;
+    this.logger.log('Validating JWT Strategy for payload', JSON.stringify(payload, null, 2));
     if (sessionId) {
       try {
         sessionDetails = await this.authzService.checkSession(sessionId);
@@ -70,9 +72,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
     }
 
-    if (payload?.email) {
-      userInfo = await this.usersService.getUserByUserIdInKeycloak(payload?.email);
-    }
+    // if (payload?.email) {
+    //   userInfo = await this.usersService.getUserByUserIdInKeycloak(payload?.email);
+    // }
+    this.logger.debug(`User Info fetched: ${JSON.stringify(userInfo)}`);
 
     if (payload.hasOwnProperty('client_id')) {
       const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id']);
@@ -104,9 +107,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new NotFoundException(ResponseMessages.user.error.notFound);
     }
     //TODO patch to QA
-    if (userInfo && userInfo?.['attributes'] && userInfo?.['attributes']?.userRole) {
-      userDetails['userRole'] = userInfo?.['attributes']?.userRole;
-    }
+    // if (userInfo && userInfo?.['attributes'] && userInfo?.['attributes']?.userRole) {
+    //   userDetails['userRole'] = userInfo?.['attributes']?.userRole;
+    // }
+    this.logger.debug(`User Details set: ${JSON.stringify(userDetails)}`);
 
     return {
       ...userDetails,

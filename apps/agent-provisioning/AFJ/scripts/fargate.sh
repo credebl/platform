@@ -304,76 +304,53 @@ aws ecs create-service \
 # Describe the ECS service and filter by service name
 service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluster $CLUSTER_NAME --region $AWS_PUBLIC_REGION)
 
-echo "=== Waiting for Agent Container to Start ==="
-
-n=0
-until [ "$n" -ge 20 ]; do
-    if netstat -tln | grep ${ADMIN_PORT} >/dev/null; then
-
-      AGENTURL="http://${EXTERNAL_IP}:${ADMIN_PORT}/agent"
-      status=$(curl -s -o /dev/null -w "%{http_code}" "$AGENTURL")
-
-      if [ "$status" = "200" ]; then
-        echo "Agent internal endpoint is running"
-        break
-      else
-        echo "Agent admin port open but /agent not ready (HTTP $status)"
-      fi
-
-    else
-      echo "Admin port ${ADMIN_PORT} not open yet"
-    fi
-
-    n=$((n + 1))
-    echo "Retrying in 10s... ($n/20)"
-    sleep 10
-done
-
-if [ "$n" -ge 20 ]; then
-  echo "ERROR: Agent internal endpoint never became ready!"
-  exit 125
-fi
-
-echo "=== Waiting for External API /agent/token to be Ready ==="
-
-API_URL="https://dev-agent.sovio.id/agent/token"
-
-max_retries=20
-retry_interval=10
-attempt=1
-
-while [ $attempt -le $max_retries ]; do
-    echo "Attempt $attempt: Checking $API_URL"
-
-    status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL" \
-      -H "Authorization: supersecret-that-too-16chars" \
-      -H "Content-Type: application/x-www-form-urlencoded")
-
-    if [ "$status" -eq 200 ]; then
-        echo "External Agent API is ready!"
-        break
-    else
-        echo "API not ready yet (status: $status). Retrying in $retry_interval sec..."
-        sleep $retry_interval
-        attempt=$((attempt + 1))
-    fi
-done
-
-if [ $attempt -gt $max_retries ]; then
-    echo "ERROR: External API /agent/token never became ready!"
+# Check if the service creation was successful
+if [ $? -eq 0 ]; then
+    echo "Service creation successful"
+else
+    echo "Failed to create service"
     exit 1
 fi
 
-echo "=== Generating Agent Config ==="
+if [ $? -eq 0 ]; then
 
-mkdir -p "$PWD/agent-provisioning/AFJ/endpoints"
+  n=0
+  until [ "$n" -ge 20 ]; do
+    if netstat -tln | grep ${ADMIN_PORT} >/dev/null; then
 
-cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
-{
-  "CONTROLLER_ENDPOINT": "$EXTERNAL_IP"
-}
+      AGENTURL="http://${EXTERNAL_IP}:${ADMIN_PORT}/agent"
+      agentResponse=$(curl -s -o /dev/null -w "%{http_code}" $AGENTURL)
+
+      if [ "$agentResponse" = "200" ]; then
+        echo "Agent is running" && break
+      else
+        echo "Agent is not running"
+        n=$((n + 1))
+        sleep 10
+      fi
+    else
+      echo "No response from agent"
+      n=$((n + 1))
+      sleep 10
+    fi
+  done
+
+# Describe the ECS service and filter by service name
+service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluster $CLUSTER_NAME --region $AWS_PUBLIC_REGION)
+echo "service_description=$service_description"
+
+  echo "Creating agent config"
+  cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
+    {
+        "CONTROLLER_ENDPOINT":"$EXTERNAL_IP"
+    }
 EOF
 
-echo "Agent config created successfully"
 
+  echo "Agent config created"
+else
+  echo "==============="
+  echo "ERROR : Failed to spin up the agent!"
+  echo "===============" && exit 125
+fi
 echo "Total time elapsed: $(date -ud "@$(($(date +%s) - $START_TIME))" +%T) (HH:MM:SS)"

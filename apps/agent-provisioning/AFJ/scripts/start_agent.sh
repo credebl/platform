@@ -236,6 +236,7 @@ if [ $? -eq 0 ]; then
       # If it exists, remove the file
       rm "$ENDPOINT"
     fi
+    mkdir -p "$PWD/agent-provisioning/AFJ/endpoints"
     cat <<EOF >${ENDPOINT}
     {
         "CONTROLLER_ENDPOINT":"${EXTERNAL_IP}:${ADMIN_PORT}"

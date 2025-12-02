@@ -225,22 +225,7 @@ if [ $? -eq 0 ]; then
     done
 
     echo "Creating agent config"
-    # Capture the logs from the container
-    container_logs=$(docker logs $(docker ps -q --filter "name=${AGENCY}_${CONTAINER_NAME}"))
-
-    # Extract the token from the logs using sed
-    token=$(printf "%s" "$container_logs" \
-  | sed -En 's/.*[Kk][Ee][Yy]: *([^ ]*).*/\1/p')
-
-    # Fallback (macOS BSD sed often fails)
-    if [ -z "$token" ]; then
-      token=$(printf "%s" "$container_logs" \
-        | awk '/[Aa][Pp][Ii][ -]*[Kk][Ee][Yy]/ {print $NF; exit}')
-    fi
-
-    # Print the extracted token
-    echo "Token: $token"
-    
+ 
     ENDPOINT="${PWD}/endpoints/${AGENCY}_${CONTAINER_NAME}.json"
 
     # Check if the file exists
@@ -254,11 +239,6 @@ if [ $? -eq 0 ]; then
     }
 EOF
 
-    cat <<EOF >${PWD}/token/${AGENCY}_${CONTAINER_NAME}.json
-    {
-        "token" : "$token"
-    }
-EOF
     echo "Agent config created"
   else
     echo "==============="

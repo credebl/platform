@@ -17,7 +17,6 @@ import {
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
 import { map } from 'rxjs/operators';
 dotenv.config();
 import {
@@ -528,10 +527,8 @@ export class AgentServiceService {
         socket.emit('did-publish-process-initiated', { clientId: agentSpinupDto.clientSocketId });
         socket.emit('invitation-url-creation-started', { clientId: agentSpinupDto.clientSocketId });
       }
-      const agentBaseWalletToken = await this.commonService.getBaseAgentToken(
-        agentDetails.agentEndPoint,
-        agentDetails?.agentToken
-      );
+      const apiKey = process.env.AGENT_API_KEY;
+      const agentBaseWalletToken = await this.commonService.getBaseAgentToken(agentDetails.agentEndPoint, apiKey);
       if (!agentBaseWalletToken) {
         throw new BadRequestException(ResponseMessages.agent.error.baseWalletToken, {
           cause: new Error(),
@@ -560,20 +557,6 @@ export class AgentServiceService {
        */
       const storeAgentDetails = await this._storeOrgAgentDetails(agentPayload);
       if (storeAgentDetails) {
-        const filePath = `${process.cwd()}${process.env.AFJ_AGENT_TOKEN_PATH}${orgData.id}_${orgData.name
-          .split(' ')
-          .join('_')}.json`;
-        if (agentDetails?.agentToken) {
-          fs.unlink(filePath, (err) => {
-            if (err) {
-              this.logger.error(`Error removing file: ${err.message}`);
-              throw new InternalServerErrorException(err.message);
-            } else {
-              this.logger.log(`File ${filePath} has been removed successfully`);
-            }
-          });
-        }
-
         if (agentSpinupDto.clientSocketId) {
           socket.emit('did-publish-process-completed', { clientId: agentSpinupDto.clientSocketId });
         }

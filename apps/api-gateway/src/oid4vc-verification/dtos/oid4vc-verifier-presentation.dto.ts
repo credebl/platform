@@ -11,7 +11,8 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
   ValidationArguments,
-  Validate
+  Validate,
+  Matches
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SignerOption } from '@prisma/client';
@@ -216,6 +217,9 @@ export class DcqlCredentialDto {
   @ApiProperty({ example: 'birthcertificate-dc_sd_jwt' })
   @IsDefined()
   @IsString()
+  @Matches(/^[a-zA-Z0-9_-]+$/, {
+    message: 'id must only contain alphanumeric characters, underscores, and hyphens (dots are not allowed)'
+  })
   id: string;
 
   @ApiProperty({ example: 'dc+sd-jwt' })

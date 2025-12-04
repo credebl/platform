@@ -11,10 +11,12 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
   ValidationArguments,
-  Validate
+  Validate,
+  Matches
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SignerOption } from '@prisma/client';
+import { ResponseMode } from '@credebl/enum/enum';
 
 /**
  * DTO for verification-presentation query parameters.
@@ -215,6 +217,9 @@ export class DcqlCredentialDto {
   @ApiProperty({ example: 'birthcertificate-dc_sd_jwt' })
   @IsDefined()
   @IsString()
+  @Matches(/^[a-zA-Z0-9_-]+$/, {
+    message: 'id must only contain alphanumeric characters, underscores, and hyphens (dots are not allowed)'
+  })
   id: string;
 
   @ApiProperty({ example: 'dc+sd-jwt' })
@@ -326,12 +331,16 @@ export class PresentationRequestDto {
   dcql?: DcqlDto;
 
   @ApiProperty({
-    example: 'direct_post.jwt',
-    description: 'Response mode for the verifier'
+    example: ResponseMode.DIRECT_POST_JWT,
+    description: 'Response mode for the verifier',
+    enum: ResponseMode
   })
   @IsDefined()
-  @IsString()
-  responseMode: string;
+  @IsEnum(ResponseMode)
+  responseMode: ResponseMode;
+  //TODO: check e2e flow and add ResponseMode based restrictions
+  @IsOptional()
+  expectedOrigins: string[];
 
   /**
    * Dummy property used to run a class-level validation ensuring mutual exclusivity.

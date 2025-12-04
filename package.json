@@ -9,7 +9,7 @@
     "build": "nest build",
     "build:all": "rimraf dist && nest build api-gateway && nest build platform-service && nest build agent-service && nest build connection",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
-    "start": "npx prisma migrate deploy --schema=./libs/prisma-service/prisma/schema.prisma & nest start",
+    "start": "prisma migrate deploy --schema=./libs/prisma-service/prisma/schema.prisma & nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/apps/api-gateway/main",
@@ -19,7 +19,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json",
-    "prisma:generate": "npx prisma generate",
+    "prisma:generate": "prisma generate",
     "prepare": "husky install"
   },
   "prisma": {
@@ -157,7 +157,8 @@
     "ts-loader": "^9.4.4",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "@types/bun": "latest"
   },
   "lint-staged": {
     "**/*.{js,ts}": [
@@ -207,6 +208,37 @@
   },
   "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a",
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
+  },
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "libs/*"
+    ],
+    "catalog": {
+      "@nestjs/common": "^11.1.6",
+      "@nestjs/core": "^11.1.6",
+      "@nestjs/platform-express": "^11.1.6",
+      "@nestjs/axios": "^4.0.1",
+      "@nestjs/bull": "^11.0.3",
+      "@nestjs/cache-manager": "^3.0.1",
+      "@nestjs/config": "^4.0.2",
+      "@nestjs/jwt": "^11.0.0",
+      "@nestjs/microservices": "^11.1.6",
+      "@nestjs/passport": "^11.0.5",
+      "@nestjs/platform-socket.io": "^11.1.6",
+      "@nestjs/schedule": "^6.0.1",
+      "@nestjs/swagger": "^11.2.0",
+      "@nestjs/typeorm": "^11.0.0",
+      "@nestjs/websockets": "^11.1.6",
+      "nestjs-cls": "^6.0.1",
+      "@nestjs/cli": "^11.0.10",
+      "@nestjs/schematics": "^11.0.7",
+      "@nestjs/testing": "^11.1.6",
+      "nestjs-rate-limiter": "^3.1.0",
+      "nestjs-supabase-auth": "^1.0.9",
+      "nestjs-typeorm-paginate": "^4.0.4"
+    }
   }
 }

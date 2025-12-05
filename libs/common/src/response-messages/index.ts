@@ -223,7 +223,7 @@ export const ResponseMessages = {
   },
   agent: {
     success: {
-      create: 'Agent process initiated successfully. Please wait',
+      create: 'Organization wallet created successfully',
       createWallet: 'Wallet created successfully',
       createDid: 'Did created successfully',
       health: 'Agent health details retrieved successfully.',

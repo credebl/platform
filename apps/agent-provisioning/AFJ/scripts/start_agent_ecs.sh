@@ -301,7 +301,7 @@ fi
 if [ $? -eq 0 ]; then
 
   n=0
-  until [ "$n" -ge 6 ]; do
+  until [ "$n" -ge 20 ]; do
     if netstat -tln | grep ${ADMIN_PORT} >/dev/null; then
 
       AGENTURL="http://${EXTERNAL_IP}:${ADMIN_PORT}/agent"
@@ -325,18 +325,8 @@ if [ $? -eq 0 ]; then
 service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluster $CLUSTER_NAME --region $AWS_PUBLIC_REGION)
 echo "service_description=$service_description"
 
-
-# Extract Task ID from the service description events
-task_id=$(echo "$service_description" | jq -r '
-  .services[0].events[] 
-  | select(.message | test("has started 1 tasks")) 
-  | .message 
-  | capture("\\(task (?<id>[^)]+)\\)") 
-  | .id
-')
-
-
-  echo "Creating agent config"
+echo "Creating agent config"
+mkdir -p "$PWD/agent-provisioning/AFJ/endpoints"
   cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
         "CONTROLLER_ENDPOINT":"$EXTERNAL_IP"

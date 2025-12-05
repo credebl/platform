@@ -340,6 +340,7 @@ service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluste
 echo "service_description=$service_description"
 
   echo "Creating agent config"
+  mkdir -p "$PWD/agent-provisioning/AFJ/endpoints"
   cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
         "CONTROLLER_ENDPOINT":"$EXTERNAL_IP"

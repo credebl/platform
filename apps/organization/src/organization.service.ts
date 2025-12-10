@@ -312,7 +312,8 @@ export class OrganizationService {
         const userDetails = await this.organizationRepository.getUser(userId);
         const token = await this.clientRegistrationService.getManagementToken(
           userDetails.clientId,
-          userDetails.clientSecret
+          userDetails.clientSecret,
+          'roles'
         );
 
         generatedClientSecret = await this.clientRegistrationService.generateClientSecret(
@@ -717,7 +718,7 @@ export class OrganizationService {
   async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
     const { clientId, clientSecret } = clientCredentials;
     // This method used to authenticate the requested user on keycloak
-    const authenticationResult = await this.authenticateClientKeycloak(clientId, clientSecret);
+    const authenticationResult = await this.authenticateClientKeycloak(clientId, clientSecret, 'roles');
     let addSessionDetails;
     // Fetch owner organization details for getting the user id
     const orgRoleDetails = await this.organizationRepository.getOrgAndOwnerUser(clientId);
@@ -773,13 +774,17 @@ export class OrganizationService {
     return finalResponse;
   }
 
-  async authenticateClientKeycloak(clientId: string, clientSecret: string): Promise<IAccessTokenData> {
+  async authenticateClientKeycloak(clientId: string, clientSecret: string, scope?: string): Promise<IAccessTokenData> {
     try {
       const payload = new ClientCredentialTokenPayloadDto();
       // eslint-disable-next-line camelcase
       payload.client_id = clientId;
       // eslint-disable-next-line camelcase
       payload.client_secret = clientSecret;
+
+      if (scope) {
+        payload.scope = scope;
+      }
 
       try {
         const mgmtTokenResponse = await this.clientRegistrationService.getToken(payload);

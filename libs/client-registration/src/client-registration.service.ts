@@ -148,7 +148,7 @@ export class ClientRegistrationService {
     }
   }
 
-  async getManagementToken(clientId: string, clientSecret: string) {
+  async getManagementToken(clientId: string, clientSecret: string, scope?: string) {
     try {
       const payload = new ClientCredentialTokenPayloadDto();
       if (!clientId && !clientSecret) {
@@ -161,6 +161,9 @@ export class ClientRegistrationService {
 
       payload.client_id = decryptClientId;
       payload.client_secret = decryptClientSecret;
+      if (scope) {
+        payload.scope = scope;
+      }
       const mgmtTokenResponse = await this.getToken(payload);
       return mgmtTokenResponse.access_token;
     } catch (error) {
@@ -583,11 +586,11 @@ export class ClientRegistrationService {
 
     const decryptClientId = await this.commonService.decryptPassword(clientId);
     const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
-
     payload.client_id = decryptClientId;
     payload.client_secret = decryptClientSecret;
     payload.username = email;
     payload.password = password;
+    payload.scope = 'user-slim';
 
     if (
       'password' !== payload.grant_type ||

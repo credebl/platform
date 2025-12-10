@@ -4,6 +4,7 @@ export class userTokenPayloadDto {
     username: string;
     password: string;
     grant_type?: string = 'password';
+    scope?: string = 'openid';
    
   }
   

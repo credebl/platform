@@ -81,62 +81,94 @@ export class UtilitiesService extends BaseService {
   }
 
   async handleLedgerAlert(emailDto: EmailDto): Promise<void> {
-    const now = Date.now();
-
-    // 1. Avoid more than once every 2 hours
-    if (this.lastAlertTime && now - this.lastAlertTime < 2 * 60 * 60 * 1000) {
-      this.logger.log(`ALERT EMAIL ALREADY SENT at ${new Date(this.lastAlertTime).toISOString()}`);
-      return;
-    }
-
-    // 2. If a retry flow is already in progress, do NOT start another
-    if (this.isSendingAlert) {
-      this.logger.log('Alert email sending already in progress, skipping...');
-      return;
-    }
-
-    const platformConfigData = await this.utilitiesRepository.getPlatformConfigDetails();
-    if (!platformConfigData) {
-      throw new NotFoundException(ResponseMessages.issuance.error.platformConfigNotFound);
-    }
-
-    emailDto.emailFrom = platformConfigData?.emailFrom;
-
-    // 3. Start async retry flow — do not block the caller
-    this.isSendingAlert = true;
-    this.sendWithRetry(emailDto).finally(() => {
-      this.isSendingAlert = false;
-    });
   }
 
   private async sendWithRetry(emailDto: EmailDto, retries = 3, delayMs = 3000): Promise<void> {
-    for (let attempt = 1; attempt <= retries; attempt++) {
-      try {
-        const result = await this.emailService.sendEmail(emailDto);
+  }
 
-        if (true !== result) {
-          throw new Error('Email not sent');
-        }
+  // Intent Template CRUD operations
+  async createIntentTemplate(data: {
+    orgId: string;
+    intentId: string;
+    templateId: string;
+    createdBy: string;
+  }): Promise<object> {
+    try {
+      const intentTemplate = await this.utilitiesRepository.createIntentTemplate(data);
+      return intentTemplate;
+    } catch (error) {
+      this.logger.error(`[createIntentTemplate] - error in create intent template: ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
 
-        // Success
-        this.lastAlertTime = Date.now();
-        this.logger.log(`ALERT EMAIL SENT SUCCESSFULLY (attempt ${attempt})`);
-        return;
-      } catch (err) {
-        this.logger.error(
-          `Email send failed (attempt ${attempt} of ${retries})`,
-          err instanceof Error ? err.stack : err
-        );
-
-        // If last attempt → throw
-        if (attempt === retries) {
-          this.logger.error('All email retry attempts failed.');
-          return;
-        }
-
-        // Wait before retrying
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
+  async getIntentTemplateById(id: string): Promise<object> {
+    try {
+      const intentTemplate = await this.utilitiesRepository.getIntentTemplateById(id);
+      if (!intentTemplate) {
+        throw new RpcException({ message: 'Intent template not found', statusCode: 404 });
       }
+      return intentTemplate;
+    } catch (error) {
+      this.logger.error(`[getIntentTemplateById] - error in get intent template by id: ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
+
+  async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
+    try {
+      const intentTemplates = await this.utilitiesRepository.getIntentTemplatesByIntentId(intentId);
+      return intentTemplates;
+    } catch (error) {
+      this.logger.error(
+        `[getIntentTemplatesByIntentId] - error in get intent templates by intent id: ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error);
+    }
+  }
+
+  async getIntentTemplatesByOrgId(orgId: string): Promise<object[]> {
+    try {
+      const intentTemplates = await this.utilitiesRepository.getIntentTemplatesByOrgId(orgId);
+      return intentTemplates;
+    } catch (error) {
+      this.logger.error(
+        `[getIntentTemplatesByOrgId] - error in get intent templates by org id: ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error);
+    }
+  }
+
+  async getAllIntentTemplates(): Promise<object[]> {
+    try {
+      const intentTemplates = await this.utilitiesRepository.getAllIntentTemplates();
+      return intentTemplates;
+    } catch (error) {
+      this.logger.error(`[getAllIntentTemplates] - error in get all intent templates: ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
+
+  async updateIntentTemplate(
+    id: string,
+    data: { orgId: string; intentId: string; templateId: string; lastChangedBy: string }
+  ): Promise<object> {
+    try {
+      const intentTemplate = await this.utilitiesRepository.updateIntentTemplate(id, data);
+      return intentTemplate;
+    } catch (error) {
+      this.logger.error(`[updateIntentTemplate] - error in update intent template: ${JSON.stringify(error)}`);
+      throw new RpcException(error);
+    }
+  }
+
+  async deleteIntentTemplate(id: string): Promise<object> {
+    try {
+      const intentTemplate = await this.utilitiesRepository.deleteIntentTemplate(id);
+      return intentTemplate;
+    } catch (error) {
+      this.logger.error(`[deleteIntentTemplate] - error in delete intent template: ${JSON.stringify(error)}`);
+      throw new RpcException(error);
     }
   }
 }

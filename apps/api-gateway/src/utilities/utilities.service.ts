@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
 import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
+import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from './dtos/intent-template.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 import { Client as PgClient } from 'pg';
@@ -128,5 +129,35 @@ export class UtilitiesService extends BaseService {
     const storeObj = storeObjectDto.data;
     const payload = { persistent, storeObj };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'store-object-return-url', payload);
+  }
+
+  // Intent Template CRUD operations
+  async createIntentTemplate(createIntentTemplateDto: CreateIntentTemplateDto): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-intent-template', createIntentTemplateDto);
+  }
+
+  async getIntentTemplateById(id: string): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-template-by-id', id);
+  }
+
+  async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-templates-by-intent-id', intentId);
+  }
+
+  async getIntentTemplatesByOrgId(orgId: string): Promise<object[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-templates-by-org-id', orgId);
+  }
+
+  async getAllIntentTemplates(): Promise<object[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-intent-templates', {});
+  }
+
+  async updateIntentTemplate(id: string, updateIntentTemplateDto: UpdateIntentTemplateDto): Promise<object> {
+    const payload = { id, ...updateIntentTemplateDto };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-intent-template', payload);
+  }
+
+  async deleteIntentTemplate(id: string): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent-template', id);
   }
 }

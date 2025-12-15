@@ -102,4 +102,57 @@ export class Oid4vpVerificationController {
   }): Promise<object> {
     return this.oid4vpVerificationService.oid4vpPresentationWebhook(payload.oid4vpPresentationWhDto, payload.id);
   }
+
+  @MessagePattern({ cmd: 'verification-template-create' })
+  async createVerificationTemplate(payload: {
+    name: string;
+    templateJson: object;
+    orgId: string;
+    userDetails: user;
+  }): Promise<object> {
+    const { name, templateJson, orgId, userDetails } = payload;
+    this.logger.debug(
+      `[createVerificationTemplate] Received 'verification-template-create' request for orgId=${orgId}, user=${userDetails?.id}`
+    );
+    return this.oid4vpVerificationService.createVerificationTemplate(name, templateJson, orgId, userDetails);
+  }
+
+  @MessagePattern({ cmd: 'verification-template-get' })
+  async getVerificationTemplates(payload: { orgId: string; templateId?: string }): Promise<object> {
+    const { orgId, templateId } = payload;
+    this.logger.debug(
+      `[getVerificationTemplates] Received 'verification-template-get' for orgId=${orgId}, templateId=${templateId ?? 'all'}`
+    );
+    return this.oid4vpVerificationService.getVerificationTemplates(orgId, templateId);
+  }
+
+  @MessagePattern({ cmd: 'verification-template-update' })
+  async updateVerificationTemplate(payload: {
+    templateId: string;
+    name: string;
+    templateJson: object;
+    orgId: string;
+    userDetails: user;
+  }): Promise<object> {
+    const { templateId, name, templateJson, orgId, userDetails } = payload;
+    this.logger.debug(
+      `[updateVerificationTemplate] Received 'verification-template-update' for orgId=${orgId}, templateId=${templateId}, user=${userDetails?.id ?? 'unknown'}`
+    );
+    return this.oid4vpVerificationService.updateVerificationTemplate(
+      templateId,
+      name,
+      templateJson,
+      orgId,
+      userDetails
+    );
+  }
+
+  @MessagePattern({ cmd: 'verification-template-delete' })
+  async deleteVerificationTemplate(payload: { orgId: string; templateId: string }): Promise<object> {
+    const { orgId, templateId } = payload;
+    this.logger.debug(
+      `[deleteVerificationTemplate] Received 'verification-template-delete' for orgId=${orgId}, templateId=${templateId}`
+    );
+    return this.oid4vpVerificationService.deleteVerificationTemplate(orgId, templateId);
+  }
 }

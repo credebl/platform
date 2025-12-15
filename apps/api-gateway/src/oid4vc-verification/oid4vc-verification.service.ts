@@ -120,4 +120,41 @@ export class Oid4vcVerificationService {
       throw error;
     }
   }
+
+  async createVerificationTemplate(
+    name: string,
+    templateJson: object,
+    orgId: string,
+    userDetails: user
+  ): Promise<object> {
+    const payload = { name, templateJson, orgId, userDetails };
+    this.logger.debug(`[createVerificationTemplate] Called with orgId=${orgId}, user=${userDetails?.id}, name=${name}`);
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verification-template-create', payload);
+  }
+
+  async getVerificationTemplates(orgId: string, templateId?: string): Promise<object> {
+    const payload = { orgId, templateId };
+    this.logger.debug(`[getVerificationTemplates] Called with orgId=${orgId}, templateId=${templateId ?? 'N/A'}`);
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verification-template-get', payload);
+  }
+
+  async updateVerificationTemplate(
+    templateId: string,
+    name: string,
+    templateJson: object,
+    orgId: string,
+    userDetails: user
+  ): Promise<object> {
+    const payload = { templateId, name, templateJson, orgId, userDetails };
+    this.logger.debug(
+      `[updateVerificationTemplate] Called with orgId=${orgId}, templateId=${templateId}, user=${userDetails?.id}`
+    );
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verification-template-update', payload);
+  }
+
+  async deleteVerificationTemplate(orgId: string, templateId: string): Promise<object> {
+    const payload = { orgId, templateId };
+    this.logger.debug(`[deleteVerificationTemplate] Called with orgId=${orgId}, templateId=${templateId}`);
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verification-template-delete', payload);
+  }
 }

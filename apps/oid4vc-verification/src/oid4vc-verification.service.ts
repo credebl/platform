@@ -477,4 +477,104 @@ export class Oid4vpVerificationService extends BaseService {
       throw error;
     }
   }
+
+  async createVerificationTemplate(
+    name: string,
+    templateJson: object,
+    orgId: string,
+    userDetails: user
+  ): Promise<object> {
+    this.logger.debug(`[createVerificationTemplate] called for orgId=${orgId}, user=${userDetails?.id}, name=${name}`);
+    try {
+      const created = await this.oid4vpRepository.createVerificationTemplate(name, templateJson, orgId, userDetails.id);
+      if (!created) {
+        throw new InternalServerErrorException(ResponseMessages.oid4vp.error.createFailed);
+      }
+      this.logger.debug(`[createVerificationTemplate] template created successfully for orgId=${orgId}`);
+      return created;
+    } catch (error) {
+      this.logger.error(
+        `[createVerificationTemplate] - error: ${error?.response?.message ?? JSON.stringify(error?.response ?? error)}`
+      );
+      throw new RpcException(error?.response ?? error);
+    }
+  }
+
+  async getVerificationTemplates(orgId: string, templateId?: string): Promise<object> {
+    this.logger.debug(
+      `[getVerificationTemplates] fetching templates for orgId=${orgId}, templateId=${templateId ?? 'all'}`
+    );
+    try {
+      const templates = await this.oid4vpRepository.getVerificationTemplates(orgId, templateId);
+      if (!templates || 0 === templates.length) {
+        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+      }
+      this.logger.debug(`[getVerificationTemplates] ${templates.length} record(s) found`);
+      return templates;
+    } catch (error) {
+      this.logger.error(
+        `[getVerificationTemplates] - error: ${error?.response ?? error?.message ?? JSON.stringify(error)}`
+      );
+      throw new RpcException(error?.response ?? error);
+    }
+  }
+
+  async updateVerificationTemplate(
+    templateId: string,
+    name: string,
+    templateJson: object,
+    orgId: string,
+    userDetails: user
+  ): Promise<object> {
+    this.logger.debug(
+      `[updateVerificationTemplate] called for orgId=${orgId}, templateId=${templateId}, user=${userDetails?.id}`
+    );
+    try {
+      const existing = await this.oid4vpRepository.getVerificationTemplateById(orgId, templateId);
+      if (!existing) {
+        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+      }
+
+      const updated = await this.oid4vpRepository.updateVerificationTemplate(
+        templateId,
+        name,
+        templateJson,
+        orgId,
+        userDetails.id
+      );
+      if (!updated) {
+        throw new InternalServerErrorException(ResponseMessages.oid4vp.error.updateFailed);
+      }
+
+      this.logger.debug(
+        `[updateVerificationTemplate] template updated successfully for orgId=${orgId}, templateId=${templateId}`
+      );
+      return updated;
+    } catch (error) {
+      this.logger.error(`[updateVerificationTemplate] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error?.response ?? error);
+    }
+  }
+
+  async deleteVerificationTemplate(orgId: string, templateId: string): Promise<object> {
+    this.logger.debug(`[deleteVerificationTemplate] called for orgId=${orgId}, templateId=${templateId}`);
+    try {
+      const existing = await this.oid4vpRepository.getVerificationTemplateById(orgId, templateId);
+      if (!existing) {
+        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+      }
+
+      const deleted = await this.oid4vpRepository.deleteVerificationTemplate(orgId, templateId);
+
+      this.logger.debug(
+        `[deleteVerificationTemplate] template deleted successfully for orgId=${orgId}, templateId=${templateId}`
+      );
+      return deleted;
+    } catch (error) {
+      this.logger.error(
+        `[deleteVerificationTemplate] - error: ${JSON.stringify(error?.response ?? error?.error ?? error ?? 'Something went wrong')}`
+      );
+      throw new RpcException(error?.response ?? error.error ?? error);
+    }
+  }
 }

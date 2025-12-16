@@ -31,6 +31,8 @@ import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from './dtos/intent-template.dto';
 import { UtilitiesService } from './utilities.service';
 import { AuthGuard } from '@nestjs/passport';
+import { User } from '../authz/decorators/user.decorator';
+import { IUserRequest } from '@credebl/user-request/user-request.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('utilities')
@@ -112,9 +114,10 @@ export class UtilitiesController {
   })
   async createIntentTemplate(
     @Body() createIntentTemplateDto: CreateIntentTemplateDto,
+    @User() user: IUserRequest,
     @Res() res: Response
   ): Promise<Response> {
-    const intentTemplate = await this.utilitiesService.createIntentTemplate(createIntentTemplateDto);
+    const intentTemplate = await this.utilitiesService.createIntentTemplate(createIntentTemplateDto, user);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: 'Intent template created successfully',
@@ -227,9 +230,10 @@ export class UtilitiesController {
   async updateIntentTemplate(
     @Param('id') id: string,
     @Body() updateIntentTemplateDto: UpdateIntentTemplateDto,
+    @User() user: IUserRequest,
     @Res() res: Response
   ): Promise<Response> {
-    const intentTemplate = await this.utilitiesService.updateIntentTemplate(id, updateIntentTemplateDto);
+    const intentTemplate = await this.utilitiesService.updateIntentTemplate(id, updateIntentTemplateDto, user);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: 'Intent template updated successfully',

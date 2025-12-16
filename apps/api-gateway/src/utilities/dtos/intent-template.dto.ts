@@ -16,11 +16,6 @@ export class CreateIntentTemplateDto {
   @IsNotEmpty()
   @IsUUID()
   templateId: string;
-
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'User ID who created the mapping' })
-  @IsNotEmpty()
-  @IsUUID()
-  createdBy: string;
 }
 
 export class UpdateIntentTemplateDto {
@@ -38,9 +33,4 @@ export class UpdateIntentTemplateDto {
   @IsNotEmpty()
   @IsUUID()
   templateId: string;
-
-  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'User ID who updated the mapping' })
-  @IsNotEmpty()
-  @IsUUID()
-  lastChangedBy: string;
 }

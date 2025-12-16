@@ -241,7 +241,7 @@ export class Oid4vpVerificationService extends BaseService {
 
         const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(
           orgId,
-          sessionRequest.requestSigner.methodv
+          sessionRequest.requestSigner.method
         );
         this.logger.debug(`activeCertificate=${JSON.stringify(activeCertificate)}`);
 

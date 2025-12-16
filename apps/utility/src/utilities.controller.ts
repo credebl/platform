@@ -51,7 +51,7 @@ export class UtilitiesController {
     orgId: string;
     intentId: string;
     templateId: string;
-    createdBy: string;
+    user: { id: string };
   }): Promise<object> {
     return this.utilitiesService.createIntentTemplate(payload);
   }
@@ -82,13 +82,13 @@ export class UtilitiesController {
     orgId: string;
     intentId: string;
     templateId: string;
-    lastChangedBy: string;
+    user: { id: string };
   }): Promise<object> {
     return this.utilitiesService.updateIntentTemplate(payload.id, {
       orgId: payload.orgId,
       intentId: payload.intentId,
       templateId: payload.templateId,
-      lastChangedBy: payload.lastChangedBy
+      user: payload.user
     });
   }
 

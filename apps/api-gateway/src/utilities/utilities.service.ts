@@ -6,6 +6,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 import { Client as PgClient } from 'pg';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { IUserRequest } from '@credebl/user-request/user-request.interface';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
@@ -132,8 +133,9 @@ export class UtilitiesService extends BaseService {
   }
 
   // Intent Template CRUD operations
-  async createIntentTemplate(createIntentTemplateDto: CreateIntentTemplateDto): Promise<object> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-intent-template', createIntentTemplateDto);
+  async createIntentTemplate(createIntentTemplateDto: CreateIntentTemplateDto, user: IUserRequest): Promise<object> {
+    const payload = { ...createIntentTemplateDto, user };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-intent-template', payload);
   }
 
   async getIntentTemplateById(id: string): Promise<object> {
@@ -152,8 +154,12 @@ export class UtilitiesService extends BaseService {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-intent-templates', {});
   }
 
-  async updateIntentTemplate(id: string, updateIntentTemplateDto: UpdateIntentTemplateDto): Promise<object> {
-    const payload = { id, ...updateIntentTemplateDto };
+  async updateIntentTemplate(
+    id: string,
+    updateIntentTemplateDto: UpdateIntentTemplateDto,
+    user: IUserRequest
+  ): Promise<object> {
+    const payload = { id, ...updateIntentTemplateDto, user };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-intent-template', payload);
   }
 

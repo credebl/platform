@@ -91,10 +91,14 @@ export class UtilitiesService extends BaseService {
     orgId: string;
     intentId: string;
     templateId: string;
-    createdBy: string;
+    user: { id: string };
   }): Promise<object> {
     try {
-      const intentTemplate = await this.utilitiesRepository.createIntentTemplate(data);
+      const { user, ...templateData } = data;
+      const intentTemplate = await this.utilitiesRepository.createIntentTemplate({
+        ...templateData,
+        createdBy: user.id
+      });
       return intentTemplate;
     } catch (error) {
       this.logger.error(`[createIntentTemplate] - error in create intent template: ${JSON.stringify(error)}`);
@@ -151,10 +155,14 @@ export class UtilitiesService extends BaseService {
 
   async updateIntentTemplate(
     id: string,
-    data: { orgId: string; intentId: string; templateId: string; lastChangedBy: string }
+    data: { orgId: string; intentId: string; templateId: string; user: { id: string } }
   ): Promise<object> {
     try {
-      const intentTemplate = await this.utilitiesRepository.updateIntentTemplate(id, data);
+      const { user, ...templateData } = data;
+      const intentTemplate = await this.utilitiesRepository.updateIntentTemplate(id, {
+        ...templateData,
+        lastChangedBy: user.id
+      });
       return intentTemplate;
     } catch (error) {
       this.logger.error(`[updateIntentTemplate] - error in update intent template: ${JSON.stringify(error)}`);

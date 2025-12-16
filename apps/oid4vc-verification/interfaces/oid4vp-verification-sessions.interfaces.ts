@@ -20,4 +20,8 @@ export interface X5cSigner {
   x5c: string[];
 }
 
-export type RequestSigner = DidSigner | X5cSigner;
+export interface NoneSigner {
+  method: SignerMethodOption.NONE;
+}
+
+export type RequestSigner = DidSigner | X5cSigner | NoneSigner;

@@ -335,7 +335,8 @@ export enum AttributeType {
 
 export enum SignerMethodOption {
   DID = 'did',
-  X5C = 'x5c'
+  X5C = 'x5c',
+  NONE = 'none'
 }
 
 export declare enum HandshakeProtocol {

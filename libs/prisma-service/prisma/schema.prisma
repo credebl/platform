@@ -627,6 +627,7 @@ enum SignerOption {
   DID
   X509_P256
   X509_ED25519
+  NONE
 }
 
 model credential_templates {

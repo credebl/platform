@@ -305,7 +305,7 @@ export class PresentationRequestDto {
     example: {
       method: 'DID'
     },
-    description: 'Signer option type'
+    description: 'Signer option type (DID, X509_P256, X509_ED25519, or NONE for unsigned requests)'
   })
   @IsOptional()
   requestSigner?: {

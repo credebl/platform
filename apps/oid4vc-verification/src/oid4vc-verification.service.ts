@@ -228,7 +228,13 @@ export class Oid4vpVerificationService extends BaseService {
 
       let requestSigner: RequestSigner | undefined;
 
-      if (sessionRequest.requestSigner.method === SignerOption.DID) {
+      // If requestSigner is not provided, default to NONE
+      if (!sessionRequest.requestSigner || !sessionRequest.requestSigner.method) {
+        this.logger.debug('No requestSigner provided, defaulting to NONE');
+        requestSigner = {
+          method: SignerMethodOption.NONE
+        };
+      } else if (sessionRequest.requestSigner.method === SignerOption.DID) {
         requestSigner = {
           method: SignerMethodOption.DID,
           didUrl: orgDid
@@ -257,6 +263,11 @@ export class Oid4vpVerificationService extends BaseService {
         };
 
         activeCertificateDetails.push(activeCertificate);
+      } else if (sessionRequest.requestSigner.method === SignerOption.NONE) {
+        this.logger.debug('NONE request signer method selected');
+        requestSigner = {
+          method: SignerMethodOption.NONE
+        };
       } else {
         throw new BadRequestException(`Unsupported requestSigner method: ${sessionRequest.requestSigner.method}`);
       }

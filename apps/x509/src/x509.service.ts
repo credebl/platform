@@ -48,7 +48,7 @@ export class X509CertificateService extends BaseService {
       this.logger.log(`Start creating x509 certificate`);
       this.logger.debug(`Create x509 certificate with options`, payload);
       const { options, user, orgId } = payload;
-      const url = await getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.X509_CREATE_CERTIFICATE);
+      const url = getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.X509_CREATE_CERTIFICATE);
 
       const certificateDateCheckDto: CertificateDateCheckDto = {
         orgId,
@@ -149,7 +149,7 @@ export class X509CertificateService extends BaseService {
   }): Promise<X509CertificateRecord> {
     try {
       const { options, user, orgId } = payload;
-      const url = await getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.X509_DECODE_CERTIFICATE);
+      const url = getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.X509_DECODE_CERTIFICATE);
 
       this.logger.log(`Decoding certificate to import`);
       const decodedResult = await this._decodeX509CertificateForOrg({ certificate: options.certificate }, url, orgId);
@@ -198,7 +198,7 @@ export class X509CertificateService extends BaseService {
       } else {
         certStatus = x5cRecordStatus.Active;
       }
-      const importurl = await getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.X509_IMPORT_CERTIFICATE);
+      const importurl = getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.X509_IMPORT_CERTIFICATE);
 
       this.logger.log(`Certificate validation done`);
       const certificate = await this._importX509CertificateForOrg(options, importurl, orgId);

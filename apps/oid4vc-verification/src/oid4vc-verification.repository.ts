@@ -39,23 +39,6 @@ export class Oid4vpRepository {
     }
   }
 
-  async getOrgAgentType(orgAgentId: string): Promise<string> {
-    this.logger.debug(`[getOrgAgentType] called with orgAgentId=${orgAgentId}`);
-    try {
-      const { agent } = await this.prisma.org_agents_type.findFirst({
-        where: {
-          id: orgAgentId
-        }
-      });
-
-      this.logger.debug(`[getOrgAgentType] Found type=${agent}`);
-      return agent;
-    } catch (error) {
-      this.logger.error(`[getOrgAgentType] - error: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
   async getOrganizationByTenantId(tenantId: string): Promise<org_agents> {
     this.logger.debug(`[getOrganizationByTenantId] called with tenantId=${tenantId}`);
     try {
@@ -114,7 +97,7 @@ export class Oid4vpRepository {
       this.logger.debug(`[updateOid4vpVerifier] Updated verifier id=${updated.id}`);
       return updated;
     } catch (error) {
-      this.logger.error(`[updateOid4vpVerifier] Error in createOid4vpVerifier: ${error.message}`);
+      this.logger.error(`[updateOid4vpVerifier] Error in updateOid4vpVerifier: ${error.message}`);
       throw error;
     }
   }

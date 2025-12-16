@@ -67,6 +67,7 @@ export const networkNamespace = (did: string): string => {
   return segments[1];
 };
 
+//TODO: Remove this util method because we can have some better way to manage agent URLs
 export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: string): string => {
   if (!agentEndPoint) {
     throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);

@@ -50,7 +50,18 @@ export const oneYearInMilliseconds = 365 * oneDayInMilliseconds;
 export const serverStartupTimeInMilliseconds = Date.now();
 
 export function dateToSeconds(date: Date | DateOnly): number {
-  const realDate = date instanceof DateOnly ? new Date(date.toISOString()) : date;
+  const realDate =
+    date instanceof DateOnly
+      ? new Date(
+          Date.UTC(
+            // Get the date parts from the string or from internal Date
+            Number(date.toISOString().slice(0, 4)),
+            Number(date.toISOString().slice(5, 7)) - 1,
+            Number(date.toISOString().slice(8, 10))
+          )
+        )
+      : date;
+
   if (isNaN(realDate.getTime())) {
     throw new TypeError('dateToSeconds: invalid date');
   }

@@ -41,7 +41,7 @@ export class CredentialAttributeDto {
   mandatory?: boolean;
 
   // TODO: Check how do we handle claims with only path rpoperty like email, etc.
-  @ApiProperty({ enum: AttributeType, description: 'Type of the attribute value (string, number, date, etc.)' })
+  @ApiProperty({ enum: AttributeType, description: 'Type of the attribute value (string, number, date, boolean)' })
   @IsEnum(AttributeType)
   // TODO: changes value_type: AttributeType;
   value_type: AttributeType;

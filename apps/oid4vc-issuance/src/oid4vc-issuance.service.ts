@@ -55,7 +55,8 @@ import {
 import {
   buildCredentialOfferPayload,
   buildCredentialOfferUrl,
-  CredentialOfferPayload
+  CredentialOfferPayload,
+  ResolvedSignerOption
 } from '../libs/helpers/credential-sessions.builder';
 import { x5cKeyType } from '@credebl/enum/enum';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
@@ -92,7 +93,7 @@ export class Oid4vcIssuanceService {
       if (!orgAgentType) {
         throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
       }
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_CREATE);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_CREATE);
       const issuerInitialConfig: IssuerInitialConfig = {
         issuerId,
         display: issuerCreation?.display || {},
@@ -176,11 +177,7 @@ export class Oid4vcIssuanceService {
         throw new InternalServerErrorException('Error in updating OID4VC Issuer details in DB');
       }
 
-      const url = await getAgentUrl(
-        agentEndPoint,
-        CommonConstants.OIDC_ISSUER_TEMPLATE,
-        getIssuerDetails.publicIssuerId
-      );
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, getIssuerDetails.publicIssuerId);
       const issuerConfig = await this.buildOidcIssuerConfig(issuerUpdationConfig.issuerId);
       console.log('This is the issuerConfig:', JSON.stringify(issuerConfig, null, 2));
       const updatedIssuer = await this._createOIDCTemplate(issuerConfig, url, orgId);
@@ -208,7 +205,7 @@ export class Oid4vcIssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const encodedId = encodeIssuerPublicId(getIssuerDetails?.publicIssuerId);
-      const url = await getAgentUrl(agentDetails?.agentEndPoint, CommonConstants.OIDC_ISSUER_BY_ID, encodedId);
+      const url = getAgentUrl(agentDetails?.agentEndPoint, CommonConstants.OIDC_ISSUER_BY_ID, encodedId);
       const issuerDetailsRaw = await this._oidcGetIssuerById(url, orgId);
       if (!issuerDetailsRaw) {
         throw new InternalServerErrorException(`Error from agent while getting issuer`);
@@ -240,7 +237,7 @@ export class Oid4vcIssuanceService {
       }
       const getIssuers = await this.oid4vcIssuanceRepository.getAllOidcIssuersByOrg(orgId);
 
-      // const url = await getAgentUrl(agentDetails.agentEndPoint, CommonConstants.OIDC_GET_ALL_ISSUERS);
+      // const url = getAgentUrl(agentDetails.agentEndPoint, CommonConstants.OIDC_GET_ALL_ISSUERS);
       // const issuersDetails = await this._oidcGetIssuers(url, orgId);
       // if (!issuersDetails || null == issuersDetails.response) {
       //   throw new InternalServerErrorException('Error from agent while oidcIssuers');
@@ -273,7 +270,7 @@ export class Oid4vcIssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint } = agentDetails;
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_DELETE, issuerRecordId.id);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_DELETE, issuerRecordId.id);
       const createTemplateOnAgent = await this._deleteOidcIssuer(url, orgId);
       if (!createTemplateOnAgent) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -333,11 +330,7 @@ export class Oid4vcIssuanceService {
         if (!issuerDetails) {
           throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
         }
-        const url = await getAgentUrl(
-          agentEndPoint,
-          CommonConstants.OIDC_ISSUER_TEMPLATE,
-          issuerDetails.publicIssuerId
-        );
+        const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, issuerDetails.publicIssuerId);
         createTemplateOnAgent = await this._createOIDCTemplate(issuerTemplateConfig, url, orgId);
       } catch (agentError) {
         try {
@@ -418,11 +411,7 @@ export class Oid4vcIssuanceService {
         if (!issuerDetails) {
           throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
         }
-        const url = await getAgentUrl(
-          agentEndPoint,
-          CommonConstants.OIDC_ISSUER_TEMPLATE,
-          issuerDetails.publicIssuerId
-        );
+        const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, issuerDetails.publicIssuerId);
 
         const createTemplateOnAgent = await this._createOIDCTemplate(issuerTemplateConfig, url, orgId);
         if (!createTemplateOnAgent) {
@@ -487,7 +476,7 @@ export class Oid4vcIssuanceService {
       if (!issuerDetails) {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
       }
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, issuerDetails.publicIssuerId);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, issuerDetails.publicIssuerId);
 
       const createTemplateOnAgent = await this._createOIDCTemplate(issuerTemplateConfig, url, orgId);
       if (!createTemplateOnAgent) {
@@ -539,7 +528,7 @@ export class Oid4vcIssuanceService {
       //TDOD: signerOption should be under credentials change this with x509 support
 
       //TDOD: signerOption should be under credentials change this with x509 support
-      const signerOptions = [];
+      const signerOptions: ResolvedSignerOption[] = [];
       const activeCertificateDetails: X509CertificateRecord[] = [];
       for (const template of getAllOfferTemplates) {
         if (template.signerOption === SignerOption.DID) {
@@ -593,7 +582,7 @@ export class Oid4vcIssuanceService {
           publicId: publicIssuerId,
           authorizationServerUrl: `${authorizationServerUrl}/oid4vci/${publicIssuerId}`
         },
-        signerOptions as any,
+        signerOptions,
         activeCertificateDetails
       );
       console.log('This is the buildOidcCredentialOffer:', JSON.stringify(buildOidcCredentialOffer, null, 2));
@@ -606,7 +595,7 @@ export class Oid4vcIssuanceService {
         throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
       }
       buildOidcCredentialOffer.publicIssuerId = issuerDetails.publicIssuerId;
-      const url = await getAgentUrl(
+      const url = getAgentUrl(
         await this.getAgentEndpoint(orgId),
         CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER,
         issuerDetails.publicIssuerId
@@ -659,7 +648,7 @@ export class Oid4vcIssuanceService {
         }
       }
 
-      const url = await getAgentUrl(
+      const url = getAgentUrl(
         await this.getAgentEndpoint(orgId),
         CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER
       );
@@ -685,7 +674,7 @@ export class Oid4vcIssuanceService {
       if (!updateOidcCredentialOffer.issuerMetadata) {
         throw new BadRequestException('Please provide a valid issuerMetadata');
       }
-      const url = await getAgentUrl(
+      const url = getAgentUrl(
         await this.getAgentEndpoint(orgId),
         CommonConstants.OIDC_ISSUER_SESSIONS_UPDATE_OFFER,
         updateOidcCredentialOffer.credentialOfferId
@@ -707,11 +696,7 @@ export class Oid4vcIssuanceService {
 
   async getCredentialOfferDetailsById(offerId: string, orgId: string): Promise<any> {
     try {
-      const url = await getAgentUrl(
-        await this.getAgentEndpoint(orgId),
-        CommonConstants.OIDC_ISSUER_SESSIONS_BY_ID,
-        offerId
-      );
+      const url = getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.OIDC_ISSUER_SESSIONS_BY_ID, offerId);
       const offer = await this._oidcGetCredentialOfferById(url, orgId);
       if ('string' === typeof offer.response) {
         offer.response = JSON.parse(offer.response);
@@ -725,7 +710,7 @@ export class Oid4vcIssuanceService {
 
   async getCredentialOffers(orgId: string, getAllCredentialOffer: GetAllCredentialOffer): Promise<any> {
     try {
-      const url = await getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.OIDC_ISSUER_SESSIONS);
+      const url = getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.OIDC_ISSUER_SESSIONS);
       const credentialOfferUrl = buildCredentialOfferUrl(url, getAllCredentialOffer);
       const offers = await this._oidcGetCredentialOffers(credentialOfferUrl, orgId);
       if ('string' === typeof offers.response) {
@@ -742,7 +727,7 @@ export class Oid4vcIssuanceService {
       if (!credentialId) {
         throw new BadRequestException('Please provide a valid credentialId');
       }
-      const url = await getAgentUrl(
+      const url = getAgentUrl(
         await this.getAgentEndpoint(orgId),
         CommonConstants.OIDC_DELETE_CREDENTIAL_OFFER,
         credentialId

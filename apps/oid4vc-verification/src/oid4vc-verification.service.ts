@@ -57,7 +57,7 @@ export class Oid4vpVerificationService extends BaseService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint, id } = agentDetails;
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_CREATE);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_CREATE);
       this.logger.debug(`[oid4vpCreateVerifier] calling agent URL=${url}`);
 
       try {
@@ -72,7 +72,7 @@ export class Oid4vpVerificationService extends BaseService {
           409 === error?.status?.message?.statusCode || 409 === error?.response?.status || 409 === error?.statusCode;
 
         if (status409) {
-          throw new ConflictException(`Verifier with id '${createdVerifierDetails.verifierId}' already exists`);
+          throw new ConflictException(`Verifier with id '${verifierId}' already exists`);
         }
         throw error;
       }
@@ -106,7 +106,8 @@ export class Oid4vpVerificationService extends BaseService {
     try {
       let updatedVerifierDetails;
       const existingVerifiers = await this.oid4vpRepository.getVerifiersByVerifierId(orgId, verifierId);
-      if (0 > existingVerifiers.length) {
+
+      if (!existingVerifiers || 0 === existingVerifiers.length) {
         throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
       }
       // updateVerifier['verifierId'] = existingVerifiers[0].publicVerifierId
@@ -115,7 +116,7 @@ export class Oid4vpVerificationService extends BaseService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint, id } = agentDetails;
-      const url = await getAgentUrl(
+      const url = getAgentUrl(
         agentEndPoint,
         CommonConstants.OIDC_VERIFIER_UPDATE,
         existingVerifiers[0].publicVerifierId
@@ -134,8 +135,10 @@ export class Oid4vpVerificationService extends BaseService {
           409 === error?.status?.message?.statusCode || 409 === error?.response?.status || 409 === error?.statusCode;
 
         if (status409) {
-          throw new ConflictException(`Verifier with id '${updatedVerifierDetails.verifierId}' already exists`);
+          const conflictId = existingVerifiers?.[0]?.publicVerifierId ?? verifierId;
+          throw new ConflictException(`Verifier with id '${conflictId}' already exists`);
         }
+
         throw error;
       }
       const updateVerifierDetails = await this.oid4vpRepository.updateOid4vpVerifier(
@@ -185,7 +188,7 @@ export class Oid4vpVerificationService extends BaseService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint, id } = agentDetails;
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_DELETE, checkIdExist[0].verifierId);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_DELETE, checkIdExist[0].verifierId);
       this.logger.debug(`[deleteVerifierById] calling agent URL=${url}`);
 
       await this._deleteOid4vpVerifier(url, orgId);
@@ -263,7 +266,7 @@ export class Oid4vpVerificationService extends BaseService {
 
       console.log(`[oid4vpCreateVerificationSession] sessionRequest=${JSON.stringify(sessionRequest)}`);
 
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
       console.log(`[oid4vpCreateVerificationSession] calling agent URL=${url}`);
 
       const createdSession = await this._createVerificationSession(sessionRequest, url, orgId);

@@ -13,11 +13,11 @@ export enum SignerMethodOption {
   X5C = 'x5c'
 }
 
-export interface SignerOption {
-  method: SignerMethodOption;
-  did?: string;
-  x5c?: string[];
-}
+// export interface SignerOption {
+//   method: SignerMethodOption;
+//   did?: string;
+//   x5c?: string[];
+// }
 
 export enum AuthenticationType {
   PRE_AUTHORIZED_CODE = 'pre-authorized_code',

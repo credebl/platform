@@ -225,7 +225,7 @@ export class VerificationService {
   async getProofPresentationById(proofId: string, orgId: string): Promise<object> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
-      const url = await getAgentUrl(
+      const url = getAgentUrl(
         getAgentDetails?.agentEndPoint,
         CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID_FLAG,
         proofId
@@ -280,7 +280,7 @@ export class VerificationService {
     try {
       const comment = requestProof.comment ? requestProof.comment : '';
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.orgId);
-      const url = await getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.REQUEST_PROOF);
+      const url = getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.REQUEST_PROOF);
       // Function to create a payload
       const createPayload = async (connectionId: string): Promise<IProofRequestPayload> => {
         const proofRequestPayload = {
@@ -400,7 +400,7 @@ export class VerificationService {
   async verifyPresentation(proofId: string, orgId: string): Promise<object> {
     try {
       const getAgentData = await this.verificationRepository.getAgentEndPoint(orgId);
-      const url = await getAgentUrl(getAgentData?.agentEndPoint, CommonConstants.ACCEPT_PRESENTATION, proofId);
+      const url = getAgentUrl(getAgentData?.agentEndPoint, CommonConstants.ACCEPT_PRESENTATION, proofId);
 
       const payload = { orgId, url };
       const getProofPresentationById = await this._verifyPresentation(payload);
@@ -477,10 +477,7 @@ export class VerificationService {
 
       outOfBandRequestProof['label'] = label;
 
-      const url = await getAgentUrl(
-        getAgentDetails?.agentEndPoint,
-        CommonConstants.CREATE_OUT_OF_BAND_PROOF_PRESENTATION
-      );
+      const url = getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.CREATE_OUT_OF_BAND_PROOF_PRESENTATION);
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
       const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
@@ -758,7 +755,7 @@ export class VerificationService {
       let credDefId;
       let schemaId;
       let certificate;
-      const url = await getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.GET_VERIFIED_PROOF, proofId);
+      const url = getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.GET_VERIFIED_PROOF, proofId);
 
       const payload = { orgId, url };
 

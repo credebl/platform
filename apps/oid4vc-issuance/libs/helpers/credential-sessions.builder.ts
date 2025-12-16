@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
-import { credential_templates } from '@prisma/client';
-import { GetAllCredentialOffer, SignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
+import { credential_templates, SignerOption } from '@prisma/client';
+import { GetAllCredentialOffer } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
 import {
   CredentialAttribute,
   MdocTemplate,
   SdJwtTemplate
 } from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
-import { UnprocessableEntityException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { dateToSeconds } from '@credebl/common/date-only';
@@ -130,7 +130,7 @@ function mapDbFormatToApiFormat(dbFormat: string): CredentialFormat {
   if ('mso_mdoc' === normalized || 'mso-mdoc' === normalized || 'mdoc' === normalized) {
     return CredentialFormat.Mdoc;
   }
-  throw new Error(`Unsupported template format: ${dbFormat}`);
+  throw new UnprocessableEntityException(`Unsupported template format: ${dbFormat}`);
 }
 
 function formatSuffix(apiFormat: CredentialFormat): 'sdjwt' | 'mdoc' {
@@ -269,8 +269,8 @@ function validateCredentialDatesInCertificateWindow(credentialValidityInfo: vali
 
 function buildSdJwtCredential(
   credentialRequest: CredentialRequestDtoLike,
-  templateRecord: any,
-  signerOptions: SignerOption[],
+  templateRecord: credential_templates,
+  signerOptions: ResolvedSignerOption[],
   activeCertificateDetails?: X509CertificateRecord[]
 ): BuiltCredential {
   // For SD-JWT format we expect payload to be a flat map of claims (no namespaces)
@@ -279,16 +279,21 @@ function buildSdJwtCredential(
   // // strip vct if present per requirement
   // delete payloadCopy.vct;
 
-  const templateSignerOption: SignerOption = signerOptions.find(
-    (x) => templateRecord.signerOption.toLowerCase() === x.method
-  );
+  const rawSigner = (templateRecord.signerOption ?? '').toString().toLowerCase();
+  if (!rawSigner) {
+    throw new UnprocessableEntityException('Template signerOption is not configured');
+  }
+
+  const expectedMethod = 'did' === rawSigner ? SignerMethodOption.DID : SignerMethodOption.X5C;
+
+  const templateSignerOption: ResolvedSignerOption = signerOptions?.find((x) => x.method === expectedMethod);
   if (!templateSignerOption) {
     throw new UnprocessableEntityException(
       `Signer option "${templateRecord.signerOption}" is not configured for template ${templateRecord.id}`
     );
   }
 
-  if (templateRecord.signerOption === SignerMethodOption.X5C && credentialRequest.validityInfo) {
+  if (templateRecord.signerOption !== SignerOption.DID && credentialRequest.validityInfo) {
     if (!activeCertificateDetails?.length) {
       throw new UnprocessableEntityException('Active x.509 certificate details are required for x5c signer templates.');
     }
@@ -327,7 +332,7 @@ function buildSdJwtCredential(
     };
   }
 
-  const sdJwtTemplate = templateRecord.attributes as SdJwtTemplate;
+  const sdJwtTemplate = templateRecord.attributes as any as SdJwtTemplate;
   payloadCopy.vct = sdJwtTemplate.vct;
 
   const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
@@ -349,8 +354,8 @@ function buildSdJwtCredential(
  */
 function buildMdocCredential(
   credentialRequest: CredentialRequestDtoLike,
-  templateRecord: any,
-  signerOptions: SignerOption[],
+  templateRecord: credential_templates,
+  signerOptions: ResolvedSignerOption[],
   activeCertificateDetails: X509CertificateRecord[]
 ): BuiltCredential {
   let incomingPayload = { ...(credentialRequest.payload as Record<string, unknown>) };
@@ -405,7 +410,7 @@ export function buildCredentialOfferPayload(
     publicId: string;
     authorizationServerUrl?: string;
   },
-  signerOptions?: SignerOption[],
+  signerOptions?: ResolvedSignerOption[],
   activeCertificateDetails?: X509CertificateRecord[]
 ): CredentialOfferPayload {
   // Index templates by id
@@ -414,12 +419,12 @@ export function buildCredentialOfferPayload(
   // Validate template ids
   const missingTemplateIds = dto.credentials.map((c) => c.templateId).filter((id) => !templatesById.has(id));
   if (missingTemplateIds.length) {
-    throw new Error(`Unknown template ids: ${missingTemplateIds.join(', ')}`);
+    throw new NotFoundException(`Unknown template ids: ${missingTemplateIds.join(', ')}`);
   }
 
   // Build each credential using the template's format
   const builtCredentials: BuiltCredential[] = dto.credentials.map((credentialRequest) => {
-    const templateRecord = templatesById.get(credentialRequest.templateId)!;
+    const templateRecord: credential_templates = templatesById.get(credentialRequest.templateId)!;
 
     const validationError = validatePayloadAgainstTemplate(templateRecord, credentialRequest.payload);
     if (!validationError.valid) {
@@ -434,7 +439,7 @@ export function buildCredentialOfferPayload(
     if (apiFormat === CredentialFormat.Mdoc) {
       return buildMdocCredential(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);
     }
-    throw new Error(`Unsupported template format for ${templateFormat}`);
+    throw new UnprocessableEntityException(`Unsupported template format for ${templateFormat}`);
   });
 
   // Base envelope: allow explicit publicIssuerId from DTO or fallback to issuerDetails.publicId
@@ -454,7 +459,7 @@ export function buildCredentialOfferPayload(
   const overrideAuthorizationServerUrl = issuerDetails?.authorizationServerUrl;
   if (overrideAuthorizationServerUrl) {
     if ('string' !== typeof overrideAuthorizationServerUrl || '' === overrideAuthorizationServerUrl.trim()) {
-      throw new Error('issuerDetails.authorizationServerUrl must be a non-empty string when provided');
+      throw new BadRequestException('issuerDetails.authorizationServerUrl must be a non-empty string when provided');
     }
     return {
       ...baseEnvelope,
@@ -469,7 +474,7 @@ export function buildCredentialOfferPayload(
   const hasPreAuthFromDto = Boolean(dto.preAuthorizedCodeFlowConfig);
   const hasAuthCodeFromDto = Boolean(dto.authorizationCodeFlowConfig);
   if (hasPreAuthFromDto === hasAuthCodeFromDto) {
-    throw new Error('Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.');
+    throw new BadRequestException('Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.');
   }
   if (hasPreAuthFromDto) {
     return {

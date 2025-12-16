@@ -269,7 +269,7 @@ export class ConnectionService {
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.GET_QUESTION_ANSWER_RECORD);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.GET_QUESTION_ANSWER_RECORD);
 
       const record = await this._getQuestionAnswersRecord(url, orgId);
       return record;
@@ -425,7 +425,7 @@ export class ConnectionService {
         question
       };
 
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.SEND_QUESTION, connectionId);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.SEND_QUESTION, connectionId);
 
       const createQuestion = await this._sendQuestion(questionPayload, url, orgId);
       return createQuestion;
@@ -529,7 +529,7 @@ export class ConnectionService {
         recipientKey: recipientKey || undefined,
         invitationDid: connectionInvitationDid || undefined
       };
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.CONNECTION_INVITATION);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.CONNECTION_INVITATION);
       const createConnectionInvitation = await this._createOutOfBandConnectionInvitation(connectionPayload, url, orgId);
       const connectionInvitationUrl = createConnectionInvitation?.invitationUrl;
       const shortenedUrl = await this.storeConnectionObjectAndReturnUrl(
@@ -661,7 +661,7 @@ export class ConnectionService {
       const questionPayload = {
         content
       };
-      const agentUrl = await getAgentUrl(agentEndPoint, CommonConstants.SEND_BASIC_MESSAGE, connectionId);
+      const agentUrl = getAgentUrl(agentEndPoint, CommonConstants.SEND_BASIC_MESSAGE, connectionId);
 
       const sendBasicMessage = await this._sendBasicMessageToAgent(questionPayload, agentUrl, orgId);
       return sendBasicMessage;

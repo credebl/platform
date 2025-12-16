@@ -503,6 +503,119 @@ export const ResponseMessages = {
       walletRecordNotFound: 'Wallet record not found.'
     }
   },
+  oidcIssuer: {
+    success: {
+      create: 'OID4VC issuer created successfully.',
+      update: 'OID4VC issuer updated successfully.',
+      delete: 'OID4VC issuer deleted successfully.',
+      fetch: 'OID4VC issuer(s) fetched successfully.',
+      issuerConfig: 'Issuer config details created successfully',
+      issuerConfigUpdate: 'Issuer config details updated successfully'
+    },
+    error: {
+      notFound: 'OID4VC issuer not found.',
+      invalidId: 'Invalid OID4VC issuer ID.',
+      createFailed: 'Failed to create OID4VC issuer.',
+      updateFailed: 'Failed to update OID4VC issuer.',
+      deleteFailed: 'Failed to delete OID4VC issuer.'
+    }
+  },
+  oidcTemplate: {
+    success: {
+      create: 'OID4VC template created successfully.',
+      update: 'OID4VC template updated successfully.',
+      delete: 'OID4VC template deleted successfully.',
+      fetch: 'OID4VC template(s) fetched successfully.',
+      getById: 'OID4VC template details fetched successfully.',
+      deleteTemplate: '[createTemplate] compensating delete succeeded for templateId=${templateId}'
+    },
+    error: {
+      notFound: 'OID4VC template not found.',
+      invalidId: 'Invalid OID4VC template ID.',
+      createFailed: 'Failed to create OID4VC template.',
+      updateFailed: 'Failed to update OID4VC template.',
+      deleteFailed: 'Failed to delete OID4VC template.',
+      issuerDisplayNotFound: 'Issuer display not found.',
+      issuerDetailsNotFound: 'Issuer details not found.',
+      templateNameAlreadyExist: 'Template name already exists for this issuer.',
+      deleteTemplate: 'Error while deleting template.',
+      failedDeleteTemplate: '[createTemplate] compensating delete FAILED for templateId='
+    }
+  },
+  oidcIssuerSession: {
+    success: {
+      create: 'OID4VC Credential offer created successfully.',
+      getById: 'OID4VC Credential offer details fetched successfully.',
+      getAll: 'OID4VC Credential offers fetched successfully.',
+      update: 'OID4VC Credential offer updated successfully.',
+      delete: 'OID4VC Credential offer deleted successfully.'
+    },
+    error: {
+      errorCreateOffer: 'Error while creating OID4VC credential offer on agent.',
+      errorUpdateOffer: 'Error while updating OID4VC credential offer on agent.',
+      deleteFailed: 'Failed to delete OID4VC credential offer.',
+      missingValidityInfo: 'Validity Info(validFrom, validTo) is required for validity of credential'
+    }
+  },
+  oid4vp: {
+    success: {
+      create: 'OID4VP verifier created successfully.',
+      update: 'OID4VP verifier updated successfully.',
+      delete: 'OID4VP verifier deleted successfully.',
+      fetch: 'OID4VP verifier(s) fetched successfully.',
+      getById: 'OID4VP verifier details fetched successfully.'
+    },
+    error: {
+      notFound: 'OID4VP verifier not found.',
+      invalidId: 'Invalid OID4VP verifier ID.',
+      createFailed: 'Failed to create OID4VP verifier.',
+      updateFailed: 'Failed to update OID4VP verifier.',
+      deleteFailed: 'Failed to delete OID4VP verifier.',
+      verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.'
+    }
+  },
+  oid4vpSession: {
+    success: {
+      create: 'OID4VP session verifier created successfully.',
+      update: 'OID4VP session verifier updated successfully.',
+      delete: 'OID4VP session verifier deleted successfully.',
+      fetch: 'OID4VP session verifier(s) fetched successfully.',
+      getById: 'OID4VP session verifier details fetched successfully.',
+      webhookReceived: 'OID4VP presentation webhook stored successfully.'
+    },
+    error: {
+      notFound: 'OID4VP session verifier not found.',
+      invalidId: 'Invalid OID4VP session verifier ID.',
+      createFailed: 'Failed to create OID4VP session verifier.',
+      updateFailed: 'Failed to update OID4VP session verifier.',
+      deleteFailed: 'Failed to delete OID4VP session verifier.',
+      verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.',
+      deleteTemplate: 'Error while deleting template.',
+      responseNotFound: 'Verification session response not found.'
+    }
+  },
+  x509: {
+    success: {
+      create: 'x509 certificate created successfully',
+      activated: 'x509 certificate activated successfully',
+      deActivated: 'x509 certificate deactivated successfully',
+      fetch: 'x509 certificate fetched successfully',
+      fetchAll: 'x509 certificates fetched successfully',
+      import: 'x509 certificate imported successfully'
+    },
+    error: {
+      errorCreate: 'Error while creating x509 certificate.',
+      errorUpdateStatus: 'Error while updating x509 certificate.',
+      errorActivation: 'Failed to activate x509 certificate.',
+      agentEndPointNotFound: 'Agent details not found',
+      collision: 'Certificate date range collides with existing certificates for this organization',
+      collisionForActivatingX5c:
+        'Certificate date range collides with existing certificates for this organization, In order to active this you need to Inactivate the previous one.',
+      notFound: 'x509 certificate record not found.',
+      import: 'Failed to import x509 certificate',
+      errorDecode: 'Error while decoding x509 certificate.'
+    }
+  },
   nats: {
     success: {},
     error: {

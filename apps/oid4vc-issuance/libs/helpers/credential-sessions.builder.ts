@@ -1,0 +1,489 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
+import { credential_templates, SignerOption } from '@prisma/client';
+import { GetAllCredentialOffer } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
+import { CredentialFormat } from '@credebl/enum/enum';
+import {
+  CredentialAttribute,
+  MdocTemplate,
+  SdJwtTemplate
+} from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
+import { BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { ResponseMessages } from '@credebl/common/response-messages';
+import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { dateToSeconds } from '@credebl/common/date-only';
+
+/* ============================================================================
+   Domain Types
+============================================================================ */
+
+// type ValueType = 'string' | 'date' | 'number' | 'boolean' | 'integer' | string;
+
+// interface TemplateAttribute {
+//   display?: { name: string; locale: string }[];
+//   mandatory?: boolean;
+//   value_type?: ValueType;
+// }
+// type TemplateAttributes = Record<string, TemplateAttribute>;
+
+export enum SignerMethodOption {
+  DID = 'did',
+  X5C = 'x5c'
+}
+
+export type DisclosureFrame = Record<string, boolean | Record<string, boolean>>;
+
+export interface validityInfo {
+  validFrom: Date;
+  validUntil: Date;
+}
+
+export interface CredentialRequestDtoLike {
+  templateId: string;
+  payload: Record<string, unknown>;
+  validityInfo?: validityInfo;
+  // disclosureFrame?: DisclosureFrame;
+}
+
+export interface CreateOidcCredentialOfferDtoLike {
+  credentials: CredentialRequestDtoLike[];
+  preAuthorizedCodeFlowConfig?: {
+    txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
+    authorizationServerUrl: string;
+  };
+  authorizationCodeFlowConfig?: {
+    authorizationServerUrl: string;
+  };
+  publicIssuerId?: string;
+}
+
+export interface ResolvedSignerOption {
+  method: 'did' | 'x5c';
+  did?: string;
+  x5c?: string[];
+}
+
+/* ============================================================================
+   Strong return types
+============================================================================ */
+
+export interface BuiltCredential {
+  credentialSupportedId: string;
+  signerOptions?: ResolvedSignerOption;
+  format: CredentialFormat;
+  payload: Record<string, unknown>;
+  disclosureFrame?: DisclosureFrame;
+}
+
+export interface BuiltCredentialOfferBase {
+  signerOption?: ResolvedSignerOption;
+  credentials: BuiltCredential[];
+  publicIssuerId?: string;
+}
+
+export type CredentialOfferPayload = BuiltCredentialOfferBase &
+  (
+    | {
+        preAuthorizedCodeFlowConfig: {
+          txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
+          authorizationServerUrl: string;
+        };
+        authorizationCodeFlowConfig?: never;
+      }
+    | {
+        authorizationCodeFlowConfig: {
+          authorizationServerUrl: string;
+        };
+        preAuthorizedCodeFlowConfig?: never;
+      }
+  );
+
+/* ============================================================================
+   Constants
+============================================================================ */
+
+/**
+ * Default txCode constant requested (used for pre-authorized flow).
+ * The user requested this as a constant to be used by the builder.
+ */
+export const DEFAULT_TXCODE = {
+  description: 'test abc',
+  length: 4,
+  input_mode: 'numeric' as const
+};
+
+/* ============================================================================
+   Small Utilities
+============================================================================ */
+
+// const isNil = (value: unknown): value is null | undefined => null == value;
+// const isEmptyString = (value: unknown): boolean => 'string' === typeof value && '' === value.trim();
+// const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+//   Boolean(value) && 'object' === typeof value && !Array.isArray(value);
+
+/** Map DB format string -> API enum */
+function mapDbFormatToApiFormat(dbFormat: string): CredentialFormat {
+  const normalized = (dbFormat ?? '').toLowerCase();
+  if (['sd-jwt', 'vc+sd-jwt', 'sdjwt', 'sd+jwt-vc'].includes(normalized)) {
+    return CredentialFormat.SdJwtVc;
+  }
+  if ('mso_mdoc' === normalized || 'mso-mdoc' === normalized || 'mdoc' === normalized) {
+    return CredentialFormat.Mdoc;
+  }
+  throw new UnprocessableEntityException(`Unsupported template format: ${dbFormat}`);
+}
+
+function formatSuffix(apiFormat: CredentialFormat): 'sdjwt' | 'mdoc' {
+  return apiFormat === CredentialFormat.SdJwtVc ? 'sdjwt' : 'mdoc';
+}
+
+export function buildCredentialOfferUrl(baseUrl: string, getAllCredentialOffer: GetAllCredentialOffer): string {
+  const criteriaParams: string[] = [];
+
+  if (getAllCredentialOffer.publicIssuerId) {
+    criteriaParams.push(`publicIssuerId=${encodeURIComponent(getAllCredentialOffer.publicIssuerId)}`);
+  }
+
+  if (getAllCredentialOffer.preAuthorizedCode) {
+    criteriaParams.push(`preAuthorizedCode=${encodeURIComponent(getAllCredentialOffer.preAuthorizedCode)}`);
+  }
+
+  if (getAllCredentialOffer.state) {
+    criteriaParams.push(`state=${encodeURIComponent(getAllCredentialOffer.state)}`);
+  }
+
+  if (getAllCredentialOffer.credentialOfferUri) {
+    criteriaParams.push(`credentialOfferUri=${encodeURIComponent(getAllCredentialOffer.credentialOfferUri)}`);
+  }
+
+  if (getAllCredentialOffer.authorizationCode) {
+    criteriaParams.push(`authorizationCode=${encodeURIComponent(getAllCredentialOffer.authorizationCode)}`);
+  }
+
+  // Append query string if any params exist
+  return 0 < criteriaParams.length ? `${baseUrl}?${criteriaParams.join('&')}` : baseUrl;
+}
+
+export function validatePayloadAgainstTemplate(template: any, payload: any): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  const validateAttributes = (attributes: CredentialAttribute[], data: any, path = '') => {
+    for (const attr of attributes) {
+      const currentPath = path ? `${path}.${attr.key}` : attr.key;
+      const value = data?.[attr.key];
+
+      // Check for missing mandatory value
+      const isEmpty =
+        value === undefined ||
+        null === value ||
+        ('string' === typeof value && '' === value.trim()) ||
+        ('object' === typeof value && !Array.isArray(value) && 0 === Object.keys(value).length);
+
+      if (attr.mandatory && isEmpty) {
+        errors.push(`Missing mandatory attribute: ${currentPath}`);
+      }
+
+      // Recurse for nested attributes
+      if (attr.children && 'object' === typeof value && null !== value) {
+        validateAttributes(attr.children, value, currentPath);
+      }
+    }
+  };
+
+  if (CredentialFormat.SdJwtVc === template.format) {
+    validateAttributes((template.attributes as SdJwtTemplate).attributes ?? [], payload);
+  } else if (CredentialFormat.Mdoc === template.format) {
+    const namespaces = payload?.namespaces;
+    if (!namespaces) {
+      errors.push('Missing namespaces object in mdoc payload.');
+    } else {
+      const templateNamespaces = (template.attributes as MdocTemplate).namespaces;
+      for (const ns of templateNamespaces ?? []) {
+        const nsData = namespaces[ns.namespace];
+        if (!nsData) {
+          errors.push(`Missing namespace: ${ns.namespace}`);
+          continue;
+        }
+        validateAttributes(ns.attributes, nsData, ns.namespace);
+      }
+    }
+  }
+
+  return { valid: 0 === errors.length, errors };
+}
+
+function buildDisclosureFrameFromTemplate(template: { attributes: CredentialAttribute[] }) {
+  const disclosureFrame: DisclosureFrame = {};
+
+  const buildFrame = (attributes: CredentialAttribute[]) => {
+    const frame: Record<string, any> = {};
+
+    for (const attr of attributes) {
+      if (attr.children?.length) {
+        // Handle nested attributes recursively
+        const subFrame = buildFrame(attr.children);
+        // Include parent only if disclose is true or it has children with disclosure
+        if (attr.disclose || 0 < Object.keys(subFrame).length) {
+          frame[attr.key] = subFrame;
+        }
+      } else if (attr.disclose !== undefined) {
+        frame[attr.key] = Boolean(attr.disclose);
+      }
+    }
+
+    return frame;
+  };
+
+  Object.assign(disclosureFrame, buildFrame(template.attributes));
+
+  return disclosureFrame;
+}
+
+function validateCredentialDatesInCertificateWindow(credentialValidityInfo: validityInfo, certificate) {
+  // Extract dates from credential
+  const credentialValidFrom = new Date(credentialValidityInfo.validFrom);
+  const credentialValidTo = new Date(credentialValidityInfo.validUntil);
+
+  // Extract dates from certificate
+  const certNotBefore = new Date(certificate.validFrom);
+  const certNotAfter = new Date(certificate.expiry);
+
+  // Validate that credential dates are within certificate validity period
+  const isCredentialStartValid = credentialValidFrom >= certNotBefore;
+  const isCredentialEndValid = credentialValidTo <= certNotAfter;
+  const isCredentialDurationValid = credentialValidFrom <= credentialValidTo;
+
+  return {
+    isValid: isCredentialStartValid && isCredentialEndValid && isCredentialDurationValid,
+    details: {
+      credentialStartValid: isCredentialStartValid,
+      credentialEndValid: isCredentialEndValid,
+      credentialDurationValid: isCredentialDurationValid,
+      credentialValidFrom: credentialValidFrom.toISOString(),
+      credentialValidTo: credentialValidTo.toISOString(),
+      certificateNotBefore: certNotBefore.toISOString(),
+      certificateNotAfter: certNotAfter.toISOString()
+    }
+  };
+}
+
+function buildSdJwtCredential(
+  credentialRequest: CredentialRequestDtoLike,
+  templateRecord: credential_templates,
+  signerOptions: ResolvedSignerOption[],
+  activeCertificateDetails?: X509CertificateRecord[]
+): BuiltCredential {
+  // For SD-JWT format we expect payload to be a flat map of claims (no namespaces)
+  let payloadCopy = { ...(credentialRequest.payload as Record<string, unknown>) };
+
+  // // strip vct if present per requirement
+  // delete payloadCopy.vct;
+
+  const rawSigner = (templateRecord.signerOption ?? '').toString().toLowerCase();
+  if (!rawSigner) {
+    throw new UnprocessableEntityException('Template signerOption is not configured');
+  }
+
+  const expectedMethod = 'did' === rawSigner ? SignerMethodOption.DID : SignerMethodOption.X5C;
+
+  const templateSignerOption: ResolvedSignerOption = signerOptions?.find((x) => x.method === expectedMethod);
+  if (!templateSignerOption) {
+    throw new UnprocessableEntityException(
+      `Signer option "${templateRecord.signerOption}" is not configured for template ${templateRecord.id}`
+    );
+  }
+
+  if (templateRecord.signerOption !== SignerOption.DID && credentialRequest.validityInfo) {
+    if (!activeCertificateDetails?.length) {
+      throw new UnprocessableEntityException('Active x.509 certificate details are required for x5c signer templates.');
+    }
+    const certificateDetail = activeCertificateDetails.find(
+      (x) => x.certificateBase64 === templateSignerOption.x5c?.[0]
+    );
+    if (!certificateDetail) {
+      throw new UnprocessableEntityException('No active x.509 certificate matches the configured signer option.');
+    }
+
+    const validationResult = validateCredentialDatesInCertificateWindow(
+      credentialRequest.validityInfo,
+      certificateDetail
+    );
+    if (!validationResult.isValid) {
+      throw new UnprocessableEntityException(`${JSON.stringify(validationResult.details)}`);
+    }
+  }
+
+  if (credentialRequest.validityInfo) {
+    const credentialValidFrom = new Date(credentialRequest.validityInfo.validFrom);
+    const credentialValidTo = new Date(credentialRequest.validityInfo.validUntil);
+    const isCredentialDurationValid = credentialValidFrom <= credentialValidTo;
+    if (!isCredentialDurationValid) {
+      const errorDetails = {
+        credentialDurationValid: isCredentialDurationValid,
+        credentialValidFrom: credentialValidFrom.toISOString(),
+        credentialValidTo: credentialValidTo.toISOString()
+      };
+      throw new UnprocessableEntityException(`${JSON.stringify(errorDetails)}`);
+    }
+    payloadCopy = {
+      ...payloadCopy,
+      nbf: dateToSeconds(credentialValidFrom),
+      exp: dateToSeconds(credentialValidTo)
+    };
+  }
+
+  const sdJwtTemplate = templateRecord.attributes as any as SdJwtTemplate;
+  payloadCopy.vct = sdJwtTemplate.vct;
+
+  const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
+  const idSuffix = formatSuffix(apiFormat);
+  const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
+  const disclosureFrame = buildDisclosureFrameFromTemplate({ attributes: sdJwtTemplate.attributes });
+
+  return {
+    credentialSupportedId,
+    signerOptions: templateSignerOption ? templateSignerOption : undefined,
+    format: apiFormat,
+    payload: payloadCopy,
+    ...(disclosureFrame ? { disclosureFrame } : {})
+  };
+}
+
+/** Build an MSO mdoc credential object
+ *  - For mdocs we expect the payload to include a `namespaces` map (draft-15 style)
+ */
+function buildMdocCredential(
+  credentialRequest: CredentialRequestDtoLike,
+  templateRecord: credential_templates,
+  signerOptions: ResolvedSignerOption[],
+  activeCertificateDetails: X509CertificateRecord[]
+): BuiltCredential {
+  let incomingPayload = { ...(credentialRequest.payload as Record<string, unknown>) };
+
+  if (
+    !credentialRequest.validityInfo ||
+    !credentialRequest.validityInfo.validFrom ||
+    !credentialRequest.validityInfo.validUntil
+  ) {
+    throw new UnprocessableEntityException(`${ResponseMessages.oidcIssuerSession.error.missingValidityInfo}`);
+  }
+
+  if (!signerOptions?.length || !signerOptions[0].x5c?.length) {
+    throw new UnprocessableEntityException('An x5c signer configuration is required for mdoc credentials.');
+  }
+  if (!activeCertificateDetails?.length) {
+    throw new UnprocessableEntityException('Active x.509 certificate details are required for mdoc credentials.');
+  }
+  const certificateDetail = activeCertificateDetails.find((x) => x.certificateBase64 === signerOptions[0].x5c[0]);
+  if (!certificateDetail) {
+    throw new UnprocessableEntityException('No active x.509 certificate matches the configured signer option.');
+  }
+  const validationResult = validateCredentialDatesInCertificateWindow(
+    credentialRequest.validityInfo,
+    certificateDetail
+  );
+
+  if (!validationResult.isValid) {
+    throw new UnprocessableEntityException(`${JSON.stringify(validationResult.details)}`);
+  }
+  incomingPayload = {
+    ...incomingPayload,
+    validityInfo: credentialRequest.validityInfo
+  };
+
+  const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
+  const idSuffix = formatSuffix(apiFormat);
+  const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
+
+  return {
+    credentialSupportedId,
+    signerOptions: signerOptions ? signerOptions[0] : undefined,
+    format: apiFormat,
+    payload: incomingPayload
+  };
+}
+
+export function buildCredentialOfferPayload(
+  dto: CreateOidcCredentialOfferDtoLike,
+  templates: credential_templates[],
+  issuerDetails?: {
+    publicId: string;
+    authorizationServerUrl?: string;
+  },
+  signerOptions?: ResolvedSignerOption[],
+  activeCertificateDetails?: X509CertificateRecord[]
+): CredentialOfferPayload {
+  // Index templates by id
+  const templatesById = new Map(templates.map((template) => [template.id, template]));
+
+  // Validate template ids
+  const missingTemplateIds = dto.credentials.map((c) => c.templateId).filter((id) => !templatesById.has(id));
+  if (missingTemplateIds.length) {
+    throw new NotFoundException(`Unknown template ids: ${missingTemplateIds.join(', ')}`);
+  }
+
+  // Build each credential using the template's format
+  const builtCredentials: BuiltCredential[] = dto.credentials.map((credentialRequest) => {
+    const templateRecord: credential_templates = templatesById.get(credentialRequest.templateId)!;
+
+    const validationError = validatePayloadAgainstTemplate(templateRecord, credentialRequest.payload);
+    if (!validationError.valid) {
+      throw new UnprocessableEntityException(`${validationError.errors.join(', ')}`);
+    }
+
+    const templateFormat = (templateRecord as any).format ?? 'vc+sd-jwt';
+    const apiFormat = mapDbFormatToApiFormat(templateFormat);
+    if (apiFormat === CredentialFormat.SdJwtVc) {
+      return buildSdJwtCredential(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);
+    }
+    if (apiFormat === CredentialFormat.Mdoc) {
+      return buildMdocCredential(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);
+    }
+    throw new UnprocessableEntityException(`Unsupported template format for ${templateFormat}`);
+  });
+
+  // Base envelope: allow explicit publicIssuerId from DTO or fallback to issuerDetails.publicId
+  const publicIssuerIdFromDto = dto.publicIssuerId;
+  const publicIssuerIdFromIssuerDetails = issuerDetails?.publicId;
+  const finalPublicIssuerId = publicIssuerIdFromDto ?? publicIssuerIdFromIssuerDetails;
+
+  const baseEnvelope: BuiltCredentialOfferBase = {
+    credentials: builtCredentials,
+    ...(finalPublicIssuerId ? { publicIssuerId: finalPublicIssuerId } : {})
+  };
+
+  // Determine which authorization flow to return:
+  // Priority:
+  // 1) If issuerDetails.authorizationServerUrl is provided, return preAuthorizedCodeFlowConfig using DEFAULT_TXCODE
+  // 2) Else fall back to flows present in DTO (still enforce XOR)
+  const overrideAuthorizationServerUrl = issuerDetails?.authorizationServerUrl;
+  if (overrideAuthorizationServerUrl) {
+    if ('string' !== typeof overrideAuthorizationServerUrl || '' === overrideAuthorizationServerUrl.trim()) {
+      throw new BadRequestException('issuerDetails.authorizationServerUrl must be a non-empty string when provided');
+    }
+    return {
+      ...baseEnvelope,
+      preAuthorizedCodeFlowConfig: {
+        txCode: DEFAULT_TXCODE,
+        authorizationServerUrl: overrideAuthorizationServerUrl
+      }
+    };
+  }
+
+  // No override provided — use what DTO carries (must be XOR)
+  const hasPreAuthFromDto = Boolean(dto.preAuthorizedCodeFlowConfig);
+  const hasAuthCodeFromDto = Boolean(dto.authorizationCodeFlowConfig);
+  if (hasPreAuthFromDto === hasAuthCodeFromDto) {
+    throw new BadRequestException('Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.');
+  }
+  if (hasPreAuthFromDto) {
+    return {
+      ...baseEnvelope,
+      preAuthorizedCodeFlowConfig: dto.preAuthorizedCodeFlowConfig!
+    };
+  }
+  return {
+    ...baseEnvelope,
+    authorizationCodeFlowConfig: dto.authorizationCodeFlowConfig!
+  };
+}

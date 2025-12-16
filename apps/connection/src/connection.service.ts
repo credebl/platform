@@ -3,7 +3,6 @@ import { CommonService } from '@credebl/common';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { HttpException, HttpStatus, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { from, map } from 'rxjs';
 import {
   ConnectionResponseDetail,
   AgentConnectionSearchCriteria,
@@ -19,8 +18,6 @@ import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { ConnectionProcessState } from '@credebl/enum/enum';
-import { Cache } from 'cache-manager';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   IConnectionList,
   ICreateConnectionUrl,
@@ -41,8 +38,6 @@ export class ConnectionService {
     private readonly connectionRepository: ConnectionRepository,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
-    // TODO: Remove unused variable
-    @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly natsClient: NATSClient
   ) {}
 
@@ -57,7 +52,7 @@ export class ConnectionService {
       return saveConnectionDetails;
     } catch (error) {
       this.logger.error(`[getConnectionWebhook] - error in fetch connection webhook: ${error}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error?.response ?? error);
     }
   }
 
@@ -66,19 +61,14 @@ export class ConnectionService {
    * @param orgId
    * @returns connection invitation URL
    */
-  async _createConnectionInvitation(
-    connectionPayload: object,
-    url: string,
-    orgId: string
-  ): Promise<{
-    response;
-  }> {
+  async _createConnectionInvitation(connectionPayload: object, url: string, orgId: string): Promise<unknown> {
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'agent-create-connection-legacy-invitation' };
     const payload = { connectionPayload, url, orgId };
 
     try {
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsClient.send(this.connectionServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(
@@ -107,7 +97,7 @@ export class ConnectionService {
       this.logger.error(
         `[getConnectionRecords ] [NATS call]- error in get connection records count : ${JSON.stringify(error)}`
       );
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error?.response ?? error);
     }
   }
 
@@ -122,7 +112,7 @@ export class ConnectionService {
       return urlDetails.referenceId;
     } catch (error) {
       this.logger.error(`Error in get url in connection service: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error?.response ?? error);
     }
   }
 
@@ -178,14 +168,14 @@ export class ConnectionService {
     } catch (error) {
       this.logger.error(`[getConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`);
 
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error?.response ?? error);
     }
   }
 
   async getAllConnectionListFromAgent(
     orgId: string,
     connectionSearchCriteria: AgentConnectionSearchCriteria
-  ): Promise<string> {
+  ): Promise<IConnectionList> {
     try {
       const { alias, myDid, outOfBandId, state, theirDid, theirLabel } = connectionSearchCriteria;
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
@@ -223,26 +213,22 @@ export class ConnectionService {
       }
 
       const connectionResponse = await this._getAllConnections(url, orgId);
-      return connectionResponse.response;
+      return connectionResponse;
     } catch (error) {
       this.logger.error(
         `[getConnectionsFromAgent] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
       );
 
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error);
     }
   }
 
-  async _getAllConnections(
-    url: string,
-    orgId: string
-  ): Promise<{
-    response: string;
-  }> {
+  async _getAllConnections(url: string, orgId: string): Promise<IConnectionList> {
     try {
       const pattern = { cmd: 'agent-get-all-connections' };
       const payload = { url, orgId };
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsClient.send<IConnectionList>(this.connectionServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(
         `[_getAllConnections] [NATS call]- error in fetch connections details : ${JSON.stringify(error)}`
@@ -260,18 +246,18 @@ export class ConnectionService {
       }
       const url = `${agentEndPoint}${CommonConstants.URL_CONN_GET_CONNECTION_BY_ID}`.replace('#', connectionId);
       const createConnectionInvitation = await this._getConnectionsByConnectionId(url, orgId);
-      return createConnectionInvitation?.response;
+      return createConnectionInvitation;
     } catch (error) {
       this.logger.error(`[getConnectionsById] - error in get connections : ${JSON.stringify(error)}`);
 
-      if (error?.response?.error?.reason) {
+      if (error?.error?.reason) {
         throw new RpcException({
           message: ResponseMessages.connection.error.connectionNotFound,
-          statusCode: error?.response?.status,
-          error: error?.response?.error?.reason
+          statusCode: error?.status,
+          error: error?.error?.reason
         });
       } else {
-        throw new RpcException(error.response ? error.response : error);
+        throw new RpcException(error);
       }
     }
   }
@@ -283,7 +269,7 @@ export class ConnectionService {
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.GET_QUESTION_ANSWER_RECORD);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.GET_QUESTION_ANSWER_RECORD);
 
       const record = await this._getQuestionAnswersRecord(url, orgId);
       return record;
@@ -293,41 +279,24 @@ export class ConnectionService {
     }
   }
 
-  async _getConnectionsByConnectionId(
-    url: string,
-    orgId: string
-  ): Promise<{
-    response;
-  }> {
+  async _getConnectionsByConnectionId(url: string, orgId: string): Promise<IConnectionDetailsById> {
     //nats call in agent service for fetch connection details
     const pattern = { cmd: 'agent-get-connection-details-by-connectionId' };
     const payload = { url, orgId };
-    return this.natsCall(pattern, payload);
+    return this.natsClient.send<IConnectionDetailsById>(this.connectionServiceProxy, pattern, payload);
   }
 
   async _getQuestionAnswersRecord(url: string, orgId: string): Promise<object> {
-    const pattern = { cmd: 'agent-get-question-answer-record' };
-    const payload = { url, orgId };
-    return this.natsCall(pattern, payload);
-  }
-
-  async _getOrgAgentApiKey(orgId: string): Promise<{
-    response: string;
-  }> {
-    const pattern = { cmd: 'get-org-agent-api-key' };
-    const payload = { orgId };
-
     try {
-      return await this.natsCall(pattern, payload);
+      const pattern = { cmd: 'agent-get-question-answer-record' };
+      const payload = { url, orgId };
+      const result = await this.natsClient.send<object>(this.connectionServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
-      this.logger.error(`catch: ${JSON.stringify(error)}`);
-      throw new HttpException(
-        {
-          status: error.status,
-          error: error.message
-        },
-        error.status
+      this.logger.error(
+        `[_getQuestionAnswersRecord ] [NATS call]- error in get question and answer records : ${JSON.stringify(error)}`
       );
+      throw error;
     }
   }
 
@@ -344,7 +313,7 @@ export class ConnectionService {
       }
       const url = `${agentEndPoint}${CommonConstants.URL_RECEIVE_INVITATION_URL}`;
       const createConnectionInvitation = await this._receiveInvitationUrl(url, orgId, receiveInvitationUrl);
-      return createConnectionInvitation.response;
+      return createConnectionInvitation;
     } catch (error) {
       this.logger.error(`[receiveInvitationUrl] - error in receive invitation url : ${JSON.stringify(error, null, 2)}`);
 
@@ -355,14 +324,14 @@ export class ConnectionService {
           message: customErrorMessage,
           error: ResponseMessages.errorMessages.conflict
         });
-      } else if (error?.response?.error?.reason) {
+      } else if (error?.error?.reason) {
         throw new RpcException({
           message: ResponseMessages.connection.error.connectionNotFound,
-          statusCode: error?.response?.status,
-          error: error?.response?.error?.reason
+          statusCode: error?.status,
+          error: error?.error?.reason
         });
       } else {
-        throw new RpcException(error.response ? error.response : error);
+        throw new RpcException(error?.response ?? error);
       }
     }
   }
@@ -371,14 +340,17 @@ export class ConnectionService {
     url: string,
     orgId: string,
     receiveInvitationUrl: IReceiveInvitationUrl
-  ): Promise<{
-    response;
-  }> {
+  ): Promise<IReceiveInvitationResponse> {
     const pattern = { cmd: 'agent-receive-invitation-url' };
     const payload = { url, orgId, receiveInvitationUrl };
 
     try {
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsClient.send<IReceiveInvitationResponse>(
+        this.connectionServiceProxy,
+        pattern,
+        payload
+      );
+      return result;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(
@@ -404,18 +376,18 @@ export class ConnectionService {
       }
       const url = `${agentEndPoint}${CommonConstants.URL_RECEIVE_INVITATION}`;
       const createConnectionInvitation = await this._receiveInvitation(url, orgId, receiveInvitation);
-      return createConnectionInvitation?.response;
+      return createConnectionInvitation;
     } catch (error) {
       this.logger.error(`[receiveInvitation] - error in receive invitation : ${JSON.stringify(error)}`);
 
-      if (error?.response?.error?.reason) {
+      if (error?.error?.reason) {
         throw new RpcException({
           message: ResponseMessages.connection.error.connectionNotFound,
-          statusCode: error?.response?.status,
-          error: error?.response?.error?.reason
+          statusCode: error?.status,
+          error: error?.error?.reason
         });
       } else {
-        throw new RpcException(error.response ? error.response : error);
+        throw new RpcException(error?.response ?? error);
       }
     }
   }
@@ -424,18 +396,16 @@ export class ConnectionService {
     url: string,
     orgId: string,
     receiveInvitation: IReceiveInvitation
-  ): Promise<{
-    response;
-  }> {
+  ): Promise<IReceiveInvitationResponse> {
     const pattern = { cmd: 'agent-receive-invitation' };
     const payload = { url, orgId, receiveInvitation };
-    return this.natsCall(pattern, payload);
+    return this.natsClient.send(this.connectionServiceProxy, pattern, payload);
   }
 
   async _sendQuestion(questionPayload: IQuestionPayload, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-send-question' };
     const payload = { questionPayload, url, orgId };
-    return this.natsCall(pattern, payload);
+    return this.natsClient.send(this.connectionServiceProxy, pattern, payload);
   }
 
   async sendQuestion(payload: IQuestionPayload): Promise<object> {
@@ -455,7 +425,7 @@ export class ConnectionService {
         question
       };
 
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.SEND_QUESTION, connectionId);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.SEND_QUESTION, connectionId);
 
       const createQuestion = await this._sendQuestion(questionPayload, url, orgId);
       return createQuestion;
@@ -467,7 +437,7 @@ export class ConnectionService {
           statusCode: error.status?.code ?? HttpStatus.INTERNAL_SERVER_ERROR
         });
       }
-      throw new RpcException(error.response || error);
+      throw new RpcException(error?.response ?? error);
     }
   }
 
@@ -478,8 +448,8 @@ export class ConnectionService {
     const payload = { persistent, storeObj };
 
     try {
-      const message = await this.natsCall(pattern, payload);
-      return message.response;
+      const message = await this.natsClient.send<string>(this.connectionServiceProxy, pattern, payload);
+      return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(
@@ -559,15 +529,15 @@ export class ConnectionService {
         recipientKey: recipientKey || undefined,
         invitationDid: connectionInvitationDid || undefined
       };
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.CONNECTION_INVITATION);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.CONNECTION_INVITATION);
       const createConnectionInvitation = await this._createOutOfBandConnectionInvitation(connectionPayload, url, orgId);
-      const connectionInvitationUrl = createConnectionInvitation?.response?.invitationUrl;
+      const connectionInvitationUrl = createConnectionInvitation?.invitationUrl;
       const shortenedUrl = await this.storeConnectionObjectAndReturnUrl(
         connectionInvitationUrl,
         connectionPayload.multiUseInvitation
       );
 
-      const invitationsDid = createConnectionInvitation?.response?.invitationDid || invitationDid;
+      const invitationsDid = createConnectionInvitation?.invitationDid || invitationDid;
       const saveConnectionDetails = await this.connectionRepository.saveAgentConnectionInvitations(
         shortenedUrl,
         agentId,
@@ -584,7 +554,7 @@ export class ConnectionService {
         createdBy: saveConnectionDetails.createdBy,
         lastChangedDateTime: saveConnectionDetails.lastChangedDateTime,
         lastChangedBy: saveConnectionDetails.lastChangedBy,
-        recordId: createConnectionInvitation.response.outOfBandRecord.id,
+        recordId: createConnectionInvitation.outOfBandRecord.id,
         invitationDid: saveConnectionDetails.invitationDid
       };
       return connectionStorePayload;
@@ -603,15 +573,15 @@ export class ConnectionService {
     connectionPayload: ICreateConnectionInvitation,
     url: string,
     orgId: string
-  ): Promise<{
-    response;
-  }> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<any> {
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'agent-create-connection-invitation' };
     const payload = { connectionPayload, url, orgId };
 
     try {
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsClient.send(this.connectionServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
       throw new HttpException(
@@ -624,36 +594,6 @@ export class ConnectionService {
     }
   }
 
-  async natsCall(
-    pattern: object,
-    payload: object
-  ): Promise<{
-    response: string;
-  }> {
-    try {
-      return from(this.natsClient.send<string>(this.connectionServiceProxy, pattern, payload))
-        .pipe(
-          map((response) => ({
-            response
-          }))
-        )
-        .toPromise()
-        .catch((error) => {
-          this.logger.error(`catch: ${JSON.stringify(error)}`);
-          throw new HttpException(
-            {
-              status: error.statusCode,
-              error: error.message
-            },
-            error.error
-          );
-        });
-    } catch (error) {
-      this.logger.error(`[ConnectionService natsCall] - error in nats call : ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
   handleError(error): Promise<void> {
     if (error?.status?.message?.error) {
       throw new RpcException({
@@ -661,7 +601,7 @@ export class ConnectionService {
         statusCode: error.status?.code ?? HttpStatus.INTERNAL_SERVER_ERROR
       });
     }
-    throw new RpcException(error.response || error);
+    throw new RpcException(error?.response ?? error);
   }
 
   async deleteConnectionRecords(orgId: string, user: user): Promise<IDeletedConnectionsRecord> {
@@ -703,11 +643,11 @@ export class ConnectionService {
       return deleteConnections;
     } catch (error) {
       this.logger.error(`[deleteConnectionRecords] - error in deleting connection records: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error?.response ?? error);
     }
   }
 
-  async sendBasicMesage(payload: IBasicMessage): Promise<object> {
+  async sendBasicMessage(payload: IBasicMessage): Promise<object> {
     const { content, orgId, connectionId } = payload;
     try {
       const agentDetails = await this.connectionRepository.getAgentEndPoint(orgId);
@@ -721,7 +661,7 @@ export class ConnectionService {
       const questionPayload = {
         content
       };
-      const agentUrl = await getAgentUrl(agentEndPoint, CommonConstants.SEND_BASIC_MESSAGE, connectionId);
+      const agentUrl = getAgentUrl(agentEndPoint, CommonConstants.SEND_BASIC_MESSAGE, connectionId);
 
       const sendBasicMessage = await this._sendBasicMessageToAgent(questionPayload, agentUrl, orgId);
       return sendBasicMessage;
@@ -733,14 +673,13 @@ export class ConnectionService {
           statusCode: error.status?.code ?? HttpStatus.INTERNAL_SERVER_ERROR
         });
       }
-      throw new RpcException(error.response || error);
+      throw new RpcException(error?.response ?? error);
     }
   }
 
   async _sendBasicMessageToAgent(content: IBasicMessage, url: string, orgId: string): Promise<object> {
     const pattern = { cmd: 'agent-send-basic-message' };
     const payload = { content, url, orgId };
-    // eslint-disable-next-line no-return-await
-    return await this.natsCall(pattern, payload);
+    return this.natsClient.send(this.connectionServiceProxy, pattern, payload);
   }
 }

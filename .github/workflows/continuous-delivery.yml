@@ -31,6 +31,9 @@ jobs:
           - webhook
           - organization
           - seed
+          - x509
+          - oid4vc-issuance
+          - oid4vc-verification
 
     permissions:
       contents: read

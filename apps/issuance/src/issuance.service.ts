@@ -190,7 +190,7 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
       }
 
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.CREATE_OFFER);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.CREATE_OFFER);
 
       if (payload.credentialType === IssueCredentialType.JSONLD) {
         await validateAndUpdateIssuanceDates(credentialData);
@@ -387,7 +387,7 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.CREATE_OFFER_OUT_OF_BAND);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.CREATE_OFFER_OUT_OF_BAND);
 
       let issueData;
       if (credentialType === IssueCredentialType.INDY) {
@@ -700,7 +700,7 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.GET_OFFER_BY_CRED_ID, credentialRecordId);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.GET_OFFER_BY_CRED_ID, credentialRecordId);
 
       const createConnectionInvitation = await this._getIssueCredentialsbyCredentialRecordId(url, orgId);
       return createConnectionInvitation?.response;
@@ -849,7 +849,7 @@ export class IssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
-      const url = await getAgentUrl(agentDetails.agentEndPoint, CommonConstants.CREATE_OFFER_OUT_OF_BAND);
+      const url = getAgentUrl(agentDetails.agentEndPoint, CommonConstants.CREATE_OFFER_OUT_OF_BAND);
       const organizationDetails = await this.issuanceRepository.getOrganization(orgId);
 
       if (!organizationDetails) {
@@ -1516,7 +1516,7 @@ export class IssuanceService {
     return schemaDetails;
   }
 
-  async delay(ms): Promise<unknown> {
+  async delay(ms: number): Promise<unknown> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 

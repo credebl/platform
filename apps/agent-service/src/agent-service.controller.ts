@@ -23,14 +23,21 @@ import {
 
 import { AgentServiceService } from './agent-service.service';
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import { MessagePattern } from '@nestjs/microservices';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
 import { user } from '@prisma/client';
+import {
+  IX509ImportCertificateOptionsDto,
+  x509CertificateDecodeDto,
+  X509CreateCertificateOptions
+} from '@credebl/common/interfaces/x509.interface';
+import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
 
 @Controller()
 export class AgentServiceController {
+  private readonly logger = new Logger('AgentServiceController');
   constructor(private readonly agentServiceService: AgentServiceService) {}
 
   /**
@@ -323,5 +330,141 @@ export class AgentServiceController {
   @MessagePattern({ cmd: 'get-agent-details-by-org-id' })
   async agentdetailsByOrgId(payload: { orgId: string }): Promise<IStoreAgent> {
     return this.agentServiceService.getAgentDetails(payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-create-oid4vc-issuer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcIssuerCreate(payload: { issuerCreation; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcIssuerCreate(payload.issuerCreation, payload.url, payload.orgId);
+  }
+  @MessagePattern({ cmd: 'delete-oid4vc-issuer' })
+  async oidcDeleteIssuer(payload: { url: string; orgId: string }): Promise<object | string> {
+    return this.agentServiceService.deleteOidcIssuer(payload.url, payload.orgId);
+  }
+  @MessagePattern({ cmd: 'agent-create-oid4vc-template' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcIssuerTemplate(payload: { templatePayload; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcIssuerTemplate(payload.templatePayload, payload.url, payload.orgId);
+  }
+  //TODO: change message for oid4vc
+  @MessagePattern({ cmd: 'oid4vc-get-issuer-by-id' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcGetIssuerById(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcGetIssuerById(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'oid4vc-get-issuers-agent-service' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcGetIssuers(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcGetIssuers(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oid4vc-create-credential-offer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcCreateCredentialOffer(payload: { credentialPayload; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcCreateCredentialOffer(payload.credentialPayload, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oid4vc-update-credential-offer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcUpdateCredentialOffer(payload: { issuanceMetadata; url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcUpdateCredentialOffer(payload.issuanceMetadata, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oid4vc-get-credential-offer-by-id' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcGetCredentialOfferById(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcGetCredentialOfferById(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oid4vc-get-all-credential-offers' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcGetAllCredentialOffers(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcGetAllCredentialOffers(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-oid4vc-delete-credential-offer' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async oidcDeleteCredentialOffer(payload: { url: string; orgId: string }): Promise<any> {
+    return this.agentServiceService.oidcDeleteCredentialOffer(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-create-x509-certificate' })
+  async createX509Certificate(payload: {
+    options: X509CreateCertificateOptions;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.createX509Certificate(payload.options, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-decode-x509-certificate' })
+  async decodeX509Certificate(payload: {
+    options: x509CertificateDecodeDto;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.decodeX509Certificate(payload.options, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-import-x509-certificate' })
+  async importX509Certificate(payload: {
+    options: IX509ImportCertificateOptionsDto;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    return this.agentServiceService.importX509Certificate(payload.options, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-create-oid4vp-verifier' })
+  async createOid4vpVerifier(payload: {
+    verifierDetails: CreateVerifier;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    this.logger.log(
+      `[createOid4vpVerifier] Received 'agent-create-oid4vp-verifier' request for orgId=${payload?.orgId || 'N/A'}`
+    );
+    return this.agentServiceService.createOid4vpVerifier(payload.verifierDetails, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-delete-oid4vp-verifier' })
+  async deleteOid4vpVerifier(payload: { url: string; orgId: string }): Promise<object> {
+    this.logger.log(
+      `[deleteOid4vpVerifier] Received 'agent-delete-oid4vp-verifier' request for orgId=${payload?.orgId || 'N/A'}`
+    );
+    return this.agentServiceService.deleteOid4vpVerifier(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-update-oid4vp-verifier' })
+  async updateOid4vpVerifier(payload: {
+    verifierDetails: UpdateVerifier;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    this.logger.log(
+      `[updateOid4vpVerifier] Received 'agent-update-oid4vp-verifier' request for orgId=${payload?.orgId || 'N/A'}`
+    );
+    return this.agentServiceService.updateOid4vpVerifier(payload.verifierDetails, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-get-oid4vp-verifier-session' })
+  async getOid4vpVerifierSession(payload: { url: string; orgId: string }): Promise<object> {
+    this.logger.log(
+      `[getOid4vpVerifierSession] Received 'agent-get-oid4vp-verifier-session' request for orgId=${payload?.orgId || 'N/A'}`
+    );
+    return this.agentServiceService.getOid4vpVerifierSession(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-create-oid4vp-verification-session' })
+  async oid4vpCreateVerificationSession(payload: {
+    sessionRequest: object;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    this.logger.log(
+      `[oid4vpCreateVerificationSession] Received 'agent-create-oid4vp-verification-session' request for orgId=${payload?.orgId || 'N/A'}`
+    );
+    return this.agentServiceService.createOid4vpVerificationSession(payload.sessionRequest, payload.url, payload.orgId);
   }
 }

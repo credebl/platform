@@ -67,11 +67,11 @@ export const networkNamespace = (did: string): string => {
   return segments[1];
 };
 
-export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramId?: string): Promise<string> => {
+//TODO: Remove this util method because we can have some better way to manage agent URLs
+export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: string): string => {
   if (!agentEndPoint) {
     throw new NotFoundException(ResponseMessages.common.error.invalidEndpoint);
   }
-
   const agentUrlMap: Map<string, string> = new Map<string, string>([
     [String(CommonConstants.CONNECTION_INVITATION), String(CommonConstants.URL_CONN_INVITE)],
     [String(CommonConstants.LEGACY_INVITATION), String(CommonConstants.URL_CONN_LEGACY_INVITE)],
@@ -93,7 +93,39 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
     [String(CommonConstants.GET_VERIFIED_PROOF), String(CommonConstants.URL_PROOF_FORM_DATA)],
     [String(CommonConstants.GET_QUESTION_ANSWER_RECORD), String(CommonConstants.URL_QUESTION_ANSWER_RECORD)],
     [String(CommonConstants.SEND_QUESTION), String(CommonConstants.URL_SEND_QUESTION)],
-    [String(CommonConstants.SEND_BASIC_MESSAGE), String(CommonConstants.URL_SEND_BASIC_MESSAGE)]
+    [String(CommonConstants.SEND_BASIC_MESSAGE), String(CommonConstants.URL_SEND_BASIC_MESSAGE)],
+    [String(CommonConstants.OIDC_ISSUER_CREATE), String(CommonConstants.URL_OIDC_ISSUER_CREATE)],
+    [String(CommonConstants.OIDC_GET_ALL_ISSUERS), String(CommonConstants.URL_OIDC_GET_ISSUERS)],
+    [String(CommonConstants.OIDC_ISSUER_DELETE), String(CommonConstants.URL_OIDC_ISSUER_UPDATE)],
+    [String(CommonConstants.OIDC_ISSUER_BY_ID), String(CommonConstants.URL_OIDC_ISSUER_UPDATE)],
+    [String(CommonConstants.OIDC_ISSUER_TEMPLATE), String(CommonConstants.URL_OIDC_ISSUER_UPDATE)],
+    [
+      String(CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER),
+      String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_CREATE)
+    ],
+    [String(CommonConstants.OIDC_ISSUER_SESSIONS_UPDATE_OFFER), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET)],
+    [String(CommonConstants.OIDC_ISSUER_SESSIONS_BY_ID), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET)],
+    [String(CommonConstants.OIDC_ISSUER_SESSIONS), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)],
+    [String(CommonConstants.OIDC_DELETE_CREDENTIAL_OFFER), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)],
+    [String(CommonConstants.X509_CREATE_CERTIFICATE), String(CommonConstants.URL_CREATE_X509_CERTIFICATE)],
+    [String(CommonConstants.X509_DECODE_CERTIFICATE), String(CommonConstants.URL_DECODE_X509_CERTIFICATE)],
+    [String(CommonConstants.X509_IMPORT_CERTIFICATE), String(CommonConstants.URL_IMPORT_X509_CERTIFICATE)],
+    [String(CommonConstants.OIDC_VERIFIER_CREATE), String(CommonConstants.URL_OIDC_VERIFIER_CREATE)],
+    [String(CommonConstants.OIDC_VERIFIER_UPDATE), String(CommonConstants.URL_OIDC_VERIFIER_UPDATE)],
+    [String(CommonConstants.OIDC_VERIFIER_DELETE), String(CommonConstants.URL_OIDC_VERIFIER_DELETE)],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_ID)
+    ],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY)
+    ],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID)
+    ],
+    [String(CommonConstants.OID4VP_VERIFICATION_SESSION), String(CommonConstants.URL_OID4VP_VERIFICATION_SESSION)]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);
@@ -107,3 +139,9 @@ export const getAgentUrl = async (agentEndPoint: string, urlFlag: string, paramI
   const url = `${agentEndPoint}${resolvedUrlPath}`;
   return url;
 };
+
+export function shouldLoadOidcModules(): boolean {
+  const raw = process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS ?? 'true';
+  const hide = 'true' === raw.toLowerCase();
+  return !hide;
+}

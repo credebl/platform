@@ -117,6 +117,30 @@ export enum CommonConstants {
   // CREATE KEYS
   CREATE_POLYGON_SECP256k1_KEY = '/polygon/create-keys',
 
+  // OID4VC URLs
+  URL_OIDC_ISSUER_CREATE = '/openid4vc/issuer',
+  /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase, @typescript-eslint/no-duplicate-enum-values */
+  URL_OIDC_GET_ISSUERS = '/openid4vc/issuer',
+  URL_OIDC_ISSUER_UPDATE = '/openid4vc/issuer/#',
+  URL_OIDC_ISSUER_SESSIONS_CREATE = '/openid4vc/issuance-sessions/create-credential-offer',
+  URL_OIDC_ISSUER_SESSIONS_GET = '/openid4vc/issuance-sessions/#',
+  URL_OIDC_ISSUER_SESSIONS_GET_ALL = '/openid4vc/issuance-sessions',
+
+  // OID4Vp URLs
+  URL_OIDC_VERIFIER_CREATE = '/openid4vc/verifier', //TODO: correct this URL
+  URL_OIDC_VERIFIER_UPDATE = '/openid4vc/verifier/#',
+  URL_OIDC_VERIFIER_DELETE = '/openid4vc/verifier/#',
+  URL_OIDC_VERIFIER_GET = '/openid4vc/verifier/#',
+  URL_OIDC_VERIFIER_SESSION_GET_BY_ID = '/openid4vc/verification-sessions/#',
+  URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY = '/openid4vc/verification-sessions',
+  URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = '/openid4vc/verification-sessions/response/#',
+  URL_OID4VP_VERIFICATION_SESSION = '/openid4vc/verification-sessions/create-presentation-request',
+
+  //X509 agent API URLs
+  URL_CREATE_X509_CERTIFICATE = '/x509',
+  URL_IMPORT_X509_CERTIFICATE = '/x509/import',
+  URL_DECODE_X509_CERTIFICATE = '/x509/decode',
+
   // Nested attribute separator
   NESTED_ATTRIBUTE_SEPARATOR = '~',
 
@@ -364,6 +388,10 @@ export enum CommonConstants {
   NOTIFICATION_SERVICE = 'notification',
   GEO_LOCATION_SERVICE = 'geo-location',
   CLOUD_WALLET_SERVICE = 'cloud-wallet',
+  OIDC4VC_ISSUANCE_SERVICE = 'oid4vc-issuance',
+  OIDC4VC_VERIFICATION_SERVICE = 'oid4vc-verification',
+  OID4VP_VERIFICATION_SESSION = 'oid4vp-verification-session',
+  X509_SERVICE = 'x509-service',
 
   ACCEPT_OFFER = '/didcomm/credentials/accept-offer',
   SEED_LENGTH = 32,
@@ -385,7 +413,32 @@ export enum CommonConstants {
   SEND_QUESTION = 'send-question',
   SEND_BASIC_MESSAGE = 'send-basic-message',
 
-  AFFECTED_RECORDS_THRESHOLD_PERCENTAGE_FOR_DB_ALERT = 30
+  AFFECTED_RECORDS_THRESHOLD_PERCENTAGE_FOR_DB_ALERT = 30,
+
+  // OID4VC
+  OIDC_ISSUER_CREATE = 'create-oid4vc-issuer',
+  OIDC_ISSUER_DELETE = 'delete-oid4vc-issuer',
+  OIDC_GET_ALL_ISSUERS = 'get-all-oid4vc-issuers',
+  OIDC_ISSUER_BY_ID = 'get-issuer-by-id',
+  OIDC_ISSUER_TEMPLATE = 'create-oid4vc-template',
+  OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER = 'create-oid4vc-credential-offer',
+  OIDC_ISSUER_SESSIONS_UPDATE_OFFER = 'update-oid4vc-credential-offer',
+  OIDC_ISSUER_SESSIONS_BY_ID = 'get-oid4vc-session-by-id',
+  OIDC_ISSUER_SESSIONS = 'get-oid4vc-sessions',
+  OIDC_DELETE_CREDENTIAL_OFFER = 'delete-oid4vc-credential-offer',
+
+  // OID4VP
+  OIDC_VERIFIER_CREATE = 'create-oid4vp-verifier',
+  OIDC_VERIFIER_UPDATE = 'update-oid4vp-verifier',
+  OIDC_VERIFIER_DELETE = 'delete-oid4vp-verifier',
+  OIDC_VERIFIER_SESSION_GET_BY_ID = 'get-oid4vp-verifier-session-id',
+  OIDC_VERIFIER_SESSION_GET_BY_QUERY = 'get-oid4vp-verifier-session-query',
+  OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = 'get-oid4vp-verifier-session-response-id',
+
+  //X509
+  X509_CREATE_CERTIFICATE = 'create-x509-certificate',
+  X509_IMPORT_CERTIFICATE = 'import-x509-certificate',
+  X509_DECODE_CERTIFICATE = 'decode-x509-certificate'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

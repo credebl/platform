@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
+// TODO: Remove this
 import {
   IClientDetails,
   IIssuance,

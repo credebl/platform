@@ -39,35 +39,35 @@ model user {
 }
 
 model account {
-  id                String      @id @default(uuid()) @db.Uuid
-  userId            String      @unique @db.Uuid
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @unique @db.Uuid
   type              String?
   provider          String
-  providerAccountId String      
+  providerAccountId String
   tokenType         String?
   scope             String?
   idToken           String?
   sessionState      String?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt 
-  user              user         @relation(fields: [userId], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              user      @relation(fields: [userId], references: [id])
   sessions          session[]
- }
+}
 
 model session {
-  id               String      @id @default(uuid()) @db.Uuid
-  sessionToken     String      
-  userId           String      @db.Uuid
-  expires          Int
-  refreshToken     String?     
-  user             user        @relation(fields: [userId], references: [id])
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  accountId        String?     @db.Uuid
-  sessionType      String?
-  account          account?    @relation(fields: [accountId], references:[id])
-  expiresAt        DateTime?   @db.Timestamp(6)
-  clientInfo       Json? 
+  id           String    @id @default(uuid()) @db.Uuid
+  sessionToken String
+  userId       String    @db.Uuid
+  expires      Int
+  refreshToken String?
+  user         user      @relation(fields: [userId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  accountId    String?   @db.Uuid
+  sessionType  String?
+  account      account?  @relation(fields: [accountId], references: [id])
+  expiresAt    DateTime? @db.Timestamp(6)
+  clientInfo   Json?
 }
 
 model token {
@@ -151,6 +151,8 @@ model organisation {
   agent_invitations     agent_invitations[]
   credential_definition credential_definition[]
   file_upload           file_upload[]
+  oid4vc_credentials    oid4vc_credentials[]
+  oid4vp_presentations  oid4vp_presentations[]
 }
 
 model org_invitations {
@@ -229,6 +231,9 @@ model org_agents {
   organisation        organisation?       @relation(fields: [orgId], references: [id])
   webhookUrl          String?             @db.VarChar
   org_dids            org_dids[]
+  oidc_issuer         oidc_issuer[]
+  x509_certificates   x509_certificates[]
+  oid4vp_verifiers    oid4vp_verifier[]
 }
 
 model org_dids {
@@ -304,7 +309,7 @@ model schema {
   type                  String?                 @db.VarChar
   isSchemaArchived      Boolean                 @default(false)
   credential_definition credential_definition[]
-  alias                 String?                 
+  alias                 String?
 }
 
 model credential_definition {
@@ -350,16 +355,16 @@ model agent_invitations {
 }
 
 model connections {
-  id                  String        @id @default(uuid()) @db.Uuid
-  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy           String        @db.Uuid
-  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String        @db.Uuid
-  connectionId        String        @unique
-  theirLabel          String        @default("")
+  id                  String          @id @default(uuid()) @db.Uuid
+  createDateTime      DateTime        @default(now()) @db.Timestamptz(6)
+  createdBy           String          @db.Uuid
+  lastChangedDateTime DateTime        @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String          @db.Uuid
+  connectionId        String          @unique
+  theirLabel          String          @default("")
   state               String
-  orgId               String?       @db.Uuid
-  organisation        organisation? @relation(fields: [orgId], references: [id])
+  orgId               String?         @db.Uuid
+  organisation        organisation?   @relation(fields: [orgId], references: [id])
   presentations       presentations[]
   credentials         credentials[]
 }
@@ -387,7 +392,7 @@ model presentations {
   createdBy           String        @db.Uuid
   lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
   lastChangedBy       String        @db.Uuid
-  connectionId        String?       
+  connectionId        String?
   state               String?
   threadId            String        @unique
   isVerified          Boolean?
@@ -398,7 +403,6 @@ model presentations {
   orgId               String?       @db.Uuid
   organisation        organisation? @relation(fields: [orgId], references: [id])
   connections         connections?  @relation(fields: [connectionId], references: [connectionId])
-
 }
 
 model file_upload {
@@ -415,7 +419,7 @@ model file_upload {
   organisation        organisation? @relation(fields: [orgId], references: [id])
   orgId               String?       @db.Uuid
   credential_type     String?
-  templateId          String?       @db.VarChar 
+  templateId          String?       @db.VarChar
 }
 
 model file_data {
@@ -548,12 +552,12 @@ model cloud_wallet_user_info {
   createdBy           String          @db.Uuid
   lastChangedDateTime DateTime        @default(now()) @db.Timestamptz(6)
   lastChangedBy       String          @db.Uuid
-  userId              String?          @db.Uuid
+  userId              String?         @db.Uuid
   agentEndpoint       String?
   agentApiKey         String?
   key                 String?
   connectionImageUrl  String?
-  user                user?            @relation(fields: [userId], references: [id])
+  user                user?           @relation(fields: [userId], references: [id])
 }
 
 enum CloudWalletType {
@@ -562,9 +566,118 @@ enum CloudWalletType {
 }
 
 model client_aliases {
-  id                   String        @id @default(uuid()) @db.Uuid
-  createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
-  clientAlias          String?
-  clientUrl            String        
+  id                  String   @id @default(uuid()) @db.Uuid
+  createDateTime      DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime DateTime @default(now()) @db.Timestamptz(6)
+  clientAlias         String?
+  clientUrl           String
+}
+
+model oidc_issuer {
+  id                          String                 @id @default(uuid()) @db.Uuid
+  createDateTime              DateTime               @default(now()) @db.Timestamptz(6)
+  createdBy                   String                 @db.Uuid
+  publicIssuerId              String
+  metadata                    Json
+  authorizationServerUrl      String
+  orgAgentId                  String                 @db.Uuid
+  orgAgent                    org_agents             @relation(fields: [orgAgentId], references: [id])
+  templates                   credential_templates[]
+  batchCredentialIssuanceSize Int                    @default(0)
+
+  @@index([orgAgentId])
+}
+
+model oid4vc_credentials {
+  id                         String   @id @default(uuid()) @db.Uuid
+  orgId                      String   @db.Uuid
+  issuanceSessionId          String   @unique
+  credentialOfferId          String
+  state                      String
+  contextCorrelationId       String
+  createdBy                  String   @db.Uuid
+  createDateTime             DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime        DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedBy              String   @db.Uuid
+  credentialConfigurationIds String[]
+  issuedCredentials          String[]
+  publicIssuerId              String
+
+  organisation organisation @relation(fields: [orgId], references: [id])
+
+  @@index([credentialConfigurationIds], type: Gin)
+}
+
+model oid4vp_presentations {
+  id                    String   @id @default(uuid()) @db.Uuid
+  orgId                 String   @db.Uuid
+  verificationSessionId String   @unique
+  presentationId        String
+  state                 String
+  contextCorrelationId  String
+  createdBy             String   @db.Uuid
+  createDateTime        DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime   DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedBy         String   @db.Uuid
+  publicVerifierId    String
+  organisation organisation @relation(fields: [orgId], references: [id])
+}
+
+enum SignerOption {
+  DID
+  X509_P256
+  X509_ED25519
+}
+
+model credential_templates {
+  id           String  @id @default(uuid())
+  name         String
+  description  String?
+  format       String // e.g. "sd_jwt", "mso_mdoc"
+  canBeRevoked Boolean @default(false)
+
+  attributes Json
+  appearance Json
+
+  issuerId String      @db.Uuid
+  issuer   oidc_issuer @relation(fields: [issuerId], references: [id])
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  signerOption SignerOption
+}
+
+model x509_certificates {
+  id String @id @default(uuid())
+
+  orgAgentId String     @db.Uuid
+  org_agents org_agents @relation(fields: [orgAgentId], references: [id])
+
+  keyType   String // "p256", "ed25519"
+  status    String //e.g "Active", "Pending activation", "InActive" 
+  validFrom DateTime
+
+  expiry            DateTime
+  certificateBase64 String
+  isImported        Boolean  @default(false)
+
+  createdAt           DateTime @default(now())
+  createdBy           String   @db.Uuid
+  lastChangedDateTime DateTime @updatedAt
+  lastChangedBy       String   @db.Uuid
+}
+
+model oid4vp_verifier {
+  id                  String     @id @default(uuid()) @db.Uuid
+  publicVerifierId    String
+  metadata            Json
+  verifierId          String     @unique
+  createDateTime      DateTime   @default(now()) @db.Timestamptz(6)
+  createdBy           String     @default("1")
+  lastChangedDateTime DateTime   @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String     @default("1")
+  orgAgentId          String     @db.Uuid
+  orgAgent            org_agents @relation(fields: [orgAgentId], references: [id])
+
+  @@index([orgAgentId])
 }

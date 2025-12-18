@@ -19,6 +19,7 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package.json ./
+COPY bun.lock ./
 COPY pnpm-workspace.yaml ./
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
@@ -31,7 +32,7 @@ COPY . .
 
 # Generate Prisma client
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
-RUN cd libs/prisma-service && npx prisma generate
+RUN cd libs/prisma-service && bunx prisma generate
 RUN ls -R /app/apps/agent-provisioning/AFJ/
 
 # Build the user service

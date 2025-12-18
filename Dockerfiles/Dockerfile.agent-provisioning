@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM node:18-alpine as build
+FROM oven/bun:1.1-alpine AS build
 # Install OpenSSL
 RUN apk update && apk upgrade
 RUN apk add --no-cache openssl
@@ -24,7 +24,7 @@ COPY pnpm-workspace.yaml ./
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Install dependencies while ignoring scripts (including Puppeteer's installation)
-RUN pnpm i --ignore-scripts
+RUN bun i --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
@@ -35,10 +35,10 @@ RUN cd libs/prisma-service && npx prisma generate
 RUN ls -R /app/apps/agent-provisioning/AFJ/
 
 # Build the user service
-RUN pnpm run build agent-provisioning
+RUN bun --bun run build agent-provisioning
 
 # Stage 2: Create the final image
-FROM node:18-alpine as prod
+FROM oven/bun:1.1-alpine AS prod
 # Install OpenSSL
 RUN apk update && apk upgrade
 RUN apk add --no-cache openssl
@@ -80,4 +80,4 @@ RUN chmod 777 /app/agent-provisioning/AFJ/token
 COPY libs/ ./libs/
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && bunx prisma migrate deploy && bunx prisma generate && cd ../.. && bun --bun dist/apps/agent-provisioning/main.js"]

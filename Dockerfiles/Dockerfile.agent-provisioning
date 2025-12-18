@@ -10,7 +10,6 @@ RUN set -eux \
         docker \
         docker-compose \
         jq \
-    && npm install -g pnpm --ignore-scripts \
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
     && rm -rf /var/cache/apk/*
 
@@ -50,7 +49,6 @@ RUN set -eux \
         docker \
         docker-compose \
         jq \
-    && npm install -g pnpm --ignore-scripts \
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
     && rm -rf /var/cache/apk/*
 

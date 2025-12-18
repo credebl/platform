@@ -3,15 +3,13 @@ FROM oven/bun:1.1-alpine AS build
 # Install OpenSSL
 RUN apk update && apk upgrade
 RUN apk add --no-cache openssl
-RUN set -eux \
-    && apk --no-cache add \
-        openssh-client \
-        aws-cli \
-        docker \
-        docker-compose \
-        jq \
-    && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
-    && rm -rf /var/cache/apk/*
+RUN apk update && apk upgrade && apk add --no-cache \
+    openssl \
+    openssh-client \
+    aws-cli \
+    docker \
+    docker-compose \
+    jq
 
 # Set the working directory
 WORKDIR /app
@@ -42,15 +40,13 @@ FROM oven/bun:1.1-alpine AS prod
 # Install OpenSSL
 RUN apk update && apk upgrade
 RUN apk add --no-cache openssl
-RUN set -eux \
-    && apk --no-cache add \
-        openssh-client \
-        aws-cli \
-        docker \
-        docker-compose \
-        jq \
-    && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
-    && rm -rf /var/cache/apk/*
+RUN apk update && apk upgrade && apk add --no-cache \
+    openssl \
+    openssh-client \
+    aws-cli \
+    docker \
+    docker-compose \
+    jq
 
 WORKDIR /app
 

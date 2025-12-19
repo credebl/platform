@@ -34,12 +34,12 @@ RUN bun --bun run build agent-service
 FROM oven/bun:1.3-alpine
 # Install OpenSSL
 RUN apk add --no-cache openssl
-RUN npm install -g pnpm --ignore-scripts \
-    && apk update \
-    && apk add openssh-client \
-    && apk add aws-cli \
-    && apk add docker \
-    && apk add docker-compose 
+RUN apk update && apk upgrade && apk add --no-cache \
+    openssl \
+    openssh-client \
+    aws-cli \
+    docker \
+    docker-compose \
 
 # RUN npm install -g pnpm
 # Set the working directory

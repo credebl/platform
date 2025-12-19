@@ -1,13 +1,12 @@
 # Stage 1: Build the application
 FROM oven/bun:1.3-alpine AS build
 # Install OpenSSL
-RUN apk add --no-cache openssl
 RUN apk update && apk upgrade && apk add --no-cache \
     openssl \
     openssh-client \
     aws-cli \
     docker \
-    docker-compose \
+    docker-compose
     
 # Set the working directory
 WORKDIR /app
@@ -39,7 +38,7 @@ RUN apk update && apk upgrade && apk add --no-cache \
     openssh-client \
     aws-cli \
     docker \
-    docker-compose \
+    docker-compose
 
 # RUN npm install -g pnpm
 # Set the working directory

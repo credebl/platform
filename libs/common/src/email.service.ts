@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CommonConstants } from './common.constant';
 import { EmailDto } from './dtos/email.dto';
 import { sendWithResend } from './resend-helper-file';
+import { sendWithSMTP } from './smtp-helper-file';
 import { sendWithSendGrid } from './send-grid-helper-file';
 
 @Injectable()
@@ -22,6 +23,9 @@ export class EmailService {
           break;
         case 'resend':
           result = await sendWithResend(emailDto);
+          break;
+        case 'smtp':
+          result = await sendWithSMTP(emailDto);
           break;
         default:
           this.logger.warn(`Unknown email provider: ${provider}, defaulting to SendGrid.`);

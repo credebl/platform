@@ -1,10 +1,11 @@
 import { Controller, Logger } from '@nestjs/common';
 import { Oid4vpVerificationService } from './oid4vc-verification.service';
-import { user } from '@prisma/client';
-import { CreateVerifier, UpdateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
+import { SignerOption, user } from '@prisma/client';
+import { CreateVerifier, IPresentationRequest, UpdateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
 import { MessagePattern } from '@nestjs/microservices';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
+import { CreateVerificationTemplate, UpdateCredentialTemplate } from '../interfaces/verification-template.interfaces';
 
 @Controller()
 export class Oid4vpVerificationController {
@@ -80,7 +81,7 @@ export class Oid4vpVerificationController {
     orgId: string;
     verifierId: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sessionRequest: any;
+    sessionRequest: IPresentationRequest;
     userDetails: user;
   }): Promise<object> {
     const { orgId, verifierId, sessionRequest, userDetails } = payload;
@@ -95,6 +96,29 @@ export class Oid4vpVerificationController {
     );
   }
 
+  @MessagePattern({ cmd: 'oid4vp-intent-based-verification-presentation' })
+  async createIntentBasedVerificationPresentation(payload: {
+    orgId: string;
+    verifierId: string;
+    intent: string;
+    responseMode: string;
+    signerOption: SignerOption;
+    userDetails: user;
+  }): Promise<object> {
+    const { orgId, verifierId, intent, responseMode, signerOption, userDetails } = payload;
+    this.logger.debug(
+      `[createIntentBasedVerificationPresentation] Received 'oid4vp-intent-based-verification-presentation' for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
+    );
+    return this.oid4vpVerificationService.createIntentBasedVerificationPresentation(
+      orgId,
+      verifierId,
+      intent,
+      responseMode,
+      signerOption,
+      userDetails
+    );
+  }
+
   @MessagePattern({ cmd: 'webhook-oid4vp-presentation' })
   async oid4vpPresentationWebhook(payload: {
     oid4vpPresentationWhDto: Oid4vpPresentationWh;
@@ -105,16 +129,15 @@ export class Oid4vpVerificationController {
 
   @MessagePattern({ cmd: 'verification-template-create' })
   async createVerificationTemplate(payload: {
-    name: string;
-    templateJson: object;
+    createTemplateDto: CreateVerificationTemplate;
     orgId: string;
     userDetails: user;
   }): Promise<object> {
-    const { name, templateJson, orgId, userDetails } = payload;
+    const { createTemplateDto, orgId, userDetails } = payload;
     this.logger.debug(
       `[createVerificationTemplate] Received 'verification-template-create' request for orgId=${orgId}, user=${userDetails?.id}`
     );
-    return this.oid4vpVerificationService.createVerificationTemplate(name, templateJson, orgId, userDetails);
+    return this.oid4vpVerificationService.createVerificationTemplate(createTemplateDto, orgId, userDetails);
   }
 
   @MessagePattern({ cmd: 'verification-template-get' })
@@ -129,19 +152,17 @@ export class Oid4vpVerificationController {
   @MessagePattern({ cmd: 'verification-template-update' })
   async updateVerificationTemplate(payload: {
     templateId: string;
-    name: string;
-    templateJson: object;
+    updateCredentialTemplate: UpdateCredentialTemplate;
     orgId: string;
     userDetails: user;
   }): Promise<object> {
-    const { templateId, name, templateJson, orgId, userDetails } = payload;
+    const { templateId, updateCredentialTemplate, orgId, userDetails } = payload;
     this.logger.debug(
       `[updateVerificationTemplate] Received 'verification-template-update' for orgId=${orgId}, templateId=${templateId}, user=${userDetails?.id ?? 'unknown'}`
     );
     return this.oid4vpVerificationService.updateVerificationTemplate(
       templateId,
-      name,
-      templateJson,
+      updateCredentialTemplate,
       orgId,
       userDetails
     );

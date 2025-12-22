@@ -49,6 +49,7 @@ import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto
 import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos/oid4vc-verifier-presentation.dto';
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
+import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -306,6 +307,63 @@ export class Oid4vcVerificationController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
+  @Post('/orgs/:orgId/oid4vp/intent-based-verification-presentation')
+  @ApiOperation({
+    summary: 'Create intent-based verification presentation',
+    description: 'Creates a new verification presentation using an intent template for the specified organization.'
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Verification presentation created successfully.',
+    type: ApiResponseDto
+  })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async createIntentBasedVerificationPresentation(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Query(
+      'verifierId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid verifier ID');
+        }
+      })
+    )
+    verifierId: string,
+    @User() user: user,
+    @Body() createIntentDto: CreateIntentBasedVerificationDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    this.logger.debug(
+      `[createIntentBasedVerificationPresentation] Called with orgId=${orgId}, verifierId=${verifierId}, intent=${createIntentDto?.intent}, user=${user.id}`
+    );
+
+    const presentation = await this.oid4vcVerificationService.createIntentBasedVerificationPresentation(
+      orgId,
+      verifierId,
+      createIntentDto,
+      user
+    );
+
+    this.logger.debug(`[createIntentBasedVerificationPresentation] Presentation created successfully`);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.oid4vpSession.success.create,
+      data: presentation
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
   @Get('/orgs/:orgId/oid4vp/verifier-presentation')
   @ApiOperation({
     summary: 'Get OID4VP verifier presentation details',
@@ -449,6 +507,7 @@ export class Oid4vcVerificationController {
       });
 
     if (webhookUrl) {
+      this.logger.log(`posting webhook response to webhook url`);
       await this.oid4vcVerificationService
         ._postWebhookResponse(webhookUrl, { data: oid4vpPresentationWhDto })
         .catch((error) => {
@@ -488,12 +547,7 @@ export class Oid4vcVerificationController {
   ): Promise<Response> {
     this.logger.debug(`[createVerificationTemplate] Called with orgId=${orgId}, user=${user.id}`);
 
-    const template = await this.oid4vcVerificationService.createVerificationTemplate(
-      createTemplateDto.name,
-      createTemplateDto.templateJson,
-      orgId,
-      user
-    );
+    const template = await this.oid4vcVerificationService.createVerificationTemplate(createTemplateDto, orgId, user);
 
     this.logger.debug(`[createVerificationTemplate] Template created: ${template['id']}`);
 
@@ -602,8 +656,7 @@ export class Oid4vcVerificationController {
 
     const template = await this.oid4vcVerificationService.updateVerificationTemplate(
       templateId,
-      updateTemplateDto.name,
-      updateTemplateDto.templateJson,
+      updateTemplateDto,
       orgId,
       user
     );

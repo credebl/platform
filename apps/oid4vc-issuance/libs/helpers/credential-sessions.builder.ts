@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 import { credential_templates, SignerOption } from '@prisma/client';
-import { GetAllCredentialOffer } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
+import { GetAllCredentialOffer, ISignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
 import {
   CredentialAttribute,
@@ -61,6 +61,14 @@ export interface ResolvedSignerOption {
   method: 'did' | 'x5c';
   did?: string;
   x5c?: string[];
+}
+
+export interface CredentialTemplateRecord {
+  id: string;
+  name: string;
+  format: string;
+  signerOption: SignerOption;
+  attributes: any; // Stored as JSON in DB; parsed at runtime as SdJwtTemplate | MdocTemplate
 }
 
 /* ============================================================================
@@ -269,8 +277,8 @@ function validateCredentialDatesInCertificateWindow(credentialValidityInfo: vali
 
 function buildSdJwtCredential(
   credentialRequest: CredentialRequestDtoLike,
-  templateRecord: credential_templates,
-  signerOptions: ResolvedSignerOption[],
+  templateRecord: CredentialTemplateRecord,
+  signerOptions: ISignerOption[],
   activeCertificateDetails?: X509CertificateRecord[]
 ): BuiltCredential {
   // For SD-JWT format we expect payload to be a flat map of claims (no namespaces)
@@ -279,21 +287,32 @@ function buildSdJwtCredential(
   // // strip vct if present per requirement
   // delete payloadCopy.vct;
 
-  const rawSigner = (templateRecord.signerOption ?? '').toString().toLowerCase();
-  if (!rawSigner) {
-    throw new UnprocessableEntityException('Template signerOption is not configured');
-  }
-
-  const expectedMethod = 'did' === rawSigner ? SignerMethodOption.DID : SignerMethodOption.X5C;
-
-  const templateSignerOption: ResolvedSignerOption = signerOptions?.find((x) => x.method === expectedMethod);
-  if (!templateSignerOption) {
+  // Map Prisma SignerOption to builder SignerMethodOption
+  // Prisma: DID, X509_P256, X509_ED25519
+  // Builder: did, x5c
+  let expectedSignerMethod: SignerMethodOption;
+  if (templateRecord.signerOption === SignerOption.DID) {
+    expectedSignerMethod = SignerMethodOption.DID;
+  } else if (
+    templateRecord.signerOption === SignerOption.X509_P256 ||
+    templateRecord.signerOption === SignerOption.X509_ED25519
+  ) {
+    expectedSignerMethod = SignerMethodOption.X5C;
+  } else {
     throw new UnprocessableEntityException(
-      `Signer option "${templateRecord.signerOption}" is not configured for template ${templateRecord.id}`
+      `Unknown signer option "${templateRecord.signerOption}" for template ${templateRecord.id}`
     );
   }
 
-  if (templateRecord.signerOption !== SignerOption.DID && credentialRequest.validityInfo) {
+  // Find matching signer option from the available signers
+  const templateSignerOption: ISignerOption | undefined = signerOptions?.find((x) => x.method === expectedSignerMethod);
+  if (!templateSignerOption) {
+    throw new UnprocessableEntityException(
+      `Signer option "${expectedSignerMethod}" is not configured for template ${templateRecord.id}`
+    );
+  }
+
+  if (expectedSignerMethod === SignerMethodOption.X5C && credentialRequest.validityInfo) {
     if (!activeCertificateDetails?.length) {
       throw new UnprocessableEntityException('Active x.509 certificate details are required for x5c signer templates.');
     }
@@ -354,8 +373,8 @@ function buildSdJwtCredential(
  */
 function buildMdocCredential(
   credentialRequest: CredentialRequestDtoLike,
-  templateRecord: credential_templates,
-  signerOptions: ResolvedSignerOption[],
+  templateRecord: CredentialTemplateRecord,
+  signerOptions: ISignerOption[],
   activeCertificateDetails: X509CertificateRecord[]
 ): BuiltCredential {
   let incomingPayload = { ...(credentialRequest.payload as Record<string, unknown>) };
@@ -410,7 +429,7 @@ export function buildCredentialOfferPayload(
     publicId: string;
     authorizationServerUrl?: string;
   },
-  signerOptions?: ResolvedSignerOption[],
+  signerOptions?: ISignerOption[],
   activeCertificateDetails?: X509CertificateRecord[]
 ): CredentialOfferPayload {
   // Index templates by id

@@ -8,6 +8,7 @@ import { OrgAgent } from '../interfaces/oid4vp-verifier.interfaces';
 import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { CreateVerificationTemplate, UpdateCredentialTemplate } from '../interfaces/verification-template.interfaces';
 
 @Injectable()
 export class Oid4vpRepository {
@@ -243,13 +244,20 @@ export class Oid4vpRepository {
     }
   }
 
-  async createVerificationTemplate(name: string, templateJson: object, orgId: string, userId: string): Promise<object> {
-    this.logger.debug(`[createVerificationTemplate] called for orgId=${orgId}, userId=${userId}, name=${name}`);
+  async createVerificationTemplate(
+    createTemplateDto: CreateVerificationTemplate,
+    orgId: string,
+    userId: string
+  ): Promise<object> {
+    this.logger.debug(
+      `[createVerificationTemplate] called for orgId=${orgId}, userId=${userId}, createTemplateDto=${createTemplateDto}`
+    );
     try {
       const created = await this.prisma.verification_templates.create({
         data: {
-          name,
-          templateJson,
+          name: createTemplateDto.name,
+          templateJson: createTemplateDto.templateJson,
+          signerOption: createTemplateDto.signerOption,
           orgId,
           createdBy: userId,
           lastChangedBy: userId
@@ -302,8 +310,7 @@ export class Oid4vpRepository {
 
   async updateVerificationTemplate(
     templateId: string,
-    name: string,
-    templateJson: object,
+    updateCredentialTemplate: UpdateCredentialTemplate,
     orgId: string,
     userId: string
   ): Promise<object> {
@@ -317,8 +324,9 @@ export class Oid4vpRepository {
           orgId
         },
         data: {
-          name,
-          templateJson,
+          name: updateCredentialTemplate.name,
+          templateJson: updateCredentialTemplate.templateJson,
+          signerOption: updateCredentialTemplate.signerOption,
           lastChangedBy: userId
         }
       });

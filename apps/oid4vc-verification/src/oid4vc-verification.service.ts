@@ -21,7 +21,12 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { getAgentUrl } from '@credebl/common/common.utils';
 import { SignerOption, user } from '@prisma/client';
 import { map } from 'rxjs';
-import { CreateVerifier, UpdateVerifier, VerifierRecord } from '@credebl/common/interfaces/oid4vp-verification';
+import {
+  CreateVerifier,
+  IPresentationRequest,
+  UpdateVerifier,
+  VerifierRecord
+} from '@credebl/common/interfaces/oid4vp-verification';
 import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 import { BaseService } from 'libs/service/base.service';
@@ -29,7 +34,8 @@ import { NATSClient } from '@credebl/common/NATSClient';
 
 import { Oid4vpPresentationWh, RequestSigner } from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
-import { SignerMethodOption } from '@credebl/enum/enum';
+import { SignerMethodOption, x5cKeyType } from '@credebl/enum/enum';
+import { CreateVerificationTemplate, UpdateCredentialTemplate } from '../interfaces/verification-template.interfaces';
 @Injectable()
 export class Oid4vpVerificationService extends BaseService {
   constructor(
@@ -264,10 +270,7 @@ export class Oid4vpVerificationService extends BaseService {
       // assign the single object (not an array)
       sessionRequest.requestSigner = requestSigner;
 
-      console.log(`[oid4vpCreateVerificationSession] sessionRequest=${JSON.stringify(sessionRequest)}`);
-
-      const url = getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
-      console.log(`[oid4vpCreateVerificationSession] calling agent URL=${url}`);
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
 
       const createdSession = await this._createVerificationSession(sessionRequest, url, orgId);
       if (!createdSession) {
@@ -281,6 +284,107 @@ export class Oid4vpVerificationService extends BaseService {
     } catch (error) {
       this.logger.error(
         `[oid4vpCreateVerificationSession] - error creating verification session: ${JSON.stringify(error?.response ?? error)}`
+      );
+      throw new RpcException(error?.response ?? error);
+    }
+  }
+
+  async createIntentBasedVerificationPresentation(
+    orgId: string,
+    verifierId: string,
+    intent: string,
+    responseMode: string,
+    signerOption: SignerOption,
+    userDetails: user
+  ): Promise<object> {
+    this.logger.debug(
+      `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
+    );
+    try {
+      // Fetch agent details
+      const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+      const { agentEndPoint, orgDid } = agentDetails;
+
+      // Fetch verifier details
+      const verifier = await this.oid4vpRepository.getVerifierById(orgId, verifierId);
+      if (!verifier) {
+        throw new NotFoundException(ResponseMessages.oid4vp.error.notFound);
+      }
+
+      // Fetch intent template using utilities service
+      this.logger.debug(
+        `[createVerificationPresentation] fetching intent template for intent=${intent}, orgId=${orgId}`
+      );
+      const templateData = await this.natsClient.sendNatsMessage(
+        this.oid4vpVerificationServiceProxy,
+        'get-intent-template-by-intent-and-org',
+        { intentName: intent, verifierOrgId: orgId }
+      );
+
+      if (!templateData) {
+        throw new NotFoundException(`No template found for intent '${intent}' and organization '${orgId}'`);
+      }
+
+      this.logger.debug(
+        `[createVerificationPresentation] template fetched successfully: ${JSON.stringify(templateData)}`
+      );
+
+      // Build session request using fetched template
+      const sessionRequest = {
+        verifierId: verifier.publicVerifierId,
+        dcql: templateData?.template?.templateJson.dcql,
+        responseMode,
+        requestSigner: null
+      };
+
+      // Handle request signer based on method
+      let resolvedSigner: RequestSigner | undefined;
+
+      if (signerOption === SignerOption.DID) {
+        resolvedSigner = {
+          method: SignerMethodOption.DID,
+          didUrl: orgDid
+        };
+      } else if (signerOption === SignerOption.X509_P256 || signerOption === SignerOption.X509_ED25519) {
+        this.logger.debug('[createIntentBasedVerificationPresentation] X5C based request signer method selected');
+
+        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(
+          orgId,
+          signerOption === SignerOption.X509_P256 ? x5cKeyType.P256 : x5cKeyType.Ed25519
+        );
+
+        if (!activeCertificate) {
+          throw new NotFoundException(`No active certificate(${signerOption}) found for organization`);
+        }
+
+        resolvedSigner = {
+          method: SignerMethodOption.X5C,
+          x5c: [activeCertificate.certificateBase64]
+        };
+      } else {
+        throw new BadRequestException(`Unsupported requestSigner method: ${signerOption}`);
+      }
+
+      sessionRequest.requestSigner = resolvedSigner;
+
+      const url = await getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
+      this.logger.debug(`[createIntentBasedVerificationPresentation] calling agent URL=${url}`);
+
+      const createdSession = await this._createVerificationSession(sessionRequest, url, orgId);
+      if (!createdSession) {
+        throw new InternalServerErrorException(ResponseMessages.oid4vp.error.createFailed);
+      }
+
+      this.logger.debug(
+        `[createIntentBasedVerificationPresentation] verification presentation created successfully for orgId=${orgId}`
+      );
+      return createdSession;
+    } catch (error) {
+      this.logger.error(
+        `[createVerificationPresentation] - error creating verification presentation: ${JSON.stringify(error?.response ?? error)}`
       );
       throw new RpcException(error?.response ?? error);
     }
@@ -479,23 +583,25 @@ export class Oid4vpVerificationService extends BaseService {
   }
 
   async createVerificationTemplate(
-    name: string,
-    templateJson: object,
+    createTemplateDto: CreateVerificationTemplate,
     orgId: string,
     userDetails: user
   ): Promise<object> {
-    this.logger.debug(`[createVerificationTemplate] called for orgId=${orgId}, user=${userDetails?.id}, name=${name}`);
+    this.logger.debug(
+      `[createVerificationTemplate] called for orgId=${orgId}, user=${userDetails?.id}, createTemplateDto=${createTemplateDto}`
+    );
     try {
-      const created = await this.oid4vpRepository.createVerificationTemplate(name, templateJson, orgId, userDetails.id);
+      const created = await this.oid4vpRepository.createVerificationTemplate(createTemplateDto, orgId, userDetails.id);
       if (!created) {
         throw new InternalServerErrorException(ResponseMessages.oid4vp.error.createFailed);
       }
       this.logger.debug(`[createVerificationTemplate] template created successfully for orgId=${orgId}`);
       return created;
     } catch (error) {
-      this.logger.error(
-        `[createVerificationTemplate] - error: ${error?.response?.message ?? JSON.stringify(error?.response ?? error)}`
-      );
+      // this.logger.error(
+      //   `[createVerificationTemplate] - error: ${error?.response?.message ?? JSON.stringify(error?.response ?? error)}`
+      // );
+      this.logger.error(`[createVerificationTemplate] - error: ${error}`);
       throw new RpcException(error?.response ?? error);
     }
   }
@@ -521,8 +627,7 @@ export class Oid4vpVerificationService extends BaseService {
 
   async updateVerificationTemplate(
     templateId: string,
-    name: string,
-    templateJson: object,
+    updateCredentialTemplate: UpdateCredentialTemplate,
     orgId: string,
     userDetails: user
   ): Promise<object> {
@@ -537,8 +642,7 @@ export class Oid4vpVerificationService extends BaseService {
 
       const updated = await this.oid4vpRepository.updateVerificationTemplate(
         templateId,
-        name,
-        templateJson,
+        updateCredentialTemplate,
         orgId,
         userDetails.id
       );

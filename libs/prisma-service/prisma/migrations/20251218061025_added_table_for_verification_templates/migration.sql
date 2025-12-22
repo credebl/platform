@@ -8,6 +8,7 @@ CREATE TABLE "verification_templates" (
     "createdBy" UUID NOT NULL,
     "lastChangedDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "lastChangedBy" UUID NOT NULL,
+    "signerOption" "SignerOption" NOT NULL,
 
     CONSTRAINT "verification_templates_pkey" PRIMARY KEY ("id")
 );
@@ -28,7 +29,7 @@ CREATE TABLE "intents" (
 -- CreateTable
 CREATE TABLE "intent_templates" (
     "id" UUID NOT NULL,
-    "orgId" UUID NOT NULL,
+    "orgId" UUID,
     "intentId" UUID NOT NULL,
     "templateId" UUID NOT NULL,
     "createDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -55,7 +56,7 @@ CREATE INDEX "intent_templates_templateId_idx" ON "intent_templates"("templateId
 ALTER TABLE "verification_templates" ADD CONSTRAINT "verification_templates_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "intent_templates" ADD CONSTRAINT "intent_templates_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "intent_templates" ADD CONSTRAINT "intent_templates_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organisation"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "intent_templates" ADD CONSTRAINT "intent_templates_intentId_fkey" FOREIGN KEY ("intentId") REFERENCES "intents"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

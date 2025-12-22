@@ -2,11 +2,13 @@ import { Inject, Injectable } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
 import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from './dtos/intent-template.dto';
+import { GetAllIntentTemplatesDto } from './dtos/get-all-intent-templates.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 import { Client as PgClient } from 'pg';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
@@ -150,8 +152,18 @@ export class UtilitiesService extends BaseService {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-templates-by-org-id', orgId);
   }
 
-  async getAllIntentTemplates(): Promise<object[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-intent-templates', {});
+  async getAllIntentTemplatesByQuery(
+    intentTemplateSearchCriteria: GetAllIntentTemplatesDto
+  ): Promise<IIntentTemplateList> {
+    const payload = {
+      intentTemplateSearchCriteria
+    };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-intent-templates-by-query', payload);
+  }
+
+  async getIntentTemplateByIntentAndOrg(intentName: string, verifierOrgId: string): Promise<object | null> {
+    const payload = { intentName, verifierOrgId };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-template-by-intent-and-org', payload);
   }
 
   async updateIntentTemplate(

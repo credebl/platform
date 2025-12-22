@@ -1,7 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { UtilitiesRepository } from './utilities.repository';
+import {
+  IIntentTemplateList,
+  IIntentTemplateSearchCriteria
+} from '@credebl/common/interfaces/intents-template.interface';
 import { AwsService } from '@credebl/aws';
+import { ErrorHandler } from '@credebl/common/utils/error-handler.util';
 import { S3 } from 'aws-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { EmailService } from '@credebl/common/email.service';
@@ -88,21 +93,34 @@ export class UtilitiesService extends BaseService {
 
   // Intent Template CRUD operations
   async createIntentTemplate(data: {
-    orgId: string;
+    orgId?: string;
     intentId: string;
     templateId: string;
     user: { id: string };
   }): Promise<object> {
     try {
       const { user, ...templateData } = data;
+
+      // Validate input
+      if (!templateData.intentId || !templateData.templateId || !user.id) {
+        throw new Error('Invalid data: intentId, templateId, and user are required');
+      }
+
+      // Call repository — may throw Error (duplicate check, DB errors)
       const intentTemplate = await this.utilitiesRepository.createIntentTemplate({
         ...templateData,
         createdBy: user.id
       });
+
+      this.logger.log(`[createIntentTemplate] - Intent template created with id ${intentTemplate.id}`);
       return intentTemplate;
     } catch (error) {
-      this.logger.error(`[createIntentTemplate] - error in create intent template: ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to create intent template');
+      this.logger.error(
+        `[createIntentTemplate] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
     }
   }
 
@@ -110,12 +128,16 @@ export class UtilitiesService extends BaseService {
     try {
       const intentTemplate = await this.utilitiesRepository.getIntentTemplateById(id);
       if (!intentTemplate) {
-        throw new RpcException({ message: 'Intent template not found', statusCode: 404 });
+        throw new Error('Intent template not found');
       }
       return intentTemplate;
     } catch (error) {
-      this.logger.error(`[getIntentTemplateById] - error in get intent template by id: ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent template');
+      this.logger.error(
+        `[getIntentTemplateById] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
     }
   }
 
@@ -124,10 +146,12 @@ export class UtilitiesService extends BaseService {
       const intentTemplates = await this.utilitiesRepository.getIntentTemplatesByIntentId(intentId);
       return intentTemplates;
     } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
       this.logger.error(
-        `[getIntentTemplatesByIntentId] - error in get intent templates by intent id: ${JSON.stringify(error)}`
+        `[getIntentTemplatesByIntentId] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
       );
-      throw new RpcException(error);
+      throw new RpcException(errorResponse);
     }
   }
 
@@ -136,20 +160,49 @@ export class UtilitiesService extends BaseService {
       const intentTemplates = await this.utilitiesRepository.getIntentTemplatesByOrgId(orgId);
       return intentTemplates;
     } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
       this.logger.error(
-        `[getIntentTemplatesByOrgId] - error in get intent templates by org id: ${JSON.stringify(error)}`
+        `[getIntentTemplatesByOrgId] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
       );
-      throw new RpcException(error);
+      throw new RpcException(errorResponse);
     }
   }
 
-  async getAllIntentTemplates(): Promise<object[]> {
+  async getAllIntentTemplateByQuery(payload: {
+    intentTemplateSearchCriteria: IIntentTemplateSearchCriteria;
+  }): Promise<IIntentTemplateList> {
     try {
-      const intentTemplates = await this.utilitiesRepository.getAllIntentTemplates();
-      return intentTemplates;
+      const { intentTemplateSearchCriteria } = payload;
+      const result = await this.utilitiesRepository.getAllIntentTemplateByQuery(intentTemplateSearchCriteria);
+      return result;
     } catch (error) {
-      this.logger.error(`[getAllIntentTemplates] - error in get all intent templates: ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
+      this.logger.error(
+        `[getAllIntentTemplateByQuery] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentTemplateByIntentAndOrg(intentName: string, verifierOrgId: string): Promise<object | null> {
+    try {
+      const intentTemplate = await this.utilitiesRepository.getIntentTemplateByIntentAndOrg(intentName, verifierOrgId);
+      if (!intentTemplate) {
+        this.logger.log(
+          `[getIntentTemplateByIntentAndOrg] - No template found for intent ${intentName} and org ${verifierOrgId}`
+        );
+        return null;
+      }
+      return intentTemplate;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent template');
+      this.logger.error(
+        `[getIntentTemplateByIntentAndOrg] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
     }
   }
 
@@ -165,8 +218,12 @@ export class UtilitiesService extends BaseService {
       });
       return intentTemplate;
     } catch (error) {
-      this.logger.error(`[updateIntentTemplate] - error in update intent template: ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to update intent template');
+      this.logger.error(
+        `[updateIntentTemplate] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
     }
   }
 
@@ -175,8 +232,12 @@ export class UtilitiesService extends BaseService {
       const intentTemplate = await this.utilitiesRepository.deleteIntentTemplate(id);
       return intentTemplate;
     } catch (error) {
-      this.logger.error(`[deleteIntentTemplate] - error in delete intent template: ${JSON.stringify(error)}`);
-      throw new RpcException(error);
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to delete intent template');
+      this.logger.error(
+        `[deleteIntentTemplate] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
     }
   }
 }

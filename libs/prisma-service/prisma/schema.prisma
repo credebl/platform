@@ -694,6 +694,7 @@ model verification_templates {
   lastChangedDateTime DateTime            @default(now()) @db.Timestamptz(6)
   lastChangedBy       String              @db.Uuid
   organisation        organisation        @relation(fields: [orgId], references: [id])
+  signerOption        SignerOption
   intentTemplates     intent_templates[]
 
   @@index([orgId])
@@ -712,14 +713,14 @@ model intents {
 
 model intent_templates {
   id                  String                 @id @default(uuid()) @db.Uuid
-  orgId               String                 @db.Uuid
+  orgId               String?                 @db.Uuid
   intentId            String                 @db.Uuid
   templateId          String                 @db.Uuid
   createDateTime      DateTime               @default(now()) @db.Timestamptz(6)
   createdBy           String                 @db.Uuid
   lastChangedDateTime DateTime               @default(now()) @db.Timestamptz(6)
   lastChangedBy       String                 @db.Uuid
-  organisation        organisation           @relation(fields: [orgId], references: [id])
+  organisation        organisation?           @relation(fields: [orgId], references: [id])
   intent              intents                @relation(fields: [intentId], references: [id])
   template            verification_templates @relation(fields: [templateId], references: [id])
 

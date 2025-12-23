@@ -18,7 +18,7 @@ export class EmailService {
 
     try {
       switch (provider) {
-        case CommonConstants.RESEND_EMAIL_PROVIDER:
+        case CommonConstants.SENDGRID_EMAIL_PROVIDER:
           result = await sendWithSendGrid(emailDto);
           break;
         case CommonConstants.RESEND_EMAIL_PROVIDER:

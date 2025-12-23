@@ -65,12 +65,12 @@ export class Oid4vcIssuanceController {
 
   @MessagePattern({ cmd: 'oid4vc-template-create' })
   async oidcTemplateCreate(payload: {
-    CredentialTemplate: CreateCredentialTemplate;
+    credentialTemplate: CreateCredentialTemplate;
     orgId: string;
     issuerId: string;
   }): Promise<credential_templates> {
-    const { CredentialTemplate, orgId, issuerId } = payload;
-    return this.oid4vcIssuanceService.createTemplate(CredentialTemplate, orgId, issuerId);
+    const { credentialTemplate, orgId, issuerId } = payload;
+    return this.oid4vcIssuanceService.createTemplate(credentialTemplate, orgId, issuerId);
   }
 
   @MessagePattern({ cmd: 'oid4vc-template-update' })

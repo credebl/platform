@@ -8,6 +8,7 @@ import { OrgAgent } from '../interfaces/oid4vp-verifier.interfaces';
 import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
 
 @Injectable()
 export class Oid4vpRepository {
@@ -239,6 +240,114 @@ export class Oid4vpRepository {
       return certificate;
     } catch (error) {
       this.logger.error(`Error in getCurrentActiveCertificate: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async createVerificationTemplate(
+    createTemplateDto: CreateVerificationTemplate,
+    orgId: string,
+    userId: string
+  ): Promise<object> {
+    try {
+      const created = await this.prisma.verification_templates.create({
+        data: {
+          name: createTemplateDto.name,
+          templateJson: createTemplateDto.templateJson,
+          signerOption: createTemplateDto.signerOption,
+          orgId,
+          createdBy: userId,
+          lastChangedBy: userId
+        }
+      });
+      this.logger.debug(`[createVerificationTemplate] Created template with id=${created.id}`);
+      return created;
+    } catch (error) {
+      this.logger.error(`[createVerificationTemplate] Error: ${error?.message ?? error}`);
+      throw error;
+    }
+  }
+
+  async getVerificationTemplates(orgId: string, templateId?: string): Promise<object[]> {
+    this.logger.debug(`[getVerificationTemplates] called with orgId=${orgId}, templateId=${templateId ?? 'all'}`);
+    try {
+      const result = await this.prisma.verification_templates.findMany({
+        where: {
+          orgId,
+          ...(templateId && { id: templateId })
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
+      this.logger.debug(`[getVerificationTemplates] Found ${result.length} records`);
+      return result;
+    } catch (error) {
+      this.logger.error(`[getVerificationTemplates] Error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getVerificationTemplateById(orgId: string, templateId: string): Promise<object | null> {
+    this.logger.debug(`[getVerificationTemplateById] called with orgId=${orgId}, templateId=${templateId}`);
+    try {
+      const result = await this.prisma.verification_templates.findFirst({
+        where: {
+          id: templateId,
+          orgId
+        }
+      });
+      this.logger.debug(`[getVerificationTemplateById] Found record id=${result?.id ?? 'none'}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`[getVerificationTemplateById] Error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateVerificationTemplate(
+    templateId: string,
+    updateCredentialTemplate: UpdateVerificationTemplate,
+    orgId: string,
+    userId: string
+  ): Promise<object> {
+    this.logger.debug(
+      `[updateVerificationTemplate] called with templateId=${templateId}, orgId=${orgId}, userId=${userId}`
+    );
+    try {
+      const updated = await this.prisma.verification_templates.update({
+        where: {
+          id: templateId,
+          orgId
+        },
+        data: {
+          name: updateCredentialTemplate.name,
+          templateJson: updateCredentialTemplate.templateJson,
+          signerOption: updateCredentialTemplate.signerOption,
+          lastChangedBy: userId
+        }
+      });
+      this.logger.debug(`[updateVerificationTemplate] Updated template id=${updated.id}`);
+      return updated;
+    } catch (error) {
+      this.logger.error(`[updateVerificationTemplate] Error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteVerificationTemplate(orgId: string, templateId: string): Promise<object> {
+    this.logger.debug(`[deleteVerificationTemplate] called with orgId=${orgId}, templateId=${templateId}`);
+    try {
+      const deleted = await this.prisma.verification_templates.delete({
+        where: {
+          id: templateId,
+          orgId
+        }
+      });
+      this.logger.debug(`[deleteVerificationTemplate] Deleted template id=${deleted.id}`);
+      return deleted;
+    } catch (error) {
+      this.logger.error(`[deleteVerificationTemplate] Error: ${error.message}`);
       throw error;
     }
   }

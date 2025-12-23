@@ -5,7 +5,10 @@ import { ClientProxy } from '@nestjs/microservices';
 import { oid4vp_verifier, user } from '@prisma/client';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
 import { VerificationPresentationQueryDto } from './dtos/oid4vc-verifier-presentation.dto';
+import { IPresentationRequest } from '@credebl/common/interfaces/oid4vp-verification';
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
+import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
+import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
 
 @Injectable()
 export class Oid4vcVerificationService {
@@ -15,6 +18,21 @@ export class Oid4vcVerificationService {
     @Inject('NATS_CLIENT') private readonly oid4vpProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {}
+
+  async createIntentBasedVerificationPresentation(
+    orgId: string,
+    verifierId: string,
+    createIntentDto: CreateIntentBasedVerificationDto,
+    userDetails: user
+  ): Promise<object> {
+    const { intent, responseMode, requestSigner } = createIntentDto;
+    const signerOption = requestSigner?.method;
+    const payload = { orgId, verifierId, intent, responseMode, signerOption, userDetails };
+    this.logger.debug(
+      `[createIntentBasedVerificationPresentation] Called with orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id}`
+    );
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'oid4vp-intent-based-verification-presentation', payload);
+  }
 
   async oid4vpCreateVerifier(
     createVerifier: CreateVerifierDto,
@@ -69,8 +87,7 @@ export class Oid4vcVerificationService {
   }
 
   async oid4vpCreateVerificationSession(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sessionRequest: any,
+    sessionRequest: IPresentationRequest,
     orgId: string,
     userDetails: user,
     verifierId?: string
@@ -119,5 +136,42 @@ export class Oid4vcVerificationService {
 
       throw error;
     }
+  }
+
+  async createVerificationTemplate(
+    createTemplateDto: CreateVerificationTemplateDto,
+    orgId: string,
+    userDetails: user
+  ): Promise<object> {
+    const payload = { createTemplateDto, orgId, userDetails };
+    this.logger.debug(
+      `[createVerificationTemplate] Called with orgId=${orgId}, user=${userDetails?.id}, createTemplateDto=${createTemplateDto}`
+    );
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verification-template-create', payload);
+  }
+
+  async getVerificationTemplates(orgId: string, templateId?: string): Promise<object> {
+    const payload = { orgId, templateId };
+    this.logger.debug(`[getVerificationTemplates] Called with orgId=${orgId}, templateId=${templateId ?? 'N/A'}`);
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verification-template-get', payload);
+  }
+
+  async updateVerificationTemplate(
+    templateId: string,
+    updateTemplateDto: UpdateVerificationTemplateDto,
+    orgId: string,
+    userDetails: user
+  ): Promise<object> {
+    const payload = { templateId, updateCredentialTemplate: updateTemplateDto, orgId, userDetails };
+    this.logger.debug(
+      `[updateVerificationTemplate] Called with orgId=${orgId}, templateId=${templateId}, user=${userDetails?.id}`
+    );
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verification-template-update', payload);
+  }
+
+  async deleteVerificationTemplate(orgId: string, templateId: string): Promise<object> {
+    const payload = { orgId, templateId };
+    this.logger.debug(`[deleteVerificationTemplate] Called with orgId=${orgId}, templateId=${templateId}`);
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verification-template-delete', payload);
   }
 }

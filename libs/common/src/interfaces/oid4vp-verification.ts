@@ -31,3 +31,23 @@ export enum OpenId4VcVerificationPresentationState {
   ResponseVerified = 'ResponseVerified',
   Error = 'Error'
 }
+
+/**
+ * Request signer configuration for OID4VP verification presentations
+ */
+export interface IRequestSigner {
+  method: string; // SignerOption enum value: 'DID', 'X509_P256', 'X509_ED25519'
+}
+
+/**
+ * Presentation request interface - represents the structure expected by verification session creation
+ */
+export interface IPresentationRequest {
+  requestSigner?: IRequestSigner;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  presentationExchange?: any; // PresentationExchangeDto
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dcql?: any; // DcqlDto
+  responseMode: string; // ResponseMode enum
+  expectedOrigins?: string[];
+}

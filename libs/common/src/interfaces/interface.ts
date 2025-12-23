@@ -62,3 +62,11 @@ export interface IW3CAttributeValue {
   dependentRequired?: Record<string, string[]>;
   properties?: Record<string, IW3CAttributeValue>;
 }
+
+export interface IPaginationSortingDto {
+  pageNumber: number;
+  pageSize: number;
+  sortField?: string;
+  sortBy?: string;
+  searchByText?: string;
+}

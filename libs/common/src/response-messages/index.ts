@@ -594,6 +594,13 @@ export const ResponseMessages = {
       responseNotFound: 'Verification session response not found.'
     }
   },
+  oid4vpIntentToTemplate: {
+    success: {},
+    error: {
+      notFound: 'Intent to template mapping not found.',
+      invalidId: 'Invalid id.'
+    }
+  },
   x509: {
     success: {
       create: 'x509 certificate created successfully',
@@ -606,7 +613,7 @@ export const ResponseMessages = {
     error: {
       errorCreate: 'Error while creating x509 certificate.',
       errorUpdateStatus: 'Error while updating x509 certificate.',
-      errorActivation: 'Failed to activate x509 certificate.',
+      errorActivation: 'Failed to activate x509 certificate..',
       agentEndPointNotFound: 'Agent details not found',
       collision: 'Certificate date range collides with existing certificates for this organization',
       collisionForActivatingX5c:

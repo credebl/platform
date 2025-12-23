@@ -1,4 +1,5 @@
 import { X509ExtendedKeyUsage, X509KeyUsage, x5cKeyType, KeyType } from '@credebl/enum/enum';
+import { IPaginationSortingDto } from './interface';
 
 // Enum remains the same
 export enum GeneralNameType {
@@ -214,17 +215,9 @@ export interface X509CertificateRecord {
   lastChangedDateTime: Date;
 }
 
-export interface IX509SearchCriteria extends IPaginationSortingdto {
+export interface IX509SearchCriteria extends IPaginationSortingDto {
   keyType: string;
   status: string;
-}
-
-export interface IPaginationSortingdto {
-  pageNumber: number;
-  pageSize: number;
-  sortField?: string;
-  sortBy?: string;
-  searchByText?: string;
 }
 
 export interface IX509ImportCertificateOptionsDto {

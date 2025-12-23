@@ -49,19 +49,20 @@ import {
 import {
   CreateOidcCredentialOffer,
   GetAllCredentialOffer,
+  ISignerOption,
   SignerMethodOption,
   UpdateCredentialRequest
 } from '../interfaces/oid4vc-issuer-sessions.interfaces';
 import {
   buildCredentialOfferPayload,
   buildCredentialOfferUrl,
-  CredentialOfferPayload,
-  ResolvedSignerOption
+  CredentialOfferPayload
 } from '../libs/helpers/credential-sessions.builder';
 import { x5cKeyType } from '@credebl/enum/enum';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { Oid4vcCredentialOfferWebhookPayload } from '../interfaces/oid4vc-wh-interfaces';
+import { ErrorHandler } from '@credebl/common';
 
 type CredentialDisplayItem = {
   logo?: { uri: string; alt_text?: string };
@@ -179,7 +180,6 @@ export class Oid4vcIssuanceService {
 
       const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, getIssuerDetails.publicIssuerId);
       const issuerConfig = await this.buildOidcIssuerConfig(issuerUpdationConfig.issuerId);
-      console.log('This is the issuerConfig:', JSON.stringify(issuerConfig, null, 2));
       const updatedIssuer = await this._createOIDCTemplate(issuerConfig, url, orgId);
       if (updatedIssuer?.response?.statusCode && 200 !== updatedIssuer?.response?.statusCode) {
         throw new InternalServerErrorException(
@@ -320,7 +320,6 @@ export class Oid4vcIssuanceService {
       let createTemplateOnAgent;
       try {
         const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
-        console.log(`service - createTemplate: `, JSON.stringify(issuerTemplateConfig));
         const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
         if (!agentDetails) {
           throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -346,7 +345,6 @@ export class Oid4vcIssuanceService {
           throw new RpcException('Template creation failed and cleanup also failed');
         }
       }
-      console.log('createTemplateOnAgent::::::::::::::', createTemplateOnAgent);
       if (!createTemplateOnAgent) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
@@ -381,7 +379,7 @@ export class Oid4vcIssuanceService {
         ...updateCredentialTemplate,
         ...(issuerId ? { issuerId } : {})
       };
-      const { name, description, format, canBeRevoked, appearance } = normalized;
+      const { name, description, format, canBeRevoked, appearance, signerOption } = normalized;
       const attributes = instanceToPlain(normalized.template);
 
       const payload = {
@@ -391,7 +389,8 @@ export class Oid4vcIssuanceService {
         ...(canBeRevoked !== undefined ? { canBeRevoked } : {}),
         ...(attributes !== undefined ? { attributes } : {}),
         ...(appearance !== undefined ? { appearance } : {}),
-        ...(issuerId ? { issuerId } : {})
+        ...(issuerId ? { issuerId } : {}),
+        ...(signerOption !== undefined ? { signerOption } : {})
       };
 
       const updatedTemplate = await this.oid4vcIssuanceRepository.updateTemplate(templateId, payload);
@@ -528,7 +527,7 @@ export class Oid4vcIssuanceService {
       //TDOD: signerOption should be under credentials change this with x509 support
 
       //TDOD: signerOption should be under credentials change this with x509 support
-      const signerOptions: ResolvedSignerOption[] = [];
+      const signerOptions: ISignerOption[] = [];
       const activeCertificateDetails: X509CertificateRecord[] = [];
       for (const template of getAllOfferTemplates) {
         if (template.signerOption === SignerOption.DID) {
@@ -585,7 +584,6 @@ export class Oid4vcIssuanceService {
         signerOptions,
         activeCertificateDetails
       );
-      console.log('This is the buildOidcCredentialOffer:', JSON.stringify(buildOidcCredentialOffer, null, 2));
 
       if (!buildOidcCredentialOffer) {
         throw new BadRequestException('Error while creating oid4vc credential offer');
@@ -600,7 +598,7 @@ export class Oid4vcIssuanceService {
         CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER,
         issuerDetails.publicIssuerId
       );
-
+      this.logger.debug(`Creating OIDC Credential Offer for :`, buildOidcCredentialOffer);
       const createCredentialOfferOnAgent = await this._oidcCreateCredentialOffer(buildOidcCredentialOffer, url, orgId);
       if (!createCredentialOfferOnAgent) {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
@@ -608,8 +606,12 @@ export class Oid4vcIssuanceService {
 
       return createCredentialOfferOnAgent.response;
     } catch (error) {
-      this.logger.error(`[createOidcCredentialOffer] - error: ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ?? error);
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to create credential offer');
+      this.logger.error(
+        `[createOidcCredentialOffer] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
     }
   }
 
@@ -656,7 +658,6 @@ export class Oid4vcIssuanceService {
       if (!createCredentialOfferOnAgent) {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
       }
-      console.log('This is the createCredentialOfferOnAgent:', JSON.stringify(createCredentialOfferOnAgent, null, 2));
 
       return createCredentialOfferOnAgent.response;
     } catch (error) {

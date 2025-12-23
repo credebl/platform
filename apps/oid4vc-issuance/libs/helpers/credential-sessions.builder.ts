@@ -351,7 +351,7 @@ function buildSdJwtCredential(
     };
   }
 
-  const sdJwtTemplate = templateRecord.attributes as any as SdJwtTemplate;
+  const sdJwtTemplate = templateRecord.attributes as SdJwtTemplate;
   payloadCopy.vct = sdJwtTemplate.vct;
 
   const apiFormat = mapDbFormatToApiFormat(templateRecord.format);

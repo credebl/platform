@@ -56,8 +56,7 @@ import {
 import {
   buildCredentialOfferPayload,
   buildCredentialOfferUrl,
-  CredentialOfferPayload,
-  ResolvedSignerOption
+  CredentialOfferPayload
 } from '../libs/helpers/credential-sessions.builder';
 import { x5cKeyType } from '@credebl/enum/enum';
 import { instanceToPlain, plainToInstance } from 'class-transformer';

@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
+import { inspect } from 'util';
 
 /**
  * Error categorization interface for consistent error handling
@@ -59,13 +60,16 @@ export class ErrorHandler {
     }
 
     // Handle unknown error types (string, object, etc.)
-    const message =
-      'string' === typeof error
-        ? error
-        : 'object' === typeof error && null !== error && 'message' in error
-          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (error as any).message
-          : defaultMessage;
+    // Extract message from different error shapes in a clear, explicit way
+    let message: string;
+    if ('string' === typeof error) {
+      message = error;
+    } else if ('object' === typeof error && null !== error && 'message' in (error as object)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      message = (error as any).message ?? defaultMessage;
+    } else {
+      message = defaultMessage;
+    }
 
     return { message, statusCode: HttpStatus.INTERNAL_SERVER_ERROR };
   }
@@ -133,10 +137,39 @@ export class ErrorHandler {
       return error;
     }
 
+    // Try to stringify safely (handle circular references). If JSON is unhelpful
+    // (e.g. empty object or array), fall back to util.inspect for a richer output.
     try {
-      return JSON.stringify(error);
+      const json = JSON.stringify(error, ErrorHandler.getSafeReplacer(), 2);
+      if (json && '{}' !== json && '[]' !== json) {
+        return json;
+      }
+      return inspect(error, { depth: null, maxArrayLength: null, compact: false });
     } catch {
-      return String(error);
+      try {
+        return inspect(error, { depth: null, maxArrayLength: null, compact: false });
+      } catch {
+        return String(error);
+      }
     }
+  }
+
+  // Creates a replacer to safely stringify objects with circular references
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static getSafeReplacer(): any {
+    const seen = new WeakSet();
+    return (_key: string, value: unknown) => {
+      if ('object' === typeof value && null !== value) {
+        if (seen.has(value as object)) {
+          return '[Circular]';
+        }
+        seen.add(value as object);
+      }
+      // Handle bigint which JSON.stringify can't serialize
+      if ('bigint' === typeof value) {
+        return value.toString();
+      }
+      return value;
+    };
   }
 }

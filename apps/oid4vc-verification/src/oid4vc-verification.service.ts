@@ -21,12 +21,7 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { getAgentUrl } from '@credebl/common/common.utils';
 import { SignerOption, user } from '@prisma/client';
 import { map } from 'rxjs';
-import {
-  CreateVerifier,
-  IPresentationRequest,
-  UpdateVerifier,
-  VerifierRecord
-} from '@credebl/common/interfaces/oid4vp-verification';
+import { CreateVerifier, UpdateVerifier, VerifierRecord } from '@credebl/common/interfaces/oid4vp-verification';
 import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 import { BaseService } from 'libs/service/base.service';
@@ -270,7 +265,7 @@ export class Oid4vpVerificationService extends BaseService {
       // assign the single object (not an array)
       sessionRequest.requestSigner = requestSigner;
 
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
 
       const createdSession = await this._createVerificationSession(sessionRequest, url, orgId);
       if (!createdSession) {
@@ -370,7 +365,7 @@ export class Oid4vpVerificationService extends BaseService {
 
       sessionRequest.requestSigner = resolvedSigner;
 
-      const url = await getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
       this.logger.debug(`[createIntentBasedVerificationPresentation] calling agent URL=${url}`);
 
       const createdSession = await this._createVerificationSession(sessionRequest, url, orgId);
@@ -587,9 +582,7 @@ export class Oid4vpVerificationService extends BaseService {
     orgId: string,
     userDetails: user
   ): Promise<object> {
-    this.logger.debug(
-      `[createVerificationTemplate] called for orgId=${orgId}, user=${userDetails?.id}, createTemplateDto=${createTemplateDto}`
-    );
+    this.logger.debug(`[createVerificationTemplate] called for orgId=${orgId}, user=${userDetails?.id}`);
     try {
       const created = await this.oid4vpRepository.createVerificationTemplate(createTemplateDto, orgId, userDetails.id);
       if (!created) {
@@ -598,9 +591,6 @@ export class Oid4vpVerificationService extends BaseService {
       this.logger.debug(`[createVerificationTemplate] template created successfully for orgId=${orgId}`);
       return created;
     } catch (error) {
-      // this.logger.error(
-      //   `[createVerificationTemplate] - error: ${error?.response?.message ?? JSON.stringify(error?.response ?? error)}`
-      // );
       this.logger.error(`[createVerificationTemplate] - error: ${error}`);
       throw new RpcException(error?.response ?? error);
     }

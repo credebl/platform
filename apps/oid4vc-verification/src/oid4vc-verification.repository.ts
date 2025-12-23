@@ -249,9 +249,7 @@ export class Oid4vpRepository {
     orgId: string,
     userId: string
   ): Promise<object> {
-    this.logger.debug(
-      `[createVerificationTemplate] called for orgId=${orgId}, userId=${userId}, createTemplateDto=${createTemplateDto}`
-    );
+    this.logger.debug();
     try {
       const created = await this.prisma.verification_templates.create({
         data: {

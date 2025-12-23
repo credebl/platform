@@ -6,4 +6,4 @@ export interface CreateVerificationTemplate {
   signerOption?: SignerOption;
 }
 
-export interface UpdateCredentialTemplate extends Partial<CreateVerificationTemplate> {}
+export interface UpdateVerificationTemplate extends Partial<CreateVerificationTemplate> {}

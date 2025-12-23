@@ -162,7 +162,7 @@ export class Oid4vcVerificationService {
     orgId: string,
     userDetails: user
   ): Promise<object> {
-    const payload = { templateId, updateTemplateDto, orgId, userDetails };
+    const payload = { templateId, updateCredentialTemplate: updateTemplateDto, orgId, userDetails };
     this.logger.debug(
       `[updateVerificationTemplate] Called with orgId=${orgId}, templateId=${templateId}, user=${userDetails?.id}`
     );

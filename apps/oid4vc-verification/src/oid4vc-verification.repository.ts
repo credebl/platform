@@ -8,7 +8,7 @@ import { OrgAgent } from '../interfaces/oid4vp-verifier.interfaces';
 import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
-import { CreateVerificationTemplate, UpdateCredentialTemplate } from '../interfaces/verification-template.interfaces';
+import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
 
 @Injectable()
 export class Oid4vpRepository {
@@ -310,7 +310,7 @@ export class Oid4vpRepository {
 
   async updateVerificationTemplate(
     templateId: string,
-    updateCredentialTemplate: UpdateCredentialTemplate,
+    updateCredentialTemplate: UpdateVerificationTemplate,
     orgId: string,
     userId: string
   ): Promise<object> {

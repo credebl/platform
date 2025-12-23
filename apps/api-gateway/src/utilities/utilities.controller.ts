@@ -19,7 +19,9 @@ import {
   Get,
   Query,
   Put,
-  Delete
+  Delete,
+  ParseUUIDPipe,
+  BadRequestException
 } from '@nestjs/common';
 import IResponse from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
@@ -191,27 +193,6 @@ export class UtilitiesController {
   }
 
   /**
-   * Get intent template by ID
-   * @param id The intent template ID
-   * @param res The response object
-   * @returns The intent template details
-   */
-  @Get('/intent-templates/:id')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
-  @ApiOperation({ summary: 'Get Intent Template by ID', description: 'Retrieve intent template details by ID.' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Intent template retrieved successfully', type: ApiResponseDto })
-  async getIntentTemplateById(@Param('id') id: string, @Res() res: Response): Promise<Response> {
-    const intentTemplate = await this.utilitiesService.getIntentTemplateById(id);
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: 'Intent template retrieved successfully',
-      data: intentTemplate
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
-
-  /**
    * Get intent templates by intent ID
    * @param intentId The intent ID
    * @param res The response object
@@ -255,6 +236,38 @@ export class UtilitiesController {
       statusCode: HttpStatus.OK,
       message: 'Intent templates retrieved successfully',
       data: intentTemplates
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Get intent template by ID
+   * @param id The intent template ID
+   * @param res The response object
+   * @returns The intent template details
+   */
+  @Get('/intent-templates/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Get Intent Template by ID', description: 'Retrieve intent template details by ID.' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Intent template retrieved successfully', type: ApiResponseDto })
+  async getIntentTemplateById(
+    @Param(
+      'id',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.oid4vpIntentToTemplate.error.invalidId);
+        }
+      })
+    )
+    id: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const intentTemplate = await this.utilitiesService.getIntentTemplateById(id);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: 'Intent template retrieved successfully',
+      data: intentTemplate
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

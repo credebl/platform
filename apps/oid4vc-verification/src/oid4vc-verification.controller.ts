@@ -5,7 +5,7 @@ import { CreateVerifier, IPresentationRequest, UpdateVerifier } from '@credebl/c
 import { MessagePattern } from '@nestjs/microservices';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
-import { CreateVerificationTemplate, UpdateCredentialTemplate } from '../interfaces/verification-template.interfaces';
+import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
 
 @Controller()
 export class Oid4vpVerificationController {
@@ -152,7 +152,7 @@ export class Oid4vpVerificationController {
   @MessagePattern({ cmd: 'verification-template-update' })
   async updateVerificationTemplate(payload: {
     templateId: string;
-    updateCredentialTemplate: UpdateCredentialTemplate;
+    updateCredentialTemplate: UpdateVerificationTemplate;
     orgId: string;
     userDetails: user;
   }): Promise<object> {

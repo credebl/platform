@@ -35,7 +35,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { Oid4vpPresentationWh, RequestSigner } from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { SignerMethodOption, x5cKeyType } from '@credebl/enum/enum';
-import { CreateVerificationTemplate, UpdateCredentialTemplate } from '../interfaces/verification-template.interfaces';
+import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
 @Injectable()
 export class Oid4vpVerificationService extends BaseService {
   constructor(
@@ -627,7 +627,7 @@ export class Oid4vpVerificationService extends BaseService {
 
   async updateVerificationTemplate(
     templateId: string,
-    updateCredentialTemplate: UpdateCredentialTemplate,
+    updateCredentialTemplate: UpdateVerificationTemplate,
     orgId: string,
     userDetails: user
   ): Promise<object> {

@@ -80,12 +80,12 @@ export class Oid4vcIssuanceService extends BaseService {
   }
 
   async createTemplate(
-    CredentialTemplate: CreateCredentialTemplateDto,
+    credentialTemplate: CreateCredentialTemplateDto,
     userDetails: user,
     orgId: string,
     issuerId: string
   ): Promise<object> {
-    const payload = { CredentialTemplate, orgId, userDetails, issuerId };
+    const payload = { credentialTemplate, orgId, userDetails, issuerId };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-template-create', payload);
   }
 

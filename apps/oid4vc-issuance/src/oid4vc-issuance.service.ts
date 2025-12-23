@@ -599,7 +599,7 @@ export class Oid4vcIssuanceService {
         CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER,
         issuerDetails.publicIssuerId
       );
-
+      this.logger.debug(`Creating OIDC Credential Offer for :`, buildOidcCredentialOffer);
       const createCredentialOfferOnAgent = await this._oidcCreateCredentialOffer(buildOidcCredentialOffer, url, orgId);
       if (!createCredentialOfferOnAgent) {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);

@@ -17,6 +17,12 @@ if ('smtp' === emailProvider) {
     throw new Error('Missing SMTP configuration. Required: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS');
   }
 
+  const port = Number(SMTP_PORT);
+
+  if (!Number.isInteger(port) || 0 >= port) {
+    throw new Error(`Invalid SMTP_PORT value: "${SMTP_PORT}". Must be a valid number.`);
+  }
+
   transporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: Number(SMTP_PORT),

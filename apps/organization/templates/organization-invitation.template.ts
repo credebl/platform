@@ -1,3 +1,5 @@
+import { escapeHtml } from '@credebl/common/common.utils';
+
 export class OrganizationInviteTemplate {
   public sendInviteEmailTemplate(
     email: string,
@@ -17,7 +19,9 @@ export class OrganizationInviteTemplate {
       : `After successful registration, you can log in to the platform and click on “Accept Organization Invitation” on your dashboard.`;
 
     const Button = isUserExist ? `Accept Organization Invitation` : `Register on ${process.env.PLATFORM_NAME}`;
-
+    const safeEmail = escapeHtml(email);
+    const safeOrgName = escapeHtml(orgName);
+    const safeFirstName = escapeHtml(firstName);
     return `<!DOCTYPE html>
         <html lang="en">
         
@@ -36,13 +40,13 @@ export class OrganizationInviteTemplate {
         <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
           font-size: 15px; line-height: 24px;color: #00000;">
               <p style="margin-top:0px">
-                  Hello ${email},
+                  Hello ${safeEmail},
               </p>
               <p>
-              ${firstName} has invited you to join “${orgName}” as a member.
+              ${safeFirstName} has invited you to join “${safeOrgName}” as a member.
 
               </p><ul>
-              <li><strong>Organization:</strong> ${orgName}</li>
+              <li><strong>Organization:</strong> ${safeOrgName}</li>
                <li><strong>Role:</strong> Member</li>
                </ul>
                <p>

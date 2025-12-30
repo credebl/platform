@@ -91,6 +91,24 @@ export enum AgentSpinUpStatus {
   DID_CREATED = 2
 }
 
+export enum EcosystemRoles {
+  ECOSYSTEM_LEAD = 'Ecosystem Lead',
+  ECOSYSTEM_MEMBER = 'Ecosystem Member',
+  ECOSYSTEM_OWNER = 'Ecosystem Owner'
+}
+
+export enum EcosystemConfigSettings {
+  URL = 'url',
+  ENABLE_ECOSYSTEM = 'enableEcosystem',
+  AUTO_ENDORSEMENT = 'autoEndorsement',
+  PARTICIPATE_IN_ECOSYSTEM = 'participateInEcosystem',
+  MULTI_ECOSYSTEM = 'multiEcosystemSupport'
+}
+
+export enum EcosystemOrgStatus {
+  ACTIVE = 'ACTIVE'
+}
+
 export enum UserCertificateId {
   WINNER = 'Winner',
   PARTICIPANT = 'Participant',

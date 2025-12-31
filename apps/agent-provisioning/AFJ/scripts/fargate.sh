@@ -315,7 +315,7 @@ fi
 if [ $? -eq 0 ]; then
 
   n=0
-  until [ "$n" -ge 6 ]; do
+  until [ "$n" -ge 20 ]; do
     if netstat -tln | grep ${ADMIN_PORT} >/dev/null; then
 
       AGENTURL="http://${EXTERNAL_IP}:${ADMIN_PORT}/agent"
@@ -339,78 +339,14 @@ if [ $? -eq 0 ]; then
 service_description=$(aws ecs describe-services --service $SERVICE_NAME --cluster $CLUSTER_NAME --region $AWS_PUBLIC_REGION)
 echo "service_description=$service_description"
 
-
-# Extract Task ID from the service description events
-task_id=$(echo "$service_description" | jq -r '
-  .services[0].events[] 
-  | select(.message | test("has started 1 tasks")) 
-  | .message 
-  | capture("\\(task (?<id>[^)]+)\\)") 
-  | .id
-')
-
-# to fetch log group of container 
-log_group=/ecs/$TASKDEFINITION_FAMILY
-echo "log_group=$log_group"
-
-# Get Log Stream Name
-log_stream=ecs/$CONTAINER_NAME/$task_id
-
-echo "logstrem=$log_stream"
-
-# Check if the token folder exists, and create it if it doesn't
-token_folder="$PWD/agent-provisioning/AFJ/token"
-if [ ! -d "$token_folder" ]; then
-    mkdir -p "$token_folder"
-fi
-
-# Set maximum retry attempts
-RETRIES=3
-
-# Loop to attempt retrieving token from logs
-for attempt in $(seq 1 $RETRIES); do
-    echo "Attempt $attempt: Checking service logs for token..."
-    
-    # Fetch logs and grep for API token
-    token=$(aws logs get-log-events \
-    --log-group-name "$log_group" \
-    --log-stream-name "$log_stream" \
-    --region $AWS_PUBLIC_REGION \
-    --query 'events[*].message' \
-    --output text \
-    | tr -d '\033' \
-    | grep 'API Key:' \
-    | sed -E 's/.*API Key:[[:space:]]*([a-zA-Z0-9._:-]*).*/\1/' \
-    | head -n 1
-)
-   # echo "token=$token"
-    if [ -n "$token" ]; then
-        echo "Token found: $token"
-        # Write token to a file
-        echo "{\"token\": \"$token\"}" > "$PWD/agent-provisioning/AFJ/token/${AGENCY}_${CONTAINER_NAME}.json"
-        break  # Exit loop if token is found
-    else
-        echo "Token not found in logs. Retrying..."
-        if [ $attempt -eq $RETRIES ]; then
-            echo "Reached maximum retry attempts. Token not found."
-        fi
-    fi
-    # Add a delay of 10 seconds between retries
-    sleep 10
-done
-
   echo "Creating agent config"
+  mkdir -p "$PWD/agent-provisioning/AFJ/endpoints"
   cat <<EOF >${PWD}/agent-provisioning/AFJ/endpoints/${AGENCY}_${CONTAINER_NAME}.json
     {
         "CONTROLLER_ENDPOINT":"$EXTERNAL_IP"
     }
 EOF
 
-  cat <<EOF >${PWD}/agent-provisioning/AFJ/token/${AGENCY}_${CONTAINER_NAME}.json
-    {
-        "token" : "$token"
-    }
-EOF
 
   echo "Agent config created"
 else

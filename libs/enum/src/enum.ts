@@ -87,8 +87,8 @@ export enum OrgAgentType {
 
 export enum AgentSpinUpStatus {
   PENDING = 0,
-  PROCESSED = 1,
-  COMPLETED = 2
+  WALLET_CREATED = 1,
+  DID_CREATED = 2
 }
 
 export enum UserCertificateId {
@@ -270,4 +270,82 @@ export enum SessionType {
 export enum ProviderType {
   KEYCLOAK = 'keycloak',
   SUPABASE = 'supabase'
+}
+
+export enum OpenId4VcIssuanceSessionState {
+  OfferCreated = 'OfferCreated',
+  OfferUriRetrieved = 'OfferUriRetrieved',
+  AuthorizationInitiated = 'AuthorizationInitiated',
+  AuthorizationGranted = 'AuthorizationGranted',
+  AccessTokenRequested = 'AccessTokenRequested',
+  AccessTokenCreated = 'AccessTokenCreated',
+  CredentialRequestReceived = 'CredentialRequestReceived',
+  CredentialsPartiallyIssued = 'CredentialsPartiallyIssued',
+  Completed = 'Completed',
+  Error = 'Error'
+}
+
+export enum x5cKeyType {
+  Ed25519 = 'ed25519',
+  P256 = 'p256'
+}
+
+export enum x5cRecordStatus {
+  Active = 'Active',
+  PendingActivation = 'Pending activation',
+  InActive = 'In Active'
+}
+
+export enum X509KeyUsage {
+  DigitalSignature = 1,
+  NonRepudiation = 2,
+  KeyEncipherment = 4,
+  DataEncipherment = 8,
+  KeyAgreement = 16,
+  KeyCertSign = 32,
+  CrlSign = 64,
+  EncipherOnly = 128,
+  DecipherOnly = 256
+}
+
+export enum X509ExtendedKeyUsage {
+  ServerAuth = '1.3.6.1.5.5.7.3.1',
+  ClientAuth = '1.3.6.1.5.5.7.3.2',
+  CodeSigning = '1.3.6.1.5.5.7.3.3',
+  EmailProtection = '1.3.6.1.5.5.7.3.4',
+  TimeStamping = '1.3.6.1.5.5.7.3.8',
+  OcspSigning = '1.3.6.1.5.5.7.3.9',
+  MdlDs = '1.0.18013.5.1.2'
+}
+
+export enum CredentialFormat {
+  SdJwtVc = 'vc+sd-jwt',
+  Mdoc = 'mso_mdoc'
+}
+
+export enum AttributeType {
+  STRING = 'string',
+  NUMBER = 'number',
+  BOOLEAN = 'boolean',
+  DATE = 'date',
+  OBJECT = 'object',
+  ARRAY = 'array',
+  IMAGE = 'image'
+}
+
+export enum SignerMethodOption {
+  DID = 'did',
+  X5C = 'x5c'
+}
+
+export declare enum HandshakeProtocol {
+  Connections = 'https://didcomm.org/connections/1.0',
+  DidExchange = 'https://didcomm.org/didexchange/1.0'
+}
+
+export enum ResponseMode {
+  DIRECT_POST = 'direct_post',
+  DIRECT_POST_JWT = 'direct_post.jwt',
+  DC_API = 'dc_api',
+  DC_API_JWT = 'dc_api.jwt'
 }

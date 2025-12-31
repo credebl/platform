@@ -1,5 +1,16 @@
-import { PrismaService } from '@credebl/prisma-service';
+import { AgentSpinUpStatus, AgentType, PrismaTables } from '@credebl/enum/enum';
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import {
+  ICreateOrgAgent,
+  ILedgers,
+  IOrgAgent,
+  IOrgAgentsResponse,
+  IOrgLedgers,
+  IStoreDidDetails,
+  IStoreOrgAgentDetails,
+  LedgerNameSpace,
+  OrgDid
+} from '../interface/agent-service.interface';
 /* eslint-disable camelcase */
 import {
   Prisma,
@@ -12,19 +23,8 @@ import {
   platform_config,
   user
 } from '@prisma/client';
-import {
-  ICreateOrgAgent,
-  ILedgers,
-  IOrgAgent,
-  IOrgAgentsResponse,
-  IOrgLedgers,
-  IStoreAgent,
-  IStoreDidDetails,
-  IStoreOrgAgentDetails,
-  LedgerNameSpace,
-  OrgDid
-} from '../interface/agent-service.interface';
-import { AgentType, PrismaTables } from '@credebl/enum/enum';
+
+import { PrismaService } from '@credebl/prisma-service';
 
 @Injectable()
 export class AgentServiceRepository {
@@ -100,13 +100,14 @@ export class AgentServiceRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async createOrgAgent(agentSpinUpStatus: number, userId: string): Promise<ICreateOrgAgent> {
+  async createOrgAgent(agentSpinUpStatus: number, userId: string, orgId: string): Promise<ICreateOrgAgent> {
     try {
       return this.prisma.org_agents.create({
         data: {
           agentSpinUpStatus,
           createdBy: userId,
-          lastChangedBy: userId
+          lastChangedBy: userId,
+          orgId
         },
         select: {
           id: true
@@ -155,12 +156,20 @@ export class AgentServiceRepository {
    * @returns
    */
   // eslint-disable-next-line camelcase
-  async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<IStoreAgent> {
+  async storeOrgAgentDetails(storeOrgAgentDetails: IStoreOrgAgentDetails): Promise<{
+    orgId: string;
+    agentSpinUpStatus: number;
+    agentEndPoint: string;
+    tenantId: string;
+    walletName: string;
+    id: string;
+  }> {
     try {
-      const { id, userId, ledgerId, did, didDoc, ...commonFields } = storeOrgAgentDetails;
+      const { id, orgId, did, userId, ledgerId, didDoc, ...commonFields } = storeOrgAgentDetails;
       const firstLedgerId = Array.isArray(ledgerId) ? ledgerId[0] : null;
       const data = {
         ...commonFields,
+        orgId,
         ledgerId: firstLedgerId,
         createdBy: userId,
         lastChangedBy: userId,
@@ -169,14 +178,32 @@ export class AgentServiceRepository {
       };
 
       // eslint-disable-next-line camelcase
-      const query: Promise<org_agents> = id
+      const query = id
         ? this.prisma.org_agents.update({
             where: { id },
-            data
+            data,
+            select: {
+              id: true,
+              orgId: true,
+              agentSpinUpStatus: true,
+              agentEndPoint: true,
+              tenantId: true,
+              walletName: true
+            }
           })
-        : this.prisma.org_agents.create({ data });
+        : this.prisma.org_agents.create({
+            data,
+            select: {
+              id: true,
+              orgId: true,
+              agentSpinUpStatus: true,
+              agentEndPoint: true,
+              tenantId: true,
+              walletName: true
+            }
+          });
 
-      return { id: (await query).id };
+      return query;
     } catch (error) {
       this.logger.error(`[storeAgentDetails] - store agent details: ${JSON.stringify(error)}`);
       throw error;
@@ -233,7 +260,30 @@ export class AgentServiceRepository {
     }
   }
 
+  /**
+   * Update agent spinup status
+   * @param orgId
+   */
   // eslint-disable-next-line camelcase
+  // TODO: Combine these org_agents update functions into one common update method.
+  async updateAgentSpinupStatus(orgId: string): Promise<org_agents> {
+    try {
+      return await this.prisma.org_agents.update({
+        where: {
+          orgId
+        },
+        data: {
+          agentSpinUpStatus: AgentSpinUpStatus.DID_CREATED
+        }
+      });
+    } catch (error) {
+      this.logger.error(`[updateAgentSpinupStatus] - Update agent spinup status: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  // TODO: Combine these org_agents update functions into one common update method.
   async updateLedgerId(orgId: string, ledgerId: string): Promise<org_agents> {
     try {
       return await this.prisma.org_agents.update({

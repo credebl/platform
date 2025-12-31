@@ -9,7 +9,6 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { map } from 'rxjs/operators';
 import {
   IGetAllProofPresentations,
   IProofRequestSearchCriteria,
@@ -52,7 +51,6 @@ import { convertUrlToDeepLinkUrl, getAgentUrl } from '@credebl/common/common.uti
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
-import { from } from 'rxjs';
 import { EmailService } from '@credebl/common/email.service';
 
 @Injectable()
@@ -184,12 +182,11 @@ export class VerificationService {
    * @param payload
    * @returns Get all proof presentation
    */
-  async _getProofPresentations(payload: IGetAllProofPresentations): Promise<{
-    response: string;
-  }> {
+  async _getProofPresentations(payload: IGetAllProofPresentations): Promise<object> {
     try {
       const pattern = { cmd: 'agent-get-proof-presentations' };
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsClient.send<object>(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[_getProofPresentations] - error in get proof presentations : ${JSON.stringify(error)}`);
       throw error;
@@ -225,10 +222,10 @@ export class VerificationService {
    * @param orgId
    * @returns Proof presentation details by proofId
    */
-  async getProofPresentationById(proofId: string, orgId: string): Promise<string> {
+  async getProofPresentationById(proofId: string, orgId: string): Promise<object> {
     try {
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(orgId);
-      const url = await getAgentUrl(
+      const url = getAgentUrl(
         getAgentDetails?.agentEndPoint,
         CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID_FLAG,
         proofId
@@ -237,18 +234,18 @@ export class VerificationService {
       const payload = { orgId, url };
 
       const getProofPresentationById = await this._getProofPresentationById(payload);
-      return getProofPresentationById?.response;
+      return getProofPresentationById;
     } catch (error) {
       this.logger.error(
         `[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`
       );
-      const errorMessage = error?.response?.error?.reason || error?.message;
+      const errorMessage = error?.error?.reason || error?.message;
 
       if (errorMessage?.includes('not found')) {
         throw new NotFoundException(errorMessage);
       }
 
-      throw new RpcException(error.response ? error.response : error);
+      throw new RpcException(error);
     }
   }
 
@@ -257,15 +254,14 @@ export class VerificationService {
    * @param payload
    * @returns Get proof presentation details
    */
-  async _getProofPresentationById(payload: IGetProofPresentationById): Promise<{
-    response: string;
-  }> {
+  async _getProofPresentationById(payload: IGetProofPresentationById): Promise<object> {
     try {
       const pattern = {
         cmd: 'agent-get-proof-presentation-by-id'
       };
 
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsClient.send<object>(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(
         `[_getProofPresentationById] - error in get proof presentation by id : ${JSON.stringify(error)}`
@@ -280,11 +276,11 @@ export class VerificationService {
    * @returns Requested proof presentation details
    */
 
-  async sendProofRequest(requestProof: IProofRequestData): Promise<string | string[]> {
+  async sendProofRequest(requestProof: IProofRequestData): Promise<object | object[]> {
     try {
       const comment = requestProof.comment ? requestProof.comment : '';
       const getAgentDetails = await this.verificationRepository.getAgentEndPoint(requestProof.orgId);
-      const url = await getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.REQUEST_PROOF);
+      const url = getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.REQUEST_PROOF);
       // Function to create a payload
       const createPayload = async (connectionId: string): Promise<IProofRequestPayload> => {
         const proofRequestPayload = {
@@ -338,11 +334,11 @@ export class VerificationService {
           ? requestProof.connectionId
           : [requestProof.connectionId];
 
-        const responses: string[] = [];
+        const responses: object[] = [];
         for (const connectionId of connectionIds) {
           const payload = await createPayload(connectionId);
           const getProofPresentationById = await this._sendProofRequest(payload);
-          responses.push(getProofPresentationById?.response);
+          responses.push(getProofPresentationById);
         }
         return responses;
       } else {
@@ -352,7 +348,7 @@ export class VerificationService {
 
         const payload = await createPayload(connectionId);
         const getProofPresentationById = await this._sendProofRequest(payload);
-        return getProofPresentationById?.response;
+        return getProofPresentationById;
       }
     } catch (error) {
       // Handle cases where identical attributes are used in both predicates and non-predicates.
@@ -381,17 +377,16 @@ export class VerificationService {
    * @param orgId
    * @returns Get requested proof presentation details
    */
-  async _sendProofRequest(payload: IProofRequestPayload): Promise<{
-    response: string;
-  }> {
+  async _sendProofRequest(payload: IProofRequestPayload): Promise<object> {
     try {
       const pattern = {
         cmd: 'agent-send-proof-request'
       };
 
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsClient.send<object>(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
-      this.logger.error(`[_sendProofRequest] - error in verify presentation : ${JSON.stringify(error)}`);
+      this.logger.error(`[_sendProofRequest] - nats error in sending proof request : ${JSON.stringify(error)}`);
       throw error;
     }
   }
@@ -402,28 +397,28 @@ export class VerificationService {
    * @param orgId
    * @returns Verified proof presentation details
    */
-  async verifyPresentation(proofId: string, orgId: string): Promise<string> {
+  async verifyPresentation(proofId: string, orgId: string): Promise<object> {
     try {
       const getAgentData = await this.verificationRepository.getAgentEndPoint(orgId);
-      const url = await getAgentUrl(getAgentData?.agentEndPoint, CommonConstants.ACCEPT_PRESENTATION, proofId);
+      const url = getAgentUrl(getAgentData?.agentEndPoint, CommonConstants.ACCEPT_PRESENTATION, proofId);
 
       const payload = { orgId, url };
       const getProofPresentationById = await this._verifyPresentation(payload);
-      return getProofPresentationById?.response;
+      return getProofPresentationById;
     } catch (error) {
       this.logger.error(
         `[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`
       );
-      const errorStack = error?.response?.error?.reason;
+      const errorStack = error?.error?.reason;
 
       if (errorStack) {
         throw new RpcException({
           message: ResponseMessages.verification.error.proofNotFound,
-          statusCode: error?.response?.status,
+          statusCode: error?.status,
           error: errorStack
         });
       } else {
-        throw new RpcException(error.response ? error.response : error);
+        throw new RpcException(error || 'Something went wrong');
       }
     }
   }
@@ -433,15 +428,14 @@ export class VerificationService {
    * @param payload
    * @returns Get verified proof presentation details
    */
-  async _verifyPresentation(payload: IVerifyPresentation): Promise<{
-    response: string;
-  }> {
+  async _verifyPresentation(payload: IVerifyPresentation): Promise<object> {
     try {
       const pattern = {
         cmd: 'agent-verify-presentation'
       };
 
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsClient.send<object>(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[_verifyPresentation] - error in verify presentation : ${JSON.stringify(error)}`);
       throw error;
@@ -483,10 +477,7 @@ export class VerificationService {
 
       outOfBandRequestProof['label'] = label;
 
-      const url = await getAgentUrl(
-        getAgentDetails?.agentEndPoint,
-        CommonConstants.CREATE_OUT_OF_BAND_PROOF_PRESENTATION
-      );
+      const url = getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.CREATE_OUT_OF_BAND_PROOF_PRESENTATION);
 
       // Destructuring 'outOfBandRequestProof' to remove emailId, as it is not used while agent operation
       const { isShortenUrl, emailId, type, reuseConnection, ...updateOutOfBandRequestProof } = outOfBandRequestProof;
@@ -571,17 +562,17 @@ export class VerificationService {
     //nats call in agent-service to create an invitation url
     const pattern = { cmd: 'store-object-return-url' };
     const payload = { persistent, storeObj };
-    const message = await this.natsCall(pattern, payload);
-    return message.response;
+    const message = await this.natsClient.send<string>(this.verificationServiceProxy, pattern, payload);
+    return message;
   }
 
-  private async generateOOBProofReq(payload: IProofRequestPayload): Promise<object> {
+  private async generateOOBProofReq(payload: IProofRequestPayload): Promise<unknown> {
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
 
     if (!getProofPresentation) {
       throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
     }
-    return getProofPresentation.response;
+    return getProofPresentation;
   }
 
   // Currently batch size is not used, as length of emails sent is restricted to '10'
@@ -626,13 +617,13 @@ export class VerificationService {
     getAgentDetails: org_agents,
     organizationDetails: organisation
   ): Promise<object> {
-    const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
+    const getProofPresentation: IInvitation = await this._sendOutOfBandProofRequest(payload);
 
     if (!getProofPresentation) {
       throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
     }
 
-    const invitationUrl = getProofPresentation?.response?.invitationUrl;
+    const invitationUrl = getProofPresentation?.invitationUrl;
     // Currently have shortenedUrl to store only for 30 days
     const persist: boolean = false;
     const shortenedUrl = await this.storeVerificationObjectAndReturnUrl(invitationUrl, persist);
@@ -670,8 +661,8 @@ export class VerificationService {
 
     return {
       isEmailSent,
-      outOfBandRecordId: getProofPresentation?.response?.outOfBandRecord?.id,
-      proofRecordThId: getProofPresentation?.response?.proofRecordThId
+      outOfBandRecordId: getProofPresentation?.outOfBandRecord?.id,
+      proofRecordThId: getProofPresentation?.proofRecordThId
     };
   }
 
@@ -680,15 +671,14 @@ export class VerificationService {
    * @param payload
    * @returns Get requested proof presentation details
    */
-  async _sendOutOfBandProofRequest(payload: IProofRequestPayload): Promise<{
-    response;
-  }> {
+  async _sendOutOfBandProofRequest(payload: IProofRequestPayload): Promise<unknown> {
     try {
       const pattern = {
         cmd: 'agent-send-out-of-band-proof-request'
       };
 
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsClient.send(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[_sendOutOfBandProofRequest] - error in Out Of Band Presentation : ${JSON.stringify(error)}`);
       throw error;
@@ -765,13 +755,13 @@ export class VerificationService {
       let credDefId;
       let schemaId;
       let certificate;
-      const url = await getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.GET_VERIFIED_PROOF, proofId);
+      const url = getAgentUrl(getAgentDetails?.agentEndPoint, CommonConstants.GET_VERIFIED_PROOF, proofId);
 
       const payload = { orgId, url };
 
       const getProofPresentationById = await this._getVerifiedProofDetails(payload);
 
-      if (!getProofPresentationById?.response?.presentation) {
+      if (!getProofPresentationById?.presentation) {
         throw new NotFoundException(ResponseMessages.verification.error.proofPresentationNotFound, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.notFound
@@ -781,11 +771,10 @@ export class VerificationService {
       const extractedDataArray: IProofPresentationDetails[] = [];
 
       // For Presentation Exchange format
-      if (getProofPresentationById?.response?.request?.presentationExchange) {
-        const presentationDefinition =
-          getProofPresentationById?.response?.request?.presentationExchange?.presentation_definition;
+      if (getProofPresentationById?.request?.presentationExchange) {
+        const presentationDefinition = getProofPresentationById?.request?.presentationExchange?.presentation_definition;
         const verifiableCredentials =
-          getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential;
+          getProofPresentationById?.presentation?.presentationExchange?.verifiableCredential;
 
         presentationDefinition?.input_descriptors.forEach((descriptor, index) => {
           const schemaId = descriptor?.schema[0]?.uri;
@@ -795,7 +784,7 @@ export class VerificationService {
 
           if (getProofPresentationById?.response) {
             certificate =
-              getProofPresentationById?.response?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc
+              getProofPresentationById?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc
                 ?.certificate;
           }
 
@@ -822,10 +811,10 @@ export class VerificationService {
         });
       }
       // For Indy format
-      if (getProofPresentationById?.response?.request?.indy) {
-        const requestedAttributes = getProofPresentationById?.response?.request?.indy?.requested_attributes;
-        const requestedPredicates = getProofPresentationById?.response?.request?.indy?.requested_predicates;
-        const revealedAttrs = getProofPresentationById?.response?.presentation?.indy?.requested_proof?.revealed_attrs;
+      if (getProofPresentationById?.request?.indy) {
+        const requestedAttributes = getProofPresentationById?.request?.indy?.requested_attributes;
+        const requestedPredicates = getProofPresentationById?.request?.indy?.requested_predicates;
+        const revealedAttrs = getProofPresentationById?.presentation?.indy?.requested_proof?.revealed_attrs;
 
         if (0 !== Object.keys(requestedAttributes).length && 0 !== Object.keys(requestedPredicates).length) {
           for (const key in requestedAttributes) {
@@ -836,9 +825,9 @@ export class VerificationService {
               if (requestedAttributeKey?.restrictions) {
                 credDefId = requestedAttributeKey?.restrictions[0]?.cred_def_id;
                 schemaId = requestedAttributeKey?.restrictions[0]?.schema_id;
-              } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {
-                credDefId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].cred_def_id;
-                schemaId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].schema_id;
+              } else if (getProofPresentationById?.presentation?.indy?.identifiers) {
+                credDefId = getProofPresentationById?.presentation?.indy?.identifiers[0].cred_def_id;
+                schemaId = getProofPresentationById?.presentation?.indy?.identifiers[0].schema_id;
               }
 
               if (revealedAttrs.hasOwnProperty(key)) {
@@ -915,16 +904,16 @@ export class VerificationService {
       return extractedDataArray;
     } catch (error) {
       this.logger.error(`[getVerifiedProofDetails] - error in get verified proof details : ${JSON.stringify(error)}`);
-      const errorStack = error?.response?.error?.reason;
+      const errorStack = error?.error?.reason;
 
       if (errorStack) {
         throw new RpcException({
           message: ResponseMessages.verification.error.verifiedProofNotFound,
-          statusCode: error?.response?.status,
+          statusCode: error?.status,
           error: errorStack
         });
       } else {
-        throw new RpcException(error.response ? error.response : error);
+        throw new RpcException(error);
       }
     }
   }
@@ -936,24 +925,24 @@ export class VerificationService {
     if (attribute?.restrictions) {
       credDefId = attribute?.restrictions[0]?.cred_def_id;
       schemaId = attribute?.restrictions[0]?.schema_id;
-    } else if (getProofPresentationById?.response?.presentation?.indy?.identifiers) {
-      credDefId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].cred_def_id;
-      schemaId = getProofPresentationById?.response?.presentation?.indy?.identifiers[0].schema_id;
+    } else if (getProofPresentationById?.presentation?.indy?.identifiers) {
+      credDefId = getProofPresentationById?.presentation?.indy?.identifiers[0].cred_def_id;
+      schemaId = getProofPresentationById?.presentation?.indy?.identifiers[0].schema_id;
     }
 
     return [credDefId, schemaId];
   }
 
-  async _getVerifiedProofDetails(payload: IVerifiedProofData): Promise<{
-    response;
-  }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async _getVerifiedProofDetails(payload: IVerifiedProofData): Promise<any> {
     try {
       //nats call in agent for fetch verified proof details
       const pattern = {
         cmd: 'get-agent-verified-proof-details'
       };
 
-      return await this.natsCall(pattern, payload);
+      const result = await this.natsClient.send(this.verificationServiceProxy, pattern, payload);
+      return result;
     } catch (error) {
       this.logger.error(`[_getVerifiedProofDetails] - error in verified proof details : ${JSON.stringify(error)}`);
       throw error;
@@ -991,32 +980,6 @@ export class VerificationService {
         statusCode: error?.status?.code
       });
     }
-  }
-
-  async natsCall(
-    pattern: object,
-    payload: object
-  ): Promise<{
-    response: string;
-  }> {
-    return from(this.natsClient.send<string>(this.verificationServiceProxy, pattern, payload))
-      .pipe(
-        map((response) => ({
-          response
-        }))
-      )
-      .toPromise()
-      .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
-        throw new HttpException(
-          {
-            status: error.statusCode,
-            error: error.error,
-            message: error.message
-          },
-          error.error
-        );
-      });
   }
 
   async delay(ms: number): Promise<unknown> {

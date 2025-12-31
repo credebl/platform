@@ -1,0 +1,42 @@
+# Stage 1: Build the application
+FROM node:18-alpine as build
+# Install OpenSSL
+RUN apk add --no-cache openssl
+RUN npm install -g pnpm
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package.json ./
+COPY pnpm-workspace.yaml ./
+
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
+# Install dependencies while ignoring scripts (including Puppeteer's installation)
+RUN pnpm i --ignore-scripts
+
+# Copy the rest of the application code
+COPY . .
+RUN cd libs/prisma-service && npx prisma generate
+
+# Build the oid4vc-issuance service
+RUN npm run build oid4vc-issuance
+
+
+# Stage 2: Create the final image
+FROM node:18-alpine
+# Install OpenSSL
+RUN apk add --no-cache openssl
+# Set the working directory
+WORKDIR /app
+
+# Copy the compiled code from the build stage
+COPY --from=build /app/dist/apps/oid4vc-issuance/ ./dist/apps/oid4vc-issuance/
+
+# Copy the libs folder from the build stage
+COPY --from=build /app/libs/ ./libs/
+
+COPY --from=build /app/node_modules  ./node_modules
+
+# Set the command to run the microservice
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/oid4vc-issuance/main.js"]

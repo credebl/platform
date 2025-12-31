@@ -1,5 +1,4 @@
 import * as CryptoJS from 'crypto-js';
-/* eslint-disable */
 import * as fs from 'fs';
 import * as util from 'util';
 
@@ -516,7 +515,7 @@ export const updateClientId = async (): Promise<void> => {
       const bytes = CryptoJS.AES.decrypt(user.clientId, CRYPTO_PRIVATE_KEY);
       decryptedClientId = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
     } catch {
-      console.warn(`⚠️ Could not decrypt clientId for user ${user.id}`);
+      logger.warn(`⚠️ Could not decrypt clientId for user ${user.id}`);
       continue;
     }
 
@@ -527,14 +526,15 @@ export const updateClientId = async (): Promise<void> => {
       });
 
       updatedCount++;
-      console.log(`✅ Updated user ${user.id} (${user.firstName})`);
+      logger.log(`✅ Updated user ${user.id} (${user.firstName})`);
     }
   }
 
-  console.log(`🎉 Finished. Updated ${updatedCount} users.`);
+  logger.log(`🎉 Finished. Updated ${updatedCount} users.\n`);
 };
 
 const updatePlatformUserRole = async (): Promise<void> => {
+  logger.log('Executing update script for platform user org role');
   try {
     if (!process.env.PLATFORM_ADMIN_EMAIL || !process.env.PLATFORM_ADMIN_ORG || !process.env.PLATFORM_ADMIN_ORG_ROLE) {
       throw new Error(
@@ -573,8 +573,6 @@ const updatePlatformUserRole = async (): Promise<void> => {
       }
     });
 
-    console.log('platformUserRole', platformUserRole);
-
     if (!platformUserRole) {
       const platformOrganization = await prisma.user_org_roles.create({
         data: {
@@ -583,9 +581,11 @@ const updatePlatformUserRole = async (): Promise<void> => {
           orgId: orgId.id
         }
       });
-      logger.log(platformOrganization);
+      logger.log(
+        `✅ user org role for platform admin added successfully \n${JSON.stringify(platformOrganization, null, 2)}\n`
+      );
     } else {
-      logger.log('Already seeding in org_roles');
+      logger.log('Already seeding in org_roles\n');
     }
   } catch (error) {
     logger.error('An error occurred seeding platformOrganization:', error);
@@ -614,12 +614,11 @@ export async function getKeycloakToken(): Promise<string> {
   );
   const data = await res.json();
 
-  console.log('res', res);
-  console.log('data', data);
   return data.access_token;
 }
 
 export async function createKeycloakUser(): Promise<void> {
+  logger.log(`✅ Creating keycloak user for platform admin`);
   const { PLATFORM_ADMIN_EMAIL, KEYCLOAK_DOMAIN, KEYCLOAK_REALM, PLATFORM_ADMIN_USER_PASSWORD, PLATFORM_NAME } =
     process.env;
 
@@ -659,26 +658,22 @@ export async function createKeycloakUser(): Promise<void> {
     })
   });
 
-  if (res.status === 409) {
-    console.log(`⚠️ User ${user.username} already exists`);
+  if (409 === res.status) {
+    logger.log(`⚠️ User ${user.username} already exists`);
     return null;
   }
 
-  console.log('res', res);
-  if (res.status !== 201) {
-    console.log('inside !201');
+  if (201 !== res.status) {
     const errorText = await res.text();
     throw new Error(`Failed to create Keycloak user (${res.status}): ${errorText}`);
   }
   const location = res.headers.get('location');
-  console.log('location', location);
 
   if (!location) {
     throw new Error('Keycloak did not return Location header');
   }
 
   const userId = location.split('/').pop();
-  console.log('userid', userId);
 
   if (userId) {
     await prisma.user.update({
@@ -687,29 +682,30 @@ export async function createKeycloakUser(): Promise<void> {
         keycloakUserId: userId
       }
     });
+    logger.log(`✅ Platform admin added and updated to user's table sucessfully`);
   } else {
     throw new Error('Failed to extract user ID from Location header');
   }
 }
 
 async function main(): Promise<void> {
-  // await createPlatformConfig();
-  // await createOrgRoles();
-  // await createAgentTypes();
-  // await createPlatformUser();
-  // await createPlatformOrganization();
-  // await createPlatformUserOrgRoles();
-  // await createOrgAgentTypes();
-  // await createLedger();
-  // await createLedgerConfig();
-  // await createUserRole();
-  // await migrateOrgAgentDids();
-  // await addSchemaType();
-  // await importGeoLocationMasterData();
-  // await updateClientCredential();
+  await createPlatformConfig();
+  await createOrgRoles();
+  await createAgentTypes();
+  await createPlatformUser();
+  await createPlatformOrganization();
+  await createPlatformUserOrgRoles();
+  await createOrgAgentTypes();
+  await createLedger();
+  await createLedgerConfig();
+  await createUserRole();
+  await migrateOrgAgentDids();
+  await addSchemaType();
+  await importGeoLocationMasterData();
+  await updateClientCredential();
 
-  // await updateClientId()
-  // await updatePlatformUserRole();
+  await updateClientId();
+  await updatePlatformUserRole();
   await createKeycloakUser();
 }
 

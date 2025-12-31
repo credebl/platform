@@ -31,7 +31,10 @@ export enum SignerMethodOption {
   X5C = 'x5c'
 }
 
-export type DisclosureFrame = Record<string, boolean | Record<string, boolean>>;
+export interface DisclosureFrame {
+  _sd?: string[];
+  [claim: string]: DisclosureFrame | string[] | undefined;
+}
 
 export interface validityInfo {
   validFrom: Date;
@@ -220,31 +223,36 @@ export function validatePayloadAgainstTemplate(template: any, payload: any): { v
   return { valid: 0 === errors.length, errors };
 }
 
-function buildDisclosureFrameFromTemplate(template: { attributes: CredentialAttribute[] }) {
-  const disclosureFrame: DisclosureFrame = {};
+function buildDisclosureFrameFromTemplate(attributes: CredentialAttribute[]): DisclosureFrame {
+  const frame: DisclosureFrame = {};
+  const rootSd: string[] = [];
 
-  const buildFrame = (attributes: CredentialAttribute[]) => {
-    const frame: Record<string, any> = {};
-
-    for (const attr of attributes) {
-      if (attr.children?.length) {
-        // Handle nested attributes recursively
-        const subFrame = buildFrame(attr.children);
-        // Include parent only if disclose is true or it has children with disclosure
-        if (attr.disclose || 0 < Object.keys(subFrame).length) {
-          frame[attr.key] = subFrame;
-        }
-      } else if (attr.disclose !== undefined) {
-        frame[attr.key] = Boolean(attr.disclose);
-      }
+  for (const attr of attributes) {
+    if (!attr.disclose) {
+      continue;
     }
 
-    return frame;
-  };
+    // Case 1: attribute has children → nested disclosure
+    if (attr.children && 0 < attr.children.length) {
+      const childSd = attr.children.filter((child) => child.disclose).map((child) => child.key);
 
-  Object.assign(disclosureFrame, buildFrame(template.attributes));
+      if (0 < childSd.length) {
+        frame[attr.key] = {
+          _sd: childSd
+        };
+      }
+      continue;
+    }
 
-  return disclosureFrame;
+    // Case 2: simple attribute → root SD
+    rootSd.push(attr.key);
+  }
+
+  if (0 < rootSd.length) {
+    frame._sd = rootSd;
+  }
+
+  return frame;
 }
 
 function validateCredentialDatesInCertificateWindow(credentialValidityInfo: validityInfo, certificate) {
@@ -357,7 +365,7 @@ function buildSdJwtCredential(
   const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
   const idSuffix = formatSuffix(apiFormat);
   const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
-  const disclosureFrame = buildDisclosureFrameFromTemplate({ attributes: sdJwtTemplate.attributes });
+  const disclosureFrame = buildDisclosureFrameFromTemplate(sdJwtTemplate.attributes);
 
   return {
     credentialSupportedId,

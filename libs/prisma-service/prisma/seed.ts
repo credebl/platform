@@ -510,7 +510,10 @@ export const updateClientId = async (): Promise<void> => {
 
   for (const user of users) {
     let decryptedClientId: string;
-
+    if (!user.clientId) {
+      logger.warn(`⚠️ Skipping user ${user.id} - no clientId set`);
+      continue;
+    }
     try {
       const bytes = CryptoJS.AES.decrypt(user.clientId, CRYPTO_PRIVATE_KEY);
       decryptedClientId = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
@@ -559,7 +562,7 @@ const updatePlatformUserRole = async (): Promise<void> => {
       }
     });
 
-    if (!userId && !orgId && !orgRoleId) {
+    if (!userId || !orgId || !orgRoleId) {
       throw new Error(
         `Required entities not found please ensure record for user, org and orgRole exist of platform admin`
       );
@@ -585,7 +588,7 @@ const updatePlatformUserRole = async (): Promise<void> => {
         `✅ user org role for platform admin added successfully \n${JSON.stringify(platformOrganization, null, 2)}\n`
       );
     } else {
-      logger.log('Already seeding in org_roles\n');
+      logger.log('Already seeding in user_org_roles\n');
     }
   } catch (error) {
     logger.error('An error occurred seeding platformOrganization:', error);
@@ -614,6 +617,14 @@ export async function getKeycloakToken(): Promise<string> {
   );
   const data = await res.json();
 
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch Keycloak token (${res.status}): ${data.error_description || data.error || 'Unknown error'}`
+    );
+  }
+  if (!data.access_token) {
+    throw new Error('Keycloak response missing access_token');
+  }
   return data.access_token;
 }
 
@@ -622,9 +633,12 @@ export async function createKeycloakUser(): Promise<void> {
   const { PLATFORM_ADMIN_EMAIL, KEYCLOAK_DOMAIN, KEYCLOAK_REALM, PLATFORM_ADMIN_USER_PASSWORD, PLATFORM_NAME } =
     process.env;
 
-  if (!KEYCLOAK_DOMAIN || !KEYCLOAK_REALM) {
-    throw new Error('Missing KEYCLOAK_DOMAIN or KEYCLOAK_REALM');
+  if (!PLATFORM_ADMIN_EMAIL || !PLATFORM_ADMIN_USER_PASSWORD || !PLATFORM_NAME || !KEYCLOAK_DOMAIN || !KEYCLOAK_REALM) {
+    throw new Error(
+      'Missing required environment variables for either PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_USER_PASSWORD or PLATFORM_NAME or KEYCLOAK_DOMAIN or KEYCLOAK_REALM'
+    );
   }
+
   const token = await getKeycloakToken();
   const user = {
     username: PLATFORM_ADMIN_EMAIL,
@@ -660,7 +674,6 @@ export async function createKeycloakUser(): Promise<void> {
 
   if (409 === res.status) {
     logger.log(`⚠️ User ${user.username} already exists`);
-    return null;
   }
 
   if (201 !== res.status) {
@@ -676,6 +689,15 @@ export async function createKeycloakUser(): Promise<void> {
   const userId = location.split('/').pop();
 
   if (userId) {
+    logger.log('Check if platform admin exists');
+    const existingUser = await prisma.user.findUnique({
+      where: { email: PLATFORM_ADMIN_EMAIL }
+    });
+
+    if (!existingUser) {
+      throw new Error(`User with email ${PLATFORM_ADMIN_EMAIL} not found in database`);
+    }
+    logger.log(`✅ Platform admin found in database`);
     await prisma.user.update({
       where: { email: PLATFORM_ADMIN_EMAIL },
       data: {

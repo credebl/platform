@@ -95,12 +95,10 @@ export interface BuiltCredentialOfferBase {
 export type CredentialOfferPayload = BuiltCredentialOfferBase &
   (
     | {
-        preAuthorizedCodeFlowConfig:
-          | {
-              txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
-              authorizationServerUrl: string;
-            }
-          | undefined;
+        preAuthorizedCodeFlowConfig: {
+          txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' } | undefined;
+          authorizationServerUrl?: string;
+        };
         authorizationCodeFlowConfig?: never;
       }
     | {

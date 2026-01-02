@@ -95,10 +95,12 @@ export interface BuiltCredentialOfferBase {
 export type CredentialOfferPayload = BuiltCredentialOfferBase &
   (
     | {
-        preAuthorizedCodeFlowConfig: {
-          txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
-          authorizationServerUrl: string;
-        };
+        preAuthorizedCodeFlowConfig:
+          | {
+              txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
+              authorizationServerUrl: string;
+            }
+          | undefined;
         authorizationCodeFlowConfig?: never;
       }
     | {
@@ -225,31 +227,32 @@ export function validatePayloadAgainstTemplate(template: any, payload: any): { v
 
 function buildDisclosureFrameFromTemplate(attributes: CredentialAttribute[]): DisclosureFrame {
   const frame: DisclosureFrame = {};
-  const rootSd: string[] = [];
+  const sd: string[] = [];
 
   for (const attr of attributes) {
-    if (!attr.disclose) {
-      continue;
-    }
+    const childFrame =
+      attr.children && 0 < attr.children.length ? buildDisclosureFrameFromTemplate(attr.children) : undefined;
 
-    // Case 1: attribute has children → nested disclosure
-    if (attr.children && 0 < attr.children.length) {
-      const childSd = attr.children.filter((child) => child.disclose).map((child) => child.key);
+    const hasChildDisclosure =
+      childFrame && (childFrame._sd?.length || Object.keys(childFrame).some((k) => '_sd' !== k));
 
-      if (0 < childSd.length) {
-        frame[attr.key] = {
-          _sd: childSd
-        };
+    // Case 1: this attribute itself is disclosed
+    if (attr.disclose) {
+      // If it has children, children are handled separately
+      if (!attr.children || 0 === attr.children.length) {
+        sd.push(attr.key);
+        continue;
       }
-      continue;
     }
 
-    // Case 2: simple attribute → root SD
-    rootSd.push(attr.key);
+    // Case 2: attribute has disclosed children
+    if (hasChildDisclosure) {
+      frame[attr.key] = childFrame!;
+    }
   }
 
-  if (0 < rootSd.length) {
-    frame._sd = rootSd;
+  if (0 < sd.length) {
+    frame._sd = sd;
   }
 
   return frame;
@@ -491,7 +494,7 @@ export function buildCredentialOfferPayload(
     return {
       ...baseEnvelope,
       preAuthorizedCodeFlowConfig: {
-        txCode: DEFAULT_TXCODE,
+        txCode: DEFAULT_TXCODE, // Pass undefined to enable no auth implementation, TODO: Need to make it configuarble.
         authorizationServerUrl: overrideAuthorizationServerUrl
       }
     };

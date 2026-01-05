@@ -64,7 +64,6 @@ CREATE TABLE "ecosystem_invitations" (
     "id" UUID NOT NULL,
     "email" TEXT NOT NULL,
     "status" TEXT NOT NULL,
-    "ecosystemId" UUID,
     "userId" UUID,
     "createDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "createdBy" UUID NOT NULL,
@@ -97,9 +96,6 @@ ALTER TABLE "ecosystem_orgs" ADD CONSTRAINT "ecosystem_orgs_ecosystemRoleId_fkey
 
 -- AddForeignKey
 ALTER TABLE "ecosystem_orgs" ADD CONSTRAINT "ecosystem_orgs_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "ecosystem_invitations" ADD CONSTRAINT "ecosystem_invitations_ecosystemId_fkey" FOREIGN KEY ("ecosystemId") REFERENCES "ecosystem"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ecosystem_invitations" ADD CONSTRAINT "ecosystem_invitations_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;

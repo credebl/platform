@@ -2,15 +2,22 @@ import { escapeHtml } from '@credebl/common/common.utils';
 
 export class CreateEcosystemInviteTemplate {
   public sendInviteEmailTemplate(email: string, inviterName: string, isUserExist: boolean): string {
+    const requiredEnvVars = [
+      'FRONT_END_URL',
+      'PLATFORM_NAME',
+      'BRAND_LOGO',
+      'PUBLIC_PLATFORM_SUPPORT_EMAIL',
+      'POWERED_BY'
+    ];
+    const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
+    if (0 < missingVars.length) {
+      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+    }
     const validUrl = isUserExist ? `${process.env.FRONT_END_URL}/sign-in` : `${process.env.FRONT_END_URL}/sign-up`;
 
     const message = isUserExist
-      ? `Please accept the ecosystem invitation using the link below:`
-      : `To get started, please register on ${process.env.PLATFORM_NAME} using the link below:`;
-
-    const secondMessage = isUserExist
-      ? `After logging in, click on “Accept Ecosystem Invitation” from your dashboard to proceed.`
-      : `After successful registration, log in and click on “Accept Ecosystem Invitation” from your dashboard.`;
+      ? `Please accept the ecosystem invitation using the following link:`
+      : `To get started, kindly register on ${process.env.PLATFORM_NAME} platform using this link:`;
 
     const buttonText = isUserExist ? `Accept Ecosystem Invitation` : `Register on ${process.env.PLATFORM_NAME}`;
 
@@ -19,27 +26,25 @@ export class CreateEcosystemInviteTemplate {
 
     return `<!DOCTYPE html>
 <html lang="en">
-<head>
+<head>  
   <title></title>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
-<body style="margin:0;padding:0;background-color:#F9F9F9;">
-  <div style="margin:auto;max-width:450px;padding:20px 30px;background-color:#FFFFFF;display:block;">
+<body style="margin: 0px; padding:0px; background-color:#F9F9F9;">
+  <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
 
-    <div style="text-align:center;padding:20px 0;">
-      <img src="${process.env.BRAND_LOGO}"
-           alt="${process.env.PLATFORM_NAME} logo"
-           style="max-width:100px;padding:5px;border-radius:5px;" />
-    </div>
+   <div style="display: block; text-align:center; background-color: white; padding-bottom: 20px; padding-top: 20px;">
+              <img src="${process.env.BRAND_LOGO}" alt="${process.env.PLATFORM_NAME} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+          </div>
 
-    <div style="font-family:Montserrat, Arial, sans-serif;
-                font-size:15px;
-                line-height:24px;
-                color:#000;">
-      
-      <p>Hello ${safeEmail},</p>
+    <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
+      font-size: 15px; line-height: 24px; color: #000000;">
+
+      <p style="margin-top:0px">
+        Hello ${safeEmail},
+      </p>
 
       <p>
         ${safeInviterName} has invited you to <strong>create a new ecosystem</strong>
@@ -47,42 +52,39 @@ export class CreateEcosystemInviteTemplate {
       </p>
 
       <ul>
-        <li><strong>Access Type:</strong> Ecosystem Creation</li>
         <li><strong>Platform:</strong> ${process.env.PLATFORM_NAME}</li>
       </ul>
 
       <p>${message}</p>
 
-      <div style="text-align:center;margin:20px 0;">
+      <div style="text-align: center;">
         <a clicktracking="off"
            href="${validUrl}"
-           style="padding:10px 20px;
-                  color:#FFFFFF;
-                  background:#1F4EAD;
-                  border-radius:5px;
-                  text-decoration:none;
-                  display:inline-block;">
+           style="padding: 10px 20px;
+                  color: #fff;
+                  background: #1F4EAD;
+                  border-radius: 5px;
+                  text-decoration: none;">
           ${buttonText}
         </a>
 
-        <p style="margin-top:10px;font-size:13px;">
+        <p style="margin-top:10px;">
           Verification Link:
           <a clicktracking="off" href="${validUrl}">${validUrl}</a>
         </p>
       </div>
 
-      <p>${secondMessage}</p>
+      <hr style="border-top:1px solid #e8e8e8" />
 
-      <hr style="border-top:1px solid #e8e8e8;margin:24px 0;" />
+      <footer style="padding-top: 10px;">
+        <div style="font-style: italic; color: #777777">
+          For any assistance or questions while accessing your account, please do not hesitate to contact the support team at
+          ${process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL}. Our team will ensure a seamless onboarding experience for you.
+        </div>
 
-      <footer style="font-style:italic;color:#777;font-size:13px;">
-        <p>
-          For any assistance, please contact us at
-          <a href="mailto:${process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL}">
-            ${process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL}
-          </a>.
+        <p style="margin-top: 6px;">
+          © ${process.env.POWERED_BY}
         </p>
-        <p>© ${process.env.POWERED_BY}</p>
       </footer>
 
     </div>

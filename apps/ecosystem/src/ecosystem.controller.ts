@@ -16,9 +16,9 @@ export class EcosystemController {
    * @returns Get created ecosystem details
    */
 
-  @MessagePattern({ cmd: 'create-ecosystem-invitation' })
-  async ecosystemCreateInvitation(@Body() payload: SendEcosystemCreateDto): Promise<IEcosystemInvitations> {
-    return this.ecosystemService.ecosystemCreateInvitation(payload);
+  @MessagePattern({ cmd: 'invite-user-for-ecosystem-creation' })
+  async inviteUserToCreateEcosystem(@Body() payload: SendEcosystemCreateDto): Promise<IEcosystemInvitations> {
+    return this.ecosystemService.inviteUserToCreateEcosystem(payload);
   }
 
   // /**

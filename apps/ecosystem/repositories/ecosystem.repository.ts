@@ -15,10 +15,11 @@ export class EcosystemRepository {
    * @returns orgInvitaionDetails
    */
 
-  async createSendInvitation(email: string, userId: string): Promise<ecosystem_invitations> {
+  async createEcosystemInvitation(email: string, userId: string): Promise<ecosystem_invitations> {
     return this.prisma.ecosystem_invitations.create({
       data: {
         email,
+        // FIXME: Change status to PENDING once invitation accept/reject implemented
         status: Invitation.ACCEPTED,
         createdBy: userId,
         lastChangedBy: userId,

@@ -12,7 +12,7 @@ export interface ICreateEcosystem {
   orgId?: string;
   autoEndorsement?: boolean;
   lastChangedBy?: string;
-  ledgers?: string[];
+  ledgers: string[] | Prisma.JsonValue;
 }
 
 export interface IEcosystem {
@@ -24,7 +24,7 @@ export interface IEcosystem {
   createdBy: string;
   logoUrl: string;
   autoEndorsement: boolean;
-  ledgers: Prisma.JsonValue;
+  ledgers: string[] | Prisma.JsonValue;
 }
 export interface IOrganizationData {
   id: string;

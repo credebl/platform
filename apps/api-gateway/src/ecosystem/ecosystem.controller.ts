@@ -60,7 +60,7 @@ export class EcosystemController {
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.organisation.success.createInvitation
+      message: ResponseMessages.ecosystem.success.createInvitation
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

@@ -1,8 +1,7 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-
-import { Transform, Type } from 'class-transformer';
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
+import { Transform, Type } from 'class-transformer';
 
 @ApiExtraModels()
 export class CreateEcosystemDto {
@@ -12,7 +11,7 @@ export class CreateEcosystemDto {
   @MinLength(2, { message: 'Ecosystem name must be at least 2 characters.' })
   @MaxLength(50, { message: 'Ecosystem name must be at most 50 characters.' })
   @IsString({ message: 'Ecosystem name must be in string format.' })
-  @IsNotSQLInjection({ message: 'Ecosystem name is required.' })
+  @IsNotSQLInjection({ message: 'Incorrect pattern for ecosystem name.' })
   name: string;
 
   @ApiProperty()
@@ -21,7 +20,7 @@ export class CreateEcosystemDto {
   @MinLength(2, { message: 'Description must be at least 2 characters.' })
   @MaxLength(255, { message: 'Description must be at most 255 characters.' })
   @IsString({ message: 'Description must be in string format.' })
-  description?: string;
+  description: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -38,10 +37,9 @@ export class CreateEcosystemDto {
   @IsString({ message: 'logo must be in string format.' })
   logo?: string;
 
-  @ApiPropertyOptional({ example: 'false' })
-  @IsBoolean()
+  @ApiPropertyOptional({ example: false })
   @IsOptional()
-  @IsNotEmpty({ message: 'autoEndorsement should be boolean value' })
+  @IsBoolean({ message: 'autoEndorsement must be a boolean value' })
   autoEndorsement = false;
 
   orgId?: string;

@@ -56,7 +56,7 @@ export class EcosystemController {
   ): Promise<Response> {
     sendEcosystemCreateDto.userId = userId;
 
-    await this.ecosystemService.ecosystemCreateInvitation(sendEcosystemCreateDto);
+    await this.ecosystemService.inviteUserToCreateEcosystem(sendEcosystemCreateDto);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,

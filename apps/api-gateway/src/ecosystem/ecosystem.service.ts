@@ -1,8 +1,8 @@
 import { NATSClient } from '@credebl/common/NATSClient';
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.intefaces';
 import { SendEcosystemCreateDto } from './dtos/send-ecosystem-invitation';
+import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 
 @Injectable()
 export class EcosystemService {
@@ -16,9 +16,9 @@ export class EcosystemService {
    * @param SendEcosystemCreateDto
    * @returns Ecosystem creation success
    */
-  async ecosystemCreateInvitation(sendEcosystemCreateDto: SendEcosystemCreateDto): Promise<IEcosystemInvitations> {
+  async inviteUserToCreateEcosystem(sendEcosystemCreateDto: SendEcosystemCreateDto): Promise<IEcosystemInvitations> {
     const payload = { sendEcosystemCreateDto };
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-ecosystem-invitation', payload);
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-user-for-ecosystem-creation', payload);
   }
   /**
    *

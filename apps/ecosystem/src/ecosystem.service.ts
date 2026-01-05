@@ -28,7 +28,7 @@ export class EcosystemService {
    * @param userId
    * @returns
    */
-  async ecosystemCreateInvitation(invitationDto: SendEcosystemCreateDto): Promise<IEcosystemInvitations> {
+  async inviteUserToCreateEcosystem(invitationDto: SendEcosystemCreateDto): Promise<IEcosystemInvitations> {
     const { email, userId } = invitationDto;
 
     try {

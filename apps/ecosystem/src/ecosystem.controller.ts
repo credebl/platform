@@ -1,9 +1,8 @@
-import { Body, Controller, Logger } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 
 import { EcosystemService } from './ecosystem.service';
 import { IEcosystemInvitations } from '../interfaces/ecosystem.interfaces';
 import { MessagePattern } from '@nestjs/microservices';
-import { SendEcosystemCreateDto } from 'apps/api-gateway/src/ecosystem/dtos/send-ecosystem-invitation';
 
 @Controller()
 export class EcosystemController {
@@ -17,8 +16,13 @@ export class EcosystemController {
    */
 
   @MessagePattern({ cmd: 'invite-user-for-ecosystem-creation' })
-  async inviteUserToCreateEcosystem(@Body() payload: SendEcosystemCreateDto): Promise<IEcosystemInvitations> {
+  async inviteUserToCreateEcosystem(payload: { email: string; userId: string }): Promise<IEcosystemInvitations> {
     return this.ecosystemService.inviteUserToCreateEcosystem(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-ecosystem-invitations-by-user' })
+  async getInvitationsByUserId(payload: { userId: string }): Promise<IEcosystemInvitations[]> {
+    return this.ecosystemService.getInvitationsByUserId(payload.userId);
   }
 
   // /**

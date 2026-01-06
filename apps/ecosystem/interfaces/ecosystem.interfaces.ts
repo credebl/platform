@@ -66,7 +66,7 @@ export interface IEcosystemInvitations {
   id: string;
   email: string;
   status: string;
-  ecosystemId: string;
+  ecosystemId?: string;
   userId: string;
   createDateTime: Date;
   createdBy: string;

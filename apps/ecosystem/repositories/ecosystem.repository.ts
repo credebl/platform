@@ -30,6 +30,17 @@ export class EcosystemRepository {
     });
   }
 
+  async getInvitationsByUserId(userId: string): Promise<ecosystem_invitations[]> {
+    return this.prisma.ecosystem_invitations.findMany({
+      where: {
+        createdBy: userId
+      },
+      orderBy: {
+        createDateTime: 'desc'
+      }
+    });
+  }
+
   // /**
   //  * Description: create ecosystem
   //  * @param createEcosystemDto

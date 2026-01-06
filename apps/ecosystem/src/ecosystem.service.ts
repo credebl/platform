@@ -1,15 +1,21 @@
 import { NATSClient } from '@credebl/common/NATSClient';
-import { ResponseMessages } from '@credebl/common/response-messages';
 import { PrismaService } from '@credebl/prisma-service';
-import { Injectable, Inject, InternalServerErrorException, Logger, HttpException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  HttpException,
+  BadRequestException,
+  InternalServerErrorException
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
-import { SendEcosystemCreateDto } from 'apps/api-gateway/src/ecosystem/dtos/send-ecosystem-invitation';
 import { CreateEcosystemInviteTemplate } from '../templates/create-ecosystem.templates';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { EmailService } from '@credebl/common/email.service';
 import { user } from '@prisma/client';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable()
 export class EcosystemService {
@@ -28,21 +34,21 @@ export class EcosystemService {
    * @param userId
    * @returns
    */
-  async inviteUserToCreateEcosystem(invitationDto: SendEcosystemCreateDto): Promise<IEcosystemInvitations> {
-    const { email, userId } = invitationDto;
+  async inviteUserToCreateEcosystem(payload: { email: string; userId: string }): Promise<IEcosystemInvitations> {
+    const { email, userId } = payload;
 
-    try {
-      const invitation = await this.ecosystemRepository.createEcosystemInvitation(email, userId);
-      const isUserExist = await this.checkUserExistInPlatform(email);
-      const userData = await this.getUserUserId(userId);
-
-      await this.sendInviteEmailTemplate(email, userData.firstName, isUserExist);
-
-      return invitation;
-    } catch (error) {
-      this.logger.error(`ecosystemCreateInvitation error: ${JSON.stringify(error)}`);
-      throw new InternalServerErrorException(ResponseMessages.user.error.invalidInvitationStatus);
+    if (!email || !userId) {
+      throw new BadRequestException('Email or userId missing');
     }
+
+    const invitation = await this.ecosystemRepository.createEcosystemInvitation(email, userId);
+
+    const isUserExist = await this.checkUserExistInPlatform(email);
+    const userData = await this.getUserUserId(userId);
+
+    await this.sendInviteEmailTemplate(email, userData.firstName, isUserExist);
+
+    return invitation;
   }
 
   async sendInviteEmailTemplate(email: string, firstName: string, isUserExist: boolean): Promise<boolean> {
@@ -97,6 +103,19 @@ export class EcosystemService {
       );
     });
     return userData;
+  }
+
+  async getInvitationsByUserId(userId: string): Promise<IEcosystemInvitations[]> {
+    if (!userId) {
+      throw new BadRequestException('userId missing');
+    }
+
+    try {
+      return await this.ecosystemRepository.getInvitationsByUserId(userId);
+    } catch (error) {
+      this.logger.error('getInvitationsByUserId error', error);
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationNotFound);
+    }
   }
 }
 

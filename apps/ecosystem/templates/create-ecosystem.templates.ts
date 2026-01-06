@@ -16,13 +16,14 @@ export class CreateEcosystemInviteTemplate {
     const validUrl = isUserExist ? `${process.env.FRONT_END_URL}/sign-in` : `${process.env.FRONT_END_URL}/sign-up`;
 
     const message = isUserExist
-      ? `Please accept the ecosystem invitation using the following link:`
+      ? ``
       : `To get started, kindly register on ${process.env.PLATFORM_NAME} platform using this link:`;
 
-    const buttonText = isUserExist ? `Accept Ecosystem Invitation` : `Register on ${process.env.PLATFORM_NAME}`;
+    const buttonText = isUserExist
+      ? `Sign in to ${process.env.PLATFORM_NAME}`
+      : `Register on ${process.env.PLATFORM_NAME}`;
 
     const safeEmail = escapeHtml(email);
-    const safeInviterName = escapeHtml(inviterName);
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -42,18 +43,14 @@ export class CreateEcosystemInviteTemplate {
     <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
       font-size: 15px; line-height: 24px; color: #000000;">
 
-      <p style="margin-top:0px">
+      <p style="margin-top:0px;">
         Hello ${safeEmail},
       </p>
 
       <p>
-        ${safeInviterName} has invited you to <strong>create a new ecosystem</strong>
+        You have been invited to create a new ecosystem
         on <strong>${process.env.PLATFORM_NAME}</strong>.
       </p>
-
-      <ul>
-        <li><strong>Platform:</strong> ${process.env.PLATFORM_NAME}</li>
-      </ul>
 
       <p>${message}</p>
 

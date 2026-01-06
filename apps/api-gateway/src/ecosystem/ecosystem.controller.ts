@@ -6,7 +6,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse
 } from '@nestjs/swagger';
-import { Body, Controller, HttpStatus, Param, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
@@ -19,6 +19,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { SendEcosystemCreateDto } from './dtos/send-ecosystem-invitation';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
@@ -41,22 +42,20 @@ export class EcosystemController {
    * @returns Success message
    */
   @Post('/:userId/invitations')
+  @Roles(OrgRoles.PLATFORM_ADMIN)
   @ApiOperation({
     summary: 'Create ecosystem invitation',
     description: 'Create an invitation to user to create a new ecosystem'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  @Roles(OrgRoles.OWNER, OrgRoles.SUPER_ADMIN, OrgRoles.ADMIN)
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async createInvitation(
     @Body() sendEcosystemCreateDto: SendEcosystemCreateDto,
     @Param('userId') userId: string,
     @Res() res: Response
   ): Promise<Response> {
-    sendEcosystemCreateDto.userId = userId;
-
-    await this.ecosystemService.inviteUserToCreateEcosystem(sendEcosystemCreateDto);
+    await this.ecosystemService.inviteUserToCreateEcosystem(sendEcosystemCreateDto, userId);
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
@@ -64,6 +63,28 @@ export class EcosystemController {
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Get('/:userId/invitations')
+  @ApiOperation({
+    summary: 'Get ecosystem invitations by user',
+    description: 'Fetch all ecosystem invitations created by a user'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Invitations fetched successfully'
+  })
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async getInvitations(@Param('userId') userId: string, @Res() res: Response): Promise<Response> {
+    const invitations = await this.ecosystemService.getInvitationsByUserId(userId);
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.fetch,
+      data: invitations
+    });
   }
 
   // @Post('/:orgId')

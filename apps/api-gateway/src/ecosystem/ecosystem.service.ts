@@ -16,10 +16,17 @@ export class EcosystemService {
    * @param SendEcosystemCreateDto
    * @returns Ecosystem creation success
    */
-  async inviteUserToCreateEcosystem(sendEcosystemCreateDto: SendEcosystemCreateDto): Promise<IEcosystemInvitations> {
-    const payload = { sendEcosystemCreateDto };
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-user-for-ecosystem-creation', payload);
+  async inviteUserToCreateEcosystem(dto: SendEcosystemCreateDto, userId: string): Promise<IEcosystemInvitations> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-user-for-ecosystem-creation', {
+      email: dto.email,
+      userId
+    });
   }
+
+  async getInvitationsByUserId(userId: string): Promise<IEcosystemInvitations[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-invitations-by-user', { userId });
+  }
+
   /**
    *
    * @param createEcosystemDto

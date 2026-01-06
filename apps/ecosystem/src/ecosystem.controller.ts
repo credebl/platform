@@ -16,7 +16,10 @@ export class EcosystemController {
    */
 
   @MessagePattern({ cmd: 'invite-user-for-ecosystem-creation' })
-  async inviteUserToCreateEcosystem(payload: { email: string; userId: string }): Promise<IEcosystemInvitations> {
+  async inviteUserToCreateEcosystem(payload: {
+    email: string;
+    platformAdminId: string;
+  }): Promise<IEcosystemInvitations> {
     return this.ecosystemService.inviteUserToCreateEcosystem(payload);
   }
 

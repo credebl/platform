@@ -82,6 +82,9 @@ CREATE UNIQUE INDEX "ecosystem_users_userId_ecosystemId_key" ON "ecosystem_users
 -- CreateIndex
 CREATE UNIQUE INDEX "ecosystem_orgs_orgId_ecosystemId_key" ON "ecosystem_orgs"("orgId", "ecosystemId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "ecosystem_invitations_email_key" ON "ecosystem_invitations"("email");
+
 -- AddForeignKey
 ALTER TABLE "ecosystem_users" ADD CONSTRAINT "ecosystem_users_ecosystemId_fkey" FOREIGN KEY ("ecosystemId") REFERENCES "ecosystem"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 

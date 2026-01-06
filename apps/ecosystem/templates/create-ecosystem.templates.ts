@@ -19,9 +19,9 @@ export class CreateEcosystemInviteTemplate {
       ? ``
       : `To get started, kindly register on ${process.env.PLATFORM_NAME} platform using this link:`;
 
-    const buttonText = isUserExist
-      ? `Sign in to ${process.env.PLATFORM_NAME}`
-      : `Register on ${process.env.PLATFORM_NAME}`;
+    const secondaryMessage = isUserExist ? `Please log in to the platform to start creating your ecosystem.` : ``;
+
+    const buttonText = isUserExist ? `Create Ecosystem` : `Register on ${process.env.PLATFORM_NAME}`;
 
     const safeEmail = escapeHtml(email);
 
@@ -48,8 +48,8 @@ export class CreateEcosystemInviteTemplate {
       </p>
 
       <p>
-        You have been invited to create a new ecosystem
-        on <strong>${process.env.PLATFORM_NAME}</strong>.
+        You have been granted access by the platform admin to create a new ecosystem on <strong>${process.env.PLATFORM_NAME}</strong>. ${secondaryMessage}
+        
       </p>
 
       <p>${message}</p>
@@ -64,11 +64,6 @@ export class CreateEcosystemInviteTemplate {
                   text-decoration: none;">
           ${buttonText}
         </a>
-
-        <p style="margin-top:10px;">
-          Verification Link:
-          <a clicktracking="off" href="${validUrl}">${validUrl}</a>
-        </p>
       </div>
 
       <hr style="border-top:1px solid #e8e8e8" />

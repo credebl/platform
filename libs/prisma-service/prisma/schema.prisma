@@ -800,7 +800,7 @@ model ecosystem_orgs {
 
 model ecosystem_invitations {
   id                  String    @id @default(uuid()) @db.Uuid
-  email               String
+  email               String    @unique
   status              String
 
   userId              String?   @db.Uuid
@@ -810,7 +810,7 @@ model ecosystem_invitations {
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedBy       String    @db.Uuid
 
-  user      user?      @relation(fields: [userId], references: [id])
+  user user? @relation(fields: [userId], references: [id])
 }
 
 

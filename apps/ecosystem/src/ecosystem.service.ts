@@ -34,19 +34,31 @@ export class EcosystemService {
    * @param userId
    * @returns
    */
-  async inviteUserToCreateEcosystem(payload: { email: string; userId: string }): Promise<IEcosystemInvitations> {
-    const { email, userId } = payload;
+  async inviteUserToCreateEcosystem(payload: {
+    email: string;
+    platformAdminId: string;
+  }): Promise<IEcosystemInvitations> {
+    const { email, platformAdminId } = payload;
 
-    if (!email || !userId) {
-      throw new BadRequestException('Email or userId missing');
+    if (!email || !platformAdminId) {
+      throw new BadRequestException('Email or platformAdminId missing');
     }
 
-    const invitation = await this.ecosystemRepository.createEcosystemInvitation(email, userId);
+    // Find invited user
+    const invitedUser = await this.prisma.user.findUnique({
+      where: { email }
+    });
 
-    const isUserExist = await this.checkUserExistInPlatform(email);
-    const userData = await this.getUserUserId(userId);
+    const invitation = await this.ecosystemRepository.createEcosystemInvitation({
+      email,
+      invitedUserId: invitedUser?.id ?? null,
+      platformAdminId
+    });
 
-    await this.sendInviteEmailTemplate(email, userData.firstName, isUserExist);
+    const isUserExist = Boolean(invitedUser);
+    const adminData = await this.getUserUserId(platformAdminId);
+
+    await this.sendInviteEmailTemplate(email, adminData.firstName, isUserExist);
 
     return invitation;
   }

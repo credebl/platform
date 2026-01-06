@@ -16,10 +16,13 @@ export class EcosystemService {
    * @param SendEcosystemCreateDto
    * @returns Ecosystem creation success
    */
-  async inviteUserToCreateEcosystem(dto: SendEcosystemCreateDto, userId: string): Promise<IEcosystemInvitations> {
+  async inviteUserToCreateEcosystem(
+    dto: SendEcosystemCreateDto,
+    platformAdminId: string
+  ): Promise<IEcosystemInvitations> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-user-for-ecosystem-creation', {
       email: dto.email,
-      userId
+      platformAdminId
     });
   }
 

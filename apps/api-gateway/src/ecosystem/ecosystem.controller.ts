@@ -7,19 +7,20 @@ import {
   ApiUnauthorizedResponse
 } from '@nestjs/swagger';
 import { Body, Controller, Get, HttpStatus, Param, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
-import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { CustomExceptionFilter } from '@credebl/common/exception-handler';
 import { EcosystemService } from './ecosystem.service';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
-import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { SendEcosystemCreateDto } from './dtos/send-ecosystem-invitation';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { user } from '@prisma/client';
+import { User } from '../authz/decorators/user.decorator';
+import { ApiResponseDto } from '../dtos/apiResponse.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
@@ -41,28 +42,30 @@ export class EcosystemController {
    * @param userId The ID of the organization
    * @returns Success message
    */
-  @Post('/:userId/invitations')
-  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @Post('/invitations')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
   @ApiOperation({
     summary: 'Create ecosystem invitation',
-    description: 'Create an invitation to user to create a new ecosystem'
+    description: 'Invite a user to create an ecosystem'
   })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Success',
+    type: ApiResponseDto
+  })
+  @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async createInvitation(
     @Body() sendEcosystemCreateDto: SendEcosystemCreateDto,
-    @Param('userId') userId: string,
+    @User() reqUser: user,
     @Res() res: Response
   ): Promise<Response> {
-    await this.ecosystemService.inviteUserToCreateEcosystem(sendEcosystemCreateDto, userId);
+    await this.ecosystemService.inviteUserToCreateEcosystem(sendEcosystemCreateDto, reqUser.id);
 
-    const finalResponse: IResponse = {
+    return res.status(HttpStatus.CREATED).json({
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.ecosystem.success.createInvitation
-    };
-
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    });
   }
 
   @Get('/:userId/invitations')

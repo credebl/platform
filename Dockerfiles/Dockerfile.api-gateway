@@ -1,31 +1,31 @@
 # Stage 1: Build the application
-FROM node:18-alpine as build
+FROM oven/bun:1.3-alpine as build
 # Install OpenSSL
 RUN apk add --no-cache openssl
-RUN npm install -g pnpm
 # Set the working directory
 WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package.json ./
+COPY bun.lock ./
 COPY pnpm-workspace.yaml ./
 # COPY package-lock.json ./
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Install dependencies while ignoring scripts (including Puppeteer's installation)
-RUN pnpm i --ignore-scripts
+RUN bun install
 
 # Copy the rest of the application code
 COPY . .
 # RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
-RUN cd libs/prisma-service && npx prisma generate
+RUN cd libs/prisma-service && bunx prisma generate
 
 # Build the api-gateway service
-RUN pnpm run build api-gateway
+RUN bun --bun run build api-gateway
 
 # Stage 2: Create the final image
-FROM node:18-alpine
+FROM oven/bun:1.3-alpine
 # Install OpenSSL
 RUN apk add --no-cache openssl
 
@@ -41,4 +41,4 @@ COPY --from=build /app/node_modules  ./node_modules
 # COPY --from=build /app/uploadedFiles ./uploadedFiles
 
 # Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/api-gateway/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && bunx prisma migrate deploy && bunx prisma generate && cd ../.. && bun --bun dist/apps/api-gateway/main.js"]

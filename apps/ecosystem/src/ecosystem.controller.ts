@@ -25,6 +25,10 @@ export class EcosystemController {
     return this.ecosystemService.getInvitationsByUserId(payload.userId);
   }
 
+  @MessagePattern({ cmd: 'invite-member-to-ecosystem' })
+  async inviteMemberToEcosystem(payload: { orgId: string }): Promise<void> {
+    this.ecosystemService.inviteMemberToEcosystem(payload.orgId);
+  }
   // /**
   //  * Description: create new ecosystem
   //  * @param payload Registration Details

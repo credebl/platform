@@ -184,7 +184,8 @@ export const ResponseMessages = {
       AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
       fetchMembers: 'Ecosystem members fetched successfully',
       allschema: 'Schema details fetched successfully',
-      AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger'
+      AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger',
+      memberInviteSucess: 'Invitation sent successfully for the member'
     },
     error: {
       ecosystemIdIsRequired: 'ecosystemId is required',

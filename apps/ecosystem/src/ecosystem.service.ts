@@ -16,6 +16,8 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { EmailService } from '@credebl/common/email.service';
 import { user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
+import { UserRepository } from 'apps/user/repositories/user.repository';
 
 @Injectable()
 export class EcosystemService {
@@ -25,7 +27,9 @@ export class EcosystemService {
     private readonly ecosystemRepository: EcosystemRepository,
     private readonly logger: Logger,
     private readonly prisma: PrismaService,
-    private readonly emailService: EmailService
+    private readonly emailService: EmailService,
+    private readonly organizationRepository: OrganizationRepository,
+    private readonly userRepository: UserRepository
   ) {}
 
   /**
@@ -116,6 +120,26 @@ export class EcosystemService {
       this.logger.error('getInvitationsByUserId error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationNotFound);
     }
+  }
+
+
+  async inviteMemberToEcosystem(orgId: string): Promise<void> {
+    console.log("orgId",orgId)
+    const platformConfigData = await this.prisma.platform_config.findFirst();
+    const organization = await this.organizationRepository.getOrgProfile(orgId)
+    console.log("organization",organization)
+    const userEmail = await this.userRepository.getUserDetailsByUserId(organization.createdBy)
+    console.log("email",userEmail)
+    const emailData = new EmailDto();
+
+    emailData.emailFrom = platformConfigData.emailFrom;
+    emailData.emailTo = [userEmail.email];
+    emailData.emailSubject = `Invitation for ecosystem`;
+    emailData.emailHtml = "<p>Invitation for ecosystem</p>";
+    console.log("emailData", emailData)
+
+   const res = await this.emailService.sendEmail(emailData);
+   console.log("res",res)
   }
 }
 

@@ -18,7 +18,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
-import { SendEcosystemCreateDto } from './dtos/send-ecosystem-invitation';
+import { inviteMemberToEcosystemDto, SendEcosystemCreateDto } from './dtos/send-ecosystem-invitation';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 
 @UseFilters(CustomExceptionFilter)
@@ -86,6 +86,33 @@ export class EcosystemController {
       data: invitations
     });
   }
+
+
+  @Post('/invite-member')
+  @ApiOperation({
+    summary: 'Invite member to ecosystem',
+    description: 'Send invitation for users to join the ecosystem'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Invitation sent successfully for member invitation'
+  })
+  // @UseGuards(AuthGuard('jwt'))
+  // @ApiBearerAuth()
+  async inviteMemberToEcosystem(
+    @Body() inviteMemberToEcosystem: inviteMemberToEcosystemDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.ecosystemService.inviteMemberToEcosystem(inviteMemberToEcosystem.orgId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.memberInviteSucess
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
 
   // @Post('/:orgId')
   // @ApiOperation({

@@ -36,4 +36,8 @@ export class EcosystemService {
   //   const payload = { createEcosystemDto };
   // return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-ecosystem', payload);
   // }
+  //
+  async inviteMemberToEcosystem(orgId: string): Promise<IEcosystemInvitations[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-member-to-ecosystem', { orgId });
+  }
 }

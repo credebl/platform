@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -12,4 +12,14 @@ export class SendEcosystemCreateDto {
   email: string;
 
   userId: string;
+}
+
+
+export class inviteMemberToEcosystemDto {
+  @ApiProperty({ example: '6e672a9c-64f0-4d98-b312-f578f633800b' })
+  @IsUUID()
+  @IsNotEmpty({ message: 'OrgId is required' })
+  @IsString({ message: 'OrgId should be a string' })
+  @Transform(({ value }) => value?.trim())
+  orgId: string;
 }

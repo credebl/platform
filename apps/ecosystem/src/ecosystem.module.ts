@@ -14,9 +14,13 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { PrismaService } from '@credebl/prisma-service';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { OrganizationModule } from 'apps/organization/src/organization.module';
+import { UserModule } from 'apps/user/src/user.module';
 
 @Module({
   imports: [
+    OrganizationModule,
+    UserModule,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',

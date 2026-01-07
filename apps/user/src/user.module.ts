@@ -60,6 +60,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
     UserActivityRepository,
     UserDevicesRepository,
     NATSClient
-  ]
+  ],
+  exports: [UserRepository]
 })
 export class UserModule {}

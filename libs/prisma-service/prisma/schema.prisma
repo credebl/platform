@@ -780,7 +780,7 @@ model ecosystem_users {
 model ecosystem_orgs {
   id                  String    @id @default(uuid()) @db.Uuid
   orgId               String    @db.Uuid
-  status              Stringapps/api-gateway/src/ecosystem/ecosystem.service.ts
+  status              String
   deploymentMode      String?
   ecosystemId         String    @db.Uuid
   ecosystemRoleId     String    @db.Uuid
@@ -800,11 +800,10 @@ model ecosystem_orgs {
 
 model ecosystem_invitations {
   id                  String    @id @default(uuid()) @db.Uuid
-  email               String
+  email               String    @unique
   status              String
-
   userId              String?   @db.Uuid
-  type                String   
+  type                String
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
   createdBy           String    @db.Uuid
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)

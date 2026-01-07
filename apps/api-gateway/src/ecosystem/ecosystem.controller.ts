@@ -18,7 +18,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
-import { inviteMemberToEcosystemDto, SendEcosystemCreateDto } from './dtos/send-ecosystem-invitation';
+import { inviteMemberToEcosystemDto, SendEcosystemCreateDto, UpdateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 
 @UseFilters(CustomExceptionFilter)
@@ -103,16 +103,56 @@ export class EcosystemController {
     @Body() inviteMemberToEcosystem: inviteMemberToEcosystemDto,
     @Res() res: Response
   ): Promise<Response> {
-    await this.ecosystemService.inviteMemberToEcosystem(inviteMemberToEcosystem.orgId);
+    const result = await this.ecosystemService.inviteMemberToEcosystem(inviteMemberToEcosystem.orgId);
 
+    if (result) {
+      const finalResponse: IResponse = {
+        statusCode: HttpStatus.CREATED,
+        message: ResponseMessages.ecosystem.success.memberInviteSucess
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
     const finalResponse: IResponse = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.memberInviteSucess
+      statusCode: HttpStatus.BAD_REQUEST,
+      message: ResponseMessages.ecosystem.error.memberInviteFailed
     };
 
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.BAD_REQUEST).json(finalResponse);
   }
 
+
+  @Post('/update-invitation-status')
+  @ApiOperation({
+    summary: 'Update status for Invitation',
+    description: 'Update status for Invitation'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Status updated successfully'
+  })
+  // @UseGuards(AuthGuard('jwt'))
+  // @ApiBearerAuth()
+  async updateEcosystemInvitationStatus(
+    @Body() updateInvitation: UpdateEcosystemInvitationDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    console.log("contrller hit",updateInvitation)
+    const result = await this.ecosystemService.updateEcosystemInvitaionStatus(updateInvitation.email, updateInvitation.status);
+
+    if (result) {
+      const finalResponse: IResponse = {
+        statusCode: HttpStatus.OK,
+        message: ResponseMessages.ecosystem.success.updateInvitation
+      };
+      return res.status(HttpStatus.CREATED).json(finalResponse);
+    }
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.BAD_REQUEST,
+      message: ResponseMessages.ecosystem.error.failInvitationUpdate
+    };
+
+    return res.status(HttpStatus.BAD_REQUEST).json(finalResponse);
+  }
 
   // @Post('/:orgId')
   // @ApiOperation({

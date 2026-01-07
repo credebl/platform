@@ -70,6 +70,11 @@ export enum Invitation {
   PENDING = 'pending'
 }
 
+export enum InviteType {
+  ECOSYSTEM = 'ecosystem',
+  MEMBER = 'member'
+} 
+
 export enum EndorserTransactionType {
   SCHEMA = 'schema',
   CREDENTIAL_DEFINITION = 'credential-definition'

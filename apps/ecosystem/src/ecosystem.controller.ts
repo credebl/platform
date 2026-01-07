@@ -3,6 +3,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { EcosystemService } from './ecosystem.service';
 import { IEcosystemInvitations } from '../interfaces/ecosystem.interfaces';
 import { MessagePattern } from '@nestjs/microservices';
+import { Invitation } from '@credebl/enum/enum';
 
 @Controller()
 export class EcosystemController {
@@ -26,9 +27,17 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'invite-member-to-ecosystem' })
-  async inviteMemberToEcosystem(payload: { orgId: string }): Promise<void> {
-    this.ecosystemService.inviteMemberToEcosystem(payload.orgId);
+  async inviteMemberToEcosystem(payload: { orgId: string }): Promise<boolean> {
+    return this.ecosystemService.inviteMemberToEcosystem(payload.orgId);
   }
+
+
+  @MessagePattern({ cmd: 'update-ecosystem-invitation-status' })
+  async updateEcosystemInvitationStatus(payload: {email: string, status: Invitation }): Promise<boolean> {
+    console.log("payload",payload)
+    return this.ecosystemService.updateEcosystemInvitationStatus(payload.email, payload.status);
+  }
+
   // /**
   //  * Description: create new ecosystem
   //  * @param payload Registration Details

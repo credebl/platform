@@ -6,9 +6,10 @@ import {
   Logger,
   HttpException,
   BadRequestException,
-  InternalServerErrorException
+  InternalServerErrorException,
+  ConflictException
 } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
 import { CreateEcosystemInviteTemplate } from '../templates/create-ecosystem.templates';
@@ -18,6 +19,7 @@ import { user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
 import { UserRepository } from 'apps/user/repositories/user.repository';
+import { Invitation, InviteType } from '@credebl/enum/enum';
 
 @Injectable()
 export class EcosystemService {
@@ -123,24 +125,50 @@ export class EcosystemService {
   }
 
 
-  async inviteMemberToEcosystem(orgId: string): Promise<void> {
-    console.log("orgId",orgId)
-    const platformConfigData = await this.prisma.platform_config.findFirst();
-    const organization = await this.organizationRepository.getOrgProfile(orgId)
-    console.log("organization",organization)
-    const userEmail = await this.userRepository.getUserDetailsByUserId(organization.createdBy)
-    console.log("email",userEmail)
-    const emailData = new EmailDto();
+  async inviteMemberToEcosystem(orgId: string): Promise<boolean> {
+    try {
+      const platformConfigData = await this.prisma.platform_config.findFirst();
+      const organization = await this.organizationRepository.getOrgProfile(orgId);
+      const user = await this.ecosystemRepository.getUserById(organization.createdBy);
+      const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(user.email)
+      if (checkUser) {
+        console.log("check user",checkUser)
+        throw new RpcException({
+          statusCode: 409,
+          message: `Invitation already exists for org with email ${user.email}`,
+        });
+      }
+      await this.ecosystemRepository.createEcosystemInvitation(user.email, user.id, InviteType.MEMBER, Invitation.PENDING);
+      
+      const emailData = new EmailDto();
 
-    emailData.emailFrom = platformConfigData.emailFrom;
-    emailData.emailTo = [userEmail.email];
-    emailData.emailSubject = `Invitation for ecosystem`;
-    emailData.emailHtml = "<p>Invitation for ecosystem</p>";
-    console.log("emailData", emailData)
-
-   const res = await this.emailService.sendEmail(emailData);
-   console.log("res",res)
+      emailData.emailFrom = platformConfigData.emailFrom;
+      emailData.emailTo = [user.email];
+      emailData.emailSubject = `Invitation for ecosystem`;
+      emailData.emailHtml = '<p>Invitation for ecosystem</p>';
+      const response = await this.emailService.sendEmail(emailData);
+      if (response) {
+        return true;
+      }
+    } catch (error) {
+      this.logger.error('inviteMemberToEcosystem error', error);
+      throw error;
+    }
+    
   }
+
+  async updateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
+    console.log("in ecosystem sercie")
+    try {
+     const result = await  this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(email, status); 
+     console.log("result", result)
+     return true
+    } catch (error) {
+      this.logger.error('updateEcosystemInvitationStatus error', error);
+      throw error;
+    }
+  }
+
 }
 
 // /**

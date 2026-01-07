@@ -3,6 +3,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { SendEcosystemCreateDto } from './dtos/send-ecosystem-invitation';
 import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { Invitation } from '@credebl/enum/enum';
 
 @Injectable()
 export class EcosystemService {
@@ -37,7 +38,12 @@ export class EcosystemService {
   // return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-ecosystem', payload);
   // }
   //
-  async inviteMemberToEcosystem(orgId: string): Promise<IEcosystemInvitations[]> {
+  async inviteMemberToEcosystem(orgId: string): Promise<boolean> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-member-to-ecosystem', { orgId });
   }
+
+  async updateEcosystemInvitaionStatus(email:string, status: Invitation): Promise<boolean> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-ecosystem-invitation-status', {email, status});
+  }
+
 }

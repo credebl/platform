@@ -1,13 +1,14 @@
 /* eslint-disable camelcase */
-import { Injectable } from '@nestjs/common';
-import { Invitation } from '@credebl/enum/enum';
-import { PrismaService } from '@credebl/prisma-service';
+import { Injectable, Logger } from '@nestjs/common';
+import { Invitation, InviteType } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
-import { ecosystem_invitations } from '@prisma/client';
+import { ecosystem_invitations, user } from '@prisma/client';
+
+import { PrismaService } from '@credebl/prisma-service';
 
 @Injectable()
 export class EcosystemRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly logger: Logger) {}
 
   /**
    *
@@ -15,14 +16,15 @@ export class EcosystemRepository {
    * @returns orgInvitaionDetails
    */
 
-  async createEcosystemInvitation(email: string, userId: string): Promise<ecosystem_invitations> {
+  async createEcosystemInvitation(email: string, userId: string, type?: InviteType, status?: Invitation): Promise<ecosystem_invitations> {
     return this.prisma.ecosystem_invitations.create({
       data: {
         email,
         // FIXME: Change status to PENDING once invitation accept/reject implemented
-        status: Invitation.ACCEPTED,
+        status: status || Invitation.ACCEPTED,
         createdBy: userId,
         lastChangedBy: userId,
+        type: type || InviteType.ECOSYSTEM,
         user: {
           connect: { id: userId }
         }
@@ -40,6 +42,49 @@ export class EcosystemRepository {
       }
     });
   }
+
+  async getUserById(userId: string): Promise<user> {
+    try {
+      return this.prisma.user.findUnique({
+        where: {
+          id: userId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getUserById: ${error.message}`);
+      throw error;
+    }
+  } 
+
+  async getEcosystemInvitationsByEmail(email: string): Promise<ecosystem_invitations> {
+    try {
+      return this.prisma.ecosystem_invitations.findUnique({
+        where: {
+          email
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getEcosystemInvitationsByEmail: ${error.message}`);
+      throw error;
+    }
+  } 
+
+  async updateEcosystemInvitationStatusByEmail(email: string, status: Invitation): Promise<ecosystem_invitations> {
+    try {
+      console.log("update eco",email,status)
+      return this.prisma.ecosystem_invitations.update({
+        where: {
+          email
+        },
+        data: {
+          status
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in updateEcosystemInvitationStatusByEmail: ${error.message}`);
+      throw error;
+    }
+  } 
 
   // /**
   //  * Description: create ecosystem

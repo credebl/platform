@@ -185,9 +185,12 @@ export const ResponseMessages = {
       fetchMembers: 'Ecosystem members fetched successfully',
       allschema: 'Schema details fetched successfully',
       AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger',
-      memberInviteSucess: 'Invitation sent successfully for the member'
+      memberInviteSucess: 'Invitation sent successfully for the member',
+      updateInvitation: 'Status for ecosystem invitation updated successfully'
     },
     error: {
+      memberInviteFailed: 'Failed to send invitation for the member',
+      failInvitationUpdate: 'Failed to update Ecosystem Invitation',
       ecosystemIdIsRequired: 'ecosystemId is required',
       notCreated: 'Error while creating ecosystem',
       agentNotSpunUp: 'Agent is not spun up for this organization',

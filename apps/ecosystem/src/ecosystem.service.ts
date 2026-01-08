@@ -11,7 +11,12 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { ICreateEcosystem, IEcosystem, IEcosystemDashboard, IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import {
+  ICreateEcosystem,
+  IEcosystem,
+  IEcosystemDashboard,
+  IEcosystemInvitations
+} from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
 import { CreateEcosystemInviteTemplate } from '../templates/create-ecosystem.templates';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -66,6 +71,10 @@ export class EcosystemService {
 
   async sendInviteEmailTemplate(email: string, isUserExist: boolean): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findFirst();
+
+    if (!platformConfigData) {
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.platformConfigNotFound);
+    }
 
     const template = new CreateEcosystemInviteTemplate();
     const emailData = new EmailDto();
@@ -175,25 +184,16 @@ export class EcosystemService {
     }
   }
 
-  async getEcosystemDashboard(
-  ecosystemId: string,
-  orgId: string
-): Promise<IEcosystemDashboard> {
-  if (!ecosystemId || !orgId) {
-    throw new BadRequestException(
-      'ecosystemId or orgId missing'
-    );
-  }
- 
-  try {
-    return await this.ecosystemRepository.getEcosystemDashboard(
-      ecosystemId,
-      orgId
-    );
-  } catch (error) {
-    this.logger.error('getEcosystemDashboard error', error);
-    throw error;
-  }
-}
+  async getEcosystemDashboard(ecosystemId: string, orgId: string): Promise<IEcosystemDashboard> {
+    if (!ecosystemId || !orgId) {
+      throw new BadRequestException('ecosystemId or orgId missing');
+    }
 
+    try {
+      return await this.ecosystemRepository.getEcosystemDashboard(ecosystemId, orgId);
+    } catch (error) {
+      this.logger.error('getEcosystemDashboard error', error);
+      throw error;
+    }
+  }
 }

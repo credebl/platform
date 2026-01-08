@@ -226,6 +226,8 @@ export class EcosystemRepository {
       throw new NotFoundException(ResponseMessages.ecosystem.error.notFound);
     }
 
+    const ecosystemLeadOrg = ecosystem.ecosystemOrgs?.length ? ecosystem.ecosystemOrgs[0] : null;
+
     return {
       ecosystem: [
         {
@@ -244,10 +246,12 @@ export class EcosystemRepository {
       ],
       membersCount: 0,
       endorsementsCount: 0,
-      ecosystemLead: {
-        role: ecosystem.ecosystemOrgs[0]?.ecosystemRole?.name,
-        orgName: ecosystem.ecosystemOrgs[0]?.organisation?.name
-      }
+      ecosystemLead: ecosystemLeadOrg
+        ? {
+            role: ecosystemLeadOrg.ecosystemRole?.name ?? null,
+            orgName: ecosystemLeadOrg.organisation?.name ?? null
+          }
+        : null
     };
   }
 }

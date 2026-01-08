@@ -1,7 +1,7 @@
-import { Body, Controller, Logger } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
+import { IEcosystem, IEcosystemDashboard, IEcosystemInvitations } from '../interfaces/ecosystem.interfaces';
 
 import { EcosystemService } from './ecosystem.service';
-import { IEcosystem, IEcosystemDashboard, IEcosystemInvitations } from '../interfaces/ecosystem.interfaces';
 import { MessagePattern } from '@nestjs/microservices';
 
 @Controller()
@@ -41,7 +41,7 @@ export class EcosystemController {
    * @returns Created ecosystem details
    */
   @MessagePattern({ cmd: 'create-ecosystem' })
-  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<IEcosystem> {
+  async createEcosystem(payload: { createEcosystemDto }): Promise<IEcosystem> {
     return this.ecosystemService.createEcosystem(payload.createEcosystemDto);
   }
 

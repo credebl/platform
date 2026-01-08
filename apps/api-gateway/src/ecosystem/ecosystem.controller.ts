@@ -54,7 +54,7 @@ export class EcosystemController {
     description: 'Success',
     type: ApiResponseDto
   })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async createInvitation(
     @Body() sendEcosystemCreateDto: SendEcosystemCreateDto,
@@ -69,7 +69,7 @@ export class EcosystemController {
     });
   }
 
-    /**
+  /**
    * Get invitations sent by platform admin
    * @returns Invitation details
    */
@@ -119,7 +119,7 @@ export class EcosystemController {
   async createNewEcosystem(
     @Body() createEcosystemDto: CreateEcosystemDto,
     @Param('orgId') orgId: string,
-    @User() user: object,
+    @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
     createEcosystemDto.orgId = orgId;
@@ -169,7 +169,7 @@ export class EcosystemController {
    * @param orgId ID of the organization
    * @returns Details of specific ecosystem
    */
-    @Get('/:ecosystemId/:orgId/dashboard')
+  @Get('/:ecosystemId/:orgId/dashboard')
   @ApiOperation({
     summary: 'Get ecosystem dashboard details',
     description: 'Fetch ecosystem dashboard data for a specific organization'
@@ -178,11 +178,7 @@ export class EcosystemController {
     status: HttpStatus.OK,
     description: 'Ecosystem dashboard data fetched successfully'
   })
-  @Roles(
-    OrgRoles.PLATFORM_ADMIN,
-    OrgRoles.OWNER,
-    OrgRoles.ADMIN
-  )
+  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.OWNER, OrgRoles.ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async getEcosystemDashboard(
@@ -190,11 +186,7 @@ export class EcosystemController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
-    const dashboardData =
-      await this.ecosystemService.getEcosystemDashboard(
-        ecosystemId,
-        orgId
-      );
+    const dashboardData = await this.ecosystemService.getEcosystemDashboard(ecosystemId, orgId);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
@@ -202,5 +194,4 @@ export class EcosystemController {
       data: dashboardData
     });
   }
-
 }

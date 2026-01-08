@@ -747,6 +747,8 @@ model ecosystem {
 
   ecosystemOrgs        ecosystem_orgs[]
   ecosystemUsers       ecosystem_users[]
+  ecosystemInvitations ecosystem_invitations[]
+
   ledgers              Json?
 }
 
@@ -800,8 +802,9 @@ model ecosystem_orgs {
 
 model ecosystem_invitations {
   id                  String    @id @default(uuid()) @db.Uuid
-  email               String    @unique
+  email               String    @unique 
   status              String
+  ecosystemId         String?   @db.Uuid
 
   userId              String?   @db.Uuid
 
@@ -809,7 +812,7 @@ model ecosystem_invitations {
   createdBy           String    @db.Uuid
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedBy       String    @db.Uuid
-
+  ecosystem ecosystem? @relation(fields: [ecosystemId], references: [id])
   user user? @relation(fields: [userId], references: [id])
 }
 

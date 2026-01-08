@@ -10,6 +10,4 @@ export class SendEcosystemCreateDto {
   @IsString({ message: 'Email should be a string' })
   @Transform(({ value }) => value?.trim())
   email: string;
-
-  userId: string;
 }

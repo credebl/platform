@@ -1,7 +1,7 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Body, Controller, Logger } from '@nestjs/common';
 
 import { EcosystemService } from './ecosystem.service';
-import { IEcosystemInvitations } from '../interfaces/ecosystem.interfaces';
+import { IEcosystem, IEcosystemDashboard, IEcosystemInvitations } from '../interfaces/ecosystem.interfaces';
 import { MessagePattern } from '@nestjs/microservices';
 
 @Controller()
@@ -10,9 +10,9 @@ export class EcosystemController {
   private readonly logger = new Logger('EcosystemController');
 
   /**
-   * Description: create new ecosystem
-   * @param payload Registration Details
-   * @returns Get created ecosystem details
+   * Description: Invite user to create new ecosystem
+   * @param payload Invitation Details
+   * @returns Success message
    */
 
   @MessagePattern({ cmd: 'invite-user-for-ecosystem-creation' })
@@ -23,19 +23,47 @@ export class EcosystemController {
     return this.ecosystemService.inviteUserToCreateEcosystem(payload);
   }
 
+  /**
+   * Fetch ecosystem invitations created by a specific user
+   *
+   * @param payload Contains userId
+   * @returns List of ecosystem invitations
+   */
   @MessagePattern({ cmd: 'get-ecosystem-invitations-by-user' })
   async getInvitationsByUserId(payload: { userId: string }): Promise<IEcosystemInvitations[]> {
     return this.ecosystemService.getInvitationsByUserId(payload.userId);
   }
 
-  // /**
-  //  * Description: create new ecosystem
-  //  * @param payload Registration Details
-  //  * @returns Get created ecosystem details
-  //  */
+  /**
+   * Create a new ecosystem
+   *
+   * @param payload Contains create ecosystem DTO
+   * @returns Created ecosystem details
+   */
+  @MessagePattern({ cmd: 'create-ecosystem' })
+  async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<IEcosystem> {
+    return this.ecosystemService.createEcosystem(payload.createEcosystemDto);
+  }
 
-  // @MessagePattern({ cmd: 'create-ecosystem' })
-  // async createEcosystem(@Body() payload: { createEcosystemDto }): Promise<IEcosystem> {
-  //   return this.ecosystemService.createEcosystem(payload.createEcosystemDto);
-  // }
+  /**
+   * Fetch all ecosystems on the platform
+   *
+   * Used by Platform Admin
+   * @returns List of ecosystems
+   */
+  @MessagePattern({ cmd: 'get-all-ecosystems' })
+  async getAllEcosystems(): Promise<IEcosystem[]> {
+    return this.ecosystemService.getAllEcosystems();
+  }
+
+  /**
+   * Fetch ecosystem dashboard details
+   *
+   * @param payload Contains ecosystemId and orgId
+   * @returns Ecosystem dashboard data
+   */
+  @MessagePattern({ cmd: 'get-ecosystem-dashboard' })
+  async getEcosystemDashboard(payload: { ecosystemId: string; orgId: string }): Promise<IEcosystemDashboard> {
+    return this.ecosystemService.getEcosystemDashboard(payload.ecosystemId, payload.orgId);
+  }
 }

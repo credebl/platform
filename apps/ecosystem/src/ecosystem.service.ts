@@ -6,16 +6,19 @@ import {
   Logger,
   HttpException,
   BadRequestException,
-  InternalServerErrorException
+  InternalServerErrorException,
+  ConflictException,
+  NotFoundException
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { ICreateEcosystem, IEcosystem, IEcosystemDashboard, IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
 import { CreateEcosystemInviteTemplate } from '../templates/create-ecosystem.templates';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { EmailService } from '@credebl/common/email.service';
 import { user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { EcosystemRoles } from '@credebl/enum/enum';
 
 @Injectable()
 export class EcosystemService {
@@ -44,7 +47,6 @@ export class EcosystemService {
       throw new BadRequestException('Email or platformAdminId missing');
     }
 
-    // Find invited user
     const invitedUser = await this.prisma.user.findUnique({
       where: { email }
     });
@@ -56,14 +58,13 @@ export class EcosystemService {
     });
 
     const isUserExist = Boolean(invitedUser);
-    const adminData = await this.getUserUserId(platformAdminId);
 
-    await this.sendInviteEmailTemplate(email, adminData.firstName, isUserExist);
+    await this.sendInviteEmailTemplate(email, isUserExist);
 
     return invitation;
   }
 
-  async sendInviteEmailTemplate(email: string, firstName: string, isUserExist: boolean): Promise<boolean> {
+  async sendInviteEmailTemplate(email: string, isUserExist: boolean): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findFirst();
 
     const template = new CreateEcosystemInviteTemplate();
@@ -72,7 +73,7 @@ export class EcosystemService {
     emailData.emailFrom = platformConfigData.emailFrom;
     emailData.emailTo = email;
     emailData.emailSubject = `Invitation to create a new ecosystem on ${process.env.PLATFORM_NAME}`;
-    emailData.emailHtml = template.sendInviteEmailTemplate(email, firstName, isUserExist);
+    emailData.emailHtml = template.sendInviteEmailTemplate(email, isUserExist);
 
     return this.emailService.sendEmail(emailData);
   }
@@ -129,60 +130,70 @@ export class EcosystemService {
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationNotFound);
     }
   }
+
+  /**
+   *
+   * @param createEcosystemDto
+   * @returns
+   */
+
+  // eslint-disable-next-line camelcase
+  async createEcosystem(createEcosystemDto: ICreateEcosystem): Promise<IEcosystem> {
+    try {
+      const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
+
+      if (ecosystemExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+      }
+
+      const ecoOrganizationList = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
+
+      for (const organization of ecoOrganizationList) {
+        if (organization['ecosystemRole']['name'] === EcosystemRoles.ECOSYSTEM_MEMBER) {
+          throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
+        }
+      }
+
+      const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
+      if (!createEcosystem) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
+      }
+
+      return createEcosystem;
+    } catch (error) {
+      this.logger.error(`createEcosystem: ${error}`);
+      throw error;
+    }
+  }
+
+  async getAllEcosystems(): Promise<IEcosystem[]> {
+    try {
+      return await this.ecosystemRepository.getAllEcosystems();
+    } catch (error) {
+      this.logger.error('getAllEcosystems error', error);
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.fetch);
+    }
+  }
+
+  async getEcosystemDashboard(
+  ecosystemId: string,
+  orgId: string
+): Promise<IEcosystemDashboard> {
+  if (!ecosystemId || !orgId) {
+    throw new BadRequestException(
+      'ecosystemId or orgId missing'
+    );
+  }
+ 
+  try {
+    return await this.ecosystemRepository.getEcosystemDashboard(
+      ecosystemId,
+      orgId
+    );
+  } catch (error) {
+    this.logger.error('getEcosystemDashboard error', error);
+    throw error;
+  }
 }
 
-// /**
-//  *
-//  * @param createEcosystemDto
-//  * @returns
-//  */
-
-// // eslint-disable-next-line camelcase
-// async createEcosystem(createEcosystemDto: ICreateEcosystem): Promise<IEcosystem> {
-//   try {
-//     const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
-
-//     if (ecosystemExist) {
-//       throw new ConflictException(ResponseMessages.ecosystem.error.exists);
-//     }
-
-//     const isMultiEcosystemEnabled = await this.ecosystemRepository.getSpecificEcosystemConfig(
-//       EcosystemConfigSettings.MULTI_ECOSYSTEM
-//     );
-
-//     if ('false' === isMultiEcosystemEnabled?.value) {
-//       const ecoOrganizationList = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
-
-//       for (const organization of ecoOrganizationList) {
-//         if (organization['ecosystemRole']['name'] === EcosystemRoles.ECOSYSTEM_MEMBER) {
-//           throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
-//         }
-//       }
-//     }
-
-//     const orgDetails: IGetOrgById = await this.organizationService.getOrganization(
-//       createEcosystemDto.orgId,
-//       createEcosystemDto.userId
-//     );
-
-//     if (!orgDetails) {
-//       throw new NotFoundException(ResponseMessages.ecosystem.error.orgNotExist);
-//     }
-
-//     if (0 === orgDetails.org_agents.length) {
-//       throw new NotFoundException(ResponseMessages.ecosystem.error.orgDidNotExist);
-//     }
-
-//     const ecosystemLedgers = orgDetails.org_agents.map((agent) => agent.ledgers?.id);
-
-//     const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, ecosystemLedgers);
-//     if (!createEcosystem) {
-//       throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
-//     }
-
-//     return createEcosystem;
-//   } catch (error) {
-//     this.logger.error(`createEcosystem: ${error}`);
-//     throw error;
-//   }
-// }
+}

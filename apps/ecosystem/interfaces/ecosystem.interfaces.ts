@@ -23,8 +23,6 @@ export interface IEcosystem {
   createDateTime: Date;
   createdBy: string;
   logoUrl: string;
-  autoEndorsement: boolean;
-  ledgers: string[] | Prisma.JsonValue;
 }
 export interface IOrganizationData {
   id: string;
@@ -70,4 +68,28 @@ export interface IEcosystemInvitations {
   userId: string;
   createDateTime: Date;
   createdBy: string;
+}
+
+export interface IEcosystemDetails {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: Date;
+  logoUrl: string;
+  ledgers: string[];
+}
+
+export interface IEcosystemDashboard {
+  ecosystem: IEcosystemDetails[];
+  membersCount: number;
+  endorsementsCount: number;
+  ecosystemLead: {
+    role: string;
+    orgName: string;
+  };
 }

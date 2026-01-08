@@ -163,9 +163,6 @@ export const ResponseMessages = {
   ecosystem: {
     success: {
       create: 'Ecosystem created successfully',
-      update: 'Ecosystem details updated successfully',
-      add: 'Organization added successfully',
-      delete: 'Ecosystem invitations deleted successfully',
       fetch: 'Ecosystem fetched successfully',
       getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
       getInvitation: 'Ecosystem invitations fetched successfully',
@@ -209,6 +206,7 @@ export const ResponseMessages = {
       requestSchemaTransaction: 'Error while request schema transaction',
       requestCredDefTransaction: 'Error while submitting transaction',
       notFound: 'Organization not found',
+      fetch: 'Error while fetching ecosystems',
       platformConfigNotFound: 'Platform configurations not found',
       schemaNotFound: 'Schema not found',
       ecosystemNotFound: 'Ecosystem not found',

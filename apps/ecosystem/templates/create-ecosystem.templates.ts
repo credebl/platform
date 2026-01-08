@@ -1,7 +1,6 @@
-import { escapeHtml } from '@credebl/common/common.utils';
 
 export class CreateEcosystemInviteTemplate {
-  public sendInviteEmailTemplate(email: string, inviterName: string, isUserExist: boolean): string {
+  public sendInviteEmailTemplate(email: string, isUserExist: boolean): string {
     const requiredEnvVars = [
       'FRONT_END_URL',
       'PLATFORM_NAME',
@@ -23,8 +22,6 @@ export class CreateEcosystemInviteTemplate {
 
     const buttonText = isUserExist ? `Create Ecosystem` : `Register on ${process.env.PLATFORM_NAME}`;
 
-    const safeEmail = escapeHtml(email);
-
     return `<!DOCTYPE html>
 <html lang="en">
 <head>  
@@ -44,7 +41,7 @@ export class CreateEcosystemInviteTemplate {
       font-size: 15px; line-height: 24px; color: #000000;">
 
       <p style="margin-top:0px;">
-        Hello ${safeEmail},
+        Hello,
       </p>
 
       <p>

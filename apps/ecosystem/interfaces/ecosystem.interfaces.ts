@@ -62,7 +62,7 @@ export interface IEcosystemInvitations {
   email: string;
   status: string;
   ecosystemId?: string;
-  userId: string | null;
+  userId?: string;
   createDateTime: Date;
   createdBy: string;
 }
@@ -76,7 +76,7 @@ export interface IEcosystemDetails {
   createdBy: string;
   lastChangedDateTime: Date;
   lastChangedBy: string;
-  deletedAt: Date | null;
+  deletedAt?: Date;
   logoUrl: string;
 }
 

@@ -1,9 +1,11 @@
+/* eslint-disable camelcase */
 import * as CryptoJS from 'crypto-js';
 import * as fs from 'fs';
 import * as util from 'util';
 
+import { HttpStatus, Logger } from '@nestjs/common';
+
 import { CommonConstants } from '../../common/src/common.constant';
-import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { exec } from 'child_process';
 
@@ -28,7 +30,7 @@ const prisma = new PrismaClient({
 });
 const logger = new Logger('Init seed DB');
 let platformUserId = '';
-let cachedConfig: PlatformConfig | null = null;
+let cachedConfig: PlatformConfig;
 
 const configData = fs.readFileSync(
   `${process.cwd()}/prisma/data/credebl-master-table/credebl-master-table.json`,
@@ -714,12 +716,12 @@ export async function createKeycloakUser(): Promise<void> {
     })
   });
 
-  if (409 === res.status) {
+  if (HttpStatus.CONFLICT === res.status) {
     logger.log(`⚠️ User ${user.username} already exists`);
     return;
   }
 
-  if (201 !== res.status) {
+  if (HttpStatus.CREATED !== res.status) {
     const errorText = await res.text();
     throw new Error(`Failed to create Keycloak user (${res.status}): ${errorText}`);
   }

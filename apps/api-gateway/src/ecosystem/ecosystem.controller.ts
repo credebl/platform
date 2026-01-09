@@ -16,7 +16,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
-import { SendEcosystemCreateDto } from './dtos/send-ecosystem-invitation';
+import { CreateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { user } from '@prisma/client';
 import { User } from '../authz/decorators/user.decorator';
@@ -40,7 +40,7 @@ export class EcosystemController {
 
   /**
    * Invitation to create ecosystem (platform admin)
-   * @param SendEcosystemCreateDto The details of the invitation
+   * @param createEcosystemInvitationDto
    * @returns Success message
    */
   @Post('/invitations')
@@ -57,11 +57,11 @@ export class EcosystemController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async createInvitation(
-    @Body() sendEcosystemCreateDto: SendEcosystemCreateDto,
+    @Body() createEcosystemInvitationDto: CreateEcosystemInvitationDto,
     @User() reqUser: user,
     @Res() res: Response
   ): Promise<Response> {
-    await this.ecosystemService.inviteUserToCreateEcosystem(sendEcosystemCreateDto.email, reqUser.id);
+    await this.ecosystemService.inviteUserToCreateEcosystem(createEcosystemInvitationDto.email, reqUser.id);
 
     return res.status(HttpStatus.CREATED).json({
       statusCode: HttpStatus.CREATED,
@@ -163,7 +163,7 @@ export class EcosystemController {
 
   /**
    * Get specific ecosystem dashboard details
-   * @param SendEcosystemCreateDto The details of the invitation
+   * @param createEcosystemInvitationDto The details of the invitation
    * @param ecosystemId the ecosystem
    * @param orgId ID of the organization
    * @returns Details of specific ecosystem

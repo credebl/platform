@@ -28,7 +28,7 @@ export class EcosystemRepository {
 
   async createEcosystemInvitation(payload: {
     email: string;
-    invitedUserId: string | null;
+    invitedUserId?: string;
     platformAdminId: string;
     // eslint-disable-next-line camelcase
   }): Promise<ecosystem_invitations> {

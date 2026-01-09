@@ -13,7 +13,7 @@ export class EcosystemService {
 
   /**
    *
-   * @param SendEcosystemCreateDto
+   * @param createEcosystemInvitationDto
    * @returns Ecosystem creation success
    */
   async inviteUserToCreateEcosystem(email: string, platformAdminId: string): Promise<IEcosystemInvitations> {

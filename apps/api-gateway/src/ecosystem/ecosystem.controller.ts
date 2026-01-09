@@ -18,8 +18,13 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
-import { inviteMemberToEcosystemDto, SendEcosystemCreateDto, UpdateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
+import {
+  inviteMemberToEcosystemDto,
+  SendEcosystemCreateDto,
+  UpdateEcosystemInvitationDto
+} from './dtos/send-ecosystem-invitation';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
@@ -87,7 +92,6 @@ export class EcosystemController {
     });
   }
 
-
   @Post('/invite-member')
   @ApiOperation({
     summary: 'Invite member to ecosystem',
@@ -97,8 +101,9 @@ export class EcosystemController {
     status: HttpStatus.OK,
     description: 'Invitation sent successfully for member invitation'
   })
-  // @UseGuards(AuthGuard('jwt'))
-  // @ApiBearerAuth()
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @ApiBearerAuth()
   async inviteMemberToEcosystem(
     @Body() inviteMemberToEcosystem: inviteMemberToEcosystemDto,
     @Res() res: Response
@@ -120,7 +125,6 @@ export class EcosystemController {
     return res.status(HttpStatus.BAD_REQUEST).json(finalResponse);
   }
 
-
   @Post('/update-invitation-status')
   @ApiOperation({
     summary: 'Update status for Invitation',
@@ -130,14 +134,16 @@ export class EcosystemController {
     status: HttpStatus.OK,
     description: 'Status updated successfully'
   })
-  // @UseGuards(AuthGuard('jwt'))
-  // @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   async updateEcosystemInvitationStatus(
     @Body() updateInvitation: UpdateEcosystemInvitationDto,
     @Res() res: Response
   ): Promise<Response> {
-    console.log("contrller hit",updateInvitation)
-    const result = await this.ecosystemService.updateEcosystemInvitaionStatus(updateInvitation.email, updateInvitation.status);
+    const result = await this.ecosystemService.updateEcosystemInvitationStatus(
+      updateInvitation.email,
+      updateInvitation.status
+    );
 
     if (result) {
       const finalResponse: IResponse = {

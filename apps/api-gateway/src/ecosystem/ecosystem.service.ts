@@ -42,8 +42,7 @@ export class EcosystemService {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-member-to-ecosystem', { orgId });
   }
 
-  async updateEcosystemInvitaionStatus(email:string, status: Invitation): Promise<boolean> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-ecosystem-invitation-status', {email, status});
+  async updateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-ecosystem-invitation-status', { email, status });
   }
-
 }

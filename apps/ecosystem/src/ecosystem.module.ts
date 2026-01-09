@@ -11,11 +11,11 @@ import { EcosystemService } from './ecosystem.service';
 import { GlobalConfigModule } from '@credebl/config';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { OrganizationModule } from 'apps/organization/src/organization.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { PrismaService } from '@credebl/prisma-service';
-import { getNatsOptions } from '@credebl/common/nats.config';
-import { OrganizationModule } from 'apps/organization/src/organization.module';
 import { UserModule } from 'apps/user/src/user.module';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -36,6 +36,7 @@ import { UserModule } from 'apps/user/src/user.module';
     CacheModule.register()
   ],
   controllers: [EcosystemController],
-  providers: [EcosystemService, EcosystemRepository, PrismaService, Logger, NATSClient]
+  providers: [EcosystemService, EcosystemRepository, PrismaService, Logger, NATSClient],
+  exports: [EcosystemService, EcosystemRepository]
 })
 export class EcosystemModule {}

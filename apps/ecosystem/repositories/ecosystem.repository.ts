@@ -2,13 +2,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Invitation, InviteType } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
-import { ecosystem_invitations, user } from '@prisma/client';
+import { ecosystem, ecosystem_invitations, user } from '@prisma/client';
 
 import { PrismaService } from '@credebl/prisma-service';
 
 @Injectable()
 export class EcosystemRepository {
-  constructor(private readonly prisma: PrismaService, private readonly logger: Logger) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: Logger
+  ) {}
 
   /**
    *
@@ -16,7 +19,12 @@ export class EcosystemRepository {
    * @returns orgInvitaionDetails
    */
 
-  async createEcosystemInvitation(email: string, userId: string, type?: InviteType, status?: Invitation): Promise<ecosystem_invitations> {
+  async createEcosystemInvitation(
+    email: string,
+    userId: string,
+    type?: InviteType,
+    status?: Invitation
+  ): Promise<ecosystem_invitations> {
     return this.prisma.ecosystem_invitations.create({
       data: {
         email,
@@ -54,7 +62,7 @@ export class EcosystemRepository {
       this.logger.error(`Error in getUserById: ${error.message}`);
       throw error;
     }
-  } 
+  }
 
   async getEcosystemInvitationsByEmail(email: string): Promise<ecosystem_invitations> {
     try {
@@ -67,11 +75,10 @@ export class EcosystemRepository {
       this.logger.error(`Error in getEcosystemInvitationsByEmail: ${error.message}`);
       throw error;
     }
-  } 
+  }
 
   async updateEcosystemInvitationStatusByEmail(email: string, status: Invitation): Promise<ecosystem_invitations> {
     try {
-      console.log("update eco",email,status)
       return this.prisma.ecosystem_invitations.update({
         where: {
           email
@@ -84,7 +91,55 @@ export class EcosystemRepository {
       this.logger.error(`Error in updateEcosystemInvitationStatusByEmail: ${error.message}`);
       throw error;
     }
-  } 
+  }
+
+  async getEcosystemOrgDetailsByUserId(
+    userId: string,
+    ecosystemId: string
+  ): Promise<{ ecosystemRole: { name: string } }[]> {
+    try {
+      return this.prisma.ecosystem_orgs.findMany({
+        where: {
+          createdBy: userId,
+          ecosystemId
+        },
+        select: {
+          ecosystemRole: {
+            select: {
+              name: true
+            }
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getEcosystemDetailsByOrgId: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemDetailsByUserId(userId: string): Promise<ecosystem> {
+    try {
+      return this.prisma.ecosystem.findFirst({
+        where: {
+          createdBy: userId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getEcosystemDetailsByOrgId: ${error.message}`);
+    }
+  }
+
+  async getUserByKeycloakId(keycloakId: string): Promise<user> {
+    try {
+      return this.prisma.user.findFirst({
+        where: {
+          keycloakUserId: keycloakId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getEcosystemDetailsByOrgId: ${error.message}`);
+    }
+  }
 
   // /**
   //  * Description: create ecosystem

@@ -1,8 +1,8 @@
 import { IsEmail, IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import { Invitation } from '@credebl/enum/enum';
+import { Transform } from 'class-transformer';
 
 export class SendEcosystemCreateDto {
   @ApiProperty({ example: 'awqx@yopmail.com' })
@@ -15,13 +15,17 @@ export class SendEcosystemCreateDto {
   userId: string;
 }
 
-
 export class inviteMemberToEcosystemDto {
   @ApiProperty({ example: '6e672a9c-64f0-4d98-b312-f578f633800b' })
   @IsUUID()
   @IsNotEmpty({ message: 'OrgId is required' })
   @IsString({ message: 'OrgId should be a string' })
   @Transform(({ value }) => value?.trim())
+  orgId: string;
+}
+
+export class OrgIdParam {
+  @IsUUID() // or @IsString()
   orgId: string;
 }
 
@@ -49,11 +53,10 @@ export class UpdateEcosystemInvitationDto {
   @IsNotEmpty({ message: 'Email is required' })
   @IsString({ message: 'Email should be a string' })
   @Transform(({ value }) => value?.trim())
-  email : string;
-
+  email: string;
 
   @ApiProperty({ enum: Invitation, example: Invitation.ACCEPTED })
-  @Transform(({ value }) => 'string' === typeof value ? value.toLowerCase() : value)
+  @Transform(({ value }) => ('string' === typeof value ? value.toLowerCase() : value))
   @IsEnum(Invitation, { message: `Status must be one of: ${Object.values(Invitation).join(', ')}` })
   @IsNotEmpty({ message: 'Status is required' })
   status: Invitation;

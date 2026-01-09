@@ -1,11 +1,14 @@
-import * as fs from 'fs';
-
-import { Logger } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-import { CommonConstants } from '../../common/src/common.constant';
+/* eslint-disable camelcase */
 import * as CryptoJS from 'crypto-js';
-import { exec } from 'child_process';
+import * as fs from 'fs';
 import * as util from 'util';
+
+import { HttpStatus, Logger } from '@nestjs/common';
+
+import { CommonConstants } from '../../common/src/common.constant';
+import { PrismaClient } from '@prisma/client';
+import { exec } from 'child_process';
+
 const execPromise = util.promisify(exec);
 
 const prisma = new PrismaClient({
@@ -27,6 +30,7 @@ const prisma = new PrismaClient({
 });
 const logger = new Logger('Init seed DB');
 let platformUserId = '';
+let cachedConfig: PlatformConfig;
 
 const configData = fs.readFileSync(
   `${process.cwd()}/prisma/data/credebl-master-table/credebl-master-table.json`,
@@ -130,6 +134,34 @@ const createOrgAgentTypes = async (): Promise<void> => {
     }
   } catch (error) {
     logger.error('An error occurred seeding orgAgentTypes:', error);
+    throw error;
+  }
+};
+
+const createEcosystemRoles = async (): Promise<void> => {
+  try {
+    const { ecosystemRoleData } = JSON.parse(configData);
+
+    const ecosystemRoleDetails = ecosystemRoleData.map((ecosystemRole) => ecosystemRole.name);
+    const existEcosystemRole = await prisma.ecosystem_roles.findMany({
+      where: {
+        name: {
+          in: ecosystemRoleDetails
+        }
+      }
+    });
+
+    if (0 === existEcosystemRole.length) {
+      const ecosystemRoles = await prisma.ecosystem_roles.createMany({
+        data: ecosystemRoleData
+      });
+
+      logger.log(ecosystemRoles);
+    } else {
+      logger.log('Already seeding in ecosystem roles');
+    }
+  } catch (error) {
+    logger.error('An error occurred seeding ecosystemRoles:', error);
     throw error;
   }
 };
@@ -482,14 +514,296 @@ const updateClientCredential = async (): Promise<void> => {
   }
 };
 
+export const updateClientId = async (): Promise<void> => {
+  const { KEYCLOAK_MANAGEMENT_CLIENT_ID, CRYPTO_PRIVATE_KEY } = process.env;
+
+  if (!KEYCLOAK_MANAGEMENT_CLIENT_ID || !CRYPTO_PRIVATE_KEY) {
+    throw new Error('Missing required environment variables');
+  }
+
+  const OLD_CLIENT_ID = 'adminClient';
+
+  // Encrypt once
+  const newEncryptedClientId = CryptoJS.AES.encrypt(
+    JSON.stringify(KEYCLOAK_MANAGEMENT_CLIENT_ID),
+    CRYPTO_PRIVATE_KEY
+  ).toString();
+
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      clientId: true,
+      firstName: true,
+      email: true
+    }
+  });
+
+  let updatedCount = 0;
+
+  for (const user of users) {
+    if (user.email === cachedConfig.platformEmail) {
+      logger.log('⚠️ Skipping update of clientId for platform admin');
+      continue;
+    }
+    let decryptedClientId: string;
+    if (!user.clientId) {
+      logger.warn(`⚠️ Skipping user ${user.id} - no clientId set`);
+      continue;
+    }
+    try {
+      const bytes = CryptoJS.AES.decrypt(user.clientId, CRYPTO_PRIVATE_KEY);
+      decryptedClientId = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    } catch {
+      logger.warn(`⚠️ Could not decrypt clientId for user ${user.id}`);
+      continue;
+    }
+
+    if (decryptedClientId === OLD_CLIENT_ID) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { clientId: newEncryptedClientId }
+      });
+
+      updatedCount++;
+      logger.log(`✅ Updated user ${user.id} (${user.firstName})`);
+    }
+  }
+
+  logger.log(`🎉 Finished. Updated ${updatedCount} users.\n`);
+};
+
+const updatePlatformUserRole = async (): Promise<void> => {
+  logger.log('Executing update script for platform user org role');
+  try {
+    const userId = await prisma.user.findUnique({
+      where: {
+        email: `${cachedConfig.platformEmail}`
+      }
+    });
+
+    const orgId = await prisma.organisation.findFirst({
+      where: {
+        name: `${CommonConstants.PLATFORM_ADMIN_ORG}`
+      }
+    });
+
+    const orgRoleId = await prisma.org_roles.findUnique({
+      where: {
+        name: `${CommonConstants.PLATFORM_ADMIN_ORG_ROLE}`
+      }
+    });
+
+    if (!userId || !orgId || !orgRoleId) {
+      throw new Error(
+        `Required entities not found please ensure record for user, org and orgRole exist of platform admin`
+      );
+    }
+
+    const platformUserRole = await prisma.user_org_roles.findFirst({
+      where: {
+        userId: userId.id,
+        orgId: orgId.id,
+        orgRoleId: orgRoleId.id
+      }
+    });
+
+    if (!platformUserRole) {
+      const platformOrganization = await prisma.user_org_roles.create({
+        data: {
+          userId: userId.id,
+          orgRoleId: orgRoleId.id,
+          orgId: orgId.id
+        }
+      });
+      logger.log(
+        `✅ user org role for platform admin added successfully \n${JSON.stringify(platformOrganization, null, 2)}\n`
+      );
+    } else {
+      logger.log('Already seeding in user_org_roles\n');
+    }
+  } catch (error) {
+    logger.error('An error occurred seeding platformOrganization:', error);
+    throw error;
+  }
+};
+
+export async function getKeycloakToken(): Promise<string> {
+  const { KEYCLOAK_DOMAIN, KEYCLOAK_REALM, PLATFORM_ADMIN_KEYCLOAK_ID, PLATFORM_ADMIN_KEYCLOAK_SECRET } = process.env;
+
+  if (!KEYCLOAK_DOMAIN || !KEYCLOAK_REALM || !PLATFORM_ADMIN_KEYCLOAK_ID || !PLATFORM_ADMIN_KEYCLOAK_SECRET) {
+    throw new Error('Missing Keycloak env vars');
+  }
+
+  const res = await fetch(
+    `${process.env.KEYCLOAK_DOMAIN}realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/token`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: PLATFORM_ADMIN_KEYCLOAK_ID,
+        client_secret: PLATFORM_ADMIN_KEYCLOAK_SECRET
+      })
+    }
+  );
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch Keycloak token (${res.status}): ${data.error_description || data.error || 'Unknown error'}`
+    );
+  }
+  if (!data.access_token) {
+    throw new Error('Keycloak response missing access_token');
+  }
+  return data.access_token;
+}
+
+export async function createKeycloakUser(): Promise<void> {
+  logger.log(`✅ Creating keycloak user for platform admin`);
+  const {
+    KEYCLOAK_DOMAIN,
+    KEYCLOAK_REALM,
+    PLATFORM_ADMIN_USER_PASSWORD,
+    PLATFORM_ADMIN_KEYCLOAK_ID,
+    PLATFORM_ADMIN_KEYCLOAK_SECRET,
+    CRYPTO_PRIVATE_KEY
+  } = process.env;
+
+  if (
+    !PLATFORM_ADMIN_USER_PASSWORD ||
+    !KEYCLOAK_DOMAIN ||
+    !KEYCLOAK_REALM ||
+    !PLATFORM_ADMIN_KEYCLOAK_ID ||
+    !PLATFORM_ADMIN_KEYCLOAK_SECRET ||
+    !CRYPTO_PRIVATE_KEY
+  ) {
+    throw new Error(
+      'Missing required environment variables for either PLATFORM_ADMIN_USER_PASSWORD or KEYCLOAK_DOMAIN or KEYCLOAK_REALM or PLATFORM_ADMIN_KEYCLOAK_ID or PLATFORM_ADMIN_KEYCLOAK_SECRET or CRYPTO_PRIVATE_KEY'
+    );
+  }
+
+  const token = await getKeycloakToken();
+  const user = {
+    username: cachedConfig.platformEmail,
+    email: cachedConfig.platformEmail,
+    firstName: cachedConfig.platformName,
+    lastName: cachedConfig.platformName,
+    password: PLATFORM_ADMIN_USER_PASSWORD
+  };
+  const res = await fetch(`${KEYCLOAK_DOMAIN}admin/realms/${KEYCLOAK_REALM}/users`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      username: user.username,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      enabled: true,
+      emailVerified: true,
+      credentials: user.password
+        ? [
+            {
+              type: 'password',
+              value: user.password,
+              temporary: false
+            }
+          ]
+        : []
+    })
+  });
+
+  if (HttpStatus.CONFLICT === res.status) {
+    logger.log(`⚠️ User ${user.username} already exists`);
+    return;
+  }
+
+  if (HttpStatus.CREATED !== res.status) {
+    const errorText = await res.text();
+    throw new Error(`Failed to create Keycloak user (${res.status}): ${errorText}`);
+  }
+  const location = res.headers.get('location');
+
+  if (!location) {
+    throw new Error('Keycloak did not return Location header');
+  }
+
+  const userId = location.split('/').pop();
+
+  if (userId) {
+    logger.log('Check if platform admin exists');
+    const existingUser = await prisma.user.findUnique({
+      where: { email: cachedConfig.platformEmail }
+    });
+
+    if (!existingUser) {
+      throw new Error(`User with email ${cachedConfig.platformEmail} not found in database`);
+    }
+    logger.log(`✅ Platform admin found in database`);
+
+    const encClientId = CryptoJS.AES.encrypt(JSON.stringify(PLATFORM_ADMIN_KEYCLOAK_ID), CRYPTO_PRIVATE_KEY).toString();
+
+    const encClientSecret = CryptoJS.AES.encrypt(
+      JSON.stringify(PLATFORM_ADMIN_KEYCLOAK_SECRET),
+      CRYPTO_PRIVATE_KEY
+    ).toString();
+
+    await prisma.user.update({
+      where: { email: cachedConfig.platformEmail },
+      data: {
+        keycloakUserId: userId,
+        clientId: encClientId,
+        clientSecret: encClientSecret
+      }
+    });
+    logger.log(`✅ Platform admin added and updated to user's table sucessfully`);
+  } else {
+    throw new Error('Failed to extract user ID from Location header');
+  }
+}
+
+type PlatformConfig = {
+  platformUsername: string;
+  platformEmail: string;
+  platformName: string;
+};
+
+export async function getPlatformConfig(): Promise<PlatformConfig> {
+  logger.log('Getting platform config');
+  if (cachedConfig) {
+    return cachedConfig;
+  }
+
+  const configFromDb = await prisma.user.findUnique({ where: { email: process.env.PLATFORM_ADMIN_EMAIL } });
+
+  if (!configFromDb) {
+    throw new Error('Platform config not found in DB');
+  }
+
+  if (!configFromDb.username || !configFromDb.email || !configFromDb.firstName) {
+    throw new Error('Platform config table is missing required fields from user || email || firstName');
+  }
+
+  cachedConfig = {
+    platformUsername: configFromDb.username, //this is the same as platform email
+    platformEmail: configFromDb.email,
+    platformName: configFromDb.firstName
+  };
+
+  return cachedConfig;
+}
+
 async function main(): Promise<void> {
-  await createPlatformConfig();
   await createOrgRoles();
   await createAgentTypes();
   await createPlatformUser();
   await createPlatformOrganization();
   await createPlatformUserOrgRoles();
   await createOrgAgentTypes();
+  await createEcosystemRoles();
   await createLedger();
   await createLedgerConfig();
   await createUserRole();
@@ -497,6 +811,12 @@ async function main(): Promise<void> {
   await addSchemaType();
   await importGeoLocationMasterData();
   await updateClientCredential();
+  await createPlatformConfig();
+
+  await getPlatformConfig();
+  await updateClientId();
+  await updatePlatformUserRole();
+  await createKeycloakUser();
 }
 
 main()

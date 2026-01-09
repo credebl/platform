@@ -254,6 +254,9 @@ export enum CommonConstants {
   ENDORSE_TRANSACTION = '/transactions/#/endorse',
   WRITE_TRANSACTION = '/transactions/#/write',
 
+  // ecosystem
+  ECOSYSTEM_SERVICE = 'ecosystem',
+
   // delete wallet
   URL_DELETE_WALLET = '/agent/wallet',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values

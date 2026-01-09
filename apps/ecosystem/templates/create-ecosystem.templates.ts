@@ -1,3 +1,4 @@
+import { escapeHtml } from '@credebl/common/common.utils';
 
 export class CreateEcosystemInviteTemplate {
   public sendInviteEmailTemplate(email: string, isUserExist: boolean): string {
@@ -8,19 +9,22 @@ export class CreateEcosystemInviteTemplate {
       'PUBLIC_PLATFORM_SUPPORT_EMAIL',
       'POWERED_BY'
     ];
+
+    const brandLogo = escapeHtml(process.env.BRAND_LOGO);
+    const platformName = escapeHtml(process.env.PLATFORM_NAME);
+    const supportEmail = escapeHtml(process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL);
+    const poweredBy = escapeHtml(process.env.POWERED_BY);
     const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
     if (0 < missingVars.length) {
       throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
     }
     const validUrl = isUserExist ? `${process.env.FRONT_END_URL}/sign-in` : `${process.env.FRONT_END_URL}/sign-up`;
 
-    const message = isUserExist
-      ? ``
-      : `To get started, kindly register on ${process.env.PLATFORM_NAME} platform using this link:`;
+    const message = isUserExist ? `` : `To get started, kindly register on ${platformName} platform using this link:`;
 
     const secondaryMessage = isUserExist ? `Please log in to the platform to start creating your ecosystem.` : ``;
 
-    const buttonText = isUserExist ? `Create Ecosystem` : `Register on ${process.env.PLATFORM_NAME}`;
+    const buttonText = isUserExist ? `Create Ecosystem` : `Register on ${platformName}`;
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -34,7 +38,7 @@ export class CreateEcosystemInviteTemplate {
   <div style="margin: auto; max-width: 450px; padding: 20px 30px; background-color: #FFFFFF; display:block;">
 
    <div style="display: block; text-align:center; background-color: white; padding-bottom: 20px; padding-top: 20px;">
-              <img src="${process.env.BRAND_LOGO}" alt="${process.env.PLATFORM_NAME} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
+              <img src="${brandLogo}" alt="${platformName} logo" style="max-width:100px; background: white; padding: 5px;border-radius: 5px;" width="100%" height="fit-content" class="CToWUd" data-bit="iit">
           </div>
 
     <div style="font-family: Montserrat; font-style: normal; font-weight: 500;
@@ -45,7 +49,7 @@ export class CreateEcosystemInviteTemplate {
       </p>
 
       <p>
-        You have been granted access by the platform admin to create a new ecosystem on <strong>${process.env.PLATFORM_NAME}</strong>. ${secondaryMessage}
+        You have been granted access by the platform admin to create a new ecosystem on <strong>${platformName}</strong>. ${secondaryMessage}
         
       </p>
 
@@ -68,11 +72,11 @@ export class CreateEcosystemInviteTemplate {
       <footer style="padding-top: 10px;">
         <div style="font-style: italic; color: #777777">
           For any assistance or questions while accessing your account, please do not hesitate to contact the support team at
-          ${process.env.PUBLIC_PLATFORM_SUPPORT_EMAIL}. Our team will ensure a seamless onboarding experience for you.
+          ${supportEmail}. Our team will ensure a seamless onboarding experience for you.
         </div>
 
         <p style="margin-top: 6px;">
-          © ${process.env.POWERED_BY}
+          © ${poweredBy}
         </p>
       </footer>
 

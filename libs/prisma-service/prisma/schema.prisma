@@ -812,6 +812,8 @@ model ecosystem_invitations {
   createdBy           String    @db.Uuid
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedBy       String    @db.Uuid
+  deletedAt           DateTime? @db.Timestamp(6)
+
   ecosystem ecosystem? @relation(fields: [ecosystemId], references: [id])
   user user? @relation(fields: [userId], references: [id])
 }

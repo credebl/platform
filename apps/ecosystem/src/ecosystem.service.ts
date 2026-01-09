@@ -8,7 +8,8 @@ import {
   BadRequestException,
   InternalServerErrorException,
   ConflictException,
-  NotFoundException
+  NotFoundException,
+  ForbiddenException
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
@@ -23,7 +24,6 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { EmailService } from '@credebl/common/email.service';
 import { user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { EcosystemRoles } from '@credebl/enum/enum';
 
 @Injectable()
 export class EcosystemService {
@@ -49,7 +49,7 @@ export class EcosystemService {
     const { email, platformAdminId } = payload;
 
     if (!email || !platformAdminId) {
-      throw new BadRequestException('Email or platformAdminId missing');
+      throw new BadRequestException(ResponseMessages.ecosystem.error.emailOrPlatformAdminIdMissing);
     }
 
     const invitedUser = await this.prisma.user.findUnique({
@@ -155,20 +155,30 @@ export class EcosystemService {
         throw new ConflictException(ResponseMessages.ecosystem.error.exists);
       }
 
-      const ecoOrganizationList = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
+      const { userId } = createEcosystemDto;
 
-      for (const organization of ecoOrganizationList) {
-        if (organization['ecosystemRole']['name'] === EcosystemRoles.ECOSYSTEM_MEMBER) {
-          throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
-        }
+      if (!userId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+      }
+      const invitation = await this.ecosystemRepository.findAcceptedInvitationByUserId(userId);
+
+      if (!invitation) {
+        throw new ForbiddenException(ResponseMessages.ecosystem.error.invitationRequired);
       }
 
-      const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
-      if (!createEcosystem) {
+      const alreadyCreated = await this.ecosystemRepository.checkEcosystemCreatedByUser(userId);
+
+      if (alreadyCreated) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.userEcosystemAlreadyExists);
+      }
+
+      const ecosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
+
+      if (!ecosystem) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
       }
 
-      return createEcosystem;
+      return ecosystem;
     } catch (error) {
       this.logger.error(`createEcosystem: ${error}`);
       throw error;
@@ -186,7 +196,7 @@ export class EcosystemService {
 
   async getEcosystemDashboard(ecosystemId: string, orgId: string): Promise<IEcosystemDashboard> {
     if (!ecosystemId || !orgId) {
-      throw new BadRequestException('ecosystemId or orgId missing');
+      throw new BadRequestException(ResponseMessages.ecosystem.error.ecosystemIdOrOrgIdMissing);
     }
 
     try {

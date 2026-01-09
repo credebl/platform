@@ -170,12 +170,18 @@ export const ResponseMessages = {
       invalidOrgId: 'Invalid organization Id',
       notFound: 'Organization not found',
       platformConfigNotFound: 'Platform configurations not found',
+      emailOrPlatformAdminIdMissing: 'Email or platformAdminId missing',
       invitationNotFound: 'Ecosystem Invitation not found',
       exists: 'An ecosystem name is already exist',
+      userIdMissing: 'UserId is required',
       ecosystemOrgAlready:
         'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.',
       notCreated: 'Error while creating ecosystem',
-      fetch: 'Error while fetching ecosystems'
+      fetch: 'Error while fetching ecosystems',
+      invitationRequired: 'Accepted invitation is required to create ecosystem',
+      userEcosystemAlreadyExists: 'User has already created an ecosystem',
+      ecosystemIdOrOrgIdMissing: 'EcosystemId or OrgId is required',
+      leadNotFound: 'Lead details not found'
     }
   },
   schema: {

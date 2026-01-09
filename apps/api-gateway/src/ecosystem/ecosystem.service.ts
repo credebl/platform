@@ -1,7 +1,6 @@
 import { NATSClient } from '@credebl/common/NATSClient';
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { SendEcosystemCreateDto } from './dtos/send-ecosystem-invitation';
 import { IEcosystem, IEcosystemDashboard, IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
 
@@ -17,12 +16,9 @@ export class EcosystemService {
    * @param SendEcosystemCreateDto
    * @returns Ecosystem creation success
    */
-  async inviteUserToCreateEcosystem(
-    dto: SendEcosystemCreateDto,
-    platformAdminId: string
-  ): Promise<IEcosystemInvitations> {
+  async inviteUserToCreateEcosystem(email: string, platformAdminId: string): Promise<IEcosystemInvitations> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-user-for-ecosystem-creation', {
-      email: dto.email,
+      email,
       platformAdminId
     });
   }
@@ -49,8 +45,8 @@ export class EcosystemService {
    * @param userId
    * @returns All ecosystems from platform
    */
-  async getAllEcosystems(userId: string): Promise<IEcosystem[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-ecosystems', { userId });
+  async getAllEcosystems(): Promise<IEcosystem[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-ecosystems', {});
   }
   /**
    *

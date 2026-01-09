@@ -20,6 +20,7 @@ export class CreateEcosystemDto {
   @MinLength(2, { message: 'Description must be at least 2 characters.' })
   @MaxLength(255, { message: 'Description must be at most 255 characters.' })
   @IsString({ message: 'Description must be in string format.' })
+  @IsNotSQLInjection({ message: 'Incorrect pattern for description.' })
   description: string;
 
   @ApiPropertyOptional()

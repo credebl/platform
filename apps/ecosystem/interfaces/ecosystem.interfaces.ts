@@ -89,7 +89,7 @@ export interface IEcosystemDashboard {
   membersCount: number;
   endorsementsCount: number;
   ecosystemLead: {
-    role: string;
-    orgName: string;
-  };
+    role: string | null;
+    orgName: string | null;
+  } | null;
 }

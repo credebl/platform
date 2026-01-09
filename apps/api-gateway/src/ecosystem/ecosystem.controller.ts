@@ -39,14 +39,14 @@ export class EcosystemController {
   constructor(private readonly ecosystemService: EcosystemService) {}
 
   /**
-   * Invitation to create ecosystem
+   * Invitation to create ecosystem (platform admin)
    * @param SendEcosystemCreateDto The details of the invitation
    * @returns Success message
    */
   @Post('/invitations')
   @Roles(OrgRoles.PLATFORM_ADMIN)
   @ApiOperation({
-    summary: 'Create ecosystem invitation',
+    summary: 'Create ecosystem invitation (platform admin)',
     description: 'Invite a user to create an ecosystem'
   })
   @ApiResponse({
@@ -61,7 +61,7 @@ export class EcosystemController {
     @User() reqUser: user,
     @Res() res: Response
   ): Promise<Response> {
-    await this.ecosystemService.inviteUserToCreateEcosystem(sendEcosystemCreateDto, reqUser.id);
+    await this.ecosystemService.inviteUserToCreateEcosystem(sendEcosystemCreateDto.email, reqUser.id);
 
     return res.status(HttpStatus.CREATED).json({
       statusCode: HttpStatus.CREATED,
@@ -76,7 +76,7 @@ export class EcosystemController {
 
   @Get('/invitations')
   @ApiOperation({
-    summary: 'Get ecosystem invitations by user',
+    summary: 'Get ecosystem invitations by user (platform admin)',
     description: 'Fetch all ecosystem invitations created by the logged-in user'
   })
   @ApiResponse({
@@ -152,8 +152,7 @@ export class EcosystemController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async getAllEcosystems(@User() reqUser: user, @Res() res: Response): Promise<Response> {
-    const userId = reqUser?.id;
-    const ecosystems = await this.ecosystemService.getAllEcosystems(userId);
+    const ecosystems = await this.ecosystemService.getAllEcosystems();
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
@@ -171,7 +170,7 @@ export class EcosystemController {
    */
   @Get('/:ecosystemId/:orgId/dashboard')
   @ApiOperation({
-    summary: 'Get ecosystem dashboard details',
+    summary: 'Get ecosystem dashboard details (platform admin and organization owner)',
     description: 'Fetch ecosystem dashboard data for a specific organization'
   })
   @ApiResponse({

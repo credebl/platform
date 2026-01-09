@@ -95,11 +95,14 @@ export class EcosystemRepository {
         }
 
         if (ecosystemUser) {
-          const ecosystemRoleDetails = await this.prisma.ecosystem_roles.findFirst({
+          const ecosystemRoleDetails = await prisma.ecosystem_roles.findFirst({
             where: {
               name: EcosystemRoles.ECOSYSTEM_LEAD
             }
           });
+          if (!ecosystemRoleDetails) {
+            throw new NotFoundException(ResponseMessages.ecosystem.error.leadNotFound);
+          }
           ecosystemUser = await prisma.ecosystem_orgs.create({
             data: {
               orgId: String(orgId),
@@ -137,6 +140,39 @@ export class EcosystemRepository {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
     }
+  }
+
+  async checkEcosystemCreatedByUser(userId: string): Promise<boolean> {
+    if (!userId) {
+      throw new BadRequestException('userId missing');
+    }
+
+    const ecosystem = await this.prisma.ecosystem.findFirst({
+      where: {
+        createdBy: userId,
+        deletedAt: null
+      },
+      select: { id: true }
+    });
+
+    return Boolean(ecosystem);
+  }
+
+  async findAcceptedInvitationByUserId(userId: string): Promise<ecosystem_invitations | null> {
+    if (!userId) {
+      throw new BadRequestException('userId missing');
+    }
+
+    return this.prisma.ecosystem_invitations.findFirst({
+      where: {
+        userId,
+        status: Invitation.ACCEPTED,
+        deletedAt: null
+      },
+      orderBy: {
+        createDateTime: 'desc'
+      }
+    });
   }
 
   /**

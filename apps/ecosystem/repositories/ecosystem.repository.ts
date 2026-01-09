@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import {
   BadRequestException,
   Injectable,
@@ -31,30 +30,43 @@ export class EcosystemRepository {
     email: string;
     invitedUserId: string | null;
     platformAdminId: string;
+    // eslint-disable-next-line camelcase
   }): Promise<ecosystem_invitations> {
-    const { email, invitedUserId, platformAdminId } = payload;
+    try {
+      const { email, invitedUserId, platformAdminId } = payload;
 
-    return this.prisma.ecosystem_invitations.create({
-      data: {
-        email,
-        // CREATE_ECOSYSTEM invitations are auto-accepted
-        status: Invitation.ACCEPTED,
-        userId: invitedUserId,
-        createdBy: platformAdminId,
-        lastChangedBy: platformAdminId
-      }
-    });
+      return await this.prisma.ecosystem_invitations.create({
+        data: {
+          email,
+          status: Invitation.ACCEPTED,
+          userId: invitedUserId,
+          createdBy: platformAdminId,
+          lastChangedBy: platformAdminId
+        }
+      });
+    } catch (error) {
+      this.logger.error('createEcosystemInvitation error', error);
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationCreateFailed);
+    }
   }
 
-  async getInvitationsByUserId(userId: string): Promise<ecosystem_invitations[]> {
-    return this.prisma.ecosystem_invitations.findMany({
-      where: {
-        createdBy: userId
-      },
-      orderBy: {
-        createDateTime: 'desc'
-      }
-    });
+  async getInvitationsByUserId(
+    userId: string
+    // eslint-disable-next-line camelcase
+  ): Promise<ecosystem_invitations[]> {
+    try {
+      return await this.prisma.ecosystem_invitations.findMany({
+        where: {
+          createdBy: userId
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
+    } catch (error) {
+      this.logger.error('getInvitationsByUserId error', error);
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.fetchInvitationsFailed);
+    }
   }
 
   /**
@@ -145,26 +157,56 @@ export class EcosystemRepository {
       throw new BadRequestException('userId missing');
     }
 
-    const ecosystem = await this.prisma.ecosystem.findFirst({
-      where: {
-        createdBy: userId,
-        deletedAt: null
-      },
-      select: { id: true }
-    });
+    try {
+      const ecosystem = await this.prisma.ecosystem.findFirst({
+        where: {
+          createdBy: userId,
+          deletedAt: null
+        },
+        select: { id: true }
+      });
 
-    return Boolean(ecosystem);
+      return Boolean(ecosystem);
+    } catch (error) {
+      this.logger.error('checkEcosystemCreatedByUser error', error);
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.checkFailed);
+    }
   }
 
-  async findAcceptedInvitationByUserId(userId: string): Promise<ecosystem_invitations | null> {
+  async findAcceptedInvitationByUserId(
+    userId: string
+    // eslint-disable-next-line camelcase
+  ): Promise<ecosystem_invitations | null> {
     if (!userId) {
       throw new BadRequestException('userId missing');
     }
 
+    try {
+      return await this.prisma.ecosystem_invitations.findFirst({
+        where: {
+          userId,
+          status: Invitation.ACCEPTED,
+          deletedAt: null
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
+    } catch (error) {
+      this.logger.error('findAcceptedInvitationByUserId error', error);
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationFetchFailed);
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async findEcosystemInvitationByEmail(email: string): Promise<ecosystem_invitations | null> {
+    if (!email) {
+      throw new BadRequestException('email missing');
+    }
+
     return this.prisma.ecosystem_invitations.findFirst({
       where: {
-        userId,
-        status: Invitation.ACCEPTED,
+        email,
         deletedAt: null
       },
       orderBy: {

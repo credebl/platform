@@ -52,6 +52,12 @@ export class EcosystemService {
       throw new BadRequestException(ResponseMessages.ecosystem.error.emailOrPlatformAdminIdMissing);
     }
 
+    const existingInvitation = await this.ecosystemRepository.findEcosystemInvitationByEmail(email);
+
+    if (existingInvitation) {
+      throw new ConflictException(ResponseMessages.ecosystem.error.invitationAlreadySent);
+    }
+
     const invitedUser = await this.prisma.user.findUnique({
       where: { email }
     });
@@ -111,7 +117,7 @@ export class EcosystemService {
     return Boolean(userData?.isEmailVerified);
   }
 
-  async getUserUserId(userId: string): Promise<user> {
+  async getUserId(userId: string): Promise<user> {
     const pattern = { cmd: 'get-user-by-user-id' };
 
     const userData = await this.natsClient.send<user>(this.ecosystemServiceProxy, pattern, userId).catch((error) => {

@@ -181,7 +181,12 @@ export const ResponseMessages = {
       invitationRequired: 'Accepted invitation is required to create ecosystem',
       userEcosystemAlreadyExists: 'User has already created an ecosystem',
       ecosystemIdOrOrgIdMissing: 'EcosystemId or OrgId is required',
-      leadNotFound: 'Lead details not found'
+      leadNotFound: 'Lead details not found',
+      invitationAlreadySent: 'Ecosystem invitation is already sent to this email',
+      invitationCreateFailed: 'Error while creating ecosystem invitation',
+      fetchInvitationsFailed: 'Error while fetching ecosystem invitations',
+      invitationFetchFailed: 'Error while fetching ecosystem invitation by userId',
+      checkFailed: ' Error while checking ecosystem existence by name'
     }
   },
   schema: {

@@ -9,7 +9,8 @@ import {
   InternalServerErrorException,
   ConflictException,
   NotFoundException,
-  ForbiddenException
+  ForbiddenException,
+  HttpStatus
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import {
@@ -31,11 +32,10 @@ export class EcosystemService {
     @Inject('NATS_CLIENT') private readonly ecosystemServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient,
     private readonly ecosystemRepository: EcosystemRepository,
-    private readonly logger: Logger,
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService
   ) {}
-
+  private readonly logger = new Logger(EcosystemService.name);
   /**
    *
    * @param bulkInvitationDto
@@ -81,8 +81,9 @@ export class EcosystemService {
 
     emailData.emailFrom = platformConfigData.emailFrom;
     emailData.emailTo = email;
-    emailData.emailSubject = `Invitation to create a new ecosystem on ${process.env.PLATFORM_NAME}`;
-    emailData.emailHtml = template.sendInviteEmailTemplate(email, isUserExist);
+    const platformName = process.env.PLATFORM_NAME ?? 'the platform';
+    emailData.emailSubject = `Invitation to create a new ecosystem on ${platformName}`;
+    emailData.emailHtml = template.sendInviteEmailTemplate(isUserExist);
 
     return this.emailService.sendEmail(emailData);
   }
@@ -93,21 +94,21 @@ export class EcosystemService {
 
     const userData: user = await this.natsClient
       .send<user>(this.ecosystemServiceProxy, pattern, payload)
-
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error('checkUserExistInPlatform error', error);
+
+        const status = Number(error?.status) || HttpStatus.INTERNAL_SERVER_ERROR;
+
         throw new HttpException(
           {
-            status: error.status,
-            error: error.message
+            status,
+            error: error?.message ?? 'Unexpected error'
           },
-          error.status
+          status
         );
       });
-    if (userData?.isEmailVerified) {
-      return true;
-    }
-    return false;
+
+    return Boolean(userData?.isEmailVerified);
   }
 
   async getUserUserId(userId: string): Promise<user> {

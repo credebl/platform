@@ -1,7 +1,7 @@
 import { escapeHtml } from '@credebl/common/common.utils';
 
 export class CreateEcosystemInviteTemplate {
-  public sendInviteEmailTemplate(email: string, isUserExist: boolean): string {
+  public sendInviteEmailTemplate(isUserExist: boolean): string {
     const requiredEnvVars = [
       'FRONT_END_URL',
       'PLATFORM_NAME',
@@ -18,7 +18,9 @@ export class CreateEcosystemInviteTemplate {
     if (0 < missingVars.length) {
       throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
     }
-    const validUrl = isUserExist ? `${process.env.FRONT_END_URL}/sign-in` : `${process.env.FRONT_END_URL}/sign-up`;
+
+    const frontEndUrl = escapeHtml(process.env.FRONT_END_URL);
+    const validUrl = isUserExist ? `${frontEndUrl}/sign-in` : `${frontEndUrl}/sign-up`;
 
     const message = isUserExist ? `` : `To get started, kindly register on ${platformName} platform using this link:`;
 

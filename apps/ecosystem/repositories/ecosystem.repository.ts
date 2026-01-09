@@ -7,7 +7,7 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import { EcosystemOrgStatus, EcosystemRoles, Invitation } from '@credebl/enum/enum';
-import { ICreateEcosystem, IEcosystemDashboard } from '../interfaces/ecosystem.interfaces';
+import { ICreateEcosystem, IEcosystem, IEcosystemDashboard } from '../interfaces/ecosystem.interfaces';
 // eslint-disable-next-line camelcase
 import { ecosystem, ecosystem_invitations, ecosystem_orgs } from '@prisma/client';
 
@@ -37,13 +37,9 @@ export class EcosystemRepository {
     return this.prisma.ecosystem_invitations.create({
       data: {
         email,
-        // Change to PENDING when accept/reject flow is ready
+        // CREATE_ECOSYSTEM invitations are auto-accepted
         status: Invitation.ACCEPTED,
-
-        // invited user (nullable)
         userId: invitedUserId,
-
-        // platform admin
         createdBy: platformAdminId,
         lastChangedBy: platformAdminId
       }
@@ -67,10 +63,11 @@ export class EcosystemRepository {
    * @returns ecosystem
    */
   // eslint-disable-next-line camelcase
-  async createNewEcosystem(createEcosystemDto: ICreateEcosystem): Promise<ecosystem> {
+  async createNewEcosystem(createEcosystemDto: ICreateEcosystem): Promise<IEcosystem> {
     try {
-      const transaction = await this.prisma.$transaction(async (prisma) => {
+      return await this.prisma.$transaction(async (prisma) => {
         const { name, description, userId, logo, tags, orgId, autoEndorsement } = createEcosystemDto;
+
         const createdEcosystem = await prisma.ecosystem.create({
           data: {
             name,
@@ -80,55 +77,56 @@ export class EcosystemRepository {
             logoUrl: logo,
             createdBy: userId,
             lastChangedBy: userId
+          },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            tags: true,
+            autoEndorsement: true,
+            logoUrl: true,
+            createdBy: true,
+            createDateTime: true
           }
         });
-        let ecosystemUser;
-        if (createdEcosystem) {
-          ecosystemUser = await prisma.ecosystem_users.create({
-            data: {
-              userId: String(userId),
-              ecosystemId: createdEcosystem.id,
-              createdBy: userId,
-              lastChangedBy: userId
-            }
-          });
+
+        const ecosystemRoleDetails = await prisma.ecosystem_roles.findFirst({
+          where: { name: EcosystemRoles.ECOSYSTEM_LEAD }
+        });
+
+        if (!ecosystemRoleDetails) {
+          throw new NotFoundException(ResponseMessages.ecosystem.error.leadNotFound);
         }
 
-        if (ecosystemUser) {
-          const ecosystemRoleDetails = await prisma.ecosystem_roles.findFirst({
-            where: {
-              name: EcosystemRoles.ECOSYSTEM_LEAD
-            }
-          });
-          if (!ecosystemRoleDetails) {
-            throw new NotFoundException(ResponseMessages.ecosystem.error.leadNotFound);
+        await prisma.ecosystem_users.create({
+          data: {
+            userId: String(userId),
+            ecosystemId: createdEcosystem.id,
+            createdBy: userId,
+            lastChangedBy: userId
           }
-          ecosystemUser = await prisma.ecosystem_orgs.create({
-            data: {
-              orgId: String(orgId),
-              status: EcosystemOrgStatus.ACTIVE,
-              ecosystemId: createdEcosystem.id,
-              ecosystemRoleId: ecosystemRoleDetails.id,
-              createdBy: userId,
-              lastChangedBy: userId
-            }
-          });
-        }
+        });
+
+        await prisma.ecosystem_orgs.create({
+          data: {
+            orgId: String(orgId),
+            status: EcosystemOrgStatus.ACTIVE,
+            ecosystemId: createdEcosystem.id,
+            ecosystemRoleId: ecosystemRoleDetails.id,
+            createdBy: userId,
+            lastChangedBy: userId
+          }
+        });
+
         return createdEcosystem;
       });
-
-      // To return selective object data
-      delete transaction.lastChangedDateTime;
-      delete transaction.lastChangedBy;
-      delete transaction.deletedAt;
-
-      return transaction;
     } catch (error) {
       this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
       throw error;
     }
   }
-  async checkEcosystemNameExist(name: string): Promise<ecosystem> {
+
+  async checkEcosystemNameExist(name: string): Promise<ecosystem | null> {
     try {
       const checkEcosystemExists = await this.prisma.ecosystem.findFirst({
         where: {
@@ -276,8 +274,7 @@ export class EcosystemRepository {
           lastChangedDateTime: ecosystem.lastChangedDateTime,
           lastChangedBy: ecosystem.lastChangedBy,
           deletedAt: ecosystem.deletedAt,
-          logoUrl: ecosystem.logoUrl,
-          ledgers: ecosystem.ledgers as string[]
+          logoUrl: ecosystem.logoUrl
         }
       ],
       membersCount: 0,

@@ -491,8 +491,11 @@ export const updateClientId = async (): Promise<void> => {
     throw new Error('Missing required environment variables');
   }
 
-  const OLD_CLIENT_ID = 'adminClient';
-
+  const OLD_CLIENT_ID = process.env.PLATFORM_ADMIN_OLD_CLIENT_ID;
+  if (!OLD_CLIENT_ID) {
+    logger.log('Skipping updateClientId script requires PLATFORM_ADMIN_OLD_CLIENT_ID');
+    return;
+  }
   // Encrypt once
   const newEncryptedClientId = CryptoJS.AES.encrypt(
     JSON.stringify(KEYCLOAK_MANAGEMENT_CLIENT_ID),
@@ -631,17 +634,21 @@ export async function getKeycloakToken(): Promise<string> {
 
 export async function createKeycloakUser(): Promise<void> {
   logger.log(`✅ Creating keycloak user for platform admin`);
+  const { platformAdminKeycloakPassword } = JSON.parse(configData);
+
+  if (!platformAdminKeycloakPassword) {
+    throw new Error('platformAdminKeycloakPassword missing from credebl-master-table.json');
+  }
+
   const {
     KEYCLOAK_DOMAIN,
     KEYCLOAK_REALM,
-    PLATFORM_ADMIN_USER_PASSWORD,
     PLATFORM_ADMIN_KEYCLOAK_ID,
     PLATFORM_ADMIN_KEYCLOAK_SECRET,
     CRYPTO_PRIVATE_KEY
   } = process.env;
 
   if (
-    !PLATFORM_ADMIN_USER_PASSWORD ||
     !KEYCLOAK_DOMAIN ||
     !KEYCLOAK_REALM ||
     !PLATFORM_ADMIN_KEYCLOAK_ID ||
@@ -659,7 +666,7 @@ export async function createKeycloakUser(): Promise<void> {
     email: cachedConfig.platformEmail,
     firstName: cachedConfig.platformName,
     lastName: cachedConfig.platformName,
-    password: PLATFORM_ADMIN_USER_PASSWORD
+    password: platformAdminKeycloakPassword
   };
   const res = await fetch(`${KEYCLOAK_DOMAIN}admin/realms/${KEYCLOAK_REALM}/users`, {
     method: 'POST',

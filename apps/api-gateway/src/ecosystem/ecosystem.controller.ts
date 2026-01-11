@@ -87,9 +87,7 @@ export class EcosystemController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async getInvitations(@User() reqUser: user, @Res() res: Response): Promise<Response> {
-    const userId = reqUser?.id;
-
-    const invitations = await this.ecosystemService.getInvitationsByUserId(userId);
+    const invitations = await this.ecosystemService.getInvitationsByUserId(reqUser.id);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
@@ -123,7 +121,7 @@ export class EcosystemController {
     @Res() res: Response
   ): Promise<Response> {
     createEcosystemDto.orgId = orgId;
-    createEcosystemDto.userId = user?.['id'];
+    createEcosystemDto.userId = user?.id;
 
     const ecosystem = await this.ecosystemService.createEcosystem(createEcosystemDto);
 

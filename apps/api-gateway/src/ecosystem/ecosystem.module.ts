@@ -1,0 +1,23 @@
+import { ClientsModule, Transport } from '@nestjs/microservices';
+
+import { CommonConstants } from '@credebl/common/common.constant';
+import { EcosystemController } from './ecosystem.controller';
+import { EcosystemService } from './ecosystem.service';
+import { Module } from '@nestjs/common';
+import { NATSClient } from '@credebl/common/NATSClient';
+import { getNatsOptions } from '@credebl/common/nats.config';
+
+@Module({
+  imports: [
+    ClientsModule.register([
+      {
+        name: 'NATS_CLIENT',
+        transport: Transport.NATS,
+        options: getNatsOptions(CommonConstants.ECOSYSTEM_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+      }
+    ])
+  ],
+  controllers: [EcosystemController],
+  providers: [EcosystemService, NATSClient]
+})
+export class EcosystemModule {}

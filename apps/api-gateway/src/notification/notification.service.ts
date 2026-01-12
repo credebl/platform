@@ -1,9 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
-import { RegisterOrgWebhhookEndpointDto, SendNotificationDto } from './dtos/notification.dto';
+import {
+  RegisterHolderForNotificationDto,
+  RegisterOrgWebhhookEndpointDto,
+  SendNotificationDto
+} from './dtos/notification.dto';
 import { INotification } from './interfaces/notification.interfaces';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
+import { IHolderNotification } from '@credebl/common/interfaces/holder-notification.interfaces';
 
 @Injectable()
 export class NotificationService extends BaseService {
@@ -36,5 +41,20 @@ export class NotificationService extends BaseService {
    */
   async sendNotification(notificationRequestBody: SendNotificationDto): Promise<INotification> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'send-notification', notificationRequestBody);
+  }
+
+  /**
+   * Register holder notification
+   * @param registerHolderForNotificationDto
+   * @returns Stored notification data
+   */
+  async registerHolderNotification(
+    registerHolderForNotificationDto: RegisterHolderForNotificationDto
+  ): Promise<IHolderNotification> {
+    return this.natsClient.sendNatsMessage(
+      this.serviceProxy,
+      'register-holder-notification',
+      registerHolderForNotificationDto
+    );
   }
 }

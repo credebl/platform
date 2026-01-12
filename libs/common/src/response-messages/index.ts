@@ -200,7 +200,7 @@ export const ResponseMessages = {
       partiallyAdded: 'Organization(s) are partially added',
       orgNotExist: 'Organization does not exist',
       orgDidNotExist: 'Organization did does not exist',
-      exists: 'An ecosystem name is already exist',
+      exists: 'Ecosystem name already exist',
       update: 'Error while updating ecosystem',
       invalidInvitationStatus: 'Invalid invitation status',
       invitationNotFound: 'Ecosystem Invitation not found',
@@ -249,7 +249,19 @@ export const ResponseMessages = {
       orgEcoIdRequired: 'OrgId & EcosystemId is required',
       ecosystemMembersNotExists: 'Ecosystem members does not exists',
       notAbleToDeleteEcosystem: 'You cannot delete the ecosystem, because you are the ecosystem lead',
-      ecosystemNotExists: 'Ecosystem does not exists'
+      ecosystemNotExists: 'Ecosystem does not exists',
+
+      emailOrPlatformAdminIdMissing: 'Email or platformAdminId missing',
+      userIdMissing: 'UserId is required',
+      fetch: 'Error while fetching ecosystems',
+      invitationRequired: 'Accepted invitation is required to create ecosystem',
+      userEcosystemAlreadyExists: 'User has already created an ecosystem',
+      ecosystemIdOrOrgIdMissing: 'EcosystemId or OrgId is required',
+      invitationAlreadySent: 'Ecosystem invitation is already sent to this email',
+      invitationCreateFailed: 'Error while creating ecosystem invitation',
+      fetchInvitationsFailed: 'Error while fetching ecosystem invitations',
+      invitationFetchFailed: 'Error while fetching ecosystem invitation by userId',
+      checkFailed: ' Error while checking ecosystem existence by name'
     }
   },
   schema: {

@@ -6,10 +6,14 @@ import {
   Logger,
   HttpException,
   BadRequestException,
-  InternalServerErrorException
+  InternalServerErrorException,
+  ConflictException,
+  NotFoundException,
+  ForbiddenException,
+  HttpStatus
 } from '@nestjs/common';
+
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
 import { CreateEcosystemInviteTemplate } from '../templates/create-ecosystem.templates';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -21,52 +25,80 @@ import { OrganizationRepository } from 'apps/organization/repositories/organizat
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import { Invitation, InviteType } from '@credebl/enum/enum';
 
+import {
+  ICreateEcosystem,
+  IEcosystem,
+  IEcosystemDashboard,
+  IEcosystemInvitations
+} from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+
 @Injectable()
 export class EcosystemService {
   constructor(
     @Inject('NATS_CLIENT') private readonly ecosystemServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient,
     private readonly ecosystemRepository: EcosystemRepository,
-    private readonly logger: Logger,
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     private readonly organizationRepository: OrganizationRepository,
     private readonly userRepository: UserRepository
   ) {}
 
+  private readonly logger = new Logger(EcosystemService.name);
   /**
    *
    * @param bulkInvitationDto
    * @param userId
    * @returns
    */
-  async inviteUserToCreateEcosystem(payload: { email: string; userId: string }): Promise<IEcosystemInvitations> {
-    const { email, userId } = payload;
+  async inviteUserToCreateEcosystem(payload: {
+    email: string;
+    platformAdminId: string;
+  }): Promise<IEcosystemInvitations> {
+    const { email, platformAdminId } = payload;
 
-    if (!email || !userId) {
-      throw new BadRequestException('Email or userId missing');
+    if (!email || !platformAdminId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.emailOrPlatformAdminIdMissing);
     }
 
-    const invitation = await this.ecosystemRepository.createEcosystemInvitation(email, userId);
+    const existingInvitation = await this.ecosystemRepository.findEcosystemInvitationByEmail(email);
 
-    const isUserExist = await this.checkUserExistInPlatform(email);
-    const userData = await this.getUserUserId(userId);
+    if (existingInvitation) {
+      throw new ConflictException(ResponseMessages.ecosystem.error.invitationAlreadySent);
+    }
 
-    await this.sendInviteEmailTemplate(email, userData.firstName, isUserExist);
+    const invitedUser = await this.prisma.user.findUnique({
+      where: { email }
+    });
+
+    const invitation = await this.ecosystemRepository.createEcosystemInvitation({
+      email,
+      invitedUserId: invitedUser?.id ?? null,
+      platformAdminId
+    });
+
+    const isUserExist = Boolean(invitedUser);
+
+    await this.sendInviteEmailTemplate(email, isUserExist);
 
     return invitation;
   }
 
-  async sendInviteEmailTemplate(email: string, firstName: string, isUserExist: boolean): Promise<boolean> {
+  async sendInviteEmailTemplate(email: string, isUserExist: boolean): Promise<boolean> {
     const platformConfigData = await this.prisma.platform_config.findFirst();
+
+    if (!platformConfigData) {
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.platformConfigNotFound);
+    }
 
     const template = new CreateEcosystemInviteTemplate();
     const emailData = new EmailDto();
 
     emailData.emailFrom = platformConfigData.emailFrom;
     emailData.emailTo = email;
-    emailData.emailSubject = `Invitation to create a new ecosystem on ${process.env.PLATFORM_NAME}`;
-    emailData.emailHtml = template.sendInviteEmailTemplate(email, firstName, isUserExist);
+    const platformName = process.env.PLATFORM_NAME ?? 'the platform';
+    emailData.emailSubject = `Invitation to create a new ecosystem on ${platformName}`;
+    emailData.emailHtml = template.sendInviteEmailTemplate(isUserExist);
 
     return this.emailService.sendEmail(emailData);
   }
@@ -77,24 +109,24 @@ export class EcosystemService {
 
     const userData: user = await this.natsClient
       .send<user>(this.ecosystemServiceProxy, pattern, payload)
-
       .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
+        this.logger.error('checkUserExistInPlatform error', error);
+
+        const status = Number(error?.status) || HttpStatus.INTERNAL_SERVER_ERROR;
+
         throw new HttpException(
           {
-            status: error.status,
-            error: error.message
+            status,
+            error: error?.message ?? 'Unexpected error'
           },
-          error.status
+          status
         );
       });
-    if (userData?.isEmailVerified) {
-      return true;
-    }
-    return false;
+
+    return Boolean(userData?.isEmailVerified);
   }
 
-  async getUserUserId(userId: string): Promise<user> {
+  async getUserId(userId: string): Promise<user> {
     const pattern = { cmd: 'get-user-by-user-id' };
 
     const userData = await this.natsClient.send<user>(this.ecosystemServiceProxy, pattern, userId).catch((error) => {
@@ -121,6 +153,51 @@ export class EcosystemService {
     } catch (error) {
       this.logger.error('getInvitationsByUserId error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationNotFound);
+    }
+  }
+
+  /**
+   *
+   * @param createEcosystemDto
+   * @returns
+   */
+
+  // eslint-disable-next-line camelcase
+  async createEcosystem(createEcosystemDto: ICreateEcosystem): Promise<IEcosystem> {
+    try {
+      const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
+
+      if (ecosystemExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+      }
+
+      const { userId } = createEcosystemDto;
+
+      if (!userId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+      }
+      const invitation = await this.ecosystemRepository.findAcceptedInvitationByUserId(userId);
+
+      if (!invitation) {
+        throw new ForbiddenException(ResponseMessages.ecosystem.error.invitationRequired);
+      }
+
+      const alreadyCreated = await this.ecosystemRepository.checkEcosystemCreatedByUser(userId);
+
+      if (alreadyCreated) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.userEcosystemAlreadyExists);
+      }
+
+      const ecosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto);
+
+      if (!ecosystem) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
+      }
+
+      return ecosystem;
+    } catch (error) {
+      this.logger.error(`createEcosystem: ${error}`);
+      throw error;
     }
   }
 
@@ -163,6 +240,28 @@ export class EcosystemService {
     }
   }
 
+  async getAllEcosystems(): Promise<IEcosystem[]> {
+    try {
+      return await this.ecosystemRepository.getAllEcosystems();
+    } catch (error) {
+      this.logger.error('getAllEcosystems error', error);
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.fetch);
+    }
+  }
+
+  async getEcosystemDashboard(ecosystemId: string, orgId: string): Promise<IEcosystemDashboard> {
+    if (!ecosystemId || !orgId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.ecosystemIdOrOrgIdMissing);
+    }
+
+    try {
+      return await this.ecosystemRepository.getEcosystemDashboard(ecosystemId, orgId);
+    } catch (error) {
+      this.logger.error('getEcosystemDashboard error', error);
+      throw error;
+    }
+  }
+
   async updateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
     try {
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(email, status);
@@ -173,59 +272,3 @@ export class EcosystemService {
     }
   }
 }
-
-// /**
-//  *
-//  * @param createEcosystemDto
-//  * @returns
-//  */
-
-// // eslint-disable-next-line camelcase
-// async createEcosystem(createEcosystemDto: ICreateEcosystem): Promise<IEcosystem> {
-//   try {
-//     const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
-
-//     if (ecosystemExist) {
-//       throw new ConflictException(ResponseMessages.ecosystem.error.exists);
-//     }
-
-//     const isMultiEcosystemEnabled = await this.ecosystemRepository.getSpecificEcosystemConfig(
-//       EcosystemConfigSettings.MULTI_ECOSYSTEM
-//     );
-
-//     if ('false' === isMultiEcosystemEnabled?.value) {
-//       const ecoOrganizationList = await this.ecosystemRepository.checkEcosystemOrgs(createEcosystemDto.orgId);
-
-//       for (const organization of ecoOrganizationList) {
-//         if (organization['ecosystemRole']['name'] === EcosystemRoles.ECOSYSTEM_MEMBER) {
-//           throw new ConflictException(ResponseMessages.ecosystem.error.ecosystemOrgAlready);
-//         }
-//       }
-//     }
-
-//     const orgDetails: IGetOrgById = await this.organizationService.getOrganization(
-//       createEcosystemDto.orgId,
-//       createEcosystemDto.userId
-//     );
-
-//     if (!orgDetails) {
-//       throw new NotFoundException(ResponseMessages.ecosystem.error.orgNotExist);
-//     }
-
-//     if (0 === orgDetails.org_agents.length) {
-//       throw new NotFoundException(ResponseMessages.ecosystem.error.orgDidNotExist);
-//     }
-
-//     const ecosystemLedgers = orgDetails.org_agents.map((agent) => agent.ledgers?.id);
-
-//     const createEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, ecosystemLedgers);
-//     if (!createEcosystem) {
-//       throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
-//     }
-
-//     return createEcosystem;
-//   } catch (error) {
-//     this.logger.error(`createEcosystem: ${error}`);
-//     throw error;
-//   }
-// }

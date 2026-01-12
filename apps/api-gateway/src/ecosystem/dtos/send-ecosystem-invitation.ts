@@ -4,15 +4,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Invitation } from '@credebl/enum/enum';
 import { Transform } from 'class-transformer';
 
-export class SendEcosystemCreateDto {
-  @ApiProperty({ example: 'awqx@yopmail.com' })
+export class CreateEcosystemInvitationDto {
+  @ApiProperty({ example: 'awqx@gmail.com' })
   @IsEmail({}, { message: 'Please provide a valid email' })
   @IsNotEmpty({ message: 'Email is required' })
   @IsString({ message: 'Email should be a string' })
   @Transform(({ value }) => value?.trim())
   email: string;
-
-  userId: string;
 }
 
 export class inviteMemberToEcosystemDto {

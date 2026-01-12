@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client';
-
 export interface ICreateEcosystem {
   name?: string;
   description?: string;
@@ -12,7 +10,6 @@ export interface ICreateEcosystem {
   orgId?: string;
   autoEndorsement?: boolean;
   lastChangedBy?: string;
-  ledgers: string[] | Prisma.JsonValue;
 }
 
 export interface IEcosystem {
@@ -23,8 +20,6 @@ export interface IEcosystem {
   createDateTime: Date;
   createdBy: string;
   logoUrl: string;
-  autoEndorsement: boolean;
-  ledgers: string[] | Prisma.JsonValue;
 }
 export interface IOrganizationData {
   id: string;
@@ -67,7 +62,30 @@ export interface IEcosystemInvitations {
   email: string;
   status: string;
   ecosystemId?: string;
-  userId: string;
+  userId?: string;
   createDateTime: Date;
   createdBy: string;
+}
+
+export interface IEcosystemDetails {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt?: Date;
+  logoUrl: string;
+}
+
+export interface IEcosystemDashboard {
+  ecosystem: IEcosystemDetails[];
+  membersCount: number;
+  endorsementsCount: number;
+  ecosystemLead: {
+    role: string | null;
+    orgName: string | null;
+  } | null;
 }

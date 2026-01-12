@@ -11,3 +11,6 @@ CREATE TABLE "holder_notification" (
 
     CONSTRAINT "holder_notification_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "holder_notification_sessionId_key" ON "holder_notification"("sessionId");

@@ -731,7 +731,7 @@ model intent_templates {
 
 model holder_notification {
   id                  String    @id @default(uuid()) @db.Uuid
-  sessionId           String
+  sessionId           String    @unique
   holderDid           String
   fcmToken            String
   state               String

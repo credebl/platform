@@ -15,13 +15,13 @@ export class HolderNotificationRepository {
   ) {}
 
   /**
-   * Register organization webhook endpoint
+   * Register holder for notification
    * @param payload
    * @returns Stored notification data
    */
   async registerHolderNotification(payload: ICreateHolderNotification): Promise<IHolderNotification> {
     try {
-      const holderNotification = await this.prisma.holder_notification.findFirst({
+      const holderNotification = await this.prisma.holder_notification.findUnique({
         where: {
           sessionId: payload.sessionId
         }
@@ -49,7 +49,7 @@ export class HolderNotificationRepository {
 
   async updateHolderNotificationState(sessionId: string, state: NotificationStatus): Promise<IHolderNotification> {
     try {
-      const updateNotification = await this.prisma.holder_notification.updateMany({
+      const updateNotification = await this.prisma.holder_notification.update({
         where: {
           sessionId
         },
@@ -58,7 +58,7 @@ export class HolderNotificationRepository {
         }
       });
 
-      if (0 === updateNotification.count) {
+      if (!updateNotification) {
         throw new NotFoundException(ResponseMessages.holderNotification.error.notFound);
       }
 
@@ -76,7 +76,7 @@ export class HolderNotificationRepository {
    */
   async getHolderNotificationBySessionId(sessionId: string): Promise<IHolderNotification> {
     try {
-      const holderNotification = await this.prisma.holder_notification.findFirst({
+      const holderNotification = await this.prisma.holder_notification.findUnique({
         where: {
           sessionId
         }

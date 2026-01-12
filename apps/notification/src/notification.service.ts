@@ -1,20 +1,23 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import {
-  INotification,
-  IWebhookEndpoint,
-  ISendNotification
-} from '../interfaces/notification.interfaces';
+import { INotification, IWebhookEndpoint, ISendNotification } from '../interfaces/notification.interfaces';
 import { RpcException } from '@nestjs/microservices';
 import { NotificationRepository } from './notification.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CommonService } from '@credebl/common';
+import {
+  ICreateHolderNotification,
+  IHolderNotification
+} from '../../../libs/common/src/interfaces/holder-notification.interfaces';
+import { HolderNotificationRepository } from './holder-notification.repository';
+import { NotificationStatus } from '@credebl/enum/enum';
 
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger('NotificationService');
   constructor(
     private readonly commonService: CommonService,
-    private readonly notificationRepository: NotificationRepository
+    private readonly notificationRepository: NotificationRepository,
+    private readonly holderNotificationRepository: HolderNotificationRepository
   ) {}
 
   /**
@@ -79,5 +82,23 @@ export class NotificationService {
   private isValidUrl(url: string): boolean {
     const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
     return urlRegex.test(url);
+  }
+
+  /**
+   * Register holder notification
+   * @param payload
+   * @returns Stored notification data
+   */
+  async registerHolderNotification(payload: ICreateHolderNotification): Promise<IHolderNotification> {
+    try {
+      payload.state = NotificationStatus.INITIATED;
+      const storeHolderNotification = await this.holderNotificationRepository.registerHolderNotification(payload);
+      return storeHolderNotification;
+    } catch (error) {
+      this.logger.error(
+        `[registerHolderNotification] - error in register holder notification: ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 }

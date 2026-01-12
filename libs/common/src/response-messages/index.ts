@@ -453,6 +453,16 @@ export const ResponseMessages = {
       invalidUrl: 'Invalid URL'
     }
   },
+  holderNotification: {
+    success: {
+      register: 'Notification registration process completed successfully',
+      sendNotification: 'Notification sent successfully'
+    },
+    error: {
+      notFound: 'Notification record not found.',
+      conflict: 'Holder already registered for this session'
+    }
+  },
   storeObject: {
     success: {
       storeObject: 'Data stored successfully'

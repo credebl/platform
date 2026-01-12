@@ -349,3 +349,14 @@ export enum ResponseMode {
   DC_API = 'dc_api',
   DC_API_JWT = 'dc_api.jwt'
 }
+
+export enum NotificationStatus {
+  INITIATED = 'initiated',
+  DATA_DELIVERED = 'DataDelivered',
+  DATA_DELIVERED_AND_NOTIFIED_WITH_NATS = 'DataDeliveredAndNotifiedWithNATS',
+  DATA_DELIVERED_AND_NOTIFIED_WITH_FCM = 'DataDeliveredAndNotifiedWithFCM',
+  DATA_PURGED = 'DataPurged',
+  DATA_PURGED_AND_NOTIFIED_WITH_NATS = 'DataPurgedAndNotifiedWithNATS',
+  DATA_PURGED_AND_NOTIFIED_WITH_FCM = 'DataPurgedAndNotifiedWithFCM',
+  NOTIFICATION_CONSUMED = 'NotificationConsumed'
+}

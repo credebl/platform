@@ -728,3 +728,14 @@ model intent_templates {
   @@index([intentId])
   @@index([templateId])
 }
+
+model holder_notification {
+  id                  String    @id @default(uuid()) @db.Uuid
+  sessionId           String
+  holderDid           String
+  fcmToken            String
+  state               String
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  deletedAt           DateTime? @db.Timestamp(6)
+}

@@ -1,6 +1,7 @@
 import { CustomExceptionFilter } from '@credebl/common/exception-handler';
-import { Body, Controller, HttpStatus, Logger, Post, Res, UseFilters } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Logger, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiExcludeEndpoint,
   ApiForbiddenResponse,
   ApiOperation,
@@ -20,6 +21,8 @@ import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotificationService } from './notification.service';
+import { ClientAccessGuard } from '../authz/guards/client-access-guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('notification')
 @UseFilters(CustomExceptionFilter)
@@ -93,6 +96,8 @@ export class NotificationController {
    */
   @Post('/register/holder-notification')
   // @ApiExcludeEndpoint()
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), ClientAccessGuard)
   @ApiOperation({
     summary: `Register holder for notification`,
     description: `Register holder for notification`

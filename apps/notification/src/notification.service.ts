@@ -4,12 +4,12 @@ import { RpcException } from '@nestjs/microservices';
 import { NotificationRepository } from './notification.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CommonService } from '@credebl/common';
+import { HolderNotificationRepository } from './holder-notification.repository';
+import { NotificationStatus } from '@credebl/enum/enum';
 import {
   ICreateHolderNotification,
   IHolderNotification
-} from '../../../libs/common/src/interfaces/holder-notification.interfaces';
-import { HolderNotificationRepository } from './holder-notification.repository';
-import { NotificationStatus } from '@credebl/enum/enum';
+} from '@credebl/common/interfaces/holder-notification.interfaces';
 
 @Injectable()
 export class NotificationService {

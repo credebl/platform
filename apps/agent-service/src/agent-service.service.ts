@@ -185,7 +185,10 @@ export class AgentServiceService {
       // Get genesis URL and ledger details
       const ledgerDetails = await this.agentServiceRepository.getGenesisUrl(agentSpinupDto.ledgerId);
 
-      if (AgentSpinUpStatus.WALLET_CREATED === getOrgAgent?.agentSpinUpStatus) {
+      if (
+        AgentSpinUpStatus.WALLET_CREATED === getOrgAgent?.agentSpinUpStatus ||
+        AgentSpinUpStatus.DID_CREATED === getOrgAgent?.agentSpinUpStatus
+      ) {
         throw new BadRequestException(ResponseMessages.agent.error.walletAlreadyCreated, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.badRequest

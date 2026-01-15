@@ -15,6 +15,10 @@ import {
   IGetAllOrgs,
   PrismaExecutor
 } from '../interfaces/ecosystem.interfaces';
+import {
+  IIntentTemplateList,
+  IIntentTemplateSearchCriteria
+} from '@credebl/common/interfaces/intents-template.interface';
 /* eslint-disable camelcase */
 // eslint-disable-next-line camelcase
 import { Prisma, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, user } from '@prisma/client';
@@ -22,6 +26,9 @@ import { Prisma, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_rol
 import { OrgRoles } from 'libs/org-roles/enums';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
+
+// eslint-disable-next-line camelcase
+
 
 @Injectable()
 export class EcosystemRepository {
@@ -541,6 +548,203 @@ export class EcosystemRepository {
     }
   }
 
+    // eslint-disable-next-line camelcase
+  async getIntentTemplateById(id: string): Promise<intent_templates> {
+    try {
+      const intentTemplate = await this.prisma.intent_templates.findUnique({
+        where: { id },
+        include: {
+          organisation: true,
+          intent: true,
+          template: true
+        }
+      });
+
+      this.logger.log(`[getIntentTemplateById] - Intent template details ${id}`);
+      return intentTemplate;
+    } catch (error) {
+      this.logger.error(`Error in getIntentTemplateById: ${error}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getIntentTemplatesByIntentId(intentId: string): Promise<intent_templates[]> {
+    try {
+      const intentTemplates = await this.prisma.intent_templates.findMany({
+        where: { intentId },
+        include: {
+          organisation: true,
+          intent: true,
+          template: true
+        }
+      });
+
+      this.logger.log(
+        `[getIntentTemplatesByIntentId] - Retrieved ${intentTemplates.length} intent templates for intent ${intentId}`
+      );
+      return intentTemplates;
+    } catch (error) {
+      this.logger.error(`Error in getIntentTemplatesByIntentId: ${error}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getIntentTemplatesByOrgId(orgId: string): Promise<intent_templates[]> {
+    try {
+      const intentTemplates = await this.prisma.intent_templates.findMany({
+        where: { orgId },
+        include: {
+          organisation: true,
+          intent: true,
+          template: true
+        }
+      });
+
+      this.logger.log(
+        `[getIntentTemplatesByOrgId] - Retrieved ${intentTemplates.length} intent templates for org ${orgId}`
+      );
+      return intentTemplates;
+    } catch (error) {
+      this.logger.error(`Error in getIntentTemplatesByOrgId: ${error}`);
+      throw error;
+    }
+  }
+
+// Intent Template CRUD operations
+  // eslint-disable-next-line camelcase
+  async createIntentTemplate(data: {
+    orgId?: string;
+    intentId: string;
+    templateId: string;
+    createdBy: string;
+    // eslint-disable-next-line camelcase
+  }): Promise<intent_templates> {
+    try {
+      // Check if a template already exists for this intent and org combination
+      const existingTemplate = await this.prisma.intent_templates.findFirst({
+        where: {
+          intentId: data.intentId,
+          orgId: data.orgId || null // null if orgId is not provided (global template)
+        }
+      });
+
+      if (existingTemplate) {
+        const scope = data.orgId ? `org ${data.orgId}` : 'globally';
+        this.logger.warn(`[createIntentTemplate] - Template already exists for intent ${data.intentId} ${scope}`);
+        throw new Error(
+          `A template is already assigned to this intent for ${scope}. Only one template per intent per organization is allowed.`
+        );
+      }
+
+      const intentTemplate = await this.prisma.intent_templates.create({
+        data: {
+          orgId: data.orgId,
+          intentId: data.intentId,
+          templateId: data.templateId,
+          createdBy: data.createdBy,
+          lastChangedBy: data.createdBy
+        }
+      });
+
+      this.logger.log(`[createIntentTemplate] - Intent template created with id ${intentTemplate.id}`);
+      return intentTemplate;
+    } catch (error) {
+      this.logger.error(`Error in createIntentTemplate: ${error}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async updateIntentTemplate(
+    id: string,
+    data: { orgId: string; intentId: string; templateId: string; lastChangedBy: string }
+    // eslint-disable-next-line camelcase
+  ): Promise<intent_templates> {
+    try {
+      const intentTemplate = await this.prisma.intent_templates.update({
+        where: { id },
+        data: {
+          orgId: data.orgId,
+          intentId: data.intentId,
+          templateId: data.templateId,
+          lastChangedBy: data.lastChangedBy,
+          lastChangedDateTime: new Date()
+        }
+      });
+
+      this.logger.log(`[updateIntentTemplate] - Intent template updated with id ${id}`);
+      return intentTemplate;
+    } catch (error) {
+      this.logger.error(`Error in updateIntentTemplate: ${error}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async deleteIntentTemplate(id: string): Promise<intent_templates> {
+    try {
+      const intentTemplate = await this.prisma.intent_templates.delete({
+        where: { id }
+      });
+
+      this.logger.log(`[deleteIntentTemplate] - Intent template deleted with id ${id}`);
+      return intentTemplate;
+    } catch (error) {
+      this.logger.error(`Error in deleteIntentTemplate: ${error}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getIntentTemplateByIntentAndOrg(intentName: string, verifierOrgId: string): Promise<intent_templates | null> {
+    try {
+      const template = await this.prisma.intent_templates.findFirst({
+        where: {
+          intent: { is: { name: intentName } },
+          OR: [{ orgId: verifierOrgId }, { orgId: null }]
+        },
+        select: {
+          id: true,
+          createDateTime: true,
+          lastChangedDateTime: true,
+          createdBy: true,
+          lastChangedBy: true,
+          intentId: true,
+          templateId: true,
+          orgId: true,
+          intent: { select: { name: true } },
+          template: {
+            select: { name: true, templateJson: true, orgId: true, organisation: { select: { name: true } } }
+          },
+          organisation: { select: { name: true } }
+        },
+        // include: {
+        //   organisation: true,
+        //   intent: true,
+        //   template: true
+        // },
+        orderBy: [{ orgId: { sort: 'desc', nulls: 'last' } }] // org-specific first, null last
+      });
+
+      if (template) {
+        this.logger.log(
+          `[getIntentTemplateByIntentAndOrg] - Found template for intent ${intentName} and org ${verifierOrgId}`
+        );
+        return template;
+      }
+
+      this.logger.log(
+        `[getIntentTemplateByIntentAndOrg] - No template found for intent ${intentName} and org ${verifierOrgId}`
+      );
+      return null;
+    } catch (error) {
+      this.logger.error(`Error in getIntentTemplateByIntentAndOrg: ${error}`);
+      throw error;
+    }
+  }
+
   async getAllEcosystemOrgsByEcosystemId(ecosystemId: string): Promise<IGetAllOrgs[]> {
     try {
       const result = await this.prisma.ecosystem_orgs.findMany({
@@ -667,6 +871,131 @@ export class EcosystemRepository {
       throw error;
     }
   }
+   async getAllIntentTemplateByQuery(
+    intentTemplateSearchCriteria: IIntentTemplateSearchCriteria
+  ): Promise<IIntentTemplateList> {
+    try {
+      const pageNumber = Number(intentTemplateSearchCriteria.pageNumber) || 1;
+      const pageSize = Number(intentTemplateSearchCriteria.pageSize) || 10;
+
+      const whereClause: Record<string, unknown> = {};
+      if (intentTemplateSearchCriteria.id) {
+        whereClause.id = intentTemplateSearchCriteria.id;
+      }
+      if (intentTemplateSearchCriteria.intentId) {
+        whereClause.intentId = intentTemplateSearchCriteria.intentId;
+      }
+      if (intentTemplateSearchCriteria.templateId) {
+        whereClause.templateId = intentTemplateSearchCriteria.templateId;
+      }
+      if (intentTemplateSearchCriteria.assignedToOrgId) {
+        whereClause.orgId = intentTemplateSearchCriteria.assignedToOrgId;
+      }
+      if (intentTemplateSearchCriteria.templateCreatedByOrgId) {
+        whereClause.template = { is: { orgId: intentTemplateSearchCriteria.templateCreatedByOrgId } };
+      }
+
+      if (intentTemplateSearchCriteria.intent) {
+        whereClause.intent = { is: { name: intentTemplateSearchCriteria.intent } };
+      }
+
+      if (intentTemplateSearchCriteria.searchByText) {
+        const search = intentTemplateSearchCriteria.searchByText;
+        whereClause.OR = [
+          { intent: { is: { name: { contains: search, mode: 'insensitive' } } } },
+          { template: { is: { name: { contains: search, mode: 'insensitive' } } } }
+        ];
+      }
+
+      const orderByField = intentTemplateSearchCriteria.sortField || 'createDateTime';
+      const orderDirection = SortValue.ASC === intentTemplateSearchCriteria.sortBy ? 'asc' : 'desc';
+
+      const intentTemplates = await this.prisma.intent_templates.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          createDateTime: true,
+          createdBy: true,
+          intentId: true,
+          templateId: true,
+          orgId: true,
+          intent: { select: { name: true } },
+          template: { select: { name: true, orgId: true, organisation: { select: { name: true } } } },
+          organisation: { select: { name: true } }
+        },
+        orderBy: {
+          [orderByField]: orderDirection
+        },
+        take: pageSize,
+        skip: (pageNumber - 1) * pageSize
+      });
+
+      const totalItems = await this.prisma.intent_templates.count({ where: whereClause });
+
+      const data = intentTemplates.map((it) => ({
+        id: it.id,
+        createDateTime: it.createDateTime,
+        createdBy: it.createdBy,
+        intentId: it.intentId,
+        templateId: it.templateId,
+        intent: it.intent?.name,
+        templateName: it.template?.name,
+        template: it.template?.name,
+        assignedToOrg: it.organisation?.name,
+        templateCreatedByOrg: it.template?.organisation?.name
+      }));
+
+      const hasNextPage = pageSize * pageNumber < totalItems;
+      const hasPreviousPage = 1 < pageNumber;
+
+      return {
+        totalItems,
+        hasNextPage,
+        hasPreviousPage,
+        nextPage: Number(pageNumber) + 1,
+        previousPage: pageNumber - 1,
+        lastPage: Math.ceil(totalItems / pageSize),
+        data
+      };
+    } catch (error) {
+      this.logger.error(`[getAllIntentTemplateByQuery] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+  /**
+   * Create a new intent
+   */
+  async createIntent(data: {
+    name: string;
+    description?: string;
+    createdBy: string;
+    ecosystemId: string;
+  }): Promise<intents> {
+    try {
+      if (!data.name || !data.createdBy) {
+        throw new BadRequestException('Intent name and createdBy are required');
+      }
+      if (!data.ecosystemId) {
+        throw new BadRequestException('ecosystemId is required');
+      }
+
+      const intent = await this.prisma.intents.create({
+        data: {
+          name: data.name,
+          description: data.description,
+          createdBy: data.createdBy,
+          lastChangedBy: data.createdBy,
+          ecosystemId: data.ecosystemId
+        }
+      });
+
+      this.logger.log(`[createIntent] - Intent created with id ${intent.id}`);
+      return intent;
+    } catch (error) {
+      this.logger.error('[createIntent] error', error);
+      throw error;
+    }
+  }
 
   async getEcosystemInvitations(params: {
     role: OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;
@@ -735,5 +1064,77 @@ export class EcosystemRepository {
         }
       }
     });
+  }
+  /**
+   * Get all intents
+   */
+  async getIntents(ecosystemId: string, intentId?: string): Promise<intents[]> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {
+      ecosystemId // ✅ ALWAYS applied
+    };
+
+    if (intentId) {
+      where.id = intentId; // ✅ ensures intent belongs to ecosystem
+    }
+
+    return this.prisma.intents.findMany({
+      where,
+      orderBy: { createDateTime: 'desc' }
+    });
+  }
+
+  /**
+   * Update an intent
+   */
+  async updateIntent(data: {
+    intentId: string;
+    name?: string;
+    description?: string;
+    lastChangedBy: string;
+  }): Promise<intents> {
+    try {
+      if (!data.intentId || !data.lastChangedBy) {
+        throw new BadRequestException('Intent id and lastChangedBy are required');
+      }
+
+      const intent = await this.prisma.intents.update({
+        where: { id: data.intentId },
+        data: {
+          name: data.name,
+          description: data.description,
+          lastChangedBy: data.lastChangedBy,
+          lastChangedDateTime: new Date()
+        }
+      });
+
+      this.logger.log(`[updateIntent] - Intent updated with id ${intent.id}`);
+      return intent;
+    } catch (error) {
+      this.logger.error('[updateIntent] error', error);
+      throw error;
+    }
+  }
+
+  async deleteIntent(data: { ecosystemId: string; intentId: string }): Promise<intents> {
+    const intent = await this.prisma.intents.findFirst({
+      where: {
+        id: data.intentId,
+        ecosystemId: data.ecosystemId
+      }
+    });
+
+    if (!intent) {
+      throw new NotFoundException('Intent not found in the given ecosystem');
+    }
+
+    await this.prisma.intents.deleteMany({
+      where: {
+        id: data.intentId,
+        ecosystemId: data.ecosystemId
+      }
+    });
+
+    return intent;
   }
 }

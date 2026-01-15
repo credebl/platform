@@ -1,14 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
 import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
-import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from './dtos/intent-template.dto';
-import { GetAllIntentTemplatesDto } from './dtos/get-all-intent-templates.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 import { Client as PgClient } from 'pg';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
@@ -132,50 +128,5 @@ export class UtilitiesService extends BaseService {
     const storeObj = storeObjectDto.data;
     const payload = { persistent, storeObj };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'store-object-return-url', payload);
-  }
-
-  // Intent Template CRUD operations
-  async createIntentTemplate(createIntentTemplateDto: CreateIntentTemplateDto, user: IUserRequest): Promise<object> {
-    const payload = { ...createIntentTemplateDto, user };
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-intent-template', payload);
-  }
-
-  async getIntentTemplateById(id: string): Promise<object> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-template-by-id', id);
-  }
-
-  async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-templates-by-intent-id', intentId);
-  }
-
-  async getIntentTemplatesByOrgId(orgId: string): Promise<object[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-templates-by-org-id', orgId);
-  }
-
-  async getAllIntentTemplatesByQuery(
-    intentTemplateSearchCriteria: GetAllIntentTemplatesDto
-  ): Promise<IIntentTemplateList> {
-    const payload = {
-      intentTemplateSearchCriteria
-    };
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-intent-templates-by-query', payload);
-  }
-
-  async getIntentTemplateByIntentAndOrg(intentName: string, verifierOrgId: string): Promise<object | null> {
-    const payload = { intentName, verifierOrgId };
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-template-by-intent-and-org', payload);
-  }
-
-  async updateIntentTemplate(
-    id: string,
-    updateIntentTemplateDto: UpdateIntentTemplateDto,
-    user: IUserRequest
-  ): Promise<object> {
-    const payload = { id, ...updateIntentTemplateDto, user };
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-intent-template', payload);
-  }
-
-  async deleteIntentTemplate(id: string): Promise<object> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent-template', id);
   }
 }

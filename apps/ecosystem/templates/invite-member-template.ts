@@ -1,7 +1,7 @@
 import { escapeHtml } from '@credebl/common/common.utils';
 
 export class InviteMemberToEcosystem {
-  public sendInviteEmailTemplate(email: string, orgName: string): string {
+  public sendInviteEmailTemplate(email: string, orgName: string, ecosystemName: string): string {
     const safeEmail = escapeHtml(email);
 
     return `<!DOCTYPE html>
@@ -26,7 +26,7 @@ export class InviteMemberToEcosystem {
                       Hello ${safeEmail},
                     </p>
 
-                    <p>You have been invited to join the ${orgName} org ecosystem on <strong>${process.env.PLATFORM_NAME}</strong>. Please log into Studio and respond to the request.</p>
+                    <p>You have been invited to join the <strong>${ecosystemName}</strong> ecosystem for <strong>${orgName}</strong> on <strong>${process.env.PLATFORM_NAME}</strong> platform. Kindly log in to Studio and respond to the invitation.</p>
                     </div>
 
                     <hr style="border-top:1px solid #e8e8e8" />

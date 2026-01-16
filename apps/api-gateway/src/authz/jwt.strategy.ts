@@ -114,9 +114,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     if (Array.isArray(ecosystemRole) && 0 < ecosystemRole.length) {
-      const ecosystemRoleList = [
-        ...new Set(ecosystemRole.map((record: { ecosystemRole: { name: string } }) => record.ecosystemRole.name))
-      ];
+      const ecosystemRoleList = [...new Set(ecosystemRole.map((record: { ecosystemRole: { name: string } }) => record.ecosystemRole.name))];
       userDetails.ecosystemRoles = ecosystemRoleList;
     }
 

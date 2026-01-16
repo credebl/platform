@@ -1,3 +1,8 @@
+import { Prisma, PrismaClient } from "@prisma/client";
+
+import { EcosystemOrgStatus } from "@credebl/enum/enum";
+import { OrgRoles } from "libs/org-roles/enums";
+
 export interface ICreateEcosystem {
   name?: string;
   description?: string;
@@ -89,3 +94,62 @@ export interface IEcosystemDashboard {
     orgName: string | null;
   } | null;
 }
+
+export interface IEcosystemUser {
+  userId: string
+  ecosystemId: string
+  createdBy: string
+  lastChangedBy: string
+}
+
+export interface IEcosystemOrg {
+  orgId: string
+  status: EcosystemOrgStatus
+  ecosystemId: string
+  ecosystemRoleId: string
+  userId: string
+  createdBy: string
+  lastChangedBy: string
+}
+
+export interface IEcosystemMemberInvitations {
+  role: OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;
+  ecosystemId?: string;
+  email?: string;
+  userId?: string;
+}
+
+export interface IEcosystemSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  logoUrl: string | null;
+  autoEndorsement: boolean;
+}
+
+export interface IUserSummary {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+  profileImg: string | null;
+}
+
+export interface IEcosystemInvitation {
+  id: string;
+  email: string;
+  status: string; 
+  type: string;   
+  ecosystemId: string | null;
+  invitedOrg: string | null;
+  createDateTime: Date;
+
+  ecosystem: IEcosystemSummary | null;
+  user: IUserSummary | null;
+}
+
+
+export type EcosystemInvitationRoles = OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER
+
+export type PrismaExecutor = Prisma.TransactionClient | PrismaClient;

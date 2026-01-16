@@ -6,11 +6,12 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import { EcosystemOrgStatus, EcosystemRoles, Invitation, InviteType } from '@credebl/enum/enum';
-import { ICreateEcosystem, IEcosystem, IEcosystemDashboard } from '../interfaces/ecosystem.interfaces';
+import { ICreateEcosystem, IEcosystem, IEcosystemDashboard, IEcosystemInvitation, IEcosystemOrg, PrismaExecutor } from '../interfaces/ecosystem.interfaces';
 /* eslint-disable camelcase */
 // eslint-disable-next-line camelcase
-import { ecosystem, ecosystem_invitations, ecosystem_orgs, user } from '@prisma/client';
+import { Prisma, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, user } from '@prisma/client';
 
+import { OrgRoles } from 'libs/org-roles/enums';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 
@@ -26,47 +27,29 @@ export class EcosystemRepository {
    * @body sendInvitationDto
    * @returns orgInvitaionDetails
    */
-
-  async createEcosystemInvitation1(
-    email: string,
-    userId: string,
-    type?: InviteType,
-    status?: Invitation
-  ): Promise<ecosystem_invitations> {
-    return this.prisma.ecosystem_invitations.create({
-      data: {
-        email,
-        // FIXME: Change status to PENDING once invitation accept/reject implemented
-        status: status || Invitation.ACCEPTED,
-        createdBy: userId,
-        lastChangedBy: userId,
-        type: type || InviteType.ECOSYSTEM,
-        user: {
-          connect: { id: userId }
-        }
-      }
-    });
-  }
-
   async createEcosystemInvitation(payload: {
     email: string;
     invitedUserId?: string;
-    platformAdminId: string;
+    userId: string;
     type?: InviteType;
     status?: Invitation;
+    ecosystemId?: string;
+    orgId?: string;
     // eslint-disable-next-line camelcase
   }): Promise<ecosystem_invitations> {
     try {
-      const { email, invitedUserId, platformAdminId, type, status } = payload;
+      const { email, invitedUserId, userId, type, status, ecosystemId, orgId} = payload;
 
       return await this.prisma.ecosystem_invitations.create({
         data: {
           email,
           status: status || Invitation.ACCEPTED,
           userId: invitedUserId,
-          createdBy: platformAdminId,
-          lastChangedBy: platformAdminId,
-          type: type || InviteType.ECOSYSTEM
+          ecosystemId,
+          createdBy: userId,
+          lastChangedBy: userId,
+          type: type || InviteType.ECOSYSTEM,
+          invitedOrg: orgId
         }
       });
     } catch (error) {
@@ -100,63 +83,54 @@ export class EcosystemRepository {
    * @returns ecosystem
    */
   // eslint-disable-next-line camelcase
-  async createNewEcosystem(createEcosystemDto: ICreateEcosystem): Promise<IEcosystem> {
+  async createNewEcosystem(createEcosystemDto: ICreateEcosystem, prisma: PrismaExecutor = this.prisma): Promise<IEcosystem> {
+
     try {
-      return await this.prisma.$transaction(async (prisma) => {
-        const { name, description, userId, logo, tags, orgId, autoEndorsement } = createEcosystemDto;
-
-        const createdEcosystem = await prisma.ecosystem.create({
-          data: {
-            name,
-            description,
-            tags,
-            autoEndorsement,
-            logoUrl: logo,
-            createdBy: userId,
-            lastChangedBy: userId
-          },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            tags: true,
-            autoEndorsement: true,
-            logoUrl: true,
-            createdBy: true,
-            createDateTime: true
-          }
-        });
-
-        const ecosystemRoleDetails = await prisma.ecosystem_roles.findFirst({
-          where: { name: EcosystemRoles.ECOSYSTEM_LEAD }
-        });
-
-        if (!ecosystemRoleDetails) {
-          throw new NotFoundException(ResponseMessages.ecosystem.error.leadNotFound);
+      const { name, description, userId, logo, tags, orgId, autoEndorsement } = createEcosystemDto;
+      console.log('createecosystem');
+      const createdEcosystem = await prisma.ecosystem.create({
+        data: {
+          name,
+          description,
+          tags,
+          autoEndorsement,
+          logoUrl: logo,
+          createdBy: userId,
+          lastChangedBy: userId
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          tags: true,
+          autoEndorsement: true,
+          logoUrl: true,
+          createdBy: true,
+          createDateTime: true
         }
-
-        await prisma.ecosystem_users.create({
-          data: {
-            userId: String(userId),
-            ecosystemId: createdEcosystem.id,
-            createdBy: userId,
-            lastChangedBy: userId
-          }
-        });
-
-        await prisma.ecosystem_orgs.create({
-          data: {
-            orgId: String(orgId),
-            status: EcosystemOrgStatus.ACTIVE,
-            ecosystemId: createdEcosystem.id,
-            ecosystemRoleId: ecosystemRoleDetails.id,
-            createdBy: userId,
-            lastChangedBy: userId
-          }
-        });
-
-        return createdEcosystem;
       });
+
+      const ecosystemRoleDetails = await prisma.ecosystem_roles.findFirst({
+        where: { name: EcosystemRoles.ECOSYSTEM_LEAD }
+      });
+
+      if (!ecosystemRoleDetails) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.leadNotFound);
+      }
+      console.log('create org');
+      await prisma.ecosystem_orgs.create({
+        data: {
+                orgId: String(orgId),
+                status: EcosystemOrgStatus.ACTIVE,
+                ecosystemId: createdEcosystem.id,
+                ecosystemRoleId: ecosystemRoleDetails.id,
+                userId: String(userId),
+                createdBy: userId,
+                lastChangedBy: userId
+              }
+          }
+      );
+      return createdEcosystem;
     } catch (error) {
       this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
       throw error;
@@ -308,11 +282,14 @@ export class EcosystemRepository {
     }
   }
 
-  async getEcosystemInvitationsByEmail(email: string): Promise<ecosystem_invitations> {
+  async getEcosystemInvitationsByEmail(email: string, ecosystemId: string): Promise<ecosystem_invitations> {
     try {
       return this.prisma.ecosystem_invitations.findUnique({
         where: {
-          email
+          email_ecosystemId: {
+            email,
+            ecosystemId
+          }
         }
       });
     } catch (error) {
@@ -321,11 +298,14 @@ export class EcosystemRepository {
     }
   }
 
-  async updateEcosystemInvitationStatusByEmail(email: string, status: Invitation): Promise<ecosystem_invitations> {
+  async updateEcosystemInvitationStatusByEmail(email: string, ecosystemId: string, status: Invitation): Promise<ecosystem_invitations> {
     try {
       return this.prisma.ecosystem_invitations.update({
         where: {
-          email
+          email_ecosystemId: {
+            email,
+            ecosystemId
+          }
         },
         data: {
           status
@@ -442,5 +422,279 @@ export class EcosystemRepository {
           }
         : null
     };
+  }
+
+  async createEcosystemOrg(ecosystemUser: IEcosystemOrg): Promise<ecosystem_orgs> {
+    try {
+      return await this.prisma.ecosystem_orgs.create({
+          data: ecosystemUser
+        });
+    } catch (error) {
+      this.logger.error(`Error in createEcosystemUser: ${error.message}`);
+    }
+  }
+
+  // async getEcosystemOrg(ecosystemId: string, userId: string): Promise<ecosystem_users> {
+  //   try {
+  //     return await this.prisma.ecosystem_users.findFirst({
+  //       where: {
+  //         userId,
+  //         ecosystemId
+  //       }
+  //     });
+  //   } catch (error) {
+  //     this.logger.error(`Error in getEcosystemUser: ${error.message}`);
+  //   }
+  // }
+
+  async getEcosystemOrg(ecosystemId: string, orgId: string): Promise<ecosystem_orgs> {
+    try {
+      return await this.prisma.ecosystem_orgs.findFirst({
+        where: {
+          orgId,
+          ecosystemId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getEcosystemOrg: ${error.message}`);
+    }
+  }
+
+  async deleteOrgFromEcosystem(ecosystemId: string, orgIds: string[], prisma: PrismaExecutor = this.prisma): Promise<{count: number}> {
+    console.log('delet user eco ', ecosystemId, orgIds);
+    try {
+      const result = await prisma.ecosystem_orgs.deleteMany({
+        where: {
+          ecosystemId,
+          ecosystemRole:{
+            name: OrgRoles.ECOSYSTEM_MEMBER
+          },
+          orgId: {
+            in: orgIds
+          }
+        }
+      });
+      console.log('result', result);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error in deleteOrgFromEcosystem: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deleteEcosystemInvitationByOrgId(ecosystemId: string, orgId: string[], prisma: PrismaExecutor = this.prisma): Promise<{count: number}> {
+    console.log('delet user eco ', ecosystemId, orgId);
+    try {
+      const result = await prisma.ecosystem_invitations.deleteMany({
+        where: {
+          ecosystemId,
+          type: InviteType.MEMBER,
+          invitedOrg: {
+            in: orgId
+          }
+        }
+      });
+      console.log('result', result);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error in deleteEcosystemInvitationByUserId: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // async updateEcosystemUserStatus(ecosystemId: string, userIds: string[], status: MemberStatus): Promise<{count: number}> {
+  //   console.log('delet user eco ', ecosystemId, userIds)
+  //   try {
+  //     const result = await this.prisma.ecosystem_users.updateMany({
+  //       where: {
+  //         ecosystemId,
+  //         userId: {
+  //           in: userIds
+  //         }
+  //       },
+  //       data: {
+  //         status
+  //       }
+  //     });
+  //     console.log("result",result)
+  //     return result;
+  //   } catch (error) {
+  //     this.logger.error(`Error in updateEcosystemUserStatus: ${error.message}`);
+  //     throw error;
+  //   }
+  // }
+
+  async updateEcosystemOrgStatus(ecosystemId: string, orgId: string[], status: EcosystemOrgStatus): Promise<{count: number}> {
+    console.log('delet user eco ', ecosystemId, orgId);
+    try {
+      const result = await this.prisma.ecosystem_orgs.updateMany({
+        where: {
+          ecosystemId,
+          orgId: {
+            in: orgId
+          }
+        },
+        data: {
+          status
+        }
+      });
+      console.log('result', result);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error in updateEcosystemUserStatus: ${error.message}`);
+      throw error;
+    }
+  }
+  
+  async getAllEcosystemOrgsByEcosystemId(ecosystemId: string): Promise<ecosystem_orgs[]> {
+    console.log('delet user eco ', ecosystemId);
+    try {
+      const result = await this.prisma.ecosystem_orgs.findMany({
+        where: {
+          ecosystemId
+        }
+      });
+      console.log('result', result);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error in getAllEcosystemOrgsByEcosystemId: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemRoleByName(name: string): Promise<ecosystem_roles> {
+    try {
+      const result = await this.prisma.ecosystem_roles.findFirst({
+          where: { name }
+        });
+      console.log('result', result);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error in getEcosystemRoleByName: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async updateEcosystemInvitationDetails(email: string, ecosystemId: string, orgId: string, prisma: PrismaExecutor = this.prisma): Promise<ecosystem_invitations> {
+    try {
+      console.log('create invitation');
+        const invitation = await prisma.ecosystem_invitations.findFirst({
+          where: {
+            email,
+            ecosystemId: null
+          },
+          orderBy: {
+            createDateTime: 'desc'
+          }
+        });
+        console.log('invitation found', invitation);
+        if (!invitation) {
+          throw new NotFoundException('Invitation not found');
+        }
+        console.log('eocid,ivniorg', ecosystemId, orgId);
+
+        return prisma.ecosystem_invitations.update({
+          where: {
+            id: invitation.id
+          },
+          data: {
+            ecosystemId,
+            invitedOrg: orgId
+          }
+        });
+    } catch (error) {
+      this.logger.error(`Error in updateEcosystemInvitationDetails: ${error.message}`);
+      throw error;
+    }
+  }
+
+    async getPendingInvitationByEmail(email: string): Promise<ecosystem_invitations> {
+    try {
+       const invitation = await this.prisma.ecosystem_invitations.findFirst({
+          where: {
+            email,
+            ecosystemId: null
+          },
+          orderBy: {
+            createDateTime: 'desc'
+          }
+        });
+      return invitation;
+    } catch (error) {
+      this.logger.error(`Error in getPendingInvitationByEmail: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemInvitations(params: {
+  role: OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;
+  ecosystemId?: string;
+  email?: string;
+  userId?: string;
+  }): Promise<IEcosystemInvitation[]> {
+    const { role, ecosystemId, email, userId } = params;
+
+    let where: Prisma.ecosystem_invitationsWhereInput = {
+      deletedAt: null,
+      type: InviteType.MEMBER
+    };
+
+    // Lead
+    if (OrgRoles.ECOSYSTEM_LEAD === role) {
+      if (!ecosystemId) {
+        throw new Error('ecosystemId is required for LEAD');
+      }
+
+      where.ecosystemId = ecosystemId;
+    }
+
+    // Member
+    if (OrgRoles.ECOSYSTEM_MEMBER === role) {
+      where = {
+        ...where,
+        status: Invitation.PENDING,
+        OR: [
+          email ? { email } : undefined,
+          userId ? { userId } : undefined
+        ].filter(Boolean)
+      };
+    }
+
+    return this.prisma.ecosystem_invitations.findMany({
+      where,
+      orderBy: {
+        createDateTime: 'desc'
+      },
+      select: {
+      id: true,
+      email: true,
+      status: true,
+      type: true,
+      ecosystemId: true,
+      invitedOrg: true,
+      createDateTime: true,
+
+      ecosystem: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          logoUrl: true,
+          autoEndorsement: true
+        }
+      },
+
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          username: true,
+          profileImg: true
+        }
+      }
+    }
+    });
   }
 }

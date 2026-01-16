@@ -166,7 +166,7 @@ export const ResponseMessages = {
       update: 'Ecosystem details updated successfully',
       add: 'Organization added successfully',
       delete: 'Ecosystem invitations deleted successfully',
-      fetch: 'Ecosystem fetched successfully',
+      fetch: 'Ecosystem invitations fetched successfully',
       getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
       getInvitation: 'Ecosystem invitations fetched successfully',
       createInvitation: 'Ecosystem invitations sent',
@@ -186,7 +186,11 @@ export const ResponseMessages = {
       allschema: 'Schema details fetched successfully',
       AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger',
       memberInviteSucess: 'Invitation sent successfully for the member',
-      updateInvitation: 'Status for ecosystem invitation updated successfully'
+      updateInvitation: 'Status for ecosystem invitation updated successfully',
+      deletionSuccessfull: 'Records deleted successfully',
+      userStatusUpdated: 'User status updated successfully',
+      updatedEcosytemOrg: 'Updated ecosytem org successfully',
+      invitationsMemberSuccess: 'Invitation members fetched successfully'
     },
     error: {
       memberInviteFailed: 'Failed to send invitation for the member',
@@ -261,7 +265,12 @@ export const ResponseMessages = {
       invitationCreateFailed: 'Error while creating ecosystem invitation',
       fetchInvitationsFailed: 'Error while fetching ecosystem invitations',
       invitationFetchFailed: 'Error while fetching ecosystem invitation by userId',
-      checkFailed: ' Error while checking ecosystem existence by name'
+      checkFailed: ' Error while checking ecosystem existence by name',
+      deletionFailed: 'Failed to delete record',
+      ecosystemMemberFetchFailed: 'Failed to fetch ecosystem users',
+      ecosystemMemberStatusFail: 'Failed to update ecosystem member status',
+      failedEcosystemOrgUpdate: 'Failed to update ecosystem org',
+      invitationMemberfail: 'Failed to fetch invitation members'
     }
   },
   schema: {

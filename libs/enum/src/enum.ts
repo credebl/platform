@@ -111,7 +111,13 @@ export enum EcosystemConfigSettings {
 }
 
 export enum EcosystemOrgStatus {
-  ACTIVE = 'ACTIVE'
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE'
+}
+
+export enum MemberStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive'
 }
 
 export enum UserCertificateId {

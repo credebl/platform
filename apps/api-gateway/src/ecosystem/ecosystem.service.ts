@@ -2,14 +2,19 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { EcosystemOrgStatus, Invitation } from '@credebl/enum/enum';
-import { IEcosystem, IEcosystemDashboard, IEcosystemInvitation, IEcosystemInvitations, IEcosystemMemberInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import {
+  IEcosystem,
+  IEcosystemDashboard,
+  IEcosystemInvitation,
+  IEcosystemInvitations,
+  IEcosystemMemberInvitations
+} from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
 // eslint-disable-next-line camelcase
-import { ecosystem_invitations, ecosystem_orgs } from '@prisma/client';
+import { ecosystem_orgs } from '@prisma/client';
 
 @Injectable()
 export class EcosystemService {
- 
   constructor(
     @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
     private readonly natsClient: NATSClient
@@ -63,24 +68,40 @@ export class EcosystemService {
   }
 
   async inviteMemberToEcosystem(orgId: string, reqUser: string, ecosystemId: string): Promise<boolean> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-member-to-ecosystem', { orgId, reqUser, ecosystemId });
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-member-to-ecosystem', {
+      orgId,
+      reqUser,
+      ecosystemId
+    });
   }
 
   async updateEcosystemInvitationStatus(status: Invitation, reqUser: string, ecosystemId: string): Promise<boolean> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-ecosystem-invitation-status', {status, reqUser, ecosystemId });
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-ecosystem-invitation-status', {
+      status,
+      reqUser,
+      ecosystemId
+    });
   }
 
-  async deleteEcosystemOrgs(ecosystemId: string, userIds: string[]): Promise<{count: number}> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-ecosystem-orgs', {userIds, ecosystemId});
+  async deleteEcosystemOrgs(ecosystemId: string, userIds: string[]): Promise<{ count: number }> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-ecosystem-orgs', { userIds, ecosystemId });
   }
 
-  async updateEcosystemOrgStatus(ecosystemId: string, userIds: string[], status: EcosystemOrgStatus): Promise<{count: number}> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-ecosystem-org-status', {userIds, ecosystemId, status});
+  async updateEcosystemOrgStatus(
+    ecosystemId: string,
+    userIds: string[],
+    status: EcosystemOrgStatus
+  ): Promise<{ count: number }> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-ecosystem-org-status', {
+      userIds,
+      ecosystemId,
+      status
+    });
   }
 
   // eslint-disable-next-line camelcase
   async getAllEcosystemOrgsByEcosystemId(ecosystemId: string): Promise<ecosystem_orgs[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs', {ecosystemId});
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs', { ecosystemId });
   }
 
   // eslint-disable-next-line camelcase

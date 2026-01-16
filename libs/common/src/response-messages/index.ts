@@ -182,12 +182,12 @@ export const ResponseMessages = {
       fetchEndorsors: 'Endorser transactions fetched successfully',
       DeclineEndorsementTransaction: 'Endorsement request declined',
       AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
-      fetchMembers: 'Ecosystem members fetched successfully',
+      fetchOrgs: 'Ecosystem orgs fetched successfully',
       allschema: 'Schema details fetched successfully',
       AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger',
       memberInviteSucess: 'Invitation sent successfully for the member',
       updateInvitation: 'Status for ecosystem invitation updated successfully',
-      deletionSuccessfull: 'Records deleted successfully',
+      deletionSuccessfull: 'Record deleted successfully',
       userStatusUpdated: 'User status updated successfully',
       updatedEcosytemOrg: 'Updated ecosytem org successfully',
       invitationsMemberSuccess: 'Invitation members fetched successfully'
@@ -267,7 +267,7 @@ export const ResponseMessages = {
       invitationFetchFailed: 'Error while fetching ecosystem invitation by userId',
       checkFailed: ' Error while checking ecosystem existence by name',
       deletionFailed: 'Failed to delete record',
-      ecosystemMemberFetchFailed: 'Failed to fetch ecosystem users',
+      ecosystemOrgsFetchFailed: 'Failed to fetch ecosystem orgs',
       ecosystemMemberStatusFail: 'Failed to update ecosystem member status',
       failedEcosystemOrgUpdate: 'Failed to update ecosystem org',
       invitationMemberfail: 'Failed to fetch invitation members'

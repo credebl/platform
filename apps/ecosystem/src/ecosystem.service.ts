@@ -7,7 +7,6 @@ import {
   HttpException,
   BadRequestException,
   InternalServerErrorException,
-  ConflictException,
   NotFoundException,
   ForbiddenException,
   HttpStatus
@@ -20,22 +19,21 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { InviteMemberToEcosystem } from '../templates/invite-member-template';
 import { EmailService } from '@credebl/common/email.service';
 // eslint-disable-next-line camelcase
-import { ecosystem_invitations, ecosystem_orgs, user } from '@prisma/client';
+import { user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import { EcosystemOrgStatus, EcosystemRoles, Invitation, InviteType } from '@credebl/enum/enum';
 
 import {
-  EcosystemInvitationRoles,
   ICreateEcosystem,
   IEcosystem,
   IEcosystemDashboard,
   IEcosystemInvitation,
   IEcosystemInvitations,
-  IEcosystemMemberInvitations
+  IEcosystemMemberInvitations,
+  IGetAllOrgs
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
-import { In } from 'typeorm';
 
 @Injectable()
 export class EcosystemService {
@@ -69,19 +67,18 @@ export class EcosystemService {
     // const ecosystemStatus = await this.ecosystemRepository.getEcosystemDetailsByUserId()
 
     const existingInvitation = await this.ecosystemRepository.getPendingInvitationByEmail(email);
-    
 
     if (existingInvitation) {
       throw new RpcException({
-          statusCode: 409,
-          message: ResponseMessages.ecosystem.error.invitationAlreadySent
+        statusCode: 409,
+        message: ResponseMessages.ecosystem.error.invitationAlreadySent
       });
     }
 
     const invitedUser = await this.prisma.user.findUnique({
       where: { email }
     });
-    
+
     const invitation = await this.ecosystemRepository.createEcosystemInvitation({
       email,
       invitedUserId: invitedUser?.id ?? null,
@@ -179,8 +176,7 @@ export class EcosystemService {
       const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
 
       if (ecosystemExist) {
-        throw new RpcException({statusCode: 409,
-          message:ResponseMessages.ecosystem.error.exists});
+        throw new RpcException({ statusCode: 409, message: ResponseMessages.ecosystem.error.exists });
       }
 
       const { userId } = createEcosystemDto;
@@ -206,16 +202,12 @@ export class EcosystemService {
       //   throw new ConflictException(ResponseMessages.ecosystem.error.userEcosystemAlreadyExists);
       // }
 
-    return this.prisma.$transaction(async (tx) => {
-        const ecosystem = await this.ecosystemRepository.createNewEcosystem(
-          createEcosystemDto,
-          tx
-        );
+      return this.prisma.$transaction(async (tx) => {
+        const ecosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, tx);
 
         if (!ecosystem) {
           throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
         }
-        console.log('ecosystem id', ecosystem);
         await this.ecosystemRepository.updateEcosystemInvitationDetails(
           user.email,
           ecosystem.id,
@@ -240,8 +232,11 @@ export class EcosystemService {
       const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(user.email, ecosystemId);
 
       if (checkUser && Invitation.REJECTED === checkUser.status && ecosystemId === checkUser.ecosystemId) {
-        const reopenedInvitation = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(user.email, ecosystemId, Invitation.ACCEPTED);
-        console.log('reopenedInvitation ', reopenedInvitation);
+        const reopenedInvitation = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
+          user.email,
+          ecosystemId,
+          Invitation.PENDING
+        );
         if (reopenedInvitation) {
           return true;
         }
@@ -262,8 +257,7 @@ export class EcosystemService {
         status: Invitation.PENDING,
         ecosystemId,
         orgId
-      }
-      );
+      });
       const ecosystem = await this.ecosystemRepository.getEcosystemDetailsByUserId(reqUser);
       const emailData = new EmailDto();
       const inviteMemberTemplate = new InviteMemberToEcosystem();
@@ -313,10 +307,14 @@ export class EcosystemService {
       const user = await this.ecosystemRepository.getUserById(reqUser);
 
       if (!user) {
-        throw new RpcException({status: HttpStatus.NOT_FOUND, message: 'User not found to send invitation'});
+        throw new RpcException({ status: HttpStatus.NOT_FOUND, message: 'User not found to send invitation' });
       }
 
-      const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(user.email, ecosystemId, status);
+      const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
+        user.email,
+        ecosystemId,
+        status
+      );
 
       if (result && result?.status === Invitation.ACCEPTED && result?.ecosystemId) {
         const role = await this.ecosystemRepository.getEcosystemRoleByName(EcosystemRoles.ECOSYSTEM_MEMBER);
@@ -334,8 +332,7 @@ export class EcosystemService {
           createdBy: reqUser,
           lastChangedBy: reqUser
         };
-  
-      
+
         const existingOrg = await this.ecosystemRepository.getEcosystemOrg(result.ecosystemId, result.userId);
         if (!existingOrg) {
           const userRecord = await this.ecosystemRepository.createEcosystemOrg(ecosystemOrgPayload);
@@ -348,8 +345,8 @@ export class EcosystemService {
       throw error;
     }
   }
-  
-  async deleteOrgsFromEcosystem(ecosystemId: string, orgIds: string[]):Promise<{count: number}> {
+
+  async deleteOrgsFromEcosystem(ecosystemId: string, orgIds: string[]): Promise<{ count: number }> {
     return this.prisma.$transaction(async (tx) => {
       const deletedCount = await this.ecosystemRepository.deleteOrgFromEcosystem(ecosystemId, orgIds, tx);
       await this.ecosystemRepository.deleteEcosystemInvitationByOrgId(ecosystemId, orgIds, tx);
@@ -357,17 +354,21 @@ export class EcosystemService {
     });
   }
 
-  async updateEcosystemOrgStatus(ecosystemId: string, orgIds: string[], status: EcosystemOrgStatus):Promise<{count: number}> {
+  async updateEcosystemOrgStatus(
+    ecosystemId: string,
+    orgIds: string[],
+    status: EcosystemOrgStatus
+  ): Promise<{ count: number }> {
     return this.ecosystemRepository.updateEcosystemOrgStatus(ecosystemId, orgIds, status);
   }
 
   // eslint-disable-next-line camelcase
-  async getAllEcosystemOrgsByEcosystemId(ecosystemId: string):Promise<ecosystem_orgs[]> {
+  async getAllEcosystemOrgsByEcosystemId(ecosystemId: string): Promise<IGetAllOrgs[]> {
     return this.ecosystemRepository.getAllEcosystemOrgsByEcosystemId(ecosystemId);
   }
 
   // eslint-disable-next-line camelcase
-  async getEcosystemMemberInvitations(params: IEcosystemMemberInvitations):Promise<IEcosystemInvitation[]> {
+  async getEcosystemMemberInvitations(params: IEcosystemMemberInvitations): Promise<IEcosystemInvitation[]> {
     return this.ecosystemRepository.getEcosystemInvitations(params);
   }
 }

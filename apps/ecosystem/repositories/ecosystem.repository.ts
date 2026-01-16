@@ -6,7 +6,15 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import { EcosystemOrgStatus, EcosystemRoles, Invitation, InviteType } from '@credebl/enum/enum';
-import { ICreateEcosystem, IEcosystem, IEcosystemDashboard, IEcosystemInvitation, IEcosystemOrg, PrismaExecutor } from '../interfaces/ecosystem.interfaces';
+import {
+  ICreateEcosystem,
+  IEcosystem,
+  IEcosystemDashboard,
+  IEcosystemInvitation,
+  IEcosystemOrg,
+  IGetAllOrgs,
+  PrismaExecutor
+} from '../interfaces/ecosystem.interfaces';
 /* eslint-disable camelcase */
 // eslint-disable-next-line camelcase
 import { Prisma, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, user } from '@prisma/client';
@@ -38,7 +46,7 @@ export class EcosystemRepository {
     // eslint-disable-next-line camelcase
   }): Promise<ecosystem_invitations> {
     try {
-      const { email, invitedUserId, userId, type, status, ecosystemId, orgId} = payload;
+      const { email, invitedUserId, userId, type, status, ecosystemId, orgId } = payload;
 
       return await this.prisma.ecosystem_invitations.create({
         data: {
@@ -83,11 +91,12 @@ export class EcosystemRepository {
    * @returns ecosystem
    */
   // eslint-disable-next-line camelcase
-  async createNewEcosystem(createEcosystemDto: ICreateEcosystem, prisma: PrismaExecutor = this.prisma): Promise<IEcosystem> {
-
+  async createNewEcosystem(
+    createEcosystemDto: ICreateEcosystem,
+    prisma: PrismaExecutor = this.prisma
+  ): Promise<IEcosystem> {
     try {
       const { name, description, userId, logo, tags, orgId, autoEndorsement } = createEcosystemDto;
-      console.log('createecosystem');
       const createdEcosystem = await prisma.ecosystem.create({
         data: {
           name,
@@ -117,19 +126,17 @@ export class EcosystemRepository {
       if (!ecosystemRoleDetails) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.leadNotFound);
       }
-      console.log('create org');
       await prisma.ecosystem_orgs.create({
         data: {
-                orgId: String(orgId),
-                status: EcosystemOrgStatus.ACTIVE,
-                ecosystemId: createdEcosystem.id,
-                ecosystemRoleId: ecosystemRoleDetails.id,
-                userId: String(userId),
-                createdBy: userId,
-                lastChangedBy: userId
-              }
-          }
-      );
+          orgId: String(orgId),
+          status: EcosystemOrgStatus.ACTIVE,
+          ecosystemId: createdEcosystem.id,
+          ecosystemRoleId: ecosystemRoleDetails.id,
+          userId: String(userId),
+          createdBy: userId,
+          lastChangedBy: userId
+        }
+      });
       return createdEcosystem;
     } catch (error) {
       this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
@@ -298,7 +305,11 @@ export class EcosystemRepository {
     }
   }
 
-  async updateEcosystemInvitationStatusByEmail(email: string, ecosystemId: string, status: Invitation): Promise<ecosystem_invitations> {
+  async updateEcosystemInvitationStatusByEmail(
+    email: string,
+    ecosystemId: string,
+    status: Invitation
+  ): Promise<ecosystem_invitations> {
     try {
       return this.prisma.ecosystem_invitations.update({
         where: {
@@ -427,8 +438,8 @@ export class EcosystemRepository {
   async createEcosystemOrg(ecosystemUser: IEcosystemOrg): Promise<ecosystem_orgs> {
     try {
       return await this.prisma.ecosystem_orgs.create({
-          data: ecosystemUser
-        });
+        data: ecosystemUser
+      });
     } catch (error) {
       this.logger.error(`Error in createEcosystemUser: ${error.message}`);
     }
@@ -460,13 +471,16 @@ export class EcosystemRepository {
     }
   }
 
-  async deleteOrgFromEcosystem(ecosystemId: string, orgIds: string[], prisma: PrismaExecutor = this.prisma): Promise<{count: number}> {
-    console.log('delet user eco ', ecosystemId, orgIds);
+  async deleteOrgFromEcosystem(
+    ecosystemId: string,
+    orgIds: string[],
+    prisma: PrismaExecutor = this.prisma
+  ): Promise<{ count: number }> {
     try {
       const result = await prisma.ecosystem_orgs.deleteMany({
         where: {
           ecosystemId,
-          ecosystemRole:{
+          ecosystemRole: {
             name: OrgRoles.ECOSYSTEM_MEMBER
           },
           orgId: {
@@ -474,7 +488,6 @@ export class EcosystemRepository {
           }
         }
       });
-      console.log('result', result);
       return result;
     } catch (error) {
       this.logger.error(`Error in deleteOrgFromEcosystem: ${error.message}`);
@@ -482,8 +495,11 @@ export class EcosystemRepository {
     }
   }
 
-  async deleteEcosystemInvitationByOrgId(ecosystemId: string, orgId: string[], prisma: PrismaExecutor = this.prisma): Promise<{count: number}> {
-    console.log('delet user eco ', ecosystemId, orgId);
+  async deleteEcosystemInvitationByOrgId(
+    ecosystemId: string,
+    orgId: string[],
+    prisma: PrismaExecutor = this.prisma
+  ): Promise<{ count: number }> {
     try {
       const result = await prisma.ecosystem_invitations.deleteMany({
         where: {
@@ -494,7 +510,6 @@ export class EcosystemRepository {
           }
         }
       });
-      console.log('result', result);
       return result;
     } catch (error) {
       this.logger.error(`Error in deleteEcosystemInvitationByUserId: ${error.message}`);
@@ -502,30 +517,11 @@ export class EcosystemRepository {
     }
   }
 
-  // async updateEcosystemUserStatus(ecosystemId: string, userIds: string[], status: MemberStatus): Promise<{count: number}> {
-  //   console.log('delet user eco ', ecosystemId, userIds)
-  //   try {
-  //     const result = await this.prisma.ecosystem_users.updateMany({
-  //       where: {
-  //         ecosystemId,
-  //         userId: {
-  //           in: userIds
-  //         }
-  //       },
-  //       data: {
-  //         status
-  //       }
-  //     });
-  //     console.log("result",result)
-  //     return result;
-  //   } catch (error) {
-  //     this.logger.error(`Error in updateEcosystemUserStatus: ${error.message}`);
-  //     throw error;
-  //   }
-  // }
-
-  async updateEcosystemOrgStatus(ecosystemId: string, orgId: string[], status: EcosystemOrgStatus): Promise<{count: number}> {
-    console.log('delet user eco ', ecosystemId, orgId);
+  async updateEcosystemOrgStatus(
+    ecosystemId: string,
+    orgId: string[],
+    status: EcosystemOrgStatus
+  ): Promise<{ count: number }> {
     try {
       const result = await this.prisma.ecosystem_orgs.updateMany({
         where: {
@@ -538,23 +534,68 @@ export class EcosystemRepository {
           status
         }
       });
-      console.log('result', result);
       return result;
     } catch (error) {
       this.logger.error(`Error in updateEcosystemUserStatus: ${error.message}`);
       throw error;
     }
   }
-  
-  async getAllEcosystemOrgsByEcosystemId(ecosystemId: string): Promise<ecosystem_orgs[]> {
-    console.log('delet user eco ', ecosystemId);
+
+  async getAllEcosystemOrgsByEcosystemId(ecosystemId: string): Promise<IGetAllOrgs[]> {
     try {
       const result = await this.prisma.ecosystem_orgs.findMany({
         where: {
           ecosystemId
+        },
+        select: {
+          id: true,
+          status: true,
+          userId: true,
+          ecosystemRole: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+
+          ecosystem: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              tags: true,
+              createDateTime: true,
+              createdBy: true,
+              logoUrl: true,
+              autoEndorsement: true,
+              ledgers: true
+            }
+          },
+
+          organisation: {
+            select: {
+              id: true,
+              createDateTime: true,
+              createdBy: true,
+              name: true,
+              description: true,
+              orgSlug: true
+            }
+          },
+
+          user: {
+            select: {
+              id: true,
+              createDateTime: true,
+              lastChangedDateTime: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              username: true
+            }
+          }
         }
       });
-      console.log('result', result);
       return result;
     } catch (error) {
       this.logger.error(`Error in getAllEcosystemOrgsByEcosystemId: ${error.message}`);
@@ -565,9 +606,8 @@ export class EcosystemRepository {
   async getEcosystemRoleByName(name: string): Promise<ecosystem_roles> {
     try {
       const result = await this.prisma.ecosystem_roles.findFirst({
-          where: { name }
-        });
-      console.log('result', result);
+        where: { name }
+      });
       return result;
     } catch (error) {
       this.logger.error(`Error in getEcosystemRoleByName: ${error.message}`);
@@ -575,50 +615,52 @@ export class EcosystemRepository {
     }
   }
 
-  async updateEcosystemInvitationDetails(email: string, ecosystemId: string, orgId: string, prisma: PrismaExecutor = this.prisma): Promise<ecosystem_invitations> {
+  async updateEcosystemInvitationDetails(
+    email: string,
+    ecosystemId: string,
+    orgId: string,
+    prisma: PrismaExecutor = this.prisma
+  ): Promise<ecosystem_invitations> {
     try {
-      console.log('create invitation');
-        const invitation = await prisma.ecosystem_invitations.findFirst({
-          where: {
-            email,
-            ecosystemId: null
-          },
-          orderBy: {
-            createDateTime: 'desc'
-          }
-        });
-        console.log('invitation found', invitation);
-        if (!invitation) {
-          throw new NotFoundException('Invitation not found');
+      const invitation = await prisma.ecosystem_invitations.findFirst({
+        where: {
+          email,
+          ecosystemId: null
+        },
+        orderBy: {
+          createDateTime: 'desc'
         }
-        console.log('eocid,ivniorg', ecosystemId, orgId);
+      });
+      if (!invitation) {
+        throw new NotFoundException('Invitation not found');
+      }
 
-        return prisma.ecosystem_invitations.update({
-          where: {
-            id: invitation.id
-          },
-          data: {
-            ecosystemId,
-            invitedOrg: orgId
-          }
-        });
+      return prisma.ecosystem_invitations.update({
+        where: {
+          id: invitation.id
+        },
+        data: {
+          ecosystemId,
+          invitedOrg: orgId
+        }
+      });
     } catch (error) {
       this.logger.error(`Error in updateEcosystemInvitationDetails: ${error.message}`);
       throw error;
     }
   }
 
-    async getPendingInvitationByEmail(email: string): Promise<ecosystem_invitations> {
+  async getPendingInvitationByEmail(email: string): Promise<ecosystem_invitations> {
     try {
-       const invitation = await this.prisma.ecosystem_invitations.findFirst({
-          where: {
-            email,
-            ecosystemId: null
-          },
-          orderBy: {
-            createDateTime: 'desc'
-          }
-        });
+      const invitation = await this.prisma.ecosystem_invitations.findFirst({
+        where: {
+          email,
+          ecosystemId: null
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
       return invitation;
     } catch (error) {
       this.logger.error(`Error in getPendingInvitationByEmail: ${error.message}`);
@@ -627,10 +669,10 @@ export class EcosystemRepository {
   }
 
   async getEcosystemInvitations(params: {
-  role: OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;
-  ecosystemId?: string;
-  email?: string;
-  userId?: string;
+    role: OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;
+    ecosystemId?: string;
+    email?: string;
+    userId?: string;
   }): Promise<IEcosystemInvitation[]> {
     const { role, ecosystemId, email, userId } = params;
 
@@ -653,10 +695,7 @@ export class EcosystemRepository {
       where = {
         ...where,
         status: Invitation.PENDING,
-        OR: [
-          email ? { email } : undefined,
-          userId ? { userId } : undefined
-        ].filter(Boolean)
+        OR: [email ? { email } : undefined, userId ? { userId } : undefined].filter(Boolean)
       };
     }
 
@@ -666,35 +705,35 @@ export class EcosystemRepository {
         createDateTime: 'desc'
       },
       select: {
-      id: true,
-      email: true,
-      status: true,
-      type: true,
-      ecosystemId: true,
-      invitedOrg: true,
-      createDateTime: true,
+        id: true,
+        email: true,
+        status: true,
+        type: true,
+        ecosystemId: true,
+        invitedOrg: true,
+        createDateTime: true,
 
-      ecosystem: {
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          logoUrl: true,
-          autoEndorsement: true
-        }
-      },
+        ecosystem: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            logoUrl: true,
+            autoEndorsement: true
+          }
+        },
 
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          username: true,
-          profileImg: true
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            username: true,
+            profileImg: true
+          }
         }
       }
-    }
     });
   }
 }

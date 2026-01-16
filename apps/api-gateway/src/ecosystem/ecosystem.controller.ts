@@ -7,7 +7,22 @@ import {
   ApiTags,
   ApiUnauthorizedResponse
 } from '@nestjs/swagger';
-import { BadRequestException, Body, Controller, Delete, Get, HttpStatus, Param, ParseUUIDPipe, Post, Put, Query, Res, UseFilters, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  Query,
+  Res,
+  UseFilters,
+  UseGuards
+} from '@nestjs/common';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
@@ -19,7 +34,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
-import { InviteMemberToEcosystemDto, OrgIdParam, UpdateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
+import { InviteMemberToEcosystemDto, UpdateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { CreateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
@@ -28,7 +43,6 @@ import { User } from '../authz/decorators/user.decorator';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
 import { DeleteEcosystemOrgDto } from './dtos/delete-ecosystem-users';
 import { GetEcosystemInvitationsQueryDto, UpdateEcosystemOrgStatusDto } from './dtos/ecosystem';
-import { IEcosystemMemberInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
@@ -122,8 +136,11 @@ export class EcosystemController {
     if (!reqUser.id) {
       throw new Error('Missing request user id');
     }
-    console.log('ecosystemId', inviteMemberToEcosystem);
-    const result = await this.ecosystemService.inviteMemberToEcosystem(inviteMemberToEcosystem.orgId, reqUser.id, inviteMemberToEcosystem.ecosystemId);
+    const result = await this.ecosystemService.inviteMemberToEcosystem(
+      inviteMemberToEcosystem.orgId,
+      reqUser.id,
+      inviteMemberToEcosystem.ecosystemId
+    );
 
     if (result) {
       const finalResponse: IResponse = {
@@ -168,7 +185,7 @@ export class EcosystemController {
     if (result) {
       const finalResponse: IResponse = {
         statusCode: HttpStatus.OK,
-        message: ResponseMessages.ecosystem.success.updateInvitation
+        message: `${ResponseMessages.ecosystem.success.updateInvitation} as ${updateInvitation.status}`
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
     }
@@ -289,20 +306,13 @@ export class EcosystemController {
   @Roles(OrgRoles.ECOSYSTEM_LEAD)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
-  async deleteEcosystemUsers(
-    @Body() deleteUser: DeleteEcosystemOrgDto,
-    @Res() res: Response
-  ): Promise<Response> {
-    console.log('delte eco controller');
-    const result = await this.ecosystemService.deleteEcosystemOrgs(
-      deleteUser.ecosystemId,
-      deleteUser.orgIds
-    );
+  async deleteEcosystemUsers(@Body() deleteUser: DeleteEcosystemOrgDto, @Res() res: Response): Promise<Response> {
+    const result = await this.ecosystemService.deleteEcosystemOrgs(deleteUser.ecosystemId, deleteUser.orgIds);
 
     if (0 < result.count) {
       const finalResponse: IResponse = {
         statusCode: HttpStatus.OK,
-        message: ResponseMessages.ecosystem.success.deletionSuccessfull
+        message: `${result.count} ${ResponseMessages.ecosystem.success.deletionSuccessfull} for ecosystem id ${deleteUser.ecosystemId}`
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
     }
@@ -316,7 +326,7 @@ export class EcosystemController {
 
   @Put('/update-org-status')
   @ApiOperation({
-    summary: 'Updates status for ecosystem org',
+    summary: 'Updates status for ecosystem org (ecosystem lead)',
     description: 'Updates status for ecosystem org'
   })
   @ApiResponse({
@@ -330,7 +340,6 @@ export class EcosystemController {
     @Body() updateUser: UpdateEcosystemOrgStatusDto,
     @Res() res: Response
   ): Promise<Response> {
-    console.log('delte eco controller');
     const result = await this.ecosystemService.updateEcosystemOrgStatus(
       updateUser.ecosystemId,
       updateUser.orgIds,
@@ -352,7 +361,7 @@ export class EcosystemController {
     return res.status(HttpStatus.BAD_REQUEST).json(finalResponse);
   }
 
-  @Get('/get-ecosystem-Orgs')
+  @Get('/get-ecosystem-orgs')
   @ApiOperation({
     summary: 'Get all Orgs for ecosystem',
     description: 'Get all Orgs for ecosystem'
@@ -365,22 +374,29 @@ export class EcosystemController {
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
   async getEcosystemOrgs(
-    @Param('ecosystemId') ecosystemId: string,
+    @Query(
+      'ecosystemId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid Uuid');
+        }
+      })
+    )
+    ecosystemId: string,
     @Res() res: Response
   ): Promise<Response> {
     const ecosystemData = await this.ecosystemService.getAllEcosystemOrgsByEcosystemId(ecosystemId);
-    console.log('ecosystem data', ecosystemData);
     if (ecosystemData && 0 < ecosystemData.length) {
       return res.status(HttpStatus.OK).json({
         statusCode: HttpStatus.OK,
-        message: ResponseMessages.ecosystem.success.fetchMembers,
+        message: ResponseMessages.ecosystem.success.fetchOrgs,
         data: ecosystemData
       });
     }
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.BAD_REQUEST,
-      message: ResponseMessages.ecosystem.error.ecosystemMemberFetchFailed
+      message: ResponseMessages.ecosystem.error.ecosystemOrgsFetchFailed
     });
   }
 
@@ -408,7 +424,8 @@ export class EcosystemController {
           throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
         }
       })
-    ) orgId: string, 
+    )
+    orgId: string,
     @Query() query: GetEcosystemInvitationsQueryDto,
     @Res() res: Response
   ): Promise<Response> {
@@ -418,9 +435,7 @@ export class EcosystemController {
     if (OrgRoles.ECOSYSTEM_LEAD === query.role && !query.ecosystemId) {
       throw new Error('EcosystemId is required for role "Lead"');
     }
-    console.log('query', query);
     const invitationData = await this.ecosystemService.getEcosystemMemberInvitations(query);
-    console.log('ecosystem data', invitationData);
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.invitationsMemberSuccess,

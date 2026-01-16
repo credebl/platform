@@ -1,7 +1,8 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from '@prisma/client';
 
-import { EcosystemOrgStatus } from "@credebl/enum/enum";
-import { OrgRoles } from "libs/org-roles/enums";
+import { EcosystemOrgStatus } from '@credebl/enum/enum';
+import { JsonValue } from '@prisma/client/runtime/library';
+import { OrgRoles } from 'libs/org-roles/enums';
 
 export interface ICreateEcosystem {
   name?: string;
@@ -96,20 +97,20 @@ export interface IEcosystemDashboard {
 }
 
 export interface IEcosystemUser {
-  userId: string
-  ecosystemId: string
-  createdBy: string
-  lastChangedBy: string
+  userId: string;
+  ecosystemId: string;
+  createdBy: string;
+  lastChangedBy: string;
 }
 
 export interface IEcosystemOrg {
-  orgId: string
-  status: EcosystemOrgStatus
-  ecosystemId: string
-  ecosystemRoleId: string
-  userId: string
-  createdBy: string
-  lastChangedBy: string
+  orgId: string;
+  status: EcosystemOrgStatus;
+  ecosystemId: string;
+  ecosystemRoleId: string;
+  userId: string;
+  createdBy: string;
+  lastChangedBy: string;
 }
 
 export interface IEcosystemMemberInvitations {
@@ -139,8 +140,8 @@ export interface IUserSummary {
 export interface IEcosystemInvitation {
   id: string;
   email: string;
-  status: string; 
-  type: string;   
+  status: string;
+  type: string;
   ecosystemId: string | null;
   invitedOrg: string | null;
   createDateTime: Date;
@@ -149,7 +150,50 @@ export interface IEcosystemInvitation {
   user: IUserSummary | null;
 }
 
+export interface IGetAllOrgs {
+  id: string;
+  status: string;
+  userId: string;
+  ecosystem: IGetAllOrgEcosystem;
+  organisation: IGetAllOrgOrganisation;
+  user: IGetAllOrgUser;
+  ecosystemRole: {
+    id: string;
+    name: string;
+  };
+}
 
-export type EcosystemInvitationRoles = OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER
+export interface IGetAllOrgEcosystem {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  createDateTime: Date;
+  createdBy: string;
+  logoUrl: string;
+  autoEndorsement: boolean;
+  ledgers: JsonValue;
+}
+
+export interface IGetAllOrgOrganisation {
+  id: string;
+  createDateTime: Date;
+  createdBy: string;
+  name: string;
+  description: string;
+  orgSlug: string;
+}
+
+export interface IGetAllOrgUser {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+}
+
+export type EcosystemInvitationRoles = OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;
 
 export type PrismaExecutor = Prisma.TransactionClient | PrismaClient;

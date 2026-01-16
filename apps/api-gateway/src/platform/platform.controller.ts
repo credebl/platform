@@ -275,4 +275,30 @@ export class PlatformController {
       data: invitations
     });
   }
+
+  /**
+   * Get all ecosystems (platform admin)
+   * @returns All ecosystems from platform
+   */
+  @Get()
+  @ApiOperation({
+    summary: 'Get all ecosystems (platform admin)',
+    description: 'Fetch all ecosystems available on the platform'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Ecosystems fetched successfully'
+  })
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async getAllEcosystems(@User() reqUser: user, @Res() res: Response): Promise<Response> {
+    const ecosystems = await this.platformService.getAllEcosystems();
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.fetch,
+      data: ecosystems
+    });
+  }
 }

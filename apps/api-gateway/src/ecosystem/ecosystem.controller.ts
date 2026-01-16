@@ -2,6 +2,7 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -34,9 +35,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { InviteMemberToEcosystemDto, UpdateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
-import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
-import { CreateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
 import { user } from '@prisma/client';
 import { User } from '../authz/decorators/user.decorator';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
@@ -65,64 +64,6 @@ import { CreateIntentDto } from './dtos/create-intent.dto';
 })
 export class EcosystemController {
   constructor(private readonly ecosystemService: EcosystemService) {}
-
-  /**
-   * Invitation to create ecosystem (platform admin)
-   * @param createEcosystemInvitationDto
-   * @returns Success message
-   */
-  @Post('/invitations')
-  @Roles(OrgRoles.PLATFORM_ADMIN)
-  @ApiOperation({
-    summary: 'Create ecosystem invitation (platform admin)',
-    description: 'Invite a user to create an ecosystem'
-  })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Success',
-    type: ApiResponseDto
-  })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiBearerAuth()
-  async createInvitation(
-    @Body() createEcosystemInvitationDto: CreateEcosystemInvitationDto,
-    @User() reqUser: user,
-    @Res() res: Response
-  ): Promise<Response> {
-    await this.ecosystemService.inviteUserToCreateEcosystem(createEcosystemInvitationDto.email, reqUser.id);
-
-    return res.status(HttpStatus.CREATED).json({
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.createInvitation
-    });
-  }
-
-  /**
-   * Get invitations sent by platform admin
-   * @returns Invitation details
-   */
-
-  @Get('/invitations')
-  @ApiOperation({
-    summary: 'Get ecosystem invitations by user (platform admin)',
-    description: 'Fetch all ecosystem invitations created by the logged-in user'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Invitations fetched successfully'
-  })
-  @Roles(OrgRoles.PLATFORM_ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiBearerAuth()
-  async getInvitations(@User() reqUser: user, @Res() res: Response): Promise<Response> {
-    const invitations = await this.ecosystemService.getInvitationsByUserId(reqUser.id);
-
-    return res.status(HttpStatus.OK).json({
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.ecosystem.success.fetch,
-      data: invitations
-    });
-  }
 
   @Post('/invite-member')
   @ApiOperation({
@@ -243,31 +184,6 @@ export class EcosystemController {
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
-  /**
-   * Get all ecosystems (platform admin)
-   * @returns All ecosystems from platform
-   */
-  @Get()
-  @ApiOperation({
-    summary: 'Get all ecosystems (platform admin)',
-    description: 'Fetch all ecosystems available on the platform'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Ecosystems fetched successfully'
-  })
-  @Roles(OrgRoles.PLATFORM_ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiBearerAuth()
-  async getAllEcosystems(@User() reqUser: user, @Res() res: Response): Promise<Response> {
-    const ecosystems = await this.ecosystemService.getAllEcosystems();
-
-    return res.status(HttpStatus.OK).json({
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.ecosystem.success.fetch,
-      data: ecosystems
-    });
-  }
 
   /**
    * Get specific ecosystem dashboard details
@@ -297,7 +213,7 @@ export class EcosystemController {
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.ecosystem.success.fetch,
+      message: ResponseMessages.ecosystem.success.getEcosystemDashboard,
       data: dashboardData
     });
   }
@@ -735,6 +651,35 @@ export class EcosystemController {
       data: intents
     });
   }
+  // verification template details by org Id
+  /**
+   * Get template details by org ID
+   */
+  @Get('/:orgId/templates')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get template details by orgId',
+    description: 'Retrieve verification template details by orgId'
+  })
+  @ApiParam({
+    name: 'orgId',
+    required: true,
+    description: 'Organization ID'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Template details fetched successfully'
+  })
+  async getTemplateByIntentId(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+    const templates = await this.ecosystemService.getVerificationTemplates(orgId);
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.fetchVerificationTemplates,
+      data: templates
+    });
+  }
 
   /**
    * Update intent
@@ -806,3 +751,5 @@ export class EcosystemController {
       message: ResponseMessages.ecosystem.success.deleteIntent,
       data: intent
     });
+  }
+}

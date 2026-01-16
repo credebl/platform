@@ -5,7 +5,7 @@ import {
   Logger,
   NotFoundException
 } from '@nestjs/common';
-import { EcosystemOrgStatus, EcosystemRoles, Invitation, InviteType } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, EcosystemRoles, Invitation, InviteType, SortValue } from '@credebl/enum/enum';
 import {
   ICreateEcosystem,
   IEcosystem,
@@ -21,14 +21,23 @@ import {
 } from '@credebl/common/interfaces/intents-template.interface';
 /* eslint-disable camelcase */
 // eslint-disable-next-line camelcase
-import { Prisma, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, user } from '@prisma/client';
+import {
+  Prisma,
+  ecosystem,
+  ecosystem_invitations,
+  ecosystem_orgs,
+  ecosystem_roles,
+  intent_templates,
+  intents,
+  user,
+  verification_templates
+} from '@prisma/client';
 
 import { OrgRoles } from 'libs/org-roles/enums';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 
 // eslint-disable-next-line camelcase
-
 
 @Injectable()
 export class EcosystemRepository {
@@ -548,7 +557,7 @@ export class EcosystemRepository {
     }
   }
 
-    // eslint-disable-next-line camelcase
+  // eslint-disable-next-line camelcase
   async getIntentTemplateById(id: string): Promise<intent_templates> {
     try {
       const intentTemplate = await this.prisma.intent_templates.findUnique({
@@ -612,7 +621,7 @@ export class EcosystemRepository {
     }
   }
 
-// Intent Template CRUD operations
+  // Intent Template CRUD operations
   // eslint-disable-next-line camelcase
   async createIntentTemplate(data: {
     orgId?: string;
@@ -871,7 +880,7 @@ export class EcosystemRepository {
       throw error;
     }
   }
-   async getAllIntentTemplateByQuery(
+  async getAllIntentTemplateByQuery(
     intentTemplateSearchCriteria: IIntentTemplateSearchCriteria
   ): Promise<IIntentTemplateList> {
     try {
@@ -1082,6 +1091,38 @@ export class EcosystemRepository {
       where,
       orderBy: { createDateTime: 'desc' }
     });
+  }
+
+  // eslint-disable-next-line camelcase
+  async getTemplatesByEcosystemId(ecosystemId: string): Promise<verification_templates[]> {
+    try {
+      return await this.prisma.verification_templates.findMany({
+        where: {
+          organisation: {
+            ecosystemOrgs: {
+              some: {
+                ecosystemId,
+                deletedAt: null
+              }
+            }
+          }
+        },
+        include: {
+          organisation: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
+    } catch (error) {
+      this.logger.error('[getTemplatesByEcosystemId] error', error);
+      throw error;
+    }
   }
 
   /**

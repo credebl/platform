@@ -1,4 +1,4 @@
-\import { EcosystemOrgStatus, Invitation } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, Invitation } from '@credebl/enum/enum';
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Body, Controller, Logger } from '@nestjs/common';
 import {
@@ -242,6 +242,11 @@ export class EcosystemController {
     return this.ecosystemService.getIntents(ecosystemId, intentId);
   }
 
+  @MessagePattern({ cmd: 'get-verification-templates-by-org-id' })
+  async getTemplatesByIntentId(payload: { orgId: string }): Promise<object[]> {
+    return this.ecosystemService.getTemplatesByIntentId(payload.orgId);
+  }
+
   /**
    * Update an existing intent
    *
@@ -262,5 +267,5 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'delete-intent' })
   async deleteIntent(payload: { ecosystemId: string; intentId: string; user: { id: string } }): Promise<object> {
     return this.ecosystemService.deleteIntent(payload.ecosystemId, payload.intentId, payload.user);
-}
+  }
 }

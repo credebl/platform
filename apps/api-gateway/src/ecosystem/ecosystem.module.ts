@@ -6,10 +6,12 @@ import { EcosystemService } from './ecosystem.service';
 import { EcosystemModule as EcosystemServiceModule } from 'apps/ecosystem/src/ecosystem.module';
 import { Module } from '@nestjs/common';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { PlatformModule } from '../platform/platform.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
+    PlatformModule,
     EcosystemServiceModule,
     ClientsModule.register([
       {

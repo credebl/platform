@@ -190,7 +190,13 @@ export const ResponseMessages = {
       deletionSuccessfull: 'Record deleted successfully',
       userStatusUpdated: 'User status updated successfully',
       updatedEcosytemOrg: 'Updated ecosytem org successfully',
-      invitationsMemberSuccess: 'Invitation members fetched successfully'
+      invitationsMemberSuccess: 'Invitation members fetched successfully',
+      intentCreated: 'Ecosystem intent created successfully',
+      intentUpdated: 'Ecosystem intent updated successfully',
+      deleteIntent: 'Ecosystem intent deleted successfully',
+      fetchIntents: 'Ecosystem intents fetched successfully',
+      fetchIntentTemplates: 'Ecosystem intent fetched successfully by id',
+      fetchVerificationTemplates: ' Verification templates fetched successfully'
     },
     error: {
       memberInviteFailed: 'Failed to send invitation for the member',

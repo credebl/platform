@@ -7,7 +7,7 @@ import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-
 import { IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
-import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IEcosystem, IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 
 @Injectable()
 export class PlatformService extends BaseService {
@@ -63,5 +63,14 @@ export class PlatformService extends BaseService {
    */
   async getInvitationsByUserId(userId: string): Promise<IEcosystemInvitations[]> {
     return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-ecosystem-invitations-by-user', { userId });
+  }
+
+  /**
+   *
+   * @param userId
+   * @returns All ecosystems from platform
+   */
+  async getAllEcosystems(): Promise<IEcosystem[]> {
+    return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-all-ecosystems', {});
   }
 }

@@ -572,6 +572,14 @@ export class EcosystemService {
     }
   }
 
+  async getTemplatesByIntentId(orgId: string): Promise<object[]> {
+    if (!orgId) {
+      throw new BadRequestException('intentId is required');
+    }
+
+    return this.ecosystemRepository.getTemplatesByEcosystemId(orgId);
+  }
+
   /**
    * Update an intent
    */

@@ -9,6 +9,7 @@ import {
   IEcosystemMemberInvitations,
   IGetAllOrgs
 } from '../interfaces/ecosystem.interfaces';
+import { ecosystem, user } from '@prisma/client';
 
 import { EcosystemService } from './ecosystem.service';
 import { MessagePattern } from '@nestjs/microservices';
@@ -138,7 +139,9 @@ export class EcosystemController {
   // eslint-disable-next-line camelcase
   async getAllEcosystemOrgsByEcosystemId(payload: { ecosystemId: string }): Promise<IGetAllOrgs[]> {
     return this.ecosystemService.getAllEcosystemOrgsByEcosystemId(payload.ecosystemId);
-  } /**
+  }
+
+  /**
    * Get Ecosystem member Invitations
    *
    * @param payload Contains IEcosystemMemberInvitations
@@ -148,5 +151,26 @@ export class EcosystemController {
   // eslint-disable-next-line camelcase
   async getEcosystemMemberInvitations(payload: IEcosystemMemberInvitations): Promise<IEcosystemInvitation[]> {
     return this.ecosystemService.getEcosystemMemberInvitations(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-user-by-keycloak-id' })
+  // eslint-disable-next-line camelcase
+  async getUserByKeycloakId(payload: { keycloakId: string }): Promise<user> {
+    return this.ecosystemService.getUserByKeycloakId(payload.keycloakId);
+  }
+
+  @MessagePattern({ cmd: 'get-ecosystem-details-by-userid' })
+  // eslint-disable-next-line camelcase
+  async getEcosystemDetailsByUserId(payload: { userId: string }): Promise<ecosystem> {
+    return this.ecosystemService.getEcosystemDetailsByUserId(payload.userId);
+  }
+
+  @MessagePattern({ cmd: 'get-ecosystem-org-details-by-userid' })
+  // eslint-disable-next-line camelcase
+  async getEcosystemOrgDetailsByUserId(payload: {
+    userId: string;
+    ecosystemId: string;
+  }): Promise<{ ecosystemRole: { name: string } }[]> {
+    return this.ecosystemService.getEcosystemOrgDetailsByUserId(payload.userId, payload.ecosystemId);
   }
 }

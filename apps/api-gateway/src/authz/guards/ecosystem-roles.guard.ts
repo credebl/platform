@@ -16,24 +16,23 @@ export class EcosystemRolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass()
     ]);
-    const requiredRolesNames = Object.values(requiredRoles) as string[];
 
-    if (!requiredRolesNames) {
+    if (!requiredRoles || 0 === requiredRoles.length) {
       return true;
     }
-
-    const req = context.switchToHttp().getRequest();
-    const { user } = req;
+    const requiredRolesNames = requiredRoles as string[];
+    const reqData = context.switchToHttp().getRequest();
+    const { user } = reqData;
 
     if (user?.userRole && user?.userRole.includes('holder')) {
       throw new ForbiddenException('This role is a holder.');
     }
 
-    req.params.orgId = req.params?.orgId ? req.params?.orgId?.trim() : '';
-    req.query.orgId = req.query?.orgId ? req.query?.orgId?.trim() : '';
-    req.body.orgId = req.body?.orgId ? req.body?.orgId?.trim() : '';
+    reqData.params.orgId = reqData.params?.orgId ? reqData.params?.orgId?.trim() : '';
+    reqData.query.orgId = reqData.query?.orgId ? reqData.query?.orgId?.trim() : '';
+    reqData.body.orgId = reqData.body?.orgId ? reqData.body?.orgId?.trim() : '';
 
-    const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+    const orgId = reqData.params.orgId || reqData.query.orgId || reqData.body.orgId;
 
     const isPlatformAdmin = user.email === process.env.PLATFORM_ADMIN_EMAIL;
 
@@ -88,11 +87,9 @@ export class EcosystemRolesGuard implements CanActivate {
 
       user.selectedOrg = specificOrg;
       // eslint-disable-next-line array-callback-return
-      user.selectedOrg.orgRoles = user.userOrgRoles.map((orgRoleItem) => {
-        if (orgRoleItem.orgId && orgRoleItem.orgId.toString().trim() === orgId.toString().trim()) {
-          return orgRoleItem.orgRole.name;
-        }
-      });
+      user.selectedOrg.orgRoles = user.userOrgRoles
+        .filter((orgRoleItem) => orgRoleItem.orgId && orgRoleItem.orgId.toString().trim() === orgId.toString().trim())
+        .map((orgRoleItem) => orgRoleItem.orgRole.name);
     } else {
       return false;
     }

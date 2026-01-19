@@ -11,7 +11,7 @@ import {
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
 // eslint-disable-next-line camelcase
-import { ecosystem_orgs } from '@prisma/client';
+import { ecosystem_orgs, user } from '@prisma/client';
 
 @Injectable()
 export class EcosystemService {
@@ -107,5 +107,20 @@ export class EcosystemService {
   // eslint-disable-next-line camelcase
   async getEcosystemMemberInvitations(payload: IEcosystemMemberInvitations): Promise<IEcosystemInvitation[]> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-member-invitations', payload);
+  }
+
+  async getUserByKeycloakId(keycloakId: string): Promise<user> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-user-by-keycloak-id', { keycloakId });
+  }
+
+  async getEcosystemDetailsByUserId(userId: string): Promise<user> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-details-by-userid', { userId });
+  }
+
+  async getEcosystemOrgDetailsByUserId(userId: string, ecosystemId: string): Promise<user> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-org-details-by-userid', {
+      userId,
+      ecosystemId
+    });
   }
 }

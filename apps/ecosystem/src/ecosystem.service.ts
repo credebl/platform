@@ -19,7 +19,7 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { InviteMemberToEcosystem } from '../templates/invite-member-template';
 import { EmailService } from '@credebl/common/email.service';
 // eslint-disable-next-line camelcase
-import { user } from '@prisma/client';
+import { ecosystem, user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
 import { UserRepository } from 'apps/user/repositories/user.repository';
@@ -226,9 +226,11 @@ export class EcosystemService {
   async inviteMemberToEcosystem(orgId: string, reqUser: string, ecosystemId: string): Promise<boolean> {
     try {
       const platformConfigData = await this.prisma.platform_config.findFirst();
+      if (!platformConfigData) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.platformConfigNotFound);
+      }
       const organization = await this.organizationRepository.getOrgProfile(orgId);
       const user = await this.ecosystemRepository.getUserById(organization.createdBy);
-      // const ecosystemDetails = await this.ecosystemRepository.
       const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(user.email, ecosystemId);
 
       if (checkUser && Invitation.REJECTED === checkUser.status && ecosystemId === checkUser.ecosystemId) {
@@ -248,7 +250,6 @@ export class EcosystemService {
           message: `Invitation already exists for org with email ${user.email}`
         });
       }
-
       await this.ecosystemRepository.createEcosystemInvitation({
         email: user.email,
         invitedUserId: user.id,
@@ -258,7 +259,7 @@ export class EcosystemService {
         ecosystemId,
         orgId
       });
-      const ecosystem = await this.ecosystemRepository.getEcosystemDetailsByUserId(reqUser);
+      const ecosystem = await this.ecosystemRepository.getEcosystemById(ecosystemId);
       const emailData = new EmailDto();
       const inviteMemberTemplate = new InviteMemberToEcosystem();
 
@@ -267,12 +268,13 @@ export class EcosystemService {
       emailData.emailSubject = `Invitation for ecosystem`;
       emailData.emailHtml = inviteMemberTemplate.sendInviteEmailTemplate(
         `${user.firstName} ${user.lastName}`,
-        organization.name,
         ecosystem.name
       );
       const response = await this.emailService.sendEmail(emailData);
       if (response) {
         return true;
+      } else {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.memberInviteFailed);
       }
     } catch (error) {
       this.logger.error('inviteMemberToEcosystem error', error);
@@ -370,5 +372,20 @@ export class EcosystemService {
   // eslint-disable-next-line camelcase
   async getEcosystemMemberInvitations(params: IEcosystemMemberInvitations): Promise<IEcosystemInvitation[]> {
     return this.ecosystemRepository.getEcosystemInvitations(params);
+  }
+
+  async getUserByKeycloakId(keycloakId: string): Promise<user> {
+    return this.ecosystemRepository.getUserByKeycloakId(keycloakId);
+  }
+
+  async getEcosystemDetailsByUserId(userId: string): Promise<ecosystem> {
+    return this.ecosystemRepository.getEcosystemDetailsByUserId(userId);
+  }
+
+  async getEcosystemOrgDetailsByUserId(
+    userId: string,
+    ecosystemId: string
+  ): Promise<{ ecosystemRole: { name: string } }[]> {
+    return this.ecosystemRepository.getEcosystemOrgDetailsByUserId(userId, ecosystemId);
   }
 }

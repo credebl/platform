@@ -267,6 +267,7 @@ export const ResponseMessages = {
       invitationFetchFailed: 'Error while fetching ecosystem invitation by userId',
       checkFailed: ' Error while checking ecosystem existence by name',
       deletionFailed: 'Failed to delete record',
+      noRecordsFound: 'No records not found',
       ecosystemOrgsFetchFailed: 'Failed to fetch ecosystem orgs',
       ecosystemMemberStatusFail: 'Failed to update ecosystem member status',
       failedEcosystemOrgUpdate: 'Failed to update ecosystem org',

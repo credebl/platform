@@ -8,7 +8,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonModule } from '../../../../libs/common/src/common.module';
 import { CommonService } from '../../../../libs/common/src/common.service';
 import { ConnectionService } from '../connection/connection.service';
-import { EcosystemModule } from 'apps/ecosystem/src/ecosystem.module';
+import { EcosystemModule } from '../ecosystem/ecosystem.module';
 import { HttpModule } from '@nestjs/axios';
 import { JwtStrategy } from './jwt.strategy';
 import { MobileJwtStrategy } from './mobile-jwt.strategy';

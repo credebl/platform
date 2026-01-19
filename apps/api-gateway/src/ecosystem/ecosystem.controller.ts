@@ -10,6 +10,7 @@ import {
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
@@ -136,25 +137,33 @@ export class EcosystemController {
     if (!reqUser.id) {
       throw new Error('Missing request user id');
     }
-    const result = await this.ecosystemService.inviteMemberToEcosystem(
-      inviteMemberToEcosystem.orgId,
-      reqUser.id,
-      inviteMemberToEcosystem.ecosystemId
-    );
+    try {
+      await this.ecosystemService.inviteMemberToEcosystem(
+        inviteMemberToEcosystem.orgId,
+        reqUser.id,
+        inviteMemberToEcosystem.ecosystemId
+      );
 
-    if (result) {
       const finalResponse: IResponse = {
         statusCode: HttpStatus.CREATED,
         message: ResponseMessages.ecosystem.success.memberInviteSucess
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
-    }
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.BAD_REQUEST,
-      message: ResponseMessages.ecosystem.error.memberInviteFailed
-    };
+    } catch (error) {
+      if (error instanceof ConflictException || HttpStatus.CONFLICT === error.status) {
+        return res.status(HttpStatus.CONFLICT).json({
+          status: HttpStatus.CONFLICT,
+          message: error.message
+        });
+      }
 
-    return res.status(HttpStatus.BAD_REQUEST).json(finalResponse);
+      const finalResponse: IResponse = {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: ResponseMessages.errorMessages.serverError
+      };
+
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(finalResponse);
+    }
   }
 
   @Post('/update-invitation-status')
@@ -174,7 +183,7 @@ export class EcosystemController {
     @Res() res: Response
   ): Promise<Response> {
     if (!reqUser.id) {
-      throw new Error('Missing request user id');
+      throw new BadRequestException('Missing request user id');
     }
     const result = await this.ecosystemService.updateEcosystemInvitationStatus(
       updateInvitation.status,
@@ -308,7 +317,6 @@ export class EcosystemController {
   @ApiBearerAuth()
   async deleteEcosystemUsers(@Body() deleteUser: DeleteEcosystemOrgDto, @Res() res: Response): Promise<Response> {
     const result = await this.ecosystemService.deleteEcosystemOrgs(deleteUser.ecosystemId, deleteUser.orgIds);
-
     if (0 < result.count) {
       const finalResponse: IResponse = {
         statusCode: HttpStatus.OK,
@@ -317,8 +325,8 @@ export class EcosystemController {
       return res.status(HttpStatus.CREATED).json(finalResponse);
     }
     const finalResponse: IResponse = {
-      statusCode: HttpStatus.BAD_REQUEST,
-      message: ResponseMessages.ecosystem.error.deletionFailed
+      statusCode: HttpStatus.NOT_FOUND,
+      message: ResponseMessages.ecosystem.error.noRecordsFound
     };
 
     return res.status(HttpStatus.BAD_REQUEST).json(finalResponse);
@@ -394,8 +402,8 @@ export class EcosystemController {
       });
     }
 
-    return res.status(HttpStatus.OK).json({
-      statusCode: HttpStatus.BAD_REQUEST,
+    return res.status(HttpStatus.NOT_FOUND).json({
+      statusCode: HttpStatus.NOT_FOUND,
       message: ResponseMessages.ecosystem.error.ecosystemOrgsFetchFailed
     });
   }
@@ -430,10 +438,10 @@ export class EcosystemController {
     @Res() res: Response
   ): Promise<Response> {
     if (!query.email && !query.userId) {
-      throw new Error('Need to have at lease one of userId or email');
+      throw new BadRequestException('Need to have at least one of userId or email');
     }
     if (OrgRoles.ECOSYSTEM_LEAD === query.role && !query.ecosystemId) {
-      throw new Error('EcosystemId is required for role "Lead"');
+      throw new BadRequestException('EcosystemId is required for role "Lead"');
     }
     const invitationData = await this.ecosystemService.getEcosystemMemberInvitations(query);
     return res.status(HttpStatus.OK).json({

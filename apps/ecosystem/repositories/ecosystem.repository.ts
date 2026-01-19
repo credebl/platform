@@ -18,7 +18,15 @@ import {
 } from '../interfaces/ecosystem.interfaces';
 /* eslint-disable camelcase */
 // eslint-disable-next-line camelcase
-import { Prisma, ecosystem, ecosystem_invitations, ecosystem_orgs, ecosystem_roles, user } from '@prisma/client';
+import {
+  Prisma,
+  ecosystem,
+  ecosystem_invitations,
+  ecosystem_orgs,
+  ecosystem_roles,
+  platform_config,
+  user
+} from '@prisma/client';
 
 import { OrgRoles } from 'libs/org-roles/enums';
 import { PrismaService } from '@credebl/prisma-service';
@@ -107,6 +115,11 @@ export class EcosystemRepository {
   ): Promise<IEcosystem> {
     try {
       const { name, description, userId, logo, tags, orgId, autoEndorsement } = createEcosystemDto;
+
+      const ecosystemRoleDetails = await prisma.ecosystem_roles.findFirst({
+        where: { name: EcosystemRoles.ECOSYSTEM_LEAD }
+      });
+
       const createdEcosystem = await prisma.ecosystem.create({
         data: {
           name,
@@ -127,10 +140,6 @@ export class EcosystemRepository {
           createdBy: true,
           createDateTime: true
         }
-      });
-
-      const ecosystemRoleDetails = await prisma.ecosystem_roles.findFirst({
-        where: { name: EcosystemRoles.ECOSYSTEM_LEAD }
       });
 
       if (!ecosystemRoleDetails) {
@@ -524,7 +533,7 @@ export class EcosystemRepository {
     status: EcosystemOrgStatus
   ): Promise<{ count: number }> {
     try {
-      const result = await this.prisma.ecosystem_orgs.updateMany({
+      return await this.prisma.ecosystem_orgs.updateMany({
         where: {
           ecosystemId,
           orgId: {
@@ -535,7 +544,6 @@ export class EcosystemRepository {
           status
         }
       });
-      return result;
     } catch (error) {
       this.logger.error(`Error in updateEcosystemUserStatus: ${error.message}`);
       throw error;
@@ -684,10 +692,6 @@ export class EcosystemRepository {
 
     // Lead
     if (OrgRoles.ECOSYSTEM_LEAD === role) {
-      if (!ecosystemId) {
-        throw new Error('ecosystemId is required for LEAD');
-      }
-
       where.ecosystemId = ecosystemId;
     }
 
@@ -746,6 +750,15 @@ export class EcosystemRepository {
       return result;
     } catch (error) {
       this.logger.error(`Error in getEcosystemById: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getPlatformConfigData(): Promise<platform_config> {
+    try {
+      return await this.prisma.platform_config.findFirst();
+    } catch (error) {
+      this.logger.error(`Error in getPlatformConfigData: ${error.message}`);
       throw error;
     }
   }

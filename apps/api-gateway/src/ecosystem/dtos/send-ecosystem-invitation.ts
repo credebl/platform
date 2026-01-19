@@ -34,24 +34,6 @@ export class OrgIdParam {
   orgId: string;
 }
 
-// export class InviteMemberToEcosystemDto {
-//   @ApiProperty({
-//     example: [
-//       '6e672a9c-64f0-4d98-b312-f578f633800b',
-//       '2f1a5a3c-91a2-4c4b-9f7d-1b7e6a22a111',
-//     ],
-//     isArray: true,
-//   })
-//   @IsArray({ message: 'orgIds must be an array' })
-//   @ArrayNotEmpty({ message: 'orgIds cannot be empty' })
-//   @IsUUID('4', { each: true })
-//   @IsString({ each: true })
-//   @Transform(({ value }) =>
-//     Array.isArray(value) ? value.map(v => v.trim()) : value,
-//   )
-//   orgIds: string[];
-// }
-//
 export class UpdateEcosystemInvitationDto {
   @ApiProperty({ enum: Invitation, example: Invitation.ACCEPTED })
   @Transform(({ value }) => ('string' === typeof value ? value.toLowerCase() : value))

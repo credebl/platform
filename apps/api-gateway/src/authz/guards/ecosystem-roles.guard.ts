@@ -24,10 +24,6 @@ export class EcosystemRolesGuard implements CanActivate {
     const reqData = context.switchToHttp().getRequest();
     const { user } = reqData;
 
-    if (user?.userRole && user?.userRole.includes('holder')) {
-      throw new ForbiddenException('This role is a holder.');
-    }
-
     reqData.params.orgId = reqData.params?.orgId ? reqData.params?.orgId?.trim() : '';
     reqData.query.orgId = reqData.query?.orgId ? reqData.query?.orgId?.trim() : '';
     reqData.body.orgId = reqData.body?.orgId ? reqData.body?.orgId?.trim() : '';
@@ -42,13 +38,13 @@ export class EcosystemRolesGuard implements CanActivate {
 
     if (isPlatformAdmin && requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {
       // eslint-disable-next-line array-callback-return
-      const isPlatformAdmin = user.userOrgRoles.find((orgDetails) => {
+      const isPlatformAdminFlag = user.userOrgRoles.find((orgDetails) => {
         if (orgDetails.orgRole.name === OrgRoles.PLATFORM_ADMIN) {
           return true;
         }
       });
 
-      if (isPlatformAdmin) {
+      if (isPlatformAdminFlag) {
         return true;
       }
     }

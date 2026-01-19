@@ -64,8 +64,6 @@ export class EcosystemService {
       throw new BadRequestException(ResponseMessages.ecosystem.error.emailOrPlatformAdminIdMissing);
     }
 
-    // const ecosystemStatus = await this.ecosystemRepository.getEcosystemDetailsByUserId()
-
     const existingInvitation = await this.ecosystemRepository.getPendingInvitationByEmail(email);
 
     if (existingInvitation) {
@@ -75,9 +73,7 @@ export class EcosystemService {
       });
     }
 
-    const invitedUser = await this.prisma.user.findUnique({
-      where: { email }
-    });
+    const invitedUser = await this.userRepository.getUserDetails(email);
 
     const invitation = await this.ecosystemRepository.createEcosystemInvitation({
       email,
@@ -93,7 +89,7 @@ export class EcosystemService {
   }
 
   async sendInviteEmailTemplate(email: string, isUserExist: boolean): Promise<boolean> {
-    const platformConfigData = await this.prisma.platform_config.findFirst();
+    const platformConfigData = await this.ecosystemRepository.getPlatformConfigData();
 
     if (!platformConfigData) {
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.platformConfigNotFound);
@@ -195,12 +191,6 @@ export class EcosystemService {
       if (!invitation) {
         throw new ForbiddenException(ResponseMessages.ecosystem.error.invitationRequired);
       }
-
-      // const alreadyCreated = await this.ecosystemRepository.checkEcosystemCreatedByUser(userId);
-
-      // if (alreadyCreated) {
-      //   throw new ConflictException(ResponseMessages.ecosystem.error.userEcosystemAlreadyExists);
-      // }
 
       return this.prisma.$transaction(async (tx) => {
         const ecosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, tx);

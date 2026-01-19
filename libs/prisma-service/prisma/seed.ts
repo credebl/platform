@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import * as CryptoJS from 'crypto-js';
 import * as fs from 'fs';
 import * as util from 'util';
@@ -521,8 +520,11 @@ export const updateClientId = async (): Promise<void> => {
     throw new Error('Missing required environment variables');
   }
 
-  const OLD_CLIENT_ID = 'adminClient';
-
+  const OLD_CLIENT_ID = process.env.PLATFORM_ADMIN_OLD_CLIENT_ID;
+  if (!OLD_CLIENT_ID) {
+    logger.log('Skipping updateClientId script requires PLATFORM_ADMIN_OLD_CLIENT_ID');
+    return;
+  }
   // Encrypt once
   const newEncryptedClientId = CryptoJS.AES.encrypt(
     JSON.stringify(KEYCLOAK_MANAGEMENT_CLIENT_ID),
@@ -661,17 +663,23 @@ export async function getKeycloakToken(): Promise<string> {
 
 export async function createKeycloakUser(): Promise<void> {
   logger.log(`✅ Creating keycloak user for platform admin`);
+  const { platformAdminData } = JSON.parse(configData);
+  if (!platformAdminData?.password) {
+    throw new Error('platformAdminData password is missing from credebl-master-table.json');
+  }
+  if (!cachedConfig) {
+    throw new Error('failed to load platform config data from db');
+  }
+
   const {
     KEYCLOAK_DOMAIN,
     KEYCLOAK_REALM,
-    PLATFORM_ADMIN_USER_PASSWORD,
     PLATFORM_ADMIN_KEYCLOAK_ID,
     PLATFORM_ADMIN_KEYCLOAK_SECRET,
     CRYPTO_PRIVATE_KEY
   } = process.env;
 
   if (
-    !PLATFORM_ADMIN_USER_PASSWORD ||
     !KEYCLOAK_DOMAIN ||
     !KEYCLOAK_REALM ||
     !PLATFORM_ADMIN_KEYCLOAK_ID ||
@@ -682,14 +690,14 @@ export async function createKeycloakUser(): Promise<void> {
       'Missing required environment variables for either PLATFORM_ADMIN_USER_PASSWORD or KEYCLOAK_DOMAIN or KEYCLOAK_REALM or PLATFORM_ADMIN_KEYCLOAK_ID or PLATFORM_ADMIN_KEYCLOAK_SECRET or CRYPTO_PRIVATE_KEY'
     );
   }
-
+  const decryptedPassword = CryptoJS.AES.decrypt(platformAdminData.password, CRYPTO_PRIVATE_KEY);
   const token = await getKeycloakToken();
   const user = {
     username: cachedConfig.platformEmail,
     email: cachedConfig.platformEmail,
     firstName: cachedConfig.platformName,
     lastName: cachedConfig.platformName,
-    password: PLATFORM_ADMIN_USER_PASSWORD
+    password: decryptedPassword.toString(CryptoJS.enc.Utf8)
   };
   const res = await fetch(`${KEYCLOAK_DOMAIN}admin/realms/${KEYCLOAK_REALM}/users`, {
     method: 'POST',

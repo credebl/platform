@@ -89,11 +89,11 @@ export class EcosystemService {
 
   async updateEcosystemOrgStatus(
     ecosystemId: string,
-    userIds: string[],
+    orgIds: string[],
     status: EcosystemOrgStatus
   ): Promise<{ count: number }> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-ecosystem-org-status', {
-      userIds,
+      orgIds,
       ecosystemId,
       status
     });

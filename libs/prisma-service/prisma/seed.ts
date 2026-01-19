@@ -2,8 +2,9 @@ import * as CryptoJS from 'crypto-js';
 import * as fs from 'fs';
 import * as util from 'util';
 
+import { HttpStatus, Logger } from '@nestjs/common';
+
 import { CommonConstants } from '../../common/src/common.constant';
-import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { exec } from 'child_process';
 
@@ -28,7 +29,7 @@ const prisma = new PrismaClient({
 });
 const logger = new Logger('Init seed DB');
 let platformUserId = '';
-let cachedConfig: PlatformConfig | null = null;
+let cachedConfig: PlatformConfig;
 
 const configData = fs.readFileSync(
   `${process.cwd()}/prisma/data/credebl-master-table/credebl-master-table.json`,
@@ -132,6 +133,34 @@ const createOrgAgentTypes = async (): Promise<void> => {
     }
   } catch (error) {
     logger.error('An error occurred seeding orgAgentTypes:', error);
+    throw error;
+  }
+};
+
+const createEcosystemRoles = async (): Promise<void> => {
+  try {
+    const { ecosystemRoleData } = JSON.parse(configData);
+
+    const ecosystemRoleDetails = ecosystemRoleData.map((ecosystemRole) => ecosystemRole.name);
+    const existEcosystemRole = await prisma.ecosystem_roles.findMany({
+      where: {
+        name: {
+          in: ecosystemRoleDetails
+        }
+      }
+    });
+
+    if (0 === existEcosystemRole.length) {
+      const ecosystemRoles = await prisma.ecosystem_roles.createMany({
+        data: ecosystemRoleData
+      });
+
+      logger.log(ecosystemRoles);
+    } else {
+      logger.log('Already seeding in ecosystem roles');
+    }
+  } catch (error) {
+    logger.error('An error occurred seeding ecosystemRoles:', error);
     throw error;
   }
 };
@@ -695,12 +724,12 @@ export async function createKeycloakUser(): Promise<void> {
     })
   });
 
-  if (409 === res.status) {
+  if (HttpStatus.CONFLICT === res.status) {
     logger.log(`⚠️ User ${user.username} already exists`);
     return;
   }
 
-  if (201 !== res.status) {
+  if (HttpStatus.CREATED !== res.status) {
     const errorText = await res.text();
     throw new Error(`Failed to create Keycloak user (${res.status}): ${errorText}`);
   }
@@ -782,6 +811,7 @@ async function main(): Promise<void> {
   await createPlatformOrganization();
   await createPlatformUserOrgRoles();
   await createOrgAgentTypes();
+  await createEcosystemRoles();
   await createLedger();
   await createLedgerConfig();
   await createUserRole();

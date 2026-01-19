@@ -175,5 +175,15 @@
     {
       "role": "DEFAULT_USER"
     }
+  ],
+  "ecosystemRoleData": [
+    {
+      "name": "Ecosystem Lead",
+      "description": "Ecosystem Lead"
+    },
+    {
+      "name": "Ecosystem Member",
+      "description": "Ecosystem Member"
+    }
   ]
 }

@@ -574,7 +574,7 @@ export class EcosystemService {
 
   async getTemplatesByIntentId(orgId: string): Promise<object[]> {
     if (!orgId) {
-      throw new BadRequestException('intentId is required');
+      throw new BadRequestException('orgId is required');
     }
 
     return this.ecosystemRepository.getTemplatesByEcosystemId(orgId);

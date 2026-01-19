@@ -167,6 +167,8 @@ export const ResponseMessages = {
       add: 'Organization added successfully',
       delete: 'Ecosystem invitations deleted successfully',
       fetch: 'Ecosystem invitations fetched successfully',
+      fetchAllEcosystems: 'All Ecosystems fetched successfully',
+
       getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
       getInvitation: 'Ecosystem invitations fetched successfully',
       createInvitation: 'Ecosystem invitations sent',

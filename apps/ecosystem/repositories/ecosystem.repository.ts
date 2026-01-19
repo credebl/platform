@@ -1094,35 +1094,31 @@ export class EcosystemRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getTemplatesByEcosystemId(ecosystemId: string): Promise<verification_templates[]> {
-    try {
-      return await this.prisma.verification_templates.findMany({
-        where: {
-          organisation: {
-            ecosystemOrgs: {
-              some: {
-                ecosystemId,
-                deletedAt: null
-              }
+  async getTemplatesByEcosystemId(orgId: string): Promise<verification_templates[]> {
+    return this.prisma.verification_templates.findMany({
+      where: {
+        organisation: {
+          ecosystemOrgs: {
+            some: {
+              orgId,
+              deletedAt: null,
+              status: 'ACTIVE' // optional but recommended
             }
           }
-        },
-        include: {
-          organisation: {
-            select: {
-              id: true,
-              name: true
-            }
-          }
-        },
-        orderBy: {
-          createDateTime: 'desc'
         }
-      });
-    } catch (error) {
-      this.logger.error('[getTemplatesByEcosystemId] error', error);
-      throw error;
-    }
+      },
+      include: {
+        organisation: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      },
+      orderBy: {
+        createDateTime: 'desc'
+      }
+    });
   }
 
   /**

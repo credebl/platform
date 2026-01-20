@@ -6,6 +6,7 @@ import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@n
 
 import { AuthzService } from './authz.service';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { EcosystemService } from '../ecosystem/ecosystem.service';
 import { IOrganization } from '@credebl/common/interfaces/organization.interface';
 import { JwtPayload } from './jwt-payload.interface';
 import { OrganizationService } from '../organization/organization.service';
@@ -23,7 +24,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly usersService: UserService,
     private readonly organizationService: OrganizationService,
-    private readonly authzService: AuthzService
+    private readonly authzService: AuthzService,
+    private readonly ecosystemService: EcosystemService
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -69,14 +71,26 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken);
       }
     }
-
     if (payload?.email) {
       userInfo = await this.usersService.getUserByUserIdInKeycloak(payload?.email);
+    }
+    let ecosystemRole = null;
+    if (userInfo?.id) {
+      try {
+        const user = await this.ecosystemService.getUserByKeycloakId(userInfo.id);
+        if (user?.id) {
+          const ecosystem = await this.ecosystemService.getEcosystemDetailsByUserId(user.id);
+          if (ecosystem?.id) {
+            ecosystemRole = await this.ecosystemService.getEcosystemOrgDetailsByUserId(user.id, ecosystem.id);
+          }
+        }
+      } catch (error) {
+        this.logger.warn('Failed to fetch ecosystem roles', JSON.stringify(error));
+      }
     }
 
     if (payload.hasOwnProperty('client_id')) {
       const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id']);
-
       this.logger.log('Organization details fetched');
       if (!orgDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
@@ -84,7 +98,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
       // eslint-disable-next-line prefer-destructuring
       const userOrgDetails = 0 < orgDetails.userOrgRoles.length && orgDetails.userOrgRoles[0];
-
       userDetails = userOrgDetails.user;
       userDetails.userOrgRoles = [];
       userDetails.userOrgRoles.push({
@@ -106,6 +119,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     //TODO patch to QA
     if (userInfo && userInfo?.['attributes'] && userInfo?.['attributes']?.userRole) {
       userDetails['userRole'] = userInfo?.['attributes']?.userRole;
+    }
+
+    if (Array.isArray(ecosystemRole) && 0 < ecosystemRole.length) {
+      const ecosystemRoleList = [
+        ...new Set(ecosystemRole.map((record: { ecosystemRole: { name: string } }) => record.ecosystemRole.name))
+      ];
+      userDetails.ecosystemRoles = ecosystemRoleList;
     }
 
     return {

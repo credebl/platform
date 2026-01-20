@@ -70,6 +70,11 @@ export enum Invitation {
   PENDING = 'pending'
 }
 
+export enum InviteType {
+  ECOSYSTEM = 'ecosystem',
+  MEMBER = 'member'
+} 
+
 export enum EndorserTransactionType {
   SCHEMA = 'schema',
   CREDENTIAL_DEFINITION = 'credential-definition'
@@ -106,7 +111,13 @@ export enum EcosystemConfigSettings {
 }
 
 export enum EcosystemOrgStatus {
-  ACTIVE = 'ACTIVE'
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE'
+}
+
+export enum MemberStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive'
 }
 
 export enum UserCertificateId {

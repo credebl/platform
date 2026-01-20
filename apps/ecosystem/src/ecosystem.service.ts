@@ -35,6 +35,13 @@ import {
   IGetAllOrgs
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { OrgRoles } from 'libs/org-roles/enums';
+import {
+  IIntentTemplateList,
+  IIntentTemplateSearchCriteria
+} from '@credebl/common/interfaces/intents-template.interface';
+import { ErrorHandler } from '@credebl/common';
+import { CreateIntentDto } from '../dtos/create-intent.dto';
+import { UpdateIntentDto } from '../dtos/update-intent.dto';
 
 @Injectable()
 export class EcosystemService {
@@ -399,5 +406,250 @@ export class EcosystemService {
     ecosystemId: string
   ): Promise<{ ecosystemRole: { name: string } }[]> {
     return this.ecosystemRepository.getEcosystemOrgDetailsByUserId(userId, ecosystemId);
+  }
+  // Intent Template CRUD operations
+  async createIntentTemplate(data: {
+    orgId?: string;
+
+    intentId: string;
+    templateId: string;
+    user: { id: string };
+  }): Promise<object> {
+    try {
+      const { user, ...templateData } = data;
+
+      // Validate input
+      if (!templateData.intentId || !templateData.templateId || !user.id) {
+        throw new Error('Invalid data: intentId, templateId, and user are required');
+      }
+
+      // Call repository — may throw Error (duplicate check, DB errors)
+      const intentTemplate = await this.ecosystemRepository.createIntentTemplate({
+        ...templateData,
+        createdBy: user.id
+      });
+
+      this.logger.log(`[createIntentTemplate] - Intent template created with id ${intentTemplate.id}`);
+      return intentTemplate;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to create intent template');
+      this.logger.error(
+        `[createIntentTemplate] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentTemplateById(id: string): Promise<object> {
+    try {
+      const intentTemplate = await this.ecosystemRepository.getIntentTemplateById(id);
+      if (!intentTemplate) {
+        throw new Error('Intent template not found');
+      }
+      return intentTemplate;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent template');
+      this.logger.error(
+        `[getIntentTemplateById] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
+    try {
+      const intentTemplates = await this.ecosystemRepository.getIntentTemplatesByIntentId(intentId);
+      return intentTemplates;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
+      this.logger.error(
+        `[getIntentTemplatesByIntentId] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentTemplatesByOrgId(orgId: string): Promise<object[]> {
+    try {
+      const intentTemplates = await this.ecosystemRepository.getIntentTemplatesByOrgId(orgId);
+      return intentTemplates;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
+      this.logger.error(
+        `[getIntentTemplatesByOrgId] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getAllIntentTemplateByQuery(payload: {
+    intentTemplateSearchCriteria: IIntentTemplateSearchCriteria;
+  }): Promise<IIntentTemplateList> {
+    try {
+      const { intentTemplateSearchCriteria } = payload;
+      const result = await this.ecosystemRepository.getAllIntentTemplateByQuery(intentTemplateSearchCriteria);
+      return result;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
+      this.logger.error(
+        `[getAllIntentTemplateByQuery] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentTemplateByIntentAndOrg(intentName: string, verifierOrgId: string): Promise<object | null> {
+    try {
+      const intentTemplate = await this.ecosystemRepository.getIntentTemplateByIntentAndOrg(intentName, verifierOrgId);
+      if (!intentTemplate) {
+        this.logger.log(
+          `[getIntentTemplateByIntentAndOrg] - No template found for intent ${intentName} and org ${verifierOrgId}`
+        );
+        return null;
+      }
+      return intentTemplate;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent template');
+      this.logger.error(
+        `[getIntentTemplateByIntentAndOrg] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async updateIntentTemplate(
+    id: string,
+    data: { orgId: string; intentId: string; templateId: string; user: { id: string } }
+  ): Promise<object> {
+    try {
+      const { user, ...templateData } = data;
+      const intentTemplate = await this.ecosystemRepository.updateIntentTemplate(id, {
+        ...templateData,
+        lastChangedBy: user.id
+      });
+      return intentTemplate;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to update intent template');
+      this.logger.error(
+        `[updateIntentTemplate] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async deleteIntentTemplate(id: string): Promise<object> {
+    try {
+      const intentTemplate = await this.ecosystemRepository.deleteIntentTemplate(id);
+      return intentTemplate;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to delete intent template');
+      this.logger.error(
+        `[deleteIntentTemplate] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  /**
+   * Create a new intent
+   */
+  async createIntent(createIntentDto: CreateIntentDto): Promise<object> {
+    try {
+      const { name, description, ecosystemId, userId } = createIntentDto;
+
+      if (!name || !ecosystemId || !userId) {
+        throw new BadRequestException('name, ecosystemId and userId are required');
+      }
+
+      return this.ecosystemRepository.createIntent({
+        name,
+        description,
+        createdBy: userId,
+        ecosystemId
+      });
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to create intent');
+      this.logger.error(
+        `[createIntent] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  /**
+   * Get all intents
+   */
+  async getIntents(ecosystemId: string, intentId?: string): Promise<object[]> {
+    try {
+      return await this.ecosystemRepository.getIntents(ecosystemId, intentId);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intents');
+      this.logger.error(
+        `[getIntents] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getTemplatesByIntentId(orgId: string): Promise<object[]> {
+    if (!orgId) {
+      throw new BadRequestException('orgId is required');
+    }
+
+    return this.ecosystemRepository.getTemplatesByEcosystemId(orgId);
+  }
+
+  /**
+   * Update an intent
+   */
+  async updateIntent(updateIntentDto: UpdateIntentDto): Promise<object> {
+    try {
+      const { intentId, ecosystemId, name, description } = updateIntentDto;
+
+      if (!intentId || !ecosystemId) {
+        throw new Error('Invalid intentId and ecosystemId are required');
+      }
+
+      const intent = await this.ecosystemRepository.updateIntent({
+        name,
+        description,
+        intentId: updateIntentDto.intentId,
+        lastChangedBy: updateIntentDto.userId
+      });
+
+      this.logger.log(`[updateIntent] - Intent updated with id ${intent.id}`);
+      return intent;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to update intent');
+      this.logger.error(
+        `[updateIntent] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  /**
+   * Delete an intent
+   */
+  async deleteIntent(ecosystemId: string, intentId: string, user: { id: string }): Promise<object> {
+    if (!ecosystemId || !intentId || !user?.id) {
+      throw new BadRequestException('ecosystemId, intentId and user are required');
+    }
+
+    return this.ecosystemRepository.deleteIntent({
+      ecosystemId,
+      intentId
+    });
   }
 }

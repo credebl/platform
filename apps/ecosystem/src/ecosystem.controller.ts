@@ -1,4 +1,4 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Body, Controller, Logger } from '@nestjs/common';
 import { EcosystemOrgStatus, Invitation } from '@credebl/enum/enum';
 import {
   ICreateEcosystem,
@@ -13,6 +13,12 @@ import { ecosystem, user } from '@prisma/client';
 
 import { EcosystemService } from './ecosystem.service';
 import { MessagePattern } from '@nestjs/microservices';
+import {
+  IIntentTemplateSearchCriteria,
+  IIntentTemplateList
+} from '@credebl/common/interfaces/intents-template.interface';
+import { CreateIntentDto } from '../dtos/create-intent.dto';
+import { UpdateIntentDto } from '../dtos/update-intent.dto';
 
 @Controller()
 export class EcosystemController {
@@ -172,5 +178,117 @@ export class EcosystemController {
     ecosystemId: string;
   }): Promise<{ ecosystemRole: { name: string } }[]> {
     return this.ecosystemService.getEcosystemOrgDetailsByUserId(payload.userId, payload.ecosystemId);
+  }
+  // Intent Template CRUD operations
+  @MessagePattern({ cmd: 'create-intent-template' })
+  async createIntentTemplate(payload: {
+    orgId?: string;
+    intentId: string;
+    templateId: string;
+    user: { id: string };
+  }): Promise<object> {
+    return this.ecosystemService.createIntentTemplate(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-intent-template-by-id' })
+  async getIntentTemplateById(id: string): Promise<object> {
+    return this.ecosystemService.getIntentTemplateById(id);
+  }
+
+  @MessagePattern({ cmd: 'get-intent-templates-by-intent-id' })
+  async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
+    return this.ecosystemService.getIntentTemplatesByIntentId(intentId);
+  }
+
+  @MessagePattern({ cmd: 'get-intent-templates-by-org-id' })
+  async getIntentTemplatesByOrgId(orgId: string): Promise<object[]> {
+    return this.ecosystemService.getIntentTemplatesByOrgId(orgId);
+  }
+
+  @MessagePattern({ cmd: 'get-all-intent-templates-by-query' })
+  async getAllIntentTemplateByQuery(payload: {
+    intentTemplateSearchCriteria: IIntentTemplateSearchCriteria;
+  }): Promise<IIntentTemplateList> {
+    return this.ecosystemService.getAllIntentTemplateByQuery(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-intent-template-by-intent-and-org' })
+  async getIntentTemplateByIntentAndOrg(payload: {
+    intentName: string;
+    verifierOrgId: string;
+  }): Promise<object | null> {
+    return this.ecosystemService.getIntentTemplateByIntentAndOrg(payload.intentName, payload.verifierOrgId);
+  }
+
+  @MessagePattern({ cmd: 'update-intent-template' })
+  async updateIntentTemplate(payload: {
+    id: string;
+    orgId: string;
+    intentId: string;
+    templateId: string;
+    user: { id: string };
+  }): Promise<object> {
+    return this.ecosystemService.updateIntentTemplate(payload.id, {
+      orgId: payload.orgId,
+      intentId: payload.intentId,
+      templateId: payload.templateId,
+      user: payload.user
+    });
+  }
+
+  @MessagePattern({ cmd: 'delete-intent-template' })
+  async deleteIntentTemplate(id: string): Promise<object> {
+    return this.ecosystemService.deleteIntentTemplate(id);
+  }
+
+  /**
+   * Create a new intent
+   *
+   * @param payload Contains intent details and user
+   * @returns Created intent
+   */
+  @MessagePattern({ cmd: 'create-intent' })
+  async createIntent(payload: { createIntentDto: CreateIntentDto }): Promise<object> {
+    return this.ecosystemService.createIntent(payload.createIntentDto);
+  }
+
+  /**
+   * Fetch all intents
+   *
+   * @returns List of intents
+   */
+  @MessagePattern({ cmd: 'get-intents' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getIntents(@Body() payload: any): Promise<object[]> {
+    const { ecosystemId, intentId } = payload;
+
+    return this.ecosystemService.getIntents(ecosystemId, intentId);
+  }
+
+  @MessagePattern({ cmd: 'get-verification-templates-by-org-id' })
+  async getTemplatesByIntentId(payload: { orgId: string }): Promise<object[]> {
+    return this.ecosystemService.getTemplatesByIntentId(payload.orgId);
+  }
+
+  /**
+   * Update an existing intent
+   *
+   * @param payload Contains intent ID, updated data, and user
+   * @returns Updated intent
+   */
+  @MessagePattern({ cmd: 'update-intent' })
+  async updateIntent(payload: { updateIntentDto: UpdateIntentDto }): Promise<object> {
+    return this.ecosystemService.updateIntent(payload.updateIntentDto);
+  }
+
+  /**
+   * Delete an intent
+   *
+   * @param payload Contains intent ID
+   * @returns Deleted intent
+   */
+  @MessagePattern({ cmd: 'delete-intent' })
+  async deleteIntent(payload: { ecosystemId: string; intentId: string; user: { id: string } }): Promise<object> {
+    return this.ecosystemService.deleteIntent(payload.ecosystemId, payload.intentId, payload.user);
   }
 }

@@ -705,12 +705,14 @@ model verification_templates {
 
 model intents {
   id                  String             @id @default(uuid()) @db.Uuid
+  ecosystemId String @db.Uuid
   name                String             @db.VarChar(500)
   description         String?
   createDateTime      DateTime           @default(now()) @db.Timestamptz(6)
   createdBy           String             @db.Uuid
   lastChangedDateTime DateTime           @default(now()) @db.Timestamptz(6)
   lastChangedBy       String             @db.Uuid
+  ecosystem ecosystem @relation(fields: [ecosystemId], references: [id])
   intentTemplates     intent_templates[]
 }
 
@@ -747,7 +749,7 @@ model ecosystem {
 
   ecosystemOrgs        ecosystem_orgs[]
   ecosystemInvitations ecosystem_invitations[]
-
+  intent              intents[]
   ledgers              Json?
 }
 

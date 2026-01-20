@@ -24,11 +24,24 @@ export class EcosystemRolesGuard implements CanActivate {
     const reqData = context.switchToHttp().getRequest();
     const { user } = reqData;
 
-    reqData.params.orgId = reqData.params?.orgId ? reqData.params?.orgId?.trim() : '';
-    reqData.query.orgId = reqData.query?.orgId ? reqData.query?.orgId?.trim() : '';
-    reqData.body.orgId = reqData.body?.orgId ? reqData.body?.orgId?.trim() : '';
+    let orgId = '';
 
-    const orgId = reqData.params.orgId || reqData.query.orgId || reqData.body.orgId;
+    switch (true) {
+      case 'string' === typeof reqData.params?.orgId:
+        orgId = reqData.params.orgId.trim();
+        break;
+
+      case 'string' === typeof reqData.query?.orgId:
+        orgId = reqData.query.orgId.trim();
+        break;
+
+      case 'string' === typeof reqData.body?.orgId:
+        orgId = reqData.body.orgId.trim();
+        break;
+
+      default:
+        orgId = '';
+    }
 
     const isPlatformAdmin = user.email === process.env.PLATFORM_ADMIN_EMAIL;
 

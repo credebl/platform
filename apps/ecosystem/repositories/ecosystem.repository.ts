@@ -677,33 +677,7 @@ export class EcosystemRepository {
     }
   }
 
-  async getEcosystemInvitations(params: {
-    role: OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;
-    ecosystemId?: string;
-    email?: string;
-    userId?: string;
-  }): Promise<IEcosystemInvitation[]> {
-    const { role, ecosystemId, email, userId } = params;
-
-    let where: Prisma.ecosystem_invitationsWhereInput = {
-      deletedAt: null,
-      type: InviteType.MEMBER
-    };
-
-    // Lead
-    if (OrgRoles.ECOSYSTEM_LEAD === role) {
-      where.ecosystemId = ecosystemId;
-    }
-
-    // Member
-    if (OrgRoles.ECOSYSTEM_MEMBER === role) {
-      where = {
-        ...where,
-        status: Invitation.PENDING,
-        OR: [email ? { email } : undefined, userId ? { userId } : undefined].filter(Boolean)
-      };
-    }
-
+  async getEcosystemInvitations(where: Prisma.ecosystem_invitationsWhereInput): Promise<IEcosystemInvitation[]> {
     return this.prisma.ecosystem_invitations.findMany({
       where,
       orderBy: {

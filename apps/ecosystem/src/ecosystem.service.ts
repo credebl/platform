@@ -19,7 +19,7 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { InviteMemberToEcosystem } from '../templates/invite-member-template';
 import { EmailService } from '@credebl/common/email.service';
 // eslint-disable-next-line camelcase
-import { ecosystem, user } from '@prisma/client';
+import { ecosystem, Prisma, user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
 import { UserRepository } from 'apps/user/repositories/user.repository';
@@ -34,6 +34,7 @@ import {
   IEcosystemMemberInvitations,
   IGetAllOrgs
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { OrgRoles } from 'libs/org-roles/enums';
 
 @Injectable()
 export class EcosystemService {
@@ -354,14 +355,35 @@ export class EcosystemService {
     return this.ecosystemRepository.updateEcosystemOrgStatus(ecosystemId, orgIds, status);
   }
 
-  // eslint-disable-next-line camelcase
   async getAllEcosystemOrgsByEcosystemId(ecosystemId: string): Promise<IGetAllOrgs[]> {
     return this.ecosystemRepository.getAllEcosystemOrgsByEcosystemId(ecosystemId);
   }
 
-  // eslint-disable-next-line camelcase
   async getEcosystemMemberInvitations(params: IEcosystemMemberInvitations): Promise<IEcosystemInvitation[]> {
-    return this.ecosystemRepository.getEcosystemInvitations(params);
+    const { role, ecosystemId, email, userId } = params;
+
+    // NOTE: where clause is constructed at service layer by design decision
+    // to keep repository free of conditional logic.
+    const baseWhere: Prisma.ecosystem_invitationsWhereInput = {
+      deletedAt: null,
+      type: InviteType.MEMBER
+    };
+
+    let where: Prisma.ecosystem_invitationsWhereInput;
+
+    if (role === OrgRoles.ECOSYSTEM_LEAD) {
+      where = {
+        ...baseWhere,
+        ecosystemId
+      };
+    } else {
+      where = {
+        ...baseWhere,
+        status: Invitation.PENDING,
+        OR: [email ? { email } : undefined, userId ? { userId } : undefined].filter(Boolean)
+      };
+    }
+    return this.ecosystemRepository.getEcosystemInvitations(where);
   }
 
   async getUserByKeycloakId(keycloakId: string): Promise<user> {

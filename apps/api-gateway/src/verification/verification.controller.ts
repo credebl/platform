@@ -373,9 +373,10 @@ export class VerificationController {
   async verifyPresentation(
     @Res() res: Response,
     @User() user: IUserRequest,
-    @Param('proofId') proofId: string,
+    @Param('proofId') rawProofId: string,
     @Param('orgId') orgId: string
   ): Promise<Response> {
+    const proofID = rawProofID.trim();
     const verifyData = await this.verificationService.verifyPresentation(proofId, orgId, user);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,

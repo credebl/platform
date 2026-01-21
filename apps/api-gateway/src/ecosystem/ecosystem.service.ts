@@ -6,7 +6,6 @@ import {
   IEcosystem,
   IEcosystemDashboard,
   IEcosystemInvitation,
-  IEcosystemInvitations,
   IEcosystemMemberInvitations
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
@@ -25,26 +24,6 @@ export class EcosystemService {
     @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
     private readonly natsClient: NATSClient
   ) {}
-
-  /**
-   *
-   * @param createEcosystemInvitationDto
-   * @returns Ecosystem creation success
-   */
-  async inviteUserToCreateEcosystem(email: string, platformAdminId: string): Promise<IEcosystemInvitations> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'invite-user-for-ecosystem-creation', {
-      email,
-      platformAdminId
-    });
-  }
-  /**
-   *
-   * @param userId
-   * @returns Get invitations
-   */
-  async getInvitationsByUserId(userId: string): Promise<IEcosystemInvitations[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-invitations-by-user', { userId });
-  }
 
   /**
    *

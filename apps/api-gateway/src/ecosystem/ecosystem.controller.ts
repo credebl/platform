@@ -39,7 +39,6 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { InviteMemberToEcosystemDto, UpdateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
-import { CreateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
 import { user } from '@prisma/client';
 import { User } from '../authz/decorators/user.decorator';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
@@ -67,64 +66,6 @@ import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/d
 })
 export class EcosystemController {
   constructor(private readonly ecosystemService: EcosystemService) {}
-
-  /**
-   * Invitation to create ecosystem (platform admin)
-   * @param createEcosystemInvitationDto
-   * @returns Success message
-   */
-  @Post('/invitations')
-  @Roles(OrgRoles.PLATFORM_ADMIN)
-  @ApiOperation({
-    summary: 'Create ecosystem invitation (platform admin)',
-    description: 'Invite a user to create an ecosystem'
-  })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Success',
-    type: ApiResponseDto
-  })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiBearerAuth()
-  async createInvitation(
-    @Body() createEcosystemInvitationDto: CreateEcosystemInvitationDto,
-    @User() reqUser: user,
-    @Res() res: Response
-  ): Promise<Response> {
-    await this.ecosystemService.inviteUserToCreateEcosystem(createEcosystemInvitationDto.email, reqUser.id);
-
-    return res.status(HttpStatus.CREATED).json({
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.ecosystem.success.createInvitation
-    });
-  }
-
-  /**
-   * Get invitations sent by platform admin
-   * @returns Invitation details
-   */
-
-  @Get('/invitations')
-  @ApiOperation({
-    summary: 'Get ecosystem invitations by user (platform admin)',
-    description: 'Fetch all ecosystem invitations created by the logged-in user'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Invitations fetched successfully'
-  })
-  @Roles(OrgRoles.PLATFORM_ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @ApiBearerAuth()
-  async getInvitations(@User() reqUser: user, @Res() res: Response): Promise<Response> {
-    const invitations = await this.ecosystemService.getInvitationsByUserId(reqUser.id);
-
-    return res.status(HttpStatus.OK).json({
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.ecosystem.success.fetch,
-      data: invitations
-    });
-  }
 
   @Post('/invite-member')
   @ApiOperation({
@@ -221,7 +162,7 @@ export class EcosystemController {
    * @param orgId The ID of the organization
    * @returns Created ecosystem details
    */
-  @Post('/:orgId')
+  @Post('/:orgId/create')
   @ApiOperation({
     summary: 'Create a new ecosystem',
     description: 'Create a new ecosystem'

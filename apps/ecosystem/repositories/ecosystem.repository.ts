@@ -651,12 +651,48 @@ export class EcosystemRepository {
     // eslint-disable-next-line camelcase
   }): Promise<intent_templates> {
     try {
+      //   /** 1️⃣ Fetch intent (needed for ecosystemId) */
+      //   const intent = await this.prisma.intents.findUnique({
+      //     where: { id: data.intentId },
+      //     select: { ecosystemId: true }
+      //   });
+
+      //   if (!intent) {
+      //     throw new RpcException({ statusCode: 404, message: 'Intent not found' });
+      //   }
+
+      //   /** 2️⃣ If orgId is provided → validate ecosystem membership */
+      // if (data.orgId) {
+      //   const orgMembership = await this.prisma.ecosystem_orgs.findUnique({
+      //     where: {
+      //       orgId_ecosystemId: {
+      //         orgId: data.orgId,
+      //         ecosystemId: intent.ecosystemId
+      //       }
+      //     }
+      //   });
+
+      //   if (!orgMembership || orgMembership.status !== MemberStatus.ACTIVE) {
+      //     throw new RpcException({
+      //       statusCode: 403,
+      //       message: 'Provided orgId is not an ACTIVE member of this ecosystem'
+      //     });
+      //   }
+      // }
       // Check if a template already exists for this intent and org combination
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const where: any = {
+        intentId: data.intentId
+      };
+
+      if (!data.orgId !== undefined) {
+        where.orgId = data.orgId;
+      } else {
+        where.orgId = null;
+      }
+
       const existingTemplate = await this.prisma.intent_templates.findFirst({
-        where: {
-          intentId: data.intentId,
-          orgId: data.orgId || null // null if orgId is not provided (global template)
-        }
+        where
       });
 
       if (existingTemplate) {

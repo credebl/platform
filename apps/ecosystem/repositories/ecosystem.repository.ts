@@ -685,7 +685,7 @@ export class EcosystemRepository {
         intentId: data.intentId
       };
 
-      if (!data.orgId !== undefined) {
+      if (data.orgId === undefined) {
         where.orgId = data.orgId;
       } else {
         where.orgId = null;

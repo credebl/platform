@@ -1,14 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { AckPolicy, DeliverPolicy, JetStreamManager, RetentionPolicy, StorageType, nanos } from 'nats';
 
-// export const STREAM = 'airport-events';
-// export const SUBJECTS = ['airport.events.*'];
-// export const CONSUMER = 'hub-consumer';
-
-// export const STREAM =  'hubStream';
-// export const SUBJECTS = ['hubStream.presentation.*', 'hubStream.consent.*'];
-// export const CONSUMER = 'hub-consumer';
-
 export const SOURCE_STREAM = 'notify';
 export const STREAM = 'aggregate';
 export const SUBJECTS = ['aggregate.>'];

@@ -662,6 +662,7 @@ model x509_certificates {
   expiry            DateTime
   certificateBase64 String
   isImported        Boolean  @default(false)
+  keyId     String?
 
   createdAt           DateTime @default(now())
   createdBy           String   @db.Uuid

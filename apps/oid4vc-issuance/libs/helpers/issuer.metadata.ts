@@ -3,12 +3,7 @@ import { oidc_issuer, Prisma } from '@prisma/client';
 import { batchCredentialIssuanceDefault } from '../../constant/issuance';
 import { CreateOidcCredentialOffer } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { IssuerResponse } from 'apps/oid4vc-issuance/interfaces/oid4vc-issuance.interfaces';
-import {
-  Claim,
-  CredentialAttribute,
-  MdocTemplate,
-  SdJwtTemplate
-} from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
+import { Claim, MdocTemplate, SdJwtTemplate } from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
 
 type AttributeDisplay = { name: string; locale: string };
@@ -44,10 +39,14 @@ type CredentialConfig = {
   vct?: string;
   scope: string;
   doctype?: string;
-  claims: Claim[];
-  credential_signing_alg_values_supported: string[];
+
+  credential_signing_alg_values_supported: string[] | number[];
   cryptographic_binding_methods_supported: string[];
-  display: { name: string; description?: string; locale?: string }[];
+
+  credential_metadata: {
+    claims: Claim[];
+    display: CredentialDisplayItem[];
+  };
 };
 
 type CredentialConfigurationsSupported = {
@@ -55,8 +54,9 @@ type CredentialConfigurationsSupported = {
 };
 
 // ---- Static Lists (as requested) ----
-const STATIC_CREDENTIAL_ALGS = ['ES256', 'EdDSA'] as const;
-const STATIC_BINDING_METHODS = ['did:key'] as const;
+const STATIC_CREDENTIAL_ALGS_FOR_SDJWT = ['ES256', 'EdDSA'] as const;
+const STATIC_CREDENTIAL_ALGS_FOR_MDOC = [-7, -9] as const;
+const STATIC_BINDING_METHODS = ['did:key', 'did:web', 'did:jwk', 'jwk'] as const;
 
 // Safe coercion helpers
 function coerceJsonObject<T>(v: Prisma.JsonValue): T | null {
@@ -243,35 +243,93 @@ export function encodeIssuerPublicId(publicIssuerId: string): string {
 /**
  * Recursively builds a nested claims object from a list of attributes.
  */
-function buildNestedClaims(attributes: CredentialAttribute[]): Record<string, Claim> {
-  const claims: Record<string, Claim> = {};
+// function buildNestedClaims(attributes: CredentialAttribute[]): Record<string, Claim> {
+//   const claims: Record<string, Claim> = {};
+
+//   for (const attr of attributes) {
+//     const node: Claim = {};
+
+//     // ✅ include display info
+//     if (attr.display?.length) {
+//       node.display = attr.display.map((d) => ({
+//         name: d.name,
+//         locale: d.locale
+//       }));
+//     }
+
+//     // ✅ include mandatory flag
+//     if (attr.mandatory) {
+//       node.mandatory = true;
+//     }
+
+//     // ✅ handle nested children recursively
+//     if (attr.children?.length) {
+//       const childClaims = buildNestedClaims(attr.children);
+//       Object.assign(node, childClaims); // merge children into current node
+//     }
+
+//     claims[attr.key] = node;
+//   }
+
+//   return claims;
+// }
+// function generateObjects(
+//   namespace: string,
+//   attributes: any[],
+//   parentPath: string[] = []
+// ): any[] {
+//   const result: any[] = [];
+
+//   for (const attr of attributes) {
+//     const currentPath = [...parentPath, attr.key];
+
+//     // If display exists, create object
+//     if (attr.display) {
+//       result.push({
+//         path: [namespace, ...currentPath],
+//         display: attr.display
+//       });
+//     }
+
+//     // Recurse into children
+//     if (attr.children?.length) {
+//       result.push(
+//         ...generateObjects(namespace, attr.children, currentPath)
+//       );
+//     }
+//   }
+//   console.log('generateObjects - result', JSON.stringify(result), '\n\n\n');
+//   return result;
+// }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function generateClaims(attributes: any[], namespace?: string, parentPath: string[] = []): Claim[] {
+  const result: Claim[] = [];
 
   for (const attr of attributes) {
-    const node: Claim = {};
+    const currentPath = [...parentPath, attr.key];
 
-    // ✅ include display info
-    if (attr.display?.length) {
-      node.display = attr.display.map((d) => ({
-        name: d.name,
-        locale: d.locale
-      }));
+    const path = namespace ? [namespace, ...currentPath] : currentPath;
+
+    const claim: Claim = { path };
+
+    if (attr.display) {
+      claim.display = attr.display;
     }
 
-    // ✅ include mandatory flag
-    if (attr.mandatory) {
-      node.mandatory = true;
+    if (true === attr.mandatory) {
+      claim.mandatory = true;
     }
 
-    // ✅ handle nested children recursively
+    // Always push the claim (even if it only has path)
+    result.push(claim);
+
+    // Handle nested children
     if (attr.children?.length) {
-      const childClaims = buildNestedClaims(attr.children);
-      Object.assign(node, childClaims); // merge children into current node
+      result.push(...generateClaims(attr.children, namespace, currentPath));
     }
-
-    claims[attr.key] = node;
   }
 
-  return claims;
+  return result;
 }
 
 /**
@@ -279,25 +337,24 @@ function buildNestedClaims(attributes: CredentialAttribute[]): Record<string, Cl
  */
 //TODO: Remove any type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildClaimsFromTemplate(template: SdJwtTemplate | MdocTemplate): Record<string, any> {
+function buildClaimsFromTemplate(template: SdJwtTemplate | MdocTemplate): Record<string, Claim> | Claim[] {
   // ✅ MDOC case — handle namespaces
   if ((template as MdocTemplate).namespaces) {
     const mdocTemplate = template as MdocTemplate;
-
     //TODO: Remove any type
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const claims: Record<string, any> = {};
-
+    const claims: Claim[] = [];
     for (const ns of mdocTemplate.namespaces) {
-      claims[ns.namespace] = buildNestedClaims(ns.attributes);
-    }
+      const generated = generateClaims(ns.attributes, ns.namespace);
 
+      claims.push(...generated);
+    }
     return claims;
   }
-
   // ✅ SD-JWT case — flat attributes
   const sdjwtTemplate = template as SdJwtTemplate;
-  return buildNestedClaims(sdjwtTemplate.attributes);
+  const claims = generateClaims(sdjwtTemplate.attributes);
+  return claims;
 }
 
 //TODO: Fix this eslint issue
@@ -316,14 +373,17 @@ export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate
       format: CredentialFormat.SdJwtVc,
       scope: credentialScope,
       vct: template.vct,
-      credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS],
+      credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS_FOR_SDJWT],
       cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS],
       // proof_types_supported: {
       //   jwt: {
       //     proof_signing_alg_values_supported: ['ES256']
       //   }
       // },
-      claims
+      credential_metadata: {
+        claims,
+        display: []
+      }
     }
   };
 }
@@ -339,7 +399,6 @@ export function buildMdocCredentialConfig(name: string, template: MdocTemplate) 
   const credentialScope = `openid4vc:${template.doctype}-${formatSuffix}`;
 
   const claims = buildClaimsFromTemplate(template);
-
   // for (const ns of template.namespaces) {
   //   claims.push(...buildClaimsFromAttributes(ns.attributes, [ns.namespace]));
   // }
@@ -349,9 +408,12 @@ export function buildMdocCredentialConfig(name: string, template: MdocTemplate) 
       format: CredentialFormat.Mdoc,
       scope: credentialScope,
       doctype: template.doctype,
-      credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS],
+      credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS_FOR_MDOC],
       cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS],
-      claims
+      credential_metadata: {
+        claims,
+        display: []
+      }
     }
   };
 }
@@ -387,7 +449,6 @@ export function buildCredentialConfigurationsSupported(templateRows: any): Recor
       templateToBuild,
       format === CredentialFormat.Mdoc ? CredentialFormat.Mdoc : CredentialFormat.SdJwtVc
     );
-
     const appearanceJson = coerceJsonObject<unknown>(templateRow.appearance);
 
     // Prepare the display configuration
@@ -406,12 +467,11 @@ export function buildCredentialConfigurationsSupported(templateRows: any): Recor
 
     // eslint-disable-next-line prefer-destructuring
     const dynamicKey = Object.keys(credentialConfig)[0];
-    Object.assign(credentialConfig[dynamicKey], {
+    Object.assign(credentialConfig[dynamicKey].credential_metadata, {
       display: displayConfigurations
     });
 
     Object.assign(credentialConfigMap, credentialConfig);
   }
-
   return credentialConfigMap; // ✅ Return flat map, not nested object
 }

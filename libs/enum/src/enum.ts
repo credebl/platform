@@ -315,8 +315,8 @@ export enum OpenId4VcIssuanceSessionState {
 }
 
 export enum x5cKeyType {
-  Ed25519 = 'ed25519',
-  P256 = 'p256'
+  Ed25519 = 'Ed25519',
+  P256 = 'P-256'
 }
 
 export enum x5cRecordStatus {
@@ -348,7 +348,7 @@ export enum X509ExtendedKeyUsage {
 }
 
 export enum CredentialFormat {
-  SdJwtVc = 'vc+sd-jwt',
+  SdJwtVc = 'dc+sd-jwt',
   Mdoc = 'mso_mdoc'
 }
 

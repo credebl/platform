@@ -6,19 +6,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse
 } from '@nestjs/swagger';
-import {
-  Controller,
-  UseFilters,
-  Post,
-  Body,
-  Res,
-  HttpStatus,
-  Param,
-  UseGuards,
-  ParseBoolPipe,
-  Get,
-  Query
-} from '@nestjs/common';
+import { Controller, UseFilters, Post, Body, Res, HttpStatus, Param, UseGuards, ParseBoolPipe } from '@nestjs/common';
 import IResponse from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -27,11 +15,7 @@ import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
-import { GetAllIntentTemplatesDto } from './dtos/get-all-intent-templates.dto';
-import { GetIntentTemplateByIntentAndOrgDto } from './dtos/get-intent-template-by-intent-and-org.dto';
-import { GetAllIntentTemplatesResponseDto } from './dtos/get-all-intent-templates-response.dto';
 import { UtilitiesService } from './utilities.service';
-import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
 import { AuthGuard } from '@nestjs/passport';
 
 @UseFilters(CustomExceptionFilter)
@@ -94,63 +78,5 @@ export class UtilitiesController {
       data: shorteningUrl
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
-  }
-  /**
-   * Get all intent templates
-   * @param res The response object
-   * @returns List of all intent templates
-   */
-  @Get('/intent-templates')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
-  @ApiOperation({ summary: 'Get All Intent Templates', description: 'Retrieve all intent template mappings.' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Intent templates retrieved successfully',
-    type: GetAllIntentTemplatesResponseDto
-  })
-  async getAllIntentTemplates(
-    @Query() intentTemplateSearchCriteria: GetAllIntentTemplatesDto,
-    @Res() res: Response
-  ): Promise<Response> {
-    const intentTemplates: IIntentTemplateList =
-      await this.utilitiesService.getAllIntentTemplatesByQuery(intentTemplateSearchCriteria);
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: 'Intent templates retrieved successfully',
-      data: intentTemplates
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
-  }
-
-  /**
-   * Get intent template by intent name and verifier organization ID
-   * @param body The intent name and verifier organization ID
-   * @param res The response object
-   * @returns The intent template details (org-specific if exists, otherwise global)
-   */
-  @Get('/intent-templates/by-intent-and-org')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
-  @ApiOperation({
-    summary: 'Get Intent Template by Intent and Organization',
-    description:
-      'Retrieve intent template details by intent name and verifier organization ID. Returns org-specific template if mapped, otherwise returns global template.'
-  })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Intent template retrieved successfully', type: ApiResponseDto })
-  async getIntentTemplateByIntentAndOrg(
-    @Query() getIntentTemplateByIntentAndOrgDto: GetIntentTemplateByIntentAndOrgDto,
-    @Res() res: Response
-  ): Promise<Response> {
-    const intentTemplate = await this.utilitiesService.getIntentTemplateByIntentAndOrg(
-      getIntentTemplateByIntentAndOrgDto.intentName,
-      getIntentTemplateByIntentAndOrgDto.verifierOrgId
-    );
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: intentTemplate ? 'Intent template retrieved successfully' : 'No intent template found',
-      data: intentTemplate
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

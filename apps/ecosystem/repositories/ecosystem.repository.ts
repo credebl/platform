@@ -608,10 +608,20 @@ export class EcosystemRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getIntentTemplatesByIntentId(intentId: string): Promise<intent_templates[]> {
+  async getIntentTemplates(params: { intentId?: string; orgId?: string }): Promise<intent_templates[]> {
     try {
+      const where: Record<string, unknown> = {};
+
+      if (params.intentId) {
+        where.intentId = params.intentId;
+      }
+
+      if (params.orgId) {
+        where.orgId = params.orgId;
+      }
+
       const intentTemplates = await this.prisma.intent_templates.findMany({
-        where: { intentId },
+        where,
         include: {
           organisation: true,
           intent: true,
@@ -620,36 +630,16 @@ export class EcosystemRepository {
       });
 
       this.logger.log(
-        `[getIntentTemplatesByIntentId] - Retrieved ${intentTemplates.length} intent templates for intent ${intentId}`
+        `[getIntentTemplates] - Retrieved ${intentTemplates.length} intent templates${params.intentId ? ` for intent ${params.intentId}` : ''}${params.orgId ? ` for org ${params.orgId}` : ''}`
       );
+
       return intentTemplates;
     } catch (error) {
-      this.logger.error(`Error in getIntentTemplatesByIntentId: ${error}`);
+      this.logger.error('[getIntentTemplates] Error:', error);
       throw error;
     }
   }
 
-  // eslint-disable-next-line camelcase
-  async getIntentTemplatesByOrgId(orgId: string): Promise<intent_templates[]> {
-    try {
-      const intentTemplates = await this.prisma.intent_templates.findMany({
-        where: { orgId },
-        include: {
-          organisation: true,
-          intent: true,
-          template: true
-        }
-      });
-
-      this.logger.log(
-        `[getIntentTemplatesByOrgId] - Retrieved ${intentTemplates.length} intent templates for org ${orgId}`
-      );
-      return intentTemplates;
-    } catch (error) {
-      this.logger.error(`Error in getIntentTemplatesByOrgId: ${error}`);
-      throw error;
-    }
-  }
   // Intent Template CRUD operations
   async createIntentTemplate(data: {
     orgId?: string;

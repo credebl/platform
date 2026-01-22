@@ -417,13 +417,6 @@ export class EcosystemService {
     try {
       const { orgId, intentId, templateId, user } = data;
 
-      if (!intentId || !templateId || !user?.id) {
-        throw new RpcException({
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'intentId, templateId and user are required'
-        });
-      }
-
       const intent = await this.ecosystemRepository.findIntentById(intentId);
 
       if (!intent) {
@@ -489,8 +482,7 @@ export class EcosystemService {
 
   async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
     try {
-      const intentTemplates = await this.ecosystemRepository.getIntentTemplatesByIntentId(intentId);
-      return intentTemplates;
+      return await this.ecosystemRepository.getIntentTemplates({ intentId });
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
       this.logger.error(
@@ -503,8 +495,7 @@ export class EcosystemService {
 
   async getIntentTemplatesByOrgId(orgId: string): Promise<object[]> {
     try {
-      const intentTemplates = await this.ecosystemRepository.getIntentTemplatesByOrgId(orgId);
-      return intentTemplates;
+      return await this.ecosystemRepository.getIntentTemplates({ orgId });
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
       this.logger.error(
@@ -520,8 +511,7 @@ export class EcosystemService {
   }): Promise<IIntentTemplateList> {
     try {
       const { intentTemplateSearchCriteria } = payload;
-      const result = await this.ecosystemRepository.getAllIntentTemplateByQuery(intentTemplateSearchCriteria);
-      return result;
+      return await this.ecosystemRepository.getAllIntentTemplateByQuery(intentTemplateSearchCriteria);
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
       this.logger.error(
@@ -564,11 +554,10 @@ export class EcosystemService {
           message: 'user is required'
         });
       }
-      const intentTemplate = await this.ecosystemRepository.updateIntentTemplate(id, {
+      return await this.ecosystemRepository.updateIntentTemplate(id, {
         ...templateData,
         lastChangedBy: user.id
       });
-      return intentTemplate;
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, 'Failed to update intent template');
       this.logger.error(

@@ -393,7 +393,7 @@ export class Oid4vpVerificationService extends BaseService {
       return createdSession;
     } catch (error) {
       this.logger.error(
-        `[createVerificationPresentation] - error creating verification presentation: ${JSON.stringify(error?.response ?? error)}`
+        `[createVerificationPresentation] - error creating verification presentation: ${JSON.stringify(error)}`
       );
       throw new RpcException(error?.response ?? error);
     }
@@ -451,7 +451,7 @@ export class Oid4vpVerificationService extends BaseService {
       this.logger.debug(`[getVerificationSessionResponse] response fetched successfully for orgId=${orgId}`);
       return verifiers;
     } catch (error) {
-      this.logger.error(`[getVerificationSessionResponse] - error: ${JSON.stringify(error?.response ?? error)}`);
+      this.logger.error(`[getVerificationSessionResponse] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error?.response ?? error);
     }
   }

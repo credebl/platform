@@ -46,9 +46,10 @@ export class PlatformService extends BaseService {
   }
 
   /**
-   *
-   * @param createEcosystemInvitationDto
-   * @returns Ecosystem creation success
+   *  Invites a user to create an ecosystem
+   * `@param` email - The email address of the user to invite
+   * `@param` platformAdminId - The ID of the platform admin sending the invitation
+   * @returns The created ecosystem invitation
    */
   async inviteUserToCreateEcosystem(email: string, platformAdminId: string): Promise<IEcosystemInvitations> {
     return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'invite-user-for-ecosystem-creation', {

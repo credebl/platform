@@ -111,7 +111,7 @@ export class EcosystemService {
 
   // Intent Template CRUD operations
   async createIntentTemplate(createIntentTemplateDto: CreateIntentTemplateDto, user: IUserRequest): Promise<object> {
-    const payload = { ...createIntentTemplateDto, user };
+    const payload = { ...createIntentTemplateDto, user: { id: user.userId } };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-intent-template', payload);
   }
 
@@ -120,7 +120,7 @@ export class EcosystemService {
   }
 
   async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-templates-by-intent-id', intentId);
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-templates-by-intent-id', { intentId });
   }
 
   async updateIntentTemplate(
@@ -128,16 +128,16 @@ export class EcosystemService {
     updateIntentTemplateDto: UpdateIntentTemplateDto,
     user: IUserRequest
   ): Promise<object> {
-    const payload = { id, ...updateIntentTemplateDto, user };
+    const payload = { id, ...updateIntentTemplateDto, user: { id: user.userId } };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-intent-template', payload);
   }
 
   async deleteIntentTemplate(id: string): Promise<object> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent-template', id);
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent-template', { id });
   }
 
   async getIntentTemplatesByOrgId(orgId: string): Promise<object[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-templates-by-org-id', orgId);
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-templates-by-org-id', { orgId });
   }
   // Intent CRUD operations
 
@@ -200,6 +200,10 @@ export class EcosystemService {
    * @returns Deleted intent
    */
   async deleteIntent(ecosystemId: string, intentId: string, user: IUserRequest): Promise<object> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent', { ecosystemId, intentId, user });
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent', {
+      ecosystemId,
+      intentId,
+      user: { id: user.userId }
+    });
   }
 }

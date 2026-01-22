@@ -196,8 +196,8 @@ export const ResponseMessages = {
       intentUpdated: 'Ecosystem intent updated successfully',
       deleteIntent: 'Ecosystem intent deleted successfully',
       fetchIntents: 'Ecosystem intents fetched successfully',
-      fetchIntentTemplates: 'Ecosystem intent fetched successfully by id',
-      fetchVerificationTemplates: ' Verification templates fetched successfully'
+      fetchIntentTemplates: 'Ecosystem intent templates fetched successfully',
+      fetchVerificationTemplates: 'Verification templates fetched successfully'
     },
     error: {
       memberInviteFailed: 'Failed to send invitation for the member',
@@ -261,7 +261,8 @@ export const ResponseMessages = {
       ecosystemMembersNotExists: 'Ecosystem members does not exists',
       notAbleToDeleteEcosystem: 'You cannot delete the ecosystem, because you are the ecosystem lead',
       ecosystemNotExists: 'Ecosystem does not exists',
-
+      invalidFormatOfEcosystemId: 'Invalid format of ecosystemId',
+      invalidFormatOfIntentId: 'Invalid format of ecosystemId',
       emailOrPlatformAdminIdMissing: 'Email or platformAdminId missing',
       userIdMissing: 'UserId is required',
       fetch: 'Error while fetching ecosystems',

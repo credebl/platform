@@ -562,6 +562,9 @@ export class EcosystemRepository {
       const result = await this.prisma.ecosystem.findFirst({
         where: { id }
       });
+      if (!result) {
+        throw new NotFoundException('Ecosystem not found');
+      }
       return result;
     } catch (error) {
       this.logger.error(`Error in getEcosystemById: ${error.message}`);
@@ -571,7 +574,11 @@ export class EcosystemRepository {
 
   async getPlatformConfigData(): Promise<platform_config> {
     try {
-      return await this.prisma.platform_config.findFirst();
+      const config = await this.prisma.platform_config.findFirst();
+      if (!config) {
+        throw new NotFoundException('Platform config not found');
+      }
+      return config;
     } catch (error) {
       this.logger.error(`Error in getPlatformConfigData: ${error.message}`);
       throw error;
@@ -589,7 +596,9 @@ export class EcosystemRepository {
           template: true
         }
       });
-
+      if (!intentTemplate) {
+        throw new NotFoundException('Intent template not found');
+      }
       this.logger.log(`[getIntentTemplateById] - Intent template details ${id}`);
       return intentTemplate;
     } catch (error) {
@@ -692,14 +701,14 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async updateIntentTemplate(
     id: string,
-    data: { orgId: string; intentId: string; templateId: string; lastChangedBy: string }
+    data: { orgId?: string | null; intentId: string; templateId: string; lastChangedBy: string }
     // eslint-disable-next-line camelcase
   ): Promise<intent_templates> {
     try {
       const intentTemplate = await this.prisma.intent_templates.update({
         where: { id },
         data: {
-          orgId: data.orgId,
+          orgId: data.orgId ?? null,
           intentId: data.intentId,
           templateId: data.templateId,
           lastChangedBy: data.lastChangedBy,
@@ -986,7 +995,7 @@ export class EcosystemRepository {
         hasNextPage,
         hasPreviousPage,
         nextPage: Number(pageNumber) + 1,
-        previousPage: pageNumber - 1,
+        previousPage: hasPreviousPage ? pageNumber - 1 : 1,
         lastPage: Math.ceil(totalItems / pageSize),
         data
       };
@@ -1088,7 +1097,7 @@ export class EcosystemRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getTemplatesByEcosystemId(orgId: string): Promise<verification_templates[]> {
+  async getTemplatesByOrgId(orgId: string): Promise<verification_templates[]> {
     return this.prisma.verification_templates.findMany({
       where: {
         organisation: {
@@ -1096,7 +1105,7 @@ export class EcosystemRepository {
             some: {
               orgId,
               deletedAt: null,
-              status: 'ACTIVE' // optional but recommended
+              status: EcosystemOrgStatus.ACTIVE // optional but recommended
             }
           }
         }

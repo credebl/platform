@@ -474,7 +474,7 @@ export class EcosystemService {
     try {
       const intentTemplate = await this.ecosystemRepository.getIntentTemplateById(id);
       if (!intentTemplate) {
-        throw new Error('Intent template not found');
+        throw new NotFoundException('Intent template not found');
       }
       return intentTemplate;
     } catch (error) {
@@ -558,6 +558,12 @@ export class EcosystemService {
   ): Promise<object> {
     try {
       const { user, ...templateData } = data;
+      if (!user?.id) {
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'user is required'
+        });
+      }
       const intentTemplate = await this.ecosystemRepository.updateIntentTemplate(id, {
         ...templateData,
         lastChangedBy: user.id
@@ -630,12 +636,12 @@ export class EcosystemService {
     }
   }
 
-  async getTemplatesByIntentId(orgId: string): Promise<object[]> {
+  async getTemplatesByOrgId(orgId: string): Promise<object[]> {
     if (!orgId) {
       throw new BadRequestException('orgId is required');
     }
 
-    return this.ecosystemRepository.getTemplatesByEcosystemId(orgId);
+    return this.ecosystemRepository.getTemplatesByOrgId(orgId);
   }
 
   /**
@@ -643,17 +649,17 @@ export class EcosystemService {
    */
   async updateIntent(updateIntentDto: UpdateIntentDto): Promise<object> {
     try {
-      const { intentId, ecosystemId, name, description } = updateIntentDto;
+      const { intentId, ecosystemId, userId, name, description } = updateIntentDto;
 
-      if (!intentId || !ecosystemId) {
-        throw new Error('Invalid intentId and ecosystemId are required');
+      if (!intentId || !ecosystemId || !userId) {
+        throw new BadRequestException('intentId, ecosystemId and userId are required');
       }
 
       const intent = await this.ecosystemRepository.updateIntent({
         name,
         description,
         intentId: updateIntentDto.intentId,
-        lastChangedBy: updateIntentDto.userId
+        lastChangedBy: userId
       });
 
       this.logger.log(`[updateIntent] - Intent updated with id ${intent.id}`);

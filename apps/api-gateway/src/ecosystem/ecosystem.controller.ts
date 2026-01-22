@@ -409,7 +409,8 @@ export class EcosystemController {
    */
   @Post('/intent-templates')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({ summary: 'Create Intent Template', description: 'Create a new intent template mapping.' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -437,7 +438,8 @@ export class EcosystemController {
    */
   @Get('/intent-templates')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({ summary: 'Get All Intent Templates', description: 'Retrieve all intent template mappings.' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -466,7 +468,8 @@ export class EcosystemController {
    */
   @Get('/intent-templates/by-intent-and-org')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({
     summary: 'Get Intent Template by Intent and Organization',
     description:
@@ -497,13 +500,25 @@ export class EcosystemController {
    */
   @Get('/intent-templates/intent/:intentId')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({
     summary: 'Get Intent Templates by Intent ID',
     description: 'Retrieve all intent templates for a specific intent.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent templates retrieved successfully', type: ApiResponseDto })
-  async getIntentTemplatesByIntentId(@Param('intentId') intentId: string, @Res() res: Response): Promise<Response> {
+  async getIntentTemplatesByIntentId(
+    @Param(
+      'intentId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid intent ID format');
+        }
+      })
+    )
+    intentId: string,
+    @Res() res: Response
+  ): Promise<Response> {
     const intentTemplates = await this.ecosystemService.getIntentTemplatesByIntentId(intentId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -521,7 +536,8 @@ export class EcosystemController {
    */
   @Get('/intent-templates/org/:orgId')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD, OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({
     summary: 'Get Intent Templates by Organization ID',
     description: 'Retrieve all intent templates for a specific organization.'
@@ -545,7 +561,8 @@ export class EcosystemController {
    */
   @Get('/intent-templates/:id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({ summary: 'Get Intent Template by ID', description: 'Retrieve intent template details by ID.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent template retrieved successfully', type: ApiResponseDto })
   async getIntentTemplateById(
@@ -578,7 +595,8 @@ export class EcosystemController {
    */
   @Put('/intent-templates/:id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({ summary: 'Update Intent Template', description: 'Update an existing intent template mapping.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent template updated successfully', type: ApiResponseDto })
   async updateIntentTemplate(
@@ -604,7 +622,8 @@ export class EcosystemController {
    */
   @Delete('/intent-templates/:id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({ summary: 'Delete Intent Template', description: 'Delete an intent template mapping.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent template deleted successfully', type: ApiResponseDto })
   async deleteIntentTemplate(@Param('id') id: string, @Res() res: Response): Promise<Response> {
@@ -623,8 +642,8 @@ export class EcosystemController {
    * @returns Created intent
    */
   @Post('/intents/:ecosystemId')
-  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Create Intent',
@@ -657,7 +676,8 @@ export class EcosystemController {
 
   @Get('/intents/:ecosystemId')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({
     summary: 'Get intents by ecosystem',
     description: 'Retrieve all intents of an ecosystem or a specific intent if intentId is provided'
@@ -674,7 +694,15 @@ export class EcosystemController {
   })
   async getIntents(
     @Res() res: Response,
-    @Param('ecosystemId') ecosystemId: string,
+    @Param(
+      'ecosystemId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid ecosystem ID format');
+        }
+      })
+    )
+    ecosystemId: string,
     @Query('intentId') intentId?: string
   ): Promise<Response> {
     const intents = await this.ecosystemService.getIntents(ecosystemId, intentId);
@@ -690,7 +718,8 @@ export class EcosystemController {
    * Get template details by org ID
    */
   @Get('/:orgId/templates')
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD, OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get template details by orgId',
@@ -723,7 +752,8 @@ export class EcosystemController {
    */
   @Put('/intents/:ecosystemId/:intentId')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({
     summary: 'Update Intent',
     description: 'Update an existing intent within an ecosystem'
@@ -734,8 +764,24 @@ export class EcosystemController {
     type: ApiResponseDto
   })
   async updateIntent(
-    @Param('ecosystemId') ecosystemId: string,
-    @Param('intentId') intentId: string,
+    @Param(
+      'ecosystemId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);
+        }
+      })
+    )
+    ecosystemId: string,
+    @Param(
+      'intentId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfIntentId);
+        }
+      })
+    )
+    intentId: string,
     @Body() updateIntentDto: UpdateIntentDto,
     @User() user: user,
     @Res() res: Response
@@ -762,7 +808,8 @@ export class EcosystemController {
    */
   @Delete('/intents/:ecosystemId/:intentId')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({
     summary: 'Delete Intent',
     description: 'Delete an intent within an ecosystem'

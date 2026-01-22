@@ -1,4 +1,4 @@
-import { Body, Controller, Logger } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { EcosystemOrgStatus, Invitation } from '@credebl/enum/enum';
 import {
   ICreateEcosystem,
@@ -9,15 +9,15 @@ import {
   IEcosystemMemberInvitations,
   IGetAllOrgs
 } from '../interfaces/ecosystem.interfaces';
+import {
+  IIntentTemplateList,
+  IIntentTemplateSearchCriteria
+} from '@credebl/common/interfaces/intents-template.interface';
 import { ecosystem, user } from '@prisma/client';
 
+import { CreateIntentDto } from '../dtos/create-intent.dto';
 import { EcosystemService } from './ecosystem.service';
 import { MessagePattern } from '@nestjs/microservices';
-import {
-  IIntentTemplateSearchCriteria,
-  IIntentTemplateList
-} from '@credebl/common/interfaces/intents-template.interface';
-import { CreateIntentDto } from '../dtos/create-intent.dto';
 import { UpdateIntentDto } from '../dtos/update-intent.dto';
 
 @Controller()
@@ -259,7 +259,7 @@ export class EcosystemController {
    */
   @MessagePattern({ cmd: 'get-intents' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getIntents(@Body() payload: any): Promise<object[]> {
+  async getIntents(payload: { ecosystemId: string; intentId?: string }): Promise<object[]> {
     const { ecosystemId, intentId } = payload;
 
     return this.ecosystemService.getIntents(ecosystemId, intentId);
@@ -267,7 +267,7 @@ export class EcosystemController {
 
   @MessagePattern({ cmd: 'get-verification-templates-by-org-id' })
   async getTemplatesByIntentId(payload: { orgId: string }): Promise<object[]> {
-    return this.ecosystemService.getTemplatesByIntentId(payload.orgId);
+    return this.ecosystemService.getTemplatesByOrgId(payload.orgId);
   }
 
   /**

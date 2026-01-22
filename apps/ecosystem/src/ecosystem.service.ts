@@ -410,33 +410,62 @@ export class EcosystemService {
   // Intent Template CRUD operations
   async createIntentTemplate(data: {
     orgId?: string;
-
     intentId: string;
     templateId: string;
     user: { id: string };
   }): Promise<object> {
     try {
-      const { user, ...templateData } = data;
+      const { orgId, intentId, templateId, user } = data;
 
-      // Validate input
-      if (!templateData.intentId || !templateData.templateId || !user.id) {
-        throw new Error('Invalid data: intentId, templateId, and user are required');
+      if (!intentId || !templateId || !user?.id) {
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'intentId, templateId and user are required'
+        });
       }
 
-      // Call repository — may throw Error (duplicate check, DB errors)
-      const intentTemplate = await this.ecosystemRepository.createIntentTemplate({
-        ...templateData,
-        createdBy: user.id
+      const intent = await this.ecosystemRepository.findIntentById(intentId);
+
+      if (!intent) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'Intent not found'
+        });
+      }
+
+      if (orgId) {
+        const orgMembership = await this.ecosystemRepository.findEcosystemOrg(intent.ecosystemId, orgId);
+
+        if (!orgMembership || orgMembership.status !== EcosystemOrgStatus.ACTIVE) {
+          throw new RpcException({
+            statusCode: HttpStatus.FORBIDDEN,
+            message: 'Provided orgId is not an ACTIVE member of this ecosystem'
+          });
+        }
+      }
+
+      const existingTemplate = await this.ecosystemRepository.findIntentTemplate({
+        orgId,
+        intentId,
+        templateId
       });
 
-      this.logger.log(`[createIntentTemplate] - Intent template created with id ${intentTemplate.id}`);
-      return intentTemplate;
+      if (existingTemplate) {
+        const scope = orgId ? `org ${orgId}` : 'globally';
+        throw new RpcException({
+          statusCode: HttpStatus.CONFLICT,
+          message: `A template is already assigned to this intent for ${scope}.`
+        });
+      }
+
+      return await this.ecosystemRepository.createIntentTemplate({
+        orgId,
+        intentId,
+        templateId,
+        createdBy: user.id
+      });
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, 'Failed to create intent template');
-      this.logger.error(
-        `[createIntentTemplate] - ${errorResponse.statusCode}: ${errorResponse.message}`,
-        ErrorHandler.format(error)
-      );
       throw new RpcException(errorResponse);
     }
   }

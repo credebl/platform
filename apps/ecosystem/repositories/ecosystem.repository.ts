@@ -642,85 +642,53 @@ export class EcosystemRepository {
     }
   }
   // Intent Template CRUD operations
-  // eslint-disable-next-line camelcase
   async createIntentTemplate(data: {
     orgId?: string;
     intentId: string;
     templateId: string;
     createdBy: string;
-    // eslint-disable-next-line camelcase
   }): Promise<intent_templates> {
-    try {
-      //   /** 1️⃣ Fetch intent (needed for ecosystemId) */
-      //   const intent = await this.prisma.intents.findUnique({
-      //     where: { id: data.intentId },
-      //     select: { ecosystemId: true }
-      //   });
-
-      //   if (!intent) {
-      //     throw new RpcException({ statusCode: 404, message: 'Intent not found' });
-      //   }
-
-      //   /** 2️⃣ If orgId is provided → validate ecosystem membership */
-      // if (data.orgId) {
-      //   const orgMembership = await this.prisma.ecosystem_orgs.findUnique({
-      //     where: {
-      //       orgId_ecosystemId: {
-      //         orgId: data.orgId,
-      //         ecosystemId: intent.ecosystemId
-      //       }
-      //     }
-      //   });
-
-      //   if (!orgMembership || orgMembership.status !== MemberStatus.ACTIVE) {
-      //     throw new RpcException({
-      //       statusCode: 403,
-      //       message: 'Provided orgId is not an ACTIVE member of this ecosystem'
-      //     });
-      //   }
-      // }
-      // Check if a template already exists for this intent and org combination
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const where: any = {
-        intentId: data.intentId
-      };
-
-      if (data.orgId === undefined) {
-        where.orgId = data.orgId;
-      } else {
-        where.orgId = null;
+    return this.prisma.intent_templates.create({
+      data: {
+        orgId: data.orgId ?? null,
+        intentId: data.intentId,
+        templateId: data.templateId,
+        createdBy: data.createdBy,
+        lastChangedBy: data.createdBy
       }
-
-      const existingTemplate = await this.prisma.intent_templates.findFirst({
-        where
-      });
-
-      if (existingTemplate) {
-        const scope = data.orgId ? `org ${data.orgId}` : 'globally';
-        this.logger.warn(`[createIntentTemplate] - Template already exists for intent ${data.intentId} ${scope}`);
-        throw new Error(
-          `A template is already assigned to this intent for ${scope}. Only one template per intent per organization is allowed.`
-        );
-      }
-
-      const intentTemplate = await this.prisma.intent_templates.create({
-        data: {
-          orgId: data.orgId,
-          intentId: data.intentId,
-          templateId: data.templateId,
-          createdBy: data.createdBy,
-          lastChangedBy: data.createdBy
-        }
-      });
-
-      this.logger.log(`[createIntentTemplate] - Intent template created with id ${intentTemplate.id}`);
-      return intentTemplate;
-    } catch (error) {
-      this.logger.error(`Error in createIntentTemplate: ${error}`);
-      throw error;
-    }
+    });
   }
 
+  async findIntentById(intentId: string): Promise<{ ecosystemId: string } | null> {
+    return this.prisma.intents.findUnique({
+      where: { id: intentId },
+      select: { ecosystemId: true }
+    });
+  }
+  async findIntentTemplate(data: {
+    orgId?: string;
+    intentId: string;
+    templateId: string;
+  }): Promise<intent_templates | null> {
+    return this.prisma.intent_templates.findFirst({
+      where: {
+        orgId: data.orgId ?? null,
+        intentId: data.intentId,
+        templateId: data.templateId
+      }
+    });
+  }
+
+  async findEcosystemOrg(ecosystemId: string, orgId: string): Promise<ecosystem_orgs | null> {
+    return this.prisma.ecosystem_orgs.findUnique({
+      where: {
+        orgId_ecosystemId: {
+          orgId,
+          ecosystemId
+        }
+      }
+    });
+  }
   // eslint-disable-next-line camelcase
   async updateIntentTemplate(
     id: string,

@@ -7,6 +7,7 @@ import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-
 import { IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
+import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 
 @Injectable()
 export class PlatformService extends BaseService {
@@ -42,5 +43,26 @@ export class PlatformService extends BaseService {
   async getShorteningUrlById(referenceId: string): Promise<object> {
     // NATS call
     return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-shortening-url', referenceId);
+  }
+
+  /**
+   *  Invites a user to create an ecosystem
+   * `@param` email - The email address of the user to invite
+   * `@param` platformAdminId - The ID of the platform admin sending the invitation
+   * @returns The created ecosystem invitation
+   */
+  async inviteUserToCreateEcosystem(email: string, platformAdminId: string): Promise<IEcosystemInvitations> {
+    return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'invite-user-for-ecosystem-creation', {
+      email,
+      platformAdminId
+    });
+  }
+  /**
+   *
+   * @param userId
+   * @returns Get invitations
+   */
+  async getInvitationsByUserId(userId: string): Promise<IEcosystemInvitations[]> {
+    return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-ecosystem-invitations-by-user', { userId });
   }
 }

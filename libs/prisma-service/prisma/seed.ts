@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import * as CryptoJS from 'crypto-js';
 import * as fs from 'fs';
 import * as util from 'util';

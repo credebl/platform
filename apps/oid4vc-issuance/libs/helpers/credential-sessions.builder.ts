@@ -459,7 +459,7 @@ export function buildCredentialOfferPayload(
       throw new UnprocessableEntityException(`${validationError.errors.join(', ')}`);
     }
 
-    const templateFormat = (templateRecord as any).format ?? 'vc+sd-jwt';
+    const templateFormat = (templateRecord as any).format ?? 'dc+sd-jwt';
     const apiFormat = mapDbFormatToApiFormat(templateFormat);
     if (apiFormat === CredentialFormat.SdJwtVc) {
       return buildSdJwtCredential(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);

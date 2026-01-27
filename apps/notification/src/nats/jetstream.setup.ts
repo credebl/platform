@@ -1,5 +1,6 @@
+/* eslint-disable camelcase */
 import { Logger } from '@nestjs/common';
-import { AckPolicy, DeliverPolicy, JetStreamManager, RetentionPolicy, StorageType, nanos } from 'nats';
+import { AckPolicy, DeliverPolicy, JetStreamManager, ReplayPolicy, RetentionPolicy, StorageType, nanos } from 'nats';
 
 export const SOURCE_STREAM = 'notify';
 export const STREAM = 'aggregate';
@@ -53,5 +54,32 @@ export async function ensureConsumer(jsm: JetStreamManager): Promise<void> {
       max_deliver: 5
       // ,filter_subjects: ['hubStream.presentation.test.*']
     });
+  }
+}
+
+export async function ensureSessionConsumer(jsm: JetStreamManager, sessionId: string): Promise<string> {
+  const consumerName = `notify-session-${sessionId}`;
+
+  try {
+    await jsm.consumers.info(STREAM, consumerName);
+    logger.log(`[NATS] Consumer '${consumerName}' already exists`);
+    return consumerName;
+  } catch (error) {
+    logger.error(
+      `Error creatingg consumer info for '${consumerName}': ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+    logger.log(`[NATS] Creating consumer '${consumerName}'`);
+    await jsm.consumers.add(STREAM, {
+      name: consumerName,
+      // durable_name: consumerName,
+      ack_policy: AckPolicy.Explicit,
+      deliver_policy: DeliverPolicy.All,
+      filter_subject: `notify.*.*.*.${sessionId}`,
+      replay_policy: ReplayPolicy.Instant,
+      max_ack_pending: 1000,
+      inactive_threshold: 30_000
+    });
+
+    return consumerName;
   }
 }

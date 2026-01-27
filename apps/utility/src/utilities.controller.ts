@@ -1,12 +1,9 @@
 import { Controller, Logger } from '@nestjs/common';
+
+import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { IShorteningUrlData } from '../interfaces/shortening-url.interface';
 import { MessagePattern } from '@nestjs/microservices';
 import { UtilitiesService } from './utilities.service';
-import { IShorteningUrlData } from '../interfaces/shortening-url.interface';
-import { EmailDto } from '@credebl/common/dtos/email.dto';
-import {
-  IIntentTemplateSearchCriteria,
-  IIntentTemplateList
-} from '@credebl/common/interfaces/intents-template.interface';
 
 @Controller()
 export class UtilitiesController {
@@ -47,20 +44,5 @@ export class UtilitiesController {
       this.logger.error(error);
       throw error;
     }
-  }
-
-  @MessagePattern({ cmd: 'get-all-intent-templates-by-query' })
-  async getAllIntentTemplateByQuery(payload: {
-    intentTemplateSearchCriteria: IIntentTemplateSearchCriteria;
-  }): Promise<IIntentTemplateList> {
-    return this.utilitiesService.getAllIntentTemplateByQuery(payload);
-  }
-
-  @MessagePattern({ cmd: 'get-intent-template-by-intent-and-org' })
-  async getIntentTemplateByIntentAndOrg(payload: {
-    intentName: string;
-    verifierOrgId: string;
-  }): Promise<object | null> {
-    return this.utilitiesService.getIntentTemplateByIntentAndOrg(payload.intentName, payload.verifierOrgId);
   }
 }

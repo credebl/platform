@@ -298,7 +298,6 @@ export class Oid4vcIssuanceService {
       const { name, description, format, canBeRevoked, appearance, signerOption } = credentialTemplate;
 
       const checkNameExist = await this.oid4vcIssuanceRepository.getTemplateByNameForIssuer(name, issuerId);
-      console.log('checkNameExist', checkNameExist);
       if (0 < checkNameExist.length) {
         throw new ConflictException(ResponseMessages.oidcTemplate.error.templateNameAlreadyExist);
       }
@@ -314,7 +313,6 @@ export class Oid4vcIssuanceService {
       };
       // Persist in DB
       const createdTemplate = await this.oid4vcIssuanceRepository.createTemplate(issuerId, metadata);
-      console.log('createdTemplate', createdTemplate);
       if (!createdTemplate) {
         throw new InternalServerErrorException(ResponseMessages.oidcTemplate.error.createFailed);
       }
@@ -323,19 +321,15 @@ export class Oid4vcIssuanceService {
       try {
         const issuerTemplateConfig = await this.buildOidcIssuerConfig(issuerId);
         const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
-        console.log('agentDetails', agentDetails);
         if (!agentDetails) {
           throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
         }
         const { agentEndPoint } = agentDetails;
         const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
-        console.log('issuerDetails', issuerDetails);
         if (!issuerDetails) {
           throw new NotFoundException(ResponseMessages.oidcTemplate.error.issuerDetailsNotFound);
         }
         const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, issuerDetails.publicIssuerId);
-        console.log('url', url);
-        console.log('issuerTemplateConfig', JSON.stringify(issuerTemplateConfig));
         createTemplateOnAgent = await this._createOIDCTemplate(issuerTemplateConfig, url, orgId);
       } catch (agentError) {
         try {
@@ -759,12 +753,9 @@ export class Oid4vcIssuanceService {
   async buildOidcIssuerConfig(issuerId: string) {
     try {
       const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
-      console.log('step-1 issuerDetails', issuerDetails);
       const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
-      console.log('step-2 templates', templates);
 
       const credentialConfigurationsSupported = buildCredentialConfigurationsSupported(templates);
-      console.log('step-3 credentialConfigurationsSupported', credentialConfigurationsSupported);
       return buildIssuerPayload({ credentialConfigurationsSupported }, issuerDetails);
     } catch (error) {
       this.logger.error(`[buildOidcIssuerPayload] - error: ${JSON.stringify(error)}`);

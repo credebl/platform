@@ -676,4 +676,26 @@ export class EcosystemService {
       intentId
     });
   }
+  /**
+   *   Update ecosystem enable/disable flag
+   */
+  async updateEcosystemConfig(payload: {
+    isEcosystemEnabled: boolean;
+    platformAdminId: string;
+  }): Promise<{ message: string }> {
+    const { isEcosystemEnabled, platformAdminId } = payload;
+
+    if ('boolean' !== typeof isEcosystemEnabled) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemEnabledFlag);
+    }
+
+    await this.ecosystemRepository.upsertEcosystemConfig({
+      isEcosystemEnabled,
+      userId: platformAdminId
+    });
+
+    return {
+      message: ResponseMessages.ecosystem.success.updateEcosystemConfig
+    };
+  }
 }

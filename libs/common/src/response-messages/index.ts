@@ -197,7 +197,8 @@ export const ResponseMessages = {
       deleteIntent: 'Ecosystem intent deleted successfully',
       fetchIntents: 'Ecosystem intents fetched successfully',
       fetchIntentTemplates: 'Ecosystem intent templates fetched successfully',
-      fetchVerificationTemplates: 'Verification templates fetched successfully'
+      fetchVerificationTemplates: 'Verification templates fetched successfully',
+      updateEcosystemConfig: 'Ecosystem configuration updated successfully'
     },
     error: {
       memberInviteFailed: 'Failed to send invitation for the member',
@@ -279,7 +280,8 @@ export const ResponseMessages = {
       ecosystemOrgsFetchFailed: 'Failed to fetch ecosystem orgs',
       ecosystemMemberStatusFail: 'Failed to update ecosystem member status',
       failedEcosystemOrgUpdate: 'Failed to update ecosystem org',
-      invitationMemberfail: 'Failed to fetch invitation members'
+      invitationMemberfail: 'Failed to fetch invitation members',
+      invalidEcosystemEnabledFlag: 'Invalid ecosystem enabled flag'
     }
   },
   schema: {

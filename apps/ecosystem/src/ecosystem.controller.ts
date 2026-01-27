@@ -291,4 +291,15 @@ export class EcosystemController {
   async deleteIntent(payload: { ecosystemId: string; intentId: string; user: { id: string } }): Promise<object> {
     return this.ecosystemService.deleteIntent(payload.ecosystemId, payload.intentId, payload.user);
   }
+
+  /**
+   * Update ecosystem platform configuration
+   */
+  @MessagePattern({ cmd: 'update-ecosystem-config' })
+  async updateEcosystemConfig(payload: {
+    isEcosystemEnabled: boolean;
+    platformAdminId: string;
+  }): Promise<{ message: string }> {
+    return this.ecosystemService.updateEcosystemConfig(payload);
+  }
 }

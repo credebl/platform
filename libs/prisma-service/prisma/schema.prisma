@@ -198,6 +198,7 @@ model platform_config {
   username            String    @db.VarChar
   sgApiKey            String    @db.VarChar
   emailFrom           String    @db.VarChar
+  isEcosystemEnabled  Boolean   @default(false)
   apiEndpoint         String    @db.VarChar
   tailsFileServer     String    @db.VarChar
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)

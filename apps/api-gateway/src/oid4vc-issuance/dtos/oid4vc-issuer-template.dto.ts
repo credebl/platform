@@ -171,7 +171,7 @@ export class MdocNamespaceDto {
 }
 export class MdocTemplateDto {
   @ApiProperty({
-    description: 'Document type (required when format is "mso_mdoc"; must NOT be provided when format is "vc+sd-jwt")',
+    description: 'Document type (required when format is "mso_mdoc"; must NOT be provided when format is "dc+sd-jwt")',
     example: 'org.iso.18013.5.1.mDL'
   })
   //@ValidateIf((o: CreateCredentialTemplateDto) => 'mso_mdoc' === o.format)
@@ -189,7 +189,7 @@ export class MdocTemplateDto {
 export class SdJwtTemplateDto {
   @ApiProperty({
     description:
-      'Verifiable Credential Type (required when format is "vc+sd-jwt"; must NOT be provided when format is "mso_mdoc")',
+      'Verifiable Credential Type (required when format is "dc+sd-jwt"; must NOT be provided when format is "mso_mdoc")',
     example: 'BirthCertificateCredential-sdjwt'
   })
   // @ValidateIf((o: CreateCredentialTemplateDto) => 'vc+sd-jwt' === o.format)

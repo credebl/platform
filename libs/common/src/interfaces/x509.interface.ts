@@ -213,6 +213,7 @@ export interface X509CertificateRecord {
   lastChangedBy: string;
   createdAt: Date;
   lastChangedDateTime: Date;
+  keyId: string;
 }
 
 export interface IX509SearchCriteria extends IPaginationSortingDto {

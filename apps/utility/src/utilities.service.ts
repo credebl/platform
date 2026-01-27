@@ -1,18 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
-import { UtilitiesRepository } from './utilities.repository';
-import {
-  IIntentTemplateList,
-  IIntentTemplateSearchCriteria
-} from '@credebl/common/interfaces/intents-template.interface';
+
 import { AwsService } from '@credebl/aws';
-import { ErrorHandler } from '@credebl/common/utils/error-handler.util';
-import { S3 } from 'aws-sdk';
-import { v4 as uuidv4 } from 'uuid';
-import { EmailService } from '@credebl/common/email.service';
-import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { BaseService } from 'libs/service/base.service';
+import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { EmailService } from '@credebl/common/email.service';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { RpcException } from '@nestjs/microservices';
+import { S3 } from 'aws-sdk';
+import { UtilitiesRepository } from './utilities.repository';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
@@ -141,43 +137,6 @@ export class UtilitiesService extends BaseService {
         // Wait before retrying
         await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
-    }
-  }
-
-  async getAllIntentTemplateByQuery(payload: {
-    intentTemplateSearchCriteria: IIntentTemplateSearchCriteria;
-  }): Promise<IIntentTemplateList> {
-    try {
-      const { intentTemplateSearchCriteria } = payload;
-      const result = await this.utilitiesRepository.getAllIntentTemplateByQuery(intentTemplateSearchCriteria);
-      return result;
-    } catch (error) {
-      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
-      this.logger.error(
-        `[getAllIntentTemplateByQuery] - ${errorResponse.statusCode}: ${errorResponse.message}`,
-        ErrorHandler.format(error)
-      );
-      throw new RpcException(errorResponse);
-    }
-  }
-
-  async getIntentTemplateByIntentAndOrg(intentName: string, verifierOrgId: string): Promise<object | null> {
-    try {
-      const intentTemplate = await this.utilitiesRepository.getIntentTemplateByIntentAndOrg(intentName, verifierOrgId);
-      if (!intentTemplate) {
-        this.logger.log(
-          `[getIntentTemplateByIntentAndOrg] - No template found for intent ${intentName} and org ${verifierOrgId}`
-        );
-        return null;
-      }
-      return intentTemplate;
-    } catch (error) {
-      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent template');
-      this.logger.error(
-        `[getIntentTemplateByIntentAndOrg] - ${errorResponse.statusCode}: ${errorResponse.message}`,
-        ErrorHandler.format(error)
-      );
-      throw new RpcException(errorResponse);
     }
   }
 }

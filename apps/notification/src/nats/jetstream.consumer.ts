@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Consumer } from 'nats';
 import { NatsService } from './nats.service';
-import { CONSUMER, STREAM } from './jetstream.setup';
 
 @Injectable()
 export class JetStreamConsumer implements OnApplicationBootstrap {
@@ -11,9 +10,9 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    const js = this.nats.jetstream(); // ✅ now safe
+    // const js = this.nats.jetstream(); // ✅ now safe
 
-    const consumer: Consumer = await js.consumers.get(STREAM, CONSUMER);
+    // const consumer: Consumer = await js.consumers.get(STREAM, CONSUMER);
     //  const consumer: Consumer = await js.consumers.get(
     //   STREAM,
     //   {
@@ -24,9 +23,9 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
 
     this.logger.log('[NATS] JetStream consumer started');
 
-    this.consume(consumer).catch((err) => {
-      this.logger.error('[NATS] Consumer crashed', err);
-    });
+    // this.consume(consumer).catch((err) => {
+    //   this.logger.error('[NATS] Consumer crashed', err);
+    // });
   }
 
   private async consume(consumer: Consumer): Promise<void> {

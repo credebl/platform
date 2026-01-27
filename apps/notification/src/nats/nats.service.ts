@@ -7,7 +7,8 @@ export class NatsService implements OnModuleDestroy {
   private js!: JetStreamClient;
   private jsm!: JetStreamManager;
   private connected = false;
-  private readonly logger = new Logger('NatsService');
+
+  constructor(private readonly logger: Logger) {}
 
   async connect(): Promise<NatsConnection> {
     if (this.connected) {

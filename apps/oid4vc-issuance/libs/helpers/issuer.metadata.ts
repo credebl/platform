@@ -56,7 +56,8 @@ type CredentialConfigurationsSupported = {
 // ---- Static Lists (as requested) ----
 const STATIC_CREDENTIAL_ALGS_FOR_SDJWT = ['ES256', 'EdDSA'] as const;
 const STATIC_CREDENTIAL_ALGS_FOR_MDOC = [-7, -9] as const;
-const STATIC_BINDING_METHODS = ['did:key', 'did:web', 'did:jwk', 'jwk'] as const;
+const STATIC_BINDING_METHODS_FOR_SDJWT = ['jwk'] as const;
+const STATIC_BINDING_METHODS_FOR_MDOC = ['cose_key'] as const; // We need to test 'did:key', 'did:web', 'did:jwk', 'jwk',
 
 // Safe coercion helpers
 function coerceJsonObject<T>(v: Prisma.JsonValue): T | null {
@@ -374,12 +375,12 @@ export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate
       scope: credentialScope,
       vct: template.vct,
       credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS_FOR_SDJWT],
-      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS],
-      // proof_types_supported: {
-      //   jwt: {
-      //     proof_signing_alg_values_supported: ['ES256']
-      //   }
-      // },
+      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS_FOR_SDJWT],
+      proof_types_supported: {
+        jwt: {
+          proof_signing_alg_values_supported: ['ES256', 'EdDSA']
+        }
+      },
       credential_metadata: {
         claims,
         display: []
@@ -409,7 +410,12 @@ export function buildMdocCredentialConfig(name: string, template: MdocTemplate) 
       scope: credentialScope,
       doctype: template.doctype,
       credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS_FOR_MDOC],
-      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS],
+      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS_FOR_MDOC],
+      proof_types_supported: {
+        jwt: {
+          proof_signing_alg_values_supported: ['ES256', 'EdDSA']
+        }
+      },
       credential_metadata: {
         claims,
         display: []

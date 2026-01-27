@@ -135,7 +135,7 @@ export const DEFAULT_TXCODE = {
 /** Map DB format string -> API enum */
 function mapDbFormatToApiFormat(dbFormat: string): CredentialFormat {
   const normalized = (dbFormat ?? '').toLowerCase();
-  if (['sd-jwt', 'vc+sd-jwt', 'sdjwt', 'sd+jwt-vc'].includes(normalized)) {
+  if (['sd-jwt', 'dc+sd-jwt', 'sdjwt', 'sd+jwt-vc'].includes(normalized)) {
     return CredentialFormat.SdJwtVc;
   }
   if ('mso_mdoc' === normalized || 'mso-mdoc' === normalized || 'mdoc' === normalized) {

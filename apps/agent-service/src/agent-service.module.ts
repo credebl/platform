@@ -1,23 +1,24 @@
-import { CommonModule, NatsInterceptor } from '@credebl/common';
-import { PrismaService } from '@credebl/prisma-service';
-import { Logger, Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { AgentServiceController } from './agent-service.controller';
-import { AgentServiceService } from './agent-service.service';
-import { AgentServiceRepository } from './repositories/agent-service.repository';
-import { ConfigModule } from '@nestjs/config';
-import { ConnectionService } from 'apps/connection/src/connection.service';
-import { ConnectionRepository } from 'apps/connection/src/connection.repository';
-import { CacheModule } from '@nestjs/cache-manager';
-import { getNatsOptions } from '@credebl/common/nats.config';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { CommonModule, NatsInterceptor } from '@credebl/common';
+import { Logger, Module } from '@nestjs/common';
+
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AgentServiceController } from './agent-service.controller';
+import { AgentServiceRepository } from './repositories/agent-service.repository';
+import { AgentServiceService } from './agent-service.service';
+import { CacheModule } from '@nestjs/cache-manager';
+import { ConfigModule } from '@nestjs/config';
+import { ConnectionRepository } from 'apps/connection/src/connection.repository';
+import { ConnectionService } from 'apps/connection/src/connection.service';
+import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { NATSClient } from '@credebl/common/NATSClient';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { PrismaService } from '@credebl/prisma-service';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.AGENT_SERVICE, process.env.AGENT_SERVICE_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.AGENT_SERVICE, process.env.NATS_CREDS_FILE)
       }
     ]),
     CommonModule,

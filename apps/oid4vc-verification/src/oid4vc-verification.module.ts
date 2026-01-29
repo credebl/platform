@@ -1,19 +1,20 @@
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { Logger, Module } from '@nestjs/common';
+import { PrismaService, PrismaServiceModule } from '@credebl/prisma-service';
+
+import { CacheModule } from '@nestjs/cache-manager';
+import { CommonModule } from '@credebl/common';
+import { ConfigModule } from '@nestjs/config';
+import { ContextInterceptorModule } from '@credebl/context';
+import { GlobalConfigModule } from '@credebl/config';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { NATSClient } from '@credebl/common/NATSClient';
+import { Oid4vpRepository } from './oid4vc-verification.repository';
 import { Oid4vpVerificationController } from './oid4vc-verification.controller';
 import { Oid4vpVerificationService } from './oid4vc-verification.service';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { getNatsOptions } from '@credebl/common/nats.config';
-import { CommonModule } from '@credebl/common';
-import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
-import { GlobalConfigModule } from '@credebl/config';
-import { ContextInterceptorModule } from '@credebl/context';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { NATSClient } from '@credebl/common/NATSClient';
-import { PrismaService, PrismaServiceModule } from '@credebl/prisma-service';
-import { Oid4vpRepository } from './oid4vc-verification.repository';
-import { ConfigModule } from '@nestjs/config';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -26,10 +27,7 @@ import { ConfigModule } from '@nestjs/config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(
-          CommonConstants.OIDC4VC_VERIFICATION_SERVICE,
-          process.env.OIDC4VC_VERIFICATION_NKEY_SEED
-        )
+        options: getNatsOptions(CommonConstants.OIDC4VC_VERIFICATION_SERVICE, process.env.NATS_CREDS_FILE)
       }
     ]),
     CommonModule,

@@ -1,14 +1,14 @@
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonModule, CommonService } from '@credebl/common';
 
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { CommonConstants } from '@credebl/common/common.constant';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { NATSClient } from '@credebl/common/NATSClient';
 import { UtilitiesController } from './utilities.controller';
 import { UtilitiesService } from './utilities.service';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.UTILITY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.UTILITY_SERVICE, process.env.NATS_CREDS_FILE)
       },
       CommonModule
     ])

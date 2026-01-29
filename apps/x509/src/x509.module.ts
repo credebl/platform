@@ -1,15 +1,16 @@
-import { Logger, Module } from '@nestjs/common';
-import { X509CertificateService } from './x509.service';
-import { PrismaService } from '@credebl/prisma-service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { X509CertificateRepository } from './repositories/x509.repository';
-import { getNatsOptions } from '@credebl/common/nats.config';
+import { Logger, Module } from '@nestjs/common';
+
 import { CommonConstants } from '@credebl/common/common.constant';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { PrismaService } from '@credebl/prisma-service';
 import { X509CertificateController } from './x509.controller';
+import { X509CertificateRepository } from './repositories/x509.repository';
+import { X509CertificateService } from './x509.service';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { X509CertificateController } from './x509.controller';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.X509_SERVICE, process.env.X509_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.X509_SERVICE, process.env.NATS_CREDS_FILE)
       }
     ])
   ],

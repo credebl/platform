@@ -1,25 +1,26 @@
-import { CommonModule } from '@credebl/common';
-import { PrismaService } from '@credebl/prisma-service';
-import { Logger, Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { Logger, Module } from '@nestjs/common';
+
+import { AwsService } from '@credebl/aws';
+import { BulkIssuanceProcessor } from './issuance.processor';
+import { BullModule } from '@nestjs/bull';
+import { CacheModule } from '@nestjs/cache-manager';
+import { CommonModule } from '@credebl/common';
+import { ConfigModule } from '@nestjs/config';
+import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { IssuanceController } from './issuance.controller';
 import { IssuanceRepository } from './issuance.repository';
 import { IssuanceService } from './issuance.service';
-import { getNatsOptions } from '@credebl/common/nats.config';
-import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
-import { EmailDto } from '@credebl/common/dtos/email.dto';
-import { BullModule } from '@nestjs/bull';
-import { CacheModule } from '@nestjs/cache-manager';
-import { BulkIssuanceProcessor } from './issuance.processor';
-import { AwsService } from '@credebl/aws';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { PrismaService } from '@credebl/prisma-service';
+import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.ISSUANCE_SERVICE, process.env.ISSUANCE_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.ISSUANCE_SERVICE, process.env.NATS_CREDS_FILE)
       }
     ]),
     CommonModule,

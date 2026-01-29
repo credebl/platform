@@ -1,17 +1,18 @@
-import { Logger, Module } from '@nestjs/common';
-import { GeoLocationController } from './geo-location.controller';
-import { GeoLocationService } from './geo-location.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CommonModule } from '@credebl/common';
+import { Logger, Module } from '@nestjs/common';
+
 import { CacheModule } from '@nestjs/cache-manager';
-import { getNatsOptions } from '@credebl/common/nats.config';
-import { PrismaService } from '@credebl/prisma-service';
-import { GeoLocationRepository } from './geo-location.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { LoggerModule } from '@credebl/logger/logger.module';
+import { CommonModule } from '@credebl/common';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { GeoLocationController } from './geo-location.controller';
+import { GeoLocationRepository } from './geo-location.repository';
+import { GeoLocationService } from './geo-location.service';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { PrismaService } from '@credebl/prisma-service';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
@@ -19,12 +20,14 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.GEO_LOCATION_SERVICE, process.env.GEOLOCATION_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.GEO_LOCATION_SERVICE, process.env.NATS_CREDS_FILE)
       }
     ]),
     CommonModule,
     GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [GeoLocationController],

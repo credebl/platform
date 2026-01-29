@@ -53,7 +53,7 @@ export class AuthzService extends BaseService {
 
   async login(clientInfo: Prisma.JsonValue, email: string, password?: string, isPasskey = false): Promise<ISignInUser> {
     const payload = { email, password, isPasskey, clientInfo };
-    return this.natsClient.sendNatsMessage(this.authServiceProxy, 'user-holder-login', payload);
+    return this.natsClient.sendNatsMessage(this.authServiceProxy, 'users.user-holder-login', payload);
   }
 
   async getSession(sessionId): Promise<ISessionDetails> {

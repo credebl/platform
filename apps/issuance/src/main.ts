@@ -1,20 +1,19 @@
-import { NestFactory } from '@nestjs/core';
-import { HttpExceptionFilter } from 'libs/http-exception.filter';
-import { Logger } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { IssuanceModule } from '../src/issuance.module';
-import { getNatsOptions } from '@credebl/common/nats.config';
+
 import { CommonConstants } from '@credebl/common/common.constant';
+import { HttpExceptionFilter } from 'libs/http-exception.filter';
+import { IssuanceModule } from '../src/issuance.module';
+import { Logger } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
+import { getNatsOptions } from '@credebl/common/nats.config';
 
 const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
-
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(IssuanceModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(CommonConstants.ISSUANCE_SERVICE, process.env.ISSUANCE_NKEY_SEED)
-
+    options: getNatsOptions(CommonConstants.ISSUANCE_SERVICE, process.env.NATS_CREDS_FILE)
   });
   app.useLogger(app.get(NestjsLoggerServiceAdapter));
   app.useGlobalFilters(new HttpExceptionFilter());

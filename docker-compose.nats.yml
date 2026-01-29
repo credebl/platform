@@ -10,3 +10,4 @@ services:
       - '8222:8222' # HTTP monitoring port for server statistics and health checks
     volumes:
       - ./nats-server.conf:/nats-server.conf:ro # Mounts the nats-server.conf configuration file into the container as read-only (ro)
+      - ./jwt:/data/jwt

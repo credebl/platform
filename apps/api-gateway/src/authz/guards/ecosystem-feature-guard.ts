@@ -1,6 +1,7 @@
 import { CanActivate, ForbiddenException, Injectable, Scope } from '@nestjs/common';
 
 import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
+import { ResponseMessages } from '@credebl/common/response-messages';
 
 @Injectable({ scope: Scope.REQUEST })
 export class EcosystemFeatureGuard implements CanActivate {
@@ -11,7 +12,7 @@ export class EcosystemFeatureGuard implements CanActivate {
     const enabled = Boolean(config?.isEcosystemEnabled);
 
     if (!enabled) {
-      throw new ForbiddenException(`You don't have access to this feature`);
+      throw new ForbiddenException(ResponseMessages.ecosystem.error.featureIsDisabled);
     }
 
     return true;

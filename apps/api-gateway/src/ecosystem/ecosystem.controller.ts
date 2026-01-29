@@ -57,6 +57,7 @@ import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
 @ApiTags('ecosystem')
+@UseGuards(EcosystemFeatureGuard)
 @ApiUnauthorizedResponse({
   description: 'Unauthorized',
   type: UnauthorizedErrorDto
@@ -78,7 +79,7 @@ export class EcosystemController {
     description: 'Invitation sent successfully for member invitation'
   })
   @Roles(OrgRoles.ECOSYSTEM_LEAD)
-  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, EcosystemFeatureGuard)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
   async inviteMemberToEcosystem(
     @Body() inviteMemberToEcosystem: InviteMemberToEcosystemDto,

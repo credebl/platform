@@ -84,8 +84,12 @@ async function bootstrap(): Promise<void> {
 
   // Create Swagger document
   let document = SwaggerModule.createDocument(app, options);
-  const ecosystemFilter = app.get(EcosystemSwaggerFilter);
-  document = await ecosystemFilter.filterDocument(document);
+  try {
+    const ecosystemFilter = app.get(EcosystemSwaggerFilter);
+    document = await ecosystemFilter.filterDocument(document);
+  } catch (err) {
+    Logger.warn('Skipping EcosystemSwaggerFilter due to error', err as Error);
+  }
 
   SwaggerModule.setup('api', app, document);
   const httpAdapter: HttpAdapterHost = app.get(HttpAdapterHost) as HttpAdapterHost;

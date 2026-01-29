@@ -1146,7 +1146,7 @@ export class EcosystemRepository {
     }
   }
 
-  async deleteIntent(data: { ecosystemId: string; intentId: string }): Promise<intents> {
+  async deleteIntent(data: { ecosystemId: string; intentId: string; userId: string }): Promise<intents> {
     const intent = await this.prisma.intents.findFirst({
       where: {
         id: data.intentId,
@@ -1186,6 +1186,17 @@ export class EcosystemRepository {
     await this.prisma.platform_config.update({
       where: { id: existingConfig.id },
       data: { isEcosystemEnabled }
+    });
+  }
+
+  /**
+   * Fetches the global platform configuration
+   */
+  async getPlatformConfig(): Promise<{ isEcosystemEnabled: boolean } | null> {
+    return this.prisma.platform_config.findFirst({
+      select: {
+        isEcosystemEnabled: true
+      }
     });
   }
 }

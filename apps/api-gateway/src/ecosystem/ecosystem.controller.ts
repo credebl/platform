@@ -52,6 +52,7 @@ import { GetAllIntentTemplatesResponseDto } from '../utilities/dtos/get-all-inte
 import { GetAllIntentTemplatesDto } from '../utilities/dtos/get-all-intent-templates.dto';
 import { GetIntentTemplateByIntentAndOrgDto } from '../utilities/dtos/get-intent-template-by-intent-and-org.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/dtos/intent-template.dto';
+import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
@@ -77,7 +78,7 @@ export class EcosystemController {
     description: 'Invitation sent successfully for member invitation'
   })
   @Roles(OrgRoles.ECOSYSTEM_LEAD)
-  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard, EcosystemFeatureGuard)
   @ApiBearerAuth()
   async inviteMemberToEcosystem(
     @Body() inviteMemberToEcosystem: InviteMemberToEcosystemDto,
@@ -800,7 +801,6 @@ export class EcosystemController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-
   /**
    * Delete intent
    * @param id Intent ID
@@ -820,12 +820,29 @@ export class EcosystemController {
     type: ApiResponseDto
   })
   async deleteIntent(
-    @Param('ecosystemId') ecosystemId: string,
-    @Param('intentId') intentId: string,
-    @User() user: IUserRequest,
+    @Param(
+      'ecosystemId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);
+        }
+      })
+    )
+    ecosystemId: string,
+    @Param(
+      'intentId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfIntentId);
+        }
+      })
+    )
+    intentId: string,
+
+    @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    const intent = await this.ecosystemService.deleteIntent(ecosystemId, intentId, user);
+    const intent = await this.ecosystemService.deleteIntent(ecosystemId, intentId, user.id);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,

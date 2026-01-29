@@ -666,16 +666,16 @@ export class EcosystemService {
   /**
    * Delete an intent
    */
-  async deleteIntent(ecosystemId: string, intentId: string, user: { id: string }): Promise<object> {
-    if (!ecosystemId || !intentId || !user?.id) {
-      throw new BadRequestException('ecosystemId, intentId and user are required');
-    }
+  async deleteIntent(data: { ecosystemId: string; intentId: string; userId: string }): Promise<object> {
+    const { ecosystemId, intentId, userId } = data;
 
     return this.ecosystemRepository.deleteIntent({
       ecosystemId,
-      intentId
+      intentId,
+      userId
     });
   }
+
   /**
    *   Update ecosystem enable/disable flag
    */

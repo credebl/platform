@@ -15,6 +15,7 @@ import { ConnectionModule } from './connection/connection.module';
 import { ContextModule } from '@credebl/context/contextModule';
 import { CredentialDefinitionModule } from './credential-definition/credential-definition.module';
 import { EcosystemModule } from './ecosystem/ecosystem.module';
+import { EcosystemSwaggerFilter } from './authz/guards/ecosystem-swagger.filter';
 import { FidoModule } from './fido/fido.module';
 import { GeoLocationModule } from './geo-location/geo-location.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
@@ -77,6 +78,7 @@ import { shouldLoadOidcModules } from '@credebl/common/common.utils';
   controllers: [AppController],
   providers: [
     AppService,
+    EcosystemSwaggerFilter,
     {
       provide: MICRO_SERVICE_NAME,
       useValue: 'APIGATEWAY'

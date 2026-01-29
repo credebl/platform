@@ -288,8 +288,8 @@ export class EcosystemController {
    * @returns Deleted intent
    */
   @MessagePattern({ cmd: 'delete-intent' })
-  async deleteIntent(payload: { ecosystemId: string; intentId: string; user: { id: string } }): Promise<object> {
-    return this.ecosystemService.deleteIntent(payload.ecosystemId, payload.intentId, payload.user);
+  async deleteIntent(payload: { ecosystemId: string; intentId: string; userId: string }): Promise<object> {
+    return this.ecosystemService.deleteIntent(payload);
   }
 
   /**

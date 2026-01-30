@@ -171,7 +171,7 @@ export async function publishToJetStream(
         subject,
         stream: ack.stream,
         sequence: ack.seq,
-        dataSize: payload.length,
+        //dataSize: payload.length,
         duplicate: ack.duplicate || false
       })}`
     );

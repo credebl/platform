@@ -26,7 +26,6 @@
     "createdBy": "",
     "lastChangedBy": ""
   },
-  "platformAdminKeycloakPassword":"Admin@123",
   "orgRoleData": [
     {
       "name": "owner",

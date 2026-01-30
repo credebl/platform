@@ -69,8 +69,8 @@ export class EcosystemService {
     });
   }
 
-  async deleteEcosystemOrgs(ecosystemId: string, userIds: string[]): Promise<{ count: number }> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-ecosystem-orgs', { userIds, ecosystemId });
+  async deleteEcosystemOrgs(ecosystemId: string, orgIds: string[]): Promise<{ count: number }> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-ecosystem-orgs', { orgIds, ecosystemId });
   }
 
   async updateEcosystemOrgStatus(

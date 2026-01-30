@@ -127,6 +127,10 @@ export class EcosystemRepository {
         where: { name: EcosystemRoles.ECOSYSTEM_LEAD }
       });
 
+      if (!ecosystemRoleDetails) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.leadNotFound);
+      }
+
       const createdEcosystem = await prisma.ecosystem.create({
         data: {
           name,
@@ -149,9 +153,6 @@ export class EcosystemRepository {
         }
       });
 
-      if (!ecosystemRoleDetails) {
-        throw new NotFoundException(ResponseMessages.ecosystem.error.leadNotFound);
-      }
       await prisma.ecosystem_orgs.create({
         data: {
           orgId: String(orgId),

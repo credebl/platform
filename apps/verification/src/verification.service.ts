@@ -781,12 +781,8 @@ export class VerificationService {
           const requestedAttributesForPresentationExchangeFormat = descriptor?.constraints?.fields[0]?.path;
 
           const verifiableCredential = verifiableCredentials[index]?.credentialSubject;
-
-          if (getProofPresentationById?.response) {
-            certificate =
-              getProofPresentationById?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc
-                ?.certificate;
-          }
+          certificate =
+            getProofPresentationById?.presentation?.presentationExchange?.verifiableCredential[0].prettyVc?.certificate;
 
           if (
             requestedAttributesForPresentationExchangeFormat &&

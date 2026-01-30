@@ -13,6 +13,7 @@ import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { HolderNotificationRepository } from './holder-notification.repository';
 
 @Module({
   imports: [
@@ -26,10 +27,12 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
     ]),
     CommonModule,
     GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
     CacheModule.register({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT })
   ],
   controllers: [NotificationController],
-  providers: [NotificationService, NotificationRepository, PrismaService, Logger]
+  providers: [NotificationService, NotificationRepository, HolderNotificationRepository, PrismaService, Logger]
 })
-export class NotificationModule { }
+export class NotificationModule {}

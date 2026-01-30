@@ -265,11 +265,11 @@ export class DcqlQueryDto {
 }
 
 export class DcqlDto {
-  @ApiProperty({ type: DcqlQueryDto })
+  //@ApiProperty({ type: DcqlQueryDto })
   @IsDefined()
-  @ValidateNested()
-  @Type(() => DcqlQueryDto)
-  query: DcqlQueryDto;
+  //@ValidateNested()
+  //@Type(() => DcqlQueryDto)
+  query: unknown;
 }
 
 /**

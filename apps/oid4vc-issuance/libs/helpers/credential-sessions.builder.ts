@@ -31,7 +31,10 @@ export enum SignerMethodOption {
   X5C = 'x5c'
 }
 
-export type DisclosureFrame = Record<string, boolean | Record<string, boolean>>;
+export interface DisclosureFrame {
+  _sd?: string[];
+  [claim: string]: DisclosureFrame | string[] | undefined;
+}
 
 export interface validityInfo {
   validFrom: Date;
@@ -93,8 +96,8 @@ export type CredentialOfferPayload = BuiltCredentialOfferBase &
   (
     | {
         preAuthorizedCodeFlowConfig: {
-          txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
-          authorizationServerUrl: string;
+          txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' } | undefined;
+          authorizationServerUrl?: string;
         };
         authorizationCodeFlowConfig?: never;
       }
@@ -220,31 +223,37 @@ export function validatePayloadAgainstTemplate(template: any, payload: any): { v
   return { valid: 0 === errors.length, errors };
 }
 
-function buildDisclosureFrameFromTemplate(template: { attributes: CredentialAttribute[] }) {
-  const disclosureFrame: DisclosureFrame = {};
+function buildDisclosureFrameFromTemplate(attributes: CredentialAttribute[]): DisclosureFrame {
+  const frame: DisclosureFrame = {};
+  const sd: string[] = [];
 
-  const buildFrame = (attributes: CredentialAttribute[]) => {
-    const frame: Record<string, any> = {};
+  for (const attr of attributes) {
+    const childFrame =
+      attr.children && 0 < attr.children.length ? buildDisclosureFrameFromTemplate(attr.children) : undefined;
 
-    for (const attr of attributes) {
-      if (attr.children?.length) {
-        // Handle nested attributes recursively
-        const subFrame = buildFrame(attr.children);
-        // Include parent only if disclose is true or it has children with disclosure
-        if (attr.disclose || 0 < Object.keys(subFrame).length) {
-          frame[attr.key] = subFrame;
-        }
-      } else if (attr.disclose !== undefined) {
-        frame[attr.key] = Boolean(attr.disclose);
+    const hasChildDisclosure =
+      childFrame && (childFrame._sd?.length || Object.keys(childFrame).some((k) => '_sd' !== k));
+
+    // Case 1: this attribute itself is disclosed
+    if (attr.disclose) {
+      // If it has children, children are handled separately
+      if (!attr.children || 0 === attr.children.length) {
+        sd.push(attr.key);
+        continue;
       }
     }
 
-    return frame;
-  };
+    // Case 2: attribute has disclosed children
+    if (hasChildDisclosure) {
+      frame[attr.key] = childFrame!;
+    }
+  }
 
-  Object.assign(disclosureFrame, buildFrame(template.attributes));
+  if (0 < sd.length) {
+    frame._sd = sd;
+  }
 
-  return disclosureFrame;
+  return frame;
 }
 
 function validateCredentialDatesInCertificateWindow(credentialValidityInfo: validityInfo, certificate) {
@@ -357,7 +366,7 @@ function buildSdJwtCredential(
   const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
   const idSuffix = formatSuffix(apiFormat);
   const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
-  const disclosureFrame = buildDisclosureFrameFromTemplate({ attributes: sdJwtTemplate.attributes });
+  const disclosureFrame = buildDisclosureFrameFromTemplate(sdJwtTemplate.attributes);
 
   return {
     credentialSupportedId,
@@ -483,7 +492,7 @@ export function buildCredentialOfferPayload(
     return {
       ...baseEnvelope,
       preAuthorizedCodeFlowConfig: {
-        txCode: DEFAULT_TXCODE,
+        txCode: DEFAULT_TXCODE, // Pass undefined to enable no auth implementation, TODO: Need to make it configuarble.
         authorizationServerUrl: overrideAuthorizationServerUrl
       }
     };

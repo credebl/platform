@@ -233,6 +233,9 @@ importers:
       express-useragent:
         specifier: ^1.0.15
         version: 1.0.15
+      firebase-admin:
+        specifier: ^13.6.0
+        version: 13.6.0
       fs:
         specifier: 0.0.1-security
         version: 0.0.1-security

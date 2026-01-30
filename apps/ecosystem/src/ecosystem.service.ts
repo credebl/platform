@@ -694,7 +694,7 @@ export class EcosystemService {
       throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemEnabledFlag);
     }
 
-    await this.ecosystemRepository.upsertEcosystemConfig({
+    await this.ecosystemRepository.updateEcosystemConfig({
       isEcosystemEnabled,
       userId: platformAdminId
     });

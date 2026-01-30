@@ -1171,15 +1171,15 @@ export class EcosystemRepository {
   /**
    *   Update ecosystem enable/disable flag
    */
-  async upsertEcosystemConfig(payload: { isEcosystemEnabled: boolean; userId: string }): Promise<void> {
+  async updateEcosystemConfig(payload: { isEcosystemEnabled: boolean; userId: string }): Promise<void> {
     const { isEcosystemEnabled } = payload;
 
     const existingConfig = await this.prisma.platform_config.findFirst();
 
     if (!existingConfig) {
       throw new RpcException({
-        statusCode: 500,
-        message: 'Platform config not found'
+        statusCode: HttpStatus.NOT_FOUND,
+        message: ResponseMessages.ecosystem.error.platformConfigNotFound
       });
     }
 

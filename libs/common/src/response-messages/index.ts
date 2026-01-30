@@ -201,6 +201,7 @@ export const ResponseMessages = {
       updateEcosystemConfig: 'Ecosystem configuration updated successfully'
     },
     error: {
+      platformConfigNotFound: 'Platform config not found',
       featureIsDisabled: `You don't have access to this feature`,
       memberInviteFailed: 'Failed to send invitation for the member',
       failInvitationUpdate: 'Failed to update Ecosystem Invitation',

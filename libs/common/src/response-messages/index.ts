@@ -197,9 +197,11 @@ export const ResponseMessages = {
       deleteIntent: 'Ecosystem intent deleted successfully',
       fetchIntents: 'Ecosystem intents fetched successfully',
       fetchIntentTemplates: 'Ecosystem intent templates fetched successfully',
-      fetchVerificationTemplates: 'Verification templates fetched successfully'
+      fetchVerificationTemplates: 'Verification templates fetched successfully',
+      updateEcosystemConfig: 'Ecosystem configuration updated successfully'
     },
     error: {
+      featureIsDisabled: `You don't have access to this feature`,
       memberInviteFailed: 'Failed to send invitation for the member',
       failInvitationUpdate: 'Failed to update Ecosystem Invitation',
       ecosystemIdIsRequired: 'ecosystemId is required',
@@ -264,6 +266,7 @@ export const ResponseMessages = {
       invalidFormatOfEcosystemId: 'Invalid format of ecosystemId',
       invalidFormatOfIntentId: 'Invalid format of ecosystemId',
       emailOrPlatformAdminIdMissing: 'Email or platformAdminId missing',
+      platformIdRequired: 'PlatformId is required',
       userIdMissing: 'UserId is required',
       fetch: 'Error while fetching ecosystems',
       invitationRequired: 'Accepted invitation is required to create ecosystem',
@@ -279,7 +282,8 @@ export const ResponseMessages = {
       ecosystemOrgsFetchFailed: 'Failed to fetch ecosystem orgs',
       ecosystemMemberStatusFail: 'Failed to update ecosystem member status',
       failedEcosystemOrgUpdate: 'Failed to update ecosystem org',
-      invitationMemberfail: 'Failed to fetch invitation members'
+      invitationMemberfail: 'Failed to fetch invitation members',
+      invalidEcosystemEnabledFlag: 'Invalid ecosystem enabled flag'
     }
   },
   schema: {

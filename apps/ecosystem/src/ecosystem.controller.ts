@@ -67,9 +67,9 @@ export class EcosystemController {
    * Used by Platform Admin
    * @returns List of ecosystems
    */
-  @MessagePattern({ cmd: 'get-all-ecosystems' })
-  async getAllEcosystems(): Promise<IEcosystem[]> {
-    return this.ecosystemService.getAllEcosystems();
+  @MessagePattern({ cmd: 'get-ecosystems' })
+  async getEcosystems(payload: { userId: string }): Promise<IEcosystem[]> {
+    return this.ecosystemService.getEcosystems(payload.userId);
   }
 
   /**
@@ -288,7 +288,18 @@ export class EcosystemController {
    * @returns Deleted intent
    */
   @MessagePattern({ cmd: 'delete-intent' })
-  async deleteIntent(payload: { ecosystemId: string; intentId: string; user: { id: string } }): Promise<object> {
-    return this.ecosystemService.deleteIntent(payload.ecosystemId, payload.intentId, payload.user);
+  async deleteIntent(payload: { ecosystemId: string; intentId: string; userId: string }): Promise<object> {
+    return this.ecosystemService.deleteIntent(payload);
+  }
+
+  /**
+   * Update ecosystem platform configuration
+   */
+  @MessagePattern({ cmd: 'update-ecosystem-config' })
+  async updateEcosystemConfig(payload: {
+    isEcosystemEnabled: boolean;
+    platformAdminId: string;
+  }): Promise<{ message: string }> {
+    return this.ecosystemService.updateEcosystemConfig(payload);
   }
 }

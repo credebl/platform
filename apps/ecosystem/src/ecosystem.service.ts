@@ -280,11 +280,19 @@ export class EcosystemService {
     }
   }
 
-  async getAllEcosystems(): Promise<IEcosystem[]> {
+  async getEcosystems(userId: string): Promise<IEcosystem[]> {
+    if (!userId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+    }
     try {
-      return await this.ecosystemRepository.getAllEcosystems();
+      const leadEcosystems = await this.ecosystemRepository.getEcosystemsForEcosystemLead(userId);
+
+      if (0 < leadEcosystems.length) {
+        return leadEcosystems;
+      }
+      return this.ecosystemRepository.getAllEcosystems();
     } catch (error) {
-      this.logger.error('getAllEcosystems error', error);
+      this.logger.error('getEcosystems error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.fetch);
     }
   }
@@ -666,14 +674,38 @@ export class EcosystemService {
   /**
    * Delete an intent
    */
-  async deleteIntent(ecosystemId: string, intentId: string, user: { id: string }): Promise<object> {
-    if (!ecosystemId || !intentId || !user?.id) {
-      throw new BadRequestException('ecosystemId, intentId and user are required');
-    }
+  async deleteIntent(data: { ecosystemId: string; intentId: string; userId: string }): Promise<object> {
+    const { ecosystemId, intentId, userId } = data;
 
     return this.ecosystemRepository.deleteIntent({
       ecosystemId,
-      intentId
+      intentId,
+      userId
     });
+  }
+
+  /**
+   *   Update ecosystem enable/disable flag
+   */
+  async updateEcosystemConfig(payload: {
+    isEcosystemEnabled: boolean;
+    platformAdminId: string;
+  }): Promise<{ message: string }> {
+    const { isEcosystemEnabled, platformAdminId } = payload;
+    if (!platformAdminId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.platformIdRequired);
+    }
+    if ('boolean' !== typeof isEcosystemEnabled) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemEnabledFlag);
+    }
+
+    await this.ecosystemRepository.updateEcosystemConfig({
+      isEcosystemEnabled,
+      userId: platformAdminId
+    });
+
+    return {
+      message: ResponseMessages.ecosystem.success.updateEcosystemConfig
+    };
   }
 }

@@ -65,4 +65,14 @@ export class PlatformService extends BaseService {
   async getInvitationsByUserId(userId: string): Promise<IEcosystemInvitations[]> {
     return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-ecosystem-invitations-by-user', { userId });
   }
+
+  /**
+   * Update ecosystem enable/disable flag
+   */
+  async updateEcosystemConfig(isEcosystemEnabled: boolean, platformAdminId: string): Promise<{ message: string }> {
+    return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'update-ecosystem-config', {
+      isEcosystemEnabled,
+      platformAdminId
+    });
+  }
 }

@@ -21,6 +21,6 @@ import { getNatsOptions } from '@credebl/common/nats.config';
   ],
   controllers: [EcosystemController],
   providers: [EcosystemService, NATSClient],
-  exports: [EcosystemService]
+  exports: [EcosystemService, EcosystemServiceModule]
 })
 export class EcosystemModule {}

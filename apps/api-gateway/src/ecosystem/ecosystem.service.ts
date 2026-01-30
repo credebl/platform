@@ -39,9 +39,10 @@ export class EcosystemService {
    * @param userId
    * @returns All ecosystems from platform
    */
-  async getAllEcosystems(): Promise<IEcosystem[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-ecosystems', {});
+  async getEcosystems(userId: string): Promise<IEcosystem[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystems', { userId });
   }
+
   /**
    *
    * @param ecosystemId
@@ -199,11 +200,11 @@ export class EcosystemService {
    * @param id Intent ID
    * @returns Deleted intent
    */
-  async deleteIntent(ecosystemId: string, intentId: string, user: IUserRequest): Promise<object> {
+  async deleteIntent(ecosystemId: string, intentId: string, userId: string): Promise<object> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent', {
       ecosystemId,
       intentId,
-      user: { id: user.userId }
+      userId
     });
   }
 }

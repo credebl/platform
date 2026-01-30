@@ -5,6 +5,7 @@
     "username": "credebl",
     "sgApiKey": "###Sendgrid Key###",
     "emailFrom": "##Senders Mail ID##",
+    "isEcosystemEnabled": false,
     "apiEndpoint": "## Platform API Ip Address##",
     "tailsFileServer": "##Machine Ip Address for agent setup##"
   },

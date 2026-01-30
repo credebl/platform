@@ -280,11 +280,16 @@ export class EcosystemService {
     }
   }
 
-  async getAllEcosystems(): Promise<IEcosystem[]> {
+  async getEcosystems(userId: string): Promise<IEcosystem[]> {
     try {
-      return await this.ecosystemRepository.getAllEcosystems();
+      const leadEcosystems = await this.ecosystemRepository.getEcosystemsForEcosystemLead(userId);
+
+      if (0 < leadEcosystems.length) {
+        return leadEcosystems;
+      }
+      return this.ecosystemRepository.getAllEcosystems();
     } catch (error) {
-      this.logger.error('getAllEcosystems error', error);
+      this.logger.error('getEcosystems error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.fetch);
     }
   }

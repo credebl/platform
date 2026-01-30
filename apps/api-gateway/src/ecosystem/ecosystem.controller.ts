@@ -37,7 +37,6 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { InviteMemberToEcosystemDto, UpdateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
-import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { user } from '@prisma/client';
 import { User } from '../authz/decorators/user.decorator';
@@ -200,20 +199,16 @@ export class EcosystemController {
    * Get all ecosystems (platform admin)
    * @returns All ecosystems from platform
    */
-  @Get()
-  @ApiOperation({
-    summary: 'Get all ecosystems (platform admin)',
-    description: 'Fetch all ecosystems available on the platform'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Ecosystems fetched successfully'
-  })
-  @Roles(OrgRoles.PLATFORM_ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
-  async getAllEcosystems(@User() reqUser: user, @Res() res: Response): Promise<Response> {
-    const ecosystems = await this.ecosystemService.getAllEcosystems();
+  @Get('/all-ecosystem')
+  @ApiOperation({
+    summary: 'Get ecosystems',
+    description: 'Fetch ecosystems for Platform Admin or Ecosystem Lead'
+  })
+  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
+  async getEcosystems(@User() reqUser: user, @Res() res: Response): Promise<Response> {
+    const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,

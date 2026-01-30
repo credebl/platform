@@ -67,9 +67,9 @@ export class EcosystemController {
    * Used by Platform Admin
    * @returns List of ecosystems
    */
-  @MessagePattern({ cmd: 'get-all-ecosystems' })
-  async getAllEcosystems(): Promise<IEcosystem[]> {
-    return this.ecosystemService.getAllEcosystems();
+  @MessagePattern({ cmd: 'get-ecosystems' })
+  async getEcosystems(payload: { userId: string }): Promise<IEcosystem[]> {
+    return this.ecosystemService.getEcosystems(payload.userId);
   }
 
   /**

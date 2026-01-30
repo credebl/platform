@@ -1199,4 +1199,42 @@ export class EcosystemRepository {
       }
     });
   }
+  async getEcosystemsForEcosystemLead(userId: string): Promise<ecosystem[]> {
+    return this.prisma.ecosystem.findMany({
+      where: {
+        deletedAt: null,
+        ecosystemOrgs: {
+          some: {
+            userId,
+            deletedAt: null,
+            ecosystemRole: {
+              name: OrgRoles.ECOSYSTEM_LEAD
+            }
+          }
+        }
+      },
+      orderBy: {
+        createDateTime: 'desc'
+      },
+      include: {
+        ecosystemOrgs: {
+          where: {
+            userId,
+            deletedAt: null
+          },
+          include: {
+            ecosystemRole: true,
+            organisation: {
+              select: {
+                id: true,
+                name: true,
+                orgSlug: true,
+                logoUrl: true
+              }
+            }
+          }
+        }
+      }
+    });
+  }
 }

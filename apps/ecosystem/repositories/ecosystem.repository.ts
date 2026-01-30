@@ -1146,7 +1146,7 @@ export class EcosystemRepository {
     }
   }
 
-  async deleteIntent(data: { ecosystemId: string; intentId: string }): Promise<intents> {
+  async deleteIntent(data: { ecosystemId: string; intentId: string; userId: string }): Promise<intents> {
     const intent = await this.prisma.intents.findFirst({
       where: {
         id: data.intentId,
@@ -1166,5 +1166,79 @@ export class EcosystemRepository {
     });
 
     return intent;
+  }
+
+  /**
+   *   Update ecosystem enable/disable flag
+   */
+  async updateEcosystemConfig(payload: { isEcosystemEnabled: boolean; userId: string }): Promise<void> {
+    const { isEcosystemEnabled } = payload;
+
+    const existingConfig = await this.prisma.platform_config.findFirst();
+
+    if (!existingConfig) {
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: ResponseMessages.ecosystem.error.platformConfigNotFound
+      });
+    }
+
+    await this.prisma.platform_config.update({
+      where: { id: existingConfig.id },
+      data: {
+        isEcosystemEnabled,
+        lastChangedBy: payload.userId,
+        lastChangedDateTime: new Date()
+      }
+    });
+  }
+
+  /**
+   * Fetches the global platform configuration
+   */
+  async getPlatformConfig(): Promise<{ isEcosystemEnabled: boolean } | null> {
+    return this.prisma.platform_config.findFirst({
+      select: {
+        isEcosystemEnabled: true
+      }
+    });
+  }
+  async getEcosystemsForEcosystemLead(userId: string): Promise<ecosystem[]> {
+    return this.prisma.ecosystem.findMany({
+      where: {
+        deletedAt: null,
+        ecosystemOrgs: {
+          some: {
+            userId,
+            deletedAt: null,
+            ecosystemRole: {
+              name: OrgRoles.ECOSYSTEM_LEAD
+            }
+          }
+        }
+      },
+      orderBy: {
+        createDateTime: 'desc'
+      },
+      include: {
+        ecosystemOrgs: {
+          where: {
+            userId,
+            deletedAt: null
+          },
+          include: {
+            ecosystemRole: true,
+            organisation: {
+              select: {
+                id: true,
+                name: true,
+                orgSlug: true,
+                logoUrl: true
+              }
+            }
+          }
+        }
+      }
+    });
   }
 }

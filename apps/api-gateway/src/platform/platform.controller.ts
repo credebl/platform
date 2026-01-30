@@ -7,6 +7,7 @@ import {
   Logger,
   Param,
   Post,
+  Put,
   Query,
   Res,
   UseFilters,
@@ -33,6 +34,8 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CreateEcosystemInvitationDto } from '../ecosystem/dtos/send-ecosystem-invitation';
+import { EnableEcosystemDto } from '../ecosystem/dtos/enable-ecosystem';
+import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';
 
 @Controller('')
 @UseFilters(CustomExceptionFilter)
@@ -234,7 +237,7 @@ export class PlatformController {
     description: 'Success',
     type: ApiResponseDto
   })
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemFeatureGuard)
   @ApiBearerAuth()
   async createInvitation(
     @Body() createEcosystemInvitationDto: CreateEcosystemInvitationDto,
@@ -264,7 +267,7 @@ export class PlatformController {
     description: 'Invitations fetched successfully'
   })
   @Roles(OrgRoles.PLATFORM_ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemFeatureGuard)
   @ApiBearerAuth()
   async getInvitations(@User() reqUser: user, @Res() res: Response): Promise<Response> {
     const invitations = await this.platformService.getInvitationsByUserId(reqUser.id);
@@ -274,5 +277,35 @@ export class PlatformController {
       message: ResponseMessages.ecosystem.success.fetch,
       data: invitations
     });
+  }
+
+  /**
+   * Update ecosystem enable/disable flag
+   */
+  @Put('/config/ecosystem')
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @ApiOperation({
+    summary: 'Enable or disable ecosystem feature',
+    description: 'Platform admin can enable or disable ecosystem feature on the platform'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Ecosystem configuration updated successfully',
+    type: ApiResponseDto
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async updateEcosystemConfig(
+    @Body() platformConfigDto: EnableEcosystemDto,
+    @User() reqUser: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.platformService.updateEcosystemConfig(platformConfigDto.isEcosystemEnabled, reqUser.id);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.updateEcosystemConfig
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

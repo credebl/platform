@@ -74,7 +74,7 @@ export class UserController {
    * @returns User's access token details
    */
 
-  @MessagePattern({ cmd: 'users.user-holder-login' })
+  @MessagePattern({ cmd: 'user-holder-login' })
   async login(payload: IUserSignIn): Promise<ISignInUser> {
     const loginRes = await this.userService.login(payload);
     return loginRes;

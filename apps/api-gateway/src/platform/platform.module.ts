@@ -1,13 +1,17 @@
+import { ClientsModule, Transport } from '@nestjs/microservices';
+
+import { CommonConstants } from '@credebl/common/common.constant';
+import { ConfigModule } from '@nestjs/config';
+import { EcosystemModule as EcosystemServiceModule } from 'apps/ecosystem/src/ecosystem.module';
 import { Module } from '@nestjs/common';
+import { NATSClient } from '@credebl/common/NATSClient';
 import { PlatformController } from './platform.controller';
 import { PlatformService } from './platform.service';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ConfigModule } from '@nestjs/config';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { NATSClient } from '@credebl/common/NATSClient';
+
 @Module({
   imports: [
+    EcosystemServiceModule,
     ConfigModule.forRoot(),
     ClientsModule.register([
       {
@@ -18,6 +22,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ])
   ],
   controllers: [PlatformController],
-  providers: [PlatformService, NATSClient]
+  providers: [PlatformService, NATSClient],
+  exports: [EcosystemServiceModule]
 })
 export class PlatformModule {}

@@ -37,7 +37,6 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { InviteMemberToEcosystemDto, UpdateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
-import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { user } from '@prisma/client';
 import { User } from '../authz/decorators/user.decorator';
@@ -52,10 +51,12 @@ import { GetAllIntentTemplatesResponseDto } from '../utilities/dtos/get-all-inte
 import { GetAllIntentTemplatesDto } from '../utilities/dtos/get-all-intent-templates.dto';
 import { GetIntentTemplateByIntentAndOrgDto } from '../utilities/dtos/get-intent-template-by-intent-and-org.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/dtos/intent-template.dto';
+import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
 @ApiTags('ecosystem')
+@UseGuards(EcosystemFeatureGuard)
 @ApiUnauthorizedResponse({
   description: 'Unauthorized',
   type: UnauthorizedErrorDto
@@ -198,20 +199,16 @@ export class EcosystemController {
    * Get all ecosystems (platform admin)
    * @returns All ecosystems from platform
    */
-  @Get()
-  @ApiOperation({
-    summary: 'Get all ecosystems (platform admin)',
-    description: 'Fetch all ecosystems available on the platform'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Ecosystems fetched successfully'
-  })
-  @Roles(OrgRoles.PLATFORM_ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
-  async getAllEcosystems(@User() reqUser: user, @Res() res: Response): Promise<Response> {
-    const ecosystems = await this.ecosystemService.getAllEcosystems();
+  @Get('/all-ecosystem')
+  @ApiOperation({
+    summary: 'Get ecosystems',
+    description: 'Fetch ecosystems for Platform Admin or Ecosystem Lead'
+  })
+  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
+  async getEcosystems(@User() reqUser: user, @Res() res: Response): Promise<Response> {
+    const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
@@ -800,7 +797,6 @@ export class EcosystemController {
 
     return res.status(HttpStatus.OK).json(finalResponse);
   }
-
   /**
    * Delete intent
    * @param id Intent ID
@@ -820,12 +816,29 @@ export class EcosystemController {
     type: ApiResponseDto
   })
   async deleteIntent(
-    @Param('ecosystemId') ecosystemId: string,
-    @Param('intentId') intentId: string,
-    @User() user: IUserRequest,
+    @Param(
+      'ecosystemId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);
+        }
+      })
+    )
+    ecosystemId: string,
+    @Param(
+      'intentId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfIntentId);
+        }
+      })
+    )
+    intentId: string,
+
+    @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
-    const intent = await this.ecosystemService.deleteIntent(ecosystemId, intentId, user);
+    const intent = await this.ecosystemService.deleteIntent(ecosystemId, intentId, user.id);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,

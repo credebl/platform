@@ -1,0 +1,9 @@
+{
+  "name": "@credebl/notification",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "firebase-admin": "^13.6.0"
+  }
+}

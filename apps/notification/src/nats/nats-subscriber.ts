@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { NatsService } from './nats.service';
 import { INatsUserRequestData } from './interfaces';
-import { ensureSessionConsumer, STREAM } from './jetstream.setup';
+import { DID_STREAM, ensureSessionConsumer, ensureSessionConsumerWithDidStream, STREAM } from './jetstream.setup';
 import { JetStreamClient } from 'nats';
 import { PendingAckStore } from './pendingAckStore';
 
@@ -123,5 +123,55 @@ export class TestSubsciber implements OnApplicationBootstrap {
     } catch (err) {
       this.logger.error(`[NATS] Failed to ACK message ${JSON.stringify(err)}`);
     }
+  }
+
+  // ------ For did-notify stream testing ------ //
+
+  private async activateUserConsumersWithDidNotify(data: INatsUserRequestData): Promise<void> {
+    const { did, sessions } = data;
+
+    const js = this.nats.jetstream();
+    const jsm = this.nats.jetstreamManager();
+    this.logger.log(`[NATS] Started activating consumer for user DID: ${did} with sessions count: ${sessions.length}`);
+
+    // Create all consumers in parallel first (dependency)
+    await Promise.all(sessions.map((session) => ensureSessionConsumerWithDidStream(jsm, session.sessionId)));
+
+    // After all consumers are created, consume messages from all sessions in parallel
+    await Promise.all(sessions.map((session) => this.consumeSessionMessagesWithDidNotify(js, session.sessionId, did)));
+  }
+
+  private async consumeSessionMessagesWithDidNotify(
+    js: JetStreamClient,
+    sessionId: string,
+    did: string
+  ): Promise<void> {
+    const consumerName = `notify-session-${sessionId}`;
+    this.logger.log(`[NATS] Getting consumer ${consumerName} to fetch messages for session ${sessionId}`);
+    const consumer = await js.consumers.get(DID_STREAM, consumerName);
+
+    const iter = await consumer.fetch({
+      // eslint-disable-next-line camelcase
+      max_messages: 10
+    });
+    this.logger.log(`[NATS] Started fetching messages for consumer ${consumerName}`);
+    for await (const msg of iter) {
+      const payload = msg.json();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [_, domain, event, orgCode, sessionId] = msg.subject.split('.');
+
+      const ackKey = this.pendingAckStore.save('notify', consumerName, msg);
+
+      await this.nats.publish(`${did}`, {
+        payload,
+        ackKey, // opaque token user must return
+        subject: msg.subject,
+        event: `${domain}.${event}`
+      });
+      this.logger.log(`[NATS] Published message to user DID ${did} for session ${sessionId}`);
+    }
+    this.logger.log(`[NATS] Finished processing messages for session ${sessionId}, deleting consumer ${consumerName}`);
+    await this.nats.jetstreamManager().consumers.delete(STREAM, consumerName);
+    this.logger.log(`[NATS] Deleted consumer ${consumerName} after processing messages for session ${sessionId}`);
   }
 }

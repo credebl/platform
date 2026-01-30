@@ -11,6 +11,8 @@ import { LoggerModule } from '@credebl/logger';
 import { ContextInterceptorModule } from '@credebl/context';
 import { CacheModule } from '@nestjs/cache-manager';
 import { PendingAckStore } from './pendingAckStore';
+import { HolderNotificationRepository } from '../holder-notification.repository';
+import { PrismaService } from '@credebl/prisma-service';
 
 @Module({
   imports: [
@@ -23,7 +25,15 @@ import { PendingAckStore } from './pendingAckStore';
     ContextInterceptorModule,
     CacheModule.register({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT })
   ],
-  providers: [NatsService, JetStreamConsumer, TestSubsciber, Logger, PendingAckStore],
+  providers: [
+    NatsService,
+    JetStreamConsumer,
+    TestSubsciber,
+    Logger,
+    PendingAckStore,
+    HolderNotificationRepository,
+    PrismaService
+  ],
   exports: [NatsService]
 })
 export class NatsModule implements OnModuleInit {

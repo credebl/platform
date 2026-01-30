@@ -281,6 +281,9 @@ export class EcosystemService {
   }
 
   async getEcosystems(userId: string): Promise<IEcosystem[]> {
+    if (!userId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+    }
     try {
       const leadEcosystems = await this.ecosystemRepository.getEcosystemsForEcosystemLead(userId);
 
@@ -689,7 +692,9 @@ export class EcosystemService {
     platformAdminId: string;
   }): Promise<{ message: string }> {
     const { isEcosystemEnabled, platformAdminId } = payload;
-
+    if (!platformAdminId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.platformIdRequired);
+    }
     if ('boolean' !== typeof isEcosystemEnabled) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemEnabledFlag);
     }

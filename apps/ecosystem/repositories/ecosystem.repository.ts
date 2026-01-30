@@ -1185,7 +1185,11 @@ export class EcosystemRepository {
 
     await this.prisma.platform_config.update({
       where: { id: existingConfig.id },
-      data: { isEcosystemEnabled }
+      data: {
+        isEcosystemEnabled,
+        lastChangedBy: payload.userId,
+        lastChangedDateTime: new Date()
+      }
     });
   }
 

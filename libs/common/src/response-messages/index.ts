@@ -201,7 +201,6 @@ export const ResponseMessages = {
       updateEcosystemConfig: 'Ecosystem configuration updated successfully'
     },
     error: {
-      platformConfigNotFound: 'Platform config not found',
       featureIsDisabled: `You don't have access to this feature`,
       memberInviteFailed: 'Failed to send invitation for the member',
       failInvitationUpdate: 'Failed to update Ecosystem Invitation',
@@ -267,6 +266,7 @@ export const ResponseMessages = {
       invalidFormatOfEcosystemId: 'Invalid format of ecosystemId',
       invalidFormatOfIntentId: 'Invalid format of ecosystemId',
       emailOrPlatformAdminIdMissing: 'Email or platformAdminId missing',
+      platformIdRequired: 'PlatformId is required',
       userIdMissing: 'UserId is required',
       fetch: 'Error while fetching ecosystems',
       invitationRequired: 'Accepted invitation is required to create ecosystem',

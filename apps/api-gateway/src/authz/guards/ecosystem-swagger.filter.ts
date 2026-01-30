@@ -11,6 +11,9 @@ export class EcosystemSwaggerFilter {
     const enabled = Boolean(config?.isEcosystemEnabled);
 
     if (!enabled) {
+      if (!document.paths) {
+        return document;
+      }
       Object.keys(document.paths).forEach((path) => {
         Object.keys(document.paths[path]).forEach((method) => {
           const operation = document.paths[path][method];

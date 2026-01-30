@@ -190,7 +190,7 @@ export const ResponseMessages = {
       updateInvitation: 'Status for ecosystem invitation updated successfully',
       deletionSuccessfull: 'Record deleted successfully',
       userStatusUpdated: 'User status updated successfully',
-      updatedEcosytemOrg: 'Updated ecosystem org successfully',
+      updatedEcosystemOrg: 'Updated ecosystem org successfully',
       invitationsMemberSuccess: 'Invitation members fetched successfully',
       intentCreated: 'Ecosystem intent created successfully',
       intentUpdated: 'Ecosystem intent updated successfully',

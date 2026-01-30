@@ -304,7 +304,7 @@ export class EcosystemController {
     if (0 < result.count) {
       const finalResponse: IResponse = {
         statusCode: HttpStatus.OK,
-        message: ResponseMessages.ecosystem.success.updatedEcosytemOrg
+        message: ResponseMessages.ecosystem.success.updatedEcosystemOrg
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
     }

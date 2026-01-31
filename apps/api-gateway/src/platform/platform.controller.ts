@@ -1,4 +1,18 @@
-import { BadRequestException, Controller, Get, HttpStatus, Logger, Param, Query, Res, UseFilters, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+  UseFilters,
+  UseGuards
+} from '@nestjs/common';
 import { PlatformService } from './platform.service';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
@@ -15,196 +29,283 @@ import * as QRCode from 'qrcode';
 import { CredDefSortFields, SchemaType, SortFields } from '@credebl/enum/enum';
 import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { user } from '@prisma/client';
+import { OrgRoles } from 'libs/org-roles/enums';
+import { Roles } from '../authz/decorators/roles.decorator';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { CreateEcosystemInvitationDto } from '../ecosystem/dtos/send-ecosystem-invitation';
+import { EnableEcosystemDto } from '../ecosystem/dtos/enable-ecosystem';
+import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';
 
 @Controller('')
 @UseFilters(CustomExceptionFilter)
 export class PlatformController {
-    constructor(private readonly platformService: PlatformService) { }
+  constructor(private readonly platformService: PlatformService) {}
 
-    private readonly logger = new Logger('PlatformController');
+  private readonly logger = new Logger('PlatformController');
 
-    /**
-     * Retrieves all schemas available on the platform with optional filters and sorting.
-     *
-     * @param ledgerId The ID of the ledger.
-     * @param schemaType Type of schema to filter results.
-     * 
-     * @returns A paginated list of schemas based on the provided criteria.
-     */
-    @Get('/platform/schemas')
-    @ApiTags('schemas')
-    @ApiOperation({
-        summary: 'Get all schemas from platform.',
-        description: 'Retrieves all schemas available on the platform'
-    })
-    @ApiQuery({
-        name: 'sortField',
-        enum: SortFields,
-        required: false
-      }) 
-    @ApiQuery({
-        name: 'schemaType',
-        enum: SchemaType,
-        required: false
-      })    
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard('jwt'))
-    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-    async getAllSchema(
-        @Query() getAllSchemaDto: GetAllSchemaByPlatformDto,
-        @Res() res: Response,
-        @User() user: IUserRequestInterface
-    ): Promise<Response> {
-        const { ledgerId, pageSize, searchByText, pageNumber, sorting, sortByValue, schemaType } = getAllSchemaDto;
-        const schemaSearchCriteria: ISchemaSearchPayload = {
-            ledgerId,
-            pageNumber,
-            searchByText,
-            pageSize,
-            sortField: sorting,
-            sortBy: sortByValue,
-            schemaType
-        };
-        const schemasResponse = await this.platformService.getAllSchema(schemaSearchCriteria, user);
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.OK,
-            message: ResponseMessages.schema.success.fetch,
-            data: schemasResponse
-        };
-        return res.status(HttpStatus.OK).json(finalResponse);
+  /**
+   * Retrieves all schemas available on the platform with optional filters and sorting.
+   *
+   * @param ledgerId The ID of the ledger.
+   * @param schemaType Type of schema to filter results.
+   *
+   * @returns A paginated list of schemas based on the provided criteria.
+   */
+  @Get('/platform/schemas')
+  @ApiTags('schemas')
+  @ApiOperation({
+    summary: 'Get all schemas from platform.',
+    description: 'Retrieves all schemas available on the platform'
+  })
+  @ApiQuery({
+    name: 'sortField',
+    enum: SortFields,
+    required: false
+  })
+  @ApiQuery({
+    name: 'schemaType',
+    enum: SchemaType,
+    required: false
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getAllSchema(
+    @Query() getAllSchemaDto: GetAllSchemaByPlatformDto,
+    @Res() res: Response,
+    @User() user: IUserRequestInterface
+  ): Promise<Response> {
+    const { ledgerId, pageSize, searchByText, pageNumber, sorting, sortByValue, schemaType } = getAllSchemaDto;
+    const schemaSearchCriteria: ISchemaSearchPayload = {
+      ledgerId,
+      pageNumber,
+      searchByText,
+      pageSize,
+      sortField: sorting,
+      sortBy: sortByValue,
+      schemaType
+    };
+    const schemasResponse = await this.platformService.getAllSchema(schemaSearchCriteria, user);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.schema.success.fetch,
+      data: schemasResponse
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Retrieves all credential definitions available on the platform.
+   *
+   * @returns A list of credential definitions and their details.
+   */
+  @Get('/platform/cred-defs')
+  @ApiTags('credential-definitions')
+  @ApiOperation({
+    summary: 'Get all credential-definitions from platform.',
+    description: 'Retrieves all credential definitions available on the platform'
+  })
+  @ApiQuery({
+    name: 'sortField',
+    enum: CredDefSortFields,
+    required: false
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getAllCredDefs(
+    @Query() getAllPlatformCredDefs: GetAllPlatformCredDefsDto,
+    @Res() res: Response,
+    @User() user: IUserRequestInterface
+  ): Promise<Response> {
+    const schemasResponse = await this.platformService.getAllPlatformCredDefs(getAllPlatformCredDefs, user);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.credentialDefinition.success.fetch,
+      data: schemasResponse
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Retrieves all available ledgers from the platform.
+   *
+   * @returns A list of ledgers and their details.
+   */
+  @Get('/platform/ledgers')
+  @ApiTags('ledgers')
+  @ApiOperation({
+    summary: 'Get all ledgers from platform.',
+    description: 'Retrieves a list of all available ledgers on platform.'
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getAllLedgers(@Res() res: Response): Promise<object> {
+    const networksResponse = await this.platformService.getAllLedgers();
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ledger.success.fetch,
+      data: networksResponse
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Retrieves the network URL associated with a specific ledger namespace.
+   *
+   * @param indyNamespace The namespace of the ledger.
+   * @returns The network URL for the specified ledger.
+   */
+  @Get('/platform/network/url/:indyNamespace')
+  @ApiTags('ledgers')
+  @ApiOperation({
+    summary: 'Get network url from platform.',
+    description: 'Retrieves the network URL for a specified ledger namespace.'
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getNetwrkUrl(
+    @Param('indyNamespace', TrimStringParamPipe) indyNamespace: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    if (!indyNamespace) {
+      throw new BadRequestException(ResponseMessages.ledger.error.indyNamespaceisRequired);
     }
+    const networksResponse = await this.platformService.getNetworkUrl(indyNamespace);
 
-/**
-     * Retrieves all credential definitions available on the platform.
-     * 
-     * @returns A list of credential definitions and their details.
-     */
-    @Get('/platform/cred-defs')
-    @ApiTags('credential-definitions')
-    @ApiOperation({
-        summary: 'Get all credential-definitions from platform.',
-        description: 'Retrieves all credential definitions available on the platform'
-    })
-    @ApiQuery({
-        name: 'sortField',
-        enum: CredDefSortFields,
-        required: false
-      })    
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard('jwt'))
-    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-    async getAllCredDefs(
-        @Query() getAllPlatformCredDefs: GetAllPlatformCredDefsDto,
-        @Res() res: Response,
-        @User() user: IUserRequestInterface
-    ): Promise<Response> {
-        const schemasResponse = await this.platformService.getAllPlatformCredDefs(getAllPlatformCredDefs, user);
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.OK,
-            message: ResponseMessages.credentialDefinition.success.fetch,
-            data: schemasResponse
-        };
-        return res.status(HttpStatus.OK).json(finalResponse);
-    }
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ledger.success.fetchNetworkUrl,
+      data: networksResponse
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
-    /**
-     * Retrieves all available ledgers from the platform.
-     *
-     * @returns A list of ledgers and their details.
-     */
-    @Get('/platform/ledgers')
-    @ApiTags('ledgers')
-    @ApiOperation({
-        summary: 'Get all ledgers from platform.',
-        description: 'Retrieves a list of all available ledgers on platform.'
-    })
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard('jwt'))
-    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-    async getAllLedgers(
-        @Res() res: Response
-    ): Promise<object> {
-        const networksResponse = await this.platformService.getAllLedgers();
+  @Get('/invitation/:referenceId')
+  @ApiOperation({
+    summary: `Get shortening url by referenceId`,
+    description: `Get shortening url by referenceId`
+  })
+  @ApiExcludeEndpoint()
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getShorteningUrlById(@Param('referenceId') referenceId: string, @Res() res: Response): Promise<Response> {
+    const shorteningUrlDetails = await this.platformService.getShorteningUrlById(referenceId);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.shorteningUrl.success.getshorteningUrl,
+      data: shorteningUrlDetails
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.OK,
-            message: ResponseMessages.ledger.success.fetch,
-            data: networksResponse
-        };
-        return res.status(HttpStatus.OK).json(finalResponse);
-    }
+  @Get('/invitation/qr-code/:referenceId')
+  @ApiOperation({
+    summary: `Get QR by referenceId`,
+    description: `Get QR by referenceId`
+  })
+  @ApiExcludeEndpoint()
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getQrCode(@Param('referenceId') referenceId: string, @Res() res: Response): Promise<void> {
+    const url = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/invitation/${referenceId}`;
+    // Generate QR code as a buffer
+    const qrCodeBuffer = await QRCode.toBuffer(url);
 
-    /**
-     * Retrieves the network URL associated with a specific ledger namespace.
-     *
-     * @param indyNamespace The namespace of the ledger.
-     * @returns The network URL for the specified ledger.
-     */
-    @Get('/platform/network/url/:indyNamespace')
-    @ApiTags('ledgers')
-    @ApiOperation({
-        summary: 'Get network url from platform.',
-        description: 'Retrieves the network URL for a specified ledger namespace.'
-    })
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard('jwt'))
-    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-    async getNetwrkUrl(
-        @Param('indyNamespace', TrimStringParamPipe) indyNamespace: string,
-        @Res() res: Response
-    ): Promise<Response> {
-        if (!indyNamespace) {
-            throw new BadRequestException(ResponseMessages.ledger.error.indyNamespaceisRequired);
-        }
-        const networksResponse = await this.platformService.getNetworkUrl(indyNamespace);
+    // Set response type to image/png
+    res.type('image/png');
 
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.OK,
-            message: ResponseMessages.ledger.success.fetchNetworkUrl,
-            data: networksResponse
-        };
-        return res.status(HttpStatus.OK).json(finalResponse);
-    }
+    // Send the QR code buffer as the response
+    res.send(qrCodeBuffer);
+  }
 
-    @Get('/invitation/:referenceId')
-    @ApiOperation({
-        summary: `Get shortening url by referenceId`,
-        description: `Get shortening url by referenceId`
-    })
-    @ApiExcludeEndpoint()
-    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-    async getShorteningUrlById(
-        @Param('referenceId') referenceId: string,
-        @Res() res: Response
-    ): Promise<Response> {
-        const shorteningUrlDetails = await this.platformService.getShorteningUrlById(referenceId);
-        const finalResponse: IResponse = {
-            statusCode: HttpStatus.OK,
-            message: ResponseMessages.shorteningUrl.success.getshorteningUrl,
-            data: shorteningUrlDetails
-        };
-        return res.status(HttpStatus.OK).json(finalResponse);
-    }
+  /**
+   * Invitation to create ecosystem (platform admin)
+   * @param createEcosystemInvitationDto
+   * @returns Success message
+   */
+  @Post('/invitations')
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @ApiOperation({
+    summary: 'Create ecosystem invitation (platform admin)',
+    description: 'Invite a user to create an ecosystem'
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Success',
+    type: ApiResponseDto
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemFeatureGuard)
+  @ApiBearerAuth()
+  async createInvitation(
+    @Body() createEcosystemInvitationDto: CreateEcosystemInvitationDto,
+    @User() reqUser: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.platformService.inviteUserToCreateEcosystem(createEcosystemInvitationDto.email, reqUser.id);
 
-    @Get('/invitation/qr-code/:referenceId')
-    @ApiOperation({
-        summary: `Get QR by referenceId`,
-        description: `Get QR by referenceId`
-    })
-    @ApiExcludeEndpoint()
-    @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-    async getQrCode(
-        @Param('referenceId') referenceId: string,
-        @Res() res: Response
-    ): Promise<void> {
-        const url = `${process.env.API_GATEWAY_PROTOCOL}://${process.env.API_ENDPOINT}/invitation/${referenceId}`;
-        // Generate QR code as a buffer
-        const qrCodeBuffer = await QRCode.toBuffer(url);
+    return res.status(HttpStatus.CREATED).json({
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.createInvitation
+    });
+  }
 
-        // Set response type to image/png
-        res.type('image/png');
+  /**
+   * Get invitations sent by platform admin
+   * @returns Invitation details
+   */
 
-        // Send the QR code buffer as the response
-        res.send(qrCodeBuffer);
-    }
+  @Get('/invitations')
+  @ApiOperation({
+    summary: 'Get ecosystem invitations by user (platform admin)',
+    description: 'Fetch all ecosystem invitations created by the logged-in user'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Invitations fetched successfully'
+  })
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemFeatureGuard)
+  @ApiBearerAuth()
+  async getInvitations(@User() reqUser: user, @Res() res: Response): Promise<Response> {
+    const invitations = await this.platformService.getInvitationsByUserId(reqUser.id);
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.fetch,
+      data: invitations
+    });
+  }
+
+  /**
+   * Update ecosystem enable/disable flag
+   */
+  @Put('/config/ecosystem')
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @ApiOperation({
+    summary: 'Enable or disable ecosystem feature',
+    description: 'Platform admin can enable or disable ecosystem feature on the platform'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Ecosystem configuration updated successfully',
+    type: ApiResponseDto
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiBearerAuth()
+  async updateEcosystemConfig(
+    @Body() platformConfigDto: EnableEcosystemDto,
+    @User() reqUser: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.platformService.updateEcosystemConfig(platformConfigDto.isEcosystemEnabled, reqUser.id);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.updateEcosystemConfig
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 }

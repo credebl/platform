@@ -48,7 +48,8 @@ import { NATSClient } from '@credebl/common/NATSClient';
       KeycloakUrlService,
       AwsService,
       NATSClient
-    ]
+    ],
+    exports:[OrganizationRepository]
 
 })
 export class OrganizationModule {}

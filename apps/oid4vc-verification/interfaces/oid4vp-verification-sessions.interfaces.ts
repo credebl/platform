@@ -18,6 +18,7 @@ export interface DidSigner {
 export interface X5cSigner {
   method: SignerMethodOption.X5C;
   x5c: string[];
+  keyId: string;
 }
 
 export type RequestSigner = DidSigner | X5cSigner;

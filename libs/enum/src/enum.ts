@@ -70,6 +70,11 @@ export enum Invitation {
   PENDING = 'pending'
 }
 
+export enum InviteType {
+  ECOSYSTEM = 'ecosystem',
+  MEMBER = 'member'
+}
+
 export enum EndorserTransactionType {
   SCHEMA = 'schema',
   CREDENTIAL_DEFINITION = 'credential-definition'
@@ -89,6 +94,30 @@ export enum AgentSpinUpStatus {
   PENDING = 0,
   WALLET_CREATED = 1,
   DID_CREATED = 2
+}
+
+export enum EcosystemRoles {
+  ECOSYSTEM_LEAD = 'Ecosystem Lead',
+  ECOSYSTEM_MEMBER = 'Ecosystem Member',
+  ECOSYSTEM_OWNER = 'Ecosystem Owner'
+}
+
+export enum EcosystemConfigSettings {
+  URL = 'url',
+  ENABLE_ECOSYSTEM = 'enableEcosystem',
+  AUTO_ENDORSEMENT = 'autoEndorsement',
+  PARTICIPATE_IN_ECOSYSTEM = 'participateInEcosystem',
+  MULTI_ECOSYSTEM = 'multiEcosystemSupport'
+}
+
+export enum EcosystemOrgStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE'
+}
+
+export enum MemberStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive'
 }
 
 export enum UserCertificateId {

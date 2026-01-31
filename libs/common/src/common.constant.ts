@@ -254,6 +254,9 @@ export enum CommonConstants {
   ENDORSE_TRANSACTION = '/transactions/#/endorse',
   WRITE_TRANSACTION = '/transactions/#/write',
 
+  // ecosystem
+  ECOSYSTEM_SERVICE = 'ecosystem',
+
   // delete wallet
   URL_DELETE_WALLET = '/agent/wallet',
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
@@ -444,6 +447,7 @@ export enum CommonConstants {
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;
+export const ECOSYSTEM_ROLES = ['Ecosystem Lead', 'Ecosystem Member'];
 
 export const postgresqlErrorCodes = [];
 postgresqlErrorCodes['23503'] = 'foreign_key_violation';

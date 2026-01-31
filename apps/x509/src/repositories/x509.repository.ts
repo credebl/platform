@@ -57,7 +57,8 @@ export class X509CertificateRepository {
           expiry: createDto.expiry,
           certificateBase64: createDto.certificateBase64,
           createdBy: createDto.createdBy,
-          lastChangedBy: createDto.lastChangedBy
+          lastChangedBy: createDto.lastChangedBy,
+          keyId: createDto.keyId
         }
       });
 

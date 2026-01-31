@@ -548,7 +548,8 @@ export class Oid4vcIssuanceService {
           }
           signerOptions.push({
             method: SignerMethodOption.X5C,
-            x5c: [activeCertificate.certificateBase64]
+            x5c: [activeCertificate.certificateBase64],
+            keyId: activeCertificate.keyId
           });
           activeCertificateDetails.push(activeCertificate);
         }
@@ -564,7 +565,8 @@ export class Oid4vcIssuanceService {
           }
           signerOptions.push({
             method: SignerMethodOption.X5C,
-            x5c: [activeCertificate.certificateBase64]
+            x5c: [activeCertificate.certificateBase64],
+            keyId: activeCertificate.keyId
           });
           activeCertificateDetails.push(activeCertificate);
         }
@@ -754,7 +756,6 @@ export class Oid4vcIssuanceService {
       const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
 
       const credentialConfigurationsSupported = buildCredentialConfigurationsSupported(templates);
-
       return buildIssuerPayload({ credentialConfigurationsSupported }, issuerDetails);
     } catch (error) {
       this.logger.error(`[buildOidcIssuerPayload] - error: ${JSON.stringify(error)}`);

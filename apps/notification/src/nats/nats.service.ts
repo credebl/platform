@@ -18,7 +18,7 @@ export class NatsService implements OnModuleDestroy {
     this.logger.log('[NATS] starting connection...');
 
     this.nc = await connect({
-      servers: [`${process.env.NATS_HOST}:${process.env.NATS_PORT}`],
+      servers: `${process.env.NATS_URL}`.split(','),
       authenticator: usernamePasswordAuthenticator(`${process.env.NATS_USER}`, `${process.env.NATS_PASSWORD}`)
     });
     this.js = this.nc.jetstream();

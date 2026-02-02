@@ -6,7 +6,6 @@ import assert = require('node:assert');
 export const AGGREGATE_STREAM = process.env.AGGREGATE_STREAM || 'aggregate';
 export const DID_STREAM = process.env.DID_STREAM || 'did-notify';
 export const PULL_CONSUMER = process.env.PULL_CONSUMER || 'hub-pull-consumer';
-
 const logger = new Logger('JetStreamSetup');
 /**
  * Ensures the JetStream stream exists
@@ -100,7 +99,7 @@ export async function publishToJetStream(
     );
 
     logger.log(
-      `[NATS] Message published to JetStream, ${JSON.stringify({
+      `[NATS] Message published to JetStream - ${JSON.stringify({
         subject,
         stream: ack.stream,
         sequence: ack.seq,

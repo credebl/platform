@@ -242,6 +242,9 @@ export class Oid4vpVerificationService extends BaseService {
         if (!activeCertificate) {
           throw new NotFoundException(`No active certificate(${sessionRequest.requestSigner.method}) found for issuer`);
         }
+        if (!activeCertificate.keyId) {
+          throw new NotFoundException(`Active certificate keyId missing for ${sessionRequest.requestSigner.method}`);
+        }
 
         requestSigner = {
           method: SignerMethodOption.X5C, // "x5c"
@@ -258,6 +261,9 @@ export class Oid4vpVerificationService extends BaseService {
           throw new NotFoundException(
             `No active certificate(${sessionRequest.requestSigner.method}}) found for issuer`
           );
+        }
+        if (!activeCertificate.keyId) {
+          throw new NotFoundException(`Active certificate keyId missing for ${sessionRequest.requestSigner.method}`);
         }
         requestSigner = {
           method: SignerMethodOption.X5C, // "x5c"
@@ -358,6 +364,9 @@ export class Oid4vpVerificationService extends BaseService {
 
         if (!activeCertificate) {
           throw new NotFoundException(`No active certificate(${signerOption}) found for organization`);
+        }
+        if (!activeCertificate.keyId) {
+          throw new NotFoundException(`Active certificate keyId missing for ${signerOption}`);
         }
 
         resolvedSigner = {

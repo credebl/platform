@@ -13,7 +13,6 @@ import { PendingAckStore } from './pendingAckStore';
 import { HolderNotificationRepository } from '../holder-notification.repository';
 import { Message } from 'firebase-admin/lib/messaging/messaging-api';
 import * as admin from 'firebase-admin';
-import { EVENT_USER_ACK } from './nats-subscriber';
 
 const EVENT_PRESENTATION_ACK = 'presentation.ack';
 const EVENT_PRESENTATION_PURGED = 'presentation.purged';
@@ -119,23 +118,18 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
 
           const ackKey = this.pendingAckStore.save('notify', consumerName, msg);
 
-          this.logger.log(`[NATS] Notification detail fetched: ${JSON.stringify(notificationDetail)}`);
+          this.logger.log(`[NATS] Notification detail fetched for session ID: ${sessionId}`);
           if (!notificationDetail) {
             this.logger.error(`[NATS] No notification detail found for session ID: ${sessionId}`);
             msg.nak();
             return;
           }
-          await this.nats.publish(
-            `${notificationDetail.holderDid}`,
-            {
-              payload,
-              ackKey,
-              subject: msg.subject,
-              event: `${domain}.${event}`
-            },
-            { reply: EVENT_USER_ACK }
-          );
-          // await this.nats.publish('did-key', payload); // ACK reply to APP
+          await this.nats.publish(`${notificationDetail.holderDid}`, {
+            payload,
+            ackKey,
+            subject: msg.subject,
+            event: `${domain}.${event}`
+          });
 
           this.logger.log(`[NATS] Message published to ${notificationDetail.holderDid} for session ${sessionId}`);
         }

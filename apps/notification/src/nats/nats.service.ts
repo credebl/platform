@@ -1,12 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import {
-  connect,
-  JetStreamClient,
-  JetStreamManager,
-  NatsConnection,
-  PublishOptions,
-  usernamePasswordAuthenticator
-} from 'nats';
+import { connect, JetStreamClient, JetStreamManager, NatsConnection, usernamePasswordAuthenticator } from 'nats';
 
 @Injectable()
 export class NatsService implements OnModuleDestroy {
@@ -56,10 +49,10 @@ export class NatsService implements OnModuleDestroy {
     }
   }
 
-  async publish(subject: string, payload: unknown, options: PublishOptions): Promise<void> {
+  async publish(subject: string, payload: unknown): Promise<void> {
     if (!this.connected) {
       throw new Error('NATS not connected yet');
     }
-    this.nc.publish(subject, Buffer.from(JSON.stringify(payload)), options);
+    this.nc.publish(subject, Buffer.from(JSON.stringify(payload)));
   }
 }

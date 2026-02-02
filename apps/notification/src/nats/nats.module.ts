@@ -2,7 +2,7 @@ import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import { NatsService } from './nats.service';
 import { JetStreamConsumer } from './jetstream.consumer';
 import { ensureStream } from './jetstream.setup';
-import { TestSubsciber } from './nats-subscriber';
+import { NotificationNATSSubsciber } from './nats-subscriber';
 import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from '@credebl/common';
 import { GlobalConfigModule } from '@credebl/config';
@@ -28,7 +28,7 @@ import { PrismaService } from '@credebl/prisma-service';
   providers: [
     NatsService,
     JetStreamConsumer,
-    TestSubsciber,
+    NotificationNATSSubsciber,
     Logger,
     PendingAckStore,
     HolderNotificationRepository,

@@ -1,23 +1,11 @@
 /* eslint-disable camelcase */
 import { Logger } from '@nestjs/common';
-import {
-  AckPolicy,
-  DeliverPolicy,
-  JetStreamClient,
-  JetStreamManager,
-  ReplayPolicy,
-  RetentionPolicy,
-  StorageType,
-  nanos
-} from 'nats';
+import { AckPolicy, DeliverPolicy, JetStreamClient, JetStreamManager, RetentionPolicy, StorageType, nanos } from 'nats';
 import assert = require('node:assert');
 
-export const SOURCE_STREAM = 'notify';
-export const STREAM = 'aggregate';
-export const DID_STREAM = 'did-notify';
-export const SUBJECTS = ['aggregate.>'];
-export const CONSUMER = 'hub-consumer';
-export const PULL_CONSUMER = 'hub-pull-consumer';
+export const AGGREGATE_STREAM = process.env.AGGREGATE_STREAM || 'aggregate';
+export const DID_STREAM = process.env.DID_STREAM || 'did-notify';
+export const PULL_CONSUMER = process.env.PULL_CONSUMER || 'hub-pull-consumer';
 
 const logger = new Logger('JetStreamSetup');
 /**
@@ -25,30 +13,31 @@ const logger = new Logger('JetStreamSetup');
  */
 export async function ensureStream(jsm: JetStreamManager): Promise<void> {
   try {
-    // await jsm.streams.delete(STREAM);
-    await jsm.streams.info(STREAM);
-    logger.log(`[NATS] Stream '${STREAM}' already exists`);
-  } catch {
-    logger.log(`[NATS] Creating stream '${STREAM}'`);
+    await jsm.streams.info(AGGREGATE_STREAM);
+    logger.log(`[NATS] Stream '${AGGREGATE_STREAM}' already exists`);
+  } catch (error) {
+    logger.error(
+      `[NATS] Error checking stream '${AGGREGATE_STREAM}': ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+    logger.log(`[NATS] Creating stream '${AGGREGATE_STREAM}'`);
     await jsm.streams.add({
-      name: STREAM,
+      name: AGGREGATE_STREAM,
       //subjects: SUBJECTS,
       retention: RetentionPolicy.Workqueue,
       storage: StorageType.File,
-      sources: [
-        { name: SOURCE_STREAM, domain: 'del' },
-        { name: SOURCE_STREAM, domain: 'blr' }
-      ]
+      sources: []
     });
   }
 }
 
 export async function ensureDidStream(jsm: JetStreamManager): Promise<void> {
   try {
-    // await jsm.streams.delete(DID_STREAM);
     await jsm.streams.info(DID_STREAM);
     logger.log(`[NATS] Stream '${DID_STREAM}' already exists`);
-  } catch {
+  } catch (error) {
+    logger.error(
+      `[NATS] Error checking stream '${DID_STREAM}': ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
     logger.log(`[NATS] Creating stream '${DID_STREAM}'`);
     await jsm.streams.add({
       name: DID_STREAM,
@@ -64,79 +53,23 @@ export async function ensureDidStream(jsm: JetStreamManager): Promise<void> {
  */
 export async function ensureConsumer(jsm: JetStreamManager): Promise<void> {
   try {
-    // await jsm.consumers.delete(STREAM, CONSUMER);
-    // await jsm.consumers.update(STREAM, CONSUMER, {
-    //  // eslint-disable-next-line camelcase
-    // //  filter_subject: '*.presentation.test.blr'
-    // });
-    await jsm.consumers.info(STREAM, PULL_CONSUMER);
+    await jsm.consumers.info(AGGREGATE_STREAM, PULL_CONSUMER);
     logger.log(`[NATS] Consumer '${PULL_CONSUMER}' already exists`);
-  } catch {
-    logger.log(`[NATS] Creating consumer '${CONSUMER}'`);
-    await jsm.consumers.add(STREAM, {
+  } catch (error) {
+    logger.error(
+      `[NATS] Error checking consumer '${PULL_CONSUMER}': ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+    logger.log(`[NATS] Creating consumer '${PULL_CONSUMER}'`);
+    await jsm.consumers.add(AGGREGATE_STREAM, {
       name: PULL_CONSUMER,
       durable_name: PULL_CONSUMER,
       ack_policy: AckPolicy.Explicit,
       deliver_policy: DeliverPolicy.All,
-      ack_wait: nanos(10_000),
-      max_deliver: 4
-      // ,filter_subjects: ['hubStream.presentation.test.*']
+      ack_wait: process.env.CONSUMER_CONFIG_ACK_WAIT
+        ? nanos(Number(process.env.CONSUMER_CONFIG_ACK_WAIT))
+        : nanos(10_000),
+      max_deliver: process.env.CONSUMER_CONFIG_MAX_DELIVER ? Number(process.env.CONSUMER_CONFIG_MAX_DELIVER) : 4
     });
-  }
-}
-
-export async function ensureSessionConsumer(jsm: JetStreamManager, sessionId: string): Promise<string> {
-  const consumerName = `notify-session-${sessionId}`;
-
-  try {
-    // await jsm.consumers.delete(STREAM, consumerName);
-    await jsm.consumers.info(STREAM, consumerName);
-    logger.log(`[NATS] Consumer '${consumerName}' already exists`);
-    return consumerName;
-  } catch (error) {
-    logger.error(
-      `Error creatingg consumer info for '${consumerName}': ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-    logger.log(`[NATS] Creating consumer '${consumerName}'`);
-    await jsm.consumers.add(STREAM, {
-      name: consumerName,
-      // durable_name: consumerName,
-      ack_policy: AckPolicy.Explicit,
-      deliver_policy: DeliverPolicy.All,
-      filter_subject: `notify.*.*.*.${sessionId}`,
-      replay_policy: ReplayPolicy.Instant,
-      // max_ack_pending: 1000,
-      inactive_threshold: 30_000
-    });
-
-    return consumerName;
-  }
-}
-
-export async function ensureSessionConsumerWithDidStream(jsm: JetStreamManager, sessionId: string): Promise<string> {
-  const consumerName = `notify-session-${sessionId}`;
-
-  try {
-    await jsm.consumers.info(DID_STREAM, consumerName);
-    logger.log(`[NATS] Consumer '${consumerName}' already exists`);
-    return consumerName;
-  } catch (error) {
-    logger.error(
-      `Error creatingg consumer info for '${consumerName}': ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-    logger.log(`[NATS] Creating consumer '${consumerName}'`);
-    await jsm.consumers.add(DID_STREAM, {
-      name: consumerName,
-      // durable_name: consumerName,
-      ack_policy: AckPolicy.Explicit,
-      deliver_policy: DeliverPolicy.All,
-      filter_subject: `notify.*.*.*.${sessionId}`,
-      replay_policy: ReplayPolicy.Instant,
-      // max_ack_pending: 1000,
-      inactive_threshold: 30_000
-    });
-
-    return consumerName;
   }
 }
 
@@ -171,7 +104,6 @@ export async function publishToJetStream(
         subject,
         stream: ack.stream,
         sequence: ack.seq,
-        //dataSize: payload.length,
         duplicate: ack.duplicate || false
       })}`
     );
@@ -181,7 +113,7 @@ export async function publishToJetStream(
       seq: ack.seq
     };
   } catch (error) {
-    logger.error(`------------${JSON.stringify(error)}`);
+    logger.error(`[NATS] Error publishing to JetStream: ${JSON.stringify(error)}`);
     logger.error('[NATS] JetStream publish failed', {
       subject,
       error: error instanceof Error ? error.message : 'Unknown error'

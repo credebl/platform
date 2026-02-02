@@ -125,6 +125,7 @@ async function bootstrap(): Promise<void> {
       xssFilter: true
     })
   );
+  Logger.log('API-Gateway is listening to NATS', 'NATS-CONNECTION');
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
   Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`, 'Success');
 

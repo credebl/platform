@@ -51,10 +51,11 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
   }
 
   private async consume(consumer: Consumer): Promise<void> {
+    this.logger.log(`[NATS] Starting to consume messages from consumer ${consumer.info}`);
     for await (const msg of await consumer.consume()) {
       try {
         const { subject } = msg;
-        this.logger.log('[NATS] Message subject', subject);
+        this.logger.log(`[NATS] Message subject: ${subject}`);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const [_, domain, event, orgCode, sessionId] = subject.split('.');
         const consumerName = `notify-session-${sessionId}`;
@@ -118,20 +119,18 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
 
           const ackKey = this.pendingAckStore.save('notify', consumerName, msg);
 
-          this.logger.log('[NATS] Notification detail fetched', notificationDetail);
+          this.logger.log(`[NATS] Notification detail fetched: ${JSON.stringify(notificationDetail)}`);
           if (!notificationDetail) {
-            this.logger.error('[NATS] No notification detail found for session ID:', sessionId);
+            this.logger.error(`[NATS] No notification detail found for session ID: ${sessionId}`);
             msg.nak();
             return;
           }
           await this.nats.publish(
             `${notificationDetail.holderDid}`,
             {
-              //`${notificationDetail.holderDid}`, {
               payload,
-              ackKey, // opaque token user must return
+              ackKey,
               subject: msg.subject,
-              msg,
               event: `${domain}.${event}`
             },
             { reply: EVENT_USER_ACK }

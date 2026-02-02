@@ -240,9 +240,7 @@ export class Oid4vpVerificationService extends BaseService {
         this.logger.debug(`activeCertificate=${JSON.stringify(activeCertificate)}`);
 
         if (!activeCertificate) {
-          throw new NotFoundException(
-            `No active certificate(${sessionRequest.requestSigner.method}}) found for issuer`
-          );
+          throw new NotFoundException(`No active certificate(${sessionRequest.requestSigner.method}) found for issuer`);
         }
 
         requestSigner = {

@@ -213,7 +213,6 @@ export class Oid4vpVerificationService extends BaseService {
       `[oid4vpCreateVerificationSession] called for orgId=${orgId}, verifierId=${verifierId}, user=${userDetails?.id ?? 'unknown'}`
     );
     try {
-      const activeCertificateDetails: X509CertificateRecord[] = [];
       const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -251,8 +250,6 @@ export class Oid4vpVerificationService extends BaseService {
           x5c: [activeCertificate.certificateBase64], // array with PEM/DER base64
           keyId: activeCertificate.keyId
         };
-
-        activeCertificateDetails.push(activeCertificate);
       } else if (sessionRequest.requestSigner.method === SignerOption.X509_ED25519) {
         this.logger.debug('X5C based request signer method selected');
 

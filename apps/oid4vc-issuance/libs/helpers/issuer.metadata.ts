@@ -338,7 +338,7 @@ function generateClaims(attributes: any[], namespace?: string, parentPath: strin
  */
 //TODO: Remove any type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildClaimsFromTemplate(template: SdJwtTemplate | MdocTemplate): Record<string, Claim> | Claim[] {
+function buildClaimsFromTemplate(template: SdJwtTemplate | MdocTemplate): Claim[] {
   // ✅ MDOC case — handle namespaces
   if ((template as MdocTemplate).namespaces) {
     const mdocTemplate = template as MdocTemplate;

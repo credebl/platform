@@ -143,6 +143,29 @@ export class X509CertificateService extends BaseService {
     throw new NotFoundException(ResponseMessages.x509.error.notFound);
   }
 
+  private parseAsn1Date(
+    value: { utcTime?: string; generalTime?: string } | undefined,
+    fieldName: 'notBefore' | 'notAfter'
+  ): Date {
+    if (!value) {
+      throw new InternalServerErrorException(`Certificate validity.${fieldName} is missing`);
+    }
+
+    const dateValue = value.utcTime ?? value.generalTime;
+
+    if (!dateValue) {
+      throw new InternalServerErrorException(`Certificate validity.${fieldName} has neither utcTime nor generalTime`);
+    }
+
+    const date = new Date(dateValue);
+
+    if (!isFinite(date.getTime())) {
+      throw new InternalServerErrorException(`Invalid ${fieldName} date in certificate: ${dateValue}`);
+    }
+
+    return date;
+  }
+
   async importCertificate(payload: {
     orgId: string;
     options: IX509ImportCertificateOptionsDto;
@@ -173,8 +196,10 @@ export class X509CertificateService extends BaseService {
         throw new InternalServerErrorException(ResponseMessages.x509.error.import);
       }
 
-      const validFrom = new Date(decodedCert.asn.tbsCertificate.validity.notBefore.utcTime);
-      const expiry = new Date(decodedCert.asn.tbsCertificate.validity.notAfter.utcTime);
+      const validity = decodedCert?.asn?.tbsCertificate?.validity;
+
+      const validFrom = this.parseAsn1Date(validity?.notBefore, 'notBefore');
+      const expiry = this.parseAsn1Date(validity?.notAfter, 'notAfter');
       const certificateDateCheckDto: CertificateDateCheckDto = {
         orgId,
         validFrom,

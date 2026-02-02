@@ -546,6 +546,11 @@ export class Oid4vcIssuanceService {
           if (!activeCertificate) {
             throw new NotFoundException('No active certificate(p256) found for issuer');
           }
+          if (!activeCertificate.keyId) {
+            throw new BadRequestException(
+              'Active certificate is missing keyId; re-import or re-issue the certificate.'
+            );
+          }
           signerOptions.push({
             method: SignerMethodOption.X5C,
             x5c: [activeCertificate.certificateBase64],

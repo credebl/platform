@@ -213,7 +213,6 @@ export class Oid4vpVerificationService extends BaseService {
       `[oid4vpCreateVerificationSession] called for orgId=${orgId}, verifierId=${verifierId}, user=${userDetails?.id ?? 'unknown'}`
     );
     try {
-      const activeCertificateDetails: X509CertificateRecord[] = [];
       const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -234,16 +233,28 @@ export class Oid4vpVerificationService extends BaseService {
           method: SignerMethodOption.DID,
           didUrl: orgDid
         };
-      } else if (
-        sessionRequest.requestSigner.method === SignerOption.X509_P256 ||
-        sessionRequest.requestSigner.method === SignerOption.X509_ED25519
-      ) {
+      } else if (sessionRequest.requestSigner.method === SignerOption.X509_P256) {
         this.logger.debug('X5C based request signer method selected');
 
-        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(
-          orgId,
-          sessionRequest.requestSigner.method
-        );
+        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(orgId, x5cKeyType.P256);
+        this.logger.debug(`activeCertificate=${JSON.stringify(activeCertificate)}`);
+
+        if (!activeCertificate) {
+          throw new NotFoundException(`No active certificate(${sessionRequest.requestSigner.method}) found for issuer`);
+        }
+        if (!activeCertificate.keyId) {
+          throw new NotFoundException(`Active certificate keyId missing for ${sessionRequest.requestSigner.method}`);
+        }
+
+        requestSigner = {
+          method: SignerMethodOption.X5C, // "x5c"
+          x5c: [activeCertificate.certificateBase64], // array with PEM/DER base64
+          keyId: activeCertificate.keyId
+        };
+      } else if (sessionRequest.requestSigner.method === SignerOption.X509_ED25519) {
+        this.logger.debug('X5C based request signer method selected');
+
+        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(orgId, x5cKeyType.Ed25519);
         this.logger.debug(`activeCertificate=${JSON.stringify(activeCertificate)}`);
 
         if (!activeCertificate) {
@@ -251,17 +262,17 @@ export class Oid4vpVerificationService extends BaseService {
             `No active certificate(${sessionRequest.requestSigner.method}}) found for issuer`
           );
         }
-
+        if (!activeCertificate.keyId) {
+          throw new NotFoundException(`Active certificate keyId missing for ${sessionRequest.requestSigner.method}`);
+        }
         requestSigner = {
           method: SignerMethodOption.X5C, // "x5c"
-          x5c: [activeCertificate.certificateBase64] // array with PEM/DER base64
+          x5c: [activeCertificate.certificateBase64], // array with PEM/DER base64
+          keyId: activeCertificate.keyId
         };
-
-        activeCertificateDetails.push(activeCertificate);
       } else {
         throw new BadRequestException(`Unsupported requestSigner method: ${sessionRequest.requestSigner.method}`);
       }
-
       // assign the single object (not an array)
       sessionRequest.requestSigner = requestSigner;
 
@@ -354,17 +365,20 @@ export class Oid4vpVerificationService extends BaseService {
         if (!activeCertificate) {
           throw new NotFoundException(`No active certificate(${signerOption}) found for organization`);
         }
+        if (!activeCertificate.keyId) {
+          throw new NotFoundException(`Active certificate keyId missing for ${signerOption}`);
+        }
 
         resolvedSigner = {
           method: SignerMethodOption.X5C,
-          x5c: [activeCertificate.certificateBase64]
+          x5c: [activeCertificate.certificateBase64],
+          keyId: activeCertificate.keyId
         };
       } else {
         throw new BadRequestException(`Unsupported requestSigner method: ${signerOption}`);
       }
 
       sessionRequest.requestSigner = resolvedSigner;
-
       const url = getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
       this.logger.debug(`[createIntentBasedVerificationPresentation] calling agent URL=${url}`);
 

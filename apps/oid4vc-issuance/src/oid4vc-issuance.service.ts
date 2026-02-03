@@ -546,9 +546,15 @@ export class Oid4vcIssuanceService {
           if (!activeCertificate) {
             throw new NotFoundException('No active certificate(p256) found for issuer');
           }
+          if (!activeCertificate.keyId) {
+            throw new BadRequestException(
+              'Active certificate is missing keyId; re-import or re-issue the certificate.'
+            );
+          }
           signerOptions.push({
             method: SignerMethodOption.X5C,
-            x5c: [activeCertificate.certificateBase64]
+            x5c: [activeCertificate.certificateBase64],
+            keyId: activeCertificate.keyId
           });
           activeCertificateDetails.push(activeCertificate);
         }
@@ -564,7 +570,8 @@ export class Oid4vcIssuanceService {
           }
           signerOptions.push({
             method: SignerMethodOption.X5C,
-            x5c: [activeCertificate.certificateBase64]
+            x5c: [activeCertificate.certificateBase64],
+            keyId: activeCertificate.keyId
           });
           activeCertificateDetails.push(activeCertificate);
         }
@@ -754,7 +761,6 @@ export class Oid4vcIssuanceService {
       const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
 
       const credentialConfigurationsSupported = buildCredentialConfigurationsSupported(templates);
-
       return buildIssuerPayload({ credentialConfigurationsSupported }, issuerDetails);
     } catch (error) {
       this.logger.error(`[buildOidcIssuerPayload] - error: ${JSON.stringify(error)}`);

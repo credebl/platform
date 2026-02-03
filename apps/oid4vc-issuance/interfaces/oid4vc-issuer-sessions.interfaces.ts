@@ -17,6 +17,7 @@ export interface ISignerOption {
   method: SignerMethodOption;
   did?: string;
   x5c?: string[];
+  keyId?: string;
 }
 
 export enum AuthenticationType {

@@ -11,16 +11,16 @@ import { EcosystemService } from './ecosystem.service';
 import { GlobalConfigModule } from '@credebl/config';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { NATSClient } from '@credebl/common/NATSClient';
-import { OrganizationModule } from 'apps/organization/src/organization.module';
+import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { PrismaService } from '@credebl/prisma-service';
-import { UserModule } from 'apps/user/src/user.module';
+import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
+import { UserOrgRolesService } from '@credebl/user-org-roles';
+import { UserRepository } from 'apps/user/repositories/user.repository';
 import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
-    OrganizationModule,
-    UserModule,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -36,7 +36,17 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     CacheModule.register()
   ],
   controllers: [EcosystemController],
-  providers: [EcosystemService, EcosystemRepository, PrismaService, Logger, NATSClient],
+  providers: [
+    EcosystemService,
+    EcosystemRepository,
+    PrismaService,
+    Logger,
+    NATSClient,
+    UserRepository,
+    OrganizationRepository,
+    UserOrgRolesService,
+    UserOrgRolesRepository
+  ],
   exports: [EcosystemService, EcosystemRepository]
 })
 export class EcosystemModule {}

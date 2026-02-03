@@ -91,7 +91,8 @@ export async function publishToJetStream(
 
   try {
     // const js = await getJetStreamClient();
-    logger.log(`------------Publishing to JetStream------------ ${subject} with payload: ${JSON.stringify(payload)}`);
+    logger.log(`[NATS] Publishing to JetStream: ${subject}`);
+    logger.debug(`[NATS] Payload for ${subject}:`, { payload }); // Only in debug mode
     const ack = await jsc.publish(
       `${subject}`,
       // sc.encode(JSON.stringify(payload))

@@ -27,11 +27,18 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
 
   async onApplicationBootstrap(): Promise<void> {
     if (!admin.apps.length) {
+      const projectId = process.env.PROJECT_ID;
+      const clientEmail = process.env.CLIENT_EMAIL;
+      const privateKey = process.env.PRIVATE_KEY;
+
+      if (!projectId || !clientEmail || !privateKey) {
+        throw new Error('Missing Firebase credentials: PROJECT_ID, CLIENT_EMAIL, and PRIVATE_KEY are required');
+      }
       admin.initializeApp({
         credential: admin.credential.cert({
-          projectId: process.env.PROJECT_ID,
-          clientEmail: process.env.CLIENT_EMAIL,
-          privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, '\n')
+          projectId,
+          clientEmail,
+          privateKey: privateKey.replace(/\\n/g, '\n')
         })
       });
     }

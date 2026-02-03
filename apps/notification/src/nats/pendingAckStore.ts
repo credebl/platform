@@ -17,7 +17,10 @@ export class PendingAckStore {
   }
 
   save(stream: string, consumer: string, msg: JsMsg): PendingKey {
-    const info = msg.info!;
+    const { info } = msg;
+    if (!info) {
+      throw new Error('Cannot save message without info metadata');
+    }
     const key = this.makeKey(stream, consumer, info.streamSequence);
 
     this.store.set(key, {

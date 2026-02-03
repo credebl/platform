@@ -13,8 +13,8 @@ export class NotificationNATSSubsciber implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    this.subscribe(EVENT_USER_ACK, async (data) => {
-      this.logger.log('[NATS] user.ack Subsciber received data:', data);
+    await this.subscribe(EVENT_USER_ACK, async (data) => {
+      this.logger.log('[NATS] user.ack Subscriber received data:', data);
       await this.handleUserAck(data as { ackKey: string });
     });
   }

@@ -68,8 +68,8 @@ export class EcosystemController {
    * @returns List of ecosystems
    */
   @MessagePattern({ cmd: 'get-ecosystems' })
-  async getEcosystems(payload: { userId: string }): Promise<IEcosystem[]> {
-    return this.ecosystemService.getEcosystems(payload.userId);
+  async getEcosystems(payload: { userId: string; orgId: string }): Promise<IEcosystem[]> {
+    return this.ecosystemService.getEcosystems(payload.userId, payload.orgId);
   }
 
   /**

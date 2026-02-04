@@ -206,9 +206,14 @@ export class EcosystemController {
     summary: 'Get ecosystems',
     description: 'Fetch ecosystems for Platform Admin or Ecosystem Lead'
   })
+  @ApiQuery({
+    name: 'orgId',
+    required: false,
+    type: String
+  })
   @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
-  async getEcosystems(@User() reqUser: user, @Res() res: Response): Promise<Response> {
-    const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id);
+  async getEcosystems(@User() reqUser: user, @Res() res: Response, @Query('orgId') orgId?: string): Promise<Response> {
+    const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id, orgId);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,

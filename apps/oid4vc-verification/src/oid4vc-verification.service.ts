@@ -322,7 +322,7 @@ export class Oid4vpVerificationService extends BaseService {
 
       // Fetch intent template using utilities service
       this.logger.debug(
-        `[createVerificationPresentation] fetching intent template for intent=${intent}, orgId=${orgId}`
+        `[createIntentBasedVerificationPresentation] fetching intent template for intent=${intent}, orgId=${orgId}`
       );
       const templateData = await this.natsClient.sendNatsMessage(
         this.oid4vpVerificationServiceProxy,
@@ -335,7 +335,7 @@ export class Oid4vpVerificationService extends BaseService {
       }
 
       this.logger.debug(
-        `[createVerificationPresentation] template fetched successfully: ${JSON.stringify(templateData)}`
+        `[createIntentBasedVerificationPresentation] template fetched successfully: ${JSON.stringify(templateData)}`
       );
 
       // Build session request using fetched template
@@ -393,7 +393,7 @@ export class Oid4vpVerificationService extends BaseService {
       return createdSession;
     } catch (error) {
       this.logger.error(
-        `[createVerificationPresentation] - error creating verification presentation: ${JSON.stringify(error)}`
+        `[createIntentBasedVerificationPresentation] - error creating verification presentation: ${JSON.stringify(error)}`
       );
       throw new RpcException(error?.response ?? error);
     }

@@ -12,10 +12,15 @@ export class NatsService implements OnModuleDestroy {
 
   async connect(): Promise<NatsConnection> {
     if (this.connected) {
-      return;
+      return this.nc;
     }
 
     this.logger.log('[NATS] starting connection...');
+
+    const { NATS_URL, NATS_USER, NATS_PASSWORD } = process.env;
+    if (!NATS_URL || !NATS_USER || !NATS_PASSWORD) {
+      throw new Error('Missing NATS connection env vars (NATS_URL, NATS_USER, NATS_PASSWORD)');
+    }
 
     this.nc = await connect({
       servers: `${process.env.NATS_URL}`.split(','),

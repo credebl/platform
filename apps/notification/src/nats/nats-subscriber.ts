@@ -22,7 +22,7 @@ export class NotificationNATSSubsciber implements OnApplicationBootstrap {
   private async subscribe(subject: string, handler: (data: unknown) => void | Promise<void>): Promise<void> {
     try {
       this.logger.log(`[NATS] Setting up subscription ${JSON.stringify(subject)}`);
-      const nc = await this.nats.nc;
+      const nc = await this.nats.connect();
       const subscription = nc.subscribe(subject);
 
       // eslint-disable-next-line @typescript-eslint/explicit-function-return-type

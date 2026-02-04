@@ -8,7 +8,7 @@ export class ClientAccessGuard implements CanActivate {
 
     const { user } = request;
 
-    if (!user.hasOwnProperty('client_id')) {
+    if (!user || !Object.prototype.hasOwnProperty.call(user, 'client_id')) {
       throw new UnauthorizedException('You do not have access');
     }
 

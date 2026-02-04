@@ -9,7 +9,6 @@ import { GlobalConfigModule } from '@credebl/config';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { LoggerModule } from '@credebl/logger';
 import { ContextInterceptorModule } from '@credebl/context';
-import { CacheModule } from '@nestjs/cache-manager';
 import { PendingAckStore } from './pendingAckStore';
 import { HolderNotificationRepository } from '../holder-notification.repository';
 import { PrismaService } from '@credebl/prisma-service';
@@ -22,8 +21,7 @@ import { PrismaService } from '@credebl/prisma-service';
     GlobalConfigModule,
     LoggerModule,
     PlatformConfig,
-    ContextInterceptorModule,
-    CacheModule.register({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT })
+    ContextInterceptorModule
   ],
   providers: [
     NatsService,

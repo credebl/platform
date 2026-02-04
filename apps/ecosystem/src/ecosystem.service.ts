@@ -290,7 +290,7 @@ export class EcosystemService {
     }
   }
 
-  async getEcosystems(userId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<IEcosystem>> {
+  async getEcosystems(userId: string, pageDetail: IPaginationSortingDto,  orgId: string): Promise<PaginatedResponse<IEcosystem>> {
     if (!userId) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
     }
@@ -298,6 +298,9 @@ export class EcosystemService {
       const ecosystem = await this.ecosystemRepository.getEcosystemByRole(userId, EcosystemRoles.ECOSYSTEM_LEAD);
       if (ecosystem && ecosystem.ecosystemRole.name === EcosystemRoles.ECOSYSTEM_LEAD) {
         const leadEcosystems = await this.ecosystemRepository.getEcosystemsForEcosystemLead(userId, pageDetail);
+         if (orgId) {
+        return this.ecosystemRepository.getAllEcosystemsByOrgId(orgId);
+      }
         return leadEcosystems;
       } else {
         return this.ecosystemRepository.getAllEcosystems(pageDetail);

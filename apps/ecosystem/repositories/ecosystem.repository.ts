@@ -1373,4 +1373,49 @@ export class EcosystemRepository {
       throw error;
     }
   }
+
+  async getAllEcosystemsByOrgId(orgId: string): Promise<ecosystem[]> {
+    try {
+      if (!orgId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
+      }
+
+      return await this.prisma.ecosystem.findMany({
+        where: {
+          deletedAt: null,
+          ecosystemOrgs: {
+            some: {
+              orgId,
+              deletedAt: null
+            }
+          }
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        },
+        include: {
+          ecosystemOrgs: {
+            where: {
+              orgId,
+              deletedAt: null
+            },
+            include: {
+              ecosystemRole: true,
+              organisation: {
+                select: {
+                  id: true,
+                  name: true,
+                  orgSlug: true,
+                  logoUrl: true
+                }
+              }
+            }
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`getAllEcosystemsByOrgId error: ${error.message}`);
+      throw error;
+    }
+  }
 }

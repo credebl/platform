@@ -14,6 +14,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { HolderNotificationRepository } from './holder-notification.repository';
+import { NatsModule } from './nats/nats.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { HolderNotificationRepository } from './holder-notification.repository';
     LoggerModule,
     PlatformConfig,
     ContextInterceptorModule,
-    CacheModule.register({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT })
+    CacheModule.register({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
+    NatsModule
   ],
   controllers: [NotificationController],
   providers: [NotificationService, NotificationRepository, HolderNotificationRepository, PrismaService, Logger]

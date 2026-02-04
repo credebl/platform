@@ -39,8 +39,8 @@ export class EcosystemService {
    * @param userId
    * @returns All ecosystems from platform
    */
-  async getEcosystems(userId: string): Promise<IEcosystem[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystems', { userId });
+  async getEcosystems(userId: string, orgId: string): Promise<IEcosystem[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystems', { userId, orgId });
   }
 
   /**

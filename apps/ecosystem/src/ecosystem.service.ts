@@ -280,11 +280,15 @@ export class EcosystemService {
     }
   }
 
-  async getEcosystems(userId: string): Promise<IEcosystem[]> {
+  async getEcosystems(userId: string, orgId: string): Promise<IEcosystem[]> {
     if (!userId) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
     }
     try {
+      if (orgId) {
+        return this.ecosystemRepository.getAllEcosystemsByOrgId(orgId);
+      }
+
       const leadEcosystems = await this.ecosystemRepository.getEcosystemsForEcosystemLead(userId);
 
       if (0 < leadEcosystems.length) {

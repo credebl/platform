@@ -37,6 +37,7 @@ import { WebhookModule } from './webhook/webhook.module';
 import { X509Module } from './x509/x509.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { shouldLoadOidcModules } from '@credebl/common/common.utils';
+import { CallbackModule } from './callback/callback.module';
 
 @Module({
   imports: [
@@ -73,7 +74,8 @@ import { shouldLoadOidcModules } from '@credebl/common/common.utils';
     CloudWalletModule,
     ConditionalModule.registerWhen(Oid4vcIssuanceModule, shouldLoadOidcModules),
     ConditionalModule.registerWhen(Oid4vpModule, shouldLoadOidcModules),
-    ConditionalModule.registerWhen(X509Module, shouldLoadOidcModules)
+    ConditionalModule.registerWhen(X509Module, shouldLoadOidcModules),
+    CallbackModule
   ],
   controllers: [AppController],
   providers: [
@@ -118,7 +120,8 @@ export class AppModule {
         'admin/user-login',
         'registry/organizations',
         'issue-credentials/national-id',
-        'labels/:id'
+        'labels/:id',
+        'callback/*'
       )
       .forRoutes(AgentController, RevocationController);
   }

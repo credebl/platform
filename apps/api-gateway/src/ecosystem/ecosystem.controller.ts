@@ -11,7 +11,6 @@ import {
 import {
   BadRequestException,
   Body,
-  ConflictException,
   Controller,
   Delete,
   Get,
@@ -55,6 +54,7 @@ import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/d
 import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';
 import { EcosystemOrgStatus, Invitation, InvitationViewRole } from '@credebl/enum/enum';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
@@ -91,33 +91,17 @@ export class EcosystemController {
     if (!reqUser.id) {
       throw new Error('Missing request user id');
     }
-    try {
-      await this.ecosystemService.inviteMemberToEcosystem(
-        inviteMemberToEcosystem.orgId,
-        reqUser.id,
-        inviteMemberToEcosystem.ecosystemId
-      );
+    await this.ecosystemService.inviteMemberToEcosystem(
+      inviteMemberToEcosystem.orgId,
+      reqUser.id,
+      inviteMemberToEcosystem.ecosystemId
+    );
 
-      const finalResponse: IResponse = {
-        statusCode: HttpStatus.CREATED,
-        message: ResponseMessages.ecosystem.success.memberInviteSucess
-      };
-      return res.status(HttpStatus.CREATED).json(finalResponse);
-    } catch (error) {
-      if (error instanceof ConflictException || HttpStatus.CONFLICT === error.statusCode) {
-        return res.status(HttpStatus.CONFLICT).json({
-          status: HttpStatus.CONFLICT,
-          message: error.message
-        });
-      }
-
-      const finalResponse: IResponse = {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: ResponseMessages.errorMessages.serverError
-      };
-
-      return res.status(HttpStatus.OK).json(finalResponse);
-    }
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.ecosystem.success.memberInviteSucess
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   @Post('/update-invitation-status')
@@ -212,8 +196,9 @@ export class EcosystemController {
   @ApiBearerAuth()
   @Get('/all-ecosystem')
   @ApiOperation({
-    summary: 'Get ecosystems',
-    description: 'Fetch ecosystems for Platform Admin or Ecosystem Lead'
+    summary: 'Get Ecosystems',
+    description:
+      'Fetch ecosystems for Platform Admin and Ecosystem Lead, with optional filtering by organization using orgId.'
   })
   @ApiQuery({
     name: 'orgId',
@@ -225,7 +210,16 @@ export class EcosystemController {
     @User() reqUser: user,
     @Res() res: Response,
     @Query() paginationDto: PaginationGetAllEcosystem,
-    @Query('orgId') orgId?: string
+    @Query(
+      'orgId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string
   ): Promise<Response> {
     const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id, paginationDto, orgId);
     return res.status(HttpStatus.OK).json({
@@ -255,15 +249,33 @@ export class EcosystemController {
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
   async getEcosystemDashboard(
-    @Param('ecosystemId') ecosystemId: string,
-    @Param('orgId') orgId: string,
+    @Param(
+      'ecosystemId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);
+        }
+      })
+    )
+    ecosystemId: string,
+    @Param(
+      'orgId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
     @Res() res: Response
   ): Promise<Response> {
     const dashboardData = await this.ecosystemService.getEcosystemDashboard(ecosystemId, orgId);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
-      message: ResponseMessages.ecosystem.success.fetch,
+      message: ResponseMessages.ecosystem.success.getEcosystemDashboard,
       data: dashboardData
     });
   }
@@ -681,7 +693,15 @@ export class EcosystemController {
   })
   async createIntent(
     @Body() createIntentDto: CreateIntentDto,
-    @Param('ecosystemId') ecosystemId: string,
+    @Param(
+      'ecosystemId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);
+        }
+      })
+    )
+    ecosystemId: string,
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
@@ -723,7 +743,7 @@ export class EcosystemController {
       'ecosystemId',
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException('Invalid ecosystem ID format');
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);
         }
       })
     )

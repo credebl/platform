@@ -202,6 +202,7 @@ export const ResponseMessages = {
     },
     error: {
       featureIsDisabled: `You don't have access to this feature`,
+      userNotFound: 'User not found',
       memberInviteFailed: 'Failed to send invitation for the member',
       failInvitationUpdate: 'Failed to update Ecosystem Invitation',
       ecosystemIdIsRequired: 'ecosystemId is required',
@@ -269,7 +270,7 @@ export const ResponseMessages = {
       platformIdRequired: 'PlatformId is required',
       userIdMissing: 'UserId is required',
       fetch: 'Error while fetching ecosystems',
-      invitationRequired: 'Accepted invitation is required to create ecosystem',
+      invitationRequiredFromPlatformAdmin: 'You need an invitation from a platform admin to create an ecosystem.',
       userEcosystemAlreadyExists: 'User has already created an ecosystem',
       ecosystemIdOrOrgIdMissing: 'EcosystemId or OrgId is required',
       invitationAlreadySent: 'Ecosystem invitation is already sent to this email',

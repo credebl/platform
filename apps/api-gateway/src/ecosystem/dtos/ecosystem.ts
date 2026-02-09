@@ -1,9 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
-import { EcosystemInvitationRoles } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
-import { EcosystemOrgStatus } from '@credebl/enum/enum';
-import { OrgRoles } from 'libs/org-roles/enums';
 import { Transform } from 'class-transformer';
 
 export class UpdateEcosystemOrgStatusDto {
@@ -24,34 +21,11 @@ export class UpdateEcosystemOrgStatusDto {
   @IsString({ message: 'ecosystemId should be a string to update status of an organization' })
   @Transform(({ value }) => value?.trim())
   ecosystemId: string;
-
-  @ApiProperty({ enum: EcosystemOrgStatus, example: EcosystemOrgStatus.INACTIVE })
-  @IsEnum(EcosystemOrgStatus, { message: `Status must be one of: ${Object.values(EcosystemOrgStatus).join(', ')}` })
-  @IsNotEmpty({ message: 'Status is required to update status of an organization' })
-  status: EcosystemOrgStatus;
-}
-
-export enum InvitationViewRole {
-  ECOSYSTEM_MEMBER = OrgRoles.ECOSYSTEM_MEMBER,
-  ECOSYSTEM_LEAD = OrgRoles.ECOSYSTEM_LEAD
 }
 
 export class GetEcosystemInvitationsQueryDto {
-  @IsEnum(InvitationViewRole)
-  role: EcosystemInvitationRoles;
-
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
   @IsUUID()
   ecosystemId?: string;
-
-  @ApiPropertyOptional({ example: 'user@example.com' })
-  @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @ApiPropertyOptional({ format: 'uuid' })
-  @IsOptional()
-  @IsUUID()
-  userId?: string;
 }

@@ -23,7 +23,7 @@ import { ecosystem, Prisma, user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
 import { UserRepository } from 'apps/user/repositories/user.repository';
-import { EcosystemOrgStatus, EcosystemRoles, Invitation, InviteType } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, EcosystemRoles, Invitation, InvitationViewRole, InviteType } from '@credebl/enum/enum';
 
 import {
   ICreateEcosystem,
@@ -34,7 +34,6 @@ import {
   IEcosystemMemberInvitations,
   IGetAllOrgs
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
-import { OrgRoles } from 'libs/org-roles/enums';
 import {
   IIntentTemplateList,
   IIntentTemplateSearchCriteria
@@ -42,6 +41,7 @@ import {
 import { ErrorHandler } from '@credebl/common';
 import { CreateIntentDto } from '../dtos/create-intent.dto';
 import { UpdateIntentDto } from '../dtos/update-intent.dto';
+import { IPageDetail, PaginatedResponse } from 'apps/api-gateway/common/interface';
 
 @Injectable()
 export class EcosystemService {
@@ -162,6 +162,27 @@ export class EcosystemService {
 
     try {
       return await this.ecosystemRepository.getInvitationsByUserId(userId);
+      // for (const val of invitationData) {
+      //   if (val.invitedOrg && val.ecosystemId) {
+      //     const orgDetails = await this.ecosystemRepository.getEcosystemOrg(val.ecosystemId, val.invitedOrg);
+      //     if (orgDetails) {
+      //       val.organization = orgDetails;
+      //     }
+      //   }
+      // }
+
+      // return invitationData;
+      // const includeOrg = invitationData.map(async (val) => {
+      //   if (val.invitedOrg && val.ecosystemId) {
+      //     const orgDetails = await this.ecosystemRepository.getEcosystemOrg(val.ecosystemId, val.invitedOrg);
+      //     if (orgDetails) {
+      //       val.organization = orgDetails;
+      //     }
+      //   } else {
+      //     return val;
+      //   }
+      // });
+      // return includeOrg;
     } catch (error) {
       this.logger.error('getInvitationsByUserId error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationNotFound);
@@ -280,17 +301,18 @@ export class EcosystemService {
     }
   }
 
-  async getEcosystems(userId: string): Promise<IEcosystem[]> {
+  async getEcosystems(userId: string, pageDetail: IPageDetail): Promise<PaginatedResponse<IEcosystem>> {
     if (!userId) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
     }
     try {
-      const leadEcosystems = await this.ecosystemRepository.getEcosystemsForEcosystemLead(userId);
-
-      if (0 < leadEcosystems.length) {
+      const ecosystem = await this.ecosystemRepository.getEcosystemByRole(userId, EcosystemRoles.ECOSYSTEM_LEAD);
+      if (ecosystem && ecosystem.ecosystemRole.name === EcosystemRoles.ECOSYSTEM_LEAD) {
+        const leadEcosystems = await this.ecosystemRepository.getEcosystemsForEcosystemLead(userId, pageDetail);
         return leadEcosystems;
+      } else {
+        return this.ecosystemRepository.getAllEcosystems(pageDetail);
       }
-      return this.ecosystemRepository.getAllEcosystems();
     } catch (error) {
       this.logger.error('getEcosystems error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.fetch);
@@ -370,11 +392,17 @@ export class EcosystemService {
     return this.ecosystemRepository.updateEcosystemOrgStatus(ecosystemId, orgIds, status);
   }
 
-  async getAllEcosystemOrgsByEcosystemId(ecosystemId: string): Promise<IGetAllOrgs[]> {
-    return this.ecosystemRepository.getAllEcosystemOrgsByEcosystemId(ecosystemId);
+  async getAllEcosystemOrgsByEcosystemId(
+    ecosystemId: string,
+    pageDetail: IPageDetail
+  ): Promise<PaginatedResponse<IGetAllOrgs>> {
+    return this.ecosystemRepository.getAllEcosystemOrgsByEcosystemId(ecosystemId, pageDetail);
   }
 
-  async getEcosystemMemberInvitations(params: IEcosystemMemberInvitations): Promise<IEcosystemInvitation[]> {
+  async getEcosystemMemberInvitations(
+    params: IEcosystemMemberInvitations,
+    pageDetail: IPageDetail
+  ): Promise<PaginatedResponse<IEcosystemInvitation>> {
     const { role, ecosystemId, email, userId } = params;
 
     // NOTE: where clause is constructed at service layer by design decision
@@ -386,7 +414,7 @@ export class EcosystemService {
 
     let where: Prisma.ecosystem_invitationsWhereInput;
 
-    if (role === OrgRoles.ECOSYSTEM_LEAD) {
+    if (role === InvitationViewRole.ECOSYSTEM_LEAD) {
       where = {
         ...baseWhere,
         ecosystemId
@@ -398,7 +426,7 @@ export class EcosystemService {
         OR: [email ? { email } : undefined, userId ? { userId } : undefined].filter(Boolean)
       };
     }
-    return this.ecosystemRepository.getEcosystemInvitations(where);
+    return this.ecosystemRepository.getEcosystemInvitations(where, pageDetail);
   }
 
   async getUserByKeycloakId(keycloakId: string): Promise<user> {
@@ -424,6 +452,7 @@ export class EcosystemService {
   }): Promise<object> {
     try {
       const { orgId, intentId, templateId, user } = data;
+      const userId = user.id;
 
       const intent = await this.ecosystemRepository.findIntentById(intentId);
 
@@ -458,12 +487,11 @@ export class EcosystemService {
           message: `A template is already assigned to this intent for ${scope}.`
         });
       }
-
       return await this.ecosystemRepository.createIntentTemplate({
         orgId,
         intentId,
         templateId,
-        createdBy: user.id
+        createdBy: userId
       });
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, 'Failed to create intent template');
@@ -620,9 +648,13 @@ export class EcosystemService {
   /**
    * Get all intents
    */
-  async getIntents(ecosystemId: string, intentId?: string): Promise<object[]> {
+  async getIntents(
+    ecosystemId: string,
+    pageDetail: IPageDetail,
+    intentId?: string
+  ): Promise<PaginatedResponse<object>> {
     try {
-      return await this.ecosystemRepository.getIntents(ecosystemId, intentId);
+      return await this.ecosystemRepository.getIntents(ecosystemId, pageDetail, intentId);
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intents');
       this.logger.error(
@@ -633,12 +665,12 @@ export class EcosystemService {
     }
   }
 
-  async getTemplatesByOrgId(orgId: string): Promise<object[]> {
+  async getTemplatesByOrgId(orgId: string, pageDetail: IPageDetail): Promise<PaginatedResponse<object>> {
     if (!orgId) {
       throw new BadRequestException('orgId is required');
     }
 
-    return this.ecosystemRepository.getTemplatesByOrgId(orgId);
+    return this.ecosystemRepository.getTemplatesByOrgId(orgId, pageDetail);
   }
 
   /**

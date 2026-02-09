@@ -802,4 +802,32 @@ export class OrganizationController {
     const finalResponse = await this.organizationService.generateClientApiToken(clientTokenDto);
     return res.status(HttpStatus.OK).header('Content-Type', 'application/json').send(finalResponse);
   }
+
+  @Get('search/get-all-organisations')
+  @ApiOperation({
+    summary: 'Get all organisations',
+    description: 'Get all organisations'
+  })
+  @ApiQuery({
+    name: 'pageNumber',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    type: Number,
+    required: false
+  })
+  @ApiQuery({
+    name: 'search',
+    type: String,
+    required: false
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  async getAllOrganisations(@Query() paginationDto: PaginationDto, @Res() res: Response): Promise<Response> {
+    const finalResponse = await this.organizationService.getAllOrganizations(paginationDto);
+    return res.status(HttpStatus.OK).header('Content-Type', 'application/json').send(finalResponse);
+  }
 }

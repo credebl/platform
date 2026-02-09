@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 
-import { EcosystemOrgStatus } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, InvitationViewRole } from '@credebl/enum/enum';
 import { JsonValue } from '@prisma/client/runtime/library';
 import { OrgRoles } from 'libs/org-roles/enums';
 
@@ -71,6 +71,31 @@ export interface IEcosystemInvitations {
   userId?: string;
   createDateTime: Date;
   createdBy: string;
+  organization?: IEcosystemOrg;
+  invitedOrg?: string;
+}
+
+export interface IEcosystemOrg {
+  id: string;
+  orgId: string;
+  status: string;
+  deploymentMode: null | string;
+  ecosystemId: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: null | Date;
+  userId: string;
+}
+
+export interface ICreateEcosystemOrg {
+  orgId: string;
+  status: EcosystemOrgStatus;
+  ecosystemId: string;
+  ecosystemRoleId: string;
+  userId: string;
+  createdBy: string;
+  lastChangedBy: string;
 }
 
 export interface IEcosystemDetails {
@@ -103,18 +128,8 @@ export interface IEcosystemUser {
   lastChangedBy: string;
 }
 
-export interface IEcosystemOrg {
-  orgId: string;
-  status: EcosystemOrgStatus;
-  ecosystemId: string;
-  ecosystemRoleId: string;
-  userId: string;
-  createdBy: string;
-  lastChangedBy: string;
-}
-
 export interface IEcosystemMemberInvitations {
-  role: OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;
+  role: InvitationViewRole;
   ecosystemId?: string;
   email?: string;
   userId?: string;

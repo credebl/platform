@@ -68,6 +68,7 @@ async function bootstrap(): Promise<void> {
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)
     .setVersion('1.0')
     .addBearerAuth()
+    .addServer('/')
     .addServer(`${process.env.PUBLIC_DEV_API_URL}`)
     .addServer(`${process.env.PUBLIC_LOCALHOST_URL}`)
     .addServer(`${process.env.PUBLIC_QA_API_URL}`)

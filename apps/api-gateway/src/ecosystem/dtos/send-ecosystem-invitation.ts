@@ -1,7 +1,6 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
-import { Invitation } from '@credebl/enum/enum';
 import { Transform } from 'class-transformer';
 
 export class CreateEcosystemInvitationDto {
@@ -35,12 +34,6 @@ export class OrgIdParam {
 }
 
 export class UpdateEcosystemInvitationDto {
-  @ApiProperty({ enum: Invitation, example: Invitation.ACCEPTED })
-  @Transform(({ value }) => ('string' === typeof value ? value.toLowerCase() : value))
-  @IsEnum(Invitation, { message: `Status must be one of: ${Object.values(Invitation).join(', ')}` })
-  @IsNotEmpty({ message: 'Status is required' })
-  status: Invitation;
-
   @ApiProperty({ example: '61ec22e3-9158-409d-874d-345ad2fc51e4' })
   @IsUUID()
   @IsNotEmpty({ message: 'ecosystemId is required' })

@@ -70,6 +70,11 @@ export enum Invitation {
   PENDING = 'pending'
 }
 
+export enum InvitationViewRole {
+  ECOSYSTEM_MEMBER = 'Ecosystem Member',
+  ECOSYSTEM_LEAD = 'Ecosysetm Lead'
+}
+
 export enum InviteType {
   ECOSYSTEM = 'ecosystem',
   MEMBER = 'member'

@@ -17,6 +17,7 @@ import { UpdateIntentDto } from 'apps/ecosystem/dtos/update-intent.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/dtos/intent-template.dto';
 import { GetAllIntentTemplatesDto } from '../utilities/dtos/get-all-intent-templates.dto';
 import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
+import { IPageDetail, PaginatedResponse } from 'apps/api-gateway/common/interface';
 
 @Injectable()
 export class EcosystemService {
@@ -39,8 +40,8 @@ export class EcosystemService {
    * @param userId
    * @returns All ecosystems from platform
    */
-  async getEcosystems(userId: string): Promise<IEcosystem[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystems', { userId });
+  async getEcosystems(userId: string, pageDetail: IPageDetail): Promise<PaginatedResponse<IEcosystem>> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystems', { userId, pageDetail });
   }
 
   /**
@@ -86,13 +87,22 @@ export class EcosystemService {
   }
 
   // eslint-disable-next-line camelcase
-  async getAllEcosystemOrgsByEcosystemId(ecosystemId: string): Promise<ecosystem_orgs[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs', { ecosystemId });
+  async getAllEcosystemOrgsByEcosystemId(
+    ecosystemId: string,
+    pageDetail: IPageDetail
+  ): Promise<PaginatedResponse<ecosystem_orgs>> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs', { ecosystemId, pageDetail });
   }
 
   // eslint-disable-next-line camelcase
-  async getEcosystemMemberInvitations(payload: IEcosystemMemberInvitations): Promise<IEcosystemInvitation[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-member-invitations', payload);
+  async getEcosystemMemberInvitations(
+    payload: IEcosystemMemberInvitations,
+    pageDetail: IPageDetail
+  ): Promise<PaginatedResponse<IEcosystemInvitation>> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-member-invitations', {
+      payload,
+      pageDetail
+    });
   }
 
   async getUserByKeycloakId(keycloakId: string): Promise<user> {
@@ -111,8 +121,8 @@ export class EcosystemService {
   }
 
   // Intent Template CRUD operations
-  async createIntentTemplate(createIntentTemplateDto: CreateIntentTemplateDto, user: IUserRequest): Promise<object> {
-    const payload = { ...createIntentTemplateDto, user: { id: user.userId } };
+  async createIntentTemplate(createIntentTemplateDto: CreateIntentTemplateDto, user: user): Promise<object> {
+    const payload = { ...createIntentTemplateDto, user: { id: user.id } };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-intent-template', payload);
   }
 
@@ -158,12 +168,19 @@ export class EcosystemService {
    * Get all intents
    * @returns List of intents
    */
-  async getIntents(ecosystemId: string, intentId?: string): Promise<object[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intents', { ecosystemId, intentId });
+  async getIntents(
+    ecosystemId: string,
+    pageDetail: IPageDetail,
+    intentId?: string
+  ): Promise<PaginatedResponse<object>> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intents', { ecosystemId, intentId, pageDetail });
   }
 
-  async getVerificationTemplates(orgId: string): Promise<object[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-verification-templates-by-org-id', { orgId });
+  async getVerificationTemplates(orgId: string, pageDetail: IPageDetail): Promise<PaginatedResponse<object>> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-verification-templates-by-org-id', {
+      orgId,
+      pageDetail
+    });
   }
 
   async getIntentTemplateByIntentAndOrg(intentName: string, verifierOrgId: string): Promise<object | null> {

@@ -158,6 +158,7 @@ model organisation {
   verification_templates verification_templates[]
   intent_templates       intent_templates[]
   ecosystemOrgs          ecosystem_orgs[]
+  ecosystem_invitations  ecosystem_invitations[]
 }
 
 model org_invitations {
@@ -801,8 +802,9 @@ model ecosystem_invitations {
   lastChangedBy       String    @db.Uuid
   deletedAt           DateTime? @db.Timestamp(6)
 
-  ecosystem ecosystem? @relation(fields: [ecosystemId], references: [id])
-  user user? @relation(fields: [userId], references: [id])
+  organisation        organisation? @relation(fields: [invitedOrg], references: [id])
+  ecosystem           ecosystem? @relation(fields: [ecosystemId], references: [id])
+  user                user? @relation(fields: [userId], references: [id])
   @@unique([email, ecosystemId])
 }
 

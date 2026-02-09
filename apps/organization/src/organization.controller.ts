@@ -18,7 +18,9 @@ import {
   IOrganization,
   IOrganizationDashboard,
   IDeleteOrganization,
-  IOrgActivityCount
+  IOrgActivityCount,
+  IGetAllOrgsPayload,
+  IAllOrgsNameId
 } from '@credebl/common/interfaces/organization.interface';
 import { organisation, user } from '@prisma/client';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
@@ -307,5 +309,10 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'generate-client-api-token' })
   async generateClientApiToken(payload: ClientTokenDto): Promise<{ token: string }> {
     return this.organizationService.generateClientApiToken(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-all-organizations' })
+  async getAllOrganisations(payload: IGetAllOrgsPayload): Promise<IAllOrgsNameId> {
+    return this.organizationService.getAllOrganisation(payload.pageNumber, payload.pageSize, payload.search);
   }
 }

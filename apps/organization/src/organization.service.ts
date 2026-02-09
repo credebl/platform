@@ -51,7 +51,8 @@ import {
   IOrganizationInvitations,
   IOrganizationDashboard,
   IDeleteOrganization,
-  IOrgActivityCount
+  IOrgActivityCount,
+  IAllOrgsNameId
 } from '@credebl/common/interfaces/organization.interface';
 
 import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dtos/client-credential-token-payload.dto';
@@ -2096,6 +2097,15 @@ export class OrganizationService {
     } catch (error) {
       this.logger.error(`in generating issuer api token: ${JSON.stringify(error)}`);
       throw new RpcException(error.response || error);
+    }
+  }
+
+  async getAllOrganisation(pageNumber: number, pageSize: number, search = ''): Promise<IAllOrgsNameId> {
+    try {
+      return this.organizationRepository.getAllOrganizations(search, pageNumber, pageSize);
+    } catch (error) {
+      this.logger.error(`In fetchUserInvitation : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 }

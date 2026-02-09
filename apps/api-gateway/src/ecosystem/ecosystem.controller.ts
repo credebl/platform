@@ -52,6 +52,8 @@ import { GetAllIntentTemplatesDto } from '../utilities/dtos/get-all-intent-templ
 import { GetIntentTemplateByIntentAndOrgDto } from '../utilities/dtos/get-intent-template-by-intent-and-org.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/dtos/intent-template.dto';
 import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';
+import { EcosystemOrgStatus, Invitation, InvitationViewRole } from '@credebl/enum/enum';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('ecosystem')
@@ -126,18 +128,23 @@ export class EcosystemController {
     status: HttpStatus.OK,
     description: 'Status updated successfully'
   })
+  @ApiQuery({
+    name: 'status',
+    enum: Invitation
+  })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async updateEcosystemInvitationStatus(
     @Body() updateInvitation: UpdateEcosystemInvitationDto,
     @User() reqUser: user,
-    @Res() res: Response
+    @Res() res: Response,
+    @Query('status') status: Invitation = Invitation.ACCEPTED
   ): Promise<Response> {
     if (!reqUser.id) {
       throw new BadRequestException('Missing request user id');
     }
     const result = await this.ecosystemService.updateEcosystemInvitationStatus(
-      updateInvitation.status,
+      status,
       reqUser.id,
       updateInvitation.ecosystemId
     );
@@ -145,7 +152,7 @@ export class EcosystemController {
     if (result) {
       const finalResponse: IResponse = {
         statusCode: HttpStatus.OK,
-        message: `${ResponseMessages.ecosystem.success.updateInvitation} as ${updateInvitation.status}`
+        message: `${ResponseMessages.ecosystem.success.updateInvitation} as ${status}`
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
     }
@@ -207,8 +214,12 @@ export class EcosystemController {
     description: 'Fetch ecosystems for Platform Admin or Ecosystem Lead'
   })
   @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
-  async getEcosystems(@User() reqUser: user, @Res() res: Response): Promise<Response> {
-    const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id);
+  async getEcosystems(
+    @User() reqUser: user,
+    @Res() res: Response,
+    @Query() paginationDto: PaginationDto
+  ): Promise<Response> {
+    const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id, paginationDto);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
@@ -288,17 +299,23 @@ export class EcosystemController {
     status: HttpStatus.OK,
     description: 'Updated ecosystem org successfully'
   })
+  @ApiQuery({
+    name: 'status',
+    enum: EcosystemOrgStatus,
+    required: true
+  })
   @Roles(OrgRoles.ECOSYSTEM_LEAD)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
   async updateEcosystemOrgStatus(
     @Body() updateUser: UpdateEcosystemOrgStatusDto,
-    @Res() res: Response
+    @Res() res: Response,
+    @Query('status') status: EcosystemOrgStatus = EcosystemOrgStatus.INACTIVE
   ): Promise<Response> {
     const result = await this.ecosystemService.updateEcosystemOrgStatus(
       updateUser.ecosystemId,
       updateUser.orgIds,
-      updateUser.status
+      status
     );
 
     if (0 < result.count) {
@@ -338,10 +355,11 @@ export class EcosystemController {
       })
     )
     ecosystemId: string,
+    @Query() pageDto: PaginationDto,
     @Res() res: Response
   ): Promise<Response> {
-    const ecosystemData = await this.ecosystemService.getAllEcosystemOrgsByEcosystemId(ecosystemId);
-    if (ecosystemData && 0 < ecosystemData.length) {
+    const ecosystemData = await this.ecosystemService.getAllEcosystemOrgsByEcosystemId(ecosystemId, pageDto);
+    if (ecosystemData.data && 0 < ecosystemData.data.length) {
       return res.status(HttpStatus.OK).json({
         statusCode: HttpStatus.OK,
         message: ResponseMessages.ecosystem.success.fetchOrgs,
@@ -364,10 +382,12 @@ export class EcosystemController {
     status: HttpStatus.OK,
     description: 'Orgs fetched successfully'
   })
-  @ApiQuery({ name: 'role', required: true })
+  @ApiQuery({
+    name: 'role',
+    enum: InvitationViewRole,
+    required: true
+  })
   @ApiQuery({ name: 'ecosystemId', required: false })
-  @ApiQuery({ name: 'email', required: false })
-  @ApiQuery({ name: 'userId', required: false })
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
@@ -382,15 +402,16 @@ export class EcosystemController {
     )
     orgId: string,
     @Query() query: GetEcosystemInvitationsQueryDto,
-    @Res() res: Response
+    @Query() pageDto: PaginationDto,
+    @Res() res: Response,
+    @User() reqUser: user,
+    @Query('role') role: InvitationViewRole = InvitationViewRole.ECOSYSTEM_LEAD
   ): Promise<Response> {
-    if (!query.email && !query.userId) {
-      throw new BadRequestException('Need to have at least one of userId or email');
-    }
-    if (OrgRoles.ECOSYSTEM_LEAD === query.role && !query.ecosystemId) {
+    const data = { ...query, role, userId: reqUser.id };
+    if (InvitationViewRole.ECOSYSTEM_LEAD === role && !query.ecosystemId) {
       throw new BadRequestException('EcosystemId is required for role "Lead"');
     }
-    const invitationData = await this.ecosystemService.getEcosystemMemberInvitations(query);
+    const invitationData = await this.ecosystemService.getEcosystemMemberInvitations(data, pageDto);
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.invitationsMemberSuccess,
@@ -416,7 +437,7 @@ export class EcosystemController {
   })
   async createIntentTemplate(
     @Body() createIntentTemplateDto: CreateIntentTemplateDto,
-    @User() user: IUserRequest,
+    @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
     const intentTemplate = await this.ecosystemService.createIntentTemplate(createIntentTemplateDto, user);
@@ -700,9 +721,10 @@ export class EcosystemController {
       })
     )
     ecosystemId: string,
+    @Query() pageDto: PaginationDto,
     @Query('intentId') intentId?: string
   ): Promise<Response> {
-    const intents = await this.ecosystemService.getIntents(ecosystemId, intentId);
+    const intents = await this.ecosystemService.getIntents(ecosystemId, pageDto, intentId);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
@@ -731,8 +753,12 @@ export class EcosystemController {
     status: HttpStatus.OK,
     description: 'Template details fetched successfully'
   })
-  async getTemplateByIntentId(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
-    const templates = await this.ecosystemService.getVerificationTemplates(orgId);
+  async getTemplateByIntentId(
+    @Param('orgId') orgId: string,
+    @Res() res: Response,
+    @Query() pageDto: PaginationDto
+  ): Promise<Response> {
+    const templates = await this.ecosystemService.getVerificationTemplates(orgId, pageDto);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,

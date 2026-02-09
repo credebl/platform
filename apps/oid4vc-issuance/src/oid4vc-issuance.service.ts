@@ -275,10 +275,10 @@ export class Oid4vcIssuanceService {
       const fetchTemplates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(id);
       if (fetchTemplates && 0 < fetchTemplates.length) {
         this.logger.log('Templates associated with issuer, deleting templates before deleting issuer record');
-        return await this.oid4vcIssuanceRepository.deleteTemplatesByIssuerId(id).then(() => {
-          this.logger.log(`Deleted Template Count=${fetchTemplates.length}`);
-          return this.oid4vcIssuanceRepository.deleteOidcIssuer(id);
-        });
+        const deleteTemplates = await this.oid4vcIssuanceRepository.deleteTemplatesByIssuerId(id);
+        if (!deleteTemplates) {
+          throw new InternalServerErrorException(ResponseMessages.oidcIssuer.error.deleteFailed);
+        }
       }
       this.logger.log('No templates associated with issuer, deleting issuer record directly');
       // If no templates associated with issuer then directly delete issuer record

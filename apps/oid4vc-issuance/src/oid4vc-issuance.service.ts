@@ -271,14 +271,7 @@ export class Oid4vcIssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
 
-      //TODO: add revert mechanism if agent call fails after deletion in DB
-      const { agentEndPoint } = agentDetails;
-      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_DELETE, issuerRecordId.id);
-      const deleteOidcIssuerOnAgent = await this._deleteOidcIssuer(url, orgId);
-      if (!deleteOidcIssuerOnAgent) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
-      }
-      // fetch templates associated with issuer and delete before deleting issuer record to maintain referential integrity in DB
+      // Fetch templates associated with issuer and delete before deleting issuer record to maintain referential integrity in DB
       const fetchTemplates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(id);
       if (fetchTemplates && 0 < fetchTemplates.length) {
         this.logger.log('Templates associated with issuer, deleting templates before deleting issuer record');
@@ -288,10 +281,17 @@ export class Oid4vcIssuanceService {
         });
       }
       this.logger.log('No templates associated with issuer, deleting issuer record directly');
-      // if no templates associated with issuer then directly delete issuer record
+      // If no templates associated with issuer then directly delete issuer record
       const deleteOidcIssuer = await this.oid4vcIssuanceRepository.deleteOidcIssuer(id);
       if (!deleteOidcIssuer) {
         throw new NotFoundException(ResponseMessages.oidcIssuer.error.deleteFailed);
+      }
+      // Delete issuer record from agent after deleting from DB to maintain consistency between agent and DB records.
+      const { agentEndPoint } = agentDetails;
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_DELETE, issuerRecordId.id);
+      const deleteOidcIssuerOnAgent = await this._deleteOidcIssuer(url, orgId);
+      if (!deleteOidcIssuerOnAgent) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       return deleteOidcIssuer;
     } catch (error) {

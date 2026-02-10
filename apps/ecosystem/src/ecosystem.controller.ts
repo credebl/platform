@@ -213,13 +213,13 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'get-intent-templates-by-intent-id' })
-  async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
-    return this.ecosystemService.getIntentTemplatesByIntentId(intentId);
+  async getIntentTemplatesByIntentId(payload: { intentId: string }): Promise<object[]> {
+    return this.ecosystemService.getIntentTemplatesByIntentId(payload.intentId);
   }
 
   @MessagePattern({ cmd: 'get-intent-templates-by-org-id' })
-  async getIntentTemplatesByOrgId(orgId: string): Promise<object[]> {
-    return this.ecosystemService.getIntentTemplatesByOrgId(orgId);
+  async getIntentTemplatesByOrgId(payload: { orgId: string }): Promise<object[]> {
+    return this.ecosystemService.getIntentTemplatesByOrgId(payload.orgId);
   }
 
   @MessagePattern({ cmd: 'get-all-intent-templates-by-query' })

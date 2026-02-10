@@ -579,6 +579,14 @@ export class EcosystemService {
 
   async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
     try {
+      const intent = await this.ecosystemRepository.findIntentById(intentId);
+
+      if (!intent) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.ecosystem.error.intentNotFound
+        });
+      }
       return await this.ecosystemRepository.getIntentTemplates({ intentId });
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
@@ -645,12 +653,34 @@ export class EcosystemService {
   ): Promise<object> {
     try {
       const { user, ...templateData } = data;
+
+      // ✅ user validation
       if (!user?.id) {
         throw new RpcException({
           statusCode: HttpStatus.BAD_REQUEST,
           message: 'user is required'
         });
       }
+
+      // ✅ required fields validation
+      if (!templateData.intentId || !templateData.templateId) {
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'intentId and templateId are required'
+        });
+      }
+
+      // ✅ CHECK: record exists or not
+      const existing = await this.ecosystemRepository.getIntentTemplateById(id);
+
+      if (!existing) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `Intent template not found for id ${id}`
+        });
+      }
+
+      // ✅ proceed update
       return await this.ecosystemRepository.updateIntentTemplate(id, {
         ...templateData,
         lastChangedBy: user.id
@@ -685,11 +715,11 @@ export class EcosystemService {
   async createIntent(createIntentDto: CreateIntentDto): Promise<object> {
     try {
       const { name, description, ecosystemId, userId } = createIntentDto;
+      const ecosystem = await this.ecosystemRepository.getEcosystemById(ecosystemId);
 
-      if (!name || !ecosystemId || !userId) {
-        throw new BadRequestException('name, ecosystemId and userId are required');
+      if (!ecosystem) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
       }
-
       return this.ecosystemRepository.createIntent({
         name,
         description,
@@ -715,6 +745,12 @@ export class EcosystemService {
     intentId?: string
   ): Promise<PaginatedResponse<object>> {
     try {
+      const ecosystem = await this.ecosystemRepository.getEcosystemById(ecosystemId);
+
+      if (!ecosystem) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
+      }
+
       return await this.ecosystemRepository.getIntents(ecosystemId, pageDetail, intentId);
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intents');
@@ -739,10 +775,10 @@ export class EcosystemService {
    */
   async updateIntent(updateIntentDto: UpdateIntentDto): Promise<object> {
     try {
-      const { intentId, ecosystemId, userId, name, description } = updateIntentDto;
+      const { userId, name, description } = updateIntentDto;
 
-      if (!intentId || !ecosystemId || !userId) {
-        throw new BadRequestException('intentId, ecosystemId and userId are required');
+      if (!userId) {
+        throw new BadRequestException('userId are required');
       }
 
       const intent = await this.ecosystemRepository.updateIntent({

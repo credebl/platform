@@ -331,12 +331,6 @@ export class EcosystemRepository {
       ]);
       const [data, totalCount] = result;
       const totalPages = Math.ceil(totalCount / pageDetail.pageSize);
-      if (pageDetail.pageNumber > totalPages && 0 !== totalPages) {
-        return {
-          totalPages,
-          data: []
-        };
-      }
       return { totalPages, data };
     } catch (error) {
       this.logger.error(`getAllEcosystems error: ${error.message}`);
@@ -1336,12 +1330,6 @@ export class EcosystemRepository {
 
     const [data, count] = result;
     const totalPages = Math.ceil(count / pageDetail.pageSize);
-    if (pageDetail.pageNumber > totalPages && 0 !== totalPages) {
-      return {
-        totalPages,
-        data: []
-      };
-    }
     return { totalPages, data };
   }
 

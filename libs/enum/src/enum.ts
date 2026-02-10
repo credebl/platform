@@ -72,7 +72,7 @@ export enum Invitation {
 
 export enum InvitationViewRole {
   ECOSYSTEM_MEMBER = 'Ecosystem Member',
-  ECOSYSTEM_LEAD = 'Ecosysetm Lead'
+  ECOSYSTEM_LEAD = 'Ecosystem Lead'
 }
 
 export enum InviteType {

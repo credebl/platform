@@ -17,6 +17,7 @@ import {
   Get,
   HttpStatus,
   Param,
+  ParseEnumPipe,
   ParseUUIDPipe,
   Post,
   Put,
@@ -138,7 +139,7 @@ export class EcosystemController {
     @Body() updateInvitation: UpdateEcosystemInvitationDto,
     @User() reqUser: user,
     @Res() res: Response,
-    @Query('status') status: Invitation = Invitation.ACCEPTED
+    @Query('status', new ParseEnumPipe(Invitation)) status: Invitation
   ): Promise<Response> {
     if (!reqUser.id) {
       throw new BadRequestException('Missing request user id');

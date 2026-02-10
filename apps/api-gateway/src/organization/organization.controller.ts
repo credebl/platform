@@ -827,7 +827,12 @@ export class OrganizationController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   async getAllOrganisations(@Query() paginationDto: PaginationDto, @Res() res: Response): Promise<Response> {
-    const finalResponse = await this.organizationService.getAllOrganizations(paginationDto);
-    return res.status(HttpStatus.OK).header('Content-Type', 'application/json').send(finalResponse);
+    const organizations = await this.organizationService.getAllOrganizations(paginationDto);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.getOrganizations,
+      data: organizations
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

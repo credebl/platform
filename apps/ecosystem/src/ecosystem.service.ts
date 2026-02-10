@@ -162,27 +162,6 @@ export class EcosystemService {
 
     try {
       return await this.ecosystemRepository.getInvitationsByUserId(userId);
-      // for (const val of invitationData) {
-      //   if (val.invitedOrg && val.ecosystemId) {
-      //     const orgDetails = await this.ecosystemRepository.getEcosystemOrg(val.ecosystemId, val.invitedOrg);
-      //     if (orgDetails) {
-      //       val.organization = orgDetails;
-      //     }
-      //   }
-      // }
-
-      // return invitationData;
-      // const includeOrg = invitationData.map(async (val) => {
-      //   if (val.invitedOrg && val.ecosystemId) {
-      //     const orgDetails = await this.ecosystemRepository.getEcosystemOrg(val.ecosystemId, val.invitedOrg);
-      //     if (orgDetails) {
-      //       val.organization = orgDetails;
-      //     }
-      //   } else {
-      //     return val;
-      //   }
-      // });
-      // return includeOrg;
     } catch (error) {
       this.logger.error('getInvitationsByUserId error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationNotFound);

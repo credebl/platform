@@ -353,4 +353,15 @@ export class Oid4vcIssuanceRepository {
       throw error;
     }
   }
+
+  async deleteTemplatesByIssuerId(issuerId: string): Promise<{ count: number }> {
+    try {
+      return await this.prisma.credential_templates.deleteMany({
+        where: { issuerId }
+      });
+    } catch (error) {
+      this.logger.error(`Error in deleteTemplatesByIssuerId: ${error.message}`);
+      throw error;
+    }
+  }
 }

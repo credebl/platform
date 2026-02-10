@@ -1388,8 +1388,8 @@ export class AgentServiceService {
       const response = await this.commonService.httpDelete(url, {
         headers: { authorization: getApiKey }
       });
-      if (response?.status === 204) {
-        return 'Data deleted successfully';
+      if (response?.status === 204 || response?.status === 200) {
+        return response.data.message || 'Data deleted successfully';
       }
     } catch (error) {
       this.logger.error(`Error in deleteOidcIssuer in agent service : ${JSON.stringify(error)}`);

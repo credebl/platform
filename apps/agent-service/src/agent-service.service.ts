@@ -54,7 +54,8 @@ import {
   IBasicMessage,
   WalletDetails,
   ILedger,
-  IStoreOrgAgent
+  IStoreOrgAgent,
+  VerifyAuthorizationResponse
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -2280,6 +2281,28 @@ export class AgentServiceService {
     } catch (error) {
       this.logger.error(
         `[createOid4vpVerificationSession] Error in creating oid4vp verification session in agent service : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
+  async verifyOid4vpSessionAuthResponse(
+    verifyAuthorizationResponse: VerifyAuthorizationResponse,
+    url: string,
+    orgId: string
+  ): Promise<object> {
+    this.logger.log(
+      `[verifyOid4vpSessionAuthResponse] Verifying OID4VP session auth response for orgId=${orgId || 'N/A'}`
+    );
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const verifySession = await this.commonService
+        .httpPost(url, verifyAuthorizationResponse, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return verifySession;
+    } catch (error) {
+      this.logger.error(
+        `[verifyOid4vpSessionAuthResponse] Error in verifying oid4vp session auth response in agent service : ${JSON.stringify(error)}`
       );
       throw error;
     }

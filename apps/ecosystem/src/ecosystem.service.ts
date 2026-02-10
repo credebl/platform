@@ -180,6 +180,10 @@ export class EcosystemService {
     try {
       const { userId } = createEcosystemDto;
 
+      if (!userId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+      }
+
       const invitation = await this.ecosystemRepository.findAcceptedInvitationByUserId(userId);
 
       if (!invitation) {
@@ -189,10 +193,6 @@ export class EcosystemService {
 
       if (ecosystemExist) {
         throw new ConflictException(ResponseMessages.ecosystem.error.exists);
-      }
-
-      if (!userId) {
-        throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
       }
 
       const user = await this.userRepository.getUserById(userId);
@@ -340,7 +340,6 @@ export class EcosystemService {
   ): Promise<boolean> {
     try {
       const user = await this.ecosystemRepository.getUserById(reqUser);
-      const userEmail = user?.email || '';
 
       if (!user) {
         throw new RpcException({
@@ -348,6 +347,15 @@ export class EcosystemService {
           message: ResponseMessages.ecosystem.error.userNotFoundForInvitation
         });
       }
+
+      if (!user.email) {
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: ResponseMessages.ecosystem.error.userEmailRequired
+        });
+      }
+
+      const userEmail = user.email;
 
       const existingInvitation = await this.ecosystemRepository.getEcosystemInvitationsByEmail(userEmail, ecosystemId, orgId);
 

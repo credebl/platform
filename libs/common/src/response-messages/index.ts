@@ -202,6 +202,7 @@ export const ResponseMessages = {
     },
     error: {
       featureIsDisabled: `You don't have access to this feature`,
+      userEmailRequired: 'User email is required to send invitation',
       userNotFound: 'User not found',
       alreadyAccepted: 'Invitation already accepted',
       orgIdMissing: 'Organization ID is missing',

@@ -26,14 +26,3 @@ export interface ISession {
   expiresAt?: Date;
   clientInfo?: Prisma.JsonValue | null;
 }
-
-export interface IPageDetail {
-  pageNumber: number;
-  pageSize: number;
-  search?: string;
-}
-
-export interface PaginatedResponse<T> {
-  totalPages: number;
-  data: T[];
-}

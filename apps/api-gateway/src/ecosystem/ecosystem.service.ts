@@ -17,7 +17,7 @@ import { UpdateIntentDto } from 'apps/ecosystem/dtos/update-intent.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/dtos/intent-template.dto';
 import { GetAllIntentTemplatesDto } from '../utilities/dtos/get-all-intent-templates.dto';
 import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
-import { IPageDetail, PaginatedResponse } from 'apps/api-gateway/common/interface';
+import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
 
 @Injectable()
 export class EcosystemService {
@@ -40,7 +40,7 @@ export class EcosystemService {
    * @param userId
    * @returns All ecosystems from platform
    */
-  async getEcosystems(userId: string, pageDetail: IPageDetail): Promise<PaginatedResponse<IEcosystem>> {
+  async getEcosystems(userId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<IEcosystem>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystems', { userId, pageDetail });
   }
 
@@ -89,7 +89,8 @@ export class EcosystemService {
   // eslint-disable-next-line camelcase
   async getAllEcosystemOrgsByEcosystemId(
     ecosystemId: string,
-    pageDetail: IPageDetail
+    pageDetail: IPaginationSortingDto
+    // eslint-disable-next-line camelcase
   ): Promise<PaginatedResponse<ecosystem_orgs>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs', { ecosystemId, pageDetail });
   }
@@ -97,7 +98,7 @@ export class EcosystemService {
   // eslint-disable-next-line camelcase
   async getEcosystemMemberInvitations(
     payload: IEcosystemMemberInvitations,
-    pageDetail: IPageDetail
+    pageDetail: IPaginationSortingDto
   ): Promise<PaginatedResponse<IEcosystemInvitation>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-member-invitations', {
       payload,
@@ -170,13 +171,13 @@ export class EcosystemService {
    */
   async getIntents(
     ecosystemId: string,
-    pageDetail: IPageDetail,
+    pageDetail: IPaginationSortingDto,
     intentId?: string
   ): Promise<PaginatedResponse<object>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intents', { ecosystemId, intentId, pageDetail });
   }
 
-  async getVerificationTemplates(orgId: string, pageDetail: IPageDetail): Promise<PaginatedResponse<object>> {
+  async getVerificationTemplates(orgId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<object>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-verification-templates-by-org-id', {
       orgId,
       pageDetail

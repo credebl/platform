@@ -34,7 +34,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const decodedToken: any = jwt.decode(jwtToken);
         if (!decodedToken) {
-          throw new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken);
+          return done(new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken), null);
         }
 
         const audiance = decodedToken.iss.toString();

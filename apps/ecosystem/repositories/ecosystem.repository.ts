@@ -39,7 +39,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { RpcException } from '@nestjs/microservices';
-import { IPageDetail, PaginatedResponse } from 'apps/api-gateway/common/interface';
+import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
 
 @Injectable()
 export class EcosystemRepository {
@@ -296,7 +296,7 @@ export class EcosystemRepository {
     }
   }
 
-  async getAllEcosystems(pageDetail: IPageDetail): Promise<PaginatedResponse<ecosystem>> {
+  async getAllEcosystems(pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<ecosystem>> {
     try {
       const whereClause = {
         deletedAt: null
@@ -305,7 +305,7 @@ export class EcosystemRepository {
         this.prisma.ecosystem.findMany({
           where: whereClause,
           orderBy: {
-            createDateTime: 'desc'
+            [pageDetail.sortField]: SortValue.ASC === pageDetail.sortBy ? 'asc' : 'desc'
           },
           include: {
             ecosystemOrgs: {
@@ -814,7 +814,7 @@ export class EcosystemRepository {
 
   async getAllEcosystemOrgsByEcosystemId(
     ecosystemId: string,
-    pageDetail: IPageDetail
+    pageDetail: IPaginationSortingDto
   ): Promise<PaginatedResponse<IGetAllOrgs>> {
     try {
       const whereClause = {
@@ -1076,7 +1076,7 @@ export class EcosystemRepository {
 
   async getEcosystemInvitations(
     where: Prisma.ecosystem_invitationsWhereInput,
-    pageDetail: IPageDetail
+    pageDetail: IPaginationSortingDto
   ): Promise<PaginatedResponse<IEcosystemInvitation>> {
     const [data, count] = await this.prisma.$transaction([
       this.prisma.ecosystem_invitations.findMany({
@@ -1127,16 +1127,16 @@ export class EcosystemRepository {
    */
   async getIntents(
     ecosystemId: string,
-    pageDetail: IPageDetail,
+    pageDetail: IPaginationSortingDto,
     intentId?: string
   ): Promise<PaginatedResponse<intents>> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {
-      ecosystemId // ✅ ALWAYS applied
+      ecosystemId
     };
 
     if (intentId) {
-      where.id = intentId; // ✅ ensures intent belongs to ecosystem
+      where.id = intentId;
     }
 
     const [data, count] = await this.prisma.$transaction([
@@ -1155,7 +1155,7 @@ export class EcosystemRepository {
   // eslint-disable-next-line camelcase
   async getTemplatesByOrgId(
     orgId: string,
-    pageDetail: IPageDetail
+    pageDetail: IPaginationSortingDto
   ): Promise<PaginatedResponse<verification_templates>> {
     const whereClause = {
       organisation: {
@@ -1281,7 +1281,10 @@ export class EcosystemRepository {
     });
   }
 
-  async getEcosystemsForEcosystemLead(userId: string, pageDetail: IPageDetail): Promise<PaginatedResponse<ecosystem>> {
+  async getEcosystemsForEcosystemLead(
+    userId: string,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<ecosystem>> {
     const whereClause = {
       deletedAt: null,
       ecosystemOrgs: {
@@ -1299,7 +1302,7 @@ export class EcosystemRepository {
       this.prisma.ecosystem.findMany({
         where: whereClause,
         orderBy: {
-          createDateTime: 'desc'
+          [pageDetail.sortField]: SortValue.ASC === pageDetail.sortBy ? 'asc' : 'desc'
         },
         include: {
           ecosystemOrgs: {

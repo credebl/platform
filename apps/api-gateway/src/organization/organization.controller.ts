@@ -55,6 +55,7 @@ import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { ClientTokenDto } from './dtos/client-token.dto';
+import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -803,31 +804,30 @@ export class OrganizationController {
     return res.status(HttpStatus.OK).header('Content-Type', 'application/json').send(finalResponse);
   }
 
-  @Get('search/get-all-organisations')
+  @Get('/:orgId/get-all-platform-organisations')
   @ApiOperation({
-    summary: 'Get all organisations',
-    description: 'Get all organisations'
-  })
-  @ApiQuery({
-    name: 'pageNumber',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    type: Number,
-    required: false
-  })
-  @ApiQuery({
-    name: 'search',
-    type: String,
-    required: false
+    summary: 'Get all platform organisations',
+    description: 'Get all platform organisations'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
   @ApiBearerAuth()
-  async getAllOrganisations(@Query() paginationDto: PaginationDto, @Res() res: Response): Promise<Response> {
-    const organizations = await this.organizationService.getAllOrganizations(paginationDto);
+  async getAllOrganisations(
+    @Param(
+      'orgId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Query() paginationDto: PaginationDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    const organizations = await this.organizationService.getAllOrganizations({ ...paginationDto, orgId });
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.getOrganizations,

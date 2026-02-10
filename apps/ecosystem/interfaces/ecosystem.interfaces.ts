@@ -3,6 +3,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { EcosystemOrgStatus, InvitationViewRole } from '@credebl/enum/enum';
 import { JsonValue } from '@prisma/client/runtime/library';
 import { OrgRoles } from 'libs/org-roles/enums';
+import { CommonTableColumns } from '@credebl/common/interfaces/interface';
 
 export interface ICreateEcosystem {
   name?: string;
@@ -27,12 +28,8 @@ export interface IEcosystem {
   createdBy: string;
   logoUrl: string;
 }
-export interface IOrganizationData {
+export interface IOrganizationData extends CommonTableColumns {
   id: string;
-  createDateTime: string;
-  createdBy: string;
-  lastChangedDateTime: string;
-  lastChangedBy: string;
   name: string;
   description: string;
   orgSlug: string;
@@ -98,15 +95,11 @@ export interface ICreateEcosystemOrg {
   lastChangedBy: string;
 }
 
-export interface IEcosystemDetails {
+export interface IEcosystemDetails extends CommonTableColumns {
   id: string;
   name: string;
   description: string;
   tags: string;
-  createDateTime: Date;
-  createdBy: string;
-  lastChangedDateTime: Date;
-  lastChangedBy: string;
   deletedAt?: Date;
   logoUrl: string;
 }

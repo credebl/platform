@@ -70,3 +70,15 @@ export interface IPaginationSortingDto {
   sortBy?: string;
   searchByText?: string;
 }
+
+export interface PaginatedResponse<T> {
+  totalPages: number;
+  data: T[];
+}
+
+export interface CommonTableColumns {
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+}

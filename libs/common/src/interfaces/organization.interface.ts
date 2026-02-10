@@ -117,4 +117,5 @@ export interface IGetAllOrgsPayload {
   pageSize: number;
   pageNumber: number;
   search: string;
+  orgId: string;
 }

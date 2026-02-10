@@ -1428,4 +1428,43 @@ export class EcosystemRepository {
       throw error;
     }
   }
+
+  async getEcosystemsForMember(userId: string): Promise<ecosystem[]> {
+    try {
+      return await this.prisma.ecosystem.findMany({
+        where: {
+          deletedAt: null,
+          ecosystemOrgs: {
+            some: {
+              userId,
+              ecosystemRole: {
+                name: OrgRoles.ECOSYSTEM_MEMBER
+              }
+            }
+          }
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        },
+        include: {
+          ecosystemOrgs: {
+            include: {
+              ecosystemRole: true,
+              organisation: {
+                select: {
+                  id: true,
+                  name: true,
+                  orgSlug: true,
+                  logoUrl: true
+                }
+              }
+            }
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`getEcosystemsForMember error: ${error}`);
+      throw error;
+    }
+  }
 }

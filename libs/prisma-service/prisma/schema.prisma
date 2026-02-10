@@ -805,7 +805,7 @@ model ecosystem_invitations {
   organisation        organisation? @relation(fields: [invitedOrg], references: [id])
   ecosystem           ecosystem? @relation(fields: [ecosystemId], references: [id])
   user                user? @relation(fields: [userId], references: [id])
-  @@unique([email, ecosystemId])
+  @@unique([email, ecosystemId, invitedOrg])
 }
 
 

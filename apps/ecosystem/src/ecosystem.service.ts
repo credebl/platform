@@ -234,6 +234,7 @@ export class EcosystemService {
       if (checkUser && Invitation.REJECTED === checkUser.status && ecosystemId === checkUser.ecosystemId) {
         const reopenedInvitation = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
           user.email,
+          orgId,
           ecosystemId,
           Invitation.PENDING
         );
@@ -311,7 +312,7 @@ export class EcosystemService {
     }
   }
 
-  async updateEcosystemInvitationStatus(status: Invitation, reqUser: string, ecosystemId: string): Promise<boolean> {
+  async updateEcosystemInvitationStatus(status: Invitation, reqUser: string, ecosystemId: string, orgId: string): Promise<boolean> {
     try {
       const user = await this.ecosystemRepository.getUserById(reqUser);
 
@@ -321,6 +322,7 @@ export class EcosystemService {
 
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
         user.email,
+        orgId,
         ecosystemId,
         status
       );

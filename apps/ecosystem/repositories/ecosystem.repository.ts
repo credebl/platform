@@ -368,21 +368,31 @@ export class EcosystemRepository {
 
   async updateEcosystemInvitationStatusByEmail(
     email: string,
+    orgId: string,
     ecosystemId: string,
     status: Invitation
   ): Promise<ecosystem_invitations> {
     try {
-      return this.prisma.ecosystem_invitations.update({
-        where: {
-          email_ecosystemId: {
-            email,
-            ecosystemId
-          }
-        },
-        data: {
-          status
-        }
-      });
+      return this.prisma.$transaction(async (tx) => {
+      const record = await tx.ecosystem_invitations.findFirst({
+       where: {
+           email,
+           ecosystemId,
+           invitedOrg: orgId
+         }
+       });
+
+       if (!record) {
+         throw new Error('Invitation not found for this specific organization');
+       }
+
+       return tx.ecosystem_invitations.update({
+         where: {
+            id: record.id
+         },
+         data: { status }
+       });
+     });
     } catch (error) {
       this.logger.error(`Error in updateEcosystemInvitationStatusByEmail: ${error.message}`);
       throw error;

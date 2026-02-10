@@ -147,7 +147,8 @@ export class EcosystemController {
     const result = await this.ecosystemService.updateEcosystemInvitationStatus(
       status,
       reqUser.id,
-      updateInvitation.ecosystemId
+      updateInvitation.ecosystemId,
+      updateInvitation.orgId
     );
 
     if (result) {

@@ -9,6 +9,7 @@ import { IPresentationRequest } from '@credebl/common/interfaces/oid4vp-verifica
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
 import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
+import { VerifyAuthorizationResponseDto } from './dtos/verify-authorization-response.dto';
 
 @Injectable()
 export class Oid4vcVerificationService {
@@ -172,5 +173,16 @@ export class Oid4vcVerificationService {
     const payload = { orgId, templateId };
     this.logger.debug(`[deleteVerificationTemplate] Called with orgId=${orgId}, templateId=${templateId}`);
     return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verification-template-delete', payload);
+  }
+  async verifyAuthorizationResponse(
+    verifyAuthorizationResponse: VerifyAuthorizationResponseDto,
+    orgId: string,
+    user: user
+  ): Promise<object> {
+    const payload = { verifyAuthorizationResponse, orgId, user };
+    this.logger.debug(
+      `[verifyAuthorizationResponse] Called with orgId=${orgId}, user=${user?.id}, verifyAuthorizationResponse=${JSON.stringify(verifyAuthorizationResponse)}`
+    );
+    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verify-authorization-response', payload);
   }
 }

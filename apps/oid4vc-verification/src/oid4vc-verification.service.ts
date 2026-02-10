@@ -32,7 +32,11 @@ import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfac
 import { BaseService } from 'libs/service/base.service';
 import { NATSClient } from '@credebl/common/NATSClient';
 
-import { Oid4vpPresentationWh, RequestSigner } from '../interfaces/oid4vp-verification-sessions.interfaces';
+import {
+  Oid4vpPresentationWh,
+  RequestSigner,
+  VerifyAuthorizationResponse
+} from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { SignerMethodOption, x5cKeyType } from '@credebl/enum/enum';
 import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
@@ -692,6 +696,36 @@ export class Oid4vpVerificationService extends BaseService {
         `[deleteVerificationTemplate] - error: ${JSON.stringify(error?.response ?? error?.error ?? error ?? 'Something went wrong')}`
       );
       throw new RpcException(error?.response ?? error.error ?? error);
+    }
+  }
+
+  async verifyAuthorizationResponse(
+    verifyAuthorizationResponse: VerifyAuthorizationResponse,
+    orgId: string,
+    userDetails: user
+  ): Promise<object> {
+    this.logger.debug(
+      `[verifyAuthorizationResponse] called for orgId=${orgId}, verificationSessionId=${JSON.stringify(verifyAuthorizationResponse)}`
+    );
+    try {
+      const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+      const { agentEndPoint, id } = agentDetails;
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY);
+      const verificationResult = await this.natsClient.sendNatsMessage(
+        this.oid4vpVerificationServiceProxy,
+        'agent-verify-oid4vp-session-auth-response',
+        { url, orgId, verifyAuthorizationResponse }
+      );
+      this.logger.debug(
+        `[verifyAuthorizationResponse] verification result received successfully for orgId=${orgId} verificationResult=${JSON.stringify(verificationResult)}`
+      );
+      return verificationResult;
+    } catch (error) {
+      this.logger.error(`[verifyAuthorizationResponse] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error?.response ?? error);
     }
   }
 }

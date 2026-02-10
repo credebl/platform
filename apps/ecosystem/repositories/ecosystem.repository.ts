@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   BadRequestException,
   HttpStatus,
@@ -189,7 +188,7 @@ export class EcosystemRepository {
         }
       });
       return createdEcosystem;
-    } catch (error: any) {
+    } catch (error) {
       this.logger.error(`Error in create ecosystem transaction: ${error}`);
       throw error;
     }
@@ -937,7 +936,7 @@ export class EcosystemRepository {
       });
       if (!invitation) {
         throw new RpcException({
-          status: 400,
+          status: HttpStatus.BAD_REQUEST,
           message: ResponseMessages.ecosystem.error.invitationRequiredFromPlatformAdmin
         });
       }
@@ -951,7 +950,7 @@ export class EcosystemRepository {
           invitedOrg: orgId
         }
       });
-    } catch (error: any) {
+    } catch (error) {
       this.logger.error(`Error in updateEcosystemInvitationDetails: ${error}`);
       throw error;
     }
@@ -1424,7 +1423,7 @@ export class EcosystemRepository {
           }
         }
       });
-    } catch (error: any) {
+    } catch (error) {
       this.logger.error(`getAllEcosystemsByOrgId error: ${error}`);
       throw error;
     }

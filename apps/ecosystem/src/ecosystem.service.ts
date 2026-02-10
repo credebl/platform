@@ -216,8 +216,7 @@ export class EcosystemService {
 
         return ecosystem;
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error) {
       this.logger.error(`Failed to create ecosystem : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
@@ -263,7 +262,7 @@ export class EcosystemService {
         checkUser.status === Invitation.ACCEPTED &&
         checkUser.type === InviteType.ECOSYSTEM
       ) {
-        throw new BadRequestException('You can not send member invitation to ecosystem lead');
+        throw new BadRequestException(ResponseMessages.ecosystem.error.unableToSendInvitationToLead);
       }
 
       const invitation = await this.ecosystemRepository.createEcosystemInvitation({
@@ -293,8 +292,7 @@ export class EcosystemService {
       );
       const response = await this.emailService.sendEmail(emailData);
       return response;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error) {
       this.logger.error(`Failed to send invitation to member : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
@@ -345,7 +343,10 @@ export class EcosystemService {
       const userEmail = user?.email || '';
 
       if (!user) {
-        throw new RpcException({ status: HttpStatus.NOT_FOUND, message: 'User not found to send invitation' });
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.ecosystem.error.userNotFoundForInvitation
+        });
       }
 
       const existingInvitation = await this.ecosystemRepository.getEcosystemInvitationsByEmail(userEmail, ecosystemId, orgId);
@@ -353,12 +354,12 @@ export class EcosystemService {
       if (!existingInvitation) {
         throw new RpcException({
           status: HttpStatus.NOT_FOUND,
-          message: 'Invitation not found'
+          message: ResponseMessages.ecosystem.error.invitationNotFound
         });
       }
 
       if (existingInvitation.status === Invitation.ACCEPTED) {
-        throw new BadRequestException('Invitation already accepted');
+        throw new BadRequestException(ResponseMessages.ecosystem.error.alreadyAccepted);
       }
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
         orgId,
@@ -375,11 +376,11 @@ export class EcosystemService {
         }
 
         if (!result.invitedOrg) {
-          throw new Error('Organization ID is missing');
+          throw new Error(ResponseMessages.ecosystem.error.orgIdMissing);
         }
 
         if (!result.userId) {
-          throw new Error('User ID missing');
+          throw new Error(ResponseMessages.ecosystem.error.userIdMissing);
         }
 
         const ecosystemOrgPayload = {

@@ -203,6 +203,10 @@ export const ResponseMessages = {
     error: {
       featureIsDisabled: `You don't have access to this feature`,
       userNotFound: 'User not found',
+      alreadyAccepted: 'Invitation already accepted',
+      orgIdMissing: 'Organization ID is missing',
+      userNotFoundForInvitation: 'User not found to send invitation',
+      unableToSendInvitationToLead: 'You can not send member invitation to ecosystem lead',
       memberInviteFailed: 'Failed to send invitation for the member',
       failInvitationUpdate: 'Failed to update Ecosystem Invitation',
       ecosystemIdIsRequired: 'ecosystemId is required',

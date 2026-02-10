@@ -152,7 +152,7 @@ export class EcosystemController {
 
     if (result) {
       const finalResponse: IResponse = {
-        statusCode: HttpStatus.OK,
+        statusCode: HttpStatus.CREATED,
         message: `${ResponseMessages.ecosystem.success.updateInvitation} as ${status}`
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
@@ -311,7 +311,7 @@ export class EcosystemController {
   async updateEcosystemOrgStatus(
     @Body() updateUser: UpdateEcosystemOrgStatusDto,
     @Res() res: Response,
-    @Query('status') status: EcosystemOrgStatus = EcosystemOrgStatus.INACTIVE
+    @Query('status', new ParseEnumPipe(EcosystemOrgStatus)) status: EcosystemOrgStatus
   ): Promise<Response> {
     const result = await this.ecosystemService.updateEcosystemOrgStatus(
       updateUser.ecosystemId,

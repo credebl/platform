@@ -305,7 +305,7 @@ export class EcosystemRepository {
         this.prisma.ecosystem.findMany({
           where: whereClause,
           orderBy: {
-            [pageDetail.sortField]: SortValue.ASC === pageDetail.sortBy ? 'asc' : 'desc'
+            [pageDetail.sortField || 'createDateTime']: SortValue.ASC === pageDetail.sortBy ? 'asc' : 'desc'
           },
           include: {
             ecosystemOrgs: {

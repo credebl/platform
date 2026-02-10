@@ -280,7 +280,7 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'get-verification-templates-by-org-id' })
-  async getTemplatesByIntentId(payload: {
+  async getTemplatesByOrgId(payload: {
     orgId: string;
     pageDetail: IPaginationSortingDto;
   }): Promise<PaginatedResponse<object>> {

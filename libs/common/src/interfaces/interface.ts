@@ -69,6 +69,7 @@ export interface IPaginationSortingDto {
   sortField?: string;
   sortBy?: string;
   searchByText?: string;
+  search?: string;
 }
 
 export interface PaginatedResponse<T> {

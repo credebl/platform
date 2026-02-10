@@ -6,11 +6,12 @@ import {
   IEcosystem,
   IEcosystemDashboard,
   IEcosystemInvitation,
-  IEcosystemMemberInvitations
+  IEcosystemMemberInvitations,
+  IGetAllOrgs
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
 // eslint-disable-next-line camelcase
-import { ecosystem_orgs, user } from '@prisma/client';
+import { user } from '@prisma/client';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CreateIntentDto } from 'apps/ecosystem/dtos/create-intent.dto';
 import { UpdateIntentDto } from 'apps/ecosystem/dtos/update-intent.dto';
@@ -90,8 +91,7 @@ export class EcosystemService {
   async getAllEcosystemOrgsByEcosystemId(
     ecosystemId: string,
     pageDetail: IPaginationSortingDto
-    // eslint-disable-next-line camelcase
-  ): Promise<PaginatedResponse<ecosystem_orgs>> {
+  ): Promise<PaginatedResponse<IGetAllOrgs>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs', { ecosystemId, pageDetail });
   }
 

@@ -214,12 +214,13 @@ export class EcosystemController {
       'orgId',
       TrimStringParamPipe,
       new ParseUUIDPipe({
+        optional: true,
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
         }
       })
     )
-    orgId: string
+    orgId?: string
   ): Promise<Response> {
     const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id, paginationDto, orgId);
     return res.status(HttpStatus.OK).json({

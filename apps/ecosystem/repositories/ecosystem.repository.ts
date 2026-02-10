@@ -459,6 +459,10 @@ export class EcosystemRepository {
   }
 
   async getEcosystemDashboard(ecosystemId: string, orgId: string): Promise<IEcosystemDashboard> {
+    if (!orgId) {
+      throw new NotFoundException(ResponseMessages.ecosystem.error.notFound);
+    }
+
     const ecosystem = await this.prisma.ecosystem.findFirst({
       where: {
         id: ecosystemId,
@@ -484,10 +488,6 @@ export class EcosystemRepository {
         }
       }
     });
-
-    if (!orgId) {
-      throw new NotFoundException(ResponseMessages.ecosystem.error.notFound);
-    }
 
     if (!ecosystem) {
       throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);

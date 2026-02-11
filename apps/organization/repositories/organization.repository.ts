@@ -1224,12 +1224,18 @@ export class OrganizationRepository {
     }
   }
 
-  async getAllOrganizations(search: string, pageNumber: number, pageSize: number): Promise<IAllOrgsNameId> {
+  async getAllOrganizations(
+    search: string,
+    pageNumber: number,
+    orgId: string,
+    pageSize: number
+  ): Promise<IAllOrgsNameId> {
     try {
       const result = await this.prisma.$transaction([
         this.prisma.organisation.findMany({
           where: {
-            name: { contains: search, mode: 'insensitive' }
+            name: { contains: search, mode: 'insensitive' },
+            id: { not: orgId }
           },
           take: pageSize,
           select: {

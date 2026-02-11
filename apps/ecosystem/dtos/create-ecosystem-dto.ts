@@ -1,7 +1,9 @@
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 import { Transform, Type } from 'class-transformer';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { SortValue } from '@credebl/enum/enum';
 
 @ApiExtraModels()
 export class CreateEcosystemDto {
@@ -39,4 +41,29 @@ export class CreateEcosystemDto {
   logo?: string;
 
   orgId?: string;
+}
+
+export enum SortFields {
+  CREATED_DATE_TIME = 'createDateTime',
+  NAME = 'name'
+}
+
+export class PaginationGetAllEcosystem extends PaginationDto {
+  @ApiProperty({
+    enum: [SortValue.DESC, SortValue.ASC],
+    required: false
+  })
+  @Transform(({ value }) => trim(value))
+  @IsOptional()
+  @IsEnum(SortValue)
+  sortBy: string = SortValue.DESC;
+
+  @ApiProperty({
+    enum: [SortFields.CREATED_DATE_TIME, SortFields.NAME],
+    required: false
+  })
+  @Transform(({ value }) => trim(value))
+  @IsOptional()
+  @IsEnum(SortFields)
+  sortField: string = SortFields.CREATED_DATE_TIME;
 }

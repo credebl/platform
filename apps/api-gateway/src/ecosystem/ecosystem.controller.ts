@@ -41,7 +41,7 @@ import { InviteMemberToEcosystemDto, UpdateEcosystemInvitationDto } from './dtos
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { user } from '@prisma/client';
 import { User } from '../authz/decorators/user.decorator';
-import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
+import { CreateEcosystemDto, PaginationGetAllEcosystem } from 'apps/ecosystem/dtos/create-ecosystem-dto';
 import { DeleteEcosystemOrgDto } from './dtos/delete-ecosystem-users';
 import { GetEcosystemInvitationsQueryDto, UpdateEcosystemOrgStatusDto } from './dtos/ecosystem';
 import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
@@ -153,7 +153,7 @@ export class EcosystemController {
 
     if (result) {
       const finalResponse: IResponse = {
-        statusCode: HttpStatus.OK,
+        statusCode: HttpStatus.CREATED,
         message: `${ResponseMessages.ecosystem.success.updateInvitation} as ${status}`
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
@@ -219,7 +219,7 @@ export class EcosystemController {
   async getEcosystems(
     @User() reqUser: user,
     @Res() res: Response,
-    @Query() paginationDto: PaginationDto
+    @Query() paginationDto: PaginationGetAllEcosystem
   ): Promise<Response> {
     const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id, paginationDto);
 
@@ -342,7 +342,7 @@ export class EcosystemController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Orgs fetched successfully'
+    description: 'Successfully fetched all the organisations for ecosystem'
   })
   @Roles(OrgRoles.ECOSYSTEM_LEAD)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
@@ -382,7 +382,7 @@ export class EcosystemController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Orgs fetched successfully'
+    description: 'Invitations for members fetched successfully'
   })
   @ApiQuery({
     name: 'role',

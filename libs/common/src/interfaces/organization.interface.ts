@@ -116,5 +116,6 @@ export interface IAllOrgsNameId {
 export interface IGetAllOrgsPayload {
   pageSize: number;
   pageNumber: number;
-  search: string;
+  search?: string;
+  orgId: string;
 }

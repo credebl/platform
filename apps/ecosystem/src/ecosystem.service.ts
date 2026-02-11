@@ -41,7 +41,7 @@ import {
 import { ErrorHandler } from '@credebl/common';
 import { CreateIntentDto } from '../dtos/create-intent.dto';
 import { UpdateIntentDto } from '../dtos/update-intent.dto';
-import { IPageDetail, PaginatedResponse } from 'apps/api-gateway/common/interface';
+import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
 
 @Injectable()
 export class EcosystemService {
@@ -290,7 +290,7 @@ export class EcosystemService {
     }
   }
 
-  async getEcosystems(userId: string, pageDetail: IPageDetail): Promise<PaginatedResponse<IEcosystem>> {
+  async getEcosystems(userId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<IEcosystem>> {
     if (!userId) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
     }
@@ -389,14 +389,14 @@ export class EcosystemService {
 
   async getAllEcosystemOrgsByEcosystemId(
     ecosystemId: string,
-    pageDetail: IPageDetail
+    pageDetail: IPaginationSortingDto
   ): Promise<PaginatedResponse<IGetAllOrgs>> {
     return this.ecosystemRepository.getAllEcosystemOrgsByEcosystemId(ecosystemId, pageDetail);
   }
 
   async getEcosystemMemberInvitations(
     params: IEcosystemMemberInvitations,
-    pageDetail: IPageDetail
+    pageDetail: IPaginationSortingDto
   ): Promise<PaginatedResponse<IEcosystemInvitation>> {
     const { role, ecosystemId, email, userId } = params;
 
@@ -645,7 +645,7 @@ export class EcosystemService {
    */
   async getIntents(
     ecosystemId: string,
-    pageDetail: IPageDetail,
+    pageDetail: IPaginationSortingDto,
     intentId?: string
   ): Promise<PaginatedResponse<object>> {
     try {
@@ -660,7 +660,7 @@ export class EcosystemService {
     }
   }
 
-  async getTemplatesByOrgId(orgId: string, pageDetail: IPageDetail): Promise<PaginatedResponse<object>> {
+  async getTemplatesByOrgId(orgId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<object>> {
     if (!orgId) {
       throw new BadRequestException('orgId is required');
     }

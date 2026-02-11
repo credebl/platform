@@ -313,6 +313,11 @@ export class OrganizationController {
 
   @MessagePattern({ cmd: 'get-all-organizations' })
   async getAllOrganisations(payload: IGetAllOrgsPayload): Promise<IAllOrgsNameId> {
-    return this.organizationService.getAllOrganisation(payload.pageNumber, payload.pageSize, payload.search);
+    return this.organizationService.getAllOrganisation(
+      payload.pageNumber,
+      payload.pageSize,
+      payload.orgId,
+      payload.search
+    );
   }
 }

@@ -19,7 +19,7 @@ import { CreateIntentDto } from '../dtos/create-intent.dto';
 import { EcosystemService } from './ecosystem.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { UpdateIntentDto } from '../dtos/update-intent.dto';
-import { IPageDetail, PaginatedResponse } from 'apps/api-gateway/common/interface';
+import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
 
 @Controller()
 export class EcosystemController {
@@ -69,7 +69,10 @@ export class EcosystemController {
    * @returns List of ecosystems
    */
   @MessagePattern({ cmd: 'get-ecosystems' })
-  async getEcosystems(payload: { userId: string; pageDetail: IPageDetail }): Promise<PaginatedResponse<IEcosystem>> {
+  async getEcosystems(payload: {
+    userId: string;
+    pageDetail: IPaginationSortingDto;
+  }): Promise<PaginatedResponse<IEcosystem>> {
     return this.ecosystemService.getEcosystems(payload.userId, payload.pageDetail);
   }
 
@@ -108,7 +111,12 @@ export class EcosystemController {
     ecosystemId: string;
     orgId: string;
   }): Promise<boolean> {
-    return this.ecosystemService.updateEcosystemInvitationStatus(payload.status, payload.reqUser, payload.ecosystemId, payload.orgId);
+    return this.ecosystemService.updateEcosystemInvitationStatus(
+      payload.status,
+      payload.reqUser,
+      payload.ecosystemId,
+      payload.orgId
+    );
   }
 
   /**
@@ -147,7 +155,7 @@ export class EcosystemController {
   // eslint-disable-next-line camelcase
   async getAllEcosystemOrgsByEcosystemId(payload: {
     ecosystemId: string;
-    pageDetail: IPageDetail;
+    pageDetail: IPaginationSortingDto;
   }): Promise<PaginatedResponse<IGetAllOrgs>> {
     return this.ecosystemService.getAllEcosystemOrgsByEcosystemId(payload.ecosystemId, payload.pageDetail);
   }
@@ -162,7 +170,7 @@ export class EcosystemController {
   // eslint-disable-next-line camelcase
   async getEcosystemMemberInvitations(payload: {
     payload: IEcosystemMemberInvitations;
-    pageDetail: IPageDetail;
+    pageDetail: IPaginationSortingDto;
   }): Promise<PaginatedResponse<IEcosystemInvitation>> {
     return this.ecosystemService.getEcosystemMemberInvitations(payload.payload, payload.pageDetail);
   }
@@ -270,7 +278,7 @@ export class EcosystemController {
   async getIntents(payload: {
     ecosystemId: string;
     intentId?: string;
-    pageDetail: IPageDetail;
+    pageDetail: IPaginationSortingDto;
   }): Promise<PaginatedResponse<object>> {
     const { ecosystemId, intentId, pageDetail } = payload;
 
@@ -278,9 +286,9 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'get-verification-templates-by-org-id' })
-  async getTemplatesByIntentId(payload: {
+  async getTemplatesByOrgId(payload: {
     orgId: string;
-    pageDetail: IPageDetail;
+    pageDetail: IPaginationSortingDto;
   }): Promise<PaginatedResponse<object>> {
     return this.ecosystemService.getTemplatesByOrgId(payload.orgId, payload.pageDetail);
   }

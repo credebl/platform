@@ -2100,9 +2100,9 @@ export class OrganizationService {
     }
   }
 
-  async getAllOrganisation(pageNumber: number, pageSize: number, search = ''): Promise<IAllOrgsNameId> {
+  async getAllOrganisation(pageNumber: number, pageSize: number, orgId: string, search = ''): Promise<IAllOrgsNameId> {
     try {
-      return await this.organizationRepository.getAllOrganizations(search, pageNumber, pageSize);
+      return await this.organizationRepository.getAllOrganizations(search, pageNumber, orgId, pageSize);
     } catch (error) {
       this.logger.error(`In getAllOrganisation : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

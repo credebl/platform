@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsObject, IsString } from 'class-validator';
+import { IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class VerifyAuthorizationResponseDto {
   @ApiProperty({
@@ -30,6 +30,7 @@ export class VerifyAuthorizationResponseDto {
     description: 'The origin of the verification session, if Digital Credentials API was used.',
     example: 'https://example.com'
   })
+  @IsOptional()
   @IsString()
   origin?: string;
 }

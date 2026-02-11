@@ -12,7 +12,6 @@ import {
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
 // eslint-disable-next-line camelcase
 import { user } from '@prisma/client';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CreateIntentDto } from 'apps/ecosystem/dtos/create-intent.dto';
 import { UpdateIntentDto } from 'apps/ecosystem/dtos/update-intent.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/dtos/intent-template.dto';
@@ -143,9 +142,9 @@ export class EcosystemService {
   async updateIntentTemplate(
     id: string,
     updateIntentTemplateDto: UpdateIntentTemplateDto,
-    user: IUserRequest
+    user: user
   ): Promise<object> {
-    const payload = { id, ...updateIntentTemplateDto, user: { id: user.userId } };
+    const payload = { id, ...updateIntentTemplateDto, user: { id: user.id } };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-intent-template', payload);
   }
 

@@ -213,13 +213,13 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'get-intent-templates-by-intent-id' })
-  async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
-    return this.ecosystemService.getIntentTemplatesByIntentId(intentId);
+  async getIntentTemplatesByIntentId(payload: { intentId: string }): Promise<object[]> {
+    return this.ecosystemService.getIntentTemplatesByIntentId(payload.intentId);
   }
 
   @MessagePattern({ cmd: 'get-intent-templates-by-org-id' })
-  async getIntentTemplatesByOrgId(orgId: string): Promise<object[]> {
-    return this.ecosystemService.getIntentTemplatesByOrgId(orgId);
+  async getIntentTemplatesByOrgId(payload: { orgId: string }): Promise<object[]> {
+    return this.ecosystemService.getIntentTemplatesByOrgId(payload.orgId);
   }
 
   @MessagePattern({ cmd: 'get-all-intent-templates-by-query' })
@@ -254,10 +254,9 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'delete-intent-template' })
-  async deleteIntentTemplate(id: string): Promise<object> {
-    return this.ecosystemService.deleteIntentTemplate(id);
+  async deleteIntentTemplate(payload: { id: string }): Promise<object> {
+    return this.ecosystemService.deleteIntentTemplate(payload.id);
   }
-
   /**
    * Create a new intent
    *

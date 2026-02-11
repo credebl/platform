@@ -44,7 +44,6 @@ import { CreateEcosystemDto, PaginationGetAllEcosystem } from 'apps/ecosystem/dt
 import { DeleteEcosystemOrgDto } from './dtos/delete-ecosystem-users';
 import { GetEcosystemInvitationsQueryDto, UpdateEcosystemOrgStatusDto } from './dtos/ecosystem';
 import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { CreateIntentDto } from 'apps/ecosystem/dtos/create-intent.dto';
 import { UpdateIntentDto } from 'apps/ecosystem/dtos/update-intent.dto';
 import { GetAllIntentTemplatesResponseDto } from '../utilities/dtos/get-all-intent-templates-response.dto';
@@ -264,7 +263,7 @@ export class EcosystemController {
       TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
         }
       })
     )
@@ -547,6 +546,7 @@ export class EcosystemController {
   async getIntentTemplatesByIntentId(
     @Param(
       'intentId',
+      TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
           throw new BadRequestException('Invalid intent ID format');
@@ -580,7 +580,19 @@ export class EcosystemController {
     description: 'Retrieve all intent templates for a specific organization.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent templates retrieved successfully', type: ApiResponseDto })
-  async getIntentTemplatesByOrgId(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
+  async getIntentTemplatesByOrgId(
+    @Param(
+      'orgId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid orgId format');
+        }
+      })
+    )
+    orgId: string,
+    @Res() res: Response
+  ): Promise<Response> {
     const intentTemplates = await this.ecosystemService.getIntentTemplatesByOrgId(orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
@@ -605,6 +617,7 @@ export class EcosystemController {
   async getIntentTemplateById(
     @Param(
       'id',
+      TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.oid4vpIntentToTemplate.error.invalidId);
@@ -637,9 +650,18 @@ export class EcosystemController {
   @ApiOperation({ summary: 'Update Intent Template', description: 'Update an existing intent template mapping.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent template updated successfully', type: ApiResponseDto })
   async updateIntentTemplate(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.oid4vpIntentToTemplate.error.invalidId);
+        }
+      })
+    )
+    id: string,
     @Body() updateIntentTemplateDto: UpdateIntentTemplateDto,
-    @User() user: IUserRequest,
+    @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
     const intentTemplate = await this.ecosystemService.updateIntentTemplate(id, updateIntentTemplateDto, user);
@@ -741,6 +763,7 @@ export class EcosystemController {
     @Res() res: Response,
     @Param(
       'ecosystemId',
+      TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);
@@ -749,9 +772,18 @@ export class EcosystemController {
     )
     ecosystemId: string,
     @Query() pageDto: PaginationDto,
-    @Query('intentId') intentId?: string
+    @Query(
+      'intentId',
+      new ParseUUIDPipe({
+        optional: true,
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfIntentId);
+        }
+      })
+    )
+    intentId?: string
   ): Promise<Response> {
-    const intents = await this.ecosystemService.getIntents(ecosystemId, pageDto, intentId);
+    const intents = await this.ecosystemService.getIntents(ecosystemId, pageDto, intentId?.trim());
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
@@ -781,7 +813,16 @@ export class EcosystemController {
     description: 'Template details fetched successfully'
   })
   async getTemplateByIntentId(
-    @Param('orgId') orgId: string,
+   @Param(
+      'orgId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
     @Res() res: Response,
     @Query() pageDto: PaginationDto
   ): Promise<Response> {
@@ -816,6 +857,7 @@ export class EcosystemController {
   async updateIntent(
     @Param(
       'ecosystemId',
+      TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);
@@ -825,6 +867,7 @@ export class EcosystemController {
     ecosystemId: string,
     @Param(
       'intentId',
+      TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfIntentId);
@@ -871,6 +914,7 @@ export class EcosystemController {
   async deleteIntent(
     @Param(
       'ecosystemId',
+      TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);
@@ -880,6 +924,7 @@ export class EcosystemController {
     ecosystemId: string,
     @Param(
       'intentId',
+      TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfIntentId);

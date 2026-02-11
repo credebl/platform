@@ -640,7 +640,7 @@ export class EcosystemRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getIntentTemplateById(id: string): Promise<intent_templates> {
+  async getIntentTemplateById(id: string): Promise<intent_templates | null> {
     try {
       const intentTemplate = await this.prisma.intent_templates.findUnique({
         where: { id },
@@ -650,10 +650,8 @@ export class EcosystemRepository {
           template: true
         }
       });
-      if (!intentTemplate) {
-        throw new NotFoundException('Intent template not found');
-      }
-      this.logger.log(`[getIntentTemplateById] - Intent template details ${id}`);
+
+      this.logger.log(`[getIntentTemplateById] fetched id ${id}`);
       return intentTemplate;
     } catch (error) {
       this.logger.error(`Error in getIntentTemplateById: ${error}`);
@@ -772,7 +770,9 @@ export class EcosystemRepository {
   async deleteIntentTemplate(id: string): Promise<intent_templates> {
     try {
       const intentTemplate = await this.prisma.intent_templates.delete({
-        where: { id }
+        where: {
+          id
+        }
       });
 
       this.logger.log(`[deleteIntentTemplate] - Intent template deleted with id ${id}`);

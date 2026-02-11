@@ -40,4 +40,11 @@ export class UpdateEcosystemInvitationDto {
   @IsString({ message: 'ecosystemId should be a string' })
   @Transform(({ value }) => value?.trim())
   ecosystemId: string;
+
+  @ApiProperty({ example: '6e672a9c-64f0-4d98-b312-f578f633810b' })
+  @IsUUID()
+  @IsNotEmpty({ message: 'OrgId is required for updating status' })
+  @IsString({ message: 'OrgId should be a string' })
+  @Transform(({ value }) => value?.trim())
+  orgId: string;
 }

@@ -229,11 +229,12 @@ export class EcosystemService {
       }
       const organization = await this.organizationRepository.getOrgProfile(orgId);
       const user = await this.ecosystemRepository.getUserById(organization.createdBy);
-      const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(user.email, ecosystemId);
+      const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(user.email, ecosystemId, orgId);
 
       if (checkUser && Invitation.REJECTED === checkUser.status && ecosystemId === checkUser.ecosystemId) {
         const reopenedInvitation = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
           user.email,
+          orgId,
           ecosystemId,
           Invitation.PENDING
         );
@@ -242,13 +243,17 @@ export class EcosystemService {
         }
       }
 
-      if (checkUser?.ecosystemId === ecosystemId && checkUser.status === Invitation.PENDING) {
+      if (
+        checkUser?.ecosystemId === ecosystemId &&
+        checkUser.invitedOrg === orgId &&
+        checkUser.status === Invitation.PENDING
+      ) {
         throw new RpcException({
           statusCode: HttpStatus.CONFLICT,
           message: `Invitation already exists for org with email ${user.email}`
         });
       }
-      await this.ecosystemRepository.createEcosystemInvitation({
+      const invitation = await this.ecosystemRepository.createEcosystemInvitation({
         email: user.email,
         invitedUserId: user.id,
         userId: reqUser,
@@ -257,6 +262,11 @@ export class EcosystemService {
         ecosystemId,
         orgId
       });
+
+      if (invitation && reqUser === user.id) {
+        await this.updateEcosystemInvitationStatus(Invitation.ACCEPTED, reqUser, ecosystemId, orgId);
+        return true;
+      }
       const ecosystem = await this.ecosystemRepository.getEcosystemById(ecosystemId);
       const emailData = new EmailDto();
       const inviteMemberTemplate = new InviteMemberToEcosystem();
@@ -311,7 +321,12 @@ export class EcosystemService {
     }
   }
 
-  async updateEcosystemInvitationStatus(status: Invitation, reqUser: string, ecosystemId: string): Promise<boolean> {
+  async updateEcosystemInvitationStatus(
+    status: Invitation,
+    reqUser: string,
+    ecosystemId: string,
+    orgId: string
+  ): Promise<boolean> {
     try {
       const user = await this.ecosystemRepository.getUserById(reqUser);
 
@@ -321,6 +336,7 @@ export class EcosystemService {
 
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
         user.email,
+        orgId,
         ecosystemId,
         status
       );

@@ -350,13 +350,18 @@ export class EcosystemRepository {
     }
   }
 
-  async getEcosystemInvitationsByEmail(email: string, ecosystemId: string): Promise<ecosystem_invitations> {
+  async getEcosystemInvitationsByEmail(
+    email: string,
+    ecosystemId: string,
+    invitedOrg: string
+  ): Promise<ecosystem_invitations> {
     try {
       return this.prisma.ecosystem_invitations.findUnique({
         where: {
-          email_ecosystemId: {
+          email_ecosystemId_invitedOrg: {
             email,
-            ecosystemId
+            ecosystemId,
+            invitedOrg
           }
         }
       });
@@ -368,20 +373,30 @@ export class EcosystemRepository {
 
   async updateEcosystemInvitationStatusByEmail(
     email: string,
+    orgId: string,
     ecosystemId: string,
     status: Invitation
   ): Promise<ecosystem_invitations> {
     try {
-      return this.prisma.ecosystem_invitations.update({
-        where: {
-          email_ecosystemId: {
+      return this.prisma.$transaction(async (tx) => {
+        const record = await tx.ecosystem_invitations.findFirst({
+          where: {
             email,
-            ecosystemId
+            ecosystemId,
+            invitedOrg: orgId
           }
-        },
-        data: {
-          status
+        });
+
+        if (!record) {
+          throw new Error('Invitation not found for this specific organization');
         }
+
+        return tx.ecosystem_invitations.update({
+          where: {
+            id: record.id
+          },
+          data: { status }
+        });
       });
     } catch (error) {
       this.logger.error(`Error in updateEcosystemInvitationStatusByEmail: ${error.message}`);
@@ -1336,7 +1351,7 @@ export class EcosystemRepository {
     return { totalPages, data };
   }
 
-  async getEcosystemByRole(userId: string, role: string): Promise<{ ecosystemRole: { name: string } }> {
+  async getEcosystemByRole(userId: string, role: string): Promise<{ ecosystemRole: { name: string } } | null> {
     try {
       return this.prisma.ecosystem_orgs.findFirst({
         where: {

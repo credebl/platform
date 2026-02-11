@@ -104,7 +104,7 @@ export class EcosystemController {
       };
       return res.status(HttpStatus.CREATED).json(finalResponse);
     } catch (error) {
-      if (error instanceof ConflictException || HttpStatus.CONFLICT === error.status) {
+      if (error instanceof ConflictException || HttpStatus.CONFLICT === error.statusCode) {
         return res.status(HttpStatus.CONFLICT).json({
           status: HttpStatus.CONFLICT,
           message: error.message
@@ -116,7 +116,7 @@ export class EcosystemController {
         message: ResponseMessages.errorMessages.serverError
       };
 
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(finalResponse);
+      return res.status(HttpStatus.OK).json(finalResponse);
     }
   }
 
@@ -147,7 +147,8 @@ export class EcosystemController {
     const result = await this.ecosystemService.updateEcosystemInvitationStatus(
       status,
       reqUser.id,
-      updateInvitation.ecosystemId
+      updateInvitation.ecosystemId,
+      updateInvitation.orgId
     );
 
     if (result) {

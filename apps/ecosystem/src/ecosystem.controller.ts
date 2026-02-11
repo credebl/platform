@@ -109,8 +109,14 @@ export class EcosystemController {
     status: Invitation;
     reqUser: string;
     ecosystemId: string;
+    orgId: string;
   }): Promise<boolean> {
-    return this.ecosystemService.updateEcosystemInvitationStatus(payload.status, payload.reqUser, payload.ecosystemId);
+    return this.ecosystemService.updateEcosystemInvitationStatus(
+      payload.status,
+      payload.reqUser,
+      payload.ecosystemId,
+      payload.orgId
+    );
   }
 
   /**

@@ -746,7 +746,7 @@ export class Oid4vcVerificationController {
     @Body() verifyAuthorizationResponseDto: VerifyAuthorizationResponseDto,
     @Res() res: Response
   ): Promise<Response> {
-    this.logger.debug(`[verifyAuthorizationResponse] Called with orgId=${orgId}}`);
+    this.logger.debug(`[verifyAuthorizationResponse] Called with orgId=${orgId}`);
 
     const result = await this.oid4vcVerificationService.verifyAuthorizationResponse(
       verifyAuthorizationResponseDto,

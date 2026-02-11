@@ -652,9 +652,8 @@ export class EcosystemService {
     data: { orgId: string; intentId: string; templateId: string; user: { id: string } }
   ): Promise<object> {
     try {
-      const { user, ...templateData } = data;
+      const { user, orgId, intentId, templateId } = data;
 
-      // ✅ user validation
       if (!user?.id) {
         throw new RpcException({
           statusCode: HttpStatus.BAD_REQUEST,
@@ -662,15 +661,13 @@ export class EcosystemService {
         });
       }
 
-      // ✅ required fields validation
-      if (!templateData.intentId || !templateData.templateId) {
+      if (!intentId || !templateId) {
         throw new RpcException({
           statusCode: HttpStatus.BAD_REQUEST,
           message: 'intentId and templateId are required'
         });
       }
 
-      // ✅ CHECK: record exists or not
       const existing = await this.ecosystemRepository.getIntentTemplateById(id);
 
       if (!existing) {
@@ -680,9 +677,25 @@ export class EcosystemService {
         });
       }
 
-      // ✅ proceed update
+      const duplicate = await this.ecosystemRepository.findIntentTemplate({
+        orgId,
+        intentId,
+        templateId
+      });
+
+      if (duplicate && duplicate.id !== id) {
+        const scope = orgId ? `org ${orgId}` : 'globally';
+
+        throw new RpcException({
+          statusCode: HttpStatus.CONFLICT,
+          message: `A template is already assigned to this intent for ${scope}.`
+        });
+      }
+
       return await this.ecosystemRepository.updateIntentTemplate(id, {
-        ...templateData,
+        orgId,
+        intentId,
+        templateId,
         lastChangedBy: user.id
       });
     } catch (error) {
@@ -778,7 +791,7 @@ export class EcosystemService {
       const { userId, name, description } = updateIntentDto;
 
       if (!userId) {
-        throw new BadRequestException('userId are required');
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
       }
 
       const intent = await this.ecosystemRepository.updateIntent({

@@ -254,10 +254,9 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'delete-intent-template' })
-  async deleteIntentTemplate(id: string): Promise<object> {
-    return this.ecosystemService.deleteIntentTemplate(id);
+  async deleteIntentTemplate(payload: { id: string }): Promise<object> {
+    return this.ecosystemService.deleteIntentTemplate(payload.id);
   }
-
   /**
    * Create a new intent
    *

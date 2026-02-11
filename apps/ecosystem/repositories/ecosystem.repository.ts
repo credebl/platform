@@ -770,7 +770,9 @@ export class EcosystemRepository {
   async deleteIntentTemplate(id: string): Promise<intent_templates> {
     try {
       const intentTemplate = await this.prisma.intent_templates.delete({
-        where: { id }
+        where: {
+          id
+        }
       });
 
       this.logger.log(`[deleteIntentTemplate] - Intent template deleted with id ${id}`);

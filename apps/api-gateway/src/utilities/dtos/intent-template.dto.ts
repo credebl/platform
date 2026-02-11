@@ -21,12 +21,12 @@ export class CreateIntentTemplateDto {
 
 export class UpdateIntentTemplateDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'Organization ID' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsUUID()
   orgId: string;
 
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'Intent ID' })
-  @IsOptional()
+  @IsNotEmpty()
   @IsUUID()
   intentId: string;
 

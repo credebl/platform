@@ -650,7 +650,16 @@ export class EcosystemController {
   @ApiOperation({ summary: 'Update Intent Template', description: 'Update an existing intent template mapping.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent template updated successfully', type: ApiResponseDto })
   async updateIntentTemplate(
-    @Param('id') id: string,
+    @Param(
+      'id',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.oid4vpIntentToTemplate.error.invalidId);
+        }
+      })
+    )
+    id: string,
     @Body() updateIntentTemplateDto: UpdateIntentTemplateDto,
     @User() user: user,
     @Res() res: Response
@@ -763,7 +772,15 @@ export class EcosystemController {
     )
     ecosystemId: string,
     @Query() pageDto: PaginationDto,
-    @Query('intentId') intentId?: string
+    @Query(
+      'intentId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfIntentId);
+        }
+      })
+    )
+    intentId?: string
   ): Promise<Response> {
     const intents = await this.ecosystemService.getIntents(ecosystemId, pageDto, intentId?.trim());
 

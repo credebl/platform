@@ -652,7 +652,7 @@ export class EcosystemRepository {
       });
 
       this.logger.log(`[getIntentTemplateById] fetched id ${id}`);
-      return intentTemplate; // return null if not found
+      return intentTemplate;
     } catch (error) {
       this.logger.error(`Error in getIntentTemplateById: ${error}`);
       throw error;

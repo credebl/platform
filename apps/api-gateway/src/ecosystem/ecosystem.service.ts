@@ -62,7 +62,12 @@ export class EcosystemService {
     });
   }
 
-  async updateEcosystemInvitationStatus(status: Invitation, reqUser: string, ecosystemId: string, orgId: string): Promise<boolean> {
+  async updateEcosystemInvitationStatus(
+    status: Invitation,
+    reqUser: string,
+    ecosystemId: string,
+    orgId: string
+  ): Promise<boolean> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-ecosystem-invitation-status', {
       status,
       reqUser,
@@ -71,8 +76,8 @@ export class EcosystemService {
     });
   }
 
-  async deleteEcosystemOrgs(ecosystemId: string, userIds: string[]): Promise<{ count: number }> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-ecosystem-orgs', { userIds, ecosystemId });
+  async deleteEcosystemOrgs(ecosystemId: string, orgIds: string[]): Promise<{ count: number }> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-ecosystem-orgs', { orgIds, ecosystemId });
   }
 
   async updateEcosystemOrgStatus(
@@ -87,10 +92,10 @@ export class EcosystemService {
     });
   }
 
-  // eslint-disable-next-line camelcase
   async getAllEcosystemOrgsByEcosystemId(
     ecosystemId: string,
     pageDetail: IPageDetail
+    // eslint-disable-next-line camelcase
   ): Promise<PaginatedResponse<ecosystem_orgs>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs', { ecosystemId, pageDetail });
   }

@@ -701,11 +701,10 @@ export class Oid4vpVerificationService extends BaseService {
 
   async verifyAuthorizationResponse(
     verifyAuthorizationResponse: VerifyAuthorizationResponse,
-    orgId: string,
-    userDetails: user
+    orgId: string
   ): Promise<object> {
     this.logger.debug(
-      `[verifyAuthorizationResponse] called for orgId=${orgId}, verificationSessionId=${JSON.stringify(verifyAuthorizationResponse)}`
+      `[verifyAuthorizationResponse] called for orgId=${orgId}, verificationSessionId=${JSON.stringify(verifyAuthorizationResponse.verificationSessionId)}`
     );
     try {
       const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
@@ -719,9 +718,7 @@ export class Oid4vpVerificationService extends BaseService {
         'agent-verify-oid4vp-session-auth-response',
         { url, orgId, verifyAuthorizationResponse }
       );
-      this.logger.debug(
-        `[verifyAuthorizationResponse] verification result received successfully for orgId=${orgId} verificationResult=${JSON.stringify(verificationResult)}`
-      );
+      this.logger.debug(`[verifyAuthorizationResponse] verification result received successfully for orgId=${orgId}`);
       return verificationResult;
     } catch (error) {
       this.logger.error(`[verifyAuthorizationResponse] - error: ${JSON.stringify(error)}`);

@@ -189,12 +189,11 @@ export class Oid4vpVerificationController {
   async verifyAuthorizationResponse(payload: {
     verifyAuthorizationResponse: VerifyAuthorizationResponse;
     orgId: string;
-    user: user;
   }): Promise<object> {
-    const { verifyAuthorizationResponse, orgId, user } = payload;
+    const { verifyAuthorizationResponse, orgId } = payload;
     this.logger.debug(
-      `[verifyAuthorizationResponse] Received 'verify-authorization-response' request for orgId=${orgId}, user=${JSON.stringify(user.id)}, verifyAuthorizationResponse=${JSON.stringify(verifyAuthorizationResponse)}`
+      `[verifyAuthorizationResponse] Received 'verify-authorization-response' request for orgId=${orgId}`
     );
-    return this.oid4vpVerificationService.verifyAuthorizationResponse(verifyAuthorizationResponse, orgId, user);
+    return this.oid4vpVerificationService.verifyAuthorizationResponse(verifyAuthorizationResponse, orgId);
   }
 }

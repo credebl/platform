@@ -176,13 +176,10 @@ export class Oid4vcVerificationService {
   }
   async verifyAuthorizationResponse(
     verifyAuthorizationResponse: VerifyAuthorizationResponseDto,
-    orgId: string,
-    user: user
+    orgId: string
   ): Promise<object> {
-    const payload = { verifyAuthorizationResponse, orgId, user };
-    this.logger.debug(
-      `[verifyAuthorizationResponse] Called with orgId=${orgId}, user=${user?.id}, verifyAuthorizationResponse=${JSON.stringify(verifyAuthorizationResponse)}`
-    );
+    const payload = { verifyAuthorizationResponse, orgId };
+    this.logger.debug(`[verifyAuthorizationResponse] Called with orgId=${orgId}`);
     return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verify-authorization-response', payload);
   }
 }

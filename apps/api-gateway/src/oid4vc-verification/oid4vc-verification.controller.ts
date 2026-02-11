@@ -720,13 +720,13 @@ export class Oid4vcVerificationController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Post('/orgs/:orgId/verify-authorization-response')
+  @Post('/orgs/:orgId/oid4vp/verify-authorization-response')
   @ApiOperation({
     summary: 'Verify authorization response',
     description: 'Verifies an authorization response for the specified organization.'
   })
   @ApiResponse({
-    status: HttpStatus.CREATED,
+    status: HttpStatus.OK,
     description: 'Authorization response verified successfully.',
     type: ApiResponseDto
   })
@@ -743,16 +743,14 @@ export class Oid4vcVerificationController {
       })
     )
     orgId: string,
-    @User() user: user,
     @Body() verifyAuthorizationResponseDto: VerifyAuthorizationResponseDto,
     @Res() res: Response
   ): Promise<Response> {
-    this.logger.debug(`[verifyAuthorizationResponse] Called with orgId=${orgId}, user=${user.id}`);
+    this.logger.debug(`[verifyAuthorizationResponse] Called with orgId=${orgId}}`);
 
     const result = await this.oid4vcVerificationService.verifyAuthorizationResponse(
       verifyAuthorizationResponseDto,
-      orgId,
-      user
+      orgId
     );
     this.logger.debug(`[verifyAuthorizationResponse] Authorization response verified successfully for orgId=${orgId}`);
     const finalResponse: IResponse = {

@@ -261,6 +261,7 @@ export class Oid4vcIssuanceService {
 
   async deleteOidcIssuer(orgId: string, userDetails: user, id: string) {
     try {
+      // Fetch issuer details to get public id for agent call and also to check if issuer exists before deletion
       const issuerRecordId = await this.oidcIssuerGetById(id, orgId);
       if (!issuerRecordId.id) {
         throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
@@ -269,15 +270,28 @@ export class Oid4vcIssuanceService {
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      const { agentEndPoint } = agentDetails;
-      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_DELETE, issuerRecordId.id);
-      const createTemplateOnAgent = await this._deleteOidcIssuer(url, orgId);
-      if (!createTemplateOnAgent) {
-        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+
+      // Fetch templates associated with issuer and delete before deleting issuer record to maintain referential integrity in DB
+      const fetchTemplates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(id);
+      if (fetchTemplates && 0 < fetchTemplates.length) {
+        this.logger.log('Templates associated with issuer, deleting templates before deleting issuer record');
+        const deleteTemplates = await this.oid4vcIssuanceRepository.deleteTemplatesByIssuerId(id);
+        if (!deleteTemplates) {
+          throw new InternalServerErrorException(ResponseMessages.oidcIssuer.error.deleteFailed);
+        }
       }
+      this.logger.log('No templates associated with issuer, deleting issuer record directly');
+      // If no templates associated with issuer then directly delete issuer record
       const deleteOidcIssuer = await this.oid4vcIssuanceRepository.deleteOidcIssuer(id);
       if (!deleteOidcIssuer) {
         throw new NotFoundException(ResponseMessages.oidcIssuer.error.deleteFailed);
+      }
+      // Delete issuer record from agent after deleting from DB to maintain consistency between agent and DB records.
+      const { agentEndPoint } = agentDetails;
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_DELETE, issuerRecordId.id);
+      const deleteOidcIssuerOnAgent = await this._deleteOidcIssuer(url, orgId);
+      if (!deleteOidcIssuerOnAgent) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       return deleteOidcIssuer;
     } catch (error) {

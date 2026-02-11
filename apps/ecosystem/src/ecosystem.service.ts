@@ -239,7 +239,11 @@ export class EcosystemService {
 
       const userEmail = user.email;
 
-      const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(userEmail || '', ecosystemId, orgId);
+      const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(
+        userEmail || '',
+        ecosystemId,
+        orgId
+      );
 
       if (checkUser && Invitation.REJECTED === checkUser.status && ecosystemId === checkUser.ecosystemId) {
         const reopenedInvitation = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
@@ -302,7 +306,11 @@ export class EcosystemService {
     }
   }
 
-  async getEcosystems(userId: string, pageDetail: IPaginationSortingDto,  orgId: string): Promise<PaginatedResponse<IEcosystem>> {
+  async getEcosystems(
+    userId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId: string
+  ): Promise<PaginatedResponse<IEcosystem>> {
     if (!userId) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
     }
@@ -310,14 +318,14 @@ export class EcosystemService {
       const ecosystem = await this.ecosystemRepository.getEcosystemByRole(userId, EcosystemRoles.ECOSYSTEM_LEAD);
       if (ecosystem && ecosystem.ecosystemRole.name === EcosystemRoles.ECOSYSTEM_LEAD) {
         const leadEcosystems = await this.ecosystemRepository.getEcosystemsForEcosystemLead(userId, pageDetail);
-         if (orgId) {
-        return this.ecosystemRepository.getAllEcosystemsByOrgId(orgId);
-      }
-      const userEcosystems = await this.ecosystemRepository.getEcosystemsForUser(userId);
+        if (orgId) {
+          return this.ecosystemRepository.getAllEcosystemsByOrgId(orgId, pageDetail);
+        }
+        const userEcosystems = await this.ecosystemRepository.getEcosystemsForUser(userId, pageDetail);
 
-      if (0 < userEcosystems?.length) {
-        return userEcosystems;
-      }
+        if (0 < userEcosystems?.data.length) {
+          return userEcosystems;
+        }
         return leadEcosystems;
       } else {
         return this.ecosystemRepository.getAllEcosystems(pageDetail);
@@ -366,7 +374,11 @@ export class EcosystemService {
 
       const userEmail = user.email;
 
-      const existingInvitation = await this.ecosystemRepository.getEcosystemInvitationsByEmail(userEmail, ecosystemId, orgId);
+      const existingInvitation = await this.ecosystemRepository.getEcosystemInvitationsByEmail(
+        userEmail,
+        ecosystemId,
+        orgId
+      );
 
       if (!existingInvitation) {
         throw new RpcException({

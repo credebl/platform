@@ -339,12 +339,11 @@ export class EcosystemRepository {
   }
   async getUserById(userId: string): Promise<user | null> {
     try {
-      const userdetails = await this.prisma.user.findUnique({
+      return await this.prisma.user.findUnique({
         where: {
           id: userId
         }
       });
-      return userdetails;
     } catch (error) {
       this.logger.error(`Error in getUserById: ${error}`);
       throw error;
@@ -357,7 +356,7 @@ export class EcosystemRepository {
     invitedOrg: string
   ): Promise<ecosystem_invitations> {
     try {
-      const invitation = await this.prisma.ecosystem_invitations.findUnique({
+      return await this.prisma.ecosystem_invitations.findUnique({
         where: {
           email_ecosystemId_invitedOrg: {
             email,
@@ -366,7 +365,6 @@ export class EcosystemRepository {
           }
         }
       });
-      return invitation;
     } catch (error) {
       this.logger.error(`Error in getEcosystemInvitationsByEmail: ${error}`);
       throw error;
@@ -400,7 +398,6 @@ export class EcosystemRepository {
           data: { status }
         });
       });
-      return updateInvitationsBtEmail;
     } catch (error) {
       this.logger.error(`Error in updateEcosystemInvitationStatusByEmail: ${error}`);
       throw error;

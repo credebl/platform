@@ -233,7 +233,11 @@ export class EcosystemService {
       if (!user) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.userNotFound);
       }
-      const userEmail = user.email || '';
+      if (!user.email) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userEmailRequired);
+      }
+
+      const userEmail = user.email;
 
       const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(userEmail || '', ecosystemId, orgId);
 
@@ -378,7 +382,7 @@ export class EcosystemService {
 
       if (result && result?.status === Invitation.ACCEPTED && result?.ecosystemId) {
         const role = await this.ecosystemRepository.getEcosystemRoleByName(EcosystemRoles.ECOSYSTEM_MEMBER);
-        const userId = result.userId || '';
+
         if (!role) {
           throw new Error('Error fetching ecosystem role');
         }
@@ -390,6 +394,8 @@ export class EcosystemService {
         if (!result.userId) {
           throw new Error(ResponseMessages.ecosystem.error.userIdMissing);
         }
+
+        const { userId } = result;
 
         const ecosystemOrgPayload = {
           orgId: result.invitedOrg,

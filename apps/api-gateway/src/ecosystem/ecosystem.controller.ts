@@ -775,6 +775,7 @@ export class EcosystemController {
     @Query(
       'intentId',
       new ParseUUIDPipe({
+        optional: true,
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfIntentId);
         }

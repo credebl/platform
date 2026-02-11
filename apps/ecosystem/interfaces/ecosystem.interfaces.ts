@@ -1,8 +1,9 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 
-import { EcosystemOrgStatus } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, InvitationViewRole } from '@credebl/enum/enum';
 import { JsonValue } from '@prisma/client/runtime/library';
 import { OrgRoles } from 'libs/org-roles/enums';
+import { CommonTableColumns } from '@credebl/common/interfaces/interface';
 
 export interface ICreateEcosystem {
   name?: string;
@@ -27,12 +28,8 @@ export interface IEcosystem {
   createdBy: string;
   logoUrl: string;
 }
-export interface IOrganizationData {
+export interface IOrganizationData extends CommonTableColumns {
   id: string;
-  createDateTime: string;
-  createdBy: string;
-  lastChangedDateTime: string;
-  lastChangedBy: string;
   name: string;
   description: string;
   orgSlug: string;
@@ -71,17 +68,38 @@ export interface IEcosystemInvitations {
   userId?: string;
   createDateTime: Date;
   createdBy: string;
+  organization?: IEcosystemOrg;
+  invitedOrg?: string;
 }
 
-export interface IEcosystemDetails {
+export interface IEcosystemOrg {
+  id: string;
+  orgId: string;
+  status: string;
+  deploymentMode: null | string;
+  ecosystemId: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  deletedAt: null | Date;
+  userId: string;
+}
+
+export interface ICreateEcosystemOrg {
+  orgId: string;
+  status: EcosystemOrgStatus;
+  ecosystemId: string;
+  ecosystemRoleId: string;
+  userId: string;
+  createdBy: string;
+  lastChangedBy: string;
+}
+
+export interface IEcosystemDetails extends CommonTableColumns {
   id: string;
   name: string;
   description: string;
   tags: string;
-  createDateTime: Date;
-  createdBy: string;
-  lastChangedDateTime: Date;
-  lastChangedBy: string;
   deletedAt?: Date;
   logoUrl: string;
 }
@@ -103,18 +121,8 @@ export interface IEcosystemUser {
   lastChangedBy: string;
 }
 
-export interface IEcosystemOrg {
-  orgId: string;
-  status: EcosystemOrgStatus;
-  ecosystemId: string;
-  ecosystemRoleId: string;
-  userId: string;
-  createdBy: string;
-  lastChangedBy: string;
-}
-
 export interface IEcosystemMemberInvitations {
-  role: OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;
+  role: InvitationViewRole;
   ecosystemId?: string;
   email?: string;
   userId?: string;

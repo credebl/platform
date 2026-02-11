@@ -1425,17 +1425,23 @@ export class EcosystemRepository {
       throw error;
     }
   }
-
-  async getEcosystemsForMember(userId: string): Promise<ecosystem[]> {
+  async getEcosystemsForUser(userId: string): Promise<ecosystem[]> {
     try {
+      if (!userId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+      }
+
       return await this.prisma.ecosystem.findMany({
         where: {
           deletedAt: null,
           ecosystemOrgs: {
             some: {
               userId,
+              deletedAt: null,
               ecosystemRole: {
-                name: OrgRoles.ECOSYSTEM_MEMBER
+                name: {
+                  in: [OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER]
+                }
               }
             }
           }
@@ -1445,6 +1451,10 @@ export class EcosystemRepository {
         },
         include: {
           ecosystemOrgs: {
+            where: {
+              userId,
+              deletedAt: null
+            },
             include: {
               ecosystemRole: true,
               organisation: {
@@ -1460,7 +1470,7 @@ export class EcosystemRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`getEcosystemsForMember error: ${error}`);
+      this.logger.error(`getEcosystemsForUser error: ${error}`);
       throw error;
     }
   }

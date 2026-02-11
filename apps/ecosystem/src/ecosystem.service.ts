@@ -313,6 +313,11 @@ export class EcosystemService {
          if (orgId) {
         return this.ecosystemRepository.getAllEcosystemsByOrgId(orgId);
       }
+      const userEcosystems = await this.ecosystemRepository.getEcosystemsForUser(userId);
+
+      if (0 < userEcosystems?.length) {
+        return userEcosystems;
+      }
         return leadEcosystems;
       } else {
         return this.ecosystemRepository.getAllEcosystems(pageDetail);

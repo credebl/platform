@@ -212,7 +212,6 @@ export class EcosystemController {
     @Query() paginationDto: PaginationGetAllEcosystem,
     @Query(
       'orgId',
-      TrimStringParamPipe,
       new ParseUUIDPipe({
         optional: true,
         exceptionFactory: (): Error => {

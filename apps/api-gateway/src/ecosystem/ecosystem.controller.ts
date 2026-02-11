@@ -312,7 +312,7 @@ export class EcosystemController {
   async updateEcosystemOrgStatus(
     @Body() updateUser: UpdateEcosystemOrgStatusDto,
     @Res() res: Response,
-    @Query('status') status: EcosystemOrgStatus = EcosystemOrgStatus.INACTIVE
+    @Query('status', new ParseEnumPipe(EcosystemOrgStatus)) status: EcosystemOrgStatus
   ): Promise<Response> {
     const result = await this.ecosystemService.updateEcosystemOrgStatus(
       updateUser.ecosystemId,

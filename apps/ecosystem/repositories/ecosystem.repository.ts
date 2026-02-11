@@ -1348,7 +1348,7 @@ export class EcosystemRepository {
     return { totalPages, data };
   }
 
-  async getEcosystemByRole(userId: string, role: string): Promise<{ ecosystemRole: { name: string } }> {
+  async getEcosystemByRole(userId: string, role: string): Promise<{ ecosystemRole: { name: string } } | null> {
     try {
       return this.prisma.ecosystem_orgs.findFirst({
         where: {

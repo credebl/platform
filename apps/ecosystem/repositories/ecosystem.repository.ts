@@ -20,6 +20,7 @@ import {
   IIntentTemplateList,
   IIntentTemplateSearchCriteria
 } from '@credebl/common/interfaces/intents-template.interface';
+import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
 /* eslint-disable camelcase */
 // eslint-disable-next-line camelcase
 import {
@@ -39,7 +40,6 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { RpcException } from '@nestjs/microservices';
-import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
 
 @Injectable()
 export class EcosystemRepository {
@@ -189,12 +189,12 @@ export class EcosystemRepository {
       });
       return createdEcosystem;
     } catch (error) {
-      this.logger.error(`Error in create ecosystem transaction: ${error.message}`);
+      this.logger.error(`Error in create ecosystem transaction: ${error}`);
       throw error;
     }
   }
 
-  async checkEcosystemNameExist(name: string): Promise<ecosystem | null> {
+  async checkEcosystemNameExist(name?: string): Promise<ecosystem | null> {
     try {
       const checkEcosystemExists = await this.prisma.ecosystem.findFirst({
         where: {
@@ -333,19 +333,19 @@ export class EcosystemRepository {
       const totalPages = Math.ceil(totalCount / pageDetail.pageSize);
       return { totalPages, data };
     } catch (error) {
-      this.logger.error(`getAllEcosystems error: ${error.message}`);
+      this.logger.error(`getAllEcosystems error: ${error}`);
       throw error;
     }
   }
-  async getUserById(userId: string): Promise<user> {
+  async getUserById(userId: string): Promise<user | null> {
     try {
-      return this.prisma.user.findUnique({
+      return await this.prisma.user.findUnique({
         where: {
           id: userId
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getUserById: ${error.message}`);
+      this.logger.error(`Error in getUserById: ${error}`);
       throw error;
     }
   }
@@ -356,7 +356,7 @@ export class EcosystemRepository {
     invitedOrg: string
   ): Promise<ecosystem_invitations> {
     try {
-      return this.prisma.ecosystem_invitations.findUnique({
+      return await this.prisma.ecosystem_invitations.findUnique({
         where: {
           email_ecosystemId_invitedOrg: {
             email,
@@ -366,7 +366,7 @@ export class EcosystemRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getEcosystemInvitationsByEmail: ${error.message}`);
+      this.logger.error(`Error in getEcosystemInvitationsByEmail: ${error}`);
       throw error;
     }
   }
@@ -399,7 +399,7 @@ export class EcosystemRepository {
         });
       });
     } catch (error) {
-      this.logger.error(`Error in updateEcosystemInvitationStatusByEmail: ${error.message}`);
+      this.logger.error(`Error in updateEcosystemInvitationStatusByEmail: ${error}`);
       throw error;
     }
   }
@@ -423,12 +423,12 @@ export class EcosystemRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getEcosystemOrgDetailsByUserId: ${error.message}`);
+      this.logger.error(`Error in getEcosystemOrgDetailsByUserId: ${error}`);
       throw error;
     }
   }
 
-  async getEcosystemDetailsByUserId(userId: string): Promise<ecosystem> {
+  async getEcosystemDetailsByUserId(userId: string): Promise<ecosystem | null> {
     try {
       return this.prisma.ecosystem.findFirst({
         where: {
@@ -436,12 +436,12 @@ export class EcosystemRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getEcosystemDetailsByUserId: ${error.message}`);
+      this.logger.error(`Error in getEcosystemDetailsByUserId: ${error}`);
       throw error;
     }
   }
 
-  async getUserByKeycloakId(keycloakId: string): Promise<user> {
+  async getUserByKeycloakId(keycloakId: string): Promise<user | null> {
     try {
       return this.prisma.user.findFirst({
         where: {
@@ -449,12 +449,16 @@ export class EcosystemRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getUserByKeycloakId: ${error.message}`);
+      this.logger.error(`Error in getUserByKeycloakId: ${error}`);
       throw error;
     }
   }
 
   async getEcosystemDashboard(ecosystemId: string, orgId: string): Promise<IEcosystemDashboard> {
+    if (!orgId) {
+      throw new NotFoundException(ResponseMessages.ecosystem.error.notFound);
+    }
+
     const ecosystem = await this.prisma.ecosystem.findFirst({
       where: {
         id: ecosystemId,
@@ -482,7 +486,7 @@ export class EcosystemRepository {
     });
 
     if (!ecosystem) {
-      throw new NotFoundException(ResponseMessages.ecosystem.error.notFound);
+      throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
     }
 
     const ecosystemLeadOrg = ecosystem.ecosystemOrgs?.length ? ecosystem.ecosystemOrgs[0] : null;
@@ -519,12 +523,12 @@ export class EcosystemRepository {
         data: ecosystemUser
       });
     } catch (error) {
-      this.logger.error(`Error in createEcosystemOrg: ${error.message}`);
+      this.logger.error(`Error in createEcosystemOrg: ${error}`);
       throw error;
     }
   }
 
-  async getEcosystemOrg(ecosystemId: string, orgId: string): Promise<ecosystem_orgs> {
+  async getEcosystemOrg(ecosystemId: string, orgId: string): Promise<ecosystem_orgs | null> {
     try {
       return await this.prisma.ecosystem_orgs.findFirst({
         where: {
@@ -533,7 +537,7 @@ export class EcosystemRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`Error in getEcosystemOrg: ${error.message}`);
+      this.logger.error(`Error in getEcosystemOrg: ${error}`);
       throw error;
     }
   }
@@ -557,7 +561,7 @@ export class EcosystemRepository {
       });
       return result;
     } catch (error) {
-      this.logger.error(`Error in deleteOrgFromEcosystem: ${error.message}`);
+      this.logger.error(`Error in deleteOrgFromEcosystem: ${error}`);
       throw error;
     }
   }
@@ -579,7 +583,7 @@ export class EcosystemRepository {
       });
       return result;
     } catch (error) {
-      this.logger.error(`Error in deleteEcosystemInvitationByUserId: ${error.message}`);
+      this.logger.error(`Error in deleteEcosystemInvitationByUserId: ${error}`);
       throw error;
     }
   }
@@ -602,7 +606,7 @@ export class EcosystemRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`Error in updateEcosystemUserStatus: ${error.message}`);
+      this.logger.error(`Error in updateEcosystemUserStatus: ${error}`);
       throw error;
     }
   }
@@ -617,7 +621,7 @@ export class EcosystemRepository {
       }
       return result;
     } catch (error) {
-      this.logger.error(`Error in getEcosystemById: ${error.message}`);
+      this.logger.error(`Error in getEcosystemById: ${error}`);
       throw error;
     }
   }
@@ -630,7 +634,7 @@ export class EcosystemRepository {
       }
       return config;
     } catch (error) {
-      this.logger.error(`Error in getPlatformConfigData: ${error.message}`);
+      this.logger.error(`Error in getPlatformConfigData: ${error}`);
       throw error;
     }
   }
@@ -894,19 +898,19 @@ export class EcosystemRepository {
       const totalPages = Math.ceil(count / pageDetail.pageSize);
       return { totalPages, data };
     } catch (error) {
-      this.logger.error(`Error in getAllEcosystemOrgsByEcosystemId: ${error.message}`);
+      this.logger.error(`Error in getAllEcosystemOrgsByEcosystemId: ${error}`);
       throw error;
     }
   }
 
-  async getEcosystemRoleByName(name: string): Promise<ecosystem_roles> {
+  async getEcosystemRoleByName(name: string): Promise<ecosystem_roles | null> {
     try {
       const result = await this.prisma.ecosystem_roles.findFirst({
         where: { name }
       });
       return result;
     } catch (error) {
-      this.logger.error(`Error in getEcosystemRoleByName: ${error.message}`);
+      this.logger.error(`Error in getEcosystemRoleByName: ${error}`);
       throw error;
     }
   }
@@ -928,7 +932,10 @@ export class EcosystemRepository {
         }
       });
       if (!invitation) {
-        throw new NotFoundException('Invitation not found');
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: ResponseMessages.ecosystem.error.invitationRequiredFromPlatformAdmin
+        });
       }
 
       return prisma.ecosystem_invitations.update({
@@ -941,12 +948,12 @@ export class EcosystemRepository {
         }
       });
     } catch (error) {
-      this.logger.error(`Error in updateEcosystemInvitationDetails: ${error.message}`);
+      this.logger.error(`Error in updateEcosystemInvitationDetails: ${error}`);
       throw error;
     }
   }
 
-  async getPendingInvitationByEmail(email: string): Promise<ecosystem_invitations> {
+  async getPendingInvitationByEmail(email: string): Promise<ecosystem_invitations | null> {
     try {
       const invitation = await this.prisma.ecosystem_invitations.findFirst({
         where: {
@@ -959,7 +966,7 @@ export class EcosystemRepository {
       });
       return invitation;
     } catch (error) {
-      this.logger.error(`Error in getPendingInvitationByEmail: ${error.message}`);
+      this.logger.error(`Error in getPendingInvitationByEmail: ${error}`);
       throw error;
     }
   }
@@ -1370,6 +1377,117 @@ export class EcosystemRepository {
       });
     } catch (error) {
       this.logger.error(`Error in getEcosystemByRole: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getAllEcosystemsByOrgId(
+    orgId: string,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<ecosystem>> {
+    try {
+      if (!orgId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
+      }
+      const whereClause = {
+        deletedAt: null,
+        ecosystemOrgs: {
+          some: {
+            orgId,
+            deletedAt: null
+          }
+        }
+      };
+      const result = await this.prisma.$transaction([
+        this.prisma.ecosystem.findMany({
+          where: whereClause,
+          orderBy: {
+            createDateTime: 'desc'
+          },
+          include: {
+            ecosystemOrgs: {
+              where: {
+                orgId,
+                deletedAt: null
+              },
+              include: {
+                ecosystemRole: true,
+                organisation: {
+                  select: {
+                    id: true,
+                    name: true,
+                    orgSlug: true,
+                    logoUrl: true
+                  }
+                }
+              }
+            }
+          },
+          take: pageDetail.pageSize,
+          skip: (pageDetail.pageNumber - 1) * pageDetail.pageSize
+        }),
+        this.prisma.ecosystem.count({ where: whereClause })
+      ]);
+      const [data, totalCount] = result;
+      const totalPages = Math.ceil(totalCount / pageDetail.pageSize);
+      return { totalPages, data };
+    } catch (error) {
+      this.logger.error(`getAllEcosystemsByOrgId error: ${error}`);
+      throw error;
+    }
+  }
+  async getEcosystemsForUser(userId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<ecosystem>> {
+    try {
+      if (!userId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+      }
+      const whereClause = {
+        deletedAt: null,
+        ecosystemOrgs: {
+          some: {
+            userId,
+            deletedAt: null,
+            ecosystemRole: {
+              name: {
+                in: [OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER]
+              }
+            }
+          }
+        }
+      };
+      const result = await this.prisma.$transaction([
+        this.prisma.ecosystem.findMany({
+          where: whereClause,
+          orderBy: {
+            createDateTime: 'desc'
+          },
+          include: {
+            ecosystemOrgs: {
+              where: {
+                userId,
+                deletedAt: null
+              },
+              include: {
+                ecosystemRole: true,
+                organisation: {
+                  select: {
+                    id: true,
+                    name: true,
+                    orgSlug: true,
+                    logoUrl: true
+                  }
+                }
+              }
+            }
+          }
+        }),
+        this.prisma.ecosystem.count({})
+      ]);
+      const [data, totalCount] = result;
+      const totalPages = Math.ceil(totalCount / pageDetail.pageSize);
+      return { totalPages, data };
+    } catch (error) {
+      this.logger.error(`getEcosystemsForUser error: ${error}`);
       throw error;
     }
   }

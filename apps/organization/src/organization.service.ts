@@ -36,7 +36,6 @@ import {
   IOrgRole,
   IDidList,
   IPrimaryDidDetails,
-  IEcosystemOrgStatus,
   IOrgDetails
 } from '../interfaces/organization.interface';
 import { UserActivityService } from '@credebl/user-activity';
@@ -636,9 +635,7 @@ export class OrganizationService {
         ]
       };
 
-      const filterOptions = {
-        userId
-      };
+      const filterOptions = { userId };
 
       const getOrgs = await this.organizationRepository.getOrganizations(
         query,
@@ -651,32 +648,12 @@ export class OrganizationService {
 
       const { organizations } = getOrgs;
 
-      if (0 === organizations?.length) {
+      if (!organizations?.length) {
         throw new NotFoundException(ResponseMessages.organisation.error.organizationNotFound);
       }
-
-      let orgIds;
-      let updatedOrgs;
-
-      if ('true' === process.env.IS_ECOSYSTEM_ENABLE) {
-        orgIds = organizations?.map((item) => item.id);
-
-        const orgEcosystemDetails = await this._getOrgEcosystems(orgIds);
-
-        updatedOrgs = getOrgs.organizations.map((org) => {
-          const matchingEcosystems = orgEcosystemDetails
-            .filter((ecosystem) => ecosystem.orgId === org.id)
-            .map((ecosystem) => ({ ecosystemId: ecosystem.ecosystemId }));
-          return {
-            ...org,
-            ecosystemOrgs: 0 < matchingEcosystems.length ? matchingEcosystems : []
-          };
-        });
-      } else {
-        updatedOrgs = getOrgs?.organizations?.map((org) => ({
-          ...org
-        }));
-      }
+      const updatedOrgs = organizations.map((org) => ({
+        ...org
+      }));
 
       return {
         totalCount: getOrgs.totalCount,
@@ -687,27 +664,6 @@ export class OrganizationService {
       this.logger.error(`In fetch getOrganizations : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
-  }
-
-  async _getOrgEcosystems(orgIds: string[]): Promise<IEcosystemOrgStatus[]> {
-    const pattern = { cmd: 'get-ecosystems-by-org' };
-
-    const payload = { orgIds };
-
-    const response = await this.organizationServiceProxy
-      .send(pattern, payload)
-      .toPromise()
-      .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
-        throw new HttpException(
-          {
-            status: error.status,
-            error: error.message
-          },
-          error.status
-        );
-      });
-    return response;
   }
 
   /**

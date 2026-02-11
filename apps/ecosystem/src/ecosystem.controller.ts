@@ -13,13 +13,13 @@ import {
   IIntentTemplateList,
   IIntentTemplateSearchCriteria
 } from '@credebl/common/interfaces/intents-template.interface';
+import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
 import { ecosystem, user } from '@prisma/client';
 
 import { CreateIntentDto } from '../dtos/create-intent.dto';
 import { EcosystemService } from './ecosystem.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { UpdateIntentDto } from '../dtos/update-intent.dto';
-import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
 
 @Controller()
 export class EcosystemController {
@@ -72,8 +72,9 @@ export class EcosystemController {
   async getEcosystems(payload: {
     userId: string;
     pageDetail: IPaginationSortingDto;
+    orgId: string;
   }): Promise<PaginatedResponse<IEcosystem>> {
-    return this.ecosystemService.getEcosystems(payload.userId, payload.pageDetail);
+    return this.ecosystemService.getEcosystems(payload.userId, payload.pageDetail, payload.orgId);
   }
 
   /**

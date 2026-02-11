@@ -1,20 +1,20 @@
+import { EcosystemOrgStatus, InvitationViewRole } from '@credebl/enum/enum';
 import { Prisma, PrismaClient } from '@prisma/client';
 
-import { EcosystemOrgStatus, InvitationViewRole } from '@credebl/enum/enum';
+import { CommonTableColumns } from '@credebl/common/interfaces/interface';
 import { JsonValue } from '@prisma/client/runtime/library';
 import { OrgRoles } from 'libs/org-roles/enums';
-import { CommonTableColumns } from '@credebl/common/interfaces/interface';
 
 export interface ICreateEcosystem {
-  name?: string;
-  description?: string;
+  name: string;
+  description: string;
   tags?: string;
   logoUrl?: string;
-  userId?: string;
+  userId: string;
   logo?: string;
   orgName?: string;
   orgDid?: string;
-  orgId?: string;
+  orgId: string;
   autoEndorsement?: boolean;
   lastChangedBy?: string;
 }
@@ -23,10 +23,10 @@ export interface IEcosystem {
   id: string;
   name: string;
   description: string;
-  tags: string;
+  tags: string | null;
   createDateTime: Date;
   createdBy: string;
-  logoUrl: string;
+  logoUrl: string | null;
 }
 export interface IOrganizationData extends CommonTableColumns {
   id: string;
@@ -64,8 +64,8 @@ export interface IEcosystemInvitations {
   id: string;
   email: string;
   status: string;
-  ecosystemId?: string;
-  userId?: string;
+  ecosystemId: string | null;
+  userId: string | null;
   createDateTime: Date;
   createdBy: string;
   organization?: IEcosystemOrg;
@@ -103,7 +103,6 @@ export interface IEcosystemDetails extends CommonTableColumns {
   deletedAt?: Date;
   logoUrl: string;
 }
-
 export interface IEcosystemDashboard {
   ecosystem: IEcosystemDetails[];
   membersCount: number;
@@ -138,10 +137,10 @@ export interface IEcosystemSummary {
 
 export interface IUserSummary {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  username: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  username: string | null;
   profileImg: string | null;
 }
 
@@ -161,7 +160,7 @@ export interface IEcosystemInvitation {
 export interface IGetAllOrgs {
   id: string;
   status: string;
-  userId: string;
+  userId: string | null;
   ecosystem: IGetAllOrgEcosystem;
   organisation: IGetAllOrgOrganisation;
   user: IGetAllOrgUser;
@@ -175,10 +174,10 @@ export interface IGetAllOrgEcosystem {
   id: string;
   name: string;
   description: string;
-  tags: string;
+  tags: string | null;
   createDateTime: Date;
   createdBy: string;
-  logoUrl: string;
+  logoUrl: string | null;
   autoEndorsement: boolean;
   ledgers: JsonValue;
 }
@@ -187,19 +186,19 @@ export interface IGetAllOrgOrganisation {
   id: string;
   createDateTime: Date;
   createdBy: string;
-  name: string;
-  description: string;
-  orgSlug: string;
+  name: string | null;
+  description: string | null;
+  orgSlug: string | null;
 }
 
 export interface IGetAllOrgUser {
   id: string;
   createDateTime: Date;
   lastChangedDateTime: Date;
-  firstName: string;
-  lastName: string;
-  email: string;
-  username: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  username: string | null;
 }
 
 export type EcosystemInvitationRoles = OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;

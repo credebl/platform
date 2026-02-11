@@ -9,7 +9,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
   ForbiddenException,
-  HttpStatus
+  HttpStatus,
+  ConflictException
 } from '@nestjs/common';
 
 import { ClientProxy, RpcException } from '@nestjs/microservices';
@@ -76,7 +77,7 @@ export class EcosystemService {
 
     if (existingInvitation) {
       throw new RpcException({
-        statusCode: 409,
+        statusCode: HttpStatus.CONFLICT,
         message: ResponseMessages.ecosystem.error.invitationAlreadySent
       });
     }
@@ -177,12 +178,6 @@ export class EcosystemService {
   // eslint-disable-next-line camelcase
   async createEcosystem(createEcosystemDto: ICreateEcosystem): Promise<IEcosystem> {
     try {
-      const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto.name);
-
-      if (ecosystemExist) {
-        throw new RpcException({ statusCode: 409, message: ResponseMessages.ecosystem.error.exists });
-      }
-
       const { userId } = createEcosystemDto;
 
       if (!userId) {
@@ -190,14 +185,20 @@ export class EcosystemService {
       }
 
       const invitation = await this.ecosystemRepository.findAcceptedInvitationByUserId(userId);
+
+      if (!invitation) {
+        throw new ForbiddenException(ResponseMessages.ecosystem.error.invitationRequiredFromPlatformAdmin);
+      }
+      const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto?.name);
+
+      if (ecosystemExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+      }
+
       const user = await this.userRepository.getUserById(userId);
 
       if (!user) {
         throw new Error('Error fetching user');
-      }
-
-      if (!invitation) {
-        throw new ForbiddenException(ResponseMessages.ecosystem.error.invitationRequired);
       }
 
       return this.prisma.$transaction(async (tx) => {
@@ -216,8 +217,8 @@ export class EcosystemService {
         return ecosystem;
       });
     } catch (error) {
-      this.logger.error(`createEcosystem: ${error}`);
-      throw error;
+      this.logger.error(`Failed to create ecosystem : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
@@ -229,11 +230,24 @@ export class EcosystemService {
       }
       const organization = await this.organizationRepository.getOrgProfile(orgId);
       const user = await this.ecosystemRepository.getUserById(organization.createdBy);
-      const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(user.email, ecosystemId, orgId);
+      if (!user) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.userNotFound);
+      }
+      if (!user.email) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userEmailRequired);
+      }
+
+      const userEmail = user.email;
+
+      const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(
+        userEmail || '',
+        ecosystemId,
+        orgId
+      );
 
       if (checkUser && Invitation.REJECTED === checkUser.status && ecosystemId === checkUser.ecosystemId) {
         const reopenedInvitation = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-          user.email,
+          userEmail,
           orgId,
           ecosystemId,
           Invitation.PENDING
@@ -246,15 +260,21 @@ export class EcosystemService {
       if (
         checkUser?.ecosystemId === ecosystemId &&
         checkUser.invitedOrg === orgId &&
-        checkUser.status === Invitation.PENDING
+        checkUser.status === Invitation.PENDING &&
+        checkUser.status === Invitation.PENDING &&
+        checkUser.type === InviteType.MEMBER
       ) {
-        throw new RpcException({
-          statusCode: HttpStatus.CONFLICT,
-          message: `Invitation already exists for org with email ${user.email}`
-        });
+        throw new ConflictException(`Invitation already exists for org with email ${user.email}`);
+      } else if (
+        checkUser?.ecosystemId === ecosystemId &&
+        checkUser.status === Invitation.ACCEPTED &&
+        checkUser.type === InviteType.ECOSYSTEM
+      ) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.unableToSendInvitationToLead);
       }
+
       const invitation = await this.ecosystemRepository.createEcosystemInvitation({
-        email: user.email,
+        email: userEmail,
         invitedUserId: user.id,
         userId: reqUser,
         type: InviteType.MEMBER,
@@ -272,25 +292,25 @@ export class EcosystemService {
       const inviteMemberTemplate = new InviteMemberToEcosystem();
 
       emailData.emailFrom = platformConfigData.emailFrom;
-      emailData.emailTo = [user.email];
+      emailData.emailTo = [userEmail];
       emailData.emailSubject = `Invitation for ecosystem`;
       emailData.emailHtml = inviteMemberTemplate.sendInviteEmailTemplate(
         `${user.firstName} ${user.lastName}`,
         ecosystem.name
       );
       const response = await this.emailService.sendEmail(emailData);
-      if (response) {
-        return true;
-      } else {
-        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.memberInviteFailed);
-      }
+      return response;
     } catch (error) {
-      this.logger.error('inviteMemberToEcosystem error', error);
-      throw error;
+      this.logger.error(`Failed to send invitation to member : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async getEcosystems(userId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<IEcosystem>> {
+  async getEcosystems(
+    userId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId: string
+  ): Promise<PaginatedResponse<IEcosystem>> {
     if (!userId) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
     }
@@ -298,6 +318,14 @@ export class EcosystemService {
       const ecosystem = await this.ecosystemRepository.getEcosystemByRole(userId, EcosystemRoles.ECOSYSTEM_LEAD);
       if (ecosystem && ecosystem.ecosystemRole.name === EcosystemRoles.ECOSYSTEM_LEAD) {
         const leadEcosystems = await this.ecosystemRepository.getEcosystemsForEcosystemLead(userId, pageDetail);
+        if (orgId) {
+          return this.ecosystemRepository.getAllEcosystemsByOrgId(orgId, pageDetail);
+        }
+        const userEcosystems = await this.ecosystemRepository.getEcosystemsForUser(userId, pageDetail);
+
+        if (0 < userEcosystems?.data.length) {
+          return userEcosystems;
+        }
         return leadEcosystems;
       } else {
         return this.ecosystemRepository.getAllEcosystems(pageDetail);
@@ -331,12 +359,40 @@ export class EcosystemService {
       const user = await this.ecosystemRepository.getUserById(reqUser);
 
       if (!user) {
-        throw new RpcException({ status: HttpStatus.NOT_FOUND, message: 'User not found to send invitation' });
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.ecosystem.error.userNotFoundForInvitation
+        });
       }
 
+      if (!user.email) {
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: ResponseMessages.ecosystem.error.userEmailRequired
+        });
+      }
+
+      const userEmail = user.email;
+
+      const existingInvitation = await this.ecosystemRepository.getEcosystemInvitationsByEmail(
+        userEmail,
+        ecosystemId,
+        orgId
+      );
+
+      if (!existingInvitation) {
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.ecosystem.error.invitationNotFound
+        });
+      }
+
+      if (existingInvitation.status === Invitation.ACCEPTED) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.alreadyAccepted);
+      }
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-        user.email,
         orgId,
+        userEmail,
         ecosystemId,
         status
       );
@@ -348,6 +404,16 @@ export class EcosystemService {
           throw new Error('Error fetching ecosystem role');
         }
 
+        if (!result.invitedOrg) {
+          throw new Error(ResponseMessages.ecosystem.error.orgIdMissing);
+        }
+
+        if (!result.userId) {
+          throw new Error(ResponseMessages.ecosystem.error.userIdMissing);
+        }
+
+        const { userId } = result;
+
         const ecosystemOrgPayload = {
           orgId: result.invitedOrg,
           status: EcosystemOrgStatus.ACTIVE,
@@ -358,7 +424,7 @@ export class EcosystemService {
           lastChangedBy: reqUser
         };
 
-        const existingOrg = await this.ecosystemRepository.getEcosystemOrg(result.ecosystemId, result.userId);
+        const existingOrg = await this.ecosystemRepository.getEcosystemOrg(result.ecosystemId, userId);
         if (!existingOrg) {
           const userRecord = await this.ecosystemRepository.createEcosystemOrg(ecosystemOrgPayload);
           this.logger.log('Ecosystem user record created', JSON.stringify(userRecord, null, 2));

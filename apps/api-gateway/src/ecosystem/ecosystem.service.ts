@@ -41,8 +41,8 @@ export class EcosystemService {
    * @param userId
    * @returns All ecosystems from platform
    */
-  async getEcosystems(userId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<IEcosystem>> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystems', { userId, pageDetail });
+  async getEcosystems(userId: string, pageDetail: IPaginationSortingDto, orgId:string): Promise<PaginatedResponse<IEcosystem>> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystems', { userId, pageDetail, orgId });
   }
 
   /**

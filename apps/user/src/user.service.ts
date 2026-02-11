@@ -880,40 +880,11 @@ export class UserService {
   async getProfile(payload: { id }): Promise<IUsersProfile> {
     try {
       const userData = await this.userRepository.getUserById(payload.id);
-
-      if ('true' === process.env.IS_ECOSYSTEM_ENABLE) {
-        const ecosystemSettings = await this._getEcosystemConfig();
-        for (const setting of ecosystemSettings) {
-          userData[setting.key] = 'true' === setting.value;
-        }
-      }
-
       return userData;
     } catch (error) {
       this.logger.error(`get user: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
-  }
-
-  async _getEcosystemConfig(): Promise<IEcosystemConfig[]> {
-    const pattern = { cmd: 'get-ecosystem-config-details' };
-    const payload = {};
-
-    const getEcosystemConfigDetails = await this.userServiceProxy
-      .send(pattern, payload)
-      .toPromise()
-      .catch((error) => {
-        this.logger.error(`catch: ${JSON.stringify(error)}`);
-        throw new HttpException(
-          {
-            status: error.status,
-            error: error.message
-          },
-          error.status
-        );
-      });
-
-    return getEcosystemConfigDetails;
   }
 
   async getPublicProfile(payload: { username }): Promise<IUsersProfile> {

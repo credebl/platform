@@ -394,3 +394,8 @@ export enum NotificationStatus {
   DATA_PURGED_AND_NOTIFIED_WITH_FCM = 'DataPurgedAndNotifiedWithFCM',
   NOTIFICATION_CONSUMED = 'NotificationConsumed'
 }
+
+export enum ClientIdPrefix {
+  X509SanDns = 'x509_san_dns',
+  X509Hash = 'x509_hash'
+}

@@ -1,3 +1,6 @@
+import { ClientIdPrefix } from '@credebl/enum/enum';
+import { SignerOption } from '@prisma/client';
+
 export interface ClientMetadata {
   client_name: string;
   logo_uri: string;
@@ -36,7 +39,8 @@ export enum OpenId4VcVerificationPresentationState {
  * Request signer configuration for OID4VP verification presentations
  */
 export interface IRequestSigner {
-  method: string; // SignerOption enum value: 'DID', 'X509_P256', 'X509_ED25519'
+  method: SignerOption; // SignerOption enum value: 'DID', 'X509_P256', 'X509_ED25519',
+  clientIdPrefix?: ClientIdPrefix;
 }
 
 /**

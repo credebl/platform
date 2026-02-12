@@ -1,15 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDefined, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { SignerOption } from '@prisma/client';
 import { ResponseMode } from '@credebl/enum/enum';
-
-class RequestSignerDto {
-  @ApiProperty({ enum: SignerOption, example: SignerOption.DID })
-  @IsDefined()
-  @IsEnum(SignerOption)
-  method: SignerOption;
-}
+import { RequestSignerDto } from './oid4vc-verifier-presentation.dto';
 
 export class CreateIntentBasedVerificationDto {
   @ApiProperty({ description: 'Intent name to lookup template for', example: 'kyc-intent' })

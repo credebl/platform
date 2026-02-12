@@ -21,7 +21,12 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { getAgentUrl } from '@credebl/common/common.utils';
 import { SignerOption, user } from '@prisma/client';
 import { map } from 'rxjs';
-import { CreateVerifier, UpdateVerifier, VerifierRecord } from '@credebl/common/interfaces/oid4vp-verification';
+import {
+  CreateVerifier,
+  IRequestSigner,
+  UpdateVerifier,
+  VerifierRecord
+} from '@credebl/common/interfaces/oid4vp-verification';
 import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 import { BaseService } from 'libs/service/base.service';
@@ -249,7 +254,8 @@ export class Oid4vpVerificationService extends BaseService {
         requestSigner = {
           method: SignerMethodOption.X5C, // "x5c"
           x5c: [activeCertificate.certificateBase64], // array with PEM/DER base64
-          keyId: activeCertificate.keyId
+          keyId: activeCertificate.keyId,
+          clientIdPrefix: sessionRequest.requestSigner.clientIdPrefix
         };
       } else if (sessionRequest.requestSigner.method === SignerOption.X509_ED25519) {
         this.logger.debug('X5C based request signer method selected');
@@ -268,7 +274,8 @@ export class Oid4vpVerificationService extends BaseService {
         requestSigner = {
           method: SignerMethodOption.X5C, // "x5c"
           x5c: [activeCertificate.certificateBase64], // array with PEM/DER base64
-          keyId: activeCertificate.keyId
+          keyId: activeCertificate.keyId,
+          clientIdPrefix: sessionRequest.requestSigner.clientIdPrefix
         };
       } else {
         throw new BadRequestException(`Unsupported requestSigner method: ${sessionRequest.requestSigner.method}`);
@@ -300,7 +307,7 @@ export class Oid4vpVerificationService extends BaseService {
     verifierId: string,
     intent: string,
     responseMode: string,
-    signerOption: SignerOption,
+    requestSigner: IRequestSigner,
     userDetails: user
   ): Promise<object> {
     this.logger.debug(
@@ -348,6 +355,7 @@ export class Oid4vpVerificationService extends BaseService {
 
       // Handle request signer based on method
       let resolvedSigner: RequestSigner | undefined;
+      const signerOption = requestSigner?.method;
 
       if (signerOption === SignerOption.DID) {
         resolvedSigner = {
@@ -372,7 +380,8 @@ export class Oid4vpVerificationService extends BaseService {
         resolvedSigner = {
           method: SignerMethodOption.X5C,
           x5c: [activeCertificate.certificateBase64],
-          keyId: activeCertificate.keyId
+          keyId: activeCertificate.keyId,
+          clientIdPrefix: requestSigner.clientIdPrefix // Pass through clientIdPrefix if provided
         };
       } else {
         throw new BadRequestException(`Unsupported requestSigner method: ${signerOption}`);

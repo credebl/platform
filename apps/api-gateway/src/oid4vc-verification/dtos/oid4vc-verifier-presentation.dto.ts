@@ -306,9 +306,8 @@ export class RequestSignerDto {
   @IsEnum(SignerOption)
   method: SignerOption;
 
-  @ApiProperty({ enum: ClientIdPrefix, example: ClientIdPrefix.X509Hash })
+  @ApiPropertyOptional({ enum: ClientIdPrefix, example: ClientIdPrefix.X509Hash })
   @IsOptional()
-  @IsDefined()
   @IsEnum(ClientIdPrefix)
   clientIdPrefix?: ClientIdPrefix;
 }
@@ -316,9 +315,9 @@ export class RequestSignerDto {
 export class PresentationRequestDto {
   @ApiProperty({
     type: RequestSignerDto,
-    description: 'Optional request signer option'
+    description: 'Request signer option'
   })
-  @IsOptional()
+  @IsDefined()
   @ValidateNested()
   @Type(() => RequestSignerDto)
   requestSigner: RequestSignerDto;

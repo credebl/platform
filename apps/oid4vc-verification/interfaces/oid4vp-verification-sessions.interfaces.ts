@@ -1,4 +1,4 @@
-import { SignerMethodOption } from '@credebl/enum/enum';
+import { ClientIdPrefix, SignerMethodOption } from '@credebl/enum/enum';
 
 export interface Oid4vpPresentationWh {
   id: string;
@@ -19,6 +19,7 @@ export interface X5cSigner {
   method: SignerMethodOption.X5C;
   x5c: string[];
   keyId: string;
+  clientIdPrefix?: ClientIdPrefix;
 }
 
 export type RequestSigner = DidSigner | X5cSigner;

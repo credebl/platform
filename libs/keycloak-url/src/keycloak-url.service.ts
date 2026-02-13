@@ -71,4 +71,11 @@ export class KeycloakUrlService {
   async GetClient(realm: string, clientId: string): Promise<string> {
     return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients?clientId=${clientId}`;
   }
+  async GetServiceAccountUserURL(realm: string, clientIdpId: string): Promise<string> {
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${clientIdpId}/service-account-user`;
+  }
+
+  async GetClientProtocolMappersURL(realm: string, clientIdpId: string): Promise<string> {
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${clientIdpId}/protocol-mappers/models`;
+  }
 }

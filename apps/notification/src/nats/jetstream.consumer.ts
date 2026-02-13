@@ -59,9 +59,8 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
 
   private async consume(consumer: Consumer): Promise<void> {
     this.logger.log(`[NATS] Starting to consume messages from consumer ${consumer.info}`);
-    const WAIT_BEFORE_TRYING_REDELIVERY_MS = process.env.CONSUMER_CONFIG_ACK_WAIT
-      ? Number(process.env.CONSUMER_CONFIG_ACK_WAIT)
-      : 10000;
+    const parsed = Number(process.env.CONSUMER_CONFIG_ACK_WAIT);
+    const WAIT_BEFORE_TRYING_REDELIVERY_MS = Number.isFinite(parsed) && 0 < parsed ? parsed : 10000;
     for await (const msg of await consumer.consume()) {
       try {
         const { subject } = msg;

@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 
 import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientRegistrationService } from '@credebl/client-registration';
 import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
 import { CreateEcosystemInviteTemplate } from '../templates/create-ecosystem.templates';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -54,7 +55,8 @@ export class EcosystemService {
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     private readonly organizationRepository: OrganizationRepository,
-    private readonly userRepository: UserRepository
+    private readonly userRepository: UserRepository,
+    private readonly clientRegistrationService: ClientRegistrationService
   ) {}
 
   private readonly logger = new Logger(EcosystemService.name);
@@ -69,11 +71,9 @@ export class EcosystemService {
     platformAdminId: string;
   }): Promise<IEcosystemInvitations> {
     const { email, platformAdminId } = payload;
-
     if (!email || !platformAdminId) {
       throw new BadRequestException(ResponseMessages.ecosystem.error.emailOrPlatformAdminIdMissing);
     }
-
     const existingInvitation = await this.ecosystemRepository.getPendingInvitationByEmail(email);
 
     if (existingInvitation?.type === InviteType.MEMBER) {
@@ -84,13 +84,11 @@ export class EcosystemService {
     }
 
     const invitedUser = await this.userRepository.getUserDetails(email);
-
     const invitation = await this.ecosystemRepository.createEcosystemInvitation({
       email,
       invitedUserId: invitedUser?.id ?? null,
       userId: platformAdminId
     });
-
     const isUserExist = Boolean(invitedUser);
 
     await this.sendInviteEmailTemplate(email, isUserExist);
@@ -100,7 +98,6 @@ export class EcosystemService {
 
   async sendInviteEmailTemplate(email: string, isUserExist: boolean): Promise<boolean> {
     const platformConfigData = await this.ecosystemRepository.getPlatformConfigData();
-
     if (!platformConfigData) {
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.platformConfigNotFound);
     }
@@ -113,7 +110,6 @@ export class EcosystemService {
     const platformName = process.env.PLATFORM_NAME ?? 'the platform';
     emailData.emailSubject = `Invitation to create a new ecosystem on ${platformName}`;
     emailData.emailHtml = template.sendInviteEmailTemplate(isUserExist);
-
     return this.emailService.sendEmail(emailData);
   }
 
@@ -206,24 +202,106 @@ export class EcosystemService {
         throw new Error('Error fetching user');
       }
 
-      return this.prisma.$transaction(async (tx) => {
-        const ecosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, tx);
+      if (!invitation) {
+        throw new ForbiddenException(ResponseMessages.ecosystem.error.invitationRequired);
+      }
 
-        if (!ecosystem) {
+      const ecosystem = await this.prisma.$transaction(async (tx) => {
+        const newEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, tx);
+
+        if (!newEcosystem) {
           throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
         }
         await this.ecosystemRepository.updateEcosystemInvitationDetails(
           user.email,
-          ecosystem.id,
+          newEcosystem.id,
           createEcosystemDto.orgId,
           tx
         );
 
-        return ecosystem;
+        return newEcosystem;
       });
+
+      // Update Keycloak user attributes with ecosystem lead information
+      await this.updateKeycloakEcosystemLeads(user, createEcosystemDto.orgId, ecosystem.id);
+
+      return ecosystem;
     } catch (error) {
       this.logger.error(`Failed to create ecosystem : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  private async updateKeycloakEcosystemLeads(
+    user: { id: string; keycloakUserId?: string; clientId?: string; clientSecret?: string },
+    orgId: string,
+    ecosystemId: string
+  ): Promise<void> {
+    try {
+      const token = await this.clientRegistrationService.getPlatformManagementToken();
+
+      // Update user attributes in Keycloak with ecosystem lead info
+      if (user.keycloakUserId) {
+        await this.clientRegistrationService.updateUserEcosystemLeads(user.keycloakUserId, orgId, ecosystemId, token);
+        this.logger.log(`Successfully updated Keycloak ecosystem leads for user ${user.id}, ecosystem ${ecosystemId}`);
+      } else {
+        this.logger.warn(`User ${user.id} does not have a keycloakUserId, skipping user attribute update`);
+      }
+
+      await this.updateOrgServiceAccountEcosystem(orgId, ecosystemId, 'lead', token);
+    } catch (error) {
+      this.logger.error(`Failed to update Keycloak ecosystem leads: ${error.message}`);
+    }
+  }
+
+  private async updateKeycloakEcosystemMember(
+    user: { id: string; keycloakUserId?: string; clientId?: string; clientSecret?: string },
+    orgId: string,
+    ecosystemId: string
+  ): Promise<void> {
+    try {
+      const token = await this.clientRegistrationService.getPlatformManagementToken();
+
+      if (user.keycloakUserId) {
+        await this.clientRegistrationService.updateUserEcosystemMember(user.keycloakUserId, orgId, ecosystemId, token);
+        this.logger.log(`Successfully updated Keycloak ecosystem member for user ${user.id}, ecosystem ${ecosystemId}`);
+      } else {
+        this.logger.warn(`User ${user.id} does not have a keycloakUserId, skipping user attribute update`);
+      }
+
+      await this.updateOrgServiceAccountEcosystem(orgId, ecosystemId, 'member', token);
+    } catch (error) {
+      this.logger.error(`Failed to update Keycloak ecosystem member: ${error.message}`);
+    }
+  }
+
+  private async updateOrgServiceAccountEcosystem(
+    orgId: string,
+    ecosystemId: string,
+    role: 'lead' | 'member',
+    token: string
+  ): Promise<void> {
+    try {
+      const organization = await this.organizationRepository.getOrgProfile(orgId);
+
+      if (!organization?.idpId) {
+        this.logger.warn(`Organization ${orgId} does not have an idpId, skipping service account update`);
+        return;
+      }
+
+      await this.clientRegistrationService.updateClientServiceAccountEcosystemAccess(
+        organization.idpId,
+        orgId,
+        ecosystemId,
+        role,
+        token
+      );
+
+      this.logger.log(
+        `Successfully updated service account ecosystem ${role} for org ${orgId}, ecosystem ${ecosystemId}`
+      );
+    } catch (error) {
+      this.logger.error(`Failed to update service account ecosystem access: ${error.message}`);
     }
   }
 
@@ -433,6 +511,8 @@ export class EcosystemService {
         if (!existingOrg) {
           const userRecord = await this.ecosystemRepository.createEcosystemOrg(ecosystemOrgPayload);
           this.logger.log('Ecosystem user record created', JSON.stringify(userRecord, null, 2));
+
+          await this.updateKeycloakEcosystemMember(user, result.invitedOrg, result.ecosystemId);
         }
       }
       return Boolean(result);

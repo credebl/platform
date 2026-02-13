@@ -59,14 +59,14 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
 
   private async consume(consumer: Consumer): Promise<void> {
     this.logger.log(`[NATS] Starting to consume messages from consumer ${consumer.info}`);
+    const parsed = Number(process.env.CONSUMER_CONFIG_ACK_WAIT);
+    const WAIT_BEFORE_TRYING_REDELIVERY_MS = Number.isFinite(parsed) && 0 < parsed ? parsed : 10000;
     for await (const msg of await consumer.consume()) {
       try {
         const { subject } = msg;
         this.logger.log(`[NATS] Message subject: ${subject}`);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const [_, domain, event, orgCode, sessionId] = subject.split('.');
-        const consumerName = `notify-session-${sessionId}`;
-
         this.logger.log({
           domain,
           event,
@@ -75,9 +75,10 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
         });
 
         const payload = msg.json();
-        const notificationDetail = await this.holderNotificationRepository.getHolderNotificationBySessionId(sessionId);
         this.logger.debug(`[NATS] Message received ${JSON.stringify(payload)}`);
         this.logger.log(`[NATS] Processing message, ${JSON.stringify({ deliveryCount: msg.info.deliveryCount })}`);
+        const notificationDetail = await this.holderNotificationRepository.getHolderNotificationBySessionId(sessionId);
+
         const maxDeliver = process.env.CONSUMER_CONFIG_MAX_DELIVER
           ? Number(process.env.CONSUMER_CONFIG_MAX_DELIVER)
           : 4;
@@ -90,15 +91,17 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
           msg.ack();
         } else {
           // ------------- Publishing Messages via NATS ----------------//
-
-          const ackKey = this.pendingAckStore.save(AGGREGATE_STREAM, consumerName, msg);
+          // Last delivery attempt - wait for user confirmation before ACKing
 
           this.logger.log(`[NATS] Notification detail fetched for session ID: ${sessionId}`);
           if (!notificationDetail) {
             this.logger.error(`[NATS] No notification detail found for session ID: ${sessionId}`);
-            msg.nak();
+            msg.nak(WAIT_BEFORE_TRYING_REDELIVERY_MS);
             continue;
           }
+
+          const ackKey = await this.pendingAckStore.save(AGGREGATE_STREAM, PULL_CONSUMER, msg);
+
           await this.nats.publish(`${notificationDetail.holderDid}`, {
             payload,
             ackKey,
@@ -107,13 +110,14 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
           });
 
           this.logger.log(`[NATS] Message published to ${notificationDetail.holderDid} for session ${sessionId}`);
+          // DO NOT ack here - waiting for user confirmation via user.ack
         }
 
         // business logic
         // msg.ack();
       } catch (err) {
-        this.logger.error('[NATS] Processing failed', err);
-        msg.nak();
+        this.logger.error(`[NATS] Processing failed ${JSON.stringify({ error: err.message, stack: err.stack })}`);
+        msg.nak(WAIT_BEFORE_TRYING_REDELIVERY_MS);
       }
     }
   }

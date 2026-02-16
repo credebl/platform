@@ -14,6 +14,8 @@ import {
   IEcosystemDashboard,
   IEcosystemInvitation,
   IGetAllOrgs,
+  IGetEcosystemOrgStatus,
+  IPlatformDashboardCount,
   PrismaExecutor
 } from '../interfaces/ecosystem.interfaces';
 import {
@@ -93,41 +95,51 @@ export class EcosystemRepository {
   }
 
   async getInvitationsByUserId(
-    userId: string
+    userId: string,
+    pageDetail: IPaginationSortingDto
     // eslint-disable-next-line camelcase
-  ): Promise<ecosystem_invitations[]> {
+  ): Promise<PaginatedResponse<ecosystem_invitations>> {
     try {
-      return await this.prisma.ecosystem_invitations.findMany({
-        where: {
-          createdBy: userId
-        },
-        include: {
-          ecosystem: {
-            select: {
-              id: true,
-              name: true,
-              description: true,
-              createDateTime: true
+      const whereClause = {
+        createdBy: userId
+      };
+      const [data, count] = await this.prisma.$transaction([
+        this.prisma.ecosystem_invitations.findMany({
+          where: whereClause,
+          include: {
+            ecosystem: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                createDateTime: true
+              }
+            },
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            },
+            organisation: {
+              select: {
+                name: true
+              }
             }
           },
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true
-            }
+          orderBy: {
+            createDateTime: 'desc'
           },
-          organisation: {
-            select: {
-              name: true
-            }
-          }
-        },
-        orderBy: {
-          createDateTime: 'desc'
-        }
-      });
+          take: pageDetail.pageSize,
+          skip: (pageDetail.pageNumber - 1) * pageDetail.pageSize
+        }),
+
+        this.prisma.ecosystem_invitations.count({ where: whereClause })
+      ]);
+      const totalPages = Math.ceil(count / pageDetail.pageSize);
+      return { totalPages, data };
     } catch (error) {
       this.logger.error('getInvitationsByUserId error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.fetchInvitationsFailed);
@@ -1488,6 +1500,48 @@ export class EcosystemRepository {
       return { totalPages, data };
     } catch (error) {
       this.logger.error(`getEcosystemsForUser error: ${error}`);
+      throw error;
+    }
+  }
+
+  getEcosystemOrgsByOrgIdAndEcosystemId(orgId: string[], ecosystemId: string[]): Promise<IGetEcosystemOrgStatus[]> {
+    try {
+      return this.prisma.ecosystem_orgs.findMany({
+        where: {
+          orgId: { in: orgId },
+          ecosystemId: { in: ecosystemId }
+        },
+        select: {
+          orgId: true,
+          ecosystemId: true,
+          status: true
+        }
+      });
+    } catch (error) {
+      this.logger.error(`getEcosystemOrgsByOrgIdAndEcosystemId error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getDashBoardCountPlatfromAdmin(): Promise<IPlatformDashboardCount> {
+    try {
+      const data = await this.prisma.$transaction([
+        this.prisma.ecosystem.count(),
+        this.prisma.ecosystem_invitations.count({
+          where: {
+            type: InviteType.ECOSYSTEM
+          }
+        }),
+        this.prisma.ecosystem_orgs.count({
+          where: {
+            status: EcosystemOrgStatus.ACTIVE
+          }
+        })
+      ]);
+      const [ecosystem, invitations, activeOrgs] = data;
+      return { ecosystem, invitations, activeOrgs };
+    } catch (error) {
+      this.logger.error(`getDashBoardCountPlatfromAdmin error: ${error}`);
       throw error;
     }
   }

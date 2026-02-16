@@ -7,7 +7,8 @@ import {
   IEcosystemDashboard,
   IEcosystemInvitation,
   IEcosystemMemberInvitations,
-  IGetAllOrgs
+  IGetAllOrgs,
+  IPlatformDashboardCount
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
 // eslint-disable-next-line camelcase
@@ -40,7 +41,11 @@ export class EcosystemService {
    * @param userId
    * @returns All ecosystems from platform
    */
-  async getEcosystems(userId: string, pageDetail: IPaginationSortingDto, orgId:string): Promise<PaginatedResponse<IEcosystem>> {
+  async getEcosystems(
+    userId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId: string
+  ): Promise<PaginatedResponse<IEcosystem>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystems', { userId, pageDetail, orgId });
   }
 
@@ -228,5 +233,9 @@ export class EcosystemService {
       intentId,
       userId
     });
+  }
+
+  async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-dashboard-count-platform-admin', {});
   }
 }

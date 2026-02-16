@@ -33,7 +33,8 @@ import {
   IEcosystemInvitation,
   IEcosystemInvitations,
   IEcosystemMemberInvitations,
-  IGetAllOrgs
+  IGetAllOrgs,
+  IPlatformDashboardCount
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import {
   IIntentTemplateList,
@@ -156,13 +157,28 @@ export class EcosystemService {
     return userData;
   }
 
-  async getInvitationsByUserId(userId: string): Promise<IEcosystemInvitations[]> {
+  async getInvitationsByUserId(
+    userId: string,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<IEcosystemInvitations>> {
     if (!userId) {
       throw new BadRequestException('userId missing');
     }
 
     try {
-      return await this.ecosystemRepository.getInvitationsByUserId(userId);
+      const invitations = await this.ecosystemRepository.getInvitationsByUserId(userId, pageDetail);
+      if (!invitations.data) {
+        throw new Error('failed to fetch invitations');
+      }
+      const invitedOrgIds = [...new Set(invitations?.data.map((i) => i.invitedOrg).filter(Boolean))];
+      const ecosystemIds = [...new Set(invitations?.data.map((i) => i.ecosystemId).filter(Boolean))];
+      const orgs = await this.ecosystemRepository.getEcosystemOrgsByOrgIdAndEcosystemId(invitedOrgIds, ecosystemIds);
+      const statusMap = new Map(orgs.map((org) => [`${org.orgId}-${org.ecosystemId}`, org.status]));
+      const enrichedData: IEcosystemInvitations[] = invitations.data.map((invitation) => ({
+        ...invitation,
+        orgStatus: statusMap.get(`${invitation.invitedOrg}-${invitation.ecosystemId}`) || 'NOT_FOUND'
+      }));
+      return { ...invitations, data: enrichedData };
     } catch (error) {
       this.logger.error('getInvitationsByUserId error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationNotFound);
@@ -391,8 +407,8 @@ export class EcosystemService {
         throw new BadRequestException(ResponseMessages.ecosystem.error.alreadyAccepted);
       }
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-        orgId,
         userEmail,
+        orgId,
         ecosystemId,
         status
       );
@@ -849,5 +865,9 @@ export class EcosystemService {
     return {
       message: ResponseMessages.ecosystem.success.updateEcosystemConfig
     };
+  }
+
+  async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
+    return this.ecosystemRepository.getDashBoardCountPlatfromAdmin();
   }
 }

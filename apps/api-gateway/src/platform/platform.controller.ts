@@ -36,6 +36,7 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CreateEcosystemInvitationDto } from '../ecosystem/dtos/send-ecosystem-invitation';
 import { EnableEcosystemDto } from '../ecosystem/dtos/enable-ecosystem';
 import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';
+import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 @Controller('')
 @UseFilters(CustomExceptionFilter)
@@ -269,8 +270,12 @@ export class PlatformController {
   @Roles(OrgRoles.PLATFORM_ADMIN)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemFeatureGuard)
   @ApiBearerAuth()
-  async getInvitations(@User() reqUser: user, @Res() res: Response): Promise<Response> {
-    const invitations = await this.platformService.getInvitationsByUserId(reqUser.id);
+  async getInvitations(
+    @User() reqUser: user,
+    @Res() res: Response,
+    @Query() pageDto: PaginationDto
+  ): Promise<Response> {
+    const invitations = await this.platformService.getInvitationsByUserId(reqUser.id, pageDto);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,

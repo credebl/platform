@@ -813,7 +813,7 @@ export class EcosystemController {
     description: 'Template details fetched successfully'
   })
   async getTemplateByIntentId(
-   @Param(
+    @Param(
       'orgId',
       TrimStringParamPipe,
       new ParseUUIDPipe({
@@ -942,6 +942,28 @@ export class EcosystemController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.deleteIntent,
       data: intent
+    });
+  }
+
+  @Get('/count/dashboard')
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get Count for Ecosystem dashboard',
+    description: 'Get Count for Ecosystem dashboard'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Template details fetched successfully'
+  })
+  async getDashboardCountEcosystem(@Res() res: Response): Promise<Response> {
+    const dashboard = await this.ecosystemService.getDashboardCountEcosystem();
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.dashboard,
+      data: dashboard
     });
   }
 }

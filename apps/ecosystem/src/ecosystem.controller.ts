@@ -7,7 +7,8 @@ import {
   IEcosystemInvitation,
   IEcosystemInvitations,
   IEcosystemMemberInvitations,
-  IGetAllOrgs
+  IGetAllOrgs,
+  IPlatformDashboardCount
 } from '../interfaces/ecosystem.interfaces';
 import {
   IIntentTemplateList,
@@ -47,8 +48,11 @@ export class EcosystemController {
    * @returns List of ecosystem invitations
    */
   @MessagePattern({ cmd: 'get-ecosystem-invitations-by-user' })
-  async getInvitationsByUserId(payload: { userId: string }): Promise<IEcosystemInvitations[]> {
-    return this.ecosystemService.getInvitationsByUserId(payload.userId);
+  async getInvitationsByUserId(payload: {
+    userId: string;
+    pageDetail: IPaginationSortingDto;
+  }): Promise<PaginatedResponse<IEcosystemInvitations>> {
+    return this.ecosystemService.getInvitationsByUserId(payload.userId, payload.pageDetail);
   }
 
   /**
@@ -324,5 +328,10 @@ export class EcosystemController {
     platformAdminId: string;
   }): Promise<{ message: string }> {
     return this.ecosystemService.updateEcosystemConfig(payload);
+  }
+
+  @MessagePattern({ cmd: 'get-dashboard-count-platform-admin' })
+  async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
+    return this.ecosystemService.getDashboardCountEcosystem();
   }
 }

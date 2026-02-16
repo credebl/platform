@@ -70,6 +70,7 @@ export interface IEcosystemInvitations {
   createdBy: string;
   organization?: IEcosystemOrg;
   invitedOrg?: string;
+  orgStatus?: string;
 }
 
 export interface IEcosystemOrg {
@@ -201,6 +202,18 @@ export interface IGetAllOrgUser {
   username: string | null;
 }
 
+export interface IGetEcosystemOrgStatus {
+  ecosystemId: string;
+  orgId: string;
+  status: string;
+}
+
 export type EcosystemInvitationRoles = OrgRoles.ECOSYSTEM_LEAD | OrgRoles.ECOSYSTEM_MEMBER;
 
 export type PrismaExecutor = Prisma.TransactionClient | PrismaClient;
+
+export interface IPlatformDashboardCount {
+  ecosystem: number;
+  invitations: number;
+  activeOrgs: number;
+}

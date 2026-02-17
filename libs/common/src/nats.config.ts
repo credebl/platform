@@ -9,13 +9,13 @@ export const getNatsOptions = (
   authenticator?: Authenticator;
   maxReconnectAttempts: NATSReconnects;
   reconnectTimeWait: NATSReconnects;
-  // queue?: string;
+  queue?: string;
 } => {
   const baseOptions = {
     servers: `${process.env.NATS_URL}`.split(','),
     maxReconnectAttempts: NATSReconnects.maxReconnectAttempts,
-    reconnectTimeWait: NATSReconnects.reconnectTimeWait
-    // queue: serviceName
+    reconnectTimeWait: NATSReconnects.reconnectTimeWait,
+    queue: serviceName
   };
 
   if (nkeySeed) {

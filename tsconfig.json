@@ -38,6 +38,12 @@
       "@credebl/enum/*": [
         "libs/enum/src/*"
       ],
+      "@credebl/keycloak-config": [
+        "libs/keycloak-config/src"
+      ],
+      "@credebl/keycloak-config/*": [
+        "libs/keycloak-config/src/*"
+      ],
       "@credebl/keycloak-url": [
         "libs/keycloak-url/src"
       ],

@@ -377,8 +377,8 @@ export class EcosystemRepository {
   }
 
   async updateEcosystemInvitationStatusByEmail(
-    email: string,
     orgId: string,
+    email: string,
     ecosystemId: string,
     status: Invitation
   ): Promise<ecosystem_invitations> {

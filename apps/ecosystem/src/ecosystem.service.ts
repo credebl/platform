@@ -863,4 +863,8 @@ export class EcosystemService {
   async getEcosystemEnableStatus(): Promise<boolean> {
     return this.ecosystemRepository.getEcosystemEnableStatus();
   }
+
+  async getEcosystemEnableStatus(): Promise<boolean> {
+    return this.ecosystemRepository.getEcosystemEnableStatus();
+  }
 }

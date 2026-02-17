@@ -20,7 +20,7 @@ import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { InviteMemberToEcosystem } from '../templates/invite-member-template';
 import { EmailService } from '@credebl/common/email.service';
 // eslint-disable-next-line camelcase
-import { ecosystem, Prisma, user } from '@prisma/client';
+import { ecosystem, Prisma, user } from '@credebl/prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
 import { UserRepository } from 'apps/user/repositories/user.repository';

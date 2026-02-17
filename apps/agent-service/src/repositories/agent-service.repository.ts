@@ -22,7 +22,7 @@ import {
   organisation,
   platform_config,
   user
-} from '@prisma/client';
+} from '@credebl/prisma/client';
 
 import { PrismaService } from '@credebl/prisma-service';
 

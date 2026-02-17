@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserOrgRolesRepository } from '../repositories';
 // eslint-disable-next-line camelcase
-import { user_org_roles } from '@prisma/client';
+import { user_org_roles } from '@credebl/prisma/client';
 
 @Injectable()
 export class UserOrgRolesService {
@@ -17,11 +17,10 @@ export class UserOrgRolesService {
     return this.userOrgRoleRepository.createUserOrgRole(userId, roleId, orgId, idpRoleId);
   }
 
-
   /**
-   * 
-   * @param userId 
-   * @param orgId 
+   *
+   * @param userId
+   * @param orgId
    * @returns Boolean response for user exist
    */
   async checkUserOrgExist(userId: string, orgId: string): Promise<boolean> {
@@ -38,20 +37,18 @@ export class UserOrgRolesService {
     return true;
   }
 
-
   /**
-   * 
-   * @param userId 
-   * @param orgId 
-   * @param roleIds 
-   * @returns 
+   *
+   * @param userId
+   * @param orgId
+   * @param roleIds
+   * @returns
    */
   async updateUserOrgRole(
     userId: string,
     orgId: string,
-    roleIdList: {roleId: string, idpRoleId: string}[]
-     ): Promise<boolean> {
-  
+    roleIdList: { roleId: string; idpRoleId: string }[]
+  ): Promise<boolean> {
     for (const roleData of roleIdList) {
       this.userOrgRoleRepository.createUserOrgRole(userId, roleData.roleId, orgId, roleData.idpRoleId);
     }
@@ -60,19 +57,17 @@ export class UserOrgRolesService {
   }
 
   /**
-   * 
-   * @param userId 
-   * @param orgId 
+   *
+   * @param userId
+   * @param orgId
    * @returns Delete user org roles
    */
   async deleteOrgRoles(userId: string, orgId: string): Promise<object> {
-
     const queryOptions = {
       userId,
       orgId
     };
 
     return this.userOrgRoleRepository.deleteMany(queryOptions);
-
   }
 }

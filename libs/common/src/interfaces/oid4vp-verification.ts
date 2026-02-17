@@ -1,5 +1,5 @@
 import { ClientIdPrefix } from '@credebl/enum/enum';
-import { SignerOption } from '@prisma/client';
+import { SignerOption } from '@credebl/prisma/client';
 
 export interface ClientMetadata {
   client_name: string;

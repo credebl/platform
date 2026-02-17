@@ -24,7 +24,7 @@ import {
   IVerifyUserEmail
 } from '@credebl/common/interfaces/user.interface';
 // eslint-disable-next-line camelcase
-import { client_aliases, user, user_org_roles } from '@prisma/client';
+import { client_aliases, user, user_org_roles } from '@credebl/prisma/client';
 
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';

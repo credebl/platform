@@ -11,7 +11,7 @@ import {
 import { IPresentation, IProofRequest, IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { IProofPresentation } from './interfaces/verification.interface';
 // To do make a similar interface in API-gateway
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 

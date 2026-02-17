@@ -34,7 +34,7 @@ import {
   organisation,
   user,
   user_org_roles
-} from '@prisma/client';
+} from '@credebl/prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
@@ -441,7 +441,7 @@ export class OrganizationRepository {
 
   async getOrganization(queryObject: object): Promise<IGetOrgById> {
     try {
-      return this.prisma.organisation.findFirst({
+      const result = await this.prisma.organisation.findFirst({
         where: {
           ...queryObject
         },
@@ -505,6 +505,20 @@ export class OrganizationRepository {
           }
         }
       });
+
+      // Transform org_agents from single object to array to match interface
+      if (result && result.org_agents) {
+        return {
+          ...result,
+          org_agents: [result.org_agents]
+        } as IGetOrgById;
+      }
+
+      // Return with empty array if no org_agents
+      return {
+        ...result,
+        org_agents: []
+      } as IGetOrgById;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);
@@ -1189,7 +1203,7 @@ export class OrganizationRepository {
           OR: [
             { name: { contains: search, mode: 'insensitive' } },
             // eslint-disable-next-line camelcase
-            { org_agents: { some: { orgDid: { contains: search, mode: 'insensitive' } } } }
+            { org_agents: { is: { orgDid: { contains: search, mode: 'insensitive' } } } }
           ]
         },
         select: {
@@ -1215,7 +1229,7 @@ export class OrganizationRepository {
 
       return {
         organisations,
-        orgAgents,
+        orgAgents: orgAgents as IOrgDetails['orgAgents'],
         userOrgRoles
       };
     } catch (error) {

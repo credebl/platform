@@ -1,4 +1,4 @@
-import { $Enums, Prisma, RecordType } from '@prisma/client';
+import { $Enums, Prisma, RecordType } from '@credebl/prisma/client';
 
 export interface IUsersProfile {
   id: string;

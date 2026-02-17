@@ -1,5 +1,5 @@
-import { Prisma } from '@prisma/client';
-import { JsonValue } from '@prisma/client/runtime/library';
+import { Prisma } from '@credebl/prisma/client';
+import { JsonValue } from 'libs/prisma-service/generated/prisma/internal/prismaNamespace';
 
 export interface IUserOrgRoles {
   id: string;

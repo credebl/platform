@@ -16,7 +16,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ClientIdPrefix, ResponseMode } from '@credebl/enum/enum';
-import { SignerOption } from '@prisma/client';
+import { SignerOption } from '@credebl/prisma/client';
 
 /**
  * DTO for verification-presentation query parameters.

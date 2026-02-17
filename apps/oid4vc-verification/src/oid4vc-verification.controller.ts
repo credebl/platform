@@ -1,6 +1,6 @@
 import { Controller, Logger } from '@nestjs/common';
 import { Oid4vpVerificationService } from './oid4vc-verification.service';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import {
   CreateVerifier,
   IPresentationRequest,

@@ -78,7 +78,7 @@ import {
   ISchemaObject
 } from '@credebl/common/interfaces/issuance.interface';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
-import { RecordType, agent_invitations, organisation, user } from '@prisma/client';
+import { RecordType, agent_invitations, organisation, user } from '@credebl/prisma/client';
 import {
   createOobJsonldIssuancePayload,
   validateAndUpdateIssuanceDates,

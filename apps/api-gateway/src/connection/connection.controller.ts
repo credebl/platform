@@ -51,7 +51,7 @@ import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.inter
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto } from './dtos/question-answer.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { ClientProxy } from '@nestjs/microservices';
 @UseFilters(CustomExceptionFilter)

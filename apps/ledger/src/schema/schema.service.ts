@@ -12,7 +12,7 @@ import {
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 import { SchemaRepository } from './repositories/schema.repository';
-import { Prisma, schema } from '@prisma/client';
+import { Prisma, schema } from '@credebl/prisma/client';
 import {
   ISaveSchema,
   ISchema,

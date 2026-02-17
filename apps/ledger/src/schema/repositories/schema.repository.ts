@@ -3,7 +3,7 @@ import { AgentDetails, ISchemasWithCount, IUpdateSchema, UpdateSchemaResponse } 
 import { ConflictException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ICredDefWithCount, IPlatformSchemasWithOrg } from '@credebl/common/interfaces/schema.interface';
 import { ISaveSchema, ISchema, ISchemaExist, ISchemaSearchCriteria } from '../interfaces/schema-payload.interface';
-import { Prisma, ledgers, org_agents, org_agents_type, organisation, schema } from '@prisma/client';
+import { Prisma, ledgers, org_agents, org_agents_type, organisation, schema } from '@credebl/prisma/client';
 import { SchemaType, SortValue } from '@credebl/enum/enum';
 
 import { ISchemaId } from '../schema.interface';

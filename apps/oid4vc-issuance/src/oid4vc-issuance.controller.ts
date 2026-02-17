@@ -3,7 +3,7 @@ import { Controller } from '@nestjs/common';
 import { Oid4vcIssuanceService } from './oid4vc-issuance.service';
 import { IssuerCreation, IssuerUpdation } from '../interfaces/oid4vc-issuance.interfaces';
 import { MessagePattern } from '@nestjs/microservices';
-import { user, oidc_issuer, credential_templates } from '@prisma/client';
+import { user, oidc_issuer, credential_templates } from '@credebl/prisma/client';
 import {
   CreateOidcCredentialOffer,
   UpdateCredentialRequest,

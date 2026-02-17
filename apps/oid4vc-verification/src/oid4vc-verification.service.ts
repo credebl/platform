@@ -19,8 +19,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { getAgentUrl } from '@credebl/common/common.utils';
-import { SignerOption, user } from '@prisma/client';
-import { map } from 'rxjs';
+import { SignerOption, user } from '@credebl/prisma/client';
 import {
   CreateVerifier,
   IRequestSigner,

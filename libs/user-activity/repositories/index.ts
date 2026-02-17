@@ -3,7 +3,7 @@
 import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { IUsersActivity } from '../interface';
 import { PrismaService } from '@credebl/prisma-service';
-import { RecordType, user, user_activity } from '@prisma/client';
+import { RecordType, user, user_activity } from '@credebl/prisma/client';
 import { lastValueFrom, timeout } from 'rxjs';
 import { ClientProxy } from '@nestjs/microservices';
 

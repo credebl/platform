@@ -38,7 +38,7 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { InviteMemberToEcosystemDto, UpdateEcosystemInvitationDto } from './dtos/send-ecosystem-invitation';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { User } from '../authz/decorators/user.decorator';
 import { CreateEcosystemDto, PaginationGetAllEcosystem } from 'apps/ecosystem/dtos/create-ecosystem-dto';
 import { DeleteEcosystemOrgDto } from './dtos/delete-ecosystem-users';
@@ -813,7 +813,7 @@ export class EcosystemController {
     description: 'Template details fetched successfully'
   })
   async getTemplateByIntentId(
-   @Param(
+    @Param(
       'orgId',
       TrimStringParamPipe,
       new ParseUUIDPipe({

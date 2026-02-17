@@ -11,7 +11,7 @@ import {
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
 // eslint-disable-next-line camelcase
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { CreateIntentDto } from 'apps/ecosystem/dtos/create-intent.dto';
 import { UpdateIntentDto } from 'apps/ecosystem/dtos/update-intent.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/dtos/intent-template.dto';
@@ -40,7 +40,11 @@ export class EcosystemService {
    * @param userId
    * @returns All ecosystems from platform
    */
-  async getEcosystems(userId: string, pageDetail: IPaginationSortingDto, orgId:string): Promise<PaginatedResponse<IEcosystem>> {
+  async getEcosystems(
+    userId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId: string
+  ): Promise<PaginatedResponse<IEcosystem>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystems', { userId, pageDetail, orgId });
   }
 

@@ -2,7 +2,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 // eslint-disable-next-line camelcase
-import { oid4vp_verifier, user } from '@prisma/client';
+import { oid4vp_verifier, user } from '@credebl/prisma/client';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
 import { VerificationPresentationQueryDto } from './dtos/oid4vc-verifier-presentation.dto';
 import { IPresentationRequest } from '@credebl/common/interfaces/oid4vp-verification';

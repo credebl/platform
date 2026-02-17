@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { BaseService } from 'libs/service/base.service';
 import { AgentSpinupDto } from './dto/agent-service.dto';
 import { CreateTenantDto } from './dto/create-tenant.dto';

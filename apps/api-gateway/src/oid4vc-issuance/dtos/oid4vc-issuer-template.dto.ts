@@ -16,7 +16,7 @@ import {
 } from 'class-validator';
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { SignerOption } from '@prisma/client';
+import { SignerOption } from '@credebl/prisma/client';
 import { AttributeType, CredentialFormat } from '@credebl/enum/enum';
 
 class CredentialAttributeDisplayDto {

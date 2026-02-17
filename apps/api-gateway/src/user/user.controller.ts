@@ -32,7 +32,7 @@ import { Response } from 'express';
 import { CommonService } from '@credebl/common';
 import IResponse from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 import { AcceptRejectInvitationDto } from './dto/accept-reject-invitation.dto';

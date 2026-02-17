@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
 import { X509CertificateRepository } from './repositories/x509.repository';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import {

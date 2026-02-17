@@ -35,7 +35,7 @@ import {
   token,
   user,
   user_org_roles
-} from '@prisma/client';
+} from '@credebl/prisma/client';
 import { ProviderType, UserRole } from '@credebl/enum/enum';
 
 import { PrismaService } from '@credebl/prisma-service';

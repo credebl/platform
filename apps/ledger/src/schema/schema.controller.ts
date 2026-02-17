@@ -8,7 +8,7 @@ import {
   ISchemaSearchPayload,
   SaveSchemaPayload
 } from './interfaces/schema-payload.interface';
-import { Prisma, schema } from '@prisma/client';
+import { Prisma, schema } from '@credebl/prisma/client';
 import {
   ICredDefWithPagination,
   ISchemaData,
@@ -18,7 +18,6 @@ import {
 import { IschemaPayload } from './interfaces/schema.interface';
 import { ISchemaId } from './schema.interface';
 import { UpdateSchemaDto } from 'apps/api-gateway/src/schema/dtos/update-schema-dto';
-
 
 @Controller('schema')
 export class SchemaController {
@@ -31,14 +30,14 @@ export class SchemaController {
   }
 
   @MessagePattern({ cmd: 'get-schemas-details' })
-  async getSchemasDetails(payload: {templateIds: string[]}): Promise<schema[]> {
+  async getSchemasDetails(payload: { templateIds: string[] }): Promise<schema[]> {
     const { templateIds } = payload;
     return this.schemaService.getSchemaDetails(templateIds);
   }
 
   @MessagePattern({ cmd: 'get-schemas-details-by-name' })
-  async getSchemasDetailsBySchemaName(payload:{schemaName:string, orgId:string}): Promise<ISchemaId[]> {
-    const {orgId, schemaName} = payload;
+  async getSchemasDetailsBySchemaName(payload: { schemaName: string; orgId: string }): Promise<ISchemaId[]> {
+    const { orgId, schemaName } = payload;
     return this.schemaService.getSchemaDetailsBySchemaName(schemaName, orgId);
   }
 
@@ -66,26 +65,28 @@ export class SchemaController {
   }
 
   @MessagePattern({ cmd: 'schema-exist' })
-  async schemaExist(payload: ISchemaExist): Promise<{
-    id: string;
-    createDateTime: Date;
-    createdBy: string;
-    lastChangedDateTime: Date;
-    lastChangedBy: string;
-    name: string;
-    version: string;
-    attributes: string;
-    schemaLedgerId: string;
-    publisherDid: string;
-    issuerId: string;
-    orgId: string;
-    ledgerId: string;
-  }[]> {
+  async schemaExist(payload: ISchemaExist): Promise<
+    {
+      id: string;
+      createDateTime: Date;
+      createdBy: string;
+      lastChangedDateTime: Date;
+      lastChangedBy: string;
+      name: string;
+      version: string;
+      attributes: string;
+      schemaLedgerId: string;
+      publisherDid: string;
+      issuerId: string;
+      orgId: string;
+      ledgerId: string;
+    }[]
+  > {
     return this.schemaService.schemaExist(payload);
   }
 
   @MessagePattern({ cmd: 'archive-schemas' })
-  async archiveSchemas(payload: {did: string}): Promise<Prisma.BatchPayload> {
+  async archiveSchemas(payload: { did: string }): Promise<Prisma.BatchPayload> {
     return this.schemaService.archiveSchemas(payload.did);
   }
 
@@ -95,12 +96,12 @@ export class SchemaController {
   }
 
   @MessagePattern({ cmd: 'get-schema-record-by-schema-id' })
-  async getSchemaRecordBySchemaId(payload: {schemaId: string}): Promise<schema> {
+  async getSchemaRecordBySchemaId(payload: { schemaId: string }): Promise<schema> {
     return this.schemaService.getSchemaBySchemaId(payload.schemaId);
   }
 
-@MessagePattern({ cmd: 'update-schema' })
-  updateSchema(payload:{schemaDetails:UpdateSchemaDto}): Promise<object> {
+  @MessagePattern({ cmd: 'update-schema' })
+  updateSchema(payload: { schemaDetails: UpdateSchemaDto }): Promise<object> {
     return this.schemaService.updateSchema(payload.schemaDetails);
   }
 }

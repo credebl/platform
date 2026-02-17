@@ -22,7 +22,7 @@ import {
   IGetAllOrgsPayload,
   IAllOrgsNameId
 } from '@credebl/common/interfaces/organization.interface';
-import { organisation, user } from '@prisma/client';
+import { organisation, user } from '@credebl/prisma/client';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';

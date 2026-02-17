@@ -34,7 +34,7 @@ import IResponseType, { IResponse } from '@credebl/common/interfaces/response.in
 import { AgentSpinupDto, SignDataDto, VerifySignatureDto } from './dto/agent-service.dto';
 import { Response } from 'express';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { User } from '../authz/decorators/user.decorator';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';

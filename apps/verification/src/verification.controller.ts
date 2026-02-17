@@ -10,7 +10,7 @@ import {
   IProofPresentationList,
   IVerificationRecords
 } from '@credebl/common/interfaces/verification.interface';
-import { presentations, user } from '@prisma/client';
+import { presentations, user } from '@credebl/prisma/client';
 
 import { Controller } from '@nestjs/common';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';

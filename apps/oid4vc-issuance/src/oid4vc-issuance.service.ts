@@ -23,7 +23,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { map } from 'rxjs';
 import { getAgentUrl } from '@credebl/common/common.utils';
-import { credential_templates, oidc_issuer, Prisma, SignerOption, user } from '@prisma/client';
+import { credential_templates, oidc_issuer, Prisma, SignerOption, user } from '@credebl/prisma/client';
 import {
   IAgentOIDCIssuerCreate,
   IssuerCreation,

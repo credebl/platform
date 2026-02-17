@@ -8,7 +8,7 @@ import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
 import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';

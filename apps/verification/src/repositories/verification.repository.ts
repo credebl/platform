@@ -7,8 +7,16 @@ import {
 } from '../interfaces/verification.interface';
 import { IProofPresentationsListCount, IVerificationRecords } from '@credebl/common/interfaces/verification.interface';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-// eslint-disable-next-line camelcase
-import { Prisma, agent_invitations, org_agents, organisation, platform_config, presentations } from '@prisma/client';
+/* eslint-disable camelcase */
+import {
+  Prisma,
+  agent_invitations,
+  org_agents,
+  organisation,
+  platform_config,
+  presentations
+} from '@credebl/prisma/client';
+/* eslint-enable camelcase */
 
 import { CommonService } from '@credebl/common';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';

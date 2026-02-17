@@ -52,7 +52,7 @@ import { ISessionData } from 'apps/user/interfaces/user.interface';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { User } from './decorators/user.decorator';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import * as useragent from 'express-useragent';
 import { EmptyStringParamPipe, TrimStringParamPipe } from '@credebl/common/cast.helper';
 

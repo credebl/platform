@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@credebl/prisma/client';
 
 export interface IProofPresentationsListCount {
   proofRequestsCount: number;

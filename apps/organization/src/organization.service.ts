@@ -1,6 +1,6 @@
 /* eslint-disable prefer-destructuring */
 // eslint-disable-next-line camelcase
-import { RecordType, org_invitations, organisation, user } from '@prisma/client';
+import { RecordType, org_invitations, organisation, user } from '@credebl/prisma/client';
 import {
   Injectable,
   Logger,

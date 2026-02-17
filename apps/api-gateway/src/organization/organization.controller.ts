@@ -37,7 +37,7 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';

@@ -1,4 +1,4 @@
-import { organisation } from '@prisma/client';
+import { organisation } from '@credebl/prisma/client';
 import { Claim } from './oid4vc-template.interfaces';
 
 export interface OrgAgent {

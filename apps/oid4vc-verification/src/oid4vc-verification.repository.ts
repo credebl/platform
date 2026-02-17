@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { oid4vp_verifier, org_agents } from '@prisma/client';
+import { oid4vp_verifier, org_agents } from '@credebl/prisma/client';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrgAgent } from '../interfaces/oid4vp-verifier.interfaces';

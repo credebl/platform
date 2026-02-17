@@ -49,4 +49,4 @@ import { ConfigModule } from '@nestjs/config';
     }
   ]
 })
-export class Oid4vpModule {}
+export class Oid4vcVerificationModule {}

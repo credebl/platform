@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { oidc_issuer, Prisma } from '@prisma/client';
+import { oidc_issuer, Prisma } from '@credebl/prisma/client';
 import { batchCredentialIssuanceDefault } from '../../constant/issuance';
 import { CreateOidcCredentialOffer } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { IssuerResponse } from 'apps/oid4vc-issuance/interfaces/oid4vc-issuance.interfaces';

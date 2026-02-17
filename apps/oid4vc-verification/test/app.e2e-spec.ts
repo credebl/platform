@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { Oid4vcVerificationModule } from './../src/oid4vc-verification.module';
+import { Oid4vcVerificationModule } from '../src/oid4vc-verification.module';
 
 describe('Oid4vcVerificationController (e2e)', () => {
   let app: INestApplication;

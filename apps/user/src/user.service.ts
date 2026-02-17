@@ -25,7 +25,7 @@ import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 // eslint-disable-next-line camelcase
-import { client_aliases, RecordType, session, user, user_org_roles } from '@prisma/client';
+import { client_aliases, RecordType, session, user, user_org_roles } from '@credebl/prisma/client';
 import {
   ICheckUserDetails,
   OrgInvitations,

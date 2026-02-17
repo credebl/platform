@@ -1,5 +1,5 @@
 import { OpenId4VcVerificationPresentationState } from '@credebl/common/interfaces/oid4vp-verification';
-import { organisation } from '@prisma/client';
+import { organisation } from '@credebl/prisma/client';
 export interface OrgAgent {
   organisation: organisation;
   id: string;

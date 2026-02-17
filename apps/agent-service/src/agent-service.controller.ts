@@ -27,7 +27,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import { MessagePattern } from '@nestjs/microservices';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import {
   IX509ImportCertificateOptionsDto,
   x509CertificateDecodeDto,

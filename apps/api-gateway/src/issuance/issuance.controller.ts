@@ -74,7 +74,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
 import { RpcException } from '@nestjs/microservices';
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { IGetAllIssuedCredentialsDto } from './dtos/get-all-issued-credentials.dto';
 import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { SchemaType } from '@credebl/enum/enum';

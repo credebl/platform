@@ -16,9 +16,10 @@ import {
   IConnectionSearchCriteria
 } from '../interfaces/IConnectionSearch.interface';
 import { BasicMessageDto, QuestionDto } from './dtos/question-answer.dto';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { firstValueFrom } from 'rxjs';
+
 @Injectable()
 export class ConnectionService extends BaseService {
   constructor(

@@ -49,7 +49,7 @@ import { GetAllProofRequestsDto } from './dto/get-all-proof-requests.dto';
 import { IProofRequestSearchCriteria } from './interfaces/verification.interface';
 import { API_Version, ProofRequestType, SortFields } from './enum/verification.enum';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { Validator } from '@credebl/common/validator';
 

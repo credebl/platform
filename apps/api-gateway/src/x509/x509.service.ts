@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
 
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 
 import { NATSClient } from '@credebl/common/NATSClient';
 import {

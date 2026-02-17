@@ -42,7 +42,7 @@ import { CloudBaseWalletConfigureDto } from './dtos/configure-base-wallet.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { Validator } from '@credebl/common/validator';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { UserRoleGuard } from '../authz/guards/user-role.guard';

@@ -3,14 +3,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 // eslint-disable-next-line camelcase
-import { user_org_roles } from '@prisma/client';
-import { Prisma } from '@prisma/client';
+import { user_org_roles } from '@credebl/prisma/client';
+import { Prisma } from '@credebl/prisma/client';
 
 type UserOrgRolesWhereUniqueInput = Prisma.user_org_rolesWhereUniqueInput;
 
 @Injectable()
 export class UserOrgRolesRepository {
-  constructor(private readonly prisma: PrismaService, private readonly logger: Logger) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: Logger
+  ) {}
 
   /**
    *
@@ -19,13 +22,12 @@ export class UserOrgRolesRepository {
    */
   // eslint-disable-next-line camelcase
   async createUserOrgRole(userId: string, roleId: string, orgId?: string, idpRoleId?: string): Promise<user_org_roles> {
-    
     try {
       const data: {
         orgRole: { connect: { id: string } };
         user: { connect: { id: string } };
         organisation?: { connect: { id: string } };
-        idpRoleId?: string
+        idpRoleId?: string;
       } = {
         orgRole: { connect: { id: roleId } },
         user: { connect: { id: userId } }
@@ -42,9 +44,8 @@ export class UserOrgRolesRepository {
       const saveResponse = await this.prisma.user_org_roles.create({
         data
       });
-     
+
       return saveResponse;
-     
     } catch (error) {
       this.logger.error(`UserOrgRolesRepository:: createUserOrgRole: ${error}`);
       throw new InternalServerErrorException('User Org Role not created');
@@ -102,5 +103,4 @@ export class UserOrgRolesRepository {
       throw new InternalServerErrorException(error);
     }
   }
-
 }

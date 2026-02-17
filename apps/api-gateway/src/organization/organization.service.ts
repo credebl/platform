@@ -5,7 +5,7 @@ import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { organisation, user } from '@prisma/client';
+import { organisation, user } from '@credebl/prisma/client';
 import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
 import {

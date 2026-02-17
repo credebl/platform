@@ -1,6 +1,6 @@
 import { Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
+import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@credebl/prisma/internal/prismaNamespace';
 import { Observable, throwError } from 'rxjs';
 
 @Catch()
@@ -35,7 +35,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
           case 'P2011': // Null constraint violation on the {constraint}
           case 'P2017': // The records for relation {relation_name} between the {parent_name} and {child_name} models are not connected.
           case 'P2021': // The table {table} does not exist in the current database.
-          case 'P2022': // The column {column} does not exist in the current database.          
+          case 'P2022': // The column {column} does not exist in the current database.
             httpStatus = HttpStatus.BAD_REQUEST;
             message = exception?.response?.message || exception?.message;
             break;

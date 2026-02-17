@@ -25,7 +25,7 @@ import {
 } from './interfaces/verification.interface';
 import { VerificationRepository } from './repositories/verification.repository';
 import { ATTRIBUTE_NAME_REGEX, CommonConstants } from '@credebl/common/common.constant';
-import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@prisma/client';
+import { RecordType, agent_invitations, org_agents, organisation, presentations, user } from '@credebl/prisma/client';
 import { AutoAccept, VerificationProcessState } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import * as QRCode from 'qrcode';

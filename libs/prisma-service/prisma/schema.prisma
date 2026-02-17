@@ -1,15 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("POOL_DATABASE_URL")
-  directUrl = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 model user {
-  id                     String                   @id(map: "PK_cace4a159ff9f2512dd42373760") @default(uuid()) @db.Uuid
   createDateTime         DateTime                 @default(now()) @db.Timestamptz(6)
   lastChangedDateTime    DateTime                 @default(now()) @db.Timestamptz(6)
   firstName              String?                  @db.VarChar(500)
@@ -19,7 +17,6 @@ model user {
   verificationCode       String?                  @db.VarChar(500)
   isEmailVerified        Boolean                  @default(false)
   supabaseUserId         String?                  @db.VarChar(500)
-  keycloakUserId         String?                  @db.VarChar(500)
   clientId               String?                  @db.VarChar(500)
   clientSecret           String?                  @db.VarChar(500)
   profileImg             String?
@@ -27,17 +24,19 @@ model user {
   isFidoVerified         Boolean                  @default(false)
   publicProfile          Boolean                  @default(false)
   password               String?                  @db.VarChar
+  id                     String                   @id(map: "PK_cace4a159ff9f2512dd42373760") @default(uuid()) @db.Uuid
+  keycloakUserId         String?                  @db.VarChar(500)
+  accounts               account?
+  cloud_wallet_user_info cloud_wallet_user_info[]
+  ecosystemInvitations   ecosystem_invitations[]
+  ecosystemOrgs          ecosystem_orgs[]
   orgInvitations         org_invitations[]
+  sessions               session[]
+  token                  token[]
   user_activities        user_activity[]
   userDevices            user_devices[]
   userOrgRoles           user_org_roles[]
-  token                  token[]
   user_role_mapping      user_role_mapping[]
-  cloud_wallet_user_info cloud_wallet_user_info[]
-  accounts               account[]
-  sessions               session[]
-  ecosystemInvitations   ecosystem_invitations[]
-  ecosystemOrgs          ecosystem_orgs[]
 }
 
 model account {
@@ -46,12 +45,12 @@ model account {
   type              String?
   provider          String
   providerAccountId String
-  tokenType         String?
   scope             String?
-  idToken           String?
-  sessionState      String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  idToken           String?
+  sessionState      String?
+  tokenType         String?
   user              user      @relation(fields: [userId], references: [id])
   sessions          session[]
 }
@@ -61,43 +60,42 @@ model session {
   sessionToken String
   userId       String    @db.Uuid
   expires      Int
-  refreshToken String?
-  user         user      @relation(fields: [userId], references: [id])
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   accountId    String?   @db.Uuid
+  refreshToken String?
   sessionType  String?
-  account      account?  @relation(fields: [accountId], references: [id])
   expiresAt    DateTime? @db.Timestamp(6)
   clientInfo   Json?
+  account      account?  @relation(fields: [accountId], references: [id])
+  user         user      @relation(fields: [userId], references: [id])
 }
 
 model token {
   id        String   @id @default(uuid()) @db.Uuid
   token     String   @unique
   userId    String   @db.Uuid
-  user      user     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   expiresAt DateTime
+  user      user     @relation(fields: [userId], references: [id])
 }
 
 model user_activity {
-  id                  String       @id @default(uuid()) @db.Uuid
-  userId              String       @db.Uuid
-  orgId               String       @db.Uuid
   action              String
   details             String
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           String       @db.Uuid
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String       @db.Uuid
   deletedAt           DateTime?    @db.Timestamp(6)
+  id                  String       @id @default(uuid()) @db.Uuid
+  userId              String       @db.Uuid
+  orgId               String       @db.Uuid
+  createdBy           String       @db.Uuid
+  lastChangedBy       String       @db.Uuid
   organisation        organisation @relation(fields: [orgId], references: [id])
   user                user         @relation(fields: [userId], references: [id])
 }
 
 model org_roles {
-  id                  String           @id @default(uuid()) @db.Uuid
   name                String           @unique
   description         String
   createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
@@ -105,6 +103,7 @@ model org_roles {
   lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
   lastChangedBy       String           @default("1")
   deletedAt           DateTime?        @db.Timestamp(6)
+  id                  String           @id @default(uuid()) @db.Uuid
   userOrgRoles        user_org_roles[]
 }
 
@@ -120,86 +119,83 @@ model user_org_roles {
 }
 
 model organisation {
-  id                    String                  @id @default(uuid()) @db.Uuid
-  createDateTime        DateTime                @default(now()) @db.Timestamptz(6)
-  createdBy             String                  @db.Uuid
-  lastChangedDateTime   DateTime                @default(now()) @db.Timestamptz(6)
-  lastChangedBy         String                  @db.Uuid
-  name                  String?                 @db.VarChar(500)
-  description           String?                 @db.VarChar(500)
-  orgSlug               String?                 @unique
-  logoUrl               String?
-  website               String?                 @db.VarChar
-  publicProfile         Boolean                 @default(false)
-  idpId                 String?                 @db.VarChar(500)
-  clientId              String?                 @db.VarChar(500)
-  clientSecret          String?                 @db.VarChar(500)
-  registrationNumber    String?                 @db.VarChar(100)
-  appLaunchDetails      Json?
-  countryId             Int?
-  countries             countries?              @relation(fields: [countryId], references: [id])
-  stateId               Int?
-  states                states?                 @relation(fields: [stateId], references: [id])
-  cityId                Int?
-  cities                cities?                 @relation(fields: [cityId], references: [id])
+  createDateTime         DateTime                 @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime    DateTime                 @default(now()) @db.Timestamptz(6)
+  name                   String?                  @db.VarChar(500)
+  description            String?                  @db.VarChar(500)
+  orgSlug                String?                  @unique
+  logoUrl                String?
+  website                String?                  @db.VarChar
+  publicProfile          Boolean                  @default(false)
+  id                     String                   @id @default(uuid()) @db.Uuid
+  createdBy              String                   @db.Uuid
+  lastChangedBy          String                   @db.Uuid
+  clientId               String?                  @db.VarChar(500)
+  clientSecret           String?                  @db.VarChar(500)
+  idpId                  String?                  @db.VarChar(500)
+  registrationNumber     String?                  @db.VarChar(100)
+  cityId                 Int?
+  countryId              Int?
+  stateId                Int?
+  appLaunchDetails       Json?
+  agent_invitations      agent_invitations[]
   connections            connections[]
+  credential_definition  credential_definition[]
   credentials            credentials[]
-  org_agents             org_agents[]
+  ecosystem_invitations  ecosystem_invitations[]
+  ecosystemOrgs          ecosystem_orgs[]
+  file_upload            file_upload[]
+  intent_templates       intent_templates[]
+  oid4vc_credentials     oid4vc_credentials[]
+  oid4vp_presentations   oid4vp_presentations[]
+  org_agents             org_agents?
   orgInvitations         org_invitations[]
+  cities                 cities?                  @relation(fields: [cityId], references: [id])
+  countries              countries?               @relation(fields: [countryId], references: [id])
+  states                 states?                  @relation(fields: [stateId], references: [id])
   presentations          presentations[]
   schema                 schema[]
   user_activities        user_activity[]
   userOrgRoles           user_org_roles[]
-  agent_invitations      agent_invitations[]
-  credential_definition  credential_definition[]
-  file_upload            file_upload[]
-  oid4vc_credentials     oid4vc_credentials[]
-  oid4vp_presentations   oid4vp_presentations[]
   verification_templates verification_templates[]
-  intent_templates       intent_templates[]
-  ecosystemOrgs          ecosystem_orgs[]
-  ecosystem_invitations  ecosystem_invitations[]
 }
 
 model org_invitations {
-  id                  String       @id @default(uuid()) @db.Uuid
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
-  createdBy           String       @db.Uuid
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String       @db.Uuid
   deletedAt           DateTime?    @db.Timestamp(6)
-  userId              String       @db.Uuid
-  orgId               String       @db.Uuid
   status              String
   orgRoles            String[]
   email               String?
+  id                  String       @id @default(uuid()) @db.Uuid
+  userId              String       @db.Uuid
+  orgId               String       @db.Uuid
+  createdBy           String       @db.Uuid
+  lastChangedBy       String       @db.Uuid
   organisation        organisation @relation(fields: [orgId], references: [id])
   user                user         @relation(fields: [userId], references: [id])
 }
 
 model user_devices {
-  id                  String    @id(map: "PK_c9e7e648903a9e537347aba4371") @default(uuid()) @db.Uuid
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           String    @db.Uuid
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String    @db.Uuid
   devices             Json?     @default("[]")
   credentialId        String?   @unique(map: "UQ_7c903f5e362fe8fd3d3edba17b5") @db.VarChar
   deviceFriendlyName  String?   @db.VarChar
-  userId              String?   @db.Uuid
   deletedAt           DateTime? @db.Timestamp(6)
   authCounter         Int       @default(0)
+  id                  String    @id(map: "PK_c9e7e648903a9e537347aba4371") @default(uuid()) @db.Uuid
+  userId              String?   @db.Uuid
+  createdBy           String    @db.Uuid
+  lastChangedBy       String    @db.Uuid
   user                user?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_e12ac4f8016243ac71fd2e415af")
 }
 
 model platform_config {
-  id                  String    @id @default(uuid()) @db.Uuid
   externalIp          String    @db.VarChar
-  inboundEndpoint     String?   @db.VarChar
   username            String    @db.VarChar
   sgApiKey            String    @db.VarChar
   emailFrom           String    @db.VarChar
-  isEcosystemEnabled  Boolean   @default(false)
   apiEndpoint         String    @db.VarChar
   tailsFileServer     String    @db.VarChar
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
@@ -207,40 +203,43 @@ model platform_config {
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedBy       String    @default("1")
   deletedAt           DateTime? @db.Timestamp(6)
+  id                  String    @id @default(uuid()) @db.Uuid
+  inboundEndpoint     String?   @db.VarChar
+  isEcosystemEnabled  Boolean   @default(false)
 }
 
 model org_agents {
-  id                  String              @id @default(uuid()) @db.Uuid
   createDateTime      DateTime            @default(now()) @db.Timestamptz(6)
-  createdBy           String              @db.Uuid
   lastChangedDateTime DateTime            @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String              @db.Uuid
   orgDid              String?             @db.VarChar
   verkey              String?             @db.VarChar
   agentEndPoint       String?             @db.VarChar
-  agentId             String?             @db.Uuid
   isDidPublic         Boolean?
   agentSpinUpStatus   Int?
   agentOptions        Bytes?
   walletName          String?             @db.VarChar
   tenantId            String?
   apiKey              String?
+  id                  String              @id @default(uuid()) @db.Uuid
+  agentId             String?             @db.Uuid
   agentsTypeId        String?             @db.Uuid
   orgId               String?             @unique @db.Uuid
   orgAgentTypeId      String?             @db.Uuid
   ledgerId            String?             @db.Uuid
+  createdBy           String              @db.Uuid
+  lastChangedBy       String              @db.Uuid
+  webhookUrl          String?             @db.VarChar
   didDocument         Json?
   agent_invitations   agent_invitations[]
+  oid4vp_verifiers    oid4vp_verifier[]
+  oidc_issuer         oidc_issuer[]
   agents              agents?             @relation(fields: [agentId], references: [id])
   agents_type         agents_type?        @relation(fields: [agentsTypeId], references: [id])
   ledgers             ledgers?            @relation(fields: [ledgerId], references: [id])
   org_agent_type      org_agents_type?    @relation(fields: [orgAgentTypeId], references: [id])
   organisation        organisation?       @relation(fields: [orgId], references: [id])
-  webhookUrl          String?             @db.VarChar
   org_dids            org_dids[]
-  oidc_issuer         oidc_issuer[]
   x509_certificates   x509_certificates[]
-  oid4vp_verifiers    oid4vp_verifier[]
 }
 
 model org_dids {
@@ -250,31 +249,30 @@ model org_dids {
   lastChangedDateTime DateTime   @default(now()) @db.Timestamptz(6)
   lastChangedBy       String     @db.Uuid
   orgId               String     @db.Uuid
-  isPrimaryDid        Boolean
   did                 String     @db.VarChar(500)
   didDocument         Json
   orgAgentId          String     @db.Uuid
+  isPrimaryDid        Boolean
   org_agents          org_agents @relation(fields: [orgAgentId], references: [id])
 }
 
 model org_agents_type {
-  id                  String       @id @default(uuid()) @db.Uuid
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
   agent               String       @db.VarChar(500)
+  id                  String       @id @default(uuid()) @db.Uuid
   org_agents          org_agents[]
 }
 
 model agents_type {
-  id                  String       @id @default(uuid()) @db.Uuid
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
   agent               String       @db.VarChar(500)
+  id                  String       @id @default(uuid()) @db.Uuid
   org_agents          org_agents[]
 }
 
 model ledgers {
-  id                  String       @id @default(uuid()) @db.Uuid
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
   name                String       @db.VarChar
@@ -284,169 +282,170 @@ model ledgers {
   networkString       String       @db.VarChar
   nymTxnEndpoint      String       @db.VarChar
   indyNamespace       String?      @db.VarChar
+  id                  String       @id @default(uuid()) @db.Uuid
   networkUrl          String?      @db.VarChar
   org_agents          org_agents[]
   schema              schema[]
 }
 
 model agents {
-  id                  String       @id @default(uuid()) @db.Uuid
   createDateTime      DateTime     @default(now()) @db.Timestamptz(6)
   lastChangedDateTime DateTime     @default(now()) @db.Timestamptz(6)
   name                String
+  id                  String       @id @default(uuid()) @db.Uuid
   org_agents          org_agents[]
 }
 
 model schema {
-  id                    String                  @id(map: "PK_c9e7e648903a9e537347aba4372") @default(uuid()) @db.Uuid
   createDateTime        DateTime                @default(now()) @db.Timestamptz(6)
-  createdBy             String                  @db.Uuid
   lastChangedDateTime   DateTime                @default(now()) @db.Timestamptz(6)
-  lastChangedBy         String                  @db.Uuid
   name                  String                  @db.VarChar
   version               String                  @db.VarChar
   attributes            String
   schemaLedgerId        String                  @db.VarChar
   publisherDid          String                  @db.VarChar
   issuerId              String                  @db.VarChar
+  id                    String                  @id(map: "PK_c9e7e648903a9e537347aba4372") @default(uuid()) @db.Uuid
   orgId                 String?                 @db.Uuid
-  organisation          organisation?           @relation(fields: [orgId], references: [id], onDelete: SetNull)
-  ledgers               ledgers?                @relation(fields: [ledgerId], references: [id])
+  createdBy             String                  @db.Uuid
+  lastChangedBy         String                  @db.Uuid
   ledgerId              String?                 @db.Uuid
   type                  String?                 @db.VarChar
   isSchemaArchived      Boolean                 @default(false)
-  credential_definition credential_definition[]
   alias                 String?
+  credential_definition credential_definition[]
+  ledgers               ledgers?                @relation(fields: [ledgerId], references: [id])
+  organisation          organisation?           @relation(fields: [orgId], references: [id])
 }
 
 model credential_definition {
-  id                     String        @id(map: "PK_c9e7e648903a9e537347aba4373") @default(uuid()) @db.Uuid
   createDateTime         DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy              String        @db.Uuid
   lastChangedDateTime    DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy          String        @db.Uuid
   credentialDefinitionId String        @db.VarChar
   tag                    String        @db.VarChar
   schemaLedgerId         String        @db.VarChar
-  schemaId               String        @db.Uuid
   revocable              Boolean       @default(false)
-  organisation           organisation? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  id                     String        @id(map: "PK_c9e7e648903a9e537347aba4373") @default(uuid()) @db.Uuid
+  createdBy              String        @db.Uuid
+  lastChangedBy          String        @db.Uuid
+  schemaId               String        @db.Uuid
   orgId                  String?       @db.Uuid
+  organisation           organisation? @relation(fields: [orgId], references: [id])
   schema                 schema        @relation(fields: [schemaId], references: [id])
 }
 
 model shortening_url {
+  referenceId         String?   @unique @db.VarChar(50)
+  type                String?   @db.VarChar
   id                  String    @id @default(uuid()) @db.Uuid
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  referenceId         String?   @unique @db.VarChar(50)
-  invitationPayload   Json?
-  type                String?   @db.VarChar
   deletedAt           DateTime? @db.Timestamp(6)
+  invitationPayload   Json?
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
 }
 
 model agent_invitations {
-  id                   String       @id @default(uuid()) @db.Uuid
-  orgId                String       @db.Uuid
-  agentId              String       @db.Uuid
   connectionInvitation String
   multiUse             Boolean
   createDateTime       DateTime     @default(now()) @db.Timestamptz(6)
   createdBy            Int          @default(1)
   lastChangedDateTime  DateTime     @default(now()) @db.Timestamptz(6)
   lastChangedBy        Int          @default(1)
-  org_agents           org_agents   @relation(fields: [agentId], references: [id])
-  organisation         organisation @relation(fields: [orgId], references: [id])
+  id                   String       @id @default(uuid()) @db.Uuid
+  agentId              String       @db.Uuid
+  orgId                String       @db.Uuid
   recipientKey         String?
   invitationDid        String?
+  org_agents           org_agents   @relation(fields: [agentId], references: [id])
+  organisation         organisation @relation(fields: [orgId], references: [id])
 }
 
 model connections {
-  id                  String          @id @default(uuid()) @db.Uuid
   createDateTime      DateTime        @default(now()) @db.Timestamptz(6)
-  createdBy           String          @db.Uuid
   lastChangedDateTime DateTime        @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String          @db.Uuid
   connectionId        String          @unique
-  theirLabel          String          @default("")
   state               String
+  id                  String          @id @default(uuid()) @db.Uuid
   orgId               String?         @db.Uuid
+  createdBy           String          @db.Uuid
+  lastChangedBy       String          @db.Uuid
+  theirLabel          String          @default("")
   organisation        organisation?   @relation(fields: [orgId], references: [id])
-  presentations       presentations[]
   credentials         credentials[]
+  presentations       presentations[]
 }
 
 model credentials {
-  id                   String        @id @default(uuid()) @db.Uuid
   createDateTime       DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy            String        @db.Uuid
   lastChangedDateTime  DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy        String        @db.Uuid
   connectionId         String?
   threadId             String        @unique
+  id                   String        @id @default(uuid()) @db.Uuid
+  orgId                String?       @db.Uuid
+  createdBy            String        @db.Uuid
+  lastChangedBy        String        @db.Uuid
   credentialExchangeId String        @default("")
   state                String        @default("")
   schemaId             String        @default("")
   credDefId            String        @default("")
-  orgId                String?       @db.Uuid
-  organisation         organisation? @relation(fields: [orgId], references: [id])
   connections          connections?  @relation(fields: [connectionId], references: [connectionId])
+  organisation         organisation? @relation(fields: [orgId], references: [id])
 }
 
 model presentations {
-  id                  String        @id @default(uuid()) @db.Uuid
   createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy           String        @db.Uuid
   lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String        @db.Uuid
   connectionId        String?
   state               String?
   threadId            String        @unique
   isVerified          Boolean?
+  id                  String        @id @default(uuid()) @db.Uuid
+  orgId               String?       @db.Uuid
+  createdBy           String        @db.Uuid
+  lastChangedBy       String        @db.Uuid
   presentationId      String?
   schemaId            String?       @db.VarChar
-  errorMessage        String?       @db.VarChar
   emailId             String?
-  orgId               String?       @db.Uuid
-  organisation        organisation? @relation(fields: [orgId], references: [id])
+  errorMessage        String?       @db.VarChar
   connections         connections?  @relation(fields: [connectionId], references: [connectionId])
+  organisation        organisation? @relation(fields: [orgId], references: [id])
 }
 
 model file_upload {
-  id                  String        @id @default(uuid()) @db.Uuid
   name                String?
   status              String?
   upload_type         String?
   createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
-  createdBy           String        @db.Uuid
   lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String        @db.Uuid
   deletedAt           DateTime?     @db.Timestamp(6)
-  file_data           file_data[]
-  organisation        organisation? @relation(fields: [orgId], references: [id])
+  id                  String        @id @default(uuid()) @db.Uuid
   orgId               String?       @db.Uuid
+  createdBy           String        @db.Uuid
+  lastChangedBy       String        @db.Uuid
   credential_type     String?
   templateId          String?       @db.VarChar
+  file_data           file_data[]
+  organisation        organisation? @relation(fields: [orgId], references: [id])
 }
 
 model file_data {
-  id                  String      @id @default(uuid()) @db.Uuid
   referenceId         String?
-  isError             Boolean?
   error               String?
   detailError         String?
   createDateTime      DateTime    @default(now()) @db.Timestamptz(6)
-  createdBy           String      @db.Uuid
   lastChangedDateTime DateTime    @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String      @db.Uuid
   deletedAt           DateTime?   @db.Timestamp(6)
-  fileUploadId        String      @db.Uuid
-  fileUpload          file_upload @relation(fields: [fileUploadId], references: [id])
-  schemaId            String?
+  isError             Boolean?
   credDefId           String?
+  schemaId            String?
   status              Boolean     @default(false)
   credential_data     Json?
+  id                  String      @id @default(uuid()) @db.Uuid
+  fileUploadId        String      @db.Uuid
+  createdBy           String      @db.Uuid
+  lastChangedBy       String      @db.Uuid
   credential_type     String?
+  fileUpload          file_upload @relation(fields: [fileUploadId], references: [id])
 }
 
 model notification {
@@ -473,31 +472,21 @@ model ledgerConfig {
 
 model user_org_delete_activity {
   id             String     @id @default(uuid()) @db.Uuid
-  userEmail      String     @default("")
   userId         String     @db.Uuid
   orgId          String     @db.Uuid
   recordType     RecordType
   txnMetadata    Json
   deletedBy      String     @db.Uuid
   deleteDateTime DateTime   @default(now()) @db.Timestamptz(6)
-}
-
-enum RecordType {
-  VERIFICATION_RECORD
-  ISSUANCE_RECORD
-  CONNECTION
-  ECOSYSTEM_MEMBER
-  ORGANIZATION
-  WALLET
-  INVITATION
+  userEmail      String     @default("")
 }
 
 model countries {
   id           Int            @id @default(autoincrement()) @map("id")
   name         String         @map("name")
-  states       states[]
   cities       cities[]
   organisation organisation[]
+  states       states[]
 
   @@map("countries")
 }
@@ -507,9 +496,9 @@ model states {
   name         String         @map("name")
   countryId    Int            @map("country_id")
   countryCode  String         @map("country_code")
-  countries    countries      @relation(fields: [countryId], references: [id], onDelete: Cascade)
   cities       cities[]
   organisation organisation[]
+  countries    countries      @relation(fields: [countryId], references: [id], onDelete: Cascade)
 
   @@map("states")
 }
@@ -521,12 +510,12 @@ model cities {
   stateCode    String         @map("state_code")
   countryId    Int            @map("country_id")
   countryCode  String         @map("country_code")
-  state        states         @relation(fields: [stateId], references: [id], onDelete: Cascade)
   country      countries      @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  state        states         @relation(fields: [stateId], references: [id], onDelete: Cascade)
   organisation organisation[]
 
-  @@index([stateId], name: "cities_stateId_idx")
-  @@index([countryId], name: "cities_countryId_idx")
+  @@index([stateId], map: "cities_stateId_idx")
+  @@index([countryId], map: "cities_countryId_idx")
   @@map("cities")
 }
 
@@ -536,16 +525,11 @@ model user_role {
   user_role_mapping user_role_mapping[]
 }
 
-enum UserRole {
-  DEFAULT_USER
-  HOLDER
-}
-
 model user_role_mapping {
   id         String    @id @default(uuid()) @db.Uuid
   userId     String    @db.Uuid
-  user       user      @relation(fields: [userId], references: [id])
   userRoleId String    @db.Uuid
+  user       user      @relation(fields: [userId], references: [id])
   user_role  user_role @relation(fields: [userRoleId], references: [id])
 }
 
@@ -553,23 +537,18 @@ model cloud_wallet_user_info {
   id                  String          @id @default(uuid()) @db.Uuid
   label               String?
   tenantId            String?
-  email               String?         @unique() @db.VarChar(500)
+  email               String?         @unique @db.VarChar(500)
   type                CloudWalletType
   createDateTime      DateTime        @default(now()) @db.Timestamptz(6)
   createdBy           String          @db.Uuid
   lastChangedDateTime DateTime        @default(now()) @db.Timestamptz(6)
   lastChangedBy       String          @db.Uuid
   userId              String?         @db.Uuid
-  agentEndpoint       String?
   agentApiKey         String?
+  agentEndpoint       String?
   key                 String?
   connectionImageUrl  String?
   user                user?           @relation(fields: [userId], references: [id])
-}
-
-enum CloudWalletType {
-  CLOUD_BASE_WALLET
-  CLOUD_SUB_WALLET
 }
 
 model client_aliases {
@@ -584,95 +563,81 @@ model oidc_issuer {
   id                          String                 @id @default(uuid()) @db.Uuid
   createDateTime              DateTime               @default(now()) @db.Timestamptz(6)
   createdBy                   String                 @db.Uuid
-  publicIssuerId              String
   metadata                    Json
-  authorizationServerUrl      String
   orgAgentId                  String                 @db.Uuid
-  orgAgent                    org_agents             @relation(fields: [orgAgentId], references: [id])
-  templates                   credential_templates[]
+  publicIssuerId              String
   batchCredentialIssuanceSize Int                    @default(0)
+  authorizationServerUrl      String
+  templates                   credential_templates[]
+  orgAgent                    org_agents             @relation(fields: [orgAgentId], references: [id])
 
   @@index([orgAgentId])
 }
 
 model oid4vc_credentials {
-  id                         String   @id @default(uuid()) @db.Uuid
-  orgId                      String   @db.Uuid
-  issuanceSessionId          String   @unique
+  id                         String       @id @default(uuid()) @db.Uuid
+  orgId                      String       @db.Uuid
   credentialOfferId          String
   state                      String
   contextCorrelationId       String
-  createdBy                  String   @db.Uuid
-  createDateTime             DateTime @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime        DateTime @default(now()) @db.Timestamptz(6)
-  lastChangedBy              String   @db.Uuid
+  createdBy                  String       @db.Uuid
+  createDateTime             DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime        DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy              String       @db.Uuid
   credentialConfigurationIds String[]
+  issuanceSessionId          String       @unique
   issuedCredentials          String[]
-  publicIssuerId              String
-
-  organisation organisation @relation(fields: [orgId], references: [id])
+  publicIssuerId             String
+  organisation               organisation @relation(fields: [orgId], references: [id])
 
   @@index([credentialConfigurationIds], type: Gin)
 }
 
 model oid4vp_presentations {
-  id                    String   @id @default(uuid()) @db.Uuid
-  orgId                 String   @db.Uuid
-  verificationSessionId String   @unique
+  id                    String       @id @default(uuid()) @db.Uuid
+  orgId                 String       @db.Uuid
+  verificationSessionId String       @unique
   presentationId        String
   state                 String
   contextCorrelationId  String
-  createdBy             String   @db.Uuid
-  createDateTime        DateTime @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime   DateTime @default(now()) @db.Timestamptz(6)
-  lastChangedBy         String   @db.Uuid
-  publicVerifierId    String
-  organisation organisation @relation(fields: [orgId], references: [id])
-}
-
-enum SignerOption {
-  DID
-  X509_P256
-  X509_ED25519
+  createdBy             String       @db.Uuid
+  createDateTime        DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime   DateTime     @default(now()) @db.Timestamptz(6)
+  lastChangedBy         String       @db.Uuid
+  publicVerifierId      String
+  organisation          organisation @relation(fields: [orgId], references: [id])
 }
 
 model credential_templates {
-  id           String  @id @default(uuid())
+  id           String       @id @default(uuid())
   name         String
   description  String?
-  format       String // e.g. "sd_jwt", "mso_mdoc"
-  canBeRevoked Boolean @default(false)
-
-  attributes Json
-  appearance Json
-
-  issuerId String      @db.Uuid
-  issuer   oidc_issuer @relation(fields: [issuerId], references: [id])
-
+  format       String
+  canBeRevoked Boolean      @default(false)
+  attributes   Json
+  appearance   Json
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  issuerId     String       @db.Uuid
   signerOption SignerOption
+  issuer       oidc_issuer  @relation(fields: [issuerId], references: [id])
 }
 
 model x509_certificates {
-  id String @id @default(uuid())
-
-  orgAgentId String     @db.Uuid
-  org_agents org_agents @relation(fields: [orgAgentId], references: [id])
-
-  keyType   String // "p256", "ed25519"
-  status    String //e.g "Active", "Pending activation", "InActive" 
-  validFrom DateTime
-
-  expiry            DateTime
-  certificateBase64 String
-  isImported        Boolean  @default(false)
-  keyId     String?
-
-  createdAt           DateTime @default(now())
-  createdBy           String   @db.Uuid
-  lastChangedDateTime DateTime @updatedAt
-  lastChangedBy       String   @db.Uuid
+  id                  String     @id @default(uuid())
+  orgAgentId          String     @db.Uuid
+  keyType             String
+  status              String
+  validFrom           DateTime
+  expiry              DateTime
+  certificateBase64   String
+  isImported          Boolean    @default(false)
+  createdAt           DateTime   @default(now())
+  createdBy           String     @db.Uuid
+  lastChangedDateTime DateTime   @updatedAt
+  lastChangedBy       String     @db.Uuid
+  keyId               String?
+  org_agents          org_agents @relation(fields: [orgAgentId], references: [id])
 }
 
 model oid4vp_verifier {
@@ -691,45 +656,45 @@ model oid4vp_verifier {
 }
 
 model verification_templates {
-  id                  String              @id @default(uuid()) @db.Uuid
-  name                String              @db.VarChar(500)
+  id                  String             @id @default(uuid()) @db.Uuid
+  name                String             @db.VarChar(500)
   templateJson        Json
-  orgId               String              @db.Uuid
-  createDateTime      DateTime            @default(now()) @db.Timestamptz(6)
-  createdBy           String              @db.Uuid
-  lastChangedDateTime DateTime            @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String              @db.Uuid
-  organisation        organisation        @relation(fields: [orgId], references: [id])
+  orgId               String             @db.Uuid
+  createDateTime      DateTime           @default(now()) @db.Timestamptz(6)
+  createdBy           String             @db.Uuid
+  lastChangedDateTime DateTime           @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String             @db.Uuid
   signerOption        SignerOption
   intentTemplates     intent_templates[]
+  organisation        organisation       @relation(fields: [orgId], references: [id])
 
   @@index([orgId])
 }
 
 model intents {
   id                  String             @id @default(uuid()) @db.Uuid
-  ecosystemId String @db.Uuid
   name                String             @db.VarChar(500)
   description         String?
   createDateTime      DateTime           @default(now()) @db.Timestamptz(6)
   createdBy           String             @db.Uuid
   lastChangedDateTime DateTime           @default(now()) @db.Timestamptz(6)
   lastChangedBy       String             @db.Uuid
-  ecosystem ecosystem @relation(fields: [ecosystemId], references: [id])
+  ecosystemId         String             @db.Uuid
   intentTemplates     intent_templates[]
+  ecosystem           ecosystem          @relation(fields: [ecosystemId], references: [id])
 }
 
 model intent_templates {
   id                  String                 @id @default(uuid()) @db.Uuid
-  orgId               String?                 @db.Uuid
+  orgId               String?                @db.Uuid
   intentId            String                 @db.Uuid
   templateId          String                 @db.Uuid
   createDateTime      DateTime               @default(now()) @db.Timestamptz(6)
   createdBy           String                 @db.Uuid
   lastChangedDateTime DateTime               @default(now()) @db.Timestamptz(6)
   lastChangedBy       String                 @db.Uuid
-  organisation        organisation?           @relation(fields: [orgId], references: [id])
   intent              intents                @relation(fields: [intentId], references: [id])
+  organisation        organisation?          @relation(fields: [orgId], references: [id])
   template            verification_templates @relation(fields: [templateId], references: [id])
 
   @@index([orgId])
@@ -738,76 +703,73 @@ model intent_templates {
 }
 
 model ecosystem {
-  id                  String    @id @default(uuid()) @db.Uuid
-  name                String
-  description         String
-  tags                String?
-  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           String    @db.Uuid
-  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String    @db.Uuid
-  deletedAt           DateTime? @db.Timestamp(6)
-  logoUrl             String?
-  autoEndorsement     Boolean   @default(false)
-
-  ecosystemOrgs        ecosystem_orgs[]
-  ecosystemInvitations ecosystem_invitations[]
-  intent              intents[]
+  id                   String                  @id @default(uuid()) @db.Uuid
+  name                 String
+  description          String
+  tags                 String?
+  createDateTime       DateTime                @default(now()) @db.Timestamptz(6)
+  createdBy            String                  @db.Uuid
+  lastChangedDateTime  DateTime                @default(now()) @db.Timestamptz(6)
+  lastChangedBy        String                  @db.Uuid
+  deletedAt            DateTime?               @db.Timestamp(6)
+  logoUrl              String?
+  autoEndorsement      Boolean                 @default(false)
   ledgers              Json?
+  ecosystemInvitations ecosystem_invitations[]
+  ecosystemOrgs        ecosystem_orgs[]
+  intent               intents[]
 }
 
 model ecosystem_roles {
-  id                  String    @id @default(uuid()) @db.Uuid
-  name                String    @unique
+  id                  String           @id @default(uuid()) @db.Uuid
+  name                String           @unique
   description         String
-  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  deletedAt           DateTime? @db.Timestamp(6)
-
-  ecosystemOrgs ecosystem_orgs[]
+  createDateTime      DateTime         @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime DateTime         @default(now()) @db.Timestamptz(6)
+  deletedAt           DateTime?        @db.Timestamp(6)
+  ecosystemOrgs       ecosystem_orgs[]
 }
 
 model ecosystem_orgs {
-  id                  String    @id @default(uuid()) @db.Uuid
-  orgId               String    @db.Uuid
+  id                  String          @id @default(uuid()) @db.Uuid
+  orgId               String          @db.Uuid
   status              String
   deploymentMode      String?
-  ecosystemId         String    @db.Uuid
-  ecosystemRoleId     String    @db.Uuid
-  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           String    @db.Uuid
-  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String    @db.Uuid
-  deletedAt           DateTime? @db.Timestamp(6)
-  userId     String    @db.Uuid
-  ecosystem     ecosystem       @relation(fields: [ecosystemId], references: [id])
-  ecosystemRole ecosystem_roles @relation(fields: [ecosystemRoleId], references: [id])
-  organisation  organisation    @relation(fields: [orgId], references: [id])
-  user          user            @relation(fields:[userId], references: [id])
+  ecosystemId         String          @db.Uuid
+  ecosystemRoleId     String          @db.Uuid
+  createDateTime      DateTime        @default(now()) @db.Timestamptz(6)
+  createdBy           String          @db.Uuid
+  lastChangedDateTime DateTime        @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String          @db.Uuid
+  deletedAt           DateTime?       @db.Timestamp(6)
+  userId              String          @db.Uuid
+  ecosystem           ecosystem       @relation(fields: [ecosystemId], references: [id])
+  ecosystemRole       ecosystem_roles @relation(fields: [ecosystemRoleId], references: [id])
+  organisation        organisation    @relation(fields: [orgId], references: [id])
+  user                user            @relation(fields: [userId], references: [id])
 
   @@unique([orgId, ecosystemId])
 }
 
 model ecosystem_invitations {
-  id                  String    @id @default(uuid()) @db.Uuid
-  email               String    
+  id                  String        @id @default(uuid()) @db.Uuid
+  email               String
   status              String
-  userId              String?   @db.Uuid
+  userId              String?       @db.Uuid
   type                String
-  ecosystemId         String?   @db.Uuid
-  invitedOrg          String?   @db.Uuid
-  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
-  createdBy           String    @db.Uuid
-  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
-  lastChangedBy       String    @db.Uuid
-  deletedAt           DateTime? @db.Timestamp(6)
-
+  ecosystemId         String?       @db.Uuid
+  invitedOrg          String?       @db.Uuid
+  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
+  createdBy           String        @db.Uuid
+  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String        @db.Uuid
+  deletedAt           DateTime?     @db.Timestamp(6)
+  ecosystem           ecosystem?    @relation(fields: [ecosystemId], references: [id])
   organisation        organisation? @relation(fields: [invitedOrg], references: [id])
-  ecosystem           ecosystem? @relation(fields: [ecosystemId], references: [id])
-  user                user? @relation(fields: [userId], references: [id])
+  user                user?         @relation(fields: [userId], references: [id])
+
   @@unique([email, ecosystemId, invitedOrg])
 }
-
 
 model holder_notification {
   id                  String    @id @default(uuid()) @db.Uuid
@@ -818,4 +780,30 @@ model holder_notification {
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   deletedAt           DateTime? @db.Timestamp(6)
+}
+
+enum RecordType {
+  VERIFICATION_RECORD
+  ISSUANCE_RECORD
+  CONNECTION
+  ECOSYSTEM_MEMBER
+  ORGANIZATION
+  WALLET
+  INVITATION
+}
+
+enum UserRole {
+  DEFAULT_USER
+  HOLDER
+}
+
+enum CloudWalletType {
+  CLOUD_BASE_WALLET
+  CLOUD_SUB_WALLET
+}
+
+enum SignerOption {
+  DID
+  X509_P256
+  X509_ED25519
 }

@@ -1,7 +1,7 @@
 import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@credebl/prisma/client';
 import { Transform } from 'class-transformer';
 import { trim } from '@credebl/common/cast.helper';
 

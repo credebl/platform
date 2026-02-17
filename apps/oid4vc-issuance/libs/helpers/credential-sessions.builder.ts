@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
-import { credential_templates, SignerOption } from '@prisma/client';
+import { credential_templates, SignerOption } from '@credebl/prisma/client';
 import { GetAllCredentialOffer, ISignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
 import {

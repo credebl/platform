@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { INestApplication, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '../generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
@@ -10,7 +11,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   private enable = (type: string): boolean => this.prismaLogs.includes(type);
 
   constructor() {
+    const connectionString = process.env.POOL_DATABASE_URL as string;
+    const adapter = new PrismaPg({ connectionString });
+
     super({
+      adapter,
       log: [
         { level: 'query', emit: 'event' },
         { level: 'warn', emit: 'event' },

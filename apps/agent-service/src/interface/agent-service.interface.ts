@@ -1,5 +1,5 @@
 import { AgentSpinUpStatus } from '@credebl/enum/enum';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@credebl/prisma/client';
 import { UserRoleOrgPermsDto } from 'apps/api-gateway/src/dtos/user-role-org-perms.dto';
 
 export interface IAgentSpinupDto {

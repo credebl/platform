@@ -15,10 +15,10 @@ import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { NATSClient } from '@credebl/common/NATSClient';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { IRestrictedUserSession, ISessionDetails } from 'apps/user/interfaces/user.interface';
 import { UserLogoutDto } from './dtos/user-logout.dto';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@credebl/prisma/client';
 import { ClientProxy } from '@nestjs/microservices';
 @Injectable()
 @WebSocketGateway()

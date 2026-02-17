@@ -14,7 +14,7 @@ import {
 import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IQuestionPayload } from './interfaces/messaging.interfaces';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 @Controller()
 export class ConnectionController {
   constructor(private readonly connectionService: ConnectionService) {}

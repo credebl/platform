@@ -43,7 +43,7 @@ import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { Oid4vcVerificationService } from './oid4vc-verification.service';
 import { CreateVerifierDto, UpdateVerifierDto } from './dtos/oid4vc-verifier.dto';
 import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos/oid4vc-verifier-presentation.dto';

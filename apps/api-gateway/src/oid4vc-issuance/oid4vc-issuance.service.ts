@@ -4,7 +4,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { IssuerCreationDto, IssuerUpdationDto } from './dtos/oid4vc-issuer.dto';
 import { BaseService } from 'libs/service/base.service';
 // eslint-disable-next-line camelcase
-import { oidc_issuer, user } from '@prisma/client';
+import { oidc_issuer, user } from '@credebl/prisma/client';
 import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oid4vc-issuer-template.dto';
 import {
   CreateCredentialOfferD2ADto,

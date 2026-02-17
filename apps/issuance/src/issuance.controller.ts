@@ -21,7 +21,7 @@ import { Controller, Logger } from '@nestjs/common';
 import { IssuanceService } from './issuance.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 
 @Controller()
 export class IssuanceController {

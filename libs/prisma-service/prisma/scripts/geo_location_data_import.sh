@@ -4,9 +4,9 @@ DB_URL=$1
 echo "$PWD"
 
 # file paths
-COUNTRIES_CSV="${PWD}/prisma/data/geo-location-master-data/countries.csv"
-STATES_CSV="${PWD}/prisma/data/geo-location-master-data/states.csv"
-CITIES_CSV="${PWD}/prisma/data/geo-location-master-data/cities.csv"
+COUNTRIES_CSV="${PWD}/libs/prisma-service/prisma/data/geo-location-master-data/countries.csv"
+STATES_CSV="${PWD}/libs/prisma-service/prisma/data/geo-location-master-data/states.csv"
+CITIES_CSV="${PWD}/libs/prisma-service/prisma/data/geo-location-master-data/cities.csv"
 
 # table names
 COUNTRIES_TABLE="countries"

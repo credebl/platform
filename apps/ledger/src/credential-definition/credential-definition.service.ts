@@ -12,7 +12,7 @@ import {
   IPlatformCredDefs,
   ISaveCredDef
 } from './interfaces/create-credential-definition.interface';
-import { credential_definition } from '@prisma/client';
+import { credential_definition } from '@credebl/prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import {
   CreateCredDefAgentRedirection,

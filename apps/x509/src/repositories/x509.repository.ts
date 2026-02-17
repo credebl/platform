@@ -12,7 +12,7 @@ import {
 } from '../interfaces/x509.interface';
 import { x5cRecordStatus } from '@credebl/enum/enum';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { org_agents } from '@prisma/client';
+import { org_agents } from '@credebl/prisma/client';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 
 @Injectable()

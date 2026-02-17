@@ -1,5 +1,5 @@
 import { CloudWalletType } from '../../../enum/src/enum';
-import { $Enums } from '@prisma/client';
+import { $Enums } from '@credebl/prisma/client';
 
 export class ICreateCloudWallet {
   label: string;

@@ -25,9 +25,9 @@ import {
 } from '@credebl/common/interfaces/connection.interface';
 import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
 import { IBasicMessage, IQuestionPayload } from './interfaces/messaging.interfaces';
-import { RecordType, user } from '@prisma/client';
+import { RecordType, user } from '@credebl/prisma/client';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { agent_invitations } from '@prisma/client';
+import { agent_invitations } from '@credebl/prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { getAgentUrl } from '@credebl/common/common.utils';
 @Injectable()

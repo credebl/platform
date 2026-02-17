@@ -14,7 +14,7 @@ import {
   IIntentTemplateSearchCriteria
 } from '@credebl/common/interfaces/intents-template.interface';
 import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
-import { ecosystem, user } from '@prisma/client';
+import { ecosystem, user } from '@credebl/prisma/client';
 
 import { CreateIntentDto } from '../dtos/create-intent.dto';
 import { EcosystemService } from './ecosystem.service';

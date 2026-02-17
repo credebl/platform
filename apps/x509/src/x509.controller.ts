@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { X509CertificateService } from './x509.service';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import {
   IX509ImportCertificateOptionsDto,

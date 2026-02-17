@@ -1,6 +1,6 @@
 import { IsEnum, IsNotEmpty, IsObject, IsString } from 'class-validator';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { SignerOption } from '@prisma/client';
+import { SignerOption } from '@credebl/prisma/client';
 
 export class CreateVerificationTemplateDto {
   @ApiProperty({

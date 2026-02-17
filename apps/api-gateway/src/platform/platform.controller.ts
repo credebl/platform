@@ -29,7 +29,7 @@ import * as QRCode from 'qrcode';
 import { CredDefSortFields, SchemaType, SortFields } from '@credebl/enum/enum';
 import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-platform-cred-defs.dto';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
-import { user } from '@prisma/client';
+import { user } from '@credebl/prisma/client';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';

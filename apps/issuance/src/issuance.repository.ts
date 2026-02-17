@@ -21,7 +21,7 @@ import {
   organisation,
   platform_config,
   schema
-} from '@prisma/client';
+} from '@credebl/prisma/client';
 import { PrismaTables, SortValue } from '@credebl/enum/enum';
 
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';

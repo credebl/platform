@@ -34,7 +34,7 @@ import {
   platform_config,
   user,
   verification_templates
-} from '@prisma/client';
+} from '@credebl/prisma/client';
 
 import { OrgRoles } from 'libs/org-roles/enums';
 import { PrismaService } from '@credebl/prisma-service';

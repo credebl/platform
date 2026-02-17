@@ -2,9 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { CloudWalletType } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
-import { cloud_wallet_user_info, user } from '@prisma/client';
-import { ICloudWalletDetails, IGetStoredWalletInfo, IStoredWalletDetails, IStoreWalletInfo } from '@credebl/common/interfaces/cloud-wallet.interface';
-
+import { cloud_wallet_user_info, user } from '@credebl/prisma/client';
+import {
+  ICloudWalletDetails,
+  IGetStoredWalletInfo,
+  IStoredWalletDetails,
+  IStoreWalletInfo
+} from '@credebl/common/interfaces/cloud-wallet.interface';
 
 @Injectable()
 export class CloudWalletRepository {
@@ -13,7 +17,6 @@ export class CloudWalletRepository {
     private readonly logger: Logger
   ) {}
 
- 
   // eslint-disable-next-line camelcase
   async getCloudWalletDetails(type: CloudWalletType): Promise<cloud_wallet_user_info> {
     try {
@@ -46,7 +49,18 @@ export class CloudWalletRepository {
   // eslint-disable-next-line camelcase
   async storeCloudWalletDetails(cloudWalletDetails: ICloudWalletDetails): Promise<IStoredWalletDetails> {
     try {
-      const {label, lastChangedBy, tenantId, type, userId, agentApiKey, agentEndpoint, email, key, connectionImageUrl} = cloudWalletDetails;
+      const {
+        label,
+        lastChangedBy,
+        tenantId,
+        type,
+        userId,
+        agentApiKey,
+        agentEndpoint,
+        email,
+        key,
+        connectionImageUrl
+      } = cloudWalletDetails;
 
       return await this.prisma.cloud_wallet_user_info.create({
         data: {
@@ -70,7 +84,6 @@ export class CloudWalletRepository {
           tenantId: true,
           label: true,
           lastChangedDateTime: true
-          
         }
       });
     } catch (error) {
@@ -110,7 +123,7 @@ export class CloudWalletRepository {
         },
         select: {
           id: true,
-          email: true, 
+          email: true,
           type: true,
           userId: true,
           agentEndpoint: true

@@ -1,4 +1,4 @@
-import { SignerOption } from '@prisma/client';
+import { SignerOption } from '@credebl/prisma/client';
 
 export interface CreateVerificationTemplate {
   name: string;

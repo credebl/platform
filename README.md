@@ -34,7 +34,6 @@ docker run --name credebl-postgres \
 ### • Run Prisma to Generate Database Schema
 
 ```bash
-cd ./libs/prisma-service/prisma
 npx prisma generate
 npx prisma db push
 ```
@@ -42,7 +41,6 @@ npx prisma db push
 ### • Seed Initial Data
 
 ```bash
-cd ./libs/prisma-service
 npx prisma db seed
 ```
 

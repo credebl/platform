@@ -112,14 +112,16 @@ export class ConnectionService extends BaseService {
     return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation', payload);
   }
 
-  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
+  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<{ webhookUrl: string; webhookSecret?: string }> {
     const pattern = { cmd: 'get-webhookurl' };
 
     const payload = { tenantId, orgId };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const message: string = await firstValueFrom(this.connectionServiceProxy.send(pattern, payload));
+      const message: { webhookUrl: string; webhookSecret?: string } = await firstValueFrom(
+        this.connectionServiceProxy.send(pattern, payload)
+      );
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);
@@ -127,9 +129,9 @@ export class ConnectionService extends BaseService {
     }
   }
 
-  async _postWebhookResponse(webhookUrl: string, data: object): Promise<string> {
+  async _postWebhookResponse(webhookUrl: string, data: object, webhookSecret?: string): Promise<string> {
     const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
-    const payload = { webhookUrl, data };
+    const payload = { webhookUrl, data, webhookSecret };
 
     try {
       const message: string = await firstValueFrom(this.connectionServiceProxy.send(pattern, payload));

@@ -19,8 +19,13 @@ export class WebhookController {
     return this.webhookService.getWebhookUrl(payload);
   }
 
+  @MessagePattern({ cmd: 'update-webhook' })
+  async updateWebhook(payload: { updateWebhookDto: IWebhookDto }): Promise<ICreateWebhookUrl> {
+    return this.webhookService.updateWebhook(payload.updateWebhookDto);
+  }
+
   @MessagePattern({ cmd: 'post-webhook-response-to-webhook-url' })
-  async webhookResponse(payload: { webhookUrl: string; data: object }): Promise<object> {
-    return this.webhookService.webhookResponse(payload.webhookUrl, payload.data);
+  async webhookResponse(payload: { webhookUrl: string; data: object; webhookSecret?: string }): Promise<object> {
+    return this.webhookService.webhookResponse(payload.webhookUrl, payload.data, payload.webhookSecret);
   }
 }

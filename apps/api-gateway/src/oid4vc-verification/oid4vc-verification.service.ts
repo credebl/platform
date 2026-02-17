@@ -109,7 +109,7 @@ export class Oid4vcVerificationService {
     return this.natsClient.sendNats(this.oid4vpProxy, 'webhook-oid4vp-presentation', payload);
   }
 
-  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
+  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<{ webhookUrl: string; webhookSecret?: string }> {
     const pattern = { cmd: 'get-webhookurl' };
     const payload = { tenantId, orgId };
 
@@ -123,9 +123,9 @@ export class Oid4vcVerificationService {
     }
   }
 
-  async _postWebhookResponse(webhookUrl: string, data: object): Promise<string> {
+  async _postWebhookResponse(webhookUrl: string, data: object, webhookSecret?: string): Promise<string> {
     const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
-    const payload = { webhookUrl, data };
+    const payload = { webhookUrl, data, webhookSecret };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

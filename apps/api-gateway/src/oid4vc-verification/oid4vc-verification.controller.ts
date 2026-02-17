@@ -500,16 +500,20 @@ export class Oid4vcVerificationController {
       data: []
     };
 
-    const webhookUrl = await this.oid4vcVerificationService
+    const webhookUrlInfo = await this.oid4vcVerificationService
       ._getWebhookUrl(oid4vpPresentationWhDto?.contextCorrelationId, id)
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
 
-    if (webhookUrl) {
+    if (webhookUrlInfo && 'string' !== typeof webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
       this.logger.log(`posting webhook response to webhook url`);
       await this.oid4vcVerificationService
-        ._postWebhookResponse(webhookUrl, { data: oid4vpPresentationWhDto })
+        ._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: oid4vpPresentationWhDto },
+          webhookUrlInfo.webhookSecret
+        )
         .catch((error) => {
           this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
         });

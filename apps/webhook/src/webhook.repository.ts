@@ -11,14 +11,15 @@ export class WebhookRepository {
     private readonly logger: Logger
   ) {}
 
-  async registerWebhook(orgId: string, webhookUrl: string): Promise<ICreateWebhookUrl> {
+  async registerWebhook(orgId: string, webhookUrl: string, webhookSecret?: string): Promise<ICreateWebhookUrl> {
     try {
       const agentInfo = this.prisma.org_agents.update({
         where: {
           orgId
         },
         data: {
-          webhookUrl
+          webhookUrl,
+          webhookSecret
         }
       });
 
@@ -29,28 +30,49 @@ export class WebhookRepository {
     }
   }
 
+  async updateWebhook(orgId: string, webhookUrl?: string, webhookSecret?: string): Promise<ICreateWebhookUrl> {
+    try {
+      const data: { webhookUrl?: string; webhookSecret?: string } = {};
+      if (webhookUrl) {
+        data.webhookUrl = webhookUrl;
+      }
+      if (webhookSecret) {
+        data.webhookSecret = webhookSecret;
+      }
+
+      const agentInfo = this.prisma.org_agents.update({
+        where: {
+          orgId
+        },
+        data
+      });
+
+      return agentInfo;
+    } catch (error) {
+      this.logger.error(`[updateWebhook] - update webhook details: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async getWebhookUrl(getWebhook: IWebhookUrl): Promise<IGetWebhookUrl> {
     try {
-
       const { tenantId, orgId } = getWebhook;
       let webhookUrlInfo;
 
       if ((undefined === tenantId || 'default' === tenantId) && orgId) {
         webhookUrlInfo = await this.prisma.org_agents.findFirstOrThrow({
-
           where: {
             orgId
           }
         });
       } else if (tenantId && 'default' !== tenantId) {
         webhookUrlInfo = await this.prisma.org_agents.findFirstOrThrow({
-
           where: {
             tenantId
           }
         });
       }
-      
+
       return webhookUrlInfo;
     } catch (error) {
       this.logger.error(`[getWebhookUrl] -  webhook url details: ${JSON.stringify(error)}`);

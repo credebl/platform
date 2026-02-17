@@ -6,6 +6,7 @@ import AsyncRetry = require('async-retry');
 import { ICreateWebhookUrl, IGetWebhookUrl, IWebhookDto } from '../interfaces/webhook.interfaces';
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class WebhookService {
@@ -35,7 +36,8 @@ export class WebhookService {
         try {
           webhookUrl = await this.webhookRepository.registerWebhook(
             registerWebhookDto.orgId,
-            registerWebhookDto.webhookUrl
+            registerWebhookDto.webhookUrl,
+            registerWebhookDto.webhookSecret
           );
         } catch (error) {
           throw new InternalServerErrorException(ResponseMessages.webhook.error.registerWebhook);
@@ -44,11 +46,46 @@ export class WebhookService {
         if (!webhookUrl) {
           throw new InternalServerErrorException(ResponseMessages.webhook.error.registerWebhook);
         } else {
-          return webhookUrl.webhookUrl;
+          return {
+            webhookUrl: webhookUrl.webhookUrl,
+            webhookSecret: webhookUrl.webhookSecret
+          };
         }
       }
     } catch (error) {
       this.logger.error(`[registerWebhookUrl] - register webhook url details : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async updateWebhook(updateWebhookDto: IWebhookDto): Promise<ICreateWebhookUrl> {
+    try {
+      const orgData = await this.webhookRepository.getOrganizationDetails(updateWebhookDto.orgId);
+      let updateWebhook;
+      if (!orgData) {
+        throw new NotFoundException(ResponseMessages.organisation.error.notFound);
+      } else {
+        try {
+          updateWebhook = await this.webhookRepository.updateWebhook(
+            updateWebhookDto.orgId,
+            updateWebhookDto.webhookUrl,
+            updateWebhookDto.webhookSecret
+          );
+        } catch (error) {
+          throw new InternalServerErrorException(ResponseMessages.webhook.error.updateWebhook);
+        }
+
+        if (!updateWebhook) {
+          throw new InternalServerErrorException(ResponseMessages.webhook.error.updateWebhook);
+        } else {
+          return {
+            webhookUrl: updateWebhook.webhookUrl,
+            webhookSecret: updateWebhook.webhookSecret
+          };
+        }
+      }
+    } catch (error) {
+      this.logger.error(`[updateWebhook] - update webhook details : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -62,21 +99,37 @@ export class WebhookService {
         throw new NotFoundException(ResponseMessages.webhook.error.notFound);
       }
 
-      return webhookUrlInfo.webhookUrl;
+      return {
+        webhookUrl: webhookUrlInfo.webhookUrl,
+        webhookSecret: webhookUrlInfo.webhookSecret
+      };
     } catch (error) {
       this.logger.error(`[getWebhookUrl] -  webhook url details : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
-  async webhookFunc(webhookUrl: string, data: object): Promise<Response> {
+  async webhookFunc(webhookUrl: string, data: object, webhookSecret?: string): Promise<Response> {
     try {
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      const requestBody = JSON.stringify(data);
+
+      if (webhookSecret) {
+        const timestamp = new Date().getTime().toString();
+        const payload = `${timestamp}.${requestBody}`;
+        const signature = crypto.createHmac('sha256', webhookSecret).update(payload).digest('hex');
+
+        headers['X-Signature'] = signature;
+        headers['X-Timestamp'] = timestamp;
+      }
+
       const response = await fetch(webhookUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+        headers,
+        body: requestBody
       });
 
       if (!response.ok) {
@@ -85,13 +138,14 @@ export class WebhookService {
       }
       return response;
     } catch (err) {
+      this.logger.error(`Error in sending webhook response to org webhook url: ${err}`);
       throw new InternalServerErrorException(ResponseMessages.webhook.error.webhookResponse);
     }
   }
 
-  async webhookResponse(webhookUrl: string, data: object): Promise<object> {
+  async webhookResponse(webhookUrl: string, data: object, webhookSecret?: string): Promise<object> {
     try {
-      const webhookResponse = async (): Promise<Response> => this.webhookFunc(webhookUrl, data);
+      const webhookResponse = async (): Promise<Response> => this.webhookFunc(webhookUrl, data, webhookSecret);
       const response = await AsyncRetry(webhookResponse, this.retryOptions(this.logger));
       return response;
     } catch (error) {

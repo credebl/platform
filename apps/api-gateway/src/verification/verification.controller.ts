@@ -460,15 +460,19 @@ export class VerificationController {
       data: webhookProofPresentation
     };
 
-    const webhookUrl = await this.verificationService
+    const webhookUrlInfo = await this.verificationService
       ._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId)
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
 
-    if (webhookUrl) {
+    if (webhookUrlInfo && 'string' !== typeof webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
       await this.verificationService
-        ._postWebhookResponse(webhookUrl, { data: proofPresentationPayload })
+        ._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: proofPresentationPayload },
+          webhookUrlInfo.webhookSecret
+        )
         .catch((error) => {
           this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
         });

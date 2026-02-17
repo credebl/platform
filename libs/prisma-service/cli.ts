@@ -5,10 +5,16 @@
 // eslint-disable-next-line camelcase
 const { createInterface } = require('readline');
 
-const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
+const { PrismaClient } = require('generated/prisma/client');
 const { createClient } = require('@supabase/supabase-js');
 
+const adapter = new PrismaPg({
+  connectionString: process.env.POOL_DATABASE_URL || process.env.DATABASE_URL
+});
+
 const prisma = new PrismaClient({
+  adapter,
   // Added prisma logging for better debugging
   log: [
     {

@@ -334,4 +334,9 @@ export class EcosystemController {
   async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
     return this.ecosystemService.getDashboardCountEcosystem();
   }
+
+  @MessagePattern({ cmd: 'get-ecosystem-enable-status' })
+  async getEcosystemEnableStatus(): Promise<boolean> {
+    return this.ecosystemService.getEcosystemEnableStatus();
+  }
 }

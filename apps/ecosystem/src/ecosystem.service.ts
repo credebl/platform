@@ -870,4 +870,8 @@ export class EcosystemService {
   async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
     return this.ecosystemRepository.getDashBoardCountPlatfromAdmin();
   }
+
+  async getEcosystemEnableStatus(): Promise<boolean> {
+    return this.ecosystemRepository.getEcosystemEnableStatus();
+  }
 }

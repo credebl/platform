@@ -82,4 +82,8 @@ export class PlatformService extends BaseService {
       platformAdminId
     });
   }
+
+  async getEcosystemEnableStatus(): Promise<boolean> {
+    return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-ecosystem-enable-status', {});
+  }
 }

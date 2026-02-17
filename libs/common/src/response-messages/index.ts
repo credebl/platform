@@ -199,7 +199,8 @@ export const ResponseMessages = {
       fetchIntentTemplates: 'Ecosystem intent templates fetched successfully',
       fetchVerificationTemplates: 'Verification templates fetched successfully',
       updateEcosystemConfig: 'Ecosystem configuration updated successfully',
-      dashboard: 'Dashboard data for ecosystem fetched successfully'
+      dashboard: 'Dashboard data for ecosystem fetched successfully',
+      ecosystemStatus: 'Ecosystem status fetched successfully'
     },
     error: {
       featureIsDisabled: `You don't have access to this feature`,

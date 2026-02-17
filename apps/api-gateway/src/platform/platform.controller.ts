@@ -37,6 +37,7 @@ import { CreateEcosystemInvitationDto } from '../ecosystem/dtos/send-ecosystem-i
 import { EnableEcosystemDto } from '../ecosystem/dtos/enable-ecosystem';
 import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
+import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 
 @Controller('')
 @UseFilters(CustomExceptionFilter)
@@ -312,5 +313,27 @@ export class PlatformController {
       message: ResponseMessages.ecosystem.success.updateEcosystemConfig
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/ecosystem-status')
+  @ApiOperation({
+    summary: 'Get ecosystem enabled/disabled status',
+    description: 'Get ecosystem enabled/disabled status'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Ecosystem status fetched successfully'
+  })
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @ApiBearerAuth()
+  async getEcosystemEnableStatus(@Res() res: Response): Promise<Response> {
+    const ecosystemStatus = await this.platformService.getEcosystemEnableStatus();
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.ecosystemStatus,
+      data: ecosystemStatus
+    });
   }
 }

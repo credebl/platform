@@ -4,9 +4,10 @@
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ProtocolMapperResult, UnmanagedAttributePolicy } from '@credebl/enum/enum';
+
+import { ClientRegistrationService } from '@credebl/client-registration';
 import { CommonService } from '@credebl/common';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
-import { ClientRegistrationService } from '@credebl/client-registration';
 
 @Injectable()
 export class KeycloakConfigService implements OnModuleInit {

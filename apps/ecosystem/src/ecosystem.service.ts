@@ -202,9 +202,9 @@ export class EcosystemService {
         throw new Error('Error fetching user');
       }
 
-      if (!invitation) {
-        throw new ForbiddenException(ResponseMessages.ecosystem.error.invitationRequired);
-      }
+      // if (!invitation) {
+      //   throw new ForbiddenException(ResponseMessages.ecosystem.error.invitationRequired);
+      // }
 
       const ecosystem = await this.prisma.$transaction(async (tx) => {
         const newEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, tx);

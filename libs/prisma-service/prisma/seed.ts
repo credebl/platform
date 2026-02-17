@@ -6,12 +6,17 @@ import * as util from 'util';
 import { HttpStatus, Logger } from '@nestjs/common';
 
 import { CommonConstants } from '../../common/src/common.constant';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { exec } from 'child_process';
 
 const execPromise = util.promisify(exec);
 
+const connectionString = process.env.POOL_DATABASE_URL as string;
+const adapter = new PrismaPg({ connectionString });
+
 const prisma = new PrismaClient({
+  adapter,
   // Added prisma logging for better debugging
   log: [
     {
@@ -33,7 +38,7 @@ let platformUserId = '';
 let cachedConfig: PlatformConfig;
 
 const configData = fs.readFileSync(
-  `${process.cwd()}/prisma/data/credebl-master-table/credebl-master-table.json`,
+  `${process.cwd()}/libs/prisma-service/prisma/data/credebl-master-table/credebl-master-table.json`,
   'utf8'
 );
 const createPlatformConfig = async (): Promise<void> => {

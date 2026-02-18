@@ -57,6 +57,14 @@ export class VerificationPresentationQueryDto {
   authorizationRequestUri?: string;
 
   @ApiPropertyOptional({
+    description: 'The public id for the authorization request',
+    example: '6b2f8428-7acc-4d18-8dac-e35a19b4ca4a'
+  })
+  @IsOptional()
+  @IsString()
+  authorizationRequestId?: string;
+
+  @ApiPropertyOptional({
     description: 'Nonce associated with the presentation',
     example: 'n-0S6_WzA2Mj'
   })

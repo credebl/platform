@@ -98,18 +98,22 @@ export class KeycloakConfigService implements OnModuleInit {
 
     this.logger.log(`Found ${clients.length} total clients in realm`);
 
-    const orgClients = clients.filter(
-      (client: { serviceAccountsEnabled: boolean; clientId: string }) =>
-        client.serviceAccountsEnabled && !client.clientId.startsWith('realm-')
+    const systemClients = ['admin-cli', 'account', 'account-console', 'broker', 'security-admin-console'];
+
+    const targetClients = clients.filter(
+      (client: { clientId: string; bearerOnly: boolean }) =>
+        !client.clientId.startsWith('realm-') && !client.bearerOnly && !systemClients.includes(client.clientId)
     );
 
-    this.logger.log(`Found ${orgClients.length} service-account-enabled clients to process`);
+    this.logger.log(
+      `Found ${targetClients.length} clients to process (excluded ${clients.length - targetClients.length} system clients)`
+    );
 
     let created = 0;
     let skipped = 0;
     let failed = 0;
 
-    for (const client of orgClients) {
+    for (const client of targetClients) {
       const result = await this.ensureClientProtocolMapper(realm, client.id, client.clientId, token);
       if ('created' === result) {
         created++;

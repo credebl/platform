@@ -4,6 +4,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { ICreateWebhookUrl, IGetWebhookUrl } from '../interfaces/webhook.interfaces';
 import { org_agents } from '@prisma/client';
 import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
+import { encryptClientCredential } from '@credebl/common/cast.helper';
 @Injectable()
 export class WebhookRepository {
   constructor(
@@ -19,7 +20,7 @@ export class WebhookRepository {
         },
         data: {
           webhookUrl,
-          webhookSecret
+          webhookSecret: webhookSecret ? await encryptClientCredential(webhookSecret) : undefined
         }
       });
 
@@ -32,15 +33,15 @@ export class WebhookRepository {
 
   async updateWebhook(orgId: string, webhookUrl?: string, webhookSecret?: string): Promise<ICreateWebhookUrl> {
     try {
-      const data: { webhookUrl?: string; webhookSecret?: string } = {};
-      if (webhookUrl) {
+      const data: { webhookUrl?: string; webhookSecret?: string | null } = {};
+      if (undefined !== webhookUrl) {
         data.webhookUrl = webhookUrl;
       }
-      if (webhookSecret) {
-        data.webhookSecret = webhookSecret;
+      if (undefined !== webhookSecret) {
+        data.webhookSecret = webhookSecret ? await encryptClientCredential(webhookSecret) : null;
       }
 
-      const agentInfo = this.prisma.org_agents.update({
+      const agentInfo = await this.prisma.org_agents.update({
         where: {
           orgId
         },

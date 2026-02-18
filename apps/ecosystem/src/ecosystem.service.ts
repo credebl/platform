@@ -33,7 +33,8 @@ import {
   IEcosystemInvitation,
   IEcosystemInvitations,
   IEcosystemMemberInvitations,
-  IGetAllOrgs
+  IGetAllOrgs,
+  IPlatformDashboardCount
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import {
   IIntentTemplateList,
@@ -156,13 +157,17 @@ export class EcosystemService {
     return userData;
   }
 
-  async getInvitationsByUserId(userId: string): Promise<IEcosystemInvitations[]> {
+  async getInvitationsByUserId(
+    userId: string,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<IEcosystemInvitations>> {
     if (!userId) {
       throw new BadRequestException('userId missing');
     }
 
     try {
-      return await this.ecosystemRepository.getInvitationsByUserId(userId);
+      const invitations = await this.ecosystemRepository.getInvitationsByUserId(userId, pageDetail);
+      return invitations;
     } catch (error) {
       this.logger.error('getInvitationsByUserId error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationNotFound);
@@ -391,8 +396,8 @@ export class EcosystemService {
         throw new BadRequestException(ResponseMessages.ecosystem.error.alreadyAccepted);
       }
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-        orgId,
         userEmail,
+        orgId,
         ecosystemId,
         status
       );
@@ -849,5 +854,13 @@ export class EcosystemService {
     return {
       message: ResponseMessages.ecosystem.success.updateEcosystemConfig
     };
+  }
+
+  async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
+    return this.ecosystemRepository.getDashBoardCountPlatformAdmin();
+  }
+
+  async getEcosystemEnableStatus(): Promise<boolean> {
+    return this.ecosystemRepository.getEcosystemEnableStatus();
   }
 }

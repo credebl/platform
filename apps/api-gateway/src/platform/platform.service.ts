@@ -8,6 +8,7 @@ import { IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.inter
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IPaginationSortingDto, PaginatedResponse } from '@credebl/common/interfaces/interface';
 
 @Injectable()
 export class PlatformService extends BaseService {
@@ -62,8 +63,14 @@ export class PlatformService extends BaseService {
    * @param userId
    * @returns Get invitations
    */
-  async getInvitationsByUserId(userId: string): Promise<IEcosystemInvitations[]> {
-    return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-ecosystem-invitations-by-user', { userId });
+  async getInvitationsByUserId(
+    userId: string,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<IEcosystemInvitations>> {
+    return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-ecosystem-invitations-by-user', {
+      userId,
+      pageDetail
+    });
   }
 
   /**
@@ -74,5 +81,9 @@ export class PlatformService extends BaseService {
       isEcosystemEnabled,
       platformAdminId
     });
+  }
+
+  async getEcosystemEnableStatus(): Promise<boolean> {
+    return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-ecosystem-enable-status', {});
   }
 }

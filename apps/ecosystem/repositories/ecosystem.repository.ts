@@ -14,6 +14,8 @@ import {
   IEcosystemDashboard,
   IEcosystemInvitation,
   IGetAllOrgs,
+  IGetEcosystemOrgStatus,
+  IPlatformDashboardCount,
   PrismaExecutor
 } from '../interfaces/ecosystem.interfaces';
 import {
@@ -93,41 +95,44 @@ export class EcosystemRepository {
   }
 
   async getInvitationsByUserId(
-    userId: string
+    userId: string,
+    pageDetail: IPaginationSortingDto
     // eslint-disable-next-line camelcase
-  ): Promise<ecosystem_invitations[]> {
+  ): Promise<PaginatedResponse<ecosystem_invitations>> {
     try {
-      return await this.prisma.ecosystem_invitations.findMany({
-        where: {
-          createdBy: userId
-        },
-        include: {
-          ecosystem: {
-            select: {
-              id: true,
-              name: true,
-              description: true,
-              createDateTime: true
+      const whereClause = {
+        createdBy: userId,
+        deletedAt: null
+      };
+      const [data, count] = await this.prisma.$transaction([
+        this.prisma.ecosystem_invitations.findMany({
+          where: whereClause,
+          include: {
+            ecosystem: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                createDateTime: true
+              }
+            },
+            organisation: {
+              select: {
+                name: true
+              }
             }
           },
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true
-            }
+          orderBy: {
+            createDateTime: 'desc'
           },
-          organisation: {
-            select: {
-              name: true
-            }
-          }
-        },
-        orderBy: {
-          createDateTime: 'desc'
-        }
-      });
+          take: pageDetail.pageSize,
+          skip: (pageDetail.pageNumber - 1) * pageDetail.pageSize
+        }),
+
+        this.prisma.ecosystem_invitations.count({ where: whereClause })
+      ]);
+      const totalPages = Math.ceil(count / pageDetail.pageSize);
+      return { totalPages, data };
     } catch (error) {
       this.logger.error('getInvitationsByUserId error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.fetchInvitationsFailed);
@@ -1488,6 +1493,66 @@ export class EcosystemRepository {
       return { totalPages, data };
     } catch (error) {
       this.logger.error(`getEcosystemsForUser error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemOrgsByOrgIdAndEcosystemId(
+    orgId: string[],
+    ecosystemId: string[]
+  ): Promise<IGetEcosystemOrgStatus[]> {
+    try {
+      return await this.prisma.ecosystem_orgs.findMany({
+        where: {
+          orgId: { in: orgId },
+          ecosystemId: { in: ecosystemId },
+          deletedAt: null
+        },
+        select: {
+          orgId: true,
+          ecosystemId: true,
+          status: true
+        }
+      });
+    } catch (error) {
+      this.logger.error(`getEcosystemOrgsByOrgIdAndEcosystemId error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getDashBoardCountPlatformAdmin(): Promise<IPlatformDashboardCount> {
+    try {
+      const data = await this.prisma.$transaction([
+        this.prisma.ecosystem.count({ where: { deletedAt: null } }),
+        this.prisma.ecosystem_invitations.count({
+          where: {
+            type: InviteType.ECOSYSTEM,
+            deletedAt: null
+          }
+        }),
+        this.prisma.ecosystem_orgs.count({
+          where: {
+            status: EcosystemOrgStatus.ACTIVE,
+            deletedAt: null
+          }
+        })
+      ]);
+      const [ecosystem, invitations, activeOrgs] = data;
+      return { ecosystem, invitations, activeOrgs };
+    } catch (error) {
+      this.logger.error(`getDashBoardCountPlatformAdmin error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemEnableStatus(): Promise<boolean> {
+    try {
+      const data = await this.prisma.platform_config.findFirst({
+        select: { isEcosystemEnabled: true }
+      });
+      return data?.isEcosystemEnabled ?? false;
+    } catch (error) {
+      this.logger.error(`getEcosystemEnableStatus error: ${error}`);
       throw error;
     }
   }

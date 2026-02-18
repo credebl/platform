@@ -236,6 +236,6 @@ export class EcosystemService {
   }
 
   async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-dashboard-count-platform-admin', {});
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-platform-admin-dashboard-count', {});
   }
 }

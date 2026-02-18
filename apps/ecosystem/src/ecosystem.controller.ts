@@ -330,7 +330,7 @@ export class EcosystemController {
     return this.ecosystemService.updateEcosystemConfig(payload);
   }
 
-  @MessagePattern({ cmd: 'get-dashboard-count-platform-admin' })
+  @MessagePattern({ cmd: 'get-platform-admin-dashboard-count' })
   async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
     return this.ecosystemService.getDashboardCountEcosystem();
   }

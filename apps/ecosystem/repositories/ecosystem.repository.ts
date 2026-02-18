@@ -213,6 +213,20 @@ export class EcosystemRepository {
     }
   }
 
+  async checkIntentExist(name?: string): Promise<intents | null> {
+    try {
+      const checkIntentExist = await this.prisma.intents.findFirst({
+        where: {
+          name
+        }
+      });
+      return checkIntentExist;
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
   async checkEcosystemCreatedByUser(userId: string): Promise<boolean> {
     if (!userId) {
       throw new BadRequestException('userId missing');
@@ -930,6 +944,7 @@ export class EcosystemRepository {
       const invitation = await prisma.ecosystem_invitations.findFirst({
         where: {
           email,
+          status: Invitation.ACCEPTED,
           ecosystemId: null
         },
         orderBy: {

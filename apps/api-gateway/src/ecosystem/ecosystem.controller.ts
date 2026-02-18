@@ -147,7 +147,7 @@ export class EcosystemController {
    * @param orgId The ID of the organization
    * @returns Created ecosystem details
    */
-  @Post('/:orgId')
+  @Post('/')
   @ApiOperation({
     summary: 'Create ecosystem',
     description: 'Creates a new ecosystem for the specified organization.'
@@ -162,7 +162,7 @@ export class EcosystemController {
   @Roles(OrgRoles.OWNER)
   async createNewEcosystem(
     @Body() createEcosystemDto: CreateEcosystemDto,
-    @Param('orgId') orgId: string,
+    @Query('orgId') orgId: string,
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {

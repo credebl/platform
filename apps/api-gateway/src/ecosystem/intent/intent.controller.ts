@@ -574,7 +574,19 @@ export class IntentController {
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({ summary: 'Delete Intent Template', description: 'Deletes an existing intent template mapping.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent template deleted successfully', type: ApiResponseDto })
-  async deleteIntentTemplate(@Param('id') id: string, @Res() res: Response): Promise<Response> {
+  async deleteIntentTemplate(
+    @Param(
+      'id',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.oid4vpIntentToTemplate.error.invalidId);
+        }
+      })
+    )
+    id: string,
+    @Res() res: Response
+  ): Promise<Response> {
     const intentTemplate = await this.ecosystemService.deleteIntentTemplate(id);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,

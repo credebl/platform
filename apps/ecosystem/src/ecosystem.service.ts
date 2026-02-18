@@ -76,7 +76,7 @@ export class EcosystemService {
 
     const existingInvitation = await this.ecosystemRepository.getPendingInvitationByEmail(email);
 
-    if (existingInvitation) {
+    if (existingInvitation?.type === InviteType.MEMBER) {
       throw new RpcException({
         statusCode: HttpStatus.CONFLICT,
         message: ResponseMessages.ecosystem.error.invitationAlreadySent
@@ -252,8 +252,8 @@ export class EcosystemService {
 
       if (checkUser && Invitation.REJECTED === checkUser.status && ecosystemId === checkUser.ecosystemId) {
         const reopenedInvitation = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-          userEmail,
           orgId,
+          userEmail,
           ecosystemId,
           Invitation.PENDING
         );
@@ -738,6 +738,13 @@ export class EcosystemService {
       if (!ecosystem) {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
       }
+
+      const intentExist = await this.ecosystemRepository.checkIntentExist(createIntentDto?.name);
+
+      if (intentExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.intentAlreadyExists);
+      }
+
       return this.ecosystemRepository.createIntent({
         name,
         description,
@@ -797,6 +804,12 @@ export class EcosystemService {
 
       if (!userId) {
         throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+      }
+
+      const intentExist = await this.ecosystemRepository.checkIntentExist(updateIntentDto?.name);
+
+      if (intentExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.intentAlreadyExists);
       }
 
       const intent = await this.ecosystemRepository.updateIntent({

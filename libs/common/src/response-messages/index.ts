@@ -275,6 +275,7 @@ export const ResponseMessages = {
       invalidFormatOfEcosystemId: 'Invalid format of ecosystemId',
       invalidFormatOfIntentId: 'Invalid format of intentId',
       intentIdIsRequired: 'IntentId is required',
+      intentAlreadyExists: 'Intent with this name already exists',
       emailOrPlatformAdminIdMissing: 'Email or platformAdminId missing',
       platformIdRequired: 'PlatformId is required',
       userIdMissing: 'UserId is required',

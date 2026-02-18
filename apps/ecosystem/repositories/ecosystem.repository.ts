@@ -1519,25 +1519,27 @@ export class EcosystemRepository {
     }
   }
 
-  async getDashBoardCountPlatfromAdmin(): Promise<IPlatformDashboardCount> {
+  async getDashBoardCountPlatformAdmin(): Promise<IPlatformDashboardCount> {
     try {
       const data = await this.prisma.$transaction([
         this.prisma.ecosystem.count({ where: { deletedAt: null } }),
         this.prisma.ecosystem_invitations.count({
           where: {
-            type: InviteType.ECOSYSTEM
+            type: InviteType.ECOSYSTEM,
+            deletedAt: null
           }
         }),
         this.prisma.ecosystem_orgs.count({
           where: {
-            status: EcosystemOrgStatus.ACTIVE
+            status: EcosystemOrgStatus.ACTIVE,
+            deletedAt: null
           }
         })
       ]);
       const [ecosystem, invitations, activeOrgs] = data;
       return { ecosystem, invitations, activeOrgs };
     } catch (error) {
-      this.logger.error(`getDashBoardCountPlatfromAdmin error: ${error}`);
+      this.logger.error(`getDashBoardCountPlatformAdmin error: ${error}`);
       throw error;
     }
   }

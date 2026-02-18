@@ -315,7 +315,7 @@ export class PlatformController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Get('/ecosystem-status')
+  @Get('/ecosystem/status')
   @ApiOperation({
     summary: 'Get ecosystem enabled/disabled status',
     description: 'Get ecosystem enabled/disabled status'

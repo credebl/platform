@@ -945,7 +945,7 @@ export class EcosystemController {
     });
   }
 
-  @Get('/count/dashboard')
+  @Get('/dashboard/summary')
   @Roles(OrgRoles.PLATFORM_ADMIN)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()

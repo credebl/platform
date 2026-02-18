@@ -162,7 +162,15 @@ export class EcosystemController {
   @Roles(OrgRoles.OWNER)
   async createNewEcosystem(
     @Body() createEcosystemDto: CreateEcosystemDto,
-    @Query('orgId') orgId: string,
+    @Query(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {

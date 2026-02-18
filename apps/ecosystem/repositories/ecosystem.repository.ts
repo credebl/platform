@@ -213,14 +213,20 @@ export class EcosystemRepository {
     }
   }
 
-  async checkIntentExist(name?: string): Promise<intents | null> {
+  async checkIntentExist(name: string, ecosystemId: string, excludeIntentId?: string): Promise<intents | null> {
     try {
-      const checkIntentExist = await this.prisma.intents.findFirst({
+      return await this.prisma.intents.findFirst({
         where: {
-          name
+          ecosystemId,
+          name: {
+            equals: name.trim(),
+            mode: 'insensitive'
+          },
+          ...(excludeIntentId && {
+            id: { not: excludeIntentId }
+          })
         }
       });
-      return checkIntentExist;
     } catch (error) {
       this.logger.error(`error: ${JSON.stringify(error)}`);
       throw new InternalServerErrorException(error);

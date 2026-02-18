@@ -739,7 +739,7 @@ export class EcosystemService {
         throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
       }
 
-      const intentExist = await this.ecosystemRepository.checkIntentExist(createIntentDto?.name);
+      const intentExist = await this.ecosystemRepository.checkIntentExist(createIntentDto.name, ecosystemId);
 
       if (intentExist) {
         throw new ConflictException(ResponseMessages.ecosystem.error.intentAlreadyExists);
@@ -800,13 +800,13 @@ export class EcosystemService {
    */
   async updateIntent(updateIntentDto: UpdateIntentDto): Promise<object> {
     try {
-      const { userId, name, description } = updateIntentDto;
+      const { userId, name, description, ecosystemId, intentId } = updateIntentDto;
 
       if (!userId) {
         throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
       }
 
-      const intentExist = await this.ecosystemRepository.checkIntentExist(updateIntentDto?.name);
+      const intentExist = await this.ecosystemRepository.checkIntentExist(name, ecosystemId, intentId);
 
       if (intentExist) {
         throw new ConflictException(ResponseMessages.ecosystem.error.intentAlreadyExists);

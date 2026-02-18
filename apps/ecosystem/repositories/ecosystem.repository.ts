@@ -101,7 +101,8 @@ export class EcosystemRepository {
   ): Promise<PaginatedResponse<ecosystem_invitations>> {
     try {
       const whereClause = {
-        createdBy: userId
+        createdBy: userId,
+        deletedAt: null
       };
       const [data, count] = await this.prisma.$transaction([
         this.prisma.ecosystem_invitations.findMany({
@@ -1496,9 +1497,12 @@ export class EcosystemRepository {
     }
   }
 
-  getEcosystemOrgsByOrgIdAndEcosystemId(orgId: string[], ecosystemId: string[]): Promise<IGetEcosystemOrgStatus[]> {
+  async getEcosystemOrgsByOrgIdAndEcosystemId(
+    orgId: string[],
+    ecosystemId: string[]
+  ): Promise<IGetEcosystemOrgStatus[]> {
     try {
-      return this.prisma.ecosystem_orgs.findMany({
+      return await this.prisma.ecosystem_orgs.findMany({
         where: {
           orgId: { in: orgId },
           ecosystemId: { in: ecosystemId }
@@ -1518,7 +1522,7 @@ export class EcosystemRepository {
   async getDashBoardCountPlatfromAdmin(): Promise<IPlatformDashboardCount> {
     try {
       const data = await this.prisma.$transaction([
-        this.prisma.ecosystem.count(),
+        this.prisma.ecosystem.count({ where: { deletedAt: null } }),
         this.prisma.ecosystem_invitations.count({
           where: {
             type: InviteType.ECOSYSTEM
@@ -1543,7 +1547,7 @@ export class EcosystemRepository {
       const data = await this.prisma.platform_config.findFirst({
         select: { isEcosystemEnabled: true }
       });
-      return data.isEcosystemEnabled ? data.isEcosystemEnabled : false;
+      return data?.isEcosystemEnabled ?? false;
     } catch (error) {
       this.logger.error(`getEcosystemEnableStatus error: ${error}`);
       throw error;

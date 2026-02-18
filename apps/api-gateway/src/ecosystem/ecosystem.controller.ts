@@ -955,7 +955,7 @@ export class EcosystemController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Template details fetched successfully'
+    description: 'Dashboard count fetched successfully'
   })
   async getDashboardCountEcosystem(@Res() res: Response): Promise<Response> {
     const dashboard = await this.ecosystemService.getDashboardCountEcosystem();

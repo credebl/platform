@@ -466,7 +466,7 @@ export class VerificationController {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
 
-    if (webhookUrlInfo && 'string' !== typeof webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
+    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
       await this.verificationService
         ._postWebhookResponse(
           webhookUrlInfo.webhookUrl,

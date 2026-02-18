@@ -966,7 +966,7 @@ export class IssuanceController {
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
-    if (webhookUrlInfo && 'string' !== typeof webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
+    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
       const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
 
       await this.issueCredentialService

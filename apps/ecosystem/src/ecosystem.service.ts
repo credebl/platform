@@ -167,15 +167,7 @@ export class EcosystemService {
 
     try {
       const invitations = await this.ecosystemRepository.getInvitationsByUserId(userId, pageDetail);
-      const invitedOrgIds = [...new Set(invitations.data.map((i) => i.invitedOrg).filter(Boolean))];
-      const ecosystemIds = [...new Set(invitations.data.map((i) => i.ecosystemId).filter(Boolean))];
-      const orgs = await this.ecosystemRepository.getEcosystemOrgsByOrgIdAndEcosystemId(invitedOrgIds, ecosystemIds);
-      const statusMap = new Map(orgs.map((org) => [`${org.orgId}-${org.ecosystemId}`, org.status]));
-      const enrichedData: IEcosystemInvitations[] = invitations.data.map((invitation) => ({
-        ...invitation,
-        orgStatus: statusMap.get(`${invitation.invitedOrg}-${invitation.ecosystemId}`) || 'NOT_FOUND'
-      }));
-      return { ...invitations, data: enrichedData };
+      return invitations;
     } catch (error) {
       this.logger.error('getInvitationsByUserId error', error);
       throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationNotFound);

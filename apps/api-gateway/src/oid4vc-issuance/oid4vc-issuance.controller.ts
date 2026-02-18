@@ -653,7 +653,7 @@ export class Oid4vcIssuanceController {
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
-    if (webhookUrlInfo && 'string' !== typeof webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
+    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
       this.logger.log(`Posting response to the webhook url`);
       const plainIssuanceDto = JSON.parse(JSON.stringify(oidcIssueCredentialDto));
 

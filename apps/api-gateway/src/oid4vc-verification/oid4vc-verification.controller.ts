@@ -506,7 +506,7 @@ export class Oid4vcVerificationController {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
 
-    if (webhookUrlInfo && 'string' !== typeof webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
+    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
       this.logger.log(`posting webhook response to webhook url`);
       await this.oid4vcVerificationService
         ._postWebhookResponse(

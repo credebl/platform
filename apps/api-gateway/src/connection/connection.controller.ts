@@ -388,7 +388,7 @@ export class ConnectionController {
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
-    if (webhookUrlInfo && 'string' !== typeof webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
+    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
       await this.connectionService
         ._postWebhookResponse(webhookUrlInfo.webhookUrl, { data: connectionDto }, webhookUrlInfo.webhookSecret)
         .catch((error) => {
@@ -430,7 +430,7 @@ export class ConnectionController {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
 
-    if (webhookUrlInfo && 'string' !== typeof webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
+    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
       await this.connectionService
         ._postWebhookResponse(
           webhookUrlInfo.webhookUrl,

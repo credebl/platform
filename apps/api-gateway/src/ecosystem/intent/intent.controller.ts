@@ -41,7 +41,6 @@ import { CreateIntentDto } from 'apps/ecosystem/dtos/create-intent.dto';
 import { UpdateIntentDto } from 'apps/ecosystem/dtos/update-intent.dto';
 import { GetAllIntentTemplatesResponseDto } from '../../utilities/dtos/get-all-intent-templates-response.dto';
 import { GetAllIntentTemplatesDto } from '../../utilities/dtos/get-all-intent-templates.dto';
-import { GetIntentTemplateByIntentAndOrgDto } from '../../utilities/dtos/get-intent-template-by-intent-and-org.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../../utilities/dtos/intent-template.dto';
 import { EcosystemFeatureGuard } from '../../authz/guards/ecosystem-feature-guard';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
@@ -395,13 +394,19 @@ export class IntentController {
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent template retrieved successfully', type: ApiResponseDto })
   async getIntentTemplateByIntentAndOrg(
-    @Query() getIntentTemplateByIntentAndOrgDto: GetIntentTemplateByIntentAndOrgDto,
+    @Param('intentName') intentName: string,
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
     @Res() res: Response
   ): Promise<Response> {
-    const intentTemplate = await this.ecosystemService.getIntentTemplateByIntentAndOrg(
-      getIntentTemplateByIntentAndOrgDto.intentName,
-      getIntentTemplateByIntentAndOrgDto.verifierOrgId
-    );
+    const intentTemplate = await this.ecosystemService.getIntentTemplateByIntentAndOrg(intentName, orgId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: intentTemplate ? 'Intent template retrieved successfully' : 'No intent template found',

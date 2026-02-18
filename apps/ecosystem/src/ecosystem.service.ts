@@ -167,9 +167,6 @@ export class EcosystemService {
 
     try {
       const invitations = await this.ecosystemRepository.getInvitationsByUserId(userId, pageDetail);
-      if (!invitations.data) {
-        throw new Error('failed to fetch invitations');
-      }
       const invitedOrgIds = [...new Set(invitations?.data.map((i) => i.invitedOrg).filter(Boolean))];
       const ecosystemIds = [...new Set(invitations?.data.map((i) => i.ecosystemId).filter(Boolean))];
       const orgs = await this.ecosystemRepository.getEcosystemOrgsByOrgIdAndEcosystemId(invitedOrgIds, ecosystemIds);

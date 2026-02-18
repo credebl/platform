@@ -1505,7 +1505,8 @@ export class EcosystemRepository {
       return await this.prisma.ecosystem_orgs.findMany({
         where: {
           orgId: { in: orgId },
-          ecosystemId: { in: ecosystemId }
+          ecosystemId: { in: ecosystemId },
+          deletedAt: null
         },
         select: {
           orgId: true,

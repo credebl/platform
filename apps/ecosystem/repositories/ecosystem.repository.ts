@@ -1562,7 +1562,7 @@ export class EcosystemRepository {
       const data = await this.prisma.platform_config.findFirst({
         select: { isEcosystemEnabled: true }
       });
-      return data.isEcosystemEnabled ? data.isEcosystemEnabled : false;
+      return data?.isEcosystemEnabled ?? false;
     } catch (error) {
       this.logger.error(`getEcosystemEnableStatus error: ${error}`);
       throw error;

@@ -9,7 +9,10 @@ import {
 } from '@credebl/common/interfaces/oid4vp-verification';
 import { MessagePattern } from '@nestjs/microservices';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
-import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
+import {
+  Oid4vpPresentationWh,
+  VerifyAuthorizationResponse
+} from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
 
 @Controller()
@@ -180,5 +183,17 @@ export class Oid4vpVerificationController {
       `[deleteVerificationTemplate] Received 'verification-template-delete' for orgId=${orgId}, templateId=${templateId}`
     );
     return this.oid4vpVerificationService.deleteVerificationTemplate(orgId, templateId);
+  }
+
+  @MessagePattern({ cmd: 'verify-authorization-response' })
+  async verifyAuthorizationResponse(payload: {
+    verifyAuthorizationResponse: VerifyAuthorizationResponse;
+    orgId: string;
+  }): Promise<object> {
+    const { verifyAuthorizationResponse, orgId } = payload;
+    this.logger.debug(
+      `[verifyAuthorizationResponse] Received 'verify-authorization-response' request for orgId=${orgId}`
+    );
+    return this.oid4vpVerificationService.verifyAuthorizationResponse(verifyAuthorizationResponse, orgId);
   }
 }

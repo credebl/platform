@@ -1,7 +1,12 @@
 import { Controller, Logger } from '@nestjs/common';
 import { Oid4vpVerificationService } from './oid4vc-verification.service';
-import { SignerOption, user } from '@prisma/client';
-import { CreateVerifier, IPresentationRequest, UpdateVerifier } from '@credebl/common/interfaces/oid4vp-verification';
+import { user } from '@prisma/client';
+import {
+  CreateVerifier,
+  IPresentationRequest,
+  IRequestSigner,
+  UpdateVerifier
+} from '@credebl/common/interfaces/oid4vp-verification';
 import { MessagePattern } from '@nestjs/microservices';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
@@ -102,10 +107,10 @@ export class Oid4vpVerificationController {
     verifierId: string;
     intent: string;
     responseMode: string;
-    signerOption: SignerOption;
+    requestSigner: IRequestSigner;
     userDetails: user;
   }): Promise<object> {
-    const { orgId, verifierId, intent, responseMode, signerOption, userDetails } = payload;
+    const { orgId, verifierId, intent, responseMode, requestSigner, userDetails } = payload;
     this.logger.debug(
       `[createIntentBasedVerificationPresentation] Received 'oid4vp-intent-based-verification-presentation' for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
     );
@@ -114,7 +119,7 @@ export class Oid4vpVerificationController {
       verifierId,
       intent,
       responseMode,
-      signerOption,
+      requestSigner,
       userDetails
     );
   }

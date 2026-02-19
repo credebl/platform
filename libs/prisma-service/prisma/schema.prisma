@@ -780,7 +780,7 @@ model ecosystem_orgs {
   lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
   lastChangedBy       String    @db.Uuid
   deletedAt           DateTime? @db.Timestamp(6)
-  userId     String    @db.Uuid
+  userId              String    @db.Uuid
   ecosystem     ecosystem       @relation(fields: [ecosystemId], references: [id])
   ecosystemRole ecosystem_roles @relation(fields: [ecosystemRoleId], references: [id])
   organisation  organisation    @relation(fields: [orgId], references: [id])
@@ -805,7 +805,8 @@ model ecosystem_invitations {
 
   organisation        organisation? @relation(fields: [invitedOrg], references: [id])
   ecosystem           ecosystem? @relation(fields: [ecosystemId], references: [id])
-  user                user? @relation(fields: [userId], references: [id])
+  user                user?      @relation(fields: [userId], references: [id])
+
   @@unique([email, ecosystemId, invitedOrg])
 }
 

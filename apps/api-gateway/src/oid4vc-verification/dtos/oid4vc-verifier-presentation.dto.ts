@@ -15,7 +15,7 @@ import {
   Matches
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ResponseMode } from '@credebl/enum/enum';
+import { ClientIdPrefix, ResponseMode } from '@credebl/enum/enum';
 import { SignerOption } from '@prisma/client';
 
 /**
@@ -55,6 +55,14 @@ export class VerificationPresentationQueryDto {
   @IsOptional()
   @IsUrl()
   authorizationRequestUri?: string;
+
+  @ApiPropertyOptional({
+    description: 'The public id for the authorization request',
+    example: '6b2f8428-7acc-4d18-8dac-e35a19b4ca4a'
+  })
+  @IsOptional()
+  @IsString()
+  authorizationRequestId?: string;
 
   @ApiPropertyOptional({
     description: 'Nonce associated with the presentation',
@@ -300,17 +308,27 @@ export class OnlyOneOfConstraint implements ValidatorConstraintInterface {
   }
 }
 
-export class PresentationRequestDto {
-  @ApiPropertyOptional({
-    example: {
-      method: 'DID'
-    },
-    description: 'Signer option type'
-  })
+export class RequestSignerDto {
+  @ApiProperty({ enum: SignerOption, example: SignerOption.DID })
+  @IsDefined()
+  @IsEnum(SignerOption)
+  method: SignerOption;
+
+  @ApiPropertyOptional({ enum: ClientIdPrefix, example: ClientIdPrefix.X509Hash })
   @IsOptional()
-  requestSigner?: {
-    method: SignerOption;
-  };
+  @IsEnum(ClientIdPrefix)
+  clientIdPrefix?: ClientIdPrefix;
+}
+
+export class PresentationRequestDto {
+  @ApiProperty({
+    type: RequestSignerDto,
+    description: 'Request signer option'
+  })
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => RequestSignerDto)
+  requestSigner: RequestSignerDto;
 
   @ApiPropertyOptional({
     type: PresentationExchangeDto,

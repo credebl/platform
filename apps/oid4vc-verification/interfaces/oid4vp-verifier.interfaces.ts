@@ -22,6 +22,7 @@ export interface VerificationSessionQuery {
   payloadState?: string;
   state?: OpenId4VcVerificationPresentationState;
   authorizationRequestUri?: string;
+  authorizationRequestId?: string;
   nonce?: string;
   id?: string;
 }

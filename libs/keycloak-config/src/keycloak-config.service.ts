@@ -46,16 +46,53 @@ export class KeycloakConfigService implements OnModuleInit {
     this.logger.log(`Target Realm: ${realmName}`);
 
     this.logger.log('');
-    this.logger.log('--- [Step 1/3] Realm-Level Protocol Mapper (profile scope) ---');
+    this.logger.log('--- [Step 1/4] Enable Unmanaged Attributes (User Profile) ---');
+    await this.ensureUnmanagedAttributesEnabled(realmName, token);
+
+    this.logger.log('');
+    this.logger.log('--- [Step 2/4] Realm-Level Protocol Mapper (profile scope) ---');
     await this.ensureRealmProtocolMapper(realmName, token);
 
     this.logger.log('');
-    this.logger.log('--- [Step 2/3] Per-Client Protocol Mappers ---');
+    this.logger.log('--- [Step 3/4] Per-Client Protocol Mappers ---');
     await this.ensureAllClientsProtocolMapper(realmName, token);
 
     this.logger.log('');
-    this.logger.log('--- [Step 3/3] Verification: Checking Users with ecosystem_access ---');
+    this.logger.log('--- [Step 4/4] Verification: Checking Users with ecosystem_access ---');
     await this.verifyUsersEcosystemAccess(realmName, token);
+  }
+
+  private async ensureUnmanagedAttributesEnabled(realm: string, token: string): Promise<void> {
+    try {
+      const userProfileUrl = await this.keycloakUrlService.GetUserProfileURL(realm);
+      this.logger.log(`Fetching User Profile config from: ${userProfileUrl}`);
+      const profileConfig = await this.commonService.httpGet(userProfileUrl, this.getAuthHeader(token));
+
+      if (!profileConfig || 'object' !== typeof profileConfig) {
+        this.logger.warn(`Unexpected User Profile response: ${JSON.stringify(profileConfig)}`);
+        this.logger.warn('Skipping - your Keycloak version may not support User Profile API');
+        return;
+      }
+
+      const currentPolicy = profileConfig.unmanagedAttributePolicy;
+      this.logger.log(`Current unmanagedAttributePolicy: ${currentPolicy || 'NOT SET (disabled)'}`);
+
+      if ('ENABLED' === currentPolicy) {
+        this.logger.log('Result: Unmanaged attributes already ENABLED - SKIPPED');
+        return;
+      }
+
+      this.logger.log('Result: Unmanaged attributes NOT enabled - UPDATING...');
+      profileConfig.unmanagedAttributePolicy = 'ENABLED';
+
+      await this.commonService.httpPut(userProfileUrl, profileConfig, this.getAuthHeader(token));
+      this.logger.log('Result: unmanagedAttributePolicy set to ENABLED');
+      this.logger.log('This allows custom attributes like ecosystem_access to be stored on users');
+    } catch (error) {
+      this.logger.warn(`Could not configure User Profile: ${error.message || error}`);
+      this.logger.warn('If using Keycloak < 24, this is expected and can be ignored');
+      this.logger.warn('If using Keycloak 24+, manually enable Unmanaged Attributes in Realm Settings > User Profile');
+    }
   }
 
   private async ensureRealmProtocolMapper(realm: string, token: string): Promise<void> {

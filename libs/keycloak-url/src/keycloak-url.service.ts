@@ -94,4 +94,8 @@ export class KeycloakUrlService {
   async GetClientsURL(realm: string): Promise<string> {
     return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients?max=1000`;
   }
+
+  async GetUserProfileURL(realm: string): Promise<string> {
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/users/profile`;
+  }
 }

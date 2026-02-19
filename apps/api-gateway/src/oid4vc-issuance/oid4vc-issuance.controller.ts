@@ -633,6 +633,7 @@ export class Oid4vcIssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
+    oidcIssueCredentialDto.contextCorrelationId = oidcIssueCredentialDto.contextCorrelationId.replace('tenant-', '');
     if (id && 'default' === oidcIssueCredentialDto.contextCorrelationId) {
       oidcIssueCredentialDto.orgId = id;
     }

@@ -444,7 +444,10 @@ export class VerificationController {
     @Res() res: Response
   ): Promise<Response> {
     proofPresentationPayload.type = 'Verification';
-
+    proofPresentationPayload.contextCorrelationId = proofPresentationPayload.contextCorrelationId.replace(
+      'tenant-',
+      ''
+    );
     if (orgId && 'default' === proofPresentationPayload.contextCorrelationId) {
       proofPresentationPayload.orgId = orgId;
     }

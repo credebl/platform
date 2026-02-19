@@ -370,7 +370,7 @@ export class ConnectionController {
   ): Promise<Response> {
     connectionDto.type = 'Connection';
     this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
-
+    connectionDto.contextCorrelationId = connectionDto.contextCorrelationId.replace('tenant-', '');
     if (orgId && 'default' === connectionDto?.contextCorrelationId) {
       connectionDto.orgId = orgId;
     }
@@ -416,6 +416,10 @@ export class ConnectionController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
+    questionAnswerWebhookDto.contextCorrelationId = questionAnswerWebhookDto.contextCorrelationId.replace(
+      'tenant-',
+      ''
+    );
     questionAnswerWebhookDto.type = 'question-answer';
     this.logger.debug(`questionAnswer ::: ${JSON.stringify(questionAnswerWebhookDto)} ${orgId}`);
 

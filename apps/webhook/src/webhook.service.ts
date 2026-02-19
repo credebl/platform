@@ -7,6 +7,8 @@ import { ICreateWebhookUrl, IGetWebhookUrl, IWebhookDto } from '../interfaces/we
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
 import * as crypto from 'crypto';
+import { isValidWebhookUrl } from '@credebl/common';
+import { decryptClientCredential } from '@credebl/common/cast.helper';
 
 @Injectable()
 export class WebhookService {
@@ -101,16 +103,20 @@ export class WebhookService {
 
       return {
         webhookUrl: webhookUrlInfo.webhookUrl,
-        webhookSecret: webhookUrlInfo.webhookSecret
+        webhookSecret: webhookUrlInfo.webhookSecret || null
       };
     } catch (error) {
       this.logger.error(`[getWebhookUrl] -  webhook url details : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
-
   async webhookFunc(webhookUrl: string, data: object, webhookSecret?: string): Promise<Response> {
     try {
+      const isSafeUrl = await isValidWebhookUrl(webhookUrl);
+      if (!isSafeUrl) {
+        throw new InternalServerErrorException('Invalid or blocked webhook URL');
+      }
+
       const headers = {
         'Content-Type': 'application/json'
       };
@@ -120,7 +126,8 @@ export class WebhookService {
       if (webhookSecret) {
         const timestamp = new Date().getTime().toString();
         const payload = `${timestamp}.${requestBody}`;
-        const signature = crypto.createHmac('sha256', webhookSecret).update(payload).digest('hex');
+        const decryptedSecret = await decryptClientCredential(webhookSecret);
+        const signature = crypto.createHmac('sha256', decryptedSecret).update(payload).digest('hex');
 
         headers['X-Signature'] = signature;
         headers['X-Timestamp'] = timestamp;

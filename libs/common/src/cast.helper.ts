@@ -328,7 +328,7 @@ export class AgentSpinupValidator {
     }
   }
 
-  public static validate(agentSpinupDto): void {
+  public static validate(agentSpinupDto: { walletName: string }): void {
     this.validateWalletName(agentSpinupDto.walletName);
   }
 }
@@ -458,6 +458,17 @@ export const encryptClientCredential = async (clientCredential: string): Promise
   }
 };
 
+export const decryptClientCredential = async (encryptedClientCredential: string): Promise<string> => {
+  try {
+    const bytes = CryptoJS.AES.decrypt(encryptedClientCredential, process.env.CRYPTO_PRIVATE_KEY);
+    const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    return decryptedData;
+  } catch (error) {
+    logger.error('An error occurred during decryptClientCredential:', error);
+    throw error;
+  }
+};
+
 export function ValidateNestedStructureFields(validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string): void {
     registerDecorator({
@@ -524,19 +535,22 @@ export function ValidateNestedStructureFields(validationOptions?: ValidationOpti
   };
 }
 
-export function buildUrlWithQuery<T extends Record<string, any>>(baseUrl: string, queryParams: T): string {
+export function buildUrlWithQuery<T extends Record<string, string | number | boolean | null | undefined | object>>(
+  baseUrl: string,
+  queryParams: T
+): string {
   const criteriaParams: string[] = [];
 
-  if (!queryParams || (queryParams?.length >= 0)) {
-    return baseUrl
+  if (!queryParams || 0 === Object.keys(queryParams).length) {
+    return baseUrl;
   }
 
   for (const [key, value] of Object.entries(queryParams)) {
     // Skip undefined or null values
-    if (value !== undefined && value !== null) {
+    if (value !== undefined && null !== value) {
       criteriaParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
     }
   }
 
-  return criteriaParams.length > 0 ? `${baseUrl}?${criteriaParams.join('&')}` : baseUrl;
+  return 0 < criteriaParams.length ? `${baseUrl}?${criteriaParams.join('&')}` : baseUrl;
 }

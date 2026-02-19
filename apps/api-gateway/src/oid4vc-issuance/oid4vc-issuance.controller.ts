@@ -633,6 +633,7 @@ export class Oid4vcIssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
+    oidcIssueCredentialDto.contextCorrelationId = oidcIssueCredentialDto.contextCorrelationId.replace('tenant-', '');
     if (id && 'default' === oidcIssueCredentialDto.contextCorrelationId) {
       oidcIssueCredentialDto.orgId = id;
     }
@@ -648,18 +649,20 @@ export class Oid4vcIssuanceController {
       data: getCredentialDetails
     };
 
-    const webhookUrl = await this.oid4vcIssuanceService
+    const webhookUrlInfo = await this.oid4vcIssuanceService
       ._getWebhookUrl(oidcIssueCredentialDto.contextCorrelationId, id)
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
-    if (webhookUrl) {
+    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
       this.logger.log(`Posting response to the webhook url`);
       const plainIssuanceDto = JSON.parse(JSON.stringify(oidcIssueCredentialDto));
 
-      await this.oid4vcIssuanceService._postWebhookResponse(webhookUrl, { data: plainIssuanceDto }).catch((error) => {
-        this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
-      });
+      await this.oid4vcIssuanceService
+        ._postWebhookResponse(webhookUrlInfo.webhookUrl, { data: plainIssuanceDto }, webhookUrlInfo.webhookSecret)
+        .catch((error) => {
+          this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
+        });
     }
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

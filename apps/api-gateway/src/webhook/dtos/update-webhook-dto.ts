@@ -1,17 +1,17 @@
 import { trim } from '@credebl/common/cast.helper';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsString, IsUrl, IsOptional, MinLength } from 'class-validator';
+import { IsString, IsUrl, IsOptional, MinLength } from 'class-validator';
 
-export class RegisterWebhookDto {
+export class UpdateWebhookDto {
   orgId: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @Transform(({ value }) => trim(value))
-  @IsNotEmpty({ message: 'webhookUrl is required.' })
   @IsString({ message: 'webhookUrl must be in string format.' })
   @IsUrl(undefined, { message: 'webhookUrl is not valid' })
-  webhookUrl: string;
+  webhookUrl?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

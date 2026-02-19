@@ -489,6 +489,7 @@ export class Oid4vcVerificationController {
     @Res() res: Response
   ): Promise<Response> {
     oid4vpPresentationWhDto.type = 'Oid4vpPresentation';
+    oid4vpPresentationWhDto.contextCorrelationId = oid4vpPresentationWhDto.contextCorrelationId.replace('tenant-', '');
     if (id && 'default' === oid4vpPresentationWhDto.contextCorrelationId) {
       oid4vpPresentationWhDto.orgId = id;
     }
@@ -500,18 +501,22 @@ export class Oid4vcVerificationController {
       data: []
     };
 
-    const webhookUrl = await this.oid4vcVerificationService
+    const webhookUrlInfo = await this.oid4vcVerificationService
       ._getWebhookUrl(oid4vpPresentationWhDto?.contextCorrelationId, id)
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        this.logger.error(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
 
-    if (webhookUrl) {
+    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
       this.logger.log(`posting webhook response to webhook url`);
       await this.oid4vcVerificationService
-        ._postWebhookResponse(webhookUrl, { data: oid4vpPresentationWhDto })
+        ._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: oid4vpPresentationWhDto },
+          webhookUrlInfo.webhookSecret
+        )
         .catch((error) => {
-          this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
+          this.logger.error(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
         });
     }
 

@@ -4,6 +4,7 @@ import { BaseService } from 'libs/service/base.service';
 import { RegisterWebhookDto } from './dtos/register-webhook-dto';
 import { ICreateWebhookUrl, IGetWebhookUrl } from 'apps/webhook/interfaces/webhook.interfaces';
 import { GetWebhookDto } from './dtos/get-webhoook-dto';
+import { UpdateWebhookDto } from './dtos/update-webhook-dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 
@@ -26,5 +27,12 @@ export class WebhookService extends BaseService {
 
     // NATS call
     return this.natsClient.sendNatsMessage(this.webhookProxy, 'register-webhook', payload);
+  }
+
+  async updateWebhook(updateWebhookDto: UpdateWebhookDto): Promise<ICreateWebhookUrl> {
+    const payload = { updateWebhookDto };
+
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.webhookProxy, 'update-webhook', payload);
   }
 }

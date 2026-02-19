@@ -369,7 +369,8 @@ export const ResponseMessages = {
       webhookUrlRegister: 'Webhook Url registered successfully',
       getWebhookUrl: 'Webhook Url fetched successfully',
       createKeys: 'Key-pair created successfully',
-      walletDelete: 'The wallet has been deleted.'
+      walletDelete: 'The wallet has been deleted.',
+      webhookUrlUpdate: 'Webhook Url updated successfully'
     },
     error: {
       exists: 'An agent name is already exist',
@@ -567,7 +568,8 @@ export const ResponseMessages = {
     error: {
       registerWebhook: 'Unable to register a webhook url',
       webhookResponse: 'Error in sending webhook response to org webhook url',
-      notFound: 'Webhook url not found'
+      notFound: 'Webhook url not found',
+      updateWebhook: 'Unable to update webhook url'
     }
   },
   shorteningUrl: {

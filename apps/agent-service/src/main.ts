@@ -29,7 +29,7 @@ async function bootstrap(): Promise<void> {
 
   const agentSpinupPayload: IAgentSpinupDto = {
     walletName: process.env.PLATFORM_WALLET_NAME,
-    walletPassword: process.env.PLATFORM_WALLET_PASSWORD,
+    walletPassword: process.env.PLATFORM_WALLET_KEY, 
     seed: process.env.PLATFORM_SEED,
     orgName: `${CommonConstants.PLATFORM_ADMIN_ORG}`,
     platformAdminEmail: process.env.PLATFORM_ADMIN_EMAIL,

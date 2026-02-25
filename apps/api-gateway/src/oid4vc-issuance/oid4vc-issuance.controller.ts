@@ -54,6 +54,7 @@ import {
   GetAllCredentialOfferDto,
   UpdateCredentialRequestDto
 } from './dtos/issuer-sessions.dto';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -655,7 +656,7 @@ export class Oid4vcIssuanceController {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
         return null;
       });
-    const webhookUrlInfo = (await webhookUrlInfoPromise) as { webhookUrl: string; webhookSecret: string } | null;
+    const webhookUrlInfo = (await webhookUrlInfoPromise) as IWebhookUrlInfo | null;
 
     if (webhookUrlInfo?.webhookUrl) {
       this.logger.log(`Posting response to the webhook url`);

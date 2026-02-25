@@ -50,6 +50,7 @@ import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
 import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -510,7 +511,7 @@ export class Oid4vcVerificationController {
         this.logger.error(`error in getting webhook url ::: ${JSON.stringify(error)}`);
         return null;
       });
-    const webhookUrlInfo = (await webhookUrlInfoPromise) as { webhookUrl: string; webhookSecret: string } | null;
+    const webhookUrlInfo = (await webhookUrlInfoPromise) as IWebhookUrlInfo | null;
 
     if (webhookUrlInfo?.webhookUrl) {
       this.logger.log(`posting webhook response to webhook url`);

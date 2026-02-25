@@ -4,7 +4,14 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { RpcException } from '@nestjs/microservices';
 import AsyncRetry = require('async-retry');
 import { ICreateWebhookUrl, IGetWebhookUrl, IWebhookDto } from '../interfaces/webhook.interfaces';
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException
+} from '@nestjs/common';
 import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
 import * as crypto from 'crypto';
 import { isValidWebhookUrl } from '@credebl/common';
@@ -111,20 +118,13 @@ export class WebhookService {
     }
   }
   async webhookFunc(webhookUrl: string, data: object, webhookSecret?: string): Promise<Response> {
+    const { isSafe } = await isValidWebhookUrl(webhookUrl);
+    if (!isSafe) {
+      throw new BadRequestException('Invalid or blocked webhook URL');
+    }
     try {
-      const { isSafe, resolvedIp } = await isValidWebhookUrl(webhookUrl);
-      if (!isSafe) {
-        throw new InternalServerErrorException('Invalid or blocked webhook URL');
-      }
-
-      const parsedWebhookUrl = new URL(webhookUrl);
-      const originalHost = parsedWebhookUrl.host;
-
-      const fetchUrl = resolvedIp ? webhookUrl.replace(parsedWebhookUrl.hostname, resolvedIp) : webhookUrl;
-
       const headers = {
-        'Content-Type': 'application/json',
-        Host: originalHost
+        'Content-Type': 'application/json'
       };
 
       const requestBody = JSON.stringify(data);
@@ -139,27 +139,39 @@ export class WebhookService {
         headers['X-Timestamp'] = timestamp;
       }
 
-      const response = await fetch(fetchUrl, {
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers,
-        body: requestBody
+        body: requestBody,
+        redirect: 'error'
       });
 
       if (!response.ok) {
         this.logger.error(`Error in sending webhook response to org webhook url:`, response.status);
-        throw new InternalServerErrorException(ResponseMessages.webhook.error.webhookResponse);
+        throw new HttpException(ResponseMessages.webhook.error.webhookResponse, response.status);
       }
       return response;
     } catch (err) {
       this.logger.error(`Error in sending webhook response to org webhook url: ${err}`);
+      if (err instanceof HttpException) {
+        throw err;
+      }
       throw new InternalServerErrorException(ResponseMessages.webhook.error.webhookResponse);
     }
   }
 
   async webhookResponse(webhookUrl: string, data: object, webhookSecret?: string): Promise<object> {
     try {
-      const webhookResponse = async (): Promise<Response> => this.webhookFunc(webhookUrl, data, webhookSecret);
-      const response = await AsyncRetry(webhookResponse, this.retryOptions(this.logger));
+      const response = await AsyncRetry(async (bail) => {
+        try {
+          return await this.webhookFunc(webhookUrl, data, webhookSecret);
+        } catch (error) {
+          if (error instanceof HttpException && 400 <= error.getStatus() && 500 > error.getStatus()) {
+            bail(error);
+          }
+          throw error;
+        }
+      }, this.retryOptions(this.logger));
       return response;
     } catch (error) {
       this.logger.error(`Error in sending webhook response to org webhook url: ${error}`);

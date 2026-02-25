@@ -9,6 +9,7 @@ import { IPresentationRequest } from '@credebl/common/interfaces/oid4vp-verifica
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
 import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 
 @Injectable()
 export class Oid4vcVerificationService {
@@ -108,7 +109,7 @@ export class Oid4vcVerificationService {
     return this.natsClient.sendNats(this.oid4vpProxy, 'webhook-oid4vp-presentation', payload);
   }
 
-  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<{ webhookUrl: string; webhookSecret?: string }> {
+  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<IWebhookUrlInfo> {
     const pattern = { cmd: 'get-webhookurl' };
     const payload = { tenantId, orgId };
 

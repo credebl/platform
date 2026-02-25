@@ -81,6 +81,7 @@ import { SchemaType } from '@credebl/enum/enum';
 import { CommonConstants } from '../../../../libs/common/src/common.constant';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -968,7 +969,7 @@ export class IssuanceController {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
         return null;
       });
-    const webhookUrlInfo = (await webhookUrlInfoPromise) as { webhookUrl: string; webhookSecret: string } | null;
+    const webhookUrlInfo = (await webhookUrlInfoPromise) as IWebhookUrlInfo | null;
 
     if (webhookUrlInfo?.webhookUrl) {
       const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));

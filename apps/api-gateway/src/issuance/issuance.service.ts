@@ -27,6 +27,7 @@ import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 import { user } from '@prisma/client';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 @Injectable()
 export class IssuanceService extends BaseService {
   constructor(
@@ -229,7 +230,7 @@ export class IssuanceService extends BaseService {
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'retry-bulk-credentials', payload);
   }
 
-  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<{ webhookUrl: string; webhookSecret?: string }> {
+  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<IWebhookUrlInfo> {
     const pattern = { cmd: 'get-webhookurl' };
     const payload = { tenantId, orgId };
 

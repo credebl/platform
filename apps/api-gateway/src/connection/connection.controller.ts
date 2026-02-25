@@ -54,6 +54,7 @@ import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto } from './dtos/q
 import { user } from '@prisma/client';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { ClientProxy } from '@nestjs/microservices';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('connections')
@@ -389,7 +390,7 @@ export class ConnectionController {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
         return null;
       });
-    const webhookUrlInfo = (await webhookUrlInfoPromise) as { webhookUrl: string; webhookSecret: string } | null;
+    const webhookUrlInfo = (await webhookUrlInfoPromise) as IWebhookUrlInfo | null;
 
     if (webhookUrlInfo?.webhookUrl) {
       this.connectionService

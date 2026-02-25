@@ -13,6 +13,7 @@ import {
   UpdateCredentialRequestDto
 } from './dtos/issuer-sessions.dto';
 import { OidcIssueCredentialDto } from './dtos/oid4vc-credential-wh.dto';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 
 @Injectable()
 export class Oid4vcIssuanceService extends BaseService {
@@ -140,7 +141,7 @@ export class Oid4vcIssuanceService extends BaseService {
     return this.natsClient.sendNats(this.issuanceProxy, 'webhook-oid4vc-issue-credential', payload);
   }
 
-  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<{ webhookUrl: string; webhookSecret?: string }> {
+  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<IWebhookUrlInfo> {
     const pattern = { cmd: 'get-webhookurl' };
     const payload = { tenantId, orgId };
 

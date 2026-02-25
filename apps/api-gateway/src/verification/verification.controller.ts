@@ -52,6 +52,7 @@ import { API_Version, ProofRequestType, SortFields } from './enum/verification.e
 import { user } from '@prisma/client';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { Validator } from '@credebl/common/validator';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -469,7 +470,7 @@ export class VerificationController {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
         return null;
       });
-    const webhookUrlInfo = (await webhookUrlInfoPromise) as { webhookUrl: string; webhookSecret: string } | null;
+    const webhookUrlInfo = (await webhookUrlInfoPromise) as IWebhookUrlInfo | null;
 
     if (webhookUrlInfo?.webhookUrl) {
       this.verificationService

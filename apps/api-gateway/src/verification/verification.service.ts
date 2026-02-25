@@ -14,6 +14,7 @@ import { IProofPresentation } from './interfaces/verification.interface';
 import { user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 
 @Injectable()
 export class VerificationService extends BaseService {
@@ -112,7 +113,7 @@ export class VerificationService extends BaseService {
     return this.natsClient.sendNatsMessage(this.verificationServiceProxy, 'get-verified-proof-details', payload);
   }
 
-  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<{ webhookUrl: string; webhookSecret?: string }> {
+  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<IWebhookUrlInfo> {
     const pattern = { cmd: 'get-webhookurl' };
     const payload = { tenantId, orgId };
 

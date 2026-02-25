@@ -17,8 +17,8 @@ RUN apk update && apk upgrade && apk add --no-cache openssl \
     && addgroup -g 1001 -S nodejs \
     && adduser -S nextjs -u 1001 -G nodejs
 WORKDIR /app
-COPY --chown=nextjs:nodejs --chmod=555 --from=build /app/dist/apps/x509/ ./dist/apps/x509/
-COPY --chown=nextjs:nodejs --chmod=555 --from=build /app/libs/ ./libs/
-COPY --chown=nextjs:nodejs --chmod=555 --from=build /app/node_modules ./node_modules
+COPY --chown=nextjs:nodejs --chmod=755 --from=build /app/dist/apps/x509/ ./dist/apps/x509/
+COPY --chown=nextjs:nodejs --chmod=755 --from=build /app/libs/ ./libs/
+COPY --chown=nextjs:nodejs --chmod=755 --from=build /app/node_modules ./node_modules
 USER nextjs
 CMD ["node", "dist/apps/x509/main.js"]

@@ -665,7 +665,9 @@ export class Oid4vcIssuanceController {
         );
       })
       .catch((error) => {
-        this.logger.debug(`error in webhook dispatch flow ::: ${JSON.stringify(error)}`);
+        this.logger.error(
+          `error in webhook dispatch flow ::: ${error?.message ?? error?.stack ?? JSON.stringify(error)}`
+        );
       });
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

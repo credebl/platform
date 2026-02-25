@@ -5,14 +5,14 @@ RUN apk update && apk upgrade && apk add --no-cache \
     && rm -rf /var/cache/apk/* \
     && addgroup -g 1001 -S nodejs \
     && adduser -S nextjs -u 1001
-RUN npm install -g pnpm@latest
+RUN npm install -g pnpm@9.15.3
 WORKDIR /app
-COPY --chown=nextjs:nodejs . .
+COPY . .
 RUN chmod +x /app/libs/prisma-service/prisma/scripts/geo_location_data_import.sh \
     && chmod +x /app/libs/prisma-service/prisma/scripts/update_client_credential_data.sh
 ENV PUPPETEER_SKIP_DOWNLOAD=true
-COPY pnpm-workspace.yaml ./
 RUN pnpm i --ignore-scripts
 RUN cd libs/prisma-service && npx prisma generate
+RUN chown -R nextjs:nodejs /app
 USER nextjs
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && npx prisma db seed"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma db seed"]

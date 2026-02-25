@@ -7,9 +7,9 @@ RUN apk update && apk upgrade && apk add --no-cache \
     docker \
     docker-compose \
     && rm -rf /var/cache/apk/*
-RUN npm install -g pnpm@latest --ignore-scripts
+RUN npm install -g pnpm@9.15.3 --ignore-scripts
 WORKDIR /app
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN pnpm i --ignore-scripts
 COPY . .
@@ -28,8 +28,8 @@ RUN apk update && apk upgrade && apk add --no-cache \
     && addgroup -g 1001 -S nodejs \
     && adduser -S nextjs -u 1001
 WORKDIR /app
-COPY --from=build --chown=nextjs:nodejs /app/dist/apps/agent-service/ ./dist/apps/agent-service/
-COPY --from=build --chown=nextjs:nodejs /app/libs/ ./libs/
-COPY --from=build --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=build /app/dist/apps/agent-service/ ./dist/apps/agent-service/
+COPY --from=build /app/libs/ ./libs/
+COPY --from=build /app/node_modules ./node_modules
 USER nextjs
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-service/main.js"]
+CMD ["node", "dist/apps/agent-service/main.js"]

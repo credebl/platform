@@ -8,14 +8,13 @@ RUN apk update && apk upgrade && apk add --no-cache \
     docker-compose \
     jq \
     && rm -rf /var/cache/apk/*
-RUN npm install -g pnpm@latest --ignore-scripts
+RUN npm install -g pnpm@9.15.3 --ignore-scripts
 WORKDIR /app
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 RUN pnpm i --ignore-scripts
 COPY . .
 RUN cd libs/prisma-service && npx prisma generate
-RUN ls -R /app/apps/agent-provisioning/AFJ/
 RUN pnpm run build agent-provisioning
 
 # Stage 2: Create the final image
@@ -35,15 +34,15 @@ RUN mkdir -p ./agent-provisioning/AFJ/endpoints \
     && mkdir -p ./agent-provisioning/AFJ/agent-config \
     && mkdir -p ./agent-provisioning/AFJ/port-file \
     && mkdir -p ./agent-provisioning/AFJ/token
-COPY --from=build --chown=nextjs:nodejs /app/dist/apps/agent-provisioning/ ./dist/apps/agent-provisioning/
-COPY --from=build --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=build --chown=nextjs:nodejs /app/apps/agent-provisioning/AFJ/scripts ./agent-provisioning/AFJ/scripts
-COPY --from=build --chown=nextjs:nodejs /app/apps/agent-provisioning/AFJ/port-file ./agent-provisioning/AFJ/port-file
-COPY --from=build --chown=nextjs:nodejs /app/libs/ ./libs/
+COPY --from=build /app/dist/apps/agent-provisioning/ ./dist/apps/agent-provisioning/
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/agent-provisioning/AFJ/scripts ./agent-provisioning/AFJ/scripts
+COPY --from=build /app/apps/agent-provisioning/AFJ/port-file ./agent-provisioning/AFJ/port-file
+COPY --from=build /app/libs/ ./libs/
 RUN chmod +x /app/agent-provisioning/AFJ/scripts/*.sh \
     && chmod 755 /app/agent-provisioning/AFJ/endpoints \
     && chmod 755 /app/agent-provisioning/AFJ/agent-config \
     && chmod 755 /app/agent-provisioning/AFJ/token \
     && chown -R nextjs:nodejs /app/agent-provisioning
 USER nextjs
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js"]
+CMD ["node", "dist/apps/agent-provisioning/main.js"]

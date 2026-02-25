@@ -963,23 +963,22 @@ export class IssuanceController {
       data: getCredentialDetails
     };
 
-    const webhookUrlInfoPromise = this.issueCredentialService
+    void this.issueCredentialService
       ._getWebhookUrl(issueCredentialDto.contextCorrelationId, id)
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
+        return this.issueCredentialService._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: plainIssuanceDto },
+          webhookUrlInfo.webhookSecret
+        );
+      })
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-        return null;
+        this.logger.debug(`error in webhook dispatch flow ::: ${JSON.stringify(error)}`);
       });
-    const webhookUrlInfo = (await webhookUrlInfoPromise) as IWebhookUrlInfo | null;
-
-    if (webhookUrlInfo?.webhookUrl) {
-      const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
-
-      this.issueCredentialService
-        ._postWebhookResponse(webhookUrlInfo.webhookUrl, { data: plainIssuanceDto }, webhookUrlInfo.webhookSecret)
-        .catch((error) => {
-          this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
-        });
-    }
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 

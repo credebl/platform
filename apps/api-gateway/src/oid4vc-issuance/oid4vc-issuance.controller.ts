@@ -650,24 +650,23 @@ export class Oid4vcIssuanceController {
       data: getCredentialDetails
     };
 
-    const webhookUrlInfoPromise = this.oid4vcIssuanceService
+    void this.oid4vcIssuanceService
       ._getWebhookUrl(oidcIssueCredentialDto.contextCorrelationId, id)
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        this.logger.log(`Posting response to the webhook url`);
+        const plainIssuanceDto = JSON.parse(JSON.stringify(oidcIssueCredentialDto));
+        return this.oid4vcIssuanceService._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: plainIssuanceDto },
+          webhookUrlInfo.webhookSecret
+        );
+      })
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-        return null;
+        this.logger.debug(`error in webhook dispatch flow ::: ${JSON.stringify(error)}`);
       });
-    const webhookUrlInfo = (await webhookUrlInfoPromise) as IWebhookUrlInfo | null;
-
-    if (webhookUrlInfo?.webhookUrl) {
-      this.logger.log(`Posting response to the webhook url`);
-      const plainIssuanceDto = JSON.parse(JSON.stringify(oidcIssueCredentialDto));
-
-      this.oid4vcIssuanceService
-        ._postWebhookResponse(webhookUrlInfo.webhookUrl, { data: plainIssuanceDto }, webhookUrlInfo.webhookSecret)
-        .catch((error) => {
-          this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
-        });
-    }
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

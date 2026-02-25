@@ -505,26 +505,22 @@ export class Oid4vcVerificationController {
       data: []
     };
 
-    const webhookUrlInfoPromise = this.oid4vcVerificationService
+    void this.oid4vcVerificationService
       ._getWebhookUrl(oid4vpPresentationWhDto?.contextCorrelationId, id)
-      .catch((error) => {
-        this.logger.error(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-        return null;
-      });
-    const webhookUrlInfo = (await webhookUrlInfoPromise) as IWebhookUrlInfo | null;
-
-    if (webhookUrlInfo?.webhookUrl) {
-      this.logger.log(`posting webhook response to webhook url`);
-      this.oid4vcVerificationService
-        ._postWebhookResponse(
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        this.logger.log(`posting webhook response to webhook url`);
+        return this.oid4vcVerificationService._postWebhookResponse(
           webhookUrlInfo.webhookUrl,
           { data: oid4vpPresentationWhDto },
           webhookUrlInfo.webhookSecret
-        )
-        .catch((error) => {
-          this.logger.error(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
-        });
-    }
+        );
+      })
+      .catch((error) => {
+        this.logger.error(`error in webhook dispatch flow ::: ${JSON.stringify(error)}`);
+      });
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

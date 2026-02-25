@@ -384,21 +384,21 @@ export class ConnectionController {
       message: ResponseMessages.connection.success.create,
       data: connectionData
     };
-    const webhookUrlInfoPromise = this.connectionService
+    void this.connectionService
       ._getWebhookUrl(connectionDto?.contextCorrelationId, orgId)
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        return this.connectionService._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: connectionDto },
+          webhookUrlInfo.webhookSecret
+        );
+      })
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-        return null;
+        this.logger.debug(`error in webhook dispatch flow ::: ${JSON.stringify(error)}`);
       });
-    const webhookUrlInfo = (await webhookUrlInfoPromise) as IWebhookUrlInfo | null;
-
-    if (webhookUrlInfo?.webhookUrl) {
-      this.connectionService
-        ._postWebhookResponse(webhookUrlInfo.webhookUrl, { data: connectionDto }, webhookUrlInfo.webhookSecret)
-        .catch((error) => {
-          this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
-        });
-    }
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 

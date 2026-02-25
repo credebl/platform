@@ -4,6 +4,18 @@ import { Logger } from '@nestjs/common';
 const { lookup } = dns;
 const logger = new Logger('UrlValidator');
 
+function sanitizeUrlForLog(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    parsed.username = '';
+    parsed.password = '';
+    parsed.search = '';
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return '<invalid-url>';
+  }
+}
+
 function isPrivateIp(ip: string): boolean {
   // IPv4-mapped IPv6: ::ffff:x.x.x.x
   const ipv4MappedMatch = ip.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i);
@@ -49,8 +61,13 @@ function isPrivateIp(ip: string): boolean {
   }
 
   // IPv6 checks
-  // ::1 (Loopback)
-  if ('::1' === ip) {
+  // ::1 / 0:0:0:0:0:0:0:1 (Loopback)
+  if (/^(::1|0:0:0:0:0:0:0:1)$/i.test(ip)) {
+    return true;
+  }
+
+  // :: / 0:0:0:0:0:0:0:0 (Unspecified)
+  if (/^(::|0:0:0:0:0:0:0:0)$/i.test(ip)) {
     return true;
   }
 
@@ -70,7 +87,7 @@ function isPrivateIp(ip: string): boolean {
 export async function isValidWebhookUrl(url: string): Promise<{ isSafe: boolean; resolvedIp?: string }> {
   // Allow local development based on environment variable
   if ('DEV' === process.env.PLATFORM_PROFILE_MODE) {
-    logger.warn(`Skipping URL validation for ${url} in DEV mode`);
+    logger.warn(`Skipping URL validation for ${sanitizeUrlForLog(url)} in DEV mode`);
     return { isSafe: true };
   }
 
@@ -79,7 +96,7 @@ export async function isValidWebhookUrl(url: string): Promise<{ isSafe: boolean;
 
     // 1. Enforce HTTPS
     if ('https:' !== parsedUrl.protocol) {
-      logger.warn(`Blocked webhook URL with non-HTTPS protocol: ${url}`);
+      logger.warn(`Blocked webhook URL with non-HTTPS protocol: ${sanitizeUrlForLog(url)}`);
       return { isSafe: false };
     }
 
@@ -88,12 +105,12 @@ export async function isValidWebhookUrl(url: string): Promise<{ isSafe: boolean;
     const { address } = await lookup(parsedUrl.hostname);
 
     if (!address) {
-      logger.warn(`Could not resolve hostname for URL: ${url}`);
+      logger.warn(`Could not resolve hostname for URL: ${sanitizeUrlForLog(url)}`);
       return { isSafe: false };
     }
 
     if (isPrivateIp(address)) {
-      logger.warn(`Blocked webhook URL resolving to private/internal IP: ${url} -> ${address}`);
+      logger.warn(`Blocked webhook URL resolving to private/internal IP: ${sanitizeUrlForLog(url)} -> ${address}`);
       return { isSafe: false };
     }
 

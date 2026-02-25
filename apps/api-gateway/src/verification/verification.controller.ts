@@ -464,25 +464,21 @@ export class VerificationController {
       data: webhookProofPresentation
     };
 
-    const webhookUrlInfoPromise = this.verificationService
+    void this.verificationService
       ._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId)
-      .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
-        return null;
-      });
-    const webhookUrlInfo = (await webhookUrlInfoPromise) as IWebhookUrlInfo | null;
-
-    if (webhookUrlInfo?.webhookUrl) {
-      this.verificationService
-        ._postWebhookResponse(
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        return this.verificationService._postWebhookResponse(
           webhookUrlInfo.webhookUrl,
           { data: proofPresentationPayload },
           webhookUrlInfo.webhookSecret
-        )
-        .catch((error) => {
-          this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
-        });
-    }
+        );
+      })
+      .catch((error) => {
+        this.logger.debug(`error in webhook dispatch flow ::: ${JSON.stringify(error)}`);
+      });
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 

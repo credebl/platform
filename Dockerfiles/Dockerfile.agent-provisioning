@@ -12,7 +12,7 @@ RUN npm install -g pnpm@9.15.3 --ignore-scripts
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 ENV PUPPETEER_SKIP_DOWNLOAD=true
-RUN pnpm i --ignore-scripts
+RUN pnpm i --frozen-lockfile --ignore-scripts
 COPY . .
 RUN cd libs/prisma-service && npx prisma generate
 RUN pnpm run build agent-provisioning

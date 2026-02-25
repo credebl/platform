@@ -1,11 +1,11 @@
 # Stage 1: Build the application
 FROM node:24-alpine3.21 AS build
 RUN apk update && apk upgrade && apk add --no-cache openssl && rm -rf /var/cache/apk/*
-RUN npm install -g pnpm@9.15.3
+RUN npm install -g pnpm@9.15.3 --ignore-scripts
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 ENV PUPPETEER_SKIP_DOWNLOAD=true
-RUN pnpm i --ignore-scripts
+RUN pnpm i --frozen-lockfile --ignore-scripts
 COPY . .
 RUN cd libs/prisma-service && npx prisma generate
 RUN pnpm run build oid4vc-verification
@@ -15,10 +15,10 @@ FROM node:24-alpine3.21
 RUN apk update && apk upgrade && apk add --no-cache openssl \
     && rm -rf /var/cache/apk/* \
     && addgroup -g 1001 -S nodejs \
-    && adduser -S nextjs -u 1001
+    && adduser -S nextjs -u 1001 -G nodejs
 WORKDIR /app
-COPY --from=build /app/dist/apps/oid4vc-verification/ ./dist/apps/oid4vc-verification/
-COPY --from=build /app/libs/ ./libs/
-COPY --from=build /app/node_modules ./node_modules
+COPY --chown=nextjs:nodejs --from=build /app/dist/apps/oid4vc-verification/ ./dist/apps/oid4vc-verification/
+COPY --chown=nextjs:nodejs --from=build /app/libs/ ./libs/
+COPY --chown=nextjs:nodejs --from=build /app/node_modules ./node_modules
 USER nextjs
 CMD ["node", "dist/apps/oid4vc-verification/main.js"]

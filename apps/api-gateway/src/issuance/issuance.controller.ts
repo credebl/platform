@@ -946,7 +946,7 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     issueCredentialDto.type = 'Issuance';
-    issueCredentialDto.contextCorrelationId = issueCredentialDto.contextCorrelationId.replace('tenant-', '');
+    issueCredentialDto.contextCorrelationId = issueCredentialDto.contextCorrelationId?.replace(/^tenant-/, '');
     if (id && 'default' === issueCredentialDto.contextCorrelationId) {
       issueCredentialDto.orgId = id;
     }
@@ -962,15 +962,18 @@ export class IssuanceController {
       data: getCredentialDetails
     };
 
-    const webhookUrlInfo = await this.issueCredentialService
+    const webhookUrlInfoPromise = this.issueCredentialService
       ._getWebhookUrl(issueCredentialDto.contextCorrelationId, id)
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        return null;
       });
-    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
+    const webhookUrlInfo = (await webhookUrlInfoPromise) as { webhookUrl: string; webhookSecret: string } | null;
+
+    if (webhookUrlInfo?.webhookUrl) {
       const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
 
-      await this.issueCredentialService
+      this.issueCredentialService
         ._postWebhookResponse(webhookUrlInfo.webhookUrl, { data: plainIssuanceDto }, webhookUrlInfo.webhookSecret)
         .catch((error) => {
           this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);

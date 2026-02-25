@@ -370,7 +370,7 @@ export class ConnectionController {
   ): Promise<Response> {
     connectionDto.type = 'Connection';
     this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
-    connectionDto.contextCorrelationId = connectionDto.contextCorrelationId.replace('tenant-', '');
+    connectionDto.contextCorrelationId = connectionDto.contextCorrelationId?.replace(/^tenant-/, '');
     if (orgId && 'default' === connectionDto?.contextCorrelationId) {
       connectionDto.orgId = orgId;
     }
@@ -383,13 +383,16 @@ export class ConnectionController {
       message: ResponseMessages.connection.success.create,
       data: connectionData
     };
-    const webhookUrlInfo = await this.connectionService
+    const webhookUrlInfoPromise = this.connectionService
       ._getWebhookUrl(connectionDto?.contextCorrelationId, orgId)
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        return null;
       });
-    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
-      await this.connectionService
+    const webhookUrlInfo = (await webhookUrlInfoPromise) as { webhookUrl: string; webhookSecret: string } | null;
+
+    if (webhookUrlInfo?.webhookUrl) {
+      this.connectionService
         ._postWebhookResponse(webhookUrlInfo.webhookUrl, { data: connectionDto }, webhookUrlInfo.webhookSecret)
         .catch((error) => {
           this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
@@ -416,8 +419,8 @@ export class ConnectionController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
-    questionAnswerWebhookDto.contextCorrelationId = questionAnswerWebhookDto.contextCorrelationId.replace(
-      'tenant-',
+    questionAnswerWebhookDto.contextCorrelationId = questionAnswerWebhookDto.contextCorrelationId?.replace(
+      /^tenant-/,
       ''
     );
     questionAnswerWebhookDto.type = 'question-answer';
@@ -428,14 +431,15 @@ export class ConnectionController {
       message: ResponseMessages.connection.success.create,
       data: ''
     };
-    const webhookUrlInfo = await this.connectionService
+    const webhookUrlInfoPromise = this.connectionService
       ._getWebhookUrl(questionAnswerWebhookDto?.contextCorrelationId, orgId)
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
+    const webhookUrlInfo = await webhookUrlInfoPromise;
 
     if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
-      await this.connectionService
+      this.connectionService
         ._postWebhookResponse(
           webhookUrlInfo.webhookUrl,
           { data: questionAnswerWebhookDto },

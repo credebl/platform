@@ -444,8 +444,8 @@ export class VerificationController {
     @Res() res: Response
   ): Promise<Response> {
     proofPresentationPayload.type = 'Verification';
-    proofPresentationPayload.contextCorrelationId = proofPresentationPayload.contextCorrelationId.replace(
-      'tenant-',
+    proofPresentationPayload.contextCorrelationId = proofPresentationPayload.contextCorrelationId?.replace(
+      /^tenant-/,
       ''
     );
     if (orgId && 'default' === proofPresentationPayload.contextCorrelationId) {
@@ -463,14 +463,16 @@ export class VerificationController {
       data: webhookProofPresentation
     };
 
-    const webhookUrlInfo = await this.verificationService
+    const webhookUrlInfoPromise = this.verificationService
       ._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId)
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        return null;
       });
+    const webhookUrlInfo = (await webhookUrlInfoPromise) as { webhookUrl: string; webhookSecret: string } | null;
 
-    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
-      await this.verificationService
+    if (webhookUrlInfo?.webhookUrl) {
+      this.verificationService
         ._postWebhookResponse(
           webhookUrlInfo.webhookUrl,
           { data: proofPresentationPayload },

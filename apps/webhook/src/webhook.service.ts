@@ -112,13 +112,19 @@ export class WebhookService {
   }
   async webhookFunc(webhookUrl: string, data: object, webhookSecret?: string): Promise<Response> {
     try {
-      const isSafeUrl = await isValidWebhookUrl(webhookUrl);
-      if (!isSafeUrl) {
+      const { isSafe, resolvedIp } = await isValidWebhookUrl(webhookUrl);
+      if (!isSafe) {
         throw new InternalServerErrorException('Invalid or blocked webhook URL');
       }
 
+      const parsedWebhookUrl = new URL(webhookUrl);
+      const originalHost = parsedWebhookUrl.host;
+
+      const fetchUrl = resolvedIp ? webhookUrl.replace(parsedWebhookUrl.hostname, resolvedIp) : webhookUrl;
+
       const headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Host: originalHost
       };
 
       const requestBody = JSON.stringify(data);
@@ -133,7 +139,7 @@ export class WebhookService {
         headers['X-Timestamp'] = timestamp;
       }
 
-      const response = await fetch(webhookUrl, {
+      const response = await fetch(fetchUrl, {
         method: 'POST',
         headers,
         body: requestBody

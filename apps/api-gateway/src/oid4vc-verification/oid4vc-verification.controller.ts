@@ -489,7 +489,10 @@ export class Oid4vcVerificationController {
     @Res() res: Response
   ): Promise<Response> {
     oid4vpPresentationWhDto.type = 'Oid4vpPresentation';
-    oid4vpPresentationWhDto.contextCorrelationId = oid4vpPresentationWhDto.contextCorrelationId.replace('tenant-', '');
+    oid4vpPresentationWhDto.contextCorrelationId = oid4vpPresentationWhDto.contextCorrelationId?.replace(
+      /^tenant-/,
+      ''
+    );
     if (id && 'default' === oid4vpPresentationWhDto.contextCorrelationId) {
       oid4vpPresentationWhDto.orgId = id;
     }
@@ -501,15 +504,17 @@ export class Oid4vcVerificationController {
       data: []
     };
 
-    const webhookUrlInfo = await this.oid4vcVerificationService
+    const webhookUrlInfoPromise = this.oid4vcVerificationService
       ._getWebhookUrl(oid4vpPresentationWhDto?.contextCorrelationId, id)
       .catch((error) => {
         this.logger.error(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        return null;
       });
+    const webhookUrlInfo = (await webhookUrlInfoPromise) as { webhookUrl: string; webhookSecret: string } | null;
 
-    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
+    if (webhookUrlInfo?.webhookUrl) {
       this.logger.log(`posting webhook response to webhook url`);
-      await this.oid4vcVerificationService
+      this.oid4vcVerificationService
         ._postWebhookResponse(
           webhookUrlInfo.webhookUrl,
           { data: oid4vpPresentationWhDto },

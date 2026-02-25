@@ -444,6 +444,9 @@ export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICreden
 
 export const encryptClientCredential = async (clientCredential: string): Promise<string> => {
   try {
+    if (!process.env.CRYPTO_PRIVATE_KEY) {
+      throw new Error('CRYPTO_PRIVATE_KEY environment variable is not set');
+    }
     const encryptedToken = CryptoJS.AES.encrypt(
       JSON.stringify(clientCredential),
       process.env.CRYPTO_PRIVATE_KEY
@@ -460,9 +463,22 @@ export const encryptClientCredential = async (clientCredential: string): Promise
 
 export const decryptClientCredential = async (encryptedClientCredential: string): Promise<string> => {
   try {
+    if (!process.env.CRYPTO_PRIVATE_KEY) {
+      throw new Error('CRYPTO_PRIVATE_KEY environment variable is not set');
+    }
+
     const bytes = CryptoJS.AES.decrypt(encryptedClientCredential, process.env.CRYPTO_PRIVATE_KEY);
-    const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-    return decryptedData;
+    const decryptedDataString = bytes.toString(CryptoJS.enc.Utf8);
+
+    if (!decryptedDataString) {
+      return encryptedClientCredential;
+    }
+
+    try {
+      return JSON.parse(decryptedDataString);
+    } catch (error) {
+      return decryptedDataString;
+    }
   } catch (error) {
     logger.error('An error occurred during decryptClientCredential:', error);
     throw error;

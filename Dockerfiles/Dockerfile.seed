@@ -1,23 +1,18 @@
-FROM node:18-alpine
-
-# Install pnpm
-RUN npm install -g pnpm
-
-RUN apk add --no-cache postgresql-client openssl 
-
-# Set working directory
+FROM node:24-alpine3.21
+RUN apk update && apk upgrade && apk add --no-cache \
+    postgresql-client \
+    openssl \
+    && rm -rf /var/cache/apk/* \
+    && addgroup -g 1001 -S nodejs \
+    && adduser -S nextjs -u 1001 \
+    && npm install -g pnpm@9.15.3 --ignore-scripts
 WORKDIR /app
-
 COPY . .
-RUN chmod +x /app/libs/prisma-service/prisma/scripts/geo_location_data_import.sh
-RUN chmod +x /app/libs/prisma-service/prisma/scripts/update_client_credential_data.sh
-
 ENV PUPPETEER_SKIP_DOWNLOAD=true
-COPY pnpm-workspace.yaml ./
-RUN pnpm i --ignore-scripts
-
-# Run Prisma commands
-RUN cd libs/prisma-service && npx prisma generate
-
-# Set the command to run the microservice
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && npx prisma db seed"]
+RUN chmod +x /app/libs/prisma-service/prisma/scripts/geo_location_data_import.sh \
+    && chmod +x /app/libs/prisma-service/prisma/scripts/update_client_credential_data.sh \
+    && pnpm i --frozen-lockfile --ignore-scripts \
+    && cd libs/prisma-service && npx prisma generate \
+    && chown -R nextjs:nodejs /app
+USER nextjs
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma db seed"]

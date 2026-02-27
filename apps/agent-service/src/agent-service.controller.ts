@@ -18,7 +18,8 @@ import {
   ITenantRecord,
   ITenantSchema,
   IUserRequestInterface,
-  IWallet
+  IWallet,
+  VerifyAuthorizationResponse
 } from './interface/agent-service.interface';
 
 import { AgentServiceService } from './agent-service.service';
@@ -466,5 +467,21 @@ export class AgentServiceController {
       `[oid4vpCreateVerificationSession] Received 'agent-create-oid4vp-verification-session' request for orgId=${payload?.orgId || 'N/A'}`
     );
     return this.agentServiceService.createOid4vpVerificationSession(payload.sessionRequest, payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-verify-oid4vp-session-auth-response' })
+  async verifyOid4vpSessionAuthResponse(payload: {
+    verifyAuthorizationResponse: VerifyAuthorizationResponse;
+    url: string;
+    orgId: string;
+  }): Promise<object> {
+    this.logger.log(
+      `[verifyOid4vpSessionAuthResponse] Received 'agent-verify-oid4vp-session-auth-response' request for orgId=${payload?.orgId || 'N/A'}`
+    );
+    return this.agentServiceService.verifyOid4vpSessionAuthResponse(
+      payload.verifyAuthorizationResponse,
+      payload.url,
+      payload.orgId
+    );
   }
 }

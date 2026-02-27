@@ -51,6 +51,7 @@ import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presenta
 import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
 import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
 import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
+import { VerifyAuthorizationResponseDto } from './dtos/verify-authorization-response.dto';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -726,5 +727,46 @@ export class Oid4vcVerificationController {
       data: template
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/oid4vp/verify-authorization-response')
+  @ApiOperation({
+    summary: 'Verify authorization response',
+    description: 'Verifies an authorization response for the specified organization.'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Authorization response verified successfully.',
+    type: ApiResponseDto
+  })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async verifyAuthorizationResponse(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Body() verifyAuthorizationResponseDto: VerifyAuthorizationResponseDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    this.logger.debug(`[verifyAuthorizationResponse] Called with orgId=${orgId}`);
+
+    const result = await this.oid4vcVerificationService.verifyAuthorizationResponse(
+      verifyAuthorizationResponseDto,
+      orgId
+    );
+    this.logger.debug(`[verifyAuthorizationResponse] Authorization response verified successfully for orgId=${orgId}`);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: 'Authorization response verified successfully',
+      data: result
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 }

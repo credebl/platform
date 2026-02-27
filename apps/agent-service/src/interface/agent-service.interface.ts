@@ -660,3 +660,9 @@ export interface WalletDetails {
   tenantId: string;
   orgId: string;
 }
+
+export interface VerifyAuthorizationResponse {
+  verificationSessionId: string;
+  authorizationResponse: Record<string, unknown>;
+  origin?: string;
+}

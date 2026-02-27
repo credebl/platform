@@ -200,7 +200,7 @@ export class EcosystemController {
   })
   @ApiQuery({
     name: 'orgId',
-    required: false,
+    required: true,
     type: String
   })
   @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
@@ -211,7 +211,6 @@ export class EcosystemController {
     @Query(
       'orgId',
       new ParseUUIDPipe({
-        optional: true,
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
         }
@@ -219,7 +218,7 @@ export class EcosystemController {
     )
     orgId?: string
   ): Promise<Response> {
-    const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id, paginationDto, orgId);
+    const ecosystems = await this.ecosystemService.getEcosystemOrgs(orgId ?? null, paginationDto);
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.fetchAllEcosystems,
@@ -455,6 +454,30 @@ export class EcosystemController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.dashboard,
       data: dashboard
+    });
+  }
+
+  @Get('/invitation/status')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get status of pending invitation for ecosystem creation',
+    description: 'Get status of pending invitation for ecosystem creation'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Invitation status fetched successfully'
+  })
+  async getCreateEcosystemInvitationStatus(@Res() res: Response, @User() reqUser: user): Promise<Response> {
+    if (!reqUser.email) {
+      throw new Error('Email not Found');
+    }
+    const status = await this.ecosystemService.getCreateEcosystemInvitationStatus(reqUser.email);
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.ecosystemStatus,
+      status
     });
   }
 }

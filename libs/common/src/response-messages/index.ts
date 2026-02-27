@@ -183,7 +183,7 @@ export const ResponseMessages = {
       fetchEndorsors: 'Endorser transactions fetched successfully',
       DeclineEndorsementTransaction: 'Endorsement request declined',
       AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
-      fetchOrgs: 'Ecosystem orgs fetched successfully',
+      fetchOrgs: 'Ecosystem members fetched successfully',
       allschema: 'Schema details fetched successfully',
       AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger',
       memberInviteSucess: 'Invitation sent successfully for the member',

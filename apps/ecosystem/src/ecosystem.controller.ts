@@ -7,7 +7,8 @@ import {
   IEcosystemInvitation,
   IEcosystemInvitations,
   IEcosystemMemberInvitations,
-  IGetAllOrgs,
+  IFromattedGetAllOrgs,
+  IGetEcosystemOrgsResponse,
   IPlatformDashboardCount
 } from '../interfaces/ecosystem.interfaces';
 import {
@@ -161,7 +162,7 @@ export class EcosystemController {
   async getAllEcosystemOrgsByEcosystemId(payload: {
     ecosystemId: string;
     pageDetail: IPaginationSortingDto;
-  }): Promise<PaginatedResponse<IGetAllOrgs>> {
+  }): Promise<PaginatedResponse<IFromattedGetAllOrgs>> {
     return this.ecosystemService.getAllEcosystemOrgsByEcosystemId(payload.ecosystemId, payload.pageDetail);
   }
 
@@ -338,5 +339,18 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'get-ecosystem-enable-status' })
   async getEcosystemEnableStatus(): Promise<boolean> {
     return this.ecosystemService.getEcosystemEnableStatus();
+  }
+
+  @MessagePattern({ cmd: 'get-ecosystem-orgs-by-orgId' })
+  async getEcosystemOrgs(payload: {
+    orgId: string;
+    pageDetail: IPaginationSortingDto;
+  }): Promise<PaginatedResponse<IGetEcosystemOrgsResponse>> {
+    return this.ecosystemService.getEcosystemOrgs(payload.orgId, payload.pageDetail);
+  }
+
+  @MessagePattern({ cmd: 'get-ecosystem-created-status' })
+  async getCreateEcosystemInvitationStatus(payload: { email: string }): Promise<boolean> {
+    return this.ecosystemService.getCreateEcosystemInvitationStatus(payload.email);
   }
 }

@@ -7,7 +7,7 @@ import {
   IEcosystemDashboard,
   IEcosystemInvitation,
   IEcosystemMemberInvitations,
-  IGetAllOrgs,
+  IFromattedGetAllOrgs,
   IPlatformDashboardCount
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
@@ -100,7 +100,7 @@ export class EcosystemService {
   async getAllEcosystemOrgsByEcosystemId(
     ecosystemId: string,
     pageDetail: IPaginationSortingDto
-  ): Promise<PaginatedResponse<IGetAllOrgs>> {
+  ): Promise<PaginatedResponse<IFromattedGetAllOrgs>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs', { ecosystemId, pageDetail });
   }
 
@@ -237,5 +237,13 @@ export class EcosystemService {
 
   async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-platform-admin-dashboard-count', {});
+  }
+
+  async getEcosystemOrgs(orgId: string | null, pageDetail: IPaginationSortingDto): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs-by-orgId', { orgId, pageDetail });
+  }
+
+  async getCreateEcosystemInvitationStatus(email: string): Promise<boolean> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-created-status', { email });
   }
 }

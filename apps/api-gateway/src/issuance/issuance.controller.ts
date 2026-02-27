@@ -81,6 +81,7 @@ import { SchemaType } from '@credebl/enum/enum';
 import { CommonConstants } from '../../../../libs/common/src/common.constant';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -946,6 +947,7 @@ export class IssuanceController {
     @Res() res: Response
   ): Promise<Response> {
     issueCredentialDto.type = 'Issuance';
+    issueCredentialDto.contextCorrelationId = issueCredentialDto.contextCorrelationId?.replace(/^tenant-/, '');
     if (id && 'default' === issueCredentialDto.contextCorrelationId) {
       issueCredentialDto.orgId = id;
     }
@@ -961,18 +963,24 @@ export class IssuanceController {
       data: getCredentialDetails
     };
 
-    const webhookUrl = await this.issueCredentialService
+    void this.issueCredentialService
       ._getWebhookUrl(issueCredentialDto.contextCorrelationId, id)
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
+        return this.issueCredentialService._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: plainIssuanceDto },
+          webhookUrlInfo.webhookSecret
+        );
+      })
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        this.logger.error(
+          `error in webhook dispatch flow ::: ${error?.message ?? error?.stack ?? JSON.stringify(error)}`
+        );
       });
-    if (webhookUrl) {
-      const plainIssuanceDto = JSON.parse(JSON.stringify(issueCredentialDto));
-
-      await this.issueCredentialService._postWebhookResponse(webhookUrl, { data: plainIssuanceDto }).catch((error) => {
-        this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
-      });
-    }
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 

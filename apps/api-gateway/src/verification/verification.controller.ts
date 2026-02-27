@@ -52,6 +52,7 @@ import { API_Version, ProofRequestType, SortFields } from './enum/verification.e
 import { user } from '@prisma/client';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { Validator } from '@credebl/common/validator';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -444,7 +445,10 @@ export class VerificationController {
     @Res() res: Response
   ): Promise<Response> {
     proofPresentationPayload.type = 'Verification';
-
+    proofPresentationPayload.contextCorrelationId = proofPresentationPayload.contextCorrelationId?.replace(
+      /^tenant-/,
+      ''
+    );
     if (orgId && 'default' === proofPresentationPayload.contextCorrelationId) {
       proofPresentationPayload.orgId = orgId;
     }
@@ -460,19 +464,23 @@ export class VerificationController {
       data: webhookProofPresentation
     };
 
-    const webhookUrl = await this.verificationService
+    void this.verificationService
       ._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId)
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        return this.verificationService._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: proofPresentationPayload },
+          webhookUrlInfo.webhookSecret
+        );
+      })
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        this.logger.error(
+          `error in webhook dispatch flow ::: ${error?.message ?? error?.stack ?? JSON.stringify(error)}`
+        );
       });
-
-    if (webhookUrl) {
-      await this.verificationService
-        ._postWebhookResponse(webhookUrl, { data: proofPresentationPayload })
-        .catch((error) => {
-          this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
-        });
-    }
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 

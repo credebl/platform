@@ -54,6 +54,7 @@ import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto } from './dtos/q
 import { user } from '@prisma/client';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { ClientProxy } from '@nestjs/microservices';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 @UseFilters(CustomExceptionFilter)
 @Controller()
 @ApiTags('connections')
@@ -370,7 +371,7 @@ export class ConnectionController {
   ): Promise<Response> {
     connectionDto.type = 'Connection';
     this.logger.debug(`connectionDto ::: ${JSON.stringify(connectionDto)} ${orgId}`);
-
+    connectionDto.contextCorrelationId = connectionDto.contextCorrelationId?.replace(/^tenant-/, '');
     if (orgId && 'default' === connectionDto?.contextCorrelationId) {
       connectionDto.orgId = orgId;
     }
@@ -383,16 +384,23 @@ export class ConnectionController {
       message: ResponseMessages.connection.success.create,
       data: connectionData
     };
-    const webhookUrl = await this.connectionService
+    void this.connectionService
       ._getWebhookUrl(connectionDto?.contextCorrelationId, orgId)
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        return this.connectionService._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: connectionDto },
+          webhookUrlInfo.webhookSecret
+        );
+      })
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        this.logger.error(
+          `error in webhook dispatch flow ::: ${error?.message ?? error?.stack ?? JSON.stringify(error)}`
+        );
       });
-    if (webhookUrl) {
-      await this.connectionService._postWebhookResponse(webhookUrl, { data: connectionDto }).catch((error) => {
-        this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
-      });
-    }
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
@@ -414,6 +422,10 @@ export class ConnectionController {
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {
+    questionAnswerWebhookDto.contextCorrelationId = questionAnswerWebhookDto.contextCorrelationId?.replace(
+      /^tenant-/,
+      ''
+    );
     questionAnswerWebhookDto.type = 'question-answer';
     this.logger.debug(`questionAnswer ::: ${JSON.stringify(questionAnswerWebhookDto)} ${orgId}`);
 
@@ -422,15 +434,20 @@ export class ConnectionController {
       message: ResponseMessages.connection.success.create,
       data: ''
     };
-    const webhookUrl = await this.connectionService
+    const webhookUrlInfoPromise = this.connectionService
       ._getWebhookUrl(questionAnswerWebhookDto?.contextCorrelationId, orgId)
       .catch((error) => {
         this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
       });
+    const webhookUrlInfo = await webhookUrlInfoPromise;
 
-    if (webhookUrl) {
-      await this.connectionService
-        ._postWebhookResponse(webhookUrl, { data: questionAnswerWebhookDto })
+    if (webhookUrlInfo && 'webhookUrl' in webhookUrlInfo) {
+      this.connectionService
+        ._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: questionAnswerWebhookDto },
+          webhookUrlInfo.webhookSecret
+        )
         .catch((error) => {
           this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
         });

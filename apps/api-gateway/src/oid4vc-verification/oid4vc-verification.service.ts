@@ -9,6 +9,7 @@ import { IPresentationRequest } from '@credebl/common/interfaces/oid4vp-verifica
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
 import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 import { VerifyAuthorizationResponseDto } from './dtos/verify-authorization-response.dto';
 
 @Injectable()
@@ -109,7 +110,7 @@ export class Oid4vcVerificationService {
     return this.natsClient.sendNats(this.oid4vpProxy, 'webhook-oid4vp-presentation', payload);
   }
 
-  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<string> {
+  async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<IWebhookUrlInfo> {
     const pattern = { cmd: 'get-webhookurl' };
     const payload = { tenantId, orgId };
 
@@ -123,9 +124,9 @@ export class Oid4vcVerificationService {
     }
   }
 
-  async _postWebhookResponse(webhookUrl: string, data: object): Promise<string> {
+  async _postWebhookResponse(webhookUrl: string, data: object, webhookSecret?: string): Promise<string> {
     const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
-    const payload = { webhookUrl, data };
+    const payload = { webhookUrl, data, webhookSecret };
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -50,6 +50,7 @@ import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
 import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 import { VerifyAuthorizationResponseDto } from './dtos/verify-authorization-response.dto';
 
 @Controller()
@@ -490,6 +491,10 @@ export class Oid4vcVerificationController {
     @Res() res: Response
   ): Promise<Response> {
     oid4vpPresentationWhDto.type = 'Oid4vpPresentation';
+    oid4vpPresentationWhDto.contextCorrelationId = oid4vpPresentationWhDto.contextCorrelationId?.replace(
+      /^tenant-/,
+      ''
+    );
     if (id && 'default' === oid4vpPresentationWhDto.contextCorrelationId) {
       oid4vpPresentationWhDto.orgId = id;
     }
@@ -501,20 +506,24 @@ export class Oid4vcVerificationController {
       data: []
     };
 
-    const webhookUrl = await this.oid4vcVerificationService
+    void this.oid4vcVerificationService
       ._getWebhookUrl(oid4vpPresentationWhDto?.contextCorrelationId, id)
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        this.logger.log(`posting webhook response to webhook url`);
+        return this.oid4vcVerificationService._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: oid4vpPresentationWhDto },
+          webhookUrlInfo.webhookSecret
+        );
+      })
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        this.logger.error(
+          `error in webhook dispatch flow ::: ${error?.message ?? error?.stack ?? JSON.stringify(error)}`
+        );
       });
-
-    if (webhookUrl) {
-      this.logger.log(`posting webhook response to webhook url`);
-      await this.oid4vcVerificationService
-        ._postWebhookResponse(webhookUrl, { data: oid4vpPresentationWhDto })
-        .catch((error) => {
-          this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
-        });
-    }
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

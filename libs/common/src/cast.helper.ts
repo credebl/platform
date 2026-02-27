@@ -328,7 +328,7 @@ export class AgentSpinupValidator {
     }
   }
 
-  public static validate(agentSpinupDto): void {
+  public static validate(agentSpinupDto: { walletName: string }): void {
     this.validateWalletName(agentSpinupDto.walletName);
   }
 }
@@ -444,6 +444,9 @@ export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICreden
 
 export const encryptClientCredential = async (clientCredential: string): Promise<string> => {
   try {
+    if (!process.env.CRYPTO_PRIVATE_KEY) {
+      throw new Error('CRYPTO_PRIVATE_KEY environment variable is not set');
+    }
     const encryptedToken = CryptoJS.AES.encrypt(
       JSON.stringify(clientCredential),
       process.env.CRYPTO_PRIVATE_KEY
@@ -454,6 +457,30 @@ export const encryptClientCredential = async (clientCredential: string): Promise
     return encryptedToken;
   } catch (error) {
     logger.error('An error occurred during encryptClientCredential:', error);
+    throw error;
+  }
+};
+
+export const decryptClientCredential = async (encryptedClientCredential: string): Promise<string> => {
+  try {
+    if (!process.env.CRYPTO_PRIVATE_KEY) {
+      throw new Error('CRYPTO_PRIVATE_KEY environment variable is not set');
+    }
+
+    const bytes = CryptoJS.AES.decrypt(encryptedClientCredential, process.env.CRYPTO_PRIVATE_KEY);
+    const decryptedDataString = bytes.toString(CryptoJS.enc.Utf8);
+
+    if (!decryptedDataString) {
+      return encryptedClientCredential;
+    }
+
+    try {
+      return JSON.parse(decryptedDataString);
+    } catch (error) {
+      return decryptedDataString;
+    }
+  } catch (error) {
+    logger.error('An error occurred during decryptClientCredential:', error);
     throw error;
   }
 };
@@ -524,19 +551,22 @@ export function ValidateNestedStructureFields(validationOptions?: ValidationOpti
   };
 }
 
-export function buildUrlWithQuery<T extends Record<string, any>>(baseUrl: string, queryParams: T): string {
+export function buildUrlWithQuery<T extends Record<string, string | number | boolean | null | undefined | object>>(
+  baseUrl: string,
+  queryParams: T
+): string {
   const criteriaParams: string[] = [];
 
-  if (!queryParams || (queryParams?.length >= 0)) {
-    return baseUrl
+  if (!queryParams || 0 === Object.keys(queryParams).length) {
+    return baseUrl;
   }
 
   for (const [key, value] of Object.entries(queryParams)) {
     // Skip undefined or null values
-    if (value !== undefined && value !== null) {
+    if (value !== undefined && null !== value) {
       criteriaParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
     }
   }
 
-  return criteriaParams.length > 0 ? `${baseUrl}?${criteriaParams.join('&')}` : baseUrl;
+  return 0 < criteriaParams.length ? `${baseUrl}?${criteriaParams.join('&')}` : baseUrl;
 }

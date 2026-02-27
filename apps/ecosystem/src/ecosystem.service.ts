@@ -906,7 +906,7 @@ export class EcosystemService {
   ): Promise<PaginatedResponse<IGetEcosystemOrgsResponse>> {
     const rawData = await this.ecosystemRepository.getEcosystemOrgs(orgId, pageDetail);
     const data = rawData.data.map((item) => {
-      const [leadData] = item?.ecosystem?.ecosystemOrgs;
+      const [leadData] = item?.ecosystem?.ecosystemOrgs || [];
 
       return {
         id: item?.ecosystem?.id,

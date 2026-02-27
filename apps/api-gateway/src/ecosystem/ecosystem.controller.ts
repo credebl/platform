@@ -470,7 +470,7 @@ export class EcosystemController {
   })
   async getCreateEcosystemInvitationStatus(@Res() res: Response, @User() reqUser: user): Promise<Response> {
     if (!reqUser.email) {
-      throw new Error('Email not Found');
+      throw new BadRequestException('Email not Found');
     }
     const status = await this.ecosystemService.getCreateEcosystemInvitationStatus(reqUser.email);
 

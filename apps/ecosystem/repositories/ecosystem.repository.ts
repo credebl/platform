@@ -864,6 +864,7 @@ export class EcosystemRepository {
   ): Promise<PaginatedResponse<IGetAllOrgs>> {
     try {
       const whereClause: Prisma.ecosystem_orgsWhereInput = {
+        deletedAt: null,
         ...(pageDetail.search && {
           OR: [
             { user: { email: { contains: pageDetail.search, mode: 'insensitive' } } },
@@ -873,7 +874,7 @@ export class EcosystemRepository {
         }),
         ecosystemId,
         ecosystemRole: {
-          name: EcosystemRoles.ECOSYSTEM_MEMBER
+          name: OrgRoles.ECOSYSTEM_MEMBER
         }
       };
       const [data, count] = await this.prisma.$transaction([
@@ -1653,9 +1654,13 @@ export class EcosystemRepository {
 
   async getCreateEcosystemInvitationStatus(email: string): Promise<boolean> {
     try {
+      const trimEmail = email?.trim();
+      if (!trimEmail) {
+        throw new BadRequestException('email missing');
+      }
       const data = await this.prisma.ecosystem_invitations.findFirst({
         where: {
-          email,
+          email: trimEmail,
           status: Invitation.ACCEPTED,
           invitedOrg: null,
           ecosystemId: null,

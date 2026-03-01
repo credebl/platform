@@ -85,6 +85,7 @@ export class IntentController {
     @Body() createIntentDto: CreateIntentDto,
     @Param(
       'ecosystemId',
+      TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);

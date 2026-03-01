@@ -1,11 +1,12 @@
+/* eslint-disable camelcase */
 import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
 
+import { CommonConstants, uuidRegex } from '@credebl/common/common.constant';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 import { AuthzService } from './authz.service';
-import { CommonConstants, uuidRegex } from '@credebl/common/common.constant';
 import { EcosystemService } from '../ecosystem/ecosystem.service';
 import { IOrganization } from '@credebl/common/interfaces/organization.interface';
 import { JwtPayload } from './jwt-payload.interface';
@@ -24,8 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly usersService: UserService,
     private readonly organizationService: OrganizationService,
-    private readonly authzService: AuthzService,
-    private readonly ecosystemService: EcosystemService
+    private readonly authzService: AuthzService
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -74,20 +74,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (payload?.email) {
       userInfo = await this.usersService.getUserByUserIdInKeycloak(payload?.email);
     }
-    let ecosystemRole = null;
-    if (userInfo?.id) {
-      try {
-        const user = await this.ecosystemService.getUserByKeycloakId(userInfo.id);
-        if (user?.id) {
-          const ecosystem = await this.ecosystemService.getEcosystemDetailsByUserId(user.id);
-          if (ecosystem?.id) {
-            ecosystemRole = await this.ecosystemService.getEcosystemOrgDetailsByUserId(user.id, ecosystem.id);
-          }
-        }
-      } catch (error) {
-        this.logger.warn('Failed to fetch ecosystem roles', JSON.stringify(error));
-      }
-    }
 
     if (payload.hasOwnProperty('client_id') && uuidRegex.test(payload['client_id'])) {
       const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id']);
@@ -122,13 +108,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       userDetails['userRole'] = userInfo?.['attributes']?.userRole;
     }
 
-    if (Array.isArray(ecosystemRole) && 0 < ecosystemRole.length) {
-      const ecosystemRoleList = [
-        ...new Set(ecosystemRole.map((record: { ecosystemRole: { name: string } }) => record.ecosystemRole.name))
-      ];
-      userDetails.ecosystemRoles = ecosystemRoleList;
+    if (payload?.ecosystem_access) {
+      userDetails.ecosystem_access = payload.ecosystem_access;
     }
-
     return {
       ...userDetails,
       ...payload

@@ -7,6 +7,13 @@ import { Reflector } from '@nestjs/core';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { validate as isValidUUID } from 'uuid';
 
+interface EcosystemAccessEntry {
+  ecosystem_role?: {
+    lead?: string[];
+    member?: string[];
+  };
+}
+
 @Injectable()
 export class EcosystemRolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {} // eslint-disable-next-line array-callback-return
@@ -44,9 +51,52 @@ export class EcosystemRolesGuard implements CanActivate {
     }
 
     const isPlatformAdmin = user.email === process.env.PLATFORM_ADMIN_EMAIL;
+    /**
+     * =====================================
+     * Ecosystem validation (JWT based only)
+     * =====================================
+     */
 
-    if (user?.ecosystemRoles && requiredRolesNames.some((role: string) => user.ecosystemRoles.includes(role))) {
-      return true;
+    let ecosystemId = '';
+
+    switch (true) {
+      case 'string' === typeof reqData.params?.ecosystemId:
+        ecosystemId = reqData.params.ecosystemId.trim();
+        break;
+      case 'string' === typeof reqData.query?.ecosystemId:
+        ecosystemId = reqData.query.ecosystemId.trim();
+        break;
+      case 'string' === typeof reqData.body?.ecosystemId:
+        ecosystemId = reqData.body.ecosystemId.trim();
+        break;
+      default:
+        ecosystemId = '';
+    }
+
+    if (ecosystemId) {
+      if (!isValidUUID(ecosystemId)) {
+        throw new BadRequestException(ResponseMessages.ecosystem?.error?.invalidEcosystemId || 'Invalid ecosystem id');
+      }
+
+      const ecosystemAccessValues = Object.values(user?.ecosystem_access || {});
+
+      if (!ecosystemAccessValues.length) {
+        throw new ForbiddenException(ResponseMessages.ecosystem?.error?.ecosystemNotFound || 'Ecosystem not found');
+      }
+
+      const [ecosystemEntry] = ecosystemAccessValues as EcosystemAccessEntry[];
+
+      const leadList = ecosystemEntry?.ecosystem_role?.lead ?? [];
+      const memberList = ecosystemEntry?.ecosystem_role?.member ?? [];
+
+      const hasAccess = leadList.includes(ecosystemId) || memberList.includes(ecosystemId);
+
+      if (!hasAccess) {
+        throw new ForbiddenException(ResponseMessages.ecosystem?.error?.ecosystemNotFound || 'Ecosystem not found');
+      }
+
+      // Optional: attach for downstream usage
+      user.selectedEcosystem = ecosystemId;
     }
 
     if (isPlatformAdmin && requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {
@@ -77,6 +127,7 @@ export class EcosystemRolesGuard implements CanActivate {
             description: ResponseMessages.errorMessages.forbidden
           });
         }
+
         return roleAccess;
       }
 

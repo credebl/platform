@@ -883,49 +883,24 @@ export class EcosystemRepository {
           select: {
             id: true,
             status: true,
-            userId: true,
             createDateTime: true,
-            ecosystemRole: {
+            ecosystem: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            organisation: {
               select: {
                 id: true,
                 name: true
               }
             },
 
-            ecosystem: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
-                tags: true,
-                createDateTime: true,
-                createdBy: true,
-                logoUrl: true,
-                autoEndorsement: true,
-                ledgers: true
-              }
-            },
-
-            organisation: {
-              select: {
-                id: true,
-                createDateTime: true,
-                createdBy: true,
-                name: true,
-                description: true,
-                orgSlug: true
-              }
-            },
-
             user: {
               select: {
                 id: true,
-                createDateTime: true,
-                lastChangedDateTime: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                username: true
+                email: true
               }
             }
           },
@@ -1652,7 +1627,7 @@ export class EcosystemRepository {
     }
   }
 
-  async getCreateEcosystemInvitationStatus(email: string): Promise<boolean> {
+  async getCreateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
     try {
       const trimEmail = email?.trim();
       if (!trimEmail) {
@@ -1661,7 +1636,7 @@ export class EcosystemRepository {
       const data = await this.prisma.ecosystem_invitations.findFirst({
         where: {
           email: trimEmail,
-          status: Invitation.ACCEPTED,
+          status,
           invitedOrg: null,
           ecosystemId: null,
           deletedAt: null

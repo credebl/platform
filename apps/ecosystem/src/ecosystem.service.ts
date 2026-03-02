@@ -33,7 +33,7 @@ import {
   IEcosystemInvitation,
   IEcosystemInvitations,
   IEcosystemMemberInvitations,
-  IFromattedGetAllOrgs,
+  IGetAllOrgs,
   IGetEcosystemOrgsResponse,
   IPlatformDashboardCount
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
@@ -462,19 +462,8 @@ export class EcosystemService {
   async getAllEcosystemOrgsByEcosystemId(
     ecosystemId: string,
     pageDetail: IPaginationSortingDto
-  ): Promise<PaginatedResponse<IFromattedGetAllOrgs>> {
-    const rawData = await this.ecosystemRepository.getAllEcosystemOrgsByEcosystemId(ecosystemId, pageDetail);
-    const formattedData = rawData.data.map((record) => ({
-      id: record.id,
-      email: record?.user?.email,
-      status: record.status,
-      createDateTime: record.createDateTime,
-      organisation: record?.organisation?.name,
-      orgId: record?.organisation?.id,
-      ecosystemName: record?.ecosystem?.name,
-      ecosystemId: record?.ecosystem?.id
-    }));
-    return { ...rawData, data: formattedData };
+  ): Promise<PaginatedResponse<IGetAllOrgs>> {
+    return this.ecosystemRepository.getAllEcosystemOrgsByEcosystemId(ecosystemId, pageDetail);
   }
 
   async getEcosystemMemberInvitations(
@@ -925,7 +914,7 @@ export class EcosystemService {
     return { totalPages: rawData.totalPages, data };
   }
 
-  async getCreateEcosystemInvitationStatus(email: string): Promise<boolean> {
-    return this.ecosystemRepository.getCreateEcosystemInvitationStatus(email);
+  async getCreateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
+    return this.ecosystemRepository.getCreateEcosystemInvitationStatus(email, status);
   }
 }

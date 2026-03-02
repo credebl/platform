@@ -66,6 +66,7 @@ import { UserRepository } from 'apps/user/repositories/user.repository';
 import * as jwt from 'jsonwebtoken';
 import { ClientTokenDto } from '../dtos/client-token.dto';
 import { EmailService } from '@credebl/common/email.service';
+import { uuidRegex } from '@credebl/common/common.constant';
 
 @Injectable()
 export class OrganizationService {
@@ -673,6 +674,10 @@ export class OrganizationService {
    */
   async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
     const { clientId, clientSecret } = clientCredentials;
+    //If the client id is not in uuid format then it will directly authenticate on keycloak without creating session because it is used by trust-service (other associated application) to authenticate and create session is not required for services
+    if (!uuidRegex.test(clientId)) {
+      return this.authenticateClientKeycloak(clientId, clientSecret);
+    }
     // This method used to authenticate the requested user on keycloak
     const authenticationResult = await this.authenticateClientKeycloak(clientId, clientSecret);
     let addSessionDetails;
@@ -744,6 +749,15 @@ export class OrganizationService {
       }
     } catch (error) {
       this.logger.error(`Error in authenticateClientKeycloak : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getEcosystemIdsByTenantId(tenantId: string): Promise<string[]> {
+    try {
+      return this.organizationRepository.getEcosystemIdsByTenantId(tenantId);
+    } catch (error) {
+      this.logger.error(`Error in getEcosystemIdsByTenantId: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

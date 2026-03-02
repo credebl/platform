@@ -89,7 +89,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
     }
 
-    if (payload.hasOwnProperty('client_id')) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (payload.hasOwnProperty('client_id') && uuidRegex.test(payload['client_id'])) {
       const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id']);
       this.logger.log('Organization details fetched');
       if (!orgDetails) {
@@ -109,11 +110,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       });
 
       this.logger.log('User details set');
-    } else {
+    } else if (!payload.hasOwnProperty('client_id')) {
       userDetails = await this.usersService.findUserinKeycloak(payload.sub);
     }
 
-    if (!userDetails) {
+    const isServiceToken = payload.hasOwnProperty('client_id') && !uuidRegex.test(payload['client_id'] as string);
+    if (!userDetails && !isServiceToken) {
       throw new NotFoundException(ResponseMessages.user.error.notFound);
     }
     //TODO patch to QA

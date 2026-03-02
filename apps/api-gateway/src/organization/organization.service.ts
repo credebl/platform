@@ -245,6 +245,10 @@ export class OrganizationService extends BaseService {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'generate-client-api-token', clientTokenDto);
   }
 
+  async getEcosystemIdsByTenantId(tenantId: string): Promise<string[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-ids-by-tenant-id', { tenantId });
+  }
+
   async getAllOrganizations(payload: IGetAllOrgsPayload): Promise<IAllOrgsNameId> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-organizations', payload);
   }

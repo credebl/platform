@@ -106,7 +106,7 @@ export class EcosystemController {
   })
   @ApiQuery({
     name: 'status',
-    enum: Invitation
+    enum: [Invitation.REJECTED, Invitation.ACCEPTED]
   })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
@@ -114,7 +114,14 @@ export class EcosystemController {
     @Body() updateInvitation: UpdateEcosystemInvitationDto,
     @User() reqUser: user,
     @Res() res: Response,
-    @Query('status', new ParseEnumPipe(Invitation)) status: Invitation
+    @Query(
+      'status',
+      new ParseEnumPipe(Invitation, {
+        exceptionFactory: () =>
+          new BadRequestException(`Status must be one of: ${[Invitation.REJECTED, Invitation.ACCEPTED].join(', ')}`)
+      })
+    )
+    status: Invitation
   ): Promise<Response> {
     if (!reqUser.id) {
       throw new BadRequestException('Missing request user id');
@@ -200,7 +207,7 @@ export class EcosystemController {
   })
   @ApiQuery({
     name: 'orgId',
-    required: false,
+    required: true,
     type: String
   })
   @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
@@ -211,7 +218,6 @@ export class EcosystemController {
     @Query(
       'orgId',
       new ParseUUIDPipe({
-        optional: true,
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
         }
@@ -219,7 +225,7 @@ export class EcosystemController {
     )
     orgId?: string
   ): Promise<Response> {
-    const ecosystems = await this.ecosystemService.getEcosystems(reqUser.id, paginationDto, orgId);
+    const ecosystems = await this.ecosystemService.getEcosystemOrgs(orgId ?? null, paginationDto);
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.fetchAllEcosystems,
@@ -455,6 +461,38 @@ export class EcosystemController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.dashboard,
       data: dashboard
+    });
+  }
+
+  @Get('/invitation/status')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get status of pending invitation for ecosystem creation',
+    description: 'Get status of pending invitation for ecosystem creation'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Invitation status fetched successfully'
+  })
+  @ApiQuery({
+    name: 'status',
+    enum: Invitation
+  })
+  async getCreateEcosystemInvitationStatus(
+    @Res() res: Response,
+    @User() reqUser: user,
+    @Query('status', new ParseEnumPipe(Invitation)) InvitationStatus: Invitation = Invitation.ACCEPTED
+  ): Promise<Response> {
+    if (!reqUser.email) {
+      throw new BadRequestException('Email not Found');
+    }
+    const status = await this.ecosystemService.getCreateEcosystemInvitationStatus(reqUser.email, InvitationStatus);
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.ecosystemStatus,
+      status
     });
   }
 }

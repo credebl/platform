@@ -34,6 +34,7 @@ import {
   IEcosystemInvitations,
   IEcosystemMemberInvitations,
   IGetAllOrgs,
+  IGetEcosystemOrgsResponse,
   IPlatformDashboardCount
 } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import {
@@ -396,8 +397,8 @@ export class EcosystemService {
         throw new BadRequestException(ResponseMessages.ecosystem.error.alreadyAccepted);
       }
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-        userEmail,
         orgId,
+        userEmail,
         ecosystemId,
         status
       );
@@ -475,7 +476,14 @@ export class EcosystemService {
     // to keep repository free of conditional logic.
     const baseWhere: Prisma.ecosystem_invitationsWhereInput = {
       deletedAt: null,
-      type: InviteType.MEMBER
+      type: InviteType.MEMBER,
+      ...(pageDetail.search && {
+        OR: [
+          { email: { contains: pageDetail.search, mode: 'insensitive' } },
+          { status: { contains: pageDetail.search, mode: 'insensitive' } },
+          { organisation: { name: { contains: pageDetail.search, mode: 'insensitive' } } }
+        ]
+      })
     };
 
     let where: Prisma.ecosystem_invitationsWhereInput;
@@ -489,7 +497,11 @@ export class EcosystemService {
       where = {
         ...baseWhere,
         status: Invitation.PENDING,
-        OR: [email ? { email } : undefined, userId ? { userId } : undefined].filter(Boolean)
+        AND: [
+          {
+            OR: [...(email ? [{ email }] : []), ...(userId ? [{ userId }] : [])]
+          }
+        ]
       };
     }
     return this.ecosystemRepository.getEcosystemInvitations(where, pageDetail);
@@ -875,5 +887,34 @@ export class EcosystemService {
 
   async getEcosystemEnableStatus(): Promise<boolean> {
     return this.ecosystemRepository.getEcosystemEnableStatus();
+  }
+
+  async getEcosystemOrgs(
+    orgId: string,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<IGetEcosystemOrgsResponse>> {
+    const rawData = await this.ecosystemRepository.getEcosystemOrgs(orgId, pageDetail);
+    const data = rawData.data.map((item) => {
+      const [leadData] = item?.ecosystem?.ecosystemOrgs || [];
+
+      return {
+        id: item?.ecosystem?.id,
+        name: item?.ecosystem?.name,
+        description: item?.ecosystem?.description,
+        memberCount: item?.ecosystem?._count.ecosystemOrgs - 1,
+        role: item?.ecosystemRole?.name,
+        leadOrg: leadData
+          ? {
+              id: leadData.orgId,
+              name: leadData.organisation.name
+            }
+          : null
+      };
+    });
+    return { totalPages: rawData.totalPages, data };
+  }
+
+  async getCreateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
+    return this.ecosystemRepository.getCreateEcosystemInvitationStatus(email, status);
   }
 }

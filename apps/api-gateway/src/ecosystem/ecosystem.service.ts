@@ -238,4 +238,12 @@ export class EcosystemService {
   async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-platform-admin-dashboard-count', {});
   }
+
+  async getEcosystemOrgs(orgId: string | null, pageDetail: IPaginationSortingDto): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs-by-orgId', { orgId, pageDetail });
+  }
+
+  async getCreateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-created-status', { email, status });
+  }
 }

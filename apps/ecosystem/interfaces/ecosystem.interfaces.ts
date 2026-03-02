@@ -2,7 +2,6 @@ import { EcosystemOrgStatus, InvitationViewRole } from '@credebl/enum/enum';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 import { CommonTableColumns } from '@credebl/common/interfaces/interface';
-import { JsonValue } from '@prisma/client/runtime/library';
 import { OrgRoles } from 'libs/org-roles/enums';
 
 export interface ICreateEcosystem {
@@ -132,8 +131,8 @@ export interface IEcosystemSummary {
   id: string;
   name: string;
   description: string | null;
-  logoUrl: string | null;
-  autoEndorsement: boolean;
+  logoUrl?: string | null;
+  autoEndorsement?: boolean;
 }
 
 export interface IUserSummary {
@@ -155,51 +154,45 @@ export interface IEcosystemInvitation {
   createDateTime: Date;
 
   ecosystem: IEcosystemSummary | null;
-  user: IUserSummary | null;
+  user?: IUserSummary | null;
+  organisation: {
+    name: string | null;
+  } | null;
 }
 
 export interface IGetAllOrgs {
   id: string;
   status: string;
-  userId: string | null;
   ecosystem: IGetAllOrgEcosystem;
   organisation: IGetAllOrgOrganisation;
+  createDateTime: Date;
   user: IGetAllOrgUser;
-  ecosystemRole: {
-    id: string;
-    name: string;
-  };
+}
+
+export interface IFromattedGetAllOrgs {
+  id: string;
+  email: string | null;
+  status: string;
+  createDateTime: Date;
+  organisation: string | null;
+  orgId: string;
+  ecosystemName: string;
+  ecosystemId: string;
 }
 
 export interface IGetAllOrgEcosystem {
   id: string;
   name: string;
-  description: string;
-  tags: string | null;
-  createDateTime: Date;
-  createdBy: string;
-  logoUrl: string | null;
-  autoEndorsement: boolean;
-  ledgers: JsonValue;
 }
 
 export interface IGetAllOrgOrganisation {
   id: string;
-  createDateTime: Date;
-  createdBy: string;
   name: string | null;
-  description: string | null;
-  orgSlug: string | null;
 }
 
 export interface IGetAllOrgUser {
   id: string;
-  createDateTime: Date;
-  lastChangedDateTime: Date;
-  firstName: string | null;
-  lastName: string | null;
   email: string | null;
-  username: string | null;
 }
 
 export interface IGetEcosystemOrgStatus {
@@ -216,4 +209,38 @@ export interface IPlatformDashboardCount {
   ecosystem: number;
   invitations: number;
   activeOrgs: number;
+}
+
+export interface IGetEcosystemOrgs {
+  ecosystem: {
+    id: string;
+    name: string;
+    description: string;
+    _count: {
+      ecosystemOrgs: number;
+    };
+    ecosystemOrgs: {
+      id: string;
+      orgId: string;
+      organisation: {
+        name: string | null;
+      };
+    }[];
+  };
+  ecosystemRole: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface IGetEcosystemOrgsResponse {
+  id: string;
+  name: string;
+  description: string;
+  memberCount: number;
+  role: string;
+  leadOrg: {
+    id: string;
+    name: string | null;
+  } | null;
 }

@@ -28,6 +28,7 @@ export class KeycloakConfigService implements OnModuleInit {
       this.logger.log('=== Configuration Finished: SUCCESS  ===');
       this.logger.log('========================================');
     } catch (error) {
+      //TODO: remove this after testing
       this.logger.error('========================================');
       this.logger.error('=== Configuration Finished: FAILED  ===');
       this.logger.error(`=== Error: ${error.message || error}`);

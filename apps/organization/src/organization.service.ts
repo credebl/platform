@@ -674,12 +674,13 @@ export class OrganizationService {
    */
   async clientLoginCredentails(clientCredentials: IClientCredentials): Promise<IAccessTokenData> {
     const { clientId, clientSecret } = clientCredentials;
-    //If the client id is not in uuid format then it will directly authenticate on keycloak without creating session because it is used by trust-service (other associated application) to authenticate and create session is not required for services
-    if (!uuidRegex.test(clientId)) {
-      return this.authenticateClientKeycloak(clientId, clientSecret);
-    }
     // This method used to authenticate the requested user on keycloak
     const authenticationResult = await this.authenticateClientKeycloak(clientId, clientSecret);
+    // If the client id is not in uuid format then it will directly authenticate on keycloak without creating session because it is used by trust-service (other associated application) to authenticate and create session is not required for services
+    //TODO: We will UUID validator here
+    if (!uuidRegex.test(clientId)) {
+      return authenticationResult;
+    }
     let addSessionDetails;
     // Fetch owner organization details for getting the user id
     const orgRoleDetails = await this.organizationRepository.getOrgAndOwnerUser(clientId);

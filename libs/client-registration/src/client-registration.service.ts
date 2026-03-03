@@ -801,7 +801,7 @@ export class ClientRegistrationService {
       }
 
       const attributes = currentUser.attributes || {};
-      this.logger.log(`[updateUserEcosystemAccess] Current attributes: ${JSON.stringify(attributes)}`);
+      this.logger.log(`[updateUserEcosystemAccess] Current attribute keys: ${Object.keys(attributes).join(', ')}`);
 
       let ecosystemAccess: Record<string, { ecosystem_role: { lead: string[]; member: string[] } }> = {};
       if (attributes.ecosystem_access && attributes.ecosystem_access[0]) {
@@ -852,11 +852,8 @@ export class ClientRegistrationService {
       attributes.ecosystem_access = [JSON.stringify(ecosystemAccess)];
 
       // Update user in Keycloak
-      const updatePayload = {
-        ...currentUser,
-        attributes
-      };
-      this.logger.log(`[updateUserEcosystemAccess] Sending update to Keycloak...`, updatePayload);
+      const updatePayload = { attributes };
+      this.logger.log(`[updateUserEcosystemAccess] Sending update to Keycloak...`);
 
       await this.commonService.httpPut(userUrl, updatePayload, this.getAuthHeader(token));
 
@@ -972,7 +969,7 @@ export class ClientRegistrationService {
         throw new NotFoundException(`User not found in Keycloak: ${keycloakUserId}`);
       }
       const attributes = currentUser.attributes || {};
-      this.logger.log(`[removeUserEcosystemAccess] Current attributes: ${JSON.stringify(attributes)}`);
+      this.logger.log(`[removeUserEcosystemAccess] Current attribute keys: ${Object.keys(attributes).join(', ')}`);
 
       let ecosystemAccess: Record<string, { ecosystem_role: { lead: string[]; member: string[] } }> = {};
       if (attributes.ecosystem_access && attributes.ecosystem_access[0]) {
@@ -1003,7 +1000,7 @@ export class ClientRegistrationService {
       );
       ecosystemAccess[orgId].ecosystem_role[role] = updatedEcosystems;
       const orgRoles = ecosystemAccess[orgId].ecosystem_role;
-      if (0 === orgRoles.lead.length && 0 === orgRoles.member.length) {
+      if (0 === (orgRoles.lead?.length ?? 0) && 0 === (orgRoles.member?.length ?? 0)) {
         delete ecosystemAccess[orgId];
         this.logger.log(`[removeUserEcosystemAccess] Removed org ${orgId} (no more ecosystems)`);
       }
@@ -1015,10 +1012,7 @@ export class ClientRegistrationService {
         this.logger.log(`[removeUserEcosystemAccess] Removed ecosystem_access attribute (empty)`);
       }
 
-      const updatePayload = {
-        ...currentUser,
-        attributes
-      };
+      const updatePayload = { attributes };
       this.logger.log(`[removeUserEcosystemAccess] Sending update to Keycloak...`);
 
       await this.commonService.httpPut(userUrl, updatePayload, this.getAuthHeader(token));

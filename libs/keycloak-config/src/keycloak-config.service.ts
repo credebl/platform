@@ -38,10 +38,20 @@ export class KeycloakConfigService implements OnModuleInit {
     this.logger.log('');
     this.logger.log('--- Fetching Management Token ---');
     const token = await this.clientRegistrationService.getPlatformManagementToken();
+    if (!token) {
+      throw new Error('Failed to obtain management token from Keycloak');
+    }
     this.logger.log('Management token: OBTAINED');
 
     const realmName = process.env.KEYCLOAK_REALM;
     const keycloakDomain = process.env.KEYCLOAK_DOMAIN;
+
+    if (!realmName || !keycloakDomain) {
+      throw new Error(
+        `Missing required environment variables: ${!realmName ? 'KEYCLOAK_REALM' : ''} ${!keycloakDomain ? 'KEYCLOAK_DOMAIN' : ''}`.trim()
+      );
+    }
+
     this.logger.log(`Keycloak Domain: ${keycloakDomain}`);
     this.logger.log(`Target Realm: ${realmName}`);
 
@@ -164,14 +174,6 @@ export class KeycloakConfigService implements OnModuleInit {
       return;
     }
 
-    this.logger.log(`Found ${clients.length} total clients in realm`);
-    this.logger.log('All clients:');
-    for (const c of clients) {
-      this.logger.log(
-        `  - clientId: "${c.clientId}", id: "${c.id}", serviceAccount: ${c.serviceAccountsEnabled}, bearerOnly: ${c.bearerOnly}, enabled: ${c.enabled}`
-      );
-    }
-
     const systemClients = ['admin-cli', 'account', 'account-console', 'broker', 'security-admin-console'];
 
     const targetClients = clients.filter(
@@ -184,16 +186,9 @@ export class KeycloakConfigService implements OnModuleInit {
         client.clientId.startsWith('realm-') || client.bearerOnly || systemClients.includes(client.clientId)
     );
 
-    this.logger.log('');
-    this.logger.log(`Target clients (${targetClients.length}):`);
-    for (const c of targetClients) {
-      this.logger.log(`  + "${c.clientId}" (id: ${c.id})`);
-    }
-    this.logger.log(`Excluded clients (${excludedClients.length}):`);
-    for (const c of excludedClients) {
-      this.logger.log(`  - "${c.clientId}" (reason: system/bearer-only/realm)`);
-    }
-
+    this.logger.log(
+      `Found ${clients.length} total clients: ${targetClients.length} to process, ${excludedClients.length} excluded`
+    );
     this.logger.log('');
     this.logger.log('Processing target clients...');
 
@@ -254,7 +249,7 @@ export class KeycloakConfigService implements OnModuleInit {
 
   private async verifyUsersEcosystemAccess(realm: string, token: string): Promise<void> {
     try {
-      const usersUrl = `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/users?max=100`;
+      const usersUrl = `${await this.keycloakUrlService.createUserURL(realm)}?max=1000`;
       this.logger.log(`Fetching users from: ${usersUrl}`);
       const users = await this.commonService.httpGet(usersUrl, this.getAuthHeader(token));
 
@@ -275,20 +270,11 @@ export class KeycloakConfigService implements OnModuleInit {
 
         if (isServiceAccount) {
           serviceAccountUsers++;
-          if (hasEcosystemAccess) {
-            this.logger.log(
-              `  [SERVICE-ACCOUNT] ${user.username} - HAS ecosystem_access: ${user.attributes.ecosystem_access[0].substring(0, 100)}...`
-            );
-          }
         } else {
           if (hasEcosystemAccess) {
             usersWithAttribute++;
-            this.logger.log(
-              `  [USER] ${user.username} (${user.id}) - HAS ecosystem_access: ${user.attributes.ecosystem_access[0].substring(0, 100)}...`
-            );
           } else {
             usersWithoutAttribute++;
-            this.logger.log(`  [USER] ${user.username} (${user.id}) - NO ecosystem_access attribute`);
           }
         }
       }

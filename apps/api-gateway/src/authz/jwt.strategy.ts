@@ -5,7 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 import { AuthzService } from './authz.service';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { CommonConstants, uuidRegex } from '@credebl/common/common.constant';
 import { EcosystemService } from '../ecosystem/ecosystem.service';
 import { IOrganization } from '@credebl/common/interfaces/organization.interface';
 import { JwtPayload } from './jwt-payload.interface';
@@ -89,7 +89,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
     }
 
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (payload.hasOwnProperty('client_id') && uuidRegex.test(payload['client_id'])) {
       const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id']);
       this.logger.log('Organization details fetched');

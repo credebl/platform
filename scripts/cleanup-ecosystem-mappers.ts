@@ -14,6 +14,17 @@ const { KEYCLOAK_REALM } = process.env;
 const { KEYCLOAK_MANAGEMENT_CLIENT_ID } = process.env;
 const { KEYCLOAK_MANAGEMENT_CLIENT_SECRET } = process.env;
 
+const missingVars = [
+  'KEYCLOAK_DOMAIN',
+  'KEYCLOAK_REALM',
+  'KEYCLOAK_MANAGEMENT_CLIENT_ID',
+  'KEYCLOAK_MANAGEMENT_CLIENT_SECRET'
+].filter((key) => !process.env[key]);
+if (0 < missingVars.length) {
+  console.error(`[CLEANUP] Missing required environment variables: ${missingVars.join(', ')}`);
+  process.exit(1);
+}
+
 const log = (msg: string): void => console.log(`[CLEANUP] ${msg}`);
 
 function request(method: string, url: string, token?: string, body?: string): Promise<any> {

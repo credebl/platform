@@ -691,13 +691,14 @@ export async function createKeycloakUser(): Promise<void> {
       'Missing required environment variables for either PLATFORM_ADMIN_USER_PASSWORD or KEYCLOAK_DOMAIN or KEYCLOAK_REALM or PLATFORM_ADMIN_KEYCLOAK_ID or PLATFORM_ADMIN_KEYCLOAK_SECRET or CRYPTO_PRIVATE_KEY'
     );
   }
+  const decryptedPassword = CryptoJS.AES.decrypt(platformAdminData.password, CRYPTO_PRIVATE_KEY);
   const token = await getKeycloakToken();
   const user = {
     username: cachedConfig.platformEmail,
     email: cachedConfig.platformEmail,
     firstName: cachedConfig.platformName,
     lastName: cachedConfig.platformName,
-    password: 'Password@1'
+    password: decryptedPassword.toString(CryptoJS.enc.Utf8)
   };
   const res = await fetch(`${KEYCLOAK_DOMAIN}admin/realms/${KEYCLOAK_REALM}/users`, {
     method: 'POST',

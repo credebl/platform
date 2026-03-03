@@ -735,11 +735,7 @@ export class OrganizationService {
 
   async authenticateClientKeycloak(clientId: string, clientSecret: string): Promise<IAccessTokenData> {
     try {
-      const payload = new ClientCredentialTokenPayloadDto();
-      // eslint-disable-next-line camelcase
-      payload.client_id = clientId;
-      // eslint-disable-next-line camelcase
-      payload.client_secret = clientSecret;
+      const payload = new ClientCredentialTokenPayloadDto(clientId, clientSecret);
 
       try {
         const mgmtTokenResponse = await this.clientRegistrationService.getToken(payload);

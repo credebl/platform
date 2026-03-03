@@ -16,6 +16,7 @@ import { CreateUserDto } from './dtos/create-user.dto';
 import { IClientRoles } from './interfaces/client.interface';
 import { IFormattedResponse } from '@credebl/common/interfaces/interface';
 import { JwtService } from '@nestjs/jwt';
+import { EcosystemServiceRole } from '@credebl/enum/enum';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -150,7 +151,6 @@ export class ClientRegistrationService {
 
   async getManagementToken(clientId: string, clientSecret: string) {
     try {
-      const payload = new ClientCredentialTokenPayloadDto();
       if (!clientId && !clientSecret) {
         this.logger.error(`getManagementToken ::: Client ID and client secret are missing`);
         throw new BadRequestException(`Client ID and client secret are missing`);
@@ -159,8 +159,7 @@ export class ClientRegistrationService {
       const decryptClientId = await this.commonService.decryptPassword(clientId);
       const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
 
-      payload.client_id = decryptClientId;
-      payload.client_secret = decryptClientSecret;
+      const payload = new ClientCredentialTokenPayloadDto(decryptClientId, decryptClientSecret);
       const mgmtTokenResponse = await this.getToken(payload);
       return mgmtTokenResponse.access_token;
     } catch (error) {
@@ -185,9 +184,7 @@ export class ClientRegistrationService {
         throw new BadRequestException(`Keycloak management credentials are missing in environment`);
       }
 
-      const payload = new ClientCredentialTokenPayloadDto();
-      payload.client_id = clientId;
-      payload.client_secret = clientSecret;
+      const payload = new ClientCredentialTokenPayloadDto(clientId, clientSecret);
 
       const mgmtTokenResponse = await this.getToken(payload);
       return mgmtTokenResponse.access_token;
@@ -198,9 +195,10 @@ export class ClientRegistrationService {
   }
 
   async getManagementTokenForMobile() {
-    const payload = new ClientCredentialTokenPayloadDto();
-    payload.client_id = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_ID;
-    payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_SECRET;
+    const payload = new ClientCredentialTokenPayloadDto(
+      process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_ID,
+      process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_SECRET
+    );
     payload.scope = 'email profile';
 
     this.logger.log(`management Payload: ${JSON.stringify(payload)}`);
@@ -785,7 +783,7 @@ export class ClientRegistrationService {
     keycloakUserId: string,
     orgId: string,
     ecosystemId: string,
-    role: 'lead' | 'member',
+    role: EcosystemServiceRole,
     token: string
   ): Promise<void> {
     try {
@@ -872,7 +870,7 @@ export class ClientRegistrationService {
     ecosystemId: string,
     token: string
   ): Promise<void> {
-    return this.updateUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, 'lead', token);
+    return this.updateUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, EcosystemServiceRole.LEAD, token);
   }
 
   async updateUserEcosystemMember(
@@ -881,7 +879,7 @@ export class ClientRegistrationService {
     ecosystemId: string,
     token: string
   ): Promise<void> {
-    return this.updateUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, 'member', token);
+    return this.updateUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, EcosystemServiceRole.MEMBER, token);
   }
 
   /**
@@ -891,7 +889,7 @@ export class ClientRegistrationService {
     clientIdpId: string,
     orgId: string,
     ecosystemId: string,
-    role: 'lead' | 'member',
+    role: EcosystemServiceRole,
     token: string
   ): Promise<void> {
     try {
@@ -932,7 +930,13 @@ export class ClientRegistrationService {
     ecosystemId: string,
     token: string
   ): Promise<void> {
-    return this.updateClientServiceAccountEcosystemAccess(clientIdpId, orgId, ecosystemId, 'lead', token);
+    return this.updateClientServiceAccountEcosystemAccess(
+      clientIdpId,
+      orgId,
+      ecosystemId,
+      EcosystemServiceRole.LEAD,
+      token
+    );
   }
 
   /**
@@ -944,7 +948,13 @@ export class ClientRegistrationService {
     ecosystemId: string,
     token: string
   ): Promise<void> {
-    return this.updateClientServiceAccountEcosystemAccess(clientIdpId, orgId, ecosystemId, 'member', token);
+    return this.updateClientServiceAccountEcosystemAccess(
+      clientIdpId,
+      orgId,
+      ecosystemId,
+      EcosystemServiceRole.MEMBER,
+      token
+    );
   }
 
   /**
@@ -954,7 +964,7 @@ export class ClientRegistrationService {
     keycloakUserId: string,
     orgId: string,
     ecosystemId: string,
-    role: 'lead' | 'member',
+    role: EcosystemServiceRole,
     token: string
   ): Promise<void> {
     try {
@@ -1032,7 +1042,7 @@ export class ClientRegistrationService {
     ecosystemId: string,
     token: string
   ): Promise<void> {
-    return this.removeUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, 'lead', token);
+    return this.removeUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, EcosystemServiceRole.LEAD, token);
   }
 
   async removeUserEcosystemMember(
@@ -1041,6 +1051,6 @@ export class ClientRegistrationService {
     ecosystemId: string,
     token: string
   ): Promise<void> {
-    return this.removeUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, 'member', token);
+    return this.removeUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, EcosystemServiceRole.MEMBER, token);
   }
 }

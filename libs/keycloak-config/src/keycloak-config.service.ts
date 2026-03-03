@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ProtocolMapperResult, UnmanagedAttributePolicy } from '@credebl/enum/enum';
 import { CommonService } from '@credebl/common';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { ClientRegistrationService } from '@credebl/client-registration';
@@ -35,7 +36,6 @@ export class KeycloakConfigService implements OnModuleInit {
   }
 
   async configureEcosystemAccess(): Promise<void> {
-    this.logger.log('');
     this.logger.log('--- Fetching Management Token ---');
     const token = await this.clientRegistrationService.getPlatformManagementToken();
     if (!token) {
@@ -87,13 +87,13 @@ export class KeycloakConfigService implements OnModuleInit {
       const currentPolicy = profileConfig.unmanagedAttributePolicy;
       this.logger.log(`Current unmanagedAttributePolicy: ${currentPolicy || 'NOT SET (disabled)'}`);
 
-      if ('ENABLED' === currentPolicy) {
+      if (UnmanagedAttributePolicy.ENABLED === currentPolicy) {
         this.logger.log('Result: Unmanaged attributes already ENABLED - SKIPPED');
         return;
       }
 
       this.logger.log('Result: Unmanaged attributes NOT enabled - UPDATING...');
-      profileConfig.unmanagedAttributePolicy = 'ENABLED';
+      profileConfig.unmanagedAttributePolicy = UnmanagedAttributePolicy.ENABLED;
 
       await this.commonService.httpPut(userProfileUrl, profileConfig, this.getAuthHeader(token));
       this.logger.log('Result: unmanagedAttributePolicy set to ENABLED');
@@ -198,9 +198,9 @@ export class KeycloakConfigService implements OnModuleInit {
 
     for (const client of targetClients) {
       const result = await this.ensureClientProtocolMapper(realm, client.id, client.clientId, token);
-      if ('created' === result) {
+      if (ProtocolMapperResult.CREATED === result) {
         created++;
-      } else if ('skipped' === result) {
+      } else if (ProtocolMapperResult.SKIPPED === result) {
         skipped++;
       } else {
         failed++;
@@ -218,7 +218,7 @@ export class KeycloakConfigService implements OnModuleInit {
     clientIdpId: string,
     clientId: string,
     token: string
-  ): Promise<'created' | 'skipped' | 'failed'> {
+  ): Promise<ProtocolMapperResult> {
     try {
       const mappersUrl = await this.keycloakUrlService.GetClientProtocolMappersByIdURL(realm, clientIdpId);
       const existingMappers = await this.commonService.httpGet(mappersUrl, this.getAuthHeader(token));
@@ -231,7 +231,7 @@ export class KeycloakConfigService implements OnModuleInit {
         this.logger.log(
           `  [${clientId}] Has ${mapperNames.length} mappers, "ecosystem_access_mapper" EXISTS - SKIPPED`
         );
-        return 'skipped';
+        return ProtocolMapperResult.SKIPPED;
       }
 
       this.logger.log(`  [${clientId}] Has ${mapperNames.length} mappers: [${mapperNames.join(', ')}]`);
@@ -240,10 +240,10 @@ export class KeycloakConfigService implements OnModuleInit {
       const mapperPayload = this.buildProtocolMapperPayload('ecosystem_access_mapper');
       await this.commonService.httpPost(mappersUrl, mapperPayload, this.getAuthHeader(token));
       this.logger.log(`  [${clientId}] "ecosystem_access_mapper" CREATED`);
-      return 'created';
+      return ProtocolMapperResult.CREATED;
     } catch (error) {
       this.logger.error(`  [${clientId}] FAILED: ${error.message || JSON.stringify(error)}`);
-      return 'failed';
+      return ProtocolMapperResult.FAILED;
     }
   }
 

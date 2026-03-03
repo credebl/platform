@@ -25,7 +25,14 @@ import { ecosystem, Prisma, user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
 import { UserRepository } from 'apps/user/repositories/user.repository';
-import { EcosystemOrgStatus, EcosystemRoles, Invitation, InvitationViewRole, InviteType } from '@credebl/enum/enum';
+import {
+  EcosystemOrgStatus,
+  EcosystemRoles,
+  EcosystemServiceRole,
+  Invitation,
+  InvitationViewRole,
+  InviteType
+} from '@credebl/enum/enum';
 
 import {
   ICreateEcosystem,
@@ -249,9 +256,10 @@ export class EcosystemService {
         this.logger.warn(`User ${user.id} does not have a keycloakUserId, skipping user attribute update`);
       }
 
-      await this.updateOrgServiceAccountEcosystem(orgId, ecosystemId, 'lead', token);
+      await this.updateOrgServiceAccountEcosystem(orgId, ecosystemId, EcosystemServiceRole.LEAD, token);
     } catch (error) {
       this.logger.error(`Failed to update Keycloak ecosystem leads: ${error.message}`);
+      throw error;
     }
   }
 
@@ -270,16 +278,17 @@ export class EcosystemService {
         this.logger.warn(`User ${user.id} does not have a keycloakUserId, skipping user attribute update`);
       }
 
-      await this.updateOrgServiceAccountEcosystem(orgId, ecosystemId, 'member', token);
+      await this.updateOrgServiceAccountEcosystem(orgId, ecosystemId, EcosystemServiceRole.MEMBER, token);
     } catch (error) {
       this.logger.error(`Failed to update Keycloak ecosystem member: ${error.message}`);
+      throw error;
     }
   }
 
   private async updateOrgServiceAccountEcosystem(
     orgId: string,
     ecosystemId: string,
-    role: 'lead' | 'member',
+    role: EcosystemServiceRole,
     token: string
   ): Promise<void> {
     try {

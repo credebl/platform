@@ -107,6 +107,24 @@ export enum EcosystemRoles {
   ECOSYSTEM_OWNER = 'Ecosystem Owner'
 }
 
+export enum EcosystemServiceRole {
+  LEAD = 'lead',
+  MEMBER = 'member'
+}
+
+export enum ProtocolMapperResult {
+  CREATED = 'created',
+  SKIPPED = 'skipped',
+  FAILED = 'failed'
+}
+
+export enum UnmanagedAttributePolicy {
+  ENABLED = 'ENABLED',
+  DISABLED = 'DISABLED',
+  ADMIN_EDIT = 'ADMIN_EDIT',
+  ADMIN_VIEW = 'ADMIN_VIEW'
+}
+
 export enum EcosystemConfigSettings {
   URL = 'url',
   ENABLE_ECOSYSTEM = 'enableEcosystem',

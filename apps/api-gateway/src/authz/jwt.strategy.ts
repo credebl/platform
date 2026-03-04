@@ -107,7 +107,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       userDetails['userRole'] = userInfo?.['attributes']?.userRole;
     }
 
-    if (payload?.ecosystem_access) {
+    if (userDetails && payload?.ecosystem_access) {
       userDetails.ecosystem_access = payload.ecosystem_access;
     }
 

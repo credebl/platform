@@ -401,14 +401,14 @@ export class Oid4vcVerificationController {
 
       return res.status(HttpStatus.OK).json({
         success: true,
-        message: 'Verifier details retrieved successfully.',
+        message: 'Verification presentation details retrieved successfully.',
         data: result
       });
     } catch (error) {
       this.logger.debug(
-        `Error in getVerificationPresentation(): ${error.message || 'Failed to fetch verifier presentation.'}`
+        `Error in getVerificationPresentation(): ${error.message || 'Failed to fetch verification presentation.'}`
       );
-      throw new BadRequestException(error.message || 'Failed to fetch verifier presentation.');
+      throw new BadRequestException(error.message || 'Failed to fetch verification presentation.');
     }
   }
 
@@ -457,19 +457,19 @@ export class Oid4vcVerificationController {
       );
 
       this.logger.debug(
-        `Verifier presentation response details fetched successfully for verificationPresentationId: ${verificationPresentationId}`
+        `Verification presentation response details fetched successfully for verificationPresentationId: ${verificationPresentationId}`
       );
 
       return res.status(HttpStatus.OK).json({
         success: true,
-        message: 'Verifier presentation response details retrieved successfully.',
+        message: 'Verification presentation response details retrieved successfully.',
         data: result
       });
     } catch (error) {
       this.logger.debug(
-        `Error in getVerificationPresentationResponse(): ${error.message || 'Failed to fetch verifier presentation response details.'}`
+        `Error in getVerificationPresentationResponse(): ${error.message || 'Failed to fetch verification presentation response details.'}`
       );
-      throw new BadRequestException(error.message || 'Failed to fetch verifier presentation response details.');
+      throw new BadRequestException(error.message || 'Failed to fetch verification presentation response details.');
     }
   }
   /**

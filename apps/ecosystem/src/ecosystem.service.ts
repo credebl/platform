@@ -336,8 +336,8 @@ export class EcosystemService {
 
       if (checkUser && Invitation.REJECTED === checkUser.status && ecosystemId === checkUser.ecosystemId) {
         const reopenedInvitation = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-          orgId,
           userEmail,
+          orgId,
           ecosystemId,
           Invitation.PENDING
         );

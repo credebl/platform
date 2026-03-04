@@ -95,7 +95,7 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Post('/invitation/status')
+  @Put('/invitation/status')
   @ApiOperation({
     summary: 'Update invitation status',
     description: 'Updates the status of an existing ecosystem invitation (accept or reject).'
@@ -207,10 +207,11 @@ export class EcosystemController {
   })
   @ApiQuery({
     name: 'orgId',
-    required: true,
+    //Need to check this once
+    required: false,
     type: String
   })
-  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
+  @Roles(OrgRoles.OWNER, OrgRoles.ECOSYSTEM_LEAD)
   async getEcosystems(
     @User() reqUser: user,
     @Res() res: Response,
@@ -218,6 +219,7 @@ export class EcosystemController {
     @Query(
       'orgId',
       new ParseUUIDPipe({
+        optional: true,
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
         }

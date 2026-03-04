@@ -7,6 +7,13 @@ import { Reflector } from '@nestjs/core';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { validate as isValidUUID } from 'uuid';
 
+interface EcosystemRoleGroup {
+  ecosystem_role?: {
+    lead?: string[];
+    member?: string[];
+  };
+}
+
 @Injectable()
 export class EcosystemRolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {} // eslint-disable-next-line array-callback-return
@@ -45,7 +52,56 @@ export class EcosystemRolesGuard implements CanActivate {
 
     const isPlatformAdmin = user.email === process.env.PLATFORM_ADMIN_EMAIL;
 
-    if (user?.ecosystemRoles && requiredRolesNames.some((role: string) => user.ecosystemRoles.includes(role))) {
+    let ecosystemId = '';
+
+    const ecosystemIdExists =
+      'undefined' !== typeof reqData.params?.ecosystemId ||
+      'undefined' !== typeof reqData.query?.ecosystemId ||
+      'undefined' !== typeof reqData.body?.ecosystemId;
+
+    switch (true) {
+      case 'string' === typeof reqData.params?.ecosystemId:
+        ecosystemId = reqData.params.ecosystemId.trim();
+        break;
+      case 'string' === typeof reqData.query?.ecosystemId:
+        ecosystemId = reqData.query.ecosystemId.trim();
+        break;
+      case 'string' === typeof reqData.body?.ecosystemId:
+        ecosystemId = reqData.body.ecosystemId.trim();
+        break;
+      default:
+        ecosystemId = '';
+    }
+
+    if (ecosystemIdExists) {
+      if (!ecosystemId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.ecosystemIdIsRequired);
+      }
+      if (!isValidUUID(ecosystemId)) {
+        throw new BadRequestException(ResponseMessages.ecosystem?.error?.invalidEcosystemId || 'Invalid ecosystem id');
+      }
+
+      const ecosystemAccess = user?.ecosystem_access;
+
+      if (!ecosystemAccess) {
+        throw new ForbiddenException(
+          ResponseMessages.ecosystem?.error?.ecosystemNotFound || 'User does not have ecosystem access'
+        );
+      }
+
+      const hasAccess = Object.values(ecosystemAccess).some((entry: EcosystemRoleGroup) => {
+        const leadList = entry?.ecosystem_role?.lead ?? [];
+        const memberList = entry?.ecosystem_role?.member ?? [];
+        return leadList.includes(ecosystemId) || memberList.includes(ecosystemId);
+      });
+
+      if (!hasAccess) {
+        throw new ForbiddenException(
+          ResponseMessages.ecosystem?.error?.ecosystemNotFound || 'User does not have access to this ecosystem'
+        );
+      }
+
+      user.selectedEcosystem = ecosystemId;
       return true;
     }
 
@@ -77,6 +133,7 @@ export class EcosystemRolesGuard implements CanActivate {
             description: ResponseMessages.errorMessages.forbidden
           });
         }
+
         return roleAccess;
       }
 

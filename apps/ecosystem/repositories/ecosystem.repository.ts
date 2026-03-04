@@ -14,8 +14,8 @@ import {
   IEcosystemDashboard,
   IEcosystemInvitation,
   IGetAllOrgs,
-  IGetEcosystemOrgs,
   IGetEcosystemOrgStatus,
+  IGetEcosystemOrgs,
   IPlatformDashboardCount,
   PrismaExecutor
 } from '../interfaces/ecosystem.interfaces';
@@ -399,8 +399,8 @@ export class EcosystemRepository {
   }
 
   async updateEcosystemInvitationStatusByEmail(
-    orgId: string,
     email: string,
+    orgId: string,
     ecosystemId: string,
     status: Invitation
   ): Promise<ecosystem_invitations> {

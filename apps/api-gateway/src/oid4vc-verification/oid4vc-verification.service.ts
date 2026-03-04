@@ -27,8 +27,8 @@ export class Oid4vcVerificationService {
     createIntentDto: CreateIntentBasedVerificationDto,
     userDetails: user
   ): Promise<object> {
-    const { intent, responseMode, requestSigner } = createIntentDto;
-    const payload = { orgId, verifierId, intent, responseMode, requestSigner, userDetails };
+    const { intent, responseMode, requestSigner, expectedOrigins } = createIntentDto;
+    const payload = { orgId, verifierId, intent, responseMode, requestSigner, expectedOrigins, userDetails };
     this.logger.debug(
       `[createIntentBasedVerificationPresentation] Called with orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id}`
     );

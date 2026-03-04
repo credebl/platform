@@ -312,7 +312,8 @@ export class Oid4vpVerificationService extends BaseService {
     intent: string,
     responseMode: string,
     requestSigner: IRequestSigner,
-    userDetails: user
+    userDetails: user,
+    expectedOrigins?: string[]
   ): Promise<object> {
     this.logger.debug(
       `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
@@ -354,7 +355,8 @@ export class Oid4vpVerificationService extends BaseService {
         verifierId: verifier.publicVerifierId,
         dcql: templateData?.template?.templateJson.dcql,
         responseMode,
-        requestSigner: null
+        requestSigner: null,
+        expectedOrigins
       };
 
       // Handle request signer based on method
@@ -426,8 +428,7 @@ export class Oid4vpVerificationService extends BaseService {
         : getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY);
 
       if (!query.id) {
-        //TODO: Temp fix due to deployment issues
-        url = buildUrlWithQuery(url, query as Record<string, string | number | boolean | object>);
+        url = buildUrlWithQuery(url, query as Record<string, object>);
       }
       this.logger.debug(`[getVerifierSession] calling agent URL=${url}`);
 

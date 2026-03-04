@@ -450,6 +450,7 @@ export enum CommonConstants {
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;
 export const ECOSYSTEM_ROLES = ['Ecosystem Lead', 'Ecosystem Member'];
+export const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const postgresqlErrorCodes = [];
 postgresqlErrorCodes['23503'] = 'foreign_key_violation';

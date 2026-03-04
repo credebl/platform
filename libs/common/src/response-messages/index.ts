@@ -98,7 +98,8 @@ export const ResponseMessages = {
       orgDids: 'Organization DIDs fetched successfully',
       primaryDid: 'Primary DID updated successfully',
       didDetails: 'DID Details updated sucessfully',
-      getOrganizationActivity: 'Organization activity count fetched successfully'
+      getOrganizationActivity: 'Organization activity count fetched successfully',
+      tenantEcosystems: 'Ecosystem IDs fetched successfully for tenant'
     },
     error: {
       exists: 'An organization name is already exist',
@@ -134,7 +135,9 @@ export const ResponseMessages = {
       MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
       adminTokenDetails: 'Error in generating admin token details',
       clientDetails: 'Error in fetching client details',
-      invalidClientCredentials: 'Invalid client credentials'
+      invalidClientCredentials: 'Invalid client credentials',
+      tenantNotFound: 'No organization found for the given tenantId',
+      tenantIdRequired: 'tenantId is required'
     }
   },
 

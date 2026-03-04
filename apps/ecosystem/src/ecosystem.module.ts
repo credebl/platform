@@ -2,6 +2,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Logger, Module } from '@nestjs/common';
 
 import { CacheModule } from '@nestjs/cache-manager';
+import { ClientRegistrationModule } from '@credebl/client-registration';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonModule } from '@credebl/common';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
@@ -33,7 +34,8 @@ import { getNatsOptions } from '@credebl/common/nats.config';
     LoggerModule,
     PlatformConfig,
     ContextInterceptorModule,
-    CacheModule.register()
+    CacheModule.register(),
+    ClientRegistrationModule
   ],
   controllers: [EcosystemController],
   providers: [

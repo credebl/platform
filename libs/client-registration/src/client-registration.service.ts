@@ -16,6 +16,7 @@ import { CreateUserDto } from './dtos/create-user.dto';
 import { IClientRoles } from './interfaces/client.interface';
 import { IFormattedResponse } from '@credebl/common/interfaces/interface';
 import { JwtService } from '@nestjs/jwt';
+import { EcosystemServiceRole } from '@credebl/enum/enum';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -150,7 +151,6 @@ export class ClientRegistrationService {
 
   async getManagementToken(clientId: string, clientSecret: string) {
     try {
-      const payload = new ClientCredentialTokenPayloadDto();
       if (!clientId && !clientSecret) {
         this.logger.error(`getManagementToken ::: Client ID and client secret are missing`);
         throw new BadRequestException(`Client ID and client secret are missing`);
@@ -159,8 +159,7 @@ export class ClientRegistrationService {
       const decryptClientId = await this.commonService.decryptPassword(clientId);
       const decryptClientSecret = await this.commonService.decryptPassword(clientSecret);
 
-      payload.client_id = decryptClientId;
-      payload.client_secret = decryptClientSecret;
+      const payload = new ClientCredentialTokenPayloadDto(decryptClientId, decryptClientSecret);
       const mgmtTokenResponse = await this.getToken(payload);
       return mgmtTokenResponse.access_token;
     } catch (error) {
@@ -170,10 +169,36 @@ export class ClientRegistrationService {
     }
   }
 
+  /**
+   * Get management token using ENV variables directly (without decryption)
+   */
+  async getPlatformManagementToken(): Promise<string> {
+    try {
+      const clientId = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
+      const clientSecret = process.env.KEYCLOAK_MANAGEMENT_CLIENT_SECRET;
+
+      if (!clientId || !clientSecret) {
+        this.logger.error(
+          `getPlatformManagementToken ::: KEYCLOAK_MANAGEMENT_CLIENT_ID or KEYCLOAK_MANAGEMENT_CLIENT_SECRET is missing`
+        );
+        throw new BadRequestException(`Keycloak management credentials are missing in environment`);
+      }
+
+      const payload = new ClientCredentialTokenPayloadDto(clientId, clientSecret);
+
+      const mgmtTokenResponse = await this.getToken(payload);
+      return mgmtTokenResponse.access_token;
+    } catch (error) {
+      this.logger.error(`Error in getPlatformManagementToken: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async getManagementTokenForMobile() {
-    const payload = new ClientCredentialTokenPayloadDto();
-    payload.client_id = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_ID;
-    payload.client_secret = process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_SECRET;
+    const payload = new ClientCredentialTokenPayloadDto(
+      process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_ID,
+      process.env.KEYCLOAK_MANAGEMENT_ADEYA_CLIENT_SECRET
+    );
     payload.scope = 'email profile';
 
     this.logger.log(`management Payload: ${JSON.stringify(payload)}`);
@@ -752,5 +777,280 @@ export class ClientRegistrationService {
       this.getAuthHeader(token)
     );
     return clientDetails;
+  }
+
+  async updateUserEcosystemAccess(
+    keycloakUserId: string,
+    orgId: string,
+    ecosystemId: string,
+    role: EcosystemServiceRole,
+    token: string
+  ): Promise<void> {
+    try {
+      const realmName = process.env.KEYCLOAK_REALM;
+      const userUrl = await this.keycloakUrlService.GetUserInfoURL(realmName, keycloakUserId);
+      this.logger.log(`[updateUserEcosystemAccess] User URL: ${userUrl}`);
+      this.logger.log(`[updateUserEcosystemAccess] Adding ecosystem ${ecosystemId} as ${role} for org ${orgId}`);
+      const currentUser = await this.commonService.httpGet(userUrl, this.getAuthHeader(token));
+      this.logger.log(`[updateUserEcosystemAccess] Current user fetched: ${currentUser ? 'success' : 'null'}`);
+
+      if (!currentUser) {
+        throw new NotFoundException(`User not found in Keycloak: ${keycloakUserId}`);
+      }
+
+      const attributes = currentUser.attributes || {};
+      this.logger.log(`[updateUserEcosystemAccess] Current attribute keys: ${Object.keys(attributes).join(', ')}`);
+
+      let ecosystemAccess: Record<string, { ecosystem_role: { lead: string[]; member: string[] } }> = {};
+      if (attributes.ecosystem_access && attributes.ecosystem_access[0]) {
+        try {
+          ecosystemAccess = JSON.parse(attributes.ecosystem_access[0]);
+          this.logger.log(
+            `[updateUserEcosystemAccess] Parsed existing ecosystem_access: ${JSON.stringify(ecosystemAccess)}`
+          );
+        } catch (error) {
+          this.logger.warn(`[updateUserEcosystemAccess] Failed to parse existing ecosystem_access, initializing empty`);
+          ecosystemAccess = {};
+        }
+      }
+
+      if (!ecosystemAccess[orgId]) {
+        ecosystemAccess[orgId] = {
+          ecosystem_role: {
+            lead: [],
+            member: []
+          }
+        };
+        this.logger.log(`[updateUserEcosystemAccess] Initialized ecosystem_access for org ${orgId}`);
+      }
+
+      if (!ecosystemAccess[orgId].ecosystem_role) {
+        ecosystemAccess[orgId].ecosystem_role = { lead: [], member: [] };
+      }
+      if (!ecosystemAccess[orgId].ecosystem_role.lead) {
+        ecosystemAccess[orgId].ecosystem_role.lead = [];
+      }
+      if (!ecosystemAccess[orgId].ecosystem_role.member) {
+        ecosystemAccess[orgId].ecosystem_role.member = [];
+      }
+
+      const existingEcosystems = ecosystemAccess[orgId].ecosystem_role[role];
+      this.logger.log(`[updateUserEcosystemAccess] Existing ${role} ecosystems: ${JSON.stringify(existingEcosystems)}`);
+
+      if (!existingEcosystems.includes(ecosystemId)) {
+        existingEcosystems.push(ecosystemId);
+        this.logger.log(`[updateUserEcosystemAccess] Added ecosystem ${ecosystemId} to ${role}`);
+      } else {
+        this.logger.log(`[updateUserEcosystemAccess] Ecosystem ${ecosystemId} already exists in ${role}`);
+      }
+
+      ecosystemAccess[orgId].ecosystem_role[role] = existingEcosystems;
+      this.logger.log(`[updateUserEcosystemAccess] Updated ecosystem_access: ${JSON.stringify(ecosystemAccess)}`);
+
+      attributes.ecosystem_access = [JSON.stringify(ecosystemAccess)];
+
+      // Update user in Keycloak
+      const updatePayload = { attributes };
+      this.logger.log(`[updateUserEcosystemAccess] Sending update to Keycloak...`);
+
+      await this.commonService.httpPut(userUrl, updatePayload, this.getAuthHeader(token));
+
+      this.logger.log(
+        `[updateUserEcosystemAccess] Successfully updated ecosystem_access for user ${keycloakUserId}, org ${orgId}, role ${role}`
+      );
+    } catch (error) {
+      this.logger.error(`[updateUserEcosystemAccess] Error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateUserEcosystemLeads(
+    keycloakUserId: string,
+    orgId: string,
+    ecosystemId: string,
+    token: string
+  ): Promise<void> {
+    return this.updateUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, EcosystemServiceRole.LEAD, token);
+  }
+
+  async updateUserEcosystemMember(
+    keycloakUserId: string,
+    orgId: string,
+    ecosystemId: string,
+    token: string
+  ): Promise<void> {
+    return this.updateUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, EcosystemServiceRole.MEMBER, token);
+  }
+
+  /**
+   * Update the service account user's ecosystem_access attribute for a client
+   */
+  async updateClientServiceAccountEcosystemAccess(
+    clientIdpId: string,
+    orgId: string,
+    ecosystemId: string,
+    role: EcosystemServiceRole,
+    token: string
+  ): Promise<void> {
+    try {
+      const realmName = process.env.KEYCLOAK_REALM;
+
+      const serviceAccountUrl = await this.keycloakUrlService.GetServiceAccountUserURL(realmName, clientIdpId);
+      this.logger.log(`[updateClientServiceAccountEcosystemAccess] Service Account URL: ${serviceAccountUrl}`);
+
+      const serviceAccountUser = await this.commonService.httpGet(serviceAccountUrl, this.getAuthHeader(token));
+
+      if (!serviceAccountUser || !serviceAccountUser.id) {
+        this.logger.warn(
+          `[updateClientServiceAccountEcosystemAccess] No service account found for client ${clientIdpId}`
+        );
+        return;
+      }
+
+      this.logger.log(
+        `[updateClientServiceAccountEcosystemAccess] Found service account user: ${serviceAccountUser.id}`
+      );
+      await this.updateUserEcosystemAccess(serviceAccountUser.id, orgId, ecosystemId, role, token);
+
+      this.logger.log(
+        `[updateClientServiceAccountEcosystemAccess] Successfully updated service account for client ${clientIdpId}`
+      );
+    } catch (error) {
+      this.logger.error(`[updateClientServiceAccountEcosystemAccess] Error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Wrapper for adding ecosystem lead to client service account
+   */
+  async updateClientServiceAccountEcosystemLead(
+    clientIdpId: string,
+    orgId: string,
+    ecosystemId: string,
+    token: string
+  ): Promise<void> {
+    return this.updateClientServiceAccountEcosystemAccess(
+      clientIdpId,
+      orgId,
+      ecosystemId,
+      EcosystemServiceRole.LEAD,
+      token
+    );
+  }
+
+  /**
+   * Wrapper for adding ecosystem member to client service account
+   */
+  async updateClientServiceAccountEcosystemMember(
+    clientIdpId: string,
+    orgId: string,
+    ecosystemId: string,
+    token: string
+  ): Promise<void> {
+    return this.updateClientServiceAccountEcosystemAccess(
+      clientIdpId,
+      orgId,
+      ecosystemId,
+      EcosystemServiceRole.MEMBER,
+      token
+    );
+  }
+
+  /**
+   * Remove an ecosystem from user's ecosystem_access attribute in Keycloak
+   */
+  async removeUserEcosystemAccess(
+    keycloakUserId: string,
+    orgId: string,
+    ecosystemId: string,
+    role: EcosystemServiceRole,
+    token: string
+  ): Promise<void> {
+    try {
+      const realmName = process.env.KEYCLOAK_REALM;
+      const userUrl = await this.keycloakUrlService.GetUserInfoURL(realmName, keycloakUserId);
+      this.logger.log(`[removeUserEcosystemAccess] User URL: ${userUrl}`);
+      this.logger.log(`[removeUserEcosystemAccess] Removing ecosystem ${ecosystemId} from ${role} for org ${orgId}`);
+      const currentUser = await this.commonService.httpGet(userUrl, this.getAuthHeader(token));
+      this.logger.log(`[removeUserEcosystemAccess] Current user fetched: ${currentUser ? 'success' : 'null'}`);
+
+      if (!currentUser) {
+        throw new NotFoundException(`User not found in Keycloak: ${keycloakUserId}`);
+      }
+      const attributes = currentUser.attributes || {};
+      this.logger.log(`[removeUserEcosystemAccess] Current attribute keys: ${Object.keys(attributes).join(', ')}`);
+
+      let ecosystemAccess: Record<string, { ecosystem_role: { lead: string[]; member: string[] } }> = {};
+      if (attributes.ecosystem_access && attributes.ecosystem_access[0]) {
+        try {
+          ecosystemAccess = JSON.parse(attributes.ecosystem_access[0]);
+          this.logger.log(
+            `[removeUserEcosystemAccess] Parsed existing ecosystem_access: ${JSON.stringify(ecosystemAccess)}`
+          );
+        } catch {
+          this.logger.warn(`[removeUserEcosystemAccess] Failed to parse existing ecosystem_access`);
+          return;
+        }
+      } else {
+        this.logger.log(`[removeUserEcosystemAccess] No ecosystem_access attribute found, nothing to remove`);
+        return;
+      }
+      if (!ecosystemAccess[orgId] || !ecosystemAccess[orgId].ecosystem_role) {
+        this.logger.log(`[removeUserEcosystemAccess] No ecosystem_role found for org ${orgId}`);
+        return;
+      }
+
+      const existingEcosystems = ecosystemAccess[orgId].ecosystem_role[role] || [];
+      this.logger.log(`[removeUserEcosystemAccess] Existing ${role} ecosystems: ${JSON.stringify(existingEcosystems)}`);
+
+      const updatedEcosystems = existingEcosystems.filter((id) => id !== ecosystemId);
+      this.logger.log(
+        `[removeUserEcosystemAccess] Updated ${role} ecosystems after removal: ${JSON.stringify(updatedEcosystems)}`
+      );
+      ecosystemAccess[orgId].ecosystem_role[role] = updatedEcosystems;
+      const orgRoles = ecosystemAccess[orgId].ecosystem_role;
+      if (0 === (orgRoles.lead?.length ?? 0) && 0 === (orgRoles.member?.length ?? 0)) {
+        delete ecosystemAccess[orgId];
+        this.logger.log(`[removeUserEcosystemAccess] Removed org ${orgId} (no more ecosystems)`);
+      }
+
+      if (0 < Object.keys(ecosystemAccess).length) {
+        attributes.ecosystem_access = [JSON.stringify(ecosystemAccess)];
+      } else {
+        delete attributes.ecosystem_access;
+        this.logger.log(`[removeUserEcosystemAccess] Removed ecosystem_access attribute (empty)`);
+      }
+
+      const updatePayload = { attributes };
+      this.logger.log(`[removeUserEcosystemAccess] Sending update to Keycloak...`);
+
+      await this.commonService.httpPut(userUrl, updatePayload, this.getAuthHeader(token));
+
+      this.logger.log(
+        `[removeUserEcosystemAccess] Successfully removed ecosystem ${ecosystemId} from ${role} for user ${keycloakUserId}, org ${orgId}`
+      );
+    } catch (error) {
+      this.logger.error(`[removeUserEcosystemAccess] Error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async removeUserEcosystemLead(
+    keycloakUserId: string,
+    orgId: string,
+    ecosystemId: string,
+    token: string
+  ): Promise<void> {
+    return this.removeUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, EcosystemServiceRole.LEAD, token);
+  }
+
+  async removeUserEcosystemMember(
+    keycloakUserId: string,
+    orgId: string,
+    ecosystemId: string,
+    token: string
+  ): Promise<void> {
+    return this.removeUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, EcosystemServiceRole.MEMBER, token);
   }
 }

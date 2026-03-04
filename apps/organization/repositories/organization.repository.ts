@@ -834,6 +834,29 @@ export class OrganizationRepository {
     }
   }
 
+  async getEcosystemIdsByTenantId(tenantId: string): Promise<string[]> {
+    try {
+      const orgAgent = await this.prisma.org_agents.findFirst({
+        where: { tenantId },
+        select: { orgId: true }
+      });
+
+      if (!orgAgent) {
+        return [];
+      }
+
+      const ecosystemOrgs = await this.prisma.ecosystem_orgs.findMany({
+        where: { orgId: orgAgent.orgId },
+        select: { ecosystemId: true }
+      });
+
+      return ecosystemOrgs.map((e) => e.ecosystemId);
+    } catch (error) {
+      this.logger.error(`Error in getEcosystemIdsByTenantId: ${error.message}`);
+      throw error;
+    }
+  }
+
   async deleteOrg(id: string): Promise<{
     deletedUserActivity: Prisma.BatchPayload;
     deletedUserOrgRole: Prisma.BatchPayload;

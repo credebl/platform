@@ -320,4 +320,9 @@ export class OrganizationController {
       payload.search
     );
   }
+
+  @MessagePattern({ cmd: 'get-ecosystem-ids-by-tenant-id' })
+  async getEcosystemIdsByTenantId(payload: { tenantId: string }): Promise<string[]> {
+    return this.organizationService.getEcosystemIdsByTenantId(payload.tenantId);
+  }
 }

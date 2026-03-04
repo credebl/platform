@@ -426,7 +426,8 @@ export class Oid4vpVerificationService extends BaseService {
         : getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY);
 
       if (!query.id) {
-        url = buildUrlWithQuery(url, query);
+        //TODO: Temp fix due to deployment issues
+        url = buildUrlWithQuery(url, query as Record<string, string | number | boolean | object>);
       }
       this.logger.debug(`[getVerifierSession] calling agent URL=${url}`);
 

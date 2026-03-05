@@ -849,8 +849,7 @@ export class ClientRegistrationService {
 
       attributes.ecosystem_access = [JSON.stringify(ecosystemAccess)];
 
-      // Update user in Keycloak
-      const updatePayload = { attributes };
+      const updatePayload = { ...currentUser, attributes };
       this.logger.log(`[updateUserEcosystemAccess] Sending update to Keycloak...`);
 
       await this.commonService.httpPut(userUrl, updatePayload, this.getAuthHeader(token));
@@ -1022,7 +1021,7 @@ export class ClientRegistrationService {
         this.logger.log(`[removeUserEcosystemAccess] Removed ecosystem_access attribute (empty)`);
       }
 
-      const updatePayload = { attributes };
+      const updatePayload = { ...currentUser, attributes };
       this.logger.log(`[removeUserEcosystemAccess] Sending update to Keycloak...`);
 
       await this.commonService.httpPut(userUrl, updatePayload, this.getAuthHeader(token));

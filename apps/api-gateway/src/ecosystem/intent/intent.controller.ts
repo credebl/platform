@@ -275,38 +275,48 @@ export class IntentController {
   /**
    * Get template details by org ID
    */
-  @Get('/org/:orgId/verification-templates')
+  @Get('/ecosystem/:ecosystemId/verification-templates')
   @Roles(OrgRoles.ECOSYSTEM_LEAD, OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Get template details by orgId',
-    description: 'Retrieve verification template details by orgId'
+    summary: 'Get verification templates by ecosystemId',
+    description: 'Retrieve verification templates of all member orgs in ecosystem'
   })
   @ApiParam({
     name: 'orgId',
-    required: true,
+    required: false,
     description: 'Organization ID'
   })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Template details fetched successfully'
   })
-  async getTemplateByIntentId(
+  async getTemplatesByEcosystemId(
     @Param(
-      'orgId',
+      'ecosystemId',
       TrimStringParamPipe,
       new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemId);
+        }
+      })
+    )
+    ecosystemId: string,
+    @Query() pageDto: PaginationDto,
+    @Res() res: Response,
+    @Query(
+      'orgId',
+      new ParseUUIDPipe({
+        optional: true,
         exceptionFactory: (): Error => {
           throw new BadRequestException(ResponseMessages.ecosystem.error.invalidOrgId);
         }
       })
     )
-    orgId: string,
-    @Res() res: Response,
-    @Query() pageDto: PaginationDto
+    orgId?: string
   ): Promise<Response> {
-    const templates = await this.ecosystemService.getVerificationTemplates(orgId, pageDto);
+    const templates = await this.ecosystemService.getVerificationTemplates(ecosystemId, pageDto, orgId);
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,

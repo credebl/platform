@@ -17,6 +17,7 @@ import {
   IGetEcosystemOrgStatus,
   IGetEcosystemOrgs,
   IPlatformDashboardCount,
+  IVerificationTemplateList,
   PrismaExecutor
 } from '../interfaces/ecosystem.interfaces';
 import {
@@ -35,8 +36,7 @@ import {
   intent_templates,
   intents,
   platform_config,
-  user,
-  verification_templates
+  user
 } from '@prisma/client';
 
 import { OrgRoles } from 'libs/org-roles/enums';
@@ -1183,24 +1183,54 @@ export class EcosystemRepository {
 
   // eslint-disable-next-line camelcase
   async getTemplatesByOrgId(
-    orgId: string,
-    pageDetail: IPaginationSortingDto
-  ): Promise<PaginatedResponse<verification_templates>> {
+    ecosystemId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId?: string
+  ): Promise<PaginatedResponse<IVerificationTemplateList>> {
+    let finalOrgIds: string[];
+
+    // If orgId is provided from API
+    if (orgId) {
+      finalOrgIds = [orgId];
+    } else {
+      const memberOrgs = await this.prisma.ecosystem_orgs.findMany({
+        where: {
+          ecosystemId,
+          deletedAt: null,
+          status: EcosystemOrgStatus.ACTIVE
+        },
+        select: {
+          orgId: true
+        }
+      });
+
+      finalOrgIds = memberOrgs.map((o) => o.orgId);
+    }
+
+    if (!finalOrgIds.length) {
+      return { totalPages: 0, data: [] };
+    }
+
     const whereClause = {
       organisation: {
-        ecosystemOrgs: {
-          some: {
-            orgId,
-            deletedAt: null,
-            status: EcosystemOrgStatus.ACTIVE // optional but recommended
-          }
+        id: {
+          in: finalOrgIds
         }
       }
     };
+
     const [data, count] = await this.prisma.$transaction([
       this.prisma.verification_templates.findMany({
         where: whereClause,
-        include: {
+        select: {
+          id: true,
+          name: true,
+          orgId: true,
+          createDateTime: true,
+          createdBy: true,
+          lastChangedDateTime: true,
+          lastChangedBy: true,
+          signerOption: true,
           organisation: {
             select: {
               id: true,
@@ -1214,10 +1244,15 @@ export class EcosystemRepository {
         take: pageDetail.pageSize,
         skip: (pageDetail.pageNumber - 1) * pageDetail.pageSize
       }),
-      this.prisma.verification_templates.count({ where: whereClause })
+      this.prisma.verification_templates.count({
+        where: whereClause
+      })
     ]);
-    const totalPages = Math.ceil(count / pageDetail.pageSize);
-    return { totalPages, data };
+
+    return {
+      totalPages: Math.ceil(count / pageDetail.pageSize),
+      data
+    };
   }
 
   /**

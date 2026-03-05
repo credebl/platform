@@ -479,8 +479,8 @@ export class EcosystemService {
         throw new BadRequestException(ResponseMessages.ecosystem.error.alreadyAccepted);
       }
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-        orgId,
         userEmail,
+        orgId,
         ecosystemId,
         status
       );
@@ -883,12 +883,16 @@ export class EcosystemService {
     }
   }
 
-  async getTemplatesByOrgId(orgId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<object>> {
-    if (!orgId) {
-      throw new BadRequestException('orgId is required');
+  async getTemplatesByOrgId(
+    ecosystemId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId?: string
+  ): Promise<PaginatedResponse<object>> {
+    if (!ecosystemId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.ecosystemIdIsRequired);
     }
 
-    return this.ecosystemRepository.getTemplatesByOrgId(orgId, pageDetail);
+    return this.ecosystemRepository.getTemplatesByOrgId(ecosystemId, pageDetail, orgId);
   }
 
   /**

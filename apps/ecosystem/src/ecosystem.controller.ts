@@ -292,10 +292,11 @@ export class EcosystemController {
 
   @MessagePattern({ cmd: 'get-verification-templates-by-org-id' })
   async getTemplatesByOrgId(payload: {
-    orgId: string;
+    ecosystemId: string;
     pageDetail: IPaginationSortingDto;
+    orgId?: string;
   }): Promise<PaginatedResponse<object>> {
-    return this.ecosystemService.getTemplatesByOrgId(payload.orgId, payload.pageDetail);
+    return this.ecosystemService.getTemplatesByOrgId(payload.ecosystemId, payload.pageDetail, payload.orgId);
   }
 
   /**

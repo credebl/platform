@@ -1,5 +1,5 @@
 import { EcosystemOrgStatus, InvitationViewRole } from '@credebl/enum/enum';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient, SignerOption } from '@prisma/client';
 
 import { CommonTableColumns } from '@credebl/common/interfaces/interface';
 import { OrgRoles } from 'libs/org-roles/enums';
@@ -243,4 +243,19 @@ export interface IGetEcosystemOrgsResponse {
     id: string;
     name: string | null;
   } | null;
+}
+
+export interface IVerificationTemplateList {
+  id: string;
+  name: string;
+  orgId: string;
+  createDateTime: Date;
+  createdBy: string;
+  lastChangedDateTime: Date;
+  lastChangedBy: string;
+  signerOption: SignerOption;
+  organisation: {
+    id: string;
+    name: string;
+  };
 }

@@ -1189,9 +1189,20 @@ export class EcosystemRepository {
   ): Promise<PaginatedResponse<IVerificationTemplateList>> {
     let finalOrgIds: string[];
 
-    // If orgId is provided from API
     if (orgId) {
-      finalOrgIds = [orgId];
+      const membership = await this.prisma.ecosystem_orgs.findFirst({
+        where: {
+          ecosystemId,
+          orgId,
+          deletedAt: null,
+          status: EcosystemOrgStatus.ACTIVE
+        },
+        select: { orgId: true }
+      });
+      if (!membership) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.orgIdNotFound);
+      }
+      finalOrgIds = membership ? [membership.orgId] : [];
     } else {
       const memberOrgs = await this.prisma.ecosystem_orgs.findMany({
         where: {
@@ -1212,10 +1223,8 @@ export class EcosystemRepository {
     }
 
     const whereClause = {
-      organisation: {
-        id: {
-          in: finalOrgIds
-        }
+      orgId: {
+        in: finalOrgIds
       }
     };
 

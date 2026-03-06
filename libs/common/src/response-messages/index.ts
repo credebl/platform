@@ -206,6 +206,7 @@ export const ResponseMessages = {
       ecosystemStatus: 'Ecosystem status fetched successfully'
     },
     error: {
+      orgIdNotFound: 'Provided orgId is not a member of this ecosystem',
       featureIsDisabled: `You don't have access to this feature`,
       userEmailRequired: 'User email is required to send invitation',
       userNotFound: 'User not found',

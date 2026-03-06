@@ -283,7 +283,7 @@ export class IntentController {
     summary: 'Get verification templates by ecosystemId',
     description: 'Retrieve verification templates of all member orgs in ecosystem'
   })
-  @ApiParam({
+  @ApiQuery({
     name: 'orgId',
     required: false,
     description: 'Organization ID'

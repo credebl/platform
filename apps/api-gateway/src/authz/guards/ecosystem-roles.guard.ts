@@ -7,6 +7,19 @@ import { Reflector } from '@nestjs/core';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { validate as isValidUUID } from 'uuid';
 
+interface EcosystemRoles {
+  lead?: string[];
+  member?: string[];
+}
+
+interface EcosystemRoleGroup {
+  ecosystem_role?: EcosystemRoles;
+}
+
+interface EcosystemAccess {
+  [ecosystemId: string]: EcosystemRoleGroup;
+}
+
 @Injectable()
 export class EcosystemRolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {} // eslint-disable-next-line array-callback-return
@@ -43,11 +56,33 @@ export class EcosystemRolesGuard implements CanActivate {
         orgId = '';
     }
 
-    const isPlatformAdmin = user.email === process.env.PLATFORM_ADMIN_EMAIL;
+    const roles: string[] = [];
 
-    if (user?.ecosystemRoles && requiredRolesNames.some((role: string) => user.ecosystemRoles.includes(role))) {
+    const ecosystemAccess: EcosystemAccess | undefined = user?.ecosystem_access;
+
+    const hasLead = Object.values(ecosystemAccess || {}).some(
+      (eco: EcosystemRoleGroup) => 0 < eco?.ecosystem_role?.lead?.length
+    );
+
+    const hasMember = Object.values(ecosystemAccess || {}).some(
+      (eco: EcosystemRoleGroup) => 0 < eco?.ecosystem_role?.member?.length
+    );
+
+    if (hasLead && !roles.includes(OrgRoles.ECOSYSTEM_LEAD)) {
+      roles.push(OrgRoles.ECOSYSTEM_LEAD);
+    }
+
+    if (hasMember && !roles.includes(OrgRoles.ECOSYSTEM_MEMBER)) {
+      roles.push(OrgRoles.ECOSYSTEM_MEMBER);
+    }
+
+    const ecosystemRoleAccess = requiredRolesNames.some((role) => roles.includes(role));
+
+    if (ecosystemRoleAccess) {
       return true;
     }
+
+    const isPlatformAdmin = user.email === process.env.PLATFORM_ADMIN_EMAIL;
 
     if (isPlatformAdmin && requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {
       // eslint-disable-next-line array-callback-return
@@ -77,6 +112,7 @@ export class EcosystemRolesGuard implements CanActivate {
             description: ResponseMessages.errorMessages.forbidden
           });
         }
+
         return roleAccess;
       }
 

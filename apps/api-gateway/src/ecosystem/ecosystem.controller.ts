@@ -95,7 +95,7 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Post('/invitation/status')
+  @Put('/invitation/status')
   @ApiOperation({
     summary: 'Update invitation status',
     description: 'Updates the status of an existing ecosystem invitation (accept or reject).'
@@ -210,7 +210,7 @@ export class EcosystemController {
     required: true,
     type: String
   })
-  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
+  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER)
   async getEcosystems(
     @User() reqUser: user,
     @Res() res: Response,

@@ -7,11 +7,17 @@ import { Reflector } from '@nestjs/core';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { validate as isValidUUID } from 'uuid';
 
+interface EcosystemRoles {
+  lead?: string[];
+  member?: string[];
+}
+
 interface EcosystemRoleGroup {
-  ecosystem_role?: {
-    lead?: string[];
-    member?: string[];
-  };
+  ecosystem_role?: EcosystemRoles;
+}
+
+interface EcosystemAccess {
+  [ecosystemId: string]: EcosystemRoleGroup;
 }
 
 @Injectable()
@@ -50,60 +56,33 @@ export class EcosystemRolesGuard implements CanActivate {
         orgId = '';
     }
 
-    const isPlatformAdmin = user.email === process.env.PLATFORM_ADMIN_EMAIL;
+    const roles: string[] = [];
 
-    let ecosystemId = '';
+    const ecosystemAccess: EcosystemAccess | undefined = user?.ecosystem_access;
 
-    const ecosystemIdExists =
-      'undefined' !== typeof reqData.params?.ecosystemId ||
-      'undefined' !== typeof reqData.query?.ecosystemId ||
-      'undefined' !== typeof reqData.body?.ecosystemId;
+    const hasLead = Object.values(ecosystemAccess || {}).some(
+      (eco: EcosystemRoleGroup) => 0 < eco?.ecosystem_role?.lead?.length
+    );
 
-    switch (true) {
-      case 'string' === typeof reqData.params?.ecosystemId:
-        ecosystemId = reqData.params.ecosystemId.trim();
-        break;
-      case 'string' === typeof reqData.query?.ecosystemId:
-        ecosystemId = reqData.query.ecosystemId.trim();
-        break;
-      case 'string' === typeof reqData.body?.ecosystemId:
-        ecosystemId = reqData.body.ecosystemId.trim();
-        break;
-      default:
-        ecosystemId = '';
+    const hasMember = Object.values(ecosystemAccess || {}).some(
+      (eco: EcosystemRoleGroup) => 0 < eco?.ecosystem_role?.member?.length
+    );
+
+    if (hasLead && !roles.includes(OrgRoles.ECOSYSTEM_LEAD)) {
+      roles.push(OrgRoles.ECOSYSTEM_LEAD);
     }
 
-    if (ecosystemIdExists) {
-      if (!ecosystemId) {
-        throw new BadRequestException(ResponseMessages.ecosystem.error.ecosystemIdIsRequired);
-      }
-      if (!isValidUUID(ecosystemId)) {
-        throw new BadRequestException(ResponseMessages.ecosystem?.error?.invalidEcosystemId || 'Invalid ecosystem id');
-      }
+    if (hasMember && !roles.includes(OrgRoles.ECOSYSTEM_MEMBER)) {
+      roles.push(OrgRoles.ECOSYSTEM_MEMBER);
+    }
 
-      const ecosystemAccess = user?.ecosystem_access;
+    const ecosystemRoleAccess = requiredRolesNames.some((role) => roles.includes(role));
 
-      if (!ecosystemAccess) {
-        throw new ForbiddenException(
-          ResponseMessages.ecosystem?.error?.ecosystemNotFound || 'User does not have ecosystem access'
-        );
-      }
-
-      const hasAccess = Object.values(ecosystemAccess).some((entry: EcosystemRoleGroup) => {
-        const leadList = entry?.ecosystem_role?.lead ?? [];
-        const memberList = entry?.ecosystem_role?.member ?? [];
-        return leadList.includes(ecosystemId) || memberList.includes(ecosystemId);
-      });
-
-      if (!hasAccess) {
-        throw new ForbiddenException(
-          ResponseMessages.ecosystem?.error?.ecosystemNotFound || 'User does not have access to this ecosystem'
-        );
-      }
-
-      user.selectedEcosystem = ecosystemId;
+    if (ecosystemRoleAccess) {
       return true;
     }
+
+    const isPlatformAdmin = user.email === process.env.PLATFORM_ADMIN_EMAIL;
 
     if (isPlatformAdmin && requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {
       // eslint-disable-next-line array-callback-return

@@ -269,7 +269,7 @@ export class PlatformController {
     description: 'Invitations fetched successfully'
   })
   @Roles(OrgRoles.PLATFORM_ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemFeatureGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async getInvitations(
     @User() reqUser: user,
@@ -324,7 +324,6 @@ export class PlatformController {
     status: HttpStatus.OK,
     description: 'Ecosystem status fetched successfully'
   })
-  @Roles(OrgRoles.PLATFORM_ADMIN)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
   async getEcosystemEnableStatus(@Res() res: Response): Promise<Response> {

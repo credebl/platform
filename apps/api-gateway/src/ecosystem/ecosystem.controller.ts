@@ -210,7 +210,7 @@ export class EcosystemController {
     required: true,
     type: String
   })
-  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
+  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER)
   async getEcosystems(
     @User() reqUser: user,
     @Res() res: Response,

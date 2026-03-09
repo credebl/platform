@@ -95,7 +95,7 @@ export class EcosystemController {
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
-  @Post('/invitation/status')
+  @Put('/invitation/status')
   @ApiOperation({
     summary: 'Update invitation status',
     description: 'Updates the status of an existing ecosystem invitation (accept or reject).'

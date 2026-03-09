@@ -186,10 +186,15 @@ export class EcosystemService {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intents', { ecosystemId, intentId, pageDetail });
   }
 
-  async getVerificationTemplates(orgId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<object>> {
+  async getVerificationTemplates(
+    ecosystemId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId?: string
+  ): Promise<PaginatedResponse<object>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-verification-templates-by-org-id', {
-      orgId,
-      pageDetail
+      ecosystemId,
+      pageDetail,
+      orgId
     });
   }
 

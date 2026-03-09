@@ -210,10 +210,6 @@ export class EcosystemService {
         throw new Error('Error fetching user');
       }
 
-      // if (!invitation) {
-      //   throw new ForbiddenException(ResponseMessages.ecosystem.error.invitationRequired);
-      // }
-
       const ecosystem = await this.prisma.$transaction(async (tx) => {
         const newEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, tx);
 
@@ -340,8 +336,8 @@ export class EcosystemService {
 
       if (checkUser && Invitation.REJECTED === checkUser.status && ecosystemId === checkUser.ecosystemId) {
         const reopenedInvitation = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-          orgId,
           userEmail,
+          orgId,
           ecosystemId,
           Invitation.PENDING
         );
@@ -353,7 +349,6 @@ export class EcosystemService {
       if (
         checkUser?.ecosystemId === ecosystemId &&
         checkUser.invitedOrg === orgId &&
-        checkUser.status === Invitation.PENDING &&
         checkUser.status === Invitation.PENDING &&
         checkUser.type === InviteType.MEMBER
       ) {
@@ -484,8 +479,8 @@ export class EcosystemService {
         throw new BadRequestException(ResponseMessages.ecosystem.error.alreadyAccepted);
       }
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-        orgId,
         userEmail,
+        orgId,
         ecosystemId,
         status
       );
@@ -888,12 +883,16 @@ export class EcosystemService {
     }
   }
 
-  async getTemplatesByOrgId(orgId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<object>> {
-    if (!orgId) {
-      throw new BadRequestException('orgId is required');
+  async getTemplatesByOrgId(
+    ecosystemId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId?: string
+  ): Promise<PaginatedResponse<object>> {
+    if (!ecosystemId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.ecosystemIdIsRequired);
     }
 
-    return this.ecosystemRepository.getTemplatesByOrgId(orgId, pageDetail);
+    return this.ecosystemRepository.getTemplatesByOrgId(ecosystemId, pageDetail, orgId);
   }
 
   /**

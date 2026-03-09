@@ -40,6 +40,7 @@ import {
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { SignerMethodOption, x5cKeyType } from '@credebl/enum/enum';
 import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
+import { CreateIntentNotice } from '../interfaces/intent-notice.interfaces';
 @Injectable()
 export class Oid4vpVerificationService extends BaseService {
   constructor(
@@ -698,6 +699,20 @@ export class Oid4vpVerificationService extends BaseService {
         `[deleteVerificationTemplate] - error: ${JSON.stringify(error?.response ?? error?.error ?? error ?? 'Something went wrong')}`
       );
       throw new RpcException(error?.response ?? error.error ?? error);
+    }
+  }
+
+  async createIntentNotice(
+    createIntentNoticeDto: CreateIntentNotice,
+    orgId: string,
+    userDetails: user
+  ): Promise<object> {
+    this.logger.debug(`[createIntentNotice] called for orgId=${orgId}, user=${userDetails?.id ?? 'unknown'}`);
+    try {
+      return await this.oid4vpRepository.createIntentNotice(createIntentNoticeDto, userDetails.id);
+    } catch (error) {
+      this.logger.error(`[createIntentNotice] Error: ${error?.message ?? error}`);
+      throw new RpcException(error);
     }
   }
 

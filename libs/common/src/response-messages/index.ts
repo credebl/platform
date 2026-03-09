@@ -755,6 +755,15 @@ export const ResponseMessages = {
       invalidId: 'Invalid id.'
     }
   },
+  intentNotice: {
+    success: {
+      create: 'Intent notice created successfully.'
+    },
+    error: {
+      create: 'Error while creating intent notice.',
+      intentNotFound: 'Intent not found.'
+    }
+  },
   x509: {
     success: {
       create: 'x509 certificate created successfully',

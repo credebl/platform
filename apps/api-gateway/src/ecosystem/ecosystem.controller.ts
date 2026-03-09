@@ -210,7 +210,7 @@ export class EcosystemController {
     required: true,
     type: String
   })
-  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
+  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER)
   async getEcosystems(
     @User() reqUser: user,
     @Res() res: Response,
@@ -439,28 +439,6 @@ export class EcosystemController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.invitationsMemberSuccess,
       data: invitationData
-    });
-  }
-
-  @Get('/dashboard/summary')
-  @Roles(OrgRoles.PLATFORM_ADMIN)
-  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get Count for Ecosystem dashboard',
-    description: 'Get Count for Ecosystem dashboard'
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Dashboard count fetched successfully'
-  })
-  async getDashboardCountEcosystem(@Res() res: Response): Promise<Response> {
-    const dashboard = await this.ecosystemService.getDashboardCountEcosystem();
-
-    return res.status(HttpStatus.OK).json({
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.ecosystem.success.dashboard,
-      data: dashboard
     });
   }
 

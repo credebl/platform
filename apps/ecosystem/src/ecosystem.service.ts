@@ -528,11 +528,69 @@ export class EcosystemService {
   }
 
   async deleteOrgsFromEcosystem(ecosystemId: string, orgIds: string[]): Promise<{ count: number }> {
-    return this.prisma.$transaction(async (tx) => {
+    if (!orgIds?.length) {
+      return { count: 0 };
+    }
+
+    const result = await this.prisma.$transaction(async (tx) => {
       const deletedCount = await this.ecosystemRepository.deleteOrgFromEcosystem(ecosystemId, orgIds, tx);
       await this.ecosystemRepository.deleteEcosystemInvitationByOrgId(ecosystemId, orgIds, tx);
       return deletedCount;
     });
+
+    this.removeKeycloakEcosystemMemberForOrgs(orgIds, ecosystemId).catch((error) => {
+      this.logger.error(`Failed to remove Keycloak ecosystem access after org deletion: ${error.message || error}`);
+    });
+
+    return result;
+  }
+
+  private async removeKeycloakEcosystemMemberForOrgs(orgIds: string[], ecosystemId: string): Promise<void> {
+    if (!orgIds?.length || !ecosystemId) {
+      return;
+    }
+
+    try {
+      const token = await this.clientRegistrationService.getPlatformManagementToken();
+
+      for (const orgId of orgIds) {
+        const orgUsers = await this.ecosystemRepository.getOrgUsersByOrgId(orgId);
+        for (const orgUser of orgUsers) {
+          const { keycloakUserId } = orgUser.user;
+          if (!keycloakUserId) {
+            continue;
+          }
+          try {
+            await this.clientRegistrationService.removeUserEcosystemMember(keycloakUserId, orgId, ecosystemId, token);
+          } catch (error) {
+            this.logger.error(
+              `Failed to remove ecosystem access for user ${keycloakUserId}: ${error.message || error}`
+            );
+          }
+        }
+
+        const organization = await this.organizationRepository.getOrgProfile(orgId);
+        if (organization?.idpId) {
+          try {
+            await this.clientRegistrationService.removeClientServiceAccountEcosystemMember(
+              organization.idpId,
+              orgId,
+              ecosystemId,
+              token
+            );
+          } catch (error) {
+            this.logger.error(
+              `Failed to remove ecosystem access for service account of org ${orgId}: ${error.message || error}`
+            );
+          }
+        }
+
+        this.logger.log(`Removed Keycloak ecosystem_access for org ${orgId}, ecosystem ${ecosystemId}`);
+      }
+    } catch (error) {
+      this.logger.error(`removeKeycloakEcosystemMemberForOrgs failed: ${error.message || error}`);
+      throw error;
+    }
   }
 
   async updateEcosystemOrgStatus(

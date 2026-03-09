@@ -593,6 +593,22 @@ export class EcosystemRepository {
     }
   }
 
+  async getOrgUsersByOrgId(orgId: string): Promise<{ user: { id: string; keycloakUserId: string | null } }[]> {
+    try {
+      return this.prisma.user_org_roles.findMany({
+        where: { orgId },
+        include: {
+          user: {
+            select: { id: true, keycloakUserId: true }
+          }
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getOrgUsersByOrgId: ${error}`);
+      throw error;
+    }
+  }
+
   async deleteEcosystemInvitationByOrgId(
     ecosystemId: string,
     orgId: string[],

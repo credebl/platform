@@ -1052,4 +1052,51 @@ export class ClientRegistrationService {
   ): Promise<void> {
     return this.removeUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, EcosystemServiceRole.MEMBER, token);
   }
+
+  async removeClientServiceAccountEcosystemAccess(
+    clientIdpId: string,
+    orgId: string,
+    ecosystemId: string,
+    role: EcosystemServiceRole,
+    token: string
+  ): Promise<void> {
+    try {
+      const realmName = process.env.KEYCLOAK_REALM;
+      if (!realmName) {
+        throw new Error('KEYCLOAK_REALM environment variable is not set');
+      }
+      const serviceAccountUrl = await this.keycloakUrlService.GetServiceAccountUserURL(realmName, clientIdpId);
+      const serviceAccountUser = await this.commonService.httpGet(serviceAccountUrl, this.getAuthHeader(token));
+
+      if (!serviceAccountUser || !serviceAccountUser.id) {
+        this.logger.warn(
+          `[removeClientServiceAccountEcosystemAccess] No service account found for client ${clientIdpId}`
+        );
+        return;
+      }
+
+      await this.removeUserEcosystemAccess(serviceAccountUser.id, orgId, ecosystemId, role, token);
+      this.logger.log(
+        `[removeClientServiceAccountEcosystemAccess] Successfully removed ecosystem ${ecosystemId} from service account for client ${clientIdpId}`
+      );
+    } catch (error) {
+      this.logger.error(`[removeClientServiceAccountEcosystemAccess] Error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async removeClientServiceAccountEcosystemMember(
+    clientIdpId: string,
+    orgId: string,
+    ecosystemId: string,
+    token: string
+  ): Promise<void> {
+    return this.removeClientServiceAccountEcosystemAccess(
+      clientIdpId,
+      orgId,
+      ecosystemId,
+      EcosystemServiceRole.MEMBER,
+      token
+    );
+  }
 }

@@ -33,6 +33,7 @@ export const ResponseMessages = {
     error: {
       exists: 'User already exists',
       profileNotFound: 'User public profile not found',
+      adminAlias: 'Use of ADMIN alias for user creation is forbidden',
       notUpdatePlatformSettings: 'Unable to update platform config settings',
       platformSetttingsNotFound: 'Unable to get platform settings',
       verificationAlreadySent: 'The verification link has already been sent to your email address',

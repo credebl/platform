@@ -479,8 +479,8 @@ export class EcosystemService {
         throw new BadRequestException(ResponseMessages.ecosystem.error.alreadyAccepted);
       }
       const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
-        userEmail,
         orgId,
+        userEmail,
         ecosystemId,
         status
       );

@@ -35,7 +35,10 @@ RUN mkdir -p ./agent-provisioning/AFJ/endpoints \
     && mkdir -p ./agent-provisioning/AFJ/port-file \
     && mkdir -p ./agent-provisioning/AFJ/token
 COPY --from=build /app/dist/apps/agent-provisioning/ ./dist/apps/agent-provisioning/
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+RUN npm install -g pnpm@9.15.3 --ignore-scripts \
+    && pnpm install --frozen-lockfile --ignore-scripts --prod \
+    && npm uninstall -g pnpm
 COPY --from=build /app/apps/agent-provisioning/AFJ/scripts ./agent-provisioning/AFJ/scripts
 COPY --from=build /app/apps/agent-provisioning/AFJ/port-file ./agent-provisioning/AFJ/port-file
 COPY --from=build /app/libs/ ./libs/

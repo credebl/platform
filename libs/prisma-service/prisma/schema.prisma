@@ -742,7 +742,6 @@ model intent_templates {
 model intent_notices {
   id                  String   @id @default(uuid()) @db.Uuid
   intentId            String   @db.Uuid
-  noticeId            String
   noticeUrl           String
   createDateTime      DateTime @default(now()) @db.Timestamptz(6)
   createdBy           String   @db.Uuid

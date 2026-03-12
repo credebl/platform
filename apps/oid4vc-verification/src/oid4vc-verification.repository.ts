@@ -9,7 +9,6 @@ import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions
 import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
-import { CreateIntentNotice } from '../interfaces/intent-notice.interfaces';
 
 @Injectable()
 export class Oid4vpRepository {
@@ -332,26 +331,6 @@ export class Oid4vpRepository {
       return updated;
     } catch (error) {
       this.logger.error(`[updateVerificationTemplate] Error: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async createIntentNotice(createIntentNoticeDto: CreateIntentNotice, userId: string): Promise<object> {
-    this.logger.debug(`[createIntentNotice] called for intentId=${createIntentNoticeDto.intentId}, userId=${userId}`);
-    try {
-      const created = await this.prisma.intent_notices.create({
-        data: {
-          intentId: createIntentNoticeDto.intentId,
-          noticeId: createIntentNoticeDto.noticeId,
-          noticeUrl: createIntentNoticeDto.noticeUrl,
-          createdBy: userId,
-          lastChangedBy: userId
-        }
-      });
-      this.logger.debug(`[createIntentNotice] Created intent notice with id=${created.id}`);
-      return created;
-    } catch (error) {
-      this.logger.error(`[createIntentNotice] Error: ${error?.message ?? error}`);
       throw error;
     }
   }

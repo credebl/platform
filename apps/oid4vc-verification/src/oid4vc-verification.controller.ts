@@ -14,7 +14,6 @@ import {
   VerifyAuthorizationResponse
 } from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
-import { CreateIntentNotice } from '../interfaces/intent-notice.interfaces';
 
 @Controller()
 export class Oid4vpVerificationController {
@@ -186,19 +185,6 @@ export class Oid4vpVerificationController {
       `[deleteVerificationTemplate] Received 'verification-template-delete' for orgId=${orgId}, templateId=${templateId}`
     );
     return this.oid4vpVerificationService.deleteVerificationTemplate(orgId, templateId);
-  }
-
-  @MessagePattern({ cmd: 'create-intent-notice' })
-  async createIntentNotice(payload: {
-    createIntentNoticeDto: CreateIntentNotice;
-    orgId: string;
-    userDetails: user;
-  }): Promise<object> {
-    const { createIntentNoticeDto, orgId, userDetails } = payload;
-    this.logger.debug(
-      `[createIntentNotice] Received 'create-intent-notice' for orgId=${orgId}, user=${userDetails?.id}`
-    );
-    return this.oid4vpVerificationService.createIntentNotice(createIntentNoticeDto, orgId, userDetails);
   }
 
   @MessagePattern({ cmd: 'verify-authorization-response' })

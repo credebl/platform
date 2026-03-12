@@ -19,6 +19,7 @@ import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/d
 import { GetAllIntentTemplatesDto } from '../utilities/dtos/get-all-intent-templates.dto';
 import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
 import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
+import { CreateIntentNoticeDto, UpdateIntentNoticeDto } from '../oid4vc-verification/dtos/create-intent-notice.dto';
 
 @Injectable()
 export class EcosystemService {
@@ -250,5 +251,43 @@ export class EcosystemService {
 
   async getCreateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-created-status', { email, status });
+  }
+
+  async createIntentNotice(createIntentNoticeDto: CreateIntentNoticeDto, userDetails: user): Promise<object> {
+    const payload = { createIntentNoticeDto, userDetails };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-intent-notice', payload);
+  }
+
+  async getIntentNoticeById(id: string): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-notice', { id });
+  }
+
+  async getIntentNotices(intentId?: string): Promise<object[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-notices', { intentId });
+  }
+
+  async getIntentNoticesByEcosystemId(
+    ecosystemId: string,
+    pageNumber: number,
+    pageSize: number,
+    search: string,
+    intentId?: string
+  ): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-notices-by-ecosystem', {
+      ecosystemId,
+      pageNumber,
+      pageSize,
+      search,
+      intentId
+    });
+  }
+
+  async updateIntentNotice(updateIntentNoticeDto: UpdateIntentNoticeDto, userDetails: user): Promise<object> {
+    const payload = { updateIntentNoticeDto, userDetails };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-intent-notice', payload);
+  }
+
+  async deleteIntentNotice(id: string): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent-notice', { id });
   }
 }

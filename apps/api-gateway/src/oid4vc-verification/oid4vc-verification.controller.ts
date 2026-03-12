@@ -50,7 +50,6 @@ import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
 import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
-import { CreateIntentNoticeDto } from './dtos/create-intent-notice.dto';
 import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 import { VerifyAuthorizationResponseDto } from './dtos/verify-authorization-response.dto';
 
@@ -728,43 +727,6 @@ export class Oid4vcVerificationController {
       data: template
     };
     return res.status(HttpStatus.OK).json(finalResponse);
-  }
-
-  @Post('/orgs/:orgId/oid4vp/intent-notice')
-  @ApiOperation({
-    summary: 'Create intent notice',
-    description: 'Stores a notice associated with an intent for the specified organization.'
-  })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Intent notice created successfully.', type: ApiResponseDto })
-  @ApiBearerAuth()
-  @Roles(OrgRoles.OWNER)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  async createIntentNotice(
-    @Param(
-      'orgId',
-      new ParseUUIDPipe({
-        exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-        }
-      })
-    )
-    orgId: string,
-    @User() user: user,
-    @Body() createIntentNoticeDto: CreateIntentNoticeDto,
-    @Res() res: Response
-  ): Promise<Response> {
-    this.logger.debug(`[createIntentNotice] Called with orgId=${orgId}, user=${user.id}`);
-
-    const result = await this.oid4vcVerificationService.createIntentNotice(createIntentNoticeDto, orgId, user);
-
-    this.logger.debug(`[createIntentNotice] Intent notice created successfully`);
-
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.intentNotice.success.create,
-      data: result
-    };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   @Post('/orgs/:orgId/oid4vp/verify-authorization-response')

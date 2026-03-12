@@ -9,7 +9,6 @@ import { IPresentationRequest } from '@credebl/common/interfaces/oid4vp-verifica
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
 import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
-import { CreateIntentNoticeDto } from './dtos/create-intent-notice.dto';
 import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 import { VerifyAuthorizationResponseDto } from './dtos/verify-authorization-response.dto';
 
@@ -176,16 +175,6 @@ export class Oid4vcVerificationService {
     this.logger.debug(`[deleteVerificationTemplate] Called with orgId=${orgId}, templateId=${templateId}`);
     return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'verification-template-delete', payload);
   }
-  async createIntentNotice(
-    createIntentNoticeDto: CreateIntentNoticeDto,
-    orgId: string,
-    userDetails: user
-  ): Promise<object> {
-    const payload = { createIntentNoticeDto, orgId, userDetails };
-    this.logger.debug(`[createIntentNotice] Called with orgId=${orgId}, user=${userDetails?.id}`);
-    return this.natsClient.sendNatsMessage(this.oid4vpProxy, 'create-intent-notice', payload);
-  }
-
   async verifyAuthorizationResponse(
     verifyAuthorizationResponse: VerifyAuthorizationResponseDto,
     orgId: string

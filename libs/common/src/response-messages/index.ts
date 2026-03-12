@@ -757,11 +757,18 @@ export const ResponseMessages = {
   },
   intentNotice: {
     success: {
-      create: 'Intent notice created successfully.'
+      create: 'Intent notice created successfully.',
+      fetch: 'Intent notice fetched successfully.',
+      fetchAll: 'Intent notices fetched successfully.',
+      update: 'Intent notice updated successfully.',
+      delete: 'Intent notice deleted successfully.'
     },
     error: {
       create: 'Error while creating intent notice.',
-      intentNotFound: 'Intent not found.'
+      intentNotFound: 'Intent not found.',
+      notFound: 'Intent notice not found.',
+      updateFailed: 'Error while updating intent notice.',
+      deleteFailed: 'Error while deleting intent notice.'
     }
   },
   x509: {

@@ -1692,4 +1692,132 @@ export class EcosystemRepository {
       throw error;
     }
   }
+
+  // Intent Notice CRUD
+  async createIntentNotice(intentId: string, noticeUrl: string, userId: string): Promise<object> {
+    try {
+      return await this.prisma.intent_notices.create({
+        data: {
+          noticeId: intentId,
+          intent: { connect: { id: intentId } },
+          noticeUrl,
+          createdBy: userId,
+          lastChangedBy: userId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`createIntentNotice error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getIntentNoticeById(id: string): Promise<object | null> {
+    try {
+      return await this.prisma.intent_notices.findFirst({
+        where: { id }
+      });
+    } catch (error) {
+      this.logger.error(`getIntentNoticeById error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getIntentNotices(intentId?: string): Promise<object[]> {
+    try {
+      return await this.prisma.intent_notices.findMany({
+        where: intentId ? { intentId } : {},
+        orderBy: { createDateTime: 'desc' }
+      });
+    } catch (error) {
+      this.logger.error(`getIntentNotices error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getIntentNoticesByEcosystemId(
+    ecosystemId: string,
+    pageNumber: number,
+    pageSize: number,
+    search: string,
+    intentId?: string
+  ): Promise<{ data: object[]; totalPages: number; totalCount: number }> {
+    try {
+      const where = {
+        intent: { ecosystemId },
+        ...(intentId && { intentId }),
+        ...(search && { noticeUrl: { contains: search, mode: 'insensitive' as const } })
+      };
+
+      const [data, totalCount] = await this.prisma.$transaction([
+        this.prisma.intent_notices.findMany({
+          where,
+          include: { intent: { select: { id: true, name: true, ecosystemId: true } } },
+          orderBy: { createDateTime: 'desc' },
+          skip: (pageNumber - 1) * pageSize,
+          take: pageSize
+        }),
+        this.prisma.intent_notices.count({ where })
+      ]);
+
+      return { data, totalPages: Math.ceil(totalCount / pageSize), totalCount };
+    } catch (error) {
+      this.logger.error(`getIntentNoticesByEcosystemId error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getIntentNoticeByIntentId(intentId: string): Promise<object | null> {
+    try {
+      return await this.prisma.intent_notices.findFirst({ where: { intentId } });
+    } catch (error) {
+      this.logger.error(`getIntentNoticeByIntentId error: ${error}`);
+      throw error;
+    }
+  }
+
+  async isEcosystemLead(userId: string, ecosystemId: string): Promise<boolean> {
+    try {
+      const record = await this.prisma.ecosystem_orgs.findFirst({
+        where: {
+          userId,
+          ecosystemId,
+          deletedAt: null,
+          ecosystemRole: { name: EcosystemRoles.ECOSYSTEM_LEAD }
+        }
+      });
+      return Boolean(record);
+    } catch (error) {
+      this.logger.error(`isEcosystemLead error: ${error}`);
+      throw error;
+    }
+  }
+
+  async updateIntentNotice(intentId: string, noticeUrl: string, userId: string): Promise<object> {
+    try {
+      const record = await this.prisma.intent_notices.findFirst({ where: { intentId } });
+      if (!record) {
+        return null;
+      }
+      return await this.prisma.intent_notices.update({
+        where: { id: record['id'] },
+        data: { noticeUrl, lastChangedBy: userId }
+      });
+    } catch (error) {
+      this.logger.error(`updateIntentNotice error: ${error}`);
+      throw error;
+    }
+  }
+
+  async deleteIntentNotice(id: string): Promise<object> {
+    try {
+      const record = await this.prisma.intent_notices.findFirst({ where: { id } });
+      if (!record) {
+        return null;
+      }
+      return await this.prisma.intent_notices.delete({ where: { id: record['id'] } });
+    } catch (error) {
+      this.logger.error(`deleteIntentNotice error: ${error}`);
+      throw error;
+    }
+  }
 }

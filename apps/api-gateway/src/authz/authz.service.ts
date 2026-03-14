@@ -42,6 +42,7 @@ export class AuthzService extends BaseService {
   }
 
   async sendVerificationMail(userEmailVerification: UserEmailVerificationDto): Promise<user> {
+    userEmailVerification.isDefaultVerified = true;
     const payload = { userEmailVerification };
     return this.natsClient.sendNatsMessage(this.authServiceProxy, 'send-verification-mail', payload);
   }

@@ -16,10 +16,10 @@ FROM node:24-alpine3.21
 RUN apk update && apk upgrade && apk add --no-cache openssl \
     && rm -rf /var/cache/apk/* \
     && addgroup -g 1001 -S nodejs \
-    && adduser -S nextjs -u 1001 -G nodejs
+    && adduser -S nextjs -u 1001
 WORKDIR /app
-COPY --chown=root:nodejs --chmod=444 --from=build /app/dist/apps/x509/ ./dist/apps/x509/
-COPY --chown=root:nodejs --chmod=444 --from=build /app/libs/ ./libs/
-COPY --chown=root:nodejs --chmod=444 --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist/apps/x509/ ./dist/apps/x509/
+COPY --from=build /app/libs/ ./libs/
+COPY --from=build /app/node_modules ./node_modules
 USER nextjs
 CMD ["node", "dist/apps/x509/main.js"]

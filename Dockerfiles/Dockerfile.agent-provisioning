@@ -16,6 +16,7 @@ RUN pnpm i --frozen-lockfile --ignore-scripts
 COPY . .
 RUN cd libs/prisma-service && npx prisma generate
 RUN pnpm run build agent-provisioning
+RUN pnpm prune --prod
 
 # Stage 2: Create the final image
 FROM  node:24-alpine3.21
@@ -35,17 +36,10 @@ RUN mkdir -p ./agent-provisioning/AFJ/endpoints \
     && mkdir -p ./agent-provisioning/AFJ/port-file \
     && mkdir -p ./agent-provisioning/AFJ/token
 COPY --from=build /app/dist/apps/agent-provisioning/ ./dist/apps/agent-provisioning/
-COPY --from=build /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
-RUN npm install -g pnpm@9.15.3 --ignore-scripts \
-    && pnpm install --frozen-lockfile --ignore-scripts --prod \
-    && npm uninstall -g pnpm
+COPY --from=build /app/libs/ ./libs/
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/agent-provisioning/AFJ/scripts ./agent-provisioning/AFJ/scripts
 COPY --from=build /app/apps/agent-provisioning/AFJ/port-file ./agent-provisioning/AFJ/port-file
-COPY --from=build /app/libs/ ./libs/
-RUN chmod +x /app/agent-provisioning/AFJ/scripts/*.sh \
-    && chmod 755 /app/agent-provisioning/AFJ/endpoints \
-    && chmod 755 /app/agent-provisioning/AFJ/agent-config \
-    && chmod 755 /app/agent-provisioning/AFJ/token \
-    && chown -R nextjs:nodejs /app/agent-provisioning
+RUN chown -R nextjs:nodejs /app/agent-provisioning
 USER nextjs
 CMD ["node", "dist/apps/agent-provisioning/main.js"]

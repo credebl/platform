@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDefined, IsOptional, IsUrl, IsUUID } from 'class-validator';
+import { IsDefined, IsOptional, IsString, IsUrl, IsUUID } from 'class-validator';
 
 export class CreateIntentNoticeDto {
   @ApiProperty({ description: 'Intent ID to associate the notice with', example: 'uuid-of-intent' })
@@ -9,7 +9,7 @@ export class CreateIntentNoticeDto {
 
   @ApiProperty({ description: 'URL of the notice', example: 'https://example.com/notice' })
   @IsDefined()
-  @IsUrl()
+  @IsString()
   noticeUrl: string;
 
   @ApiPropertyOptional({ description: 'Organization ID (optional)', example: 'uuid-of-org' })
@@ -19,11 +19,6 @@ export class CreateIntentNoticeDto {
 }
 
 export class UpdateIntentNoticeDto {
-  @ApiProperty({ description: 'Intent ID whose notice should be updated', example: 'uuid-of-intent' })
-  @IsDefined()
-  @IsUUID()
-  intentId: string;
-
   @ApiPropertyOptional({ description: 'URL of the notice', example: 'https://example.com/notice' })
   @IsOptional()
   @IsUrl()

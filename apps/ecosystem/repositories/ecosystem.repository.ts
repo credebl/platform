@@ -1694,12 +1694,12 @@ export class EcosystemRepository {
   }
 
   // Intent Notice CRUD
-  async createIntentNotice(intentId: string, noticeUrl: string, userId: string): Promise<object> {
+  async createIntentNotice(intentId: string, noticeUrl: string, userId: string, orgId?: string): Promise<object> {
     try {
       return await this.prisma.intent_notices.create({
         data: {
-          noticeId: intentId,
           intent: { connect: { id: intentId } },
+          ...(orgId && { organisation: { connect: { id: orgId } } }),
           noticeUrl,
           createdBy: userId,
           lastChangedBy: userId
@@ -1766,11 +1766,27 @@ export class EcosystemRepository {
     }
   }
 
-  async getIntentNoticeByIntentId(intentId: string): Promise<object | null> {
+  async getIntentNoticeByIntentId(intentId: string, orgId?: string | null): Promise<object | null> {
     try {
-      return await this.prisma.intent_notices.findFirst({ where: { intentId } });
+      const where: { intentId: string; orgId?: string | null } = { intentId };
+      if (orgId !== undefined) {
+        where.orgId = orgId;
+      }
+      return await this.prisma.intent_notices.findFirst({ where });
     } catch (error) {
       this.logger.error(`getIntentNoticeByIntentId error: ${error}`);
+      throw error;
+    }
+  }
+
+  async intentNoticeExists(intentId: string, orgId: string | null): Promise<boolean> {
+    try {
+      const record = await this.prisma.intent_notices.findFirst({
+        where: { intentId, orgId: orgId ?? null }
+      });
+      return Boolean(record);
+    } catch (error) {
+      this.logger.error(`intentNoticeSlotExists error: ${error}`);
       throw error;
     }
   }
@@ -1792,9 +1808,21 @@ export class EcosystemRepository {
     }
   }
 
-  async updateIntentNotice(intentId: string, noticeUrl: string, userId: string): Promise<object> {
+  async isUserInOrganisation(userId: string, orgId: string): Promise<boolean> {
     try {
-      const record = await this.prisma.intent_notices.findFirst({ where: { intentId } });
+      const record = await this.prisma.user_org_roles.findFirst({
+        where: { userId, orgId }
+      });
+      return Boolean(record);
+    } catch (error) {
+      this.logger.error(`isUserInOrganisation error: ${error}`);
+      throw error;
+    }
+  }
+
+  async updateIntentNotice(id: string, noticeUrl: string, userId: string): Promise<object> {
+    try {
+      const record = await this.prisma.intent_notices.findFirst({ where: { id } });
       if (!record) {
         return null;
       }

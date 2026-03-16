@@ -157,6 +157,7 @@ model organisation {
   oid4vp_presentations   oid4vp_presentations[]
   verification_templates verification_templates[]
   intent_templates       intent_templates[]
+  intent_notices         intent_notices[]
   ecosystemOrgs          ecosystem_orgs[]
   ecosystem_invitations  ecosystem_invitations[]
 }
@@ -740,16 +741,19 @@ model intent_templates {
 }
 
 model intent_notices {
-  id                  String   @id @default(uuid()) @db.Uuid
-  intentId            String   @db.Uuid
+  id                  String        @id @default(uuid()) @db.Uuid
+  intentId            String        @db.Uuid
+  orgId               String?       @db.Uuid
   noticeUrl           String
-  createDateTime      DateTime @default(now()) @db.Timestamptz(6)
-  createdBy           String   @db.Uuid
-  lastChangedDateTime DateTime @default(now()) @db.Timestamptz(6)
+  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
+  createdBy           String        @db.Uuid
+  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
   lastChangedBy       String
-  intent              intents  @relation(fields: [intentId], references: [id])
+  intent              intents       @relation(fields: [intentId], references: [id])
+  organisation        organisation? @relation(fields: [orgId], references: [id])
 
   @@index([intentId])
+  @@index([orgId])
 }
 
 model ecosystem {

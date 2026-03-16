@@ -313,7 +313,8 @@ export class Oid4vpVerificationService extends BaseService {
     responseMode: string,
     requestSigner: IRequestSigner,
     userDetails: user,
-    expectedOrigins?: string[]
+    expectedOrigins?: string[],
+    ecosystemId?: string
   ): Promise<object> {
     this.logger.debug(
       `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
@@ -406,15 +407,21 @@ export class Oid4vpVerificationService extends BaseService {
         `[createIntentBasedVerificationPresentation] verification presentation created successfully for orgId=${orgId}`
       );
       if (createdSession) {
-        const intentNotice: any = await this.natsClient
-          .sendNatsMessage(this.oid4vpVerificationServiceProxy, 'get-intent-notice-by-intent-id', { intentId: intent })
-          .catch(() => null);
+        const intentId: string = templateData?.intentId;
+        if (intentId) {
+          const intentNotice: any = await this.natsClient
+            .sendNatsMessage(this.oid4vpVerificationServiceProxy, 'get-intent-notice-by-intent-id', {
+              intentId,
+              orgId
+            })
+            .catch(() => null);
 
-        if (intentNotice?.noticeUrl) {
-          createdSession.noticeUrl = intentNotice.noticeUrl;
+          if (intentNotice?.noticeUrl) {
+            createdSession.noticeUrl = `${intentNotice.noticeUrl}?transactionId=${createdSession.verificationSession.id}`;
+          }
         }
       }
-
+      console.log('createdSession:::::::::::::::::;;', createdSession);
       return createdSession;
     } catch (error) {
       this.logger.error(

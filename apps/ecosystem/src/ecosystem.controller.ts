@@ -358,14 +358,15 @@ export class EcosystemController {
   // Intent Notice CRUD
   @MessagePattern({ cmd: 'create-intent-notice' })
   async createIntentNotice(payload: {
-    createIntentNoticeDto: { intentId: string; noticeUrl: string };
+    createIntentNoticeDto: { intentId: string; noticeUrl: string; orgId?: string };
     userDetails: user;
   }): Promise<object> {
     const { createIntentNoticeDto, userDetails } = payload;
     return this.ecosystemService.createIntentNotice(
       createIntentNoticeDto.intentId,
       createIntentNoticeDto.noticeUrl,
-      userDetails.id
+      userDetails,
+      createIntentNoticeDto.orgId
     );
   }
 
@@ -392,17 +393,18 @@ export class EcosystemController {
   }
 
   @MessagePattern({ cmd: 'get-intent-notice-by-intent-id' })
-  async getIntentNoticeByIntentId(payload: { intentId: string }): Promise<object | null> {
-    return this.ecosystemService.getIntentNoticeByIntentId(payload.intentId);
+  async getIntentNoticeByIntentId(payload: { intentId: string; orgId?: string | null }): Promise<object | null> {
+    return this.ecosystemService.getIntentNoticeByIntentId(payload.intentId, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'update-intent-notice' })
   async updateIntentNotice(payload: {
-    updateIntentNoticeDto: { intentId: string; noticeUrl?: string };
+    id: string;
+    updateIntentNoticeDto: { noticeUrl?: string };
     userDetails: user;
   }): Promise<object> {
     return this.ecosystemService.updateIntentNotice(
-      payload.updateIntentNoticeDto.intentId,
+      payload.id,
       payload.updateIntentNoticeDto.noticeUrl,
       payload.userDetails.id
     );

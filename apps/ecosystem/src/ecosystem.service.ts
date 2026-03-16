@@ -1018,8 +1018,13 @@ export class EcosystemService {
     }
   }
 
-  async createIntentNotice(intentId: string, noticeUrl: string, userId: string): Promise<object> {
+  async createIntentNotice(intentId: string, noticeUrl: string, userDetails: user, orgId?: string): Promise<object> {
     try {
+      // if (orgId) {
+      //   if (!isOrgExistForUser(userDetails, orgId)) {
+      //     throw new RpcException({ statusCode: HttpStatus.FORBIDDEN, message: 'Provided orgId does not belong to the user.' });
+      //   }
+      // }
       const intent = await this.ecosystemRepository.findIntentById(intentId);
       if (!intent) {
         throw new RpcException({
@@ -1027,8 +1032,16 @@ export class EcosystemService {
           message: ResponseMessages.intentNotice.error.intentNotFound
         });
       }
-      await this.validateEcosystemLead(userId, intent['ecosystemId']);
-      return await this.ecosystemRepository.createIntentNotice(intentId, noticeUrl, userId);
+      await this.validateEcosystemLead(userDetails.id, intent['ecosystemId']);
+      const isAlreadyExists = await this.ecosystemRepository.intentNoticeExists(intentId, orgId ?? null);
+      if (isAlreadyExists) {
+        const slotLabel = orgId ? `orgId ${orgId}` : 'no orgId';
+        throw new RpcException({
+          statusCode: HttpStatus.CONFLICT,
+          message: `An intent notice with ${slotLabel} already exists for this intent.`
+        });
+      }
+      return await this.ecosystemRepository.createIntentNotice(intentId, noticeUrl, userDetails.id, orgId);
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.create);
       this.logger.error(
@@ -1104,9 +1117,9 @@ export class EcosystemService {
     }
   }
 
-  async getIntentNoticeByIntentId(intentId: string): Promise<object | null> {
+  async getIntentNoticeByIntentId(intentId: string, orgId?: string | null): Promise<object | null> {
     try {
-      return await this.ecosystemRepository.getIntentNoticeByIntentId(intentId);
+      return await this.ecosystemRepository.getIntentNoticeByIntentId(intentId, orgId);
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.notFound);
       this.logger.error(
@@ -1117,9 +1130,9 @@ export class EcosystemService {
     }
   }
 
-  async updateIntentNotice(intentId: string, noticeUrl: string, userId: string): Promise<object> {
+  async updateIntentNotice(id: string, noticeUrl: string, userId: string): Promise<object> {
     try {
-      const updated = await this.ecosystemRepository.updateIntentNotice(intentId, noticeUrl, userId);
+      const updated = await this.ecosystemRepository.updateIntentNotice(id, noticeUrl, userId);
       if (!updated) {
         throw new RpcException({
           statusCode: HttpStatus.NOT_FOUND,

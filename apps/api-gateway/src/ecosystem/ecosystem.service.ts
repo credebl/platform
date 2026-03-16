@@ -282,8 +282,12 @@ export class EcosystemService {
     });
   }
 
-  async updateIntentNotice(updateIntentNoticeDto: UpdateIntentNoticeDto, userDetails: user): Promise<object> {
-    const payload = { updateIntentNoticeDto, userDetails };
+  async updateIntentNotice(
+    id: string,
+    updateIntentNoticeDto: UpdateIntentNoticeDto,
+    userDetails: user
+  ): Promise<object> {
+    const payload = { id, updateIntentNoticeDto, userDetails };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-intent-notice', payload);
   }
 

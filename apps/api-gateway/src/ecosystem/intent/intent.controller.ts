@@ -615,7 +615,7 @@ export class IntentController {
 
   @Post('/notice')
   @ApiBearerAuth()
-  @Roles(OrgRoles.OWNER)
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({ summary: 'Create intent notice', description: 'Stores a notice URL associated with an intent.' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Intent notice created successfully', type: ApiResponseDto })
@@ -635,7 +635,7 @@ export class IntentController {
 
   @Get('/notice')
   @ApiBearerAuth()
-  @Roles(OrgRoles.OWNER)
+  @Roles(OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({
     summary: 'Get intent notices',
@@ -668,7 +668,7 @@ export class IntentController {
 
   @Get('/ecosystem/:ecosystemId/notice')
   @ApiBearerAuth()
-  @Roles(OrgRoles.OWNER)
+  @Roles(OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({
     summary: 'Get intent notices by ecosystem',
@@ -720,7 +720,7 @@ export class IntentController {
 
   @Get('/notice/:id')
   @ApiBearerAuth()
-  @Roles(OrgRoles.OWNER)
+  @Roles(OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({ summary: 'Get intent notice by ID', description: 'Retrieves a specific intent notice by its ID.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent notice fetched successfully', type: ApiResponseDto })
@@ -746,21 +746,31 @@ export class IntentController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
-  @Put('/notice')
+  @Put('/notice/:id')
   @ApiBearerAuth()
-  @Roles(OrgRoles.OWNER)
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({
     summary: 'Update intent notice',
-    description: 'Updates the notice URL for an intent. The intentId in the body identifies which notice to update.'
+    description: 'Updates the notice URL for a given notice ID.'
   })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent notice updated successfully', type: ApiResponseDto })
   async updateIntentNotice(
+    @Param(
+      'id',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid notice ID');
+        }
+      })
+    )
+    id: string,
     @Body() updateIntentNoticeDto: UpdateIntentNoticeDto,
     @User() user: PrismaUser,
     @Res() res: Response
   ): Promise<Response> {
-    const result = await this.ecosystemService.updateIntentNotice(updateIntentNoticeDto, user);
+    const result = await this.ecosystemService.updateIntentNotice(id, updateIntentNoticeDto, user);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.intentNotice.success.update,
@@ -771,7 +781,7 @@ export class IntentController {
 
   @Delete('/notice/:id')
   @ApiBearerAuth()
-  @Roles(OrgRoles.OWNER)
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({ summary: 'Delete intent notice', description: 'Deletes an intent notice by its ID.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent notice deleted successfully', type: ApiResponseDto })

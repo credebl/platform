@@ -238,8 +238,13 @@ export class EcosystemController {
   async getIntentTemplateByIntentAndOrg(payload: {
     intentName: string;
     verifierOrgId: string;
+    ecosystemId?: string;
   }): Promise<object | null> {
-    return this.ecosystemService.getIntentTemplateByIntentAndOrg(payload.intentName, payload.verifierOrgId);
+    return this.ecosystemService.getIntentTemplateByIntentAndOrg(
+      payload.intentName,
+      payload.verifierOrgId,
+      payload.ecosystemId
+    );
   }
 
   @MessagePattern({ cmd: 'update-intent-template' })
@@ -370,14 +375,9 @@ export class EcosystemController {
     );
   }
 
-  @MessagePattern({ cmd: 'get-intent-notice' })
-  async getIntentNoticeById(payload: { id: string }): Promise<object> {
-    return this.ecosystemService.getIntentNoticeById(payload.id);
-  }
-
   @MessagePattern({ cmd: 'get-intent-notices' })
-  async getIntentNotices(payload: { intentId?: string }): Promise<object[]> {
-    return this.ecosystemService.getIntentNotices(payload.intentId);
+  async getIntentNotices(payload: { id?: string; intentId?: string }): Promise<object[]> {
+    return this.ecosystemService.getIntentNotices(payload.id, payload.intentId);
   }
 
   @MessagePattern({ cmd: 'get-intent-notices-by-ecosystem' })

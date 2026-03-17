@@ -113,7 +113,7 @@ export class Oid4vpVerificationController {
     requestSigner: IRequestSigner;
     userDetails: user;
     expectedOrigins?: string[];
-    ecosystemId?: string;
+    ecosystemId: string;
   }): Promise<object> {
     const { orgId, verifierId, intent, responseMode, requestSigner, expectedOrigins, userDetails, ecosystemId } =
       payload;

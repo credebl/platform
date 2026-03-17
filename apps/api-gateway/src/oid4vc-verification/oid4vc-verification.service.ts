@@ -26,7 +26,7 @@ export class Oid4vcVerificationService {
     verifierId: string,
     createIntentDto: CreateIntentBasedVerificationDto,
     userDetails: user,
-    ecosystemId?: string
+    ecosystemId: string
   ): Promise<object> {
     const { intent, responseMode, requestSigner, expectedOrigins } = createIntentDto;
     const payload = {

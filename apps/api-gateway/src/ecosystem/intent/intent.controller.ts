@@ -639,12 +639,24 @@ export class IntentController {
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiOperation({
     summary: 'Get intent notices',
-    description: 'Retrieves all intent notices, optionally filtered by intentId.'
+    description: 'Retrieves intent notices. Filter by notice id or intentId (both optional).'
   })
+  @ApiQuery({ name: 'id', required: false, type: String, description: 'Filter by notice PK UUID (optional)' })
   @ApiQuery({ name: 'intentId', required: false, type: String, description: 'Filter by intent UUID (optional)' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Intent notices fetched successfully', type: ApiResponseDto })
   async getIntentNotices(
     @Res() res: Response,
+    @Query(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+        optional: true,
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid notice ID');
+        }
+      })
+    )
+    id?: string,
     @Query(
       'intentId',
       new ParseUUIDPipe({
@@ -657,7 +669,7 @@ export class IntentController {
     )
     intentId?: string
   ): Promise<Response> {
-    const result = await this.ecosystemService.getIntentNotices(intentId);
+    const result = await this.ecosystemService.getIntentNotices(id, intentId);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.intentNotice.success.fetchAll,
@@ -716,34 +728,6 @@ export class IntentController {
       message: ResponseMessages.intentNotice.success.fetchAll,
       data: result
     });
-  }
-
-  @Get('/notice/:id')
-  @ApiBearerAuth()
-  @Roles(OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER)
-  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
-  @ApiOperation({ summary: 'Get intent notice by ID', description: 'Retrieves a specific intent notice by its ID.' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Intent notice fetched successfully', type: ApiResponseDto })
-  async getIntentNoticeById(
-    @Param(
-      'id',
-      TrimStringParamPipe,
-      new ParseUUIDPipe({
-        exceptionFactory: (): Error => {
-          throw new BadRequestException('Invalid notice ID');
-        }
-      })
-    )
-    id: string,
-    @Res() res: Response
-  ): Promise<Response> {
-    const result = await this.ecosystemService.getIntentNoticeById(id);
-    const finalResponse: IResponse = {
-      statusCode: HttpStatus.OK,
-      message: ResponseMessages.intentNotice.success.fetch,
-      data: result
-    };
-    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   @Put('/notice/:id')

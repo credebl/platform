@@ -314,7 +314,7 @@ export class Oid4vpVerificationService extends BaseService {
     requestSigner: IRequestSigner,
     userDetails: user,
     expectedOrigins?: string[],
-    ecosystemId?: string
+    ecosystemId?: string // kept optional here so existing callers don't break
   ): Promise<object> {
     this.logger.debug(
       `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
@@ -340,7 +340,7 @@ export class Oid4vpVerificationService extends BaseService {
       const templateData = await this.natsClient.sendNatsMessage(
         this.oid4vpVerificationServiceProxy,
         'get-intent-template-by-intent-and-org',
-        { intentName: intent, verifierOrgId: orgId }
+        { intentName: intent, verifierOrgId: orgId, ecosystemId }
       );
 
       if (!templateData) {

@@ -319,7 +319,7 @@ export class Oid4vcVerificationController {
     description: 'Verification presentation created successfully.',
     type: ApiResponseDto
   })
-  @ApiQuery({ name: 'ecosystemId', required: false })
+  @ApiQuery({ name: 'ecosystemId', required: true })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)

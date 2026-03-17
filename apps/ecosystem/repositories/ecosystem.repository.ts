@@ -811,11 +811,15 @@ export class EcosystemRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getIntentTemplateByIntentAndOrg(intentName: string, verifierOrgId: string): Promise<intent_templates | null> {
+  async getIntentTemplateByIntentAndOrg(
+    intentName: string,
+    verifierOrgId: string,
+    ecosystemId?: string
+  ): Promise<intent_templates | null> {
     try {
       const template = await this.prisma.intent_templates.findFirst({
         where: {
-          intent: { is: { name: intentName } },
+          intent: { is: { name: intentName, ...(ecosystemId && { ecosystemId }) } },
           OR: [{ orgId: verifierOrgId }, { orgId: null }]
         },
         select: {
@@ -1711,21 +1715,18 @@ export class EcosystemRepository {
     }
   }
 
-  async getIntentNoticeById(id: string): Promise<object | null> {
+  async getIntentNotices(id?: string, intentId?: string): Promise<object[]> {
     try {
-      return await this.prisma.intent_notices.findFirst({
-        where: { id }
-      });
-    } catch (error) {
-      this.logger.error(`getIntentNoticeById error: ${error}`);
-      throw error;
-    }
-  }
-
-  async getIntentNotices(intentId?: string): Promise<object[]> {
-    try {
+      const where = {
+        ...(id && { id }),
+        ...(intentId && { intentId })
+      };
       return await this.prisma.intent_notices.findMany({
-        where: intentId ? { intentId } : {},
+        where,
+        include: {
+          intent: { select: { id: true, name: true, ecosystemId: true } },
+          organisation: { select: { name: true, description: true } }
+        },
         orderBy: { createDateTime: 'desc' }
       });
     } catch (error) {
@@ -1751,7 +1752,10 @@ export class EcosystemRepository {
       const [data, totalCount] = await this.prisma.$transaction([
         this.prisma.intent_notices.findMany({
           where,
-          include: { intent: { select: { id: true, name: true, ecosystemId: true } } },
+          include: {
+            intent: { select: { id: true, name: true, ecosystemId: true } },
+            organisation: { select: { name: true, description: true } }
+          },
           orderBy: { createDateTime: 'desc' },
           skip: (pageNumber - 1) * pageSize,
           take: pageSize

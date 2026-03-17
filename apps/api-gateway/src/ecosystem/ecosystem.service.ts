@@ -258,12 +258,8 @@ export class EcosystemService {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-intent-notice', payload);
   }
 
-  async getIntentNoticeById(id: string): Promise<object> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-notice', { id });
-  }
-
-  async getIntentNotices(intentId?: string): Promise<object[]> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-notices', { intentId });
+  async getIntentNotices(id?: string, intentId?: string): Promise<object[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-notices', { id, intentId });
   }
 
   async getIntentNoticesByEcosystemId(

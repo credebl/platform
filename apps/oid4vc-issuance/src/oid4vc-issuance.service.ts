@@ -897,7 +897,7 @@ export class Oid4vcIssuanceService {
 
   async _oidcGetCredentialOffers(url: string, orgId: string) {
     try {
-      const pattern = { cmd: 'agent-service-oid4vc-get-credential-offers' };
+      const pattern = { cmd: 'agent-service-oid4vc-get-all-credential-offers' };
       const payload = { url, orgId };
       return this.natsCall(pattern, payload);
     } catch (error) {

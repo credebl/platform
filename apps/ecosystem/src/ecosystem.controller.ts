@@ -238,8 +238,13 @@ export class EcosystemController {
   async getIntentTemplateByIntentAndOrg(payload: {
     intentName: string;
     verifierOrgId: string;
+    ecosystemId?: string;
   }): Promise<object | null> {
-    return this.ecosystemService.getIntentTemplateByIntentAndOrg(payload.intentName, payload.verifierOrgId);
+    return this.ecosystemService.getIntentTemplateByIntentAndOrg(
+      payload.intentName,
+      payload.verifierOrgId,
+      payload.ecosystemId
+    );
   }
 
   @MessagePattern({ cmd: 'update-intent-template' })
@@ -353,5 +358,60 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'get-ecosystem-created-status' })
   async getCreateEcosystemInvitationStatus(payload: { email: string; status: Invitation }): Promise<boolean> {
     return this.ecosystemService.getCreateEcosystemInvitationStatus(payload.email, payload.status);
+  }
+
+  // Intent Notice CRUD
+  @MessagePattern({ cmd: 'create-intent-notice' })
+  async createIntentNotice(payload: {
+    createIntentNoticeDto: { intentId: string; noticeUrl: string; orgId?: string };
+    userId: string;
+  }): Promise<object> {
+    const { createIntentNoticeDto, userId } = payload;
+    return this.ecosystemService.createIntentNotice(
+      createIntentNoticeDto.intentId,
+      createIntentNoticeDto.noticeUrl,
+      userId,
+      createIntentNoticeDto.orgId
+    );
+  }
+
+  @MessagePattern({ cmd: 'get-intent-notices' })
+  async getIntentNotices(payload: { id?: string; intentId?: string }): Promise<object[]> {
+    return this.ecosystemService.getIntentNotices(payload.id, payload.intentId);
+  }
+
+  @MessagePattern({ cmd: 'get-intent-notices-by-ecosystem' })
+  async getIntentNoticesByEcosystemId(payload: {
+    ecosystemId: string;
+    pageNumber: number;
+    pageSize: number;
+    search: string;
+    intentId?: string;
+  }): Promise<object> {
+    const { ecosystemId, pageNumber, pageSize, search, intentId } = payload;
+    return this.ecosystemService.getIntentNoticesByEcosystemId(ecosystemId, pageNumber, pageSize, search, intentId);
+  }
+
+  @MessagePattern({ cmd: 'get-intent-notice-by-intent-id' })
+  async getIntentNoticeByIntentId(payload: { intentId: string; orgId?: string | null }): Promise<object | null> {
+    return this.ecosystemService.getIntentNoticeByIntentId(payload.intentId, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'update-intent-notice' })
+  async updateIntentNotice(payload: {
+    id: string;
+    updateIntentNoticeDto: { noticeUrl?: string };
+    userId: string;
+  }): Promise<object> {
+    return this.ecosystemService.updateIntentNotice(
+      payload.id,
+      payload.updateIntentNoticeDto.noticeUrl,
+      payload.userId
+    );
+  }
+
+  @MessagePattern({ cmd: 'delete-intent-notice' })
+  async deleteIntentNotice(payload: { id: string; userId: string }): Promise<object> {
+    return this.ecosystemService.deleteIntentNotice(payload.id, payload.userId);
   }
 }

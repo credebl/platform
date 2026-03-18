@@ -113,8 +113,10 @@ export class Oid4vpVerificationController {
     requestSigner: IRequestSigner;
     userDetails: user;
     expectedOrigins?: string[];
+    ecosystemId: string;
   }): Promise<object> {
-    const { orgId, verifierId, intent, responseMode, requestSigner, expectedOrigins, userDetails } = payload;
+    const { orgId, verifierId, intent, responseMode, requestSigner, expectedOrigins, userDetails, ecosystemId } =
+      payload;
     this.logger.debug(
       `[createIntentBasedVerificationPresentation] Received 'oid4vp-intent-based-verification-presentation' for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
     );
@@ -125,6 +127,7 @@ export class Oid4vpVerificationController {
       responseMode,
       requestSigner,
       userDetails,
+      ecosystemId,
       expectedOrigins
     );
   }

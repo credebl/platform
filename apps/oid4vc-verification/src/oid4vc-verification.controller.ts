@@ -127,8 +127,8 @@ export class Oid4vpVerificationController {
       responseMode,
       requestSigner,
       userDetails,
-      expectedOrigins,
-      ecosystemId
+      ecosystemId,
+      expectedOrigins
     );
   }
 

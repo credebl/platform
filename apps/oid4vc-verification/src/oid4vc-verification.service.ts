@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
+import { fetchConsentNotice } from './oid4vc-verification.helper';
 
 import {
   BadRequestException,
@@ -313,8 +314,8 @@ export class Oid4vpVerificationService extends BaseService {
     responseMode: string,
     requestSigner: IRequestSigner,
     userDetails: user,
-    expectedOrigins?: string[],
-    ecosystemId?: string // kept optional here so existing callers don't break
+    ecosystemId: string,
+    expectedOrigins?: string[]
   ): Promise<object> {
     this.logger.debug(
       `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
@@ -417,11 +418,13 @@ export class Oid4vpVerificationService extends BaseService {
             .catch(() => null);
 
           if (intentNotice?.noticeUrl) {
-            createdSession.noticeUrl = `${intentNotice.noticeUrl}?transactionId=${createdSession.verificationSession.id}`;
+            createdSession.consentNoticeUrl = await fetchConsentNotice(
+              intentNotice.noticeUrl,
+              createdSession.verificationSession.id
+            );
           }
         }
       }
-      console.log('createdSession:::::::::::::::::;;', createdSession);
       return createdSession;
     } catch (error) {
       this.logger.error(

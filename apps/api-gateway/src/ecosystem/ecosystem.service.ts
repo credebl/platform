@@ -254,7 +254,7 @@ export class EcosystemService {
   }
 
   async createIntentNotice(createIntentNoticeDto: CreateIntentNoticeDto, userDetails: user): Promise<object> {
-    const payload = { createIntentNoticeDto, userDetails };
+    const payload = { createIntentNoticeDto, userId: userDetails.id };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-intent-notice', payload);
   }
 
@@ -283,11 +283,11 @@ export class EcosystemService {
     updateIntentNoticeDto: UpdateIntentNoticeDto,
     userDetails: user
   ): Promise<object> {
-    const payload = { id, updateIntentNoticeDto, userDetails };
+    const payload = { id, updateIntentNoticeDto, userId: userDetails.id };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-intent-notice', payload);
   }
 
-  async deleteIntentNotice(id: string): Promise<object> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent-notice', { id });
+  async deleteIntentNotice(id: string, userDetails: user): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent-notice', { id, userId: userDetails.id });
   }
 }

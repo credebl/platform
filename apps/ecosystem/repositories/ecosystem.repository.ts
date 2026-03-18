@@ -1717,10 +1717,24 @@ export class EcosystemRepository {
 
   async getIntentNotices(id?: string, intentId?: string): Promise<object[]> {
     try {
-      const where = {
-        ...(id && { id }),
-        ...(intentId && { intentId })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const where: any = {
+        ...(id && { id })
       };
+
+      if (intentId) {
+        const intent = await this.prisma.intents.findUnique({
+          where: { id: intentId },
+          select: { ecosystemId: true }
+        });
+        where.intent = {
+          is: {
+            id: intentId,
+            ...(intent && { ecosystemId: intent.ecosystemId })
+          }
+        };
+      }
+
       return await this.prisma.intent_notices.findMany({
         where,
         include: {

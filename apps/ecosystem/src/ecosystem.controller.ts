@@ -364,13 +364,13 @@ export class EcosystemController {
   @MessagePattern({ cmd: 'create-intent-notice' })
   async createIntentNotice(payload: {
     createIntentNoticeDto: { intentId: string; noticeUrl: string; orgId?: string };
-    userDetails: user;
+    userId: string;
   }): Promise<object> {
-    const { createIntentNoticeDto, userDetails } = payload;
+    const { createIntentNoticeDto, userId } = payload;
     return this.ecosystemService.createIntentNotice(
       createIntentNoticeDto.intentId,
       createIntentNoticeDto.noticeUrl,
-      userDetails,
+      userId,
       createIntentNoticeDto.orgId
     );
   }
@@ -401,17 +401,17 @@ export class EcosystemController {
   async updateIntentNotice(payload: {
     id: string;
     updateIntentNoticeDto: { noticeUrl?: string };
-    userDetails: user;
+    userId: string;
   }): Promise<object> {
     return this.ecosystemService.updateIntentNotice(
       payload.id,
       payload.updateIntentNoticeDto.noticeUrl,
-      payload.userDetails.id
+      payload.userId
     );
   }
 
   @MessagePattern({ cmd: 'delete-intent-notice' })
-  async deleteIntentNotice(payload: { id: string }): Promise<object> {
-    return this.ecosystemService.deleteIntentNotice(payload.id);
+  async deleteIntentNotice(payload: { id: string; userId: string }): Promise<object> {
+    return this.ecosystemService.deleteIntentNotice(payload.id, payload.userId);
   }
 }

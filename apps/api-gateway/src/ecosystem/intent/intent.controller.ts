@@ -780,9 +780,10 @@ export class IntentController {
       })
     )
     id: string,
+    @User() user: PrismaUser,
     @Res() res: Response
   ): Promise<Response> {
-    const result = await this.ecosystemService.deleteIntentNotice(id);
+    const result = await this.ecosystemService.deleteIntentNotice(id, user);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.intentNotice.success.delete,

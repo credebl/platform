@@ -1027,7 +1027,7 @@ export class EcosystemService {
     }
   }
 
-  async createIntentNotice(intentId: string, noticeUrl: string, userDetails: user, orgId?: string): Promise<object> {
+  async createIntentNotice(intentId: string, noticeUrl: string, userId: string, orgId?: string): Promise<object> {
     try {
       await validateNoticeUrl(noticeUrl);
 
@@ -1039,7 +1039,7 @@ export class EcosystemService {
           message: ResponseMessages.intentNotice.error.intentNotFound
         });
       }
-      await this.validateEcosystemLead(userDetails.id, intent['ecosystemId']);
+      await this.validateEcosystemLead(userId, intent['ecosystemId']);
 
       if (orgId) {
         const orgEcosystemMembership = await this.ecosystemRepository.getEcosystemOrg(intent['ecosystemId'], orgId);
@@ -1059,7 +1059,7 @@ export class EcosystemService {
           message: `An intent notice with ${slotLabel} already exists for this intent.`
         });
       }
-      return await this.ecosystemRepository.createIntentNotice(intentId, noticeUrl, userDetails.id, orgId);
+      return await this.ecosystemRepository.createIntentNotice(intentId, noticeUrl, userId, orgId);
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.create);
       this.logger.error(
@@ -1130,14 +1130,18 @@ export class EcosystemService {
 
   async updateIntentNotice(id: string, noticeUrl: string, userId: string): Promise<object> {
     try {
-      const updated = await this.ecosystemRepository.updateIntentNotice(id, noticeUrl, userId);
-      if (!updated) {
+      await validateNoticeUrl(noticeUrl);
+      const [notice] = await this.ecosystemRepository.getIntentNotices(id);
+      if (!notice) {
         throw new RpcException({
           statusCode: HttpStatus.NOT_FOUND,
           message: ResponseMessages.intentNotice.error.notFound
         });
       }
-      return updated;
+      const intent = await this.ecosystemRepository.findIntentById(notice['intentId']);
+      await this.validateEcosystemLead(userId, intent['ecosystemId']);
+
+      return await this.ecosystemRepository.updateIntentNotice(id, noticeUrl, userId);
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.updateFailed);
       this.logger.error(
@@ -1148,16 +1152,19 @@ export class EcosystemService {
     }
   }
 
-  async deleteIntentNotice(id: string): Promise<object> {
+  async deleteIntentNotice(id: string, userId: string): Promise<object> {
     try {
-      const deleted = await this.ecosystemRepository.deleteIntentNotice(id);
-      if (!deleted) {
+      const [notice] = await this.ecosystemRepository.getIntentNotices(id);
+      if (!notice) {
         throw new RpcException({
           statusCode: HttpStatus.NOT_FOUND,
           message: ResponseMessages.intentNotice.error.notFound
         });
       }
-      return deleted;
+      const intent = await this.ecosystemRepository.findIntentById(notice['intentId']);
+      await this.validateEcosystemLead(userId, intent['ecosystemId']);
+
+      return await this.ecosystemRepository.deleteIntentNotice(id);
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.deleteFailed);
       this.logger.error(

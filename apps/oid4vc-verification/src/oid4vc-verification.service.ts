@@ -421,7 +421,12 @@ export class Oid4vpVerificationService extends BaseService {
             createdSession.consentNoticeUrl = await fetchConsentNotice(
               intentNotice.noticeUrl,
               createdSession.verificationSession.id
-            );
+            ).catch((err) => {
+              this.logger.warn(
+                `[createIntentBasedVerificationPresentation] consent notice enrichment failed: ${err?.message}`
+              );
+              return null;
+            });
           }
         }
       }

@@ -9,10 +9,7 @@ export async function validateNoticeUrl(noticeUrl: string): Promise<void> {
     });
   }
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
     const response = await fetch(noticeUrl);
-    clearTimeout(timeout);
     if (!response.ok) {
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,

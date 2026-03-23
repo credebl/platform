@@ -6,16 +6,15 @@ export async function fetchConsentNotice(noticeUrl: string, transactionId: strin
   const consentNoticeUrl = `${noticeUrl}?transactionId=${transactionId}`;
 
   const response = await fetch(consentNoticeUrl);
-
   if (!response.ok) {
     throw new Error(`consentNoticeUrl is not reachable (HTTP ${response.status}).`);
   }
 
   const data = await response.json();
 
-  if (!data?.consentNoticeUrl) {
+  if (!data?.consent_notice?.consentNoticeUrl) {
     throw new Error('consentNoticeUrl is missing in the consent notice response.');
   }
 
-  return data.consentNoticeUrl;
+  return data.consent_notice.consentNoticeUrl;
 }

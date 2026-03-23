@@ -1,7 +1,7 @@
 # Stage 1: Build the application
-FROM node:24-alpine AS build
+FROM node:24-alpine3.21 AS build
 RUN apk update && apk upgrade && apk add --no-cache \
-    openssl \
+    openssl=3.3.3-r0 \
     openssh-client \
     aws-cli \
     docker \
@@ -18,9 +18,9 @@ RUN pnpm run build agent-service
 RUN pnpm prune --prod
 
 # Stage 2: Create the final image
-FROM node:24-alpine
+FROM node:24-alpine3.21
 RUN apk update && apk upgrade && apk add --no-cache \
-    openssl \
+    openssl=3.3.3-r0 \
     openssh-client \
     aws-cli \
     docker \

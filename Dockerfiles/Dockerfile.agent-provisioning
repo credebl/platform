@@ -1,8 +1,8 @@
 # Stage 1: Build the application
-FROM node:18-alpine as build
+FROM  node:24-alpine3.21 AS build
 # Install OpenSSL
 RUN apk update && apk upgrade
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl=3.3.3-r0
 RUN set -eux \
     && apk --no-cache add \
         openssh-client \
@@ -38,10 +38,10 @@ RUN ls -R /app/apps/agent-provisioning/AFJ/
 RUN pnpm run build agent-provisioning
 
 # Stage 2: Create the final image
-FROM node:18-alpine as prod
+FROM  node:24-alpine3.21
 # Install OpenSSL
 RUN apk update && apk upgrade
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl=3.3.3-r0
 RUN set -eux \
     && apk --no-cache add \
         openssh-client \

@@ -1,41 +1,89 @@
 import { Injectable } from '@nestjs/common';
-import { JsMsg } from 'nats';
+import { JsMsg, KV, KvEntry, Msg } from 'nats';
+import { NatsService } from './nats.service';
 
 type PendingKey = string;
 
-interface PendingMessage {
-  msg: JsMsg;
+interface PendingMessageMetadata {
+  reply: string;
+  stream: string;
+  consumer: string;
+  streamSequence: number;
+  subject: string;
   receivedAt: number;
 }
 
 @Injectable()
 export class PendingAckStore {
-  private readonly store = new Map<PendingKey, PendingMessage>();
+  private readonly KV_BUCKET = 'PENDING_ACK';
 
-  makeKey(stream: string, consumer: string, streamSequence: number): PendingKey {
-    return `${stream}:${consumer}:${streamSequence}`;
+  constructor(private readonly natsService: NatsService) {}
+
+  private async getKV(): Promise<KV> {
+    return this.natsService.getKV(this.KV_BUCKET);
   }
 
-  save(stream: string, consumer: string, msg: JsMsg): PendingKey {
+  makeKey(stream: string, consumer: string, streamSequence: number): PendingKey {
+    return `${stream}-${consumer}-${streamSequence}`;
+  }
+
+  async save(stream: string, consumer: string, msg: JsMsg): Promise<PendingKey> {
     const { info } = msg;
     if (!info) {
       throw new Error('Cannot save message without info metadata');
     }
     const key = this.makeKey(stream, consumer, info.streamSequence);
 
-    this.store.set(key, {
-      msg,
+    const jsMsg = msg as unknown as Msg;
+    if (!jsMsg.reply) {
+      throw new Error('Cannot save message without reply subject');
+    }
+    const metadata: PendingMessageMetadata = {
+      reply: jsMsg.reply,
+      stream,
+      consumer,
+      streamSequence: info.streamSequence,
+      subject: msg.subject,
       receivedAt: Date.now()
-    });
+    };
+
+    const kv = await this.getKV();
+    await kv.put(key, JSON.stringify(metadata));
 
     return key;
   }
 
-  get(key: PendingKey): JsMsg | undefined {
-    return this.store.get(key)?.msg;
+  async get(key: PendingKey): Promise<JsMsg | undefined> {
+    try {
+      const kv = await this.getKV();
+      const entry: KvEntry | null = await kv.get(key);
+
+      if (!entry) {
+        return undefined;
+      }
+
+      const metadata: PendingMessageMetadata = JSON.parse(new TextDecoder().decode(entry.value));
+
+      const mockMsg = {
+        reply: metadata.reply,
+        ack: async () => {
+          const nc = await this.natsService.connect();
+          nc.publish(metadata.reply);
+        },
+        nak: async (delay?: number) => {
+          const nc = await this.natsService.connect();
+          nc.publish(metadata.reply, Buffer.from(`-NAK${delay ? ` ${delay}` : ''}`));
+        }
+      } as unknown as JsMsg;
+
+      return mockMsg;
+    } catch {
+      return undefined;
+    }
   }
 
-  delete(key: PendingKey): void {
-    this.store.delete(key);
+  async delete(key: PendingKey): Promise<void> {
+    const kv = await this.getKV();
+    await kv.delete(key);
   }
 }

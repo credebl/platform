@@ -58,7 +58,7 @@ export class NotificationNATSSubsciber implements OnApplicationBootstrap {
   }
 
   async handleUserAck(data: { ackKey: string }): Promise<void> {
-    const msg = this.pendingAckStore.get(data.ackKey);
+    const msg = await this.pendingAckStore.get(data.ackKey);
 
     if (!msg) {
       this.logger.warn('[NATS] ACK received but message not found or already acked', data);
@@ -67,7 +67,7 @@ export class NotificationNATSSubsciber implements OnApplicationBootstrap {
 
     try {
       msg.ack();
-      this.pendingAckStore.delete(data.ackKey);
+      await this.pendingAckStore.delete(data.ackKey);
       this.logger.log('[NATS] Message ACKed via user confirmation');
     } catch (err) {
       this.logger.error(`[NATS] Failed to ACK message ${JSON.stringify(err)}`);

@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { connect, JetStreamClient, JetStreamManager, NatsConnection, usernamePasswordAuthenticator } from 'nats';
+import { connect, JetStreamClient, JetStreamManager, KV, NatsConnection, usernamePasswordAuthenticator } from 'nats';
 
 @Injectable()
 export class NatsService implements OnModuleDestroy {
@@ -7,6 +7,7 @@ export class NatsService implements OnModuleDestroy {
   private js!: JetStreamClient;
   private jsm!: JetStreamManager;
   private connected = false;
+  private kv!: KV;
 
   constructor(private readonly logger: Logger) {}
 
@@ -59,5 +60,15 @@ export class NatsService implements OnModuleDestroy {
       throw new Error('NATS not connected yet');
     }
     this.nc.publish(subject, Buffer.from(JSON.stringify(payload)));
+  }
+
+  async getKV(bucketName: string): Promise<KV> {
+    if (!this.connected) {
+      throw new Error('NATS not connected yet');
+    }
+    if (!this.kv) {
+      this.kv = await this.js.views.kv(bucketName);
+    }
+    return this.kv;
   }
 }

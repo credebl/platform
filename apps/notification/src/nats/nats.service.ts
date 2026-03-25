@@ -1,6 +1,10 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { connect, JetStreamClient, JetStreamManager, KV, NatsConnection, usernamePasswordAuthenticator } from 'nats';
+import { readFileSync } from 'fs';
+import { connect, credsAuthenticator, JetStreamClient, JetStreamManager, KV, NatsConnection } from 'nats';
+import path = require('node:path');
 
+const creds = process.env.NATS_CREDS_FILE;
+const utf8 = readFileSync(path.resolve(creds));
 @Injectable()
 export class NatsService implements OnModuleDestroy {
   public nc!: NatsConnection;
@@ -25,7 +29,8 @@ export class NatsService implements OnModuleDestroy {
 
     this.nc = await connect({
       servers: `${process.env.NATS_URL}`.split(','),
-      authenticator: usernamePasswordAuthenticator(`${process.env.NATS_USER}`, `${process.env.NATS_PASSWORD}`)
+      // authenticator: usernamePasswordAuthenticator(`${process.env.NATS_USER}`, `${process.env.NATS_PASSWORD}`)
+      authenticator: credsAuthenticator(utf8)
     });
     this.js = this.nc.jetstream();
     this.jsm = await this.nc.jetstreamManager();

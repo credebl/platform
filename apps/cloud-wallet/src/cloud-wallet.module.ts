@@ -19,7 +19,7 @@ import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.CLOUD_WALLET_NKEY_SEED)
+        options: getNatsOptions(process.env.NATS_CREDS_FILE)
       }
     ]),
 

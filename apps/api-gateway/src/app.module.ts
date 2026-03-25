@@ -49,7 +49,7 @@ import { shouldLoadOidcModules } from '@credebl/common/common.utils';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.NATS_CREDS_FILE)
       }
     ]),
     AgentModule,

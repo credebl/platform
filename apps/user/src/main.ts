@@ -13,7 +13,7 @@ const logger = new Logger();
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(UserModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(CommonConstants.USER_SERVICE, process.env.USER_NKEY_SEED)
+    options: getNatsOptions(CommonConstants.USER_SERVICE, process.env.NATS_CREDS_FILE)
   });
   app.useLogger(app.get(NestjsLoggerServiceAdapter));
   app.useGlobalFilters(new HttpExceptionFilter());

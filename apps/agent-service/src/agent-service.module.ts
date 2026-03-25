@@ -30,7 +30,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.AGENT_SERVICE, process.env.AGENT_SERVICE_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.AGENT_SERVICE, process.env.NATS_CREDS_FILE)
       }
     ]),
     CommonModule,

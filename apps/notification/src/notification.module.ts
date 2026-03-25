@@ -23,7 +23,7 @@ import { NatsModule } from './nats/nats.module';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.NOTIFICATION_SERVICE, process.env.NOTIFICATION_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.NOTIFICATION_SERVICE, process.env.NATS_CREDS_FILE)
       }
     ]),
     CommonModule,

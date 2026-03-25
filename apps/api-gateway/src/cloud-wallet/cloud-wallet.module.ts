@@ -7,19 +7,16 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
-    imports: [
-
-        ClientsModule.register([
-            {
-                name: 'NATS_CLIENT',
-                transport: Transport.NATS,
-                options: getNatsOptions(CommonConstants.CLOUD_WALLET_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
-              }
-        ])
-    ],
-    controllers: [CloudWalletController],
-    providers: [CloudWalletService, NATSClient]
+  imports: [
+    ClientsModule.register([
+      {
+        name: 'NATS_CLIENT',
+        transport: Transport.NATS,
+        options: getNatsOptions(CommonConstants.CLOUD_WALLET_SERVICE, process.env.NATS_CREDS_FILE)
+      }
+    ])
+  ],
+  controllers: [CloudWalletController],
+  providers: [CloudWalletService, NATSClient]
 })
-
-export class CloudWalletModule {
-}
+export class CloudWalletModule {}

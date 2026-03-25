@@ -17,7 +17,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.SCHEMA_SERVICE, process.env.SCHEMA_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.SCHEMA_SERVICE, process.env.NATS_CREDS_FILE)
       }
     ]),
 
@@ -25,13 +25,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
     CommonModule,
     CacheModule.register()
   ],
-  providers: [
-    SchemaService,
-    SchemaRepository,
-    Logger,
-    PrismaService,
-    NATSClient
-  ],
+  providers: [SchemaService, SchemaRepository, Logger, PrismaService, NATSClient],
   controllers: [SchemaController]
 })
-export class SchemaModule { }
+export class SchemaModule {}

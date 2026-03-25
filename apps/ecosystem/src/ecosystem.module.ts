@@ -26,7 +26,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.ECOSYSTEM_SERVICE, process.env.ECOSYSTEM_NKEY_SEED)
+        options: getNatsOptions(CommonConstants.ECOSYSTEM_SERVICE, process.env.NATS_CREDS_FILE)
       }
     ]),
     CommonModule,

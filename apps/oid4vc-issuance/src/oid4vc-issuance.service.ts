@@ -629,15 +629,20 @@ export class Oid4vcIssuanceService {
         issuerDetails.publicIssuerId
       );
 
-      const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
-      for (const cred of buildOidcCredentialOffer.credentials) {
-        if (cred.format === CredentialFormat.SdJwtVc || cred.format === CredentialFormat.Mdoc) {
-          const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
-          (cred as any).statusListDetails = {
-            listId: allocation.listId,
-            index: allocation.index,
-            listSize: CommonConstants.DEFAULT_STATUS_LIST_SIZE
-          };
+      if (createOidcCredentialOffer.isRevocable) {
+        const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
+        if (!agentDetailsForAlloc?.orgDid) {
+          throw new BadRequestException('Organization DID is required for revocable credentials');
+        }
+        for (const cred of buildOidcCredentialOffer.credentials) {
+          if (cred.format === CredentialFormat.SdJwtVc || cred.format === CredentialFormat.Mdoc) {
+            const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
+            cred.statusListDetails = {
+              listId: allocation.listId,
+              index: allocation.index,
+              listSize: CommonConstants.DEFAULT_STATUS_LIST_SIZE
+            };
+          }
         }
       }
 
@@ -672,14 +677,14 @@ export class Oid4vcIssuanceService {
 
       const issuanceSessionId =
         parsedResponse.issuanceSessionId || parsedResponse.credentialOfferId || parsedResponse.id;
-      if (issuanceSessionId) {
+      if (issuanceSessionId && createOidcCredentialOffer.isRevocable) {
         for (const cred of buildOidcCredentialOffer.credentials) {
-          if ((cred as any).statusListDetails) {
-            const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${(cred as any).statusListDetails.listId}`;
+          if (cred.statusListDetails) {
+            const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;
             await this.statusListAllocatorService.saveCredentialAllocation(
               String(cred.credentialSupportedId),
-              (cred as any).statusListDetails.listId,
-              (cred as any).statusListDetails.index,
+              cred.statusListDetails.listId,
+              cred.statusListDetails.index,
               issuanceSessionId,
               statusListUri
             );
@@ -691,11 +696,11 @@ export class Oid4vcIssuanceService {
     } catch (error) {
       if (buildOidcCredentialOffer?.credentials) {
         for (const cred of buildOidcCredentialOffer.credentials) {
-          if ((cred as any).statusListDetails) {
+          if (cred.statusListDetails) {
             try {
               await this.statusListAllocatorService.release(
-                (cred as any).statusListDetails.listId,
-                (cred as any).statusListDetails.index
+                cred.statusListDetails.listId,
+                cred.statusListDetails.index
               );
             } catch (releaseErr) {
               this.logger.warn(`Failed to release index on rollback: ${releaseErr.message}`);
@@ -753,18 +758,23 @@ export class Oid4vcIssuanceService {
         CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER
       );
 
-      const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
-      for (const cred of oidcCredentialD2APayload.credentials) {
-        if (!cred.statusListDetails) {
-          try {
-            const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
-            cred.statusListDetails = {
-              listId: allocation.listId,
-              index: allocation.index,
-              listSize: CommonConstants.DEFAULT_STATUS_LIST_SIZE
-            };
-          } catch (allocError) {
-            this.logger.warn(`Could not allocate status list index: ${allocError.message}`);
+      if (oidcCredentialD2APayload.isRevocable) {
+        const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
+        if (!agentDetailsForAlloc?.orgDid) {
+          throw new BadRequestException('Organization DID is required for revocable credentials');
+        }
+        for (const cred of oidcCredentialD2APayload.credentials) {
+          if (!cred.statusListDetails) {
+            try {
+              const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
+              cred.statusListDetails = {
+                listId: allocation.listId,
+                index: allocation.index,
+                listSize: CommonConstants.DEFAULT_STATUS_LIST_SIZE
+              };
+            } catch (allocError) {
+              this.logger.warn(`Could not allocate status list index: ${allocError.message}`);
+            }
           }
         }
       }
@@ -784,7 +794,7 @@ export class Oid4vcIssuanceService {
 
       const issuanceSessionId =
         parsedResponse.issuanceSessionId || parsedResponse.credentialOfferId || parsedResponse.id;
-      if (issuanceSessionId) {
+      if (issuanceSessionId && oidcCredentialD2APayload.isRevocable) {
         for (const cred of oidcCredentialD2APayload.credentials) {
           if (cred.statusListDetails) {
             const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;
@@ -932,9 +942,7 @@ export class Oid4vcIssuanceService {
           lastResponse = await this.natsCall(pattern, payload);
         }
       } else {
-        // Fallback for cases where no status list allocations exist
-        const payload: any = { url, orgId };
-        lastResponse = await this.natsCall(pattern, payload);
+        throw new BadRequestException('Credential is not revocable as no status list allocation was found.');
       }
 
       return lastResponse;

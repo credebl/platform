@@ -87,6 +87,9 @@ export class StatusListAllocatorService {
   constructor(private readonly prisma: PrismaService) {}
 
   async allocate(orgId: string, issuerDid: string, listSize?: number): Promise<{ listId: string; index: number }> {
+    if (!orgId || !issuerDid) {
+      throw new Error('orgId and issuerDid are required for status list allocation');
+    }
     const defaultListSize = CommonConstants.DEFAULT_STATUS_LIST_SIZE;
     return this.prisma.$transaction(async (tx) => {
       // Find active list or create one

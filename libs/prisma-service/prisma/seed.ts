@@ -680,17 +680,26 @@ export async function createKeycloakUser(): Promise<void> {
     CRYPTO_PRIVATE_KEY
   } = process.env;
 
-  if (
-    !KEYCLOAK_DOMAIN ||
-    !KEYCLOAK_REALM ||
-    !PLATFORM_ADMIN_KEYCLOAK_ID ||
-    !PLATFORM_ADMIN_KEYCLOAK_SECRET ||
-    !CRYPTO_PRIVATE_KEY
-  ) {
-    throw new Error(
-      'Missing required environment variables for either PLATFORM_ADMIN_USER_PASSWORD or KEYCLOAK_DOMAIN or KEYCLOAK_REALM or PLATFORM_ADMIN_KEYCLOAK_ID or PLATFORM_ADMIN_KEYCLOAK_SECRET or CRYPTO_PRIVATE_KEY'
-    );
+  if (!KEYCLOAK_DOMAIN) {
+    throw new Error('Missing environment variable: KEYCLOAK_DOMAIN');
   }
+
+  if (!KEYCLOAK_REALM) {
+    throw new Error('Missing environment variable: KEYCLOAK_REALM');
+  }
+
+  if (!PLATFORM_ADMIN_KEYCLOAK_ID) {
+    throw new Error('Missing environment variable: PLATFORM_ADMIN_KEYCLOAK_ID');
+  }
+
+  if (!PLATFORM_ADMIN_KEYCLOAK_SECRET) {
+    throw new Error('Missing environment variable: PLATFORM_ADMIN_KEYCLOAK_SECRET');
+  }
+
+  if (!CRYPTO_PRIVATE_KEY) {
+    throw new Error('Missing environment variable: CRYPTO_PRIVATE_KEY');
+  }
+
   const decryptedPassword = CryptoJS.AES.decrypt(platformAdminData.password, CRYPTO_PRIVATE_KEY);
   const token = await getKeycloakToken();
   const user = {

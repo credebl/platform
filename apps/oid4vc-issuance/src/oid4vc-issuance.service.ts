@@ -10,6 +10,7 @@ import {
   BadRequestException,
   ConflictException,
   HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -18,6 +19,8 @@ import {
   Scope
 } from '@nestjs/common';
 import { Oid4vcIssuanceRepository } from './oid4vc-issuance.repository';
+import { StatusListAllocatorService } from './status-list-allocator.service';
+import { CredentialFormat } from '@credebl/enum/enum';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
@@ -79,7 +82,8 @@ export class Oid4vcIssuanceService {
   private readonly logger = new Logger('IssueCredentialService');
   constructor(
     @Inject('NATS_CLIENT') private readonly issuanceServiceProxy: ClientProxy,
-    private readonly oid4vcIssuanceRepository: Oid4vcIssuanceRepository
+    private readonly oid4vcIssuanceRepository: Oid4vcIssuanceRepository,
+    private readonly statusListAllocatorService: StatusListAllocatorService
   ) {}
 
   async oidcIssuerCreate(issuerCreation: IssuerCreation, orgId: string, userDetails: user): Promise<oidc_issuer> {
@@ -528,6 +532,7 @@ export class Oid4vcIssuanceService {
     userDetails: user,
     issuerId: string
   ): Promise<any> {
+    let buildOidcCredentialOffer: CredentialOfferPayload;
     try {
       const filterTemplateIds = extractTemplateIds(createOidcCredentialOffer);
       if (!filterTemplateIds) {
@@ -598,7 +603,7 @@ export class Oid4vcIssuanceService {
       //TODO: add logic to pass the issuer info
       const issuerDetailsFromDb = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       const { publicIssuerId, authorizationServerUrl } = issuerDetailsFromDb || {};
-      const buildOidcCredentialOffer: CredentialOfferPayload = buildCredentialOfferPayload(
+      buildOidcCredentialOffer = buildCredentialOfferPayload(
         createOidcCredentialOffer,
         //
         getAllOfferTemplates,
@@ -623,12 +628,25 @@ export class Oid4vcIssuanceService {
         CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER,
         issuerDetails.publicIssuerId
       );
-      this.logger.debug(`Creating OIDC Credential Offer for :`, buildOidcCredentialOffer);
+
+      const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
+      for (const cred of buildOidcCredentialOffer.credentials) {
+        if (cred.format === CredentialFormat.SdJwtVc || cred.format === CredentialFormat.Mdoc) {
+          const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
+          (cred as any).statusListDetails = {
+            listId: allocation.listId,
+            index: allocation.index,
+            listSize: CommonConstants.DEFAULT_STATUS_LIST_SIZE
+          };
+        }
+      }
+
       const createCredentialOfferOnAgent = await this._oidcCreateCredentialOffer(buildOidcCredentialOffer, url, orgId);
       if (!createCredentialOfferOnAgent) {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
       }
-
+      
+      // Logic to add noticeUrl in response from agent if it is present in template or request payload
       const { response } = createCredentialOfferOnAgent;
 
       if (null !== response) {
@@ -644,8 +662,48 @@ export class Oid4vcIssuanceService {
         }
       }
 
-      return response;
+      // Revocation logic to save the credential offer id and status list details in DB for later use during revocation
+      let parsedResponse;
+      if ('string' === typeof createCredentialOfferOnAgent.response) {
+        parsedResponse = JSON.parse(createCredentialOfferOnAgent.response);
+      } else {
+        parsedResponse = createCredentialOfferOnAgent.response;
+      }
+
+      const issuanceSessionId =
+        parsedResponse.issuanceSessionId || parsedResponse.credentialOfferId || parsedResponse.id;
+      if (issuanceSessionId) {
+        for (const cred of buildOidcCredentialOffer.credentials) {
+          if ((cred as any).statusListDetails) {
+            const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${(cred as any).statusListDetails.listId}`;
+            await this.statusListAllocatorService.saveCredentialAllocation(
+              String(cred.credentialSupportedId),
+              (cred as any).statusListDetails.listId,
+              (cred as any).statusListDetails.index,
+              issuanceSessionId,
+              statusListUri
+            );
+          }
+        }
+      }
+
+      return createCredentialOfferOnAgent.response;
     } catch (error) {
+      if (buildOidcCredentialOffer?.credentials) {
+        for (const cred of buildOidcCredentialOffer.credentials) {
+          if ((cred as any).statusListDetails) {
+            try {
+              await this.statusListAllocatorService.release(
+                (cred as any).statusListDetails.listId,
+                (cred as any).statusListDetails.index
+              );
+            } catch (releaseErr) {
+              this.logger.warn(`Failed to release index on rollback: ${releaseErr.message}`);
+            }
+          }
+        }
+      }
+
       const errorResponse = ErrorHandler.categorize(error, 'Failed to create credential offer');
       this.logger.error(
         `[createOidcCredentialOffer] - ${errorResponse.statusCode}: ${errorResponse.message}`,
@@ -694,13 +752,69 @@ export class Oid4vcIssuanceService {
         await this.getAgentEndpoint(orgId),
         CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER
       );
+
+      const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
+      for (const cred of oidcCredentialD2APayload.credentials) {
+        if (!cred.statusListDetails) {
+          try {
+            const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
+            cred.statusListDetails = {
+              listId: allocation.listId,
+              index: allocation.index,
+              listSize: CommonConstants.DEFAULT_STATUS_LIST_SIZE
+            };
+          } catch (allocError) {
+            this.logger.warn(`Could not allocate status list index: ${allocError.message}`);
+          }
+        }
+      }
+
       const createCredentialOfferOnAgent = await this._oidcCreateCredentialOffer(oidcCredentialD2APayload, url, orgId);
       if (!createCredentialOfferOnAgent) {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
       }
 
+      // Save allocations now that we have the session id
+      let parsedResponse;
+      if ('string' === typeof createCredentialOfferOnAgent.response) {
+        parsedResponse = JSON.parse(createCredentialOfferOnAgent.response);
+      } else {
+        parsedResponse = createCredentialOfferOnAgent.response;
+      }
+
+      const issuanceSessionId =
+        parsedResponse.issuanceSessionId || parsedResponse.credentialOfferId || parsedResponse.id;
+      if (issuanceSessionId) {
+        for (const cred of oidcCredentialD2APayload.credentials) {
+          if (cred.statusListDetails) {
+            const statusListUri = `${process.env.STATUS_LIST_HOST || 'http://10.0.0.77:3000'}/status-lists/${cred.statusListDetails.listId}`;
+            await this.statusListAllocatorService.saveCredentialAllocation(
+              String(cred.credentialSupportedId || cred.id),
+              cred.statusListDetails.listId,
+              cred.statusListDetails.index,
+              issuanceSessionId,
+              statusListUri
+            );
+          }
+        }
+      }
+
       return createCredentialOfferOnAgent.response;
     } catch (error) {
+      if (oidcCredentialD2APayload?.credentials) {
+        for (const cred of oidcCredentialD2APayload.credentials) {
+          if (cred.statusListDetails) {
+            try {
+              await this.statusListAllocatorService.release(
+                cred.statusListDetails.listId,
+                cred.statusListDetails.index
+              );
+            } catch (releaseErr) {
+              this.logger.warn(`Failed to release index on rollback: ${releaseErr.message}`);
+            }
+          }
+        }
+      }
       this.logger.error(`[createOidcCredentialOffer] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
@@ -782,7 +896,50 @@ export class Oid4vcIssuanceService {
       }
       return deletedCredentialOffer.response;
     } catch (error) {
-      this.logger.error(`[getCredentialOffers] - error: ${JSON.stringify(error)}`);
+      this.logger.error(`[deleteCredentialOffers] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
+  async revokeCredential(issuanceSessionId: string, orgId: string): Promise<object> {
+    try {
+      if (!issuanceSessionId) {
+        throw new BadRequestException('Please provide a valid issuanceSessionId');
+      }
+
+      const allocations = await this.statusListAllocatorService.getCredentialAllocations(issuanceSessionId);
+
+      const url = getAgentUrl(
+        await this.getAgentEndpoint(orgId),
+        CommonConstants.OIDC_ISSUER_SESSIONS_BY_ID,
+        `${issuanceSessionId}/revoke`
+      );
+
+      const pattern = { cmd: 'agent-service-oid4vc-revoke-credential' };
+
+      let lastResponse;
+      if (allocations && 0 < allocations.length) {
+        for (const allocation of allocations) {
+          const payload: any = {
+            url,
+            orgId,
+            statusListDetails: {
+              listId: allocation.listId,
+              index: allocation.index,
+              listSize: CommonConstants.DEFAULT_STATUS_LIST_SIZE
+            }
+          };
+          lastResponse = await this.natsCall(pattern, payload);
+        }
+      } else {
+        // Fallback for cases where no status list allocations exist
+        const payload: any = { url, orgId };
+        lastResponse = await this.natsCall(pattern, payload);
+      }
+
+      return lastResponse;
+    } catch (error) {
+      this.logger.error(`[revokeCredential] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
   }
@@ -959,10 +1116,10 @@ export class Oid4vcIssuanceService {
           this.logger.error(`catch: ${JSON.stringify(error)}`);
           throw new HttpException(
             {
-              status: error.statusCode,
+              status: error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
               error: error.message
             },
-            error.error
+            error.statusCode || error.status || HttpStatus.INTERNAL_SERVER_ERROR
           );
         });
     } catch (error) {
@@ -990,16 +1147,16 @@ export class Oid4vcIssuanceService {
   ): Promise<object> {
     try {
       // pick fields
-      let organisationId: string;
       const { oidcIssueCredentialDto, id } = CredentialOfferWebhookPayload;
+      let organisationId = id;
 
       if ('default' !== oidcIssueCredentialDto?.contextCorrelationId) {
         const getOrganizationId = await this.oid4vcIssuanceRepository.getOrganizationByTenantId(
           oidcIssueCredentialDto?.contextCorrelationId
         );
-        organisationId = getOrganizationId?.orgId;
-      } else {
-        organisationId = id;
+        if (getOrganizationId?.orgId) {
+          organisationId = getOrganizationId.orgId;
+        }
       }
 
       const {

@@ -58,6 +58,7 @@ export interface CreateOidcCredentialOfferDtoLike {
     authorizationServerUrl: string;
   };
   publicIssuerId?: string;
+  isRevocable?: boolean;
 }
 
 export interface ResolvedSignerOption {
@@ -84,12 +85,18 @@ export interface BuiltCredential {
   format: CredentialFormat;
   payload: Record<string, unknown>;
   disclosureFrame?: DisclosureFrame;
+  statusListDetails?: {
+    listId: string;
+    index: number;
+    listSize?: number;
+  };
 }
 
 export interface BuiltCredentialOfferBase {
   signerOption?: ResolvedSignerOption;
   credentials: BuiltCredential[];
   publicIssuerId?: string;
+  isRevocable?: boolean;
 }
 
 export type CredentialOfferPayload = BuiltCredentialOfferBase &
@@ -477,7 +484,8 @@ export function buildCredentialOfferPayload(
 
   const baseEnvelope: BuiltCredentialOfferBase = {
     credentials: builtCredentials,
-    ...(finalPublicIssuerId ? { publicIssuerId: finalPublicIssuerId } : {})
+    ...(finalPublicIssuerId ? { publicIssuerId: finalPublicIssuerId } : {}),
+    isRevocable: dto.isRevocable
   };
 
   // Determine which authorization flow to return:

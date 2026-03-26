@@ -787,7 +787,7 @@ export class Oid4vcIssuanceService {
       if (issuanceSessionId) {
         for (const cred of oidcCredentialD2APayload.credentials) {
           if (cred.statusListDetails) {
-            const statusListUri = `${process.env.STATUS_LIST_HOST || 'http://10.0.0.77:3000'}/status-lists/${cred.statusListDetails.listId}`;
+            const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;
             await this.statusListAllocatorService.saveCredentialAllocation(
               String(cred.credentialSupportedId || cred.id),
               cred.statusListDetails.listId,

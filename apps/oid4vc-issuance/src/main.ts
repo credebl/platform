@@ -10,6 +10,11 @@ import { Oid4vcIssuanceModule } from './oid4vc-issuance.module';
 const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
+  if (!process.env.STATUS_LIST_HOST) {
+    logger.error('STATUS_LIST_HOST is not configured. Microservice cannot start.');
+    process.exit(1);
+  }
+
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(Oid4vcIssuanceModule, {
     transport: Transport.NATS,
     options: getNatsOptions(

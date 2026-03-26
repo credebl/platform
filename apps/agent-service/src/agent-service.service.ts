@@ -1489,6 +1489,19 @@ export class AgentServiceService {
     }
   }
 
+  async oidcRevokeCredential(url: string, orgId: string, statusListDetails?: object): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const data = await this.commonService
+        .httpPost(`${url}`, statusListDetails || {}, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return data;
+    } catch (error) {
+      this.logger.error(`Error in _oidcRevokeCredential in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
   async oidcIssuerTemplate(templatePayload, url: string, orgId: string): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);

@@ -636,7 +636,7 @@ export class Oid4vcIssuanceService {
             cred.statusListDetails = {
               listId: allocation.listId,
               index: allocation.index,
-              listSize: CommonConstants.DEFAULT_STATUS_LIST_SIZE
+              listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
             };
           }
         }
@@ -655,13 +655,16 @@ export class Oid4vcIssuanceService {
       }
 
       const issuanceSessionId =
-        parsedResponse.issuanceSessionId || parsedResponse.credentialOfferId || parsedResponse.id;
+        parsedResponse.issuanceSessionId ||
+        parsedResponse.credentialOfferId ||
+        parsedResponse.id ||
+        parsedResponse.issuanceSession?.id;
       if (issuanceSessionId && createOidcCredentialOffer.isRevocable) {
         for (const cred of buildOidcCredentialOffer.credentials) {
           if (cred.statusListDetails) {
             const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;
             await this.statusListAllocatorService.saveCredentialAllocation(
-              String(cred.credentialSupportedId),
+              `${issuanceSessionId}-${cred.statusListDetails.index}`,
               cred.statusListDetails.listId,
               cred.statusListDetails.index,
               issuanceSessionId,
@@ -749,7 +752,7 @@ export class Oid4vcIssuanceService {
               cred.statusListDetails = {
                 listId: allocation.listId,
                 index: allocation.index,
-                listSize: CommonConstants.DEFAULT_STATUS_LIST_SIZE
+                listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
               };
             } catch (allocError) {
               this.logger.warn(`Could not allocate status list index: ${allocError.message}`);
@@ -772,13 +775,16 @@ export class Oid4vcIssuanceService {
       }
 
       const issuanceSessionId =
-        parsedResponse.issuanceSessionId || parsedResponse.credentialOfferId || parsedResponse.id;
+        parsedResponse.issuanceSessionId ||
+        parsedResponse.credentialOfferId ||
+        parsedResponse.id ||
+        parsedResponse.issuanceSession?.id;
       if (issuanceSessionId && oidcCredentialD2APayload.isRevocable) {
         for (const cred of oidcCredentialD2APayload.credentials) {
           if (cred.statusListDetails) {
             const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;
             await this.statusListAllocatorService.saveCredentialAllocation(
-              String(cred.credentialSupportedId || cred.id),
+              `${issuanceSessionId}-${cred.statusListDetails.index}`,
               cred.statusListDetails.listId,
               cred.statusListDetails.index,
               issuanceSessionId,
@@ -915,7 +921,7 @@ export class Oid4vcIssuanceService {
             statusListDetails: {
               listId: allocation.listId,
               index: allocation.index,
-              listSize: CommonConstants.DEFAULT_STATUS_LIST_SIZE
+              listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
             }
           };
           lastResponse = await this.natsCall(pattern, payload);

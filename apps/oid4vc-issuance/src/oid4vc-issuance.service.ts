@@ -630,18 +630,21 @@ export class Oid4vcIssuanceService {
       );
 
       if (createOidcCredentialOffer.isRevocable) {
-        const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
-        if (!agentDetailsForAlloc?.orgDid) {
-          throw new BadRequestException('Organization DID is required for revocable credentials');
-        }
-        for (const cred of buildOidcCredentialOffer.credentials) {
-          if (cred.format === CredentialFormat.SdJwtVc || cred.format === CredentialFormat.Mdoc) {
-            const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
-            cred.statusListDetails = {
-              listId: allocation.listId,
-              index: allocation.index,
-              listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
-            };
+        const hasSdJwt = buildOidcCredentialOffer.credentials.some((c) => c.format === CredentialFormat.SdJwtVc);
+        if (hasSdJwt) {
+          const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
+          if (!agentDetailsForAlloc?.orgDid) {
+            throw new BadRequestException('Organization DID is required for revocable SD-JWT credentials');
+          }
+          for (const cred of buildOidcCredentialOffer.credentials) {
+            if (cred.format === CredentialFormat.SdJwtVc) {
+              const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
+              cred.statusListDetails = {
+                listId: allocation.listId,
+                index: allocation.index,
+                listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
+              };
+            }
           }
         }
       }
@@ -762,21 +765,25 @@ export class Oid4vcIssuanceService {
       );
 
       if (oidcCredentialD2APayload.isRevocable) {
-        const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
-        if (!agentDetailsForAlloc?.orgDid) {
-          throw new BadRequestException('Organization DID is required for revocable credentials');
-        }
-        for (const cred of oidcCredentialD2APayload.credentials) {
-          if (!cred.statusListDetails) {
-            try {
-              const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
-              cred.statusListDetails = {
-                listId: allocation.listId,
-                index: allocation.index,
-                listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
-              };
-            } catch (allocError) {
-              this.logger.warn(`Could not allocate status list index: ${allocError.message}`);
+        const hasSdJwt = oidcCredentialD2APayload.credentials.some((c) => c.format === CredentialFormat.SdJwtVc);
+        if (hasSdJwt) {
+          const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
+          if (!agentDetailsForAlloc?.orgDid) {
+            throw new BadRequestException('Organization DID is required for revocable credentials');
+          }
+          for (const cred of oidcCredentialD2APayload.credentials) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((cred as any).format === CredentialFormat.SdJwtVc && !cred.statusListDetails) {
+              try {
+                const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
+                cred.statusListDetails = {
+                  listId: allocation.listId,
+                  index: allocation.index,
+                  listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
+                };
+              } catch (allocError) {
+                this.logger.warn(`Could not allocate status list index: ${allocError.message}`);
+              }
             }
           }
         }

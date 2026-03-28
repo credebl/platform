@@ -150,6 +150,11 @@ export function shouldLoadOidcModules(): boolean {
   return !hide;
 }
 
+export function shouldLoadNatsNotification(): boolean {
+  const raw = process.env.ENABLE_NATS_NOTIFICATION;
+  return 'true' === raw;
+}
+
 export const escapeHtml = (value: string): string =>
   value
     .replace(/&/g, '&amp;')

@@ -7,17 +7,20 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
-  imports:[
+  imports: [
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.FIDO_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
-
+        options: getNatsOptions(
+          CommonConstants.FIDO_SERVICE,
+          process.env.API_GATEWAY_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ])
   ],
   controllers: [FidoController],
   providers: [FidoService, NATSClient]
 })
-export class FidoModule { }
+export class FidoModule {}

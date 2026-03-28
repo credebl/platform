@@ -318,7 +318,7 @@ export class Oid4vpVerificationService extends BaseService {
     expectedOrigins?: string[]
   ): Promise<object> {
     this.logger.debug(
-      `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
+      `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, ecosystemId=${ecosystemId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
     );
     try {
       // Fetch agent details

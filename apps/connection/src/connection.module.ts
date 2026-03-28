@@ -23,16 +23,22 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.CONNECTION_SERVICE, process.env.CONNECTION_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.CONNECTION_SERVICE,
+          process.env.CONNECTION_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
 
-     CommonModule,
-     GlobalConfigModule,
-     LoggerModule, PlatformConfig, ContextInterceptorModule,
-     CacheModule.register()
+    CommonModule,
+    GlobalConfigModule,
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
+    CacheModule.register()
   ],
   controllers: [ConnectionController],
   providers: [ConnectionService, ConnectionRepository, UserActivityRepository, PrismaService, Logger, NATSClient]
 })
-export class ConnectionModule { }
+export class ConnectionModule {}

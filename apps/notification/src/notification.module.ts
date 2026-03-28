@@ -1,8 +1,9 @@
 import { CommonModule } from '@credebl/common';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { shouldLoadNatsNotification } from '@credebl/common/common.utils';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { Logger, Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
@@ -23,7 +24,11 @@ import { NatsModule } from './nats/nats.module';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.NOTIFICATION_SERVICE, process.env.NOTIFICATION_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.NOTIFICATION_SERVICE,
+          process.env.NOTIFICATION_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,
@@ -32,7 +37,7 @@ import { NatsModule } from './nats/nats.module';
     PlatformConfig,
     ContextInterceptorModule,
     CacheModule.register({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
-    NatsModule
+    ConditionalModule.registerWhen(NatsModule, shouldLoadNatsNotification)
   ],
   controllers: [NotificationController],
   providers: [NotificationService, NotificationRepository, HolderNotificationRepository, PrismaService, Logger]

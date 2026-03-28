@@ -10,7 +10,7 @@ import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapt
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(LedgerModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(CommonConstants.LEDGER_SERVICE, process.env.NATS_CREDS_FILE)
+    options: getNatsOptions(CommonConstants.LEDGER_SERVICE, process.env.LEDGER_NKEY_SEED, process.env.NATS_CREDS_FILE)
   });
   app.useLogger(app.get(NestjsLoggerServiceAdapter));
   app.useGlobalFilters(new HttpExceptionFilter());

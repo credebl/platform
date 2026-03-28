@@ -32,7 +32,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.USER_SERVICE, process.env.NATS_CREDS_FILE)
+        options: getNatsOptions(CommonConstants.USER_SERVICE, process.env.USER_NKEY_SEED, process.env.NATS_CREDS_FILE)
       }
     ]),
 

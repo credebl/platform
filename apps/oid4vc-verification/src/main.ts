@@ -11,7 +11,11 @@ const logger = new Logger();
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(Oid4vpModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(CommonConstants.OIDC4VC_VERIFICATION_SERVICE, process.env.NATS_CREDS_FILE)
+    options: getNatsOptions(
+      CommonConstants.OIDC4VC_VERIFICATION_SERVICE,
+      process.env.OIDC4VC_VERIFICATION_NKEY_SEED,
+      process.env.NATS_CREDS_FILE
+    )
   });
   app.useLogger(app.get(NestjsLoggerServiceAdapter));
   // TODO: Not sure if we want the below

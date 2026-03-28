@@ -31,7 +31,11 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.ORGANIZATION_SERVICE, process.env.NATS_CREDS_FILE)
+        options: getNatsOptions(
+          CommonConstants.ORGANIZATION_SERVICE,
+          process.env.ORGANIZATION_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,

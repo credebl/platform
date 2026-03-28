@@ -11,7 +11,7 @@ import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 
 @Module({
   imports: [
@@ -19,7 +19,11 @@ import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(process.env.NATS_CREDS_FILE)
+        options: getNatsOptions(
+          CommonConstants.CLOUD_WALLET_SERVICE,
+          process.env.CLOUD_WALLET_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
 

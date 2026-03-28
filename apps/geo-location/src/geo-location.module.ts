@@ -19,7 +19,11 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.GEO_LOCATION_SERVICE, process.env.NATS_CREDS_FILE)
+        options: getNatsOptions(
+          CommonConstants.GEO_LOCATION_SERVICE,
+          process.env.GEOLOCATION_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,

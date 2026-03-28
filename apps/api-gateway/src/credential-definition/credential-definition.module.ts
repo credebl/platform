@@ -13,7 +13,11 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.CREDENTIAL_DEFINITION_SERVICE, process.env.NATS_CREDS_FILE)
+        options: getNatsOptions(
+          CommonConstants.CREDENTIAL_DEFINITION_SERVICE,
+          process.env.API_GATEWAY_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ])
   ],

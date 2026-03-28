@@ -20,7 +20,11 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.UTILITY_SERVICE, process.env.NATS_CREDS_FILE)
+        options: getNatsOptions(
+          CommonConstants.UTILITY_SERVICE,
+          process.env.UTILITIES_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,

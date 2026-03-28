@@ -21,7 +21,7 @@ import { X509CertificateController } from './x509.controller';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.X509_SERVICE, process.env.NATS_CREDS_FILE)
+        options: getNatsOptions(CommonConstants.X509_SERVICE, process.env.X509_NKEY_SEED, process.env.NATS_CREDS_FILE)
       }
     ])
   ],

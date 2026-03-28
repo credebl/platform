@@ -66,7 +66,7 @@ export class NotificationNATSSubsciber implements OnApplicationBootstrap {
     }
 
     try {
-      msg.ack();
+      await msg.ack();
       await this.pendingAckStore.delete(data.ackKey);
       this.logger.log('[NATS] Message ACKed via user confirmation');
     } catch (err) {

@@ -34,7 +34,7 @@ export const getNatsOptions = (
           authenticator: credsAuthenticator(utf8)
         };
       }
-      return baseOptions;
+      throw new Error(`NATS_AUTH_TYPE is 'creds' but NATS_CREDS_FILE is not provided for service: ${serviceName}`);
 
     case 'usernamePassword': {
       const user = process.env.NATS_USER;
@@ -45,7 +45,9 @@ export const getNatsOptions = (
           authenticator: usernamePasswordAuthenticator(user, pass)
         };
       }
-      return baseOptions;
+      throw new Error(
+        `NATS_AUTH_TYPE is 'usernamePassword' but NATS_USER or NATS_PASSWORD is not provided for service: ${serviceName}`
+      );
     }
     case 'none':
       return baseOptions;
@@ -58,6 +60,6 @@ export const getNatsOptions = (
           authenticator: nkeyAuthenticator(new TextEncoder().encode(nkeySeed))
         };
       }
-      return baseOptions;
+      throw new Error(`NATS_AUTH_TYPE is 'nkey' but NKEY_SEED is not provided for service: ${serviceName}`);
   }
 };

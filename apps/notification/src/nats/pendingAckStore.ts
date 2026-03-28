@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JsMsg, KV, KvEntry, Msg } from 'nats';
 import { NatsService } from './nats.service';
 
@@ -17,7 +17,10 @@ interface PendingMessageMetadata {
 export class PendingAckStore {
   private readonly KV_BUCKET = 'PENDING_ACK';
 
-  constructor(private readonly natsService: NatsService) {}
+  constructor(
+    private readonly natsService: NatsService,
+    private readonly logger: Logger
+  ) {}
 
   private async getKV(): Promise<KV> {
     return this.natsService.getKV(this.KV_BUCKET);
@@ -77,7 +80,8 @@ export class PendingAckStore {
       } as unknown as JsMsg;
 
       return mockMsg;
-    } catch {
+    } catch (error) {
+      this.logger.warn(`Failed to retrieve pending ACK for key ${key}`, error);
       return undefined;
     }
   }

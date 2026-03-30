@@ -186,6 +186,14 @@ export class CreateOidcCredentialOfferDto {
   @IsIn(['preAuthorizedCodeFlow', 'authorizationCodeFlow'])
   authorizationType!: 'preAuthorizedCodeFlow' | 'authorizationCodeFlow';
 
+  @ApiPropertyOptional({
+    example: 'https://dev-consent.sovio.id/api/consent-notice/CN-OGL70CWB',
+    description: 'Optional notice URL to attach in the response when multiple credentials are offered.'
+  })
+  @IsOptional()
+  @IsUrl()
+  noticeUrl?: string;
+
   issuerId?: string;
 }
 

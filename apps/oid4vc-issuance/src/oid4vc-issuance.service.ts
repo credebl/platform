@@ -309,7 +309,7 @@ export class Oid4vcIssuanceService {
   ): Promise<credential_templates> {
     try {
       //TODO: add revert mechanism if agent call fails
-      const { name, description, format, canBeRevoked, appearance, signerOption } = credentialTemplate;
+      const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = credentialTemplate;
 
       const checkNameExist = await this.oid4vcIssuanceRepository.getTemplateByNameForIssuer(name, issuerId);
       if (0 < checkNameExist.length) {
@@ -323,7 +323,8 @@ export class Oid4vcIssuanceService {
         attributes: instanceToPlain(credentialTemplate.template),
         appearance: appearance ?? {},
         issuerId,
-        signerOption
+        signerOption,
+        noticeUrl: noticeUrl ?? null
       };
       // Persist in DB
       const createdTemplate = await this.oid4vcIssuanceRepository.createTemplate(issuerId, metadata);
@@ -625,7 +626,19 @@ export class Oid4vcIssuanceService {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
       }
 
-      return createCredentialOfferOnAgent.response;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = createCredentialOfferOnAgent.response as any;
+
+      if (1 === filterTemplateIds.length) {
+        const template = await this.oid4vcIssuanceRepository.getTemplateById(filterTemplateIds[0]);
+        if (template?.noticeUrl) {
+          response.noticeUrl = template.noticeUrl;
+        }
+      } else if (createOidcCredentialOffer.noticeUrl) {
+        response.noticeUrl = createOidcCredentialOffer.noticeUrl;
+      }
+
+      return response;
     } catch (error) {
       const errorResponse = ErrorHandler.categorize(error, 'Failed to create credential offer');
       this.logger.error(

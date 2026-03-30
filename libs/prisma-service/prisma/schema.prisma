@@ -651,6 +651,8 @@ model credential_templates {
   issuerId String      @db.Uuid
   issuer   oidc_issuer @relation(fields: [issuerId], references: [id])
 
+  noticeUrl    String?
+
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   signerOption SignerOption

@@ -47,6 +47,7 @@ export interface CreateOidcCredentialOffer {
   // e.g. "abc-gov"
   authenticationType: AuthenticationType; // only option selector
   credentials: CredentialRequest[]; // one or more credentials
+  noticeUrl?: string;
 }
 
 export interface GetAllCredentialOffer {

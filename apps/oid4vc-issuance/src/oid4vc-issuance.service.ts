@@ -394,7 +394,7 @@ export class Oid4vcIssuanceService {
         ...updateCredentialTemplate,
         ...(issuerId ? { issuerId } : {})
       };
-      const { name, description, format, canBeRevoked, appearance, signerOption } = normalized;
+      const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = normalized;
       const attributes = instanceToPlain(normalized.template);
 
       const payload = {
@@ -405,7 +405,8 @@ export class Oid4vcIssuanceService {
         ...(attributes !== undefined ? { attributes } : {}),
         ...(appearance !== undefined ? { appearance } : {}),
         ...(issuerId ? { issuerId } : {}),
-        ...(signerOption !== undefined ? { signerOption } : {})
+        ...(signerOption !== undefined ? { signerOption } : {}),
+        ...(noticeUrl !== undefined ? { noticeUrl } : {})
       };
 
       const updatedTemplate = await this.oid4vcIssuanceRepository.updateTemplate(templateId, payload);

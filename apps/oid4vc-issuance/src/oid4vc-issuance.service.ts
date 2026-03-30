@@ -442,7 +442,9 @@ export class Oid4vcIssuanceService {
             canBeRevoked: template.canBeRevoked,
             attributes: template.attributes,
             appearance: template.appearance,
-            issuerId: template.issuerId
+            issuerId: template.issuerId,
+            signerOption: template.signerOption,
+            noticeUrl: template.noticeUrl ?? null
           };
           await this.oid4vcIssuanceRepository.updateTemplate(templateId, rollbackPayload);
           this.logger.log(`Rolled back template ${templateId} to previous state after agent error`);
@@ -627,16 +629,19 @@ export class Oid4vcIssuanceService {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = createCredentialOfferOnAgent.response as any;
+      const { response } = createCredentialOfferOnAgent;
 
-      if (1 === filterTemplateIds.length) {
-        const template = await this.oid4vcIssuanceRepository.getTemplateById(filterTemplateIds[0]);
-        if (template?.noticeUrl) {
-          response.noticeUrl = template.noticeUrl;
+      if (null !== response) {
+        if (1 === filterTemplateIds.length) {
+          const template = await this.oid4vcIssuanceRepository.getTemplateById(filterTemplateIds[0]);
+          if (template?.noticeUrl) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (response as any).noticeUrl = template.noticeUrl;
+          }
+        } else if (createOidcCredentialOffer.noticeUrl) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (response as any).noticeUrl = createOidcCredentialOffer.noticeUrl;
         }
-      } else if (createOidcCredentialOffer.noticeUrl) {
-        response.noticeUrl = createOidcCredentialOffer.noticeUrl;
       }
 
       return response;

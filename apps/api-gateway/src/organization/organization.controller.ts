@@ -56,6 +56,7 @@ import { PrimaryDid } from './dtos/set-primary-did.dto';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { ClientTokenDto } from './dtos/client-token.dto';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
+import { TrustServiceRoleGuard } from '../authz/guards/trust-service-role.guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -315,6 +316,30 @@ export class OrganizationController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.getOrganizations,
       data: getOrganizations
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/tenant/:tenantId/ecosystems')
+  @UseGuards(AuthGuard('jwt'), TrustServiceRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get ecosystem IDs by tenant ID',
+    description:
+      'Returns all ecosystem IDs associated with the organization identified by tenantId. Accessible only by trust-service clients.'
+  })
+  @ApiParam({ name: 'tenantId', description: 'Tenant ID from org_agent table' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getEcosystemIdsByTenantId(@Param('tenantId') tenantId: string, @Res() res: Response): Promise<Response> {
+    if (!tenantId?.trim()) {
+      throw new BadRequestException(ResponseMessages.organisation.error.tenantIdRequired);
+    }
+
+    const ecosystemIds = await this.organizationService.getEcosystemIdsByTenantId(tenantId.trim());
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.tenantEcosystems,
+      data: ecosystemIds
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

@@ -20,15 +20,21 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.UTILITY_SERVICE, process.env.UTILITIES_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.UTILITY_SERVICE,
+          process.env.UTILITIES_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,
     GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [UtilitiesController],
   providers: [UtilitiesService, Logger, PrismaService, UtilitiesRepository, AwsService]
 })
-export class UtilitiesModule { }
+export class UtilitiesModule {}

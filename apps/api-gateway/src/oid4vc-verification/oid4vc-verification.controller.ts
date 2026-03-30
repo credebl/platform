@@ -50,6 +50,7 @@ import { PresentationRequestDto, VerificationPresentationQueryDto } from './dtos
 import { Oid4vpPresentationWhDto } from '../oid4vc-issuance/dtos/oid4vp-presentation-wh.dto';
 import { CreateVerificationTemplateDto, UpdateVerificationTemplateDto } from './dtos/verification-template.dto';
 import { CreateIntentBasedVerificationDto } from './dtos/create-intent-based-verification.dto';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 import { VerifyAuthorizationResponseDto } from './dtos/verify-authorization-response.dto';
 
 @Controller()
@@ -318,6 +319,7 @@ export class Oid4vcVerificationController {
     description: 'Verification presentation created successfully.',
     type: ApiResponseDto
   })
+  @ApiQuery({ name: 'ecosystemId', required: true })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -340,19 +342,29 @@ export class Oid4vcVerificationController {
       })
     )
     verifierId: string,
+    @Query(
+      'ecosystemId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid ecosystem ID');
+        }
+      })
+    )
+    ecosystemId: string,
     @User() user: user,
     @Body() createIntentDto: CreateIntentBasedVerificationDto,
     @Res() res: Response
   ): Promise<Response> {
     this.logger.debug(
-      `[createIntentBasedVerificationPresentation] Called with orgId=${orgId}, verifierId=${verifierId}, intent=${createIntentDto?.intent}, user=${user.id}`
+      `[createIntentBasedVerificationPresentation] Called with orgId=${orgId}, verifierId=${verifierId}, intent=${createIntentDto?.intent}, ecosystemId=${ecosystemId}, user=${user.id}`
     );
 
     const presentation = await this.oid4vcVerificationService.createIntentBasedVerificationPresentation(
       orgId,
       verifierId,
       createIntentDto,
-      user
+      user,
+      ecosystemId
     );
 
     this.logger.debug(`[createIntentBasedVerificationPresentation] Presentation created successfully`);
@@ -400,14 +412,14 @@ export class Oid4vcVerificationController {
 
       return res.status(HttpStatus.OK).json({
         success: true,
-        message: 'Verifier details retrieved successfully.',
+        message: 'Verification presentation details retrieved successfully.',
         data: result
       });
     } catch (error) {
       this.logger.debug(
-        `Error in getVerificationPresentation(): ${error.message || 'Failed to fetch verifier presentation.'}`
+        `Error in getVerificationPresentation(): ${error.message || 'Failed to fetch verification presentation.'}`
       );
-      throw new BadRequestException(error.message || 'Failed to fetch verifier presentation.');
+      throw new BadRequestException(error.message || 'Failed to fetch verification presentation.');
     }
   }
 
@@ -456,19 +468,19 @@ export class Oid4vcVerificationController {
       );
 
       this.logger.debug(
-        `Verifier presentation response details fetched successfully for verificationPresentationId: ${verificationPresentationId}`
+        `Verification presentation response details fetched successfully for verificationPresentationId: ${verificationPresentationId}`
       );
 
       return res.status(HttpStatus.OK).json({
         success: true,
-        message: 'Verifier presentation response details retrieved successfully.',
+        message: 'Verification presentation response details retrieved successfully.',
         data: result
       });
     } catch (error) {
       this.logger.debug(
-        `Error in getVerificationPresentationResponse(): ${error.message || 'Failed to fetch verifier presentation response details.'}`
+        `Error in getVerificationPresentationResponse(): ${error.message || 'Failed to fetch verification presentation response details.'}`
       );
-      throw new BadRequestException(error.message || 'Failed to fetch verifier presentation response details.');
+      throw new BadRequestException(error.message || 'Failed to fetch verification presentation response details.');
     }
   }
   /**
@@ -490,6 +502,10 @@ export class Oid4vcVerificationController {
     @Res() res: Response
   ): Promise<Response> {
     oid4vpPresentationWhDto.type = 'Oid4vpPresentation';
+    oid4vpPresentationWhDto.contextCorrelationId = oid4vpPresentationWhDto.contextCorrelationId?.replace(
+      /^tenant-/,
+      ''
+    );
     if (id && 'default' === oid4vpPresentationWhDto.contextCorrelationId) {
       oid4vpPresentationWhDto.orgId = id;
     }
@@ -501,20 +517,24 @@ export class Oid4vcVerificationController {
       data: []
     };
 
-    const webhookUrl = await this.oid4vcVerificationService
+    void this.oid4vcVerificationService
       ._getWebhookUrl(oid4vpPresentationWhDto?.contextCorrelationId, id)
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        this.logger.log(`posting webhook response to webhook url`);
+        return this.oid4vcVerificationService._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: oid4vpPresentationWhDto },
+          webhookUrlInfo.webhookSecret
+        );
+      })
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        this.logger.error(
+          `error in webhook dispatch flow ::: ${error?.message ?? error?.stack ?? JSON.stringify(error)}`
+        );
       });
-
-    if (webhookUrl) {
-      this.logger.log(`posting webhook response to webhook url`);
-      await this.oid4vcVerificationService
-        ._postWebhookResponse(webhookUrl, { data: oid4vpPresentationWhDto })
-        .catch((error) => {
-          this.logger.debug(`error in posting webhook response to webhook url ::: ${JSON.stringify(error)}`);
-        });
-    }
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

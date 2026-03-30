@@ -269,7 +269,7 @@ export class PlatformController {
     description: 'Invitations fetched successfully'
   })
   @Roles(OrgRoles.PLATFORM_ADMIN)
-  @UseGuards(AuthGuard('jwt'), OrgRolesGuard, EcosystemFeatureGuard)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   @ApiBearerAuth()
   async getInvitations(
     @User() reqUser: user,
@@ -324,7 +324,6 @@ export class PlatformController {
     status: HttpStatus.OK,
     description: 'Ecosystem status fetched successfully'
   })
-  @Roles(OrgRoles.PLATFORM_ADMIN)
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
   async getEcosystemEnableStatus(@Res() res: Response): Promise<Response> {
@@ -334,6 +333,28 @@ export class PlatformController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.ecosystem.success.ecosystemStatus,
       data: ecosystemStatus
+    });
+  }
+
+  @Get('/ecosystem/dashboard/summary')
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get summary for Ecosystem dashboard',
+    description: 'Get summary for Ecosystem dashboard'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Dashboard count fetched successfully'
+  })
+  async getDashboardCountEcosystem(@Res() res: Response): Promise<Response> {
+    const dashboard = await this.platformService.getDashboardCountEcosystem();
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.ecosystem.success.dashboard,
+      data: dashboard
     });
   }
 }

@@ -8,7 +8,8 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   Inject,
-  HttpException
+  HttpException,
+  ForbiddenException
 } from '@nestjs/common';
 
 import { ClientRegistrationService } from '@credebl/client-registration';
@@ -139,6 +140,9 @@ export class UserService {
 
       const clientDetails = await getCredentialsByAlias(clientAlias);
 
+      if (process.env.ADMIN_CLIENT_ALIAS === clientAlias) {
+        throw new ForbiddenException(ResponseMessages.user.error.adminAlias);
+      }
       try {
         const token = await this.clientRegistrationService.getManagementToken(
           clientDetails.clientId,

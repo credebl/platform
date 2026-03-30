@@ -19,6 +19,7 @@ import { EcosystemSwaggerFilter } from './authz/guards/ecosystem-swagger.filter'
 import { FidoModule } from './fido/fido.module';
 import { GeoLocationModule } from './geo-location/geo-location.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { KeycloakConfigModule } from '@credebl/keycloak-config';
 import { IssuanceModule } from './issuance/issuance.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { NotificationModule } from './notification/notification.module';
@@ -48,7 +49,11 @@ import { shouldLoadOidcModules } from '@credebl/common/common.utils';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.API_GATEWAY_SERVICE,
+          process.env.API_GATEWAY_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     AgentModule,
@@ -73,7 +78,8 @@ import { shouldLoadOidcModules } from '@credebl/common/common.utils';
     CloudWalletModule,
     ConditionalModule.registerWhen(Oid4vcIssuanceModule, shouldLoadOidcModules),
     ConditionalModule.registerWhen(Oid4vpModule, shouldLoadOidcModules),
-    ConditionalModule.registerWhen(X509Module, shouldLoadOidcModules)
+    ConditionalModule.registerWhen(X509Module, shouldLoadOidcModules),
+    KeycloakConfigModule
   ],
   controllers: [AppController],
   providers: [

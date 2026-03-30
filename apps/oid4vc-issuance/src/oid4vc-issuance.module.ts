@@ -21,7 +21,11 @@ import { StatusListAllocatorService } from './status-list-allocator.service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.OIDC4VC_ISSUANCE_SERVICE, process.env.OIDC4VC_ISSUANCE_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.OIDC4VC_ISSUANCE_SERVICE,
+          process.env.OIDC4VC_ISSUANCE_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,

@@ -22,6 +22,9 @@ type CredentialDisplayItem = {
   name: string;
   locale?: string;
   description?: string;
+  background_image?: { uri: string };
+  background_color?: string;
+  text_color?: string;
 };
 type Appearance = {
   display: CredentialDisplayItem[];
@@ -368,12 +371,19 @@ export function buildCredentialConfigurationsSupported(templateRows: any): Recor
         name: displayEntry.name,
         description: displayEntry.description,
         locale: displayEntry.locale,
-        logo: displayEntry.logo
+        logo: displayEntry?.logo
           ? {
               uri: displayEntry.logo.uri,
               alt_text: displayEntry.logo.alt_text
             }
-          : undefined
+          : undefined,
+        background_image: displayEntry?.background_image?.uri
+          ? {
+              uri: displayEntry.background_image.uri
+            }
+          : undefined,
+        background_color: displayEntry.background_color,
+        text_color: displayEntry.text_color
       })) ?? [];
 
     // eslint-disable-next-line prefer-destructuring

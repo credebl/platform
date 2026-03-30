@@ -1,4 +1,3 @@
-
 import { CommonModule, CommonService } from '@credebl/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
@@ -18,8 +17,11 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.NOTIFICATION_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
-
+        options: getNatsOptions(
+          CommonConstants.NOTIFICATION_SERVICE,
+          process.env.API_GATEWAY_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       },
       CommonModule
     ])
@@ -27,4 +29,4 @@ import { NATSClient } from '@credebl/common/NATSClient';
   controllers: [NotificationController],
   providers: [NotificationService, CommonService, NATSClient]
 })
-export class NotificationModule { }
+export class NotificationModule {}

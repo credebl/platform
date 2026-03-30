@@ -7,7 +7,7 @@ import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-
 import { IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
-import { IEcosystemInvitations } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IEcosystemInvitations, IPlatformDashboardCount } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { IPaginationSortingDto, PaginatedResponse } from '@credebl/common/interfaces/interface';
 
 @Injectable()
@@ -85,5 +85,9 @@ export class PlatformService extends BaseService {
 
   async getEcosystemEnableStatus(): Promise<boolean> {
     return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-ecosystem-enable-status', {});
+  }
+
+  async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
+    return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-platform-admin-dashboard-count', {});
   }
 }

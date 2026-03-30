@@ -40,7 +40,11 @@ async function bootstrap(): Promise<void> {
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,
-    options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+    options: getNatsOptions(
+      CommonConstants.API_GATEWAY_SERVICE,
+      process.env.API_GATEWAY_NKEY_SEED,
+      process.env.NATS_CREDS_FILE
+    )
   });
 
   const expressApp = app.getHttpAdapter().getInstance();

@@ -10,7 +10,7 @@ import { X509Module } from './x509.module';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(X509Module, {
     transport: Transport.NATS,
-    options: getNatsOptions(CommonConstants.X509_SERVICE, process.env.X509_NKEY_SEED)
+    options: getNatsOptions(CommonConstants.X509_SERVICE, process.env.X509_NKEY_SEED, process.env.NATS_CREDS_FILE)
   });
   app.useLogger(app.get(NestjsLoggerServiceAdapter));
   app.useGlobalFilters(new HttpExceptionFilter());

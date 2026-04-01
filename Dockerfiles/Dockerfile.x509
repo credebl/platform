@@ -1,7 +1,7 @@
 # Stage 1: Build the application
 FROM node:24-alpine3.21 AS build
 RUN apk update && apk upgrade && apk add --no-cache openssl=3.3.6-r0 \
-     && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/*
 RUN npm install -g pnpm@9.15.3 --ignore-scripts
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -22,6 +22,5 @@ WORKDIR /app
 COPY --from=build /app/dist/apps/x509/ ./dist/apps/x509/
 COPY --from=build /app/libs/ ./libs/
 COPY --from=build /app/node_modules ./node_modules
-RUN find ./node_modules -type d -name ".prisma" -exec chown -R nextjs:nodejs {} +
 USER nextjs
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/x509/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/x509/main.js"]

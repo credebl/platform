@@ -21,6 +21,5 @@ WORKDIR /app
 COPY --from=build /app/dist/apps/notification/ ./dist/apps/notification/
 COPY --from=build /app/libs/ ./libs/
 COPY --from=build /app/node_modules ./node_modules
-RUN find ./node_modules -type d -name ".prisma" -exec chown -R nextjs:nodejs {} +
 USER nextjs
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/notification/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/notification/main.js"]

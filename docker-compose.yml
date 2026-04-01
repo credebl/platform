@@ -118,6 +118,7 @@ services:
       - ./.env
     environment:
       - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
+    user: root
     volumes:
       - $PWD/apps/agent-provisioning/AFJ/agent-config:/app/agent-provisioning/AFJ/agent-config
       - /var/run/docker.sock:/var/run/docker.sock
@@ -138,6 +139,7 @@ services:
     image: ghcr.io/credebl/agent-service:latest
     env_file:
       - ./.env
+    user: root
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     volumes_from:

@@ -13,4 +13,4 @@ RUN pnpm i --frozen-lockfile --ignore-scripts \
     && cd libs/prisma-service && npx prisma generate \
     && chown -R nextjs:nodejs /app
 USER nextjs
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma db seed"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma db seed"]

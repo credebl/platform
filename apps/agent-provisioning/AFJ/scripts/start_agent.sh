@@ -126,7 +126,7 @@ cat <<EOF >"$CONFIG_FILE"
   "walletPassword": "$WALLET_STORAGE_PASSWORD",
   "walletAdminAccount": "$WALLET_STORAGE_USER",
   "walletAdminPassword": "$WALLET_STORAGE_PASSWORD",
-  "walletScheme": "DatabasePerWallet",
+  "walletScheme": "ProfilePerWallet",
   "indyLedger": $INDY_LEDGER,
   "endpoint": [
     "$AGENT_ENDPOINT"

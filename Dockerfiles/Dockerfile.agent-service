@@ -33,4 +33,4 @@ COPY --from=build /app/dist/apps/agent-service/ ./dist/apps/agent-service/
 COPY --from=build /app/libs/ ./libs/
 COPY --from=build /app/node_modules ./node_modules
 USER nextjs
-CMD ["node", "dist/apps/agent-service/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deployy && cd ../.. && node dist/apps/agent-service/main.js"]

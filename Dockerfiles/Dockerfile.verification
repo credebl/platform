@@ -19,8 +19,9 @@ RUN apk update && apk upgrade && apk add --no-cache openssl=3.3.6-r0 \
     && addgroup -g 1001 -S nodejs \
     && adduser -S nextjs -u 1001
 WORKDIR /app
-COPY --from=build --chown=nextjs:nodejs /app/dist/apps/verification/ ./dist/apps/verification/
-COPY --from=build --chown=nextjs:nodejs /app/libs/ ./libs/
-COPY --from=build --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=build /app/dist/apps/verification/ ./dist/apps/verification/
+COPY --from=build /app/libs/ ./libs/
+COPY --from=build /app/node_modules ./node_modules
+RUN find ./node_modules -type d -name ".prisma" -exec chown -R nextjs:nodejs {} +
 USER nextjs
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/verification/main.js"]

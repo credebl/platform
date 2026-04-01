@@ -23,4 +23,4 @@ COPY --from=build /app/dist/apps/geo-location/ ./dist/apps/geo-location/
 COPY --from=build /app/libs/ ./libs/
 COPY --from=build /app/node_modules ./node_modules
 USER nextjs
-CMD ["node", "dist/apps/geo-location/main.js"]
+CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/geo-location/main.js"]

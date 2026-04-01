@@ -124,7 +124,7 @@ cat <<EOF >/app/agent-provisioning/AFJ/agent-config/${AGENCY}_${CONTAINER_NAME}.
   "walletPassword": "$WALLET_STORAGE_PASSWORD",
   "walletAdminAccount": "$WALLET_STORAGE_USER",
   "walletAdminPassword": "$WALLET_STORAGE_PASSWORD",
-  "walletScheme": "DatabasePerWallet",
+  "walletScheme": "ProfilePerWallet",
   "indyLedger": $INDY_LEDGER,
   "endpoint": [
     "$INBOUND_ENDPOINT"

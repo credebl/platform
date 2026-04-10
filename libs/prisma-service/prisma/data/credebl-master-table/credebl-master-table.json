@@ -26,7 +26,7 @@
     "createdBy": "",
     "lastChangedBy": ""
   },
-  "platformAdminKeycloakPassword":"Admin@123",
+  "platformAdminKeycloakPassword":"##Please provide encrypted password using crypto-js##",
   "orgRoleData": [
     {
       "name": "owner",

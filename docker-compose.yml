@@ -2,16 +2,17 @@ version: '3'
 
 services:
   nats:
-    container_name: nats
-    entrypoint: '/nats-server -c /nats-server.conf -DV'  # Corrected the path to nats-server.conf
+    container_name: credebl-nats
     image: nats
+    command: ["-c", "/nats-server.conf"]
     ports:
       - '4222:4222'
       - '6222:6222'
       - '8222:8222'
-   # volumes:
-    #  - ./nats-server.conf:/nats-server.conf  # Mount the config file
+    volumes:
+      - ./nats-server.conf:/nats-server.conf:ro
   redis:
+    container_name: credebl-redis
     image: redis:6.2-alpine
     restart: always
     ports:
@@ -19,6 +20,22 @@ services:
     command: redis-server --save 20 1 --loglevel warning
     volumes: 
       - cache:/data
+  postgres:
+    container_name: credebl-postgres
+    image: postgres:16
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=credebl
+    volumes:
+      - platform-volume:/var/lib/postgresql/data
   seed:
     container_name: seed-service
     image: ghcr.io/credebl/seed:latest
@@ -26,7 +43,17 @@ services:
       - ./.env
     volumes:
       - $PWD/libs/prisma-service/prisma/data/credebl-master-table/credebl-master-table.json:/app/libs/prisma-service/prisma/data/credebl-master-table.json
+  schema-file-server:
+    container_name: schema-file-server
+    image: ghcr.io/credebl/schema-file-server:latest
+    ports:
+      - '4000:4000'
+    env_file:
+      - ./.env
+    volumes:
+      - $PWD/apps/schemas:/app/schemas
   api-gateway:
+    container_name: api-gateway
     depends_on:
       - nats  # Use depends_on instead of needs
       - redis
@@ -35,7 +62,10 @@ services:
       - '5000:5000'
     env_file:
       - ./.env
+    volumes:
+    - $PWD/apps/uploadedFiles/exports:/app/uploadedFiles/exports
   user:
+    container_name: user-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -43,6 +73,7 @@ services:
     env_file:
       - ./.env
   utility:
+    container_name: utility-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -50,6 +81,7 @@ services:
     env_file:
       - ./.env
   connection:
+    container_name: connection-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -59,6 +91,7 @@ services:
     env_file:
       - ./.env
   issuance:
+    container_name: issuance-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - redis
@@ -68,7 +101,10 @@ services:
     image: ghcr.io/credebl/issuance:latest
     env_file:
       - ./.env
+    volumes:
+    - $PWD/apps/uploadedFiles/exports:/app/uploadedFiles/exports
   ledger:
+    container_name: ledger-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -79,6 +115,7 @@ services:
     env_file:
       - ./.env
   organization:
+    container_name: organization-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -90,6 +127,7 @@ services:
     env_file:
       - ./.env
   verification:
+    container_name: verification-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -102,6 +140,7 @@ services:
     env_file:
       - ./.env
   agent-provisioning:
+    container_name: agent-provisioning-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -122,9 +161,9 @@ services:
     volumes:
       - $PWD/apps/agent-provisioning/AFJ/agent-config:/app/agent-provisioning/AFJ/agent-config
       - /var/run/docker.sock:/var/run/docker.sock
-      - /app/agent-provisioning/AFJ/token:/app/agent-provisioning/AFJ/token
       - $PWD/agent.env:/app/agent.env
   agent-service:
+    container_name: agent-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
@@ -145,6 +184,7 @@ services:
     volumes_from:
       - agent-provisioning
   cloud-wallet:
+    container_name: cloud-wallet-service
     depends_on:
       - nats
       - api-gateway
@@ -152,6 +192,7 @@ services:
     env_file:
       - ./.env
   geolocation:
+    container_name: geolocation-service
     depends_on:
       - nats
       - api-gateway
@@ -159,6 +200,7 @@ services:
     env_file:
       - ./.env
   notification:
+    container_name: notification-service
     depends_on:
       - nats
       - api-gateway
@@ -166,6 +208,7 @@ services:
     env_file:
       - ./.env
   webhook:
+    container_name: webhook-service
     depends_on:
       - nats
       - api-gateway
@@ -173,6 +216,7 @@ services:
     env_file:
       - ./.env
   ecosystem:
+    container_name: ecosystem-service
     depends_on:
       - nats
       - api-gateway
@@ -182,6 +226,7 @@ services:
     env_file:
       - ./.env
   oid4vc-issuance:
+    container_name: oid4vc-issuance-service
     depends_on:
       - nats
       - api-gateway
@@ -191,6 +236,7 @@ services:
     env_file:
       - ./.env
   oid4vc-verification:
+    container_name: oid4vc-verification-service
     depends_on:
       - nats
       - api-gateway
@@ -200,17 +246,13 @@ services:
     env_file:
       - ./.env
   x509:
+    container_name: x509-service
     depends_on:
       - nats
       - api-gateway
     build:
       context: ./  # Adjust the context path as needed
       dockerfile: Dockerfiles/Dockerfile.x509
-    env_file:
-      - ./.env
-  schema-file-server:
-    container_name: schema-file-server
-    image: ghcr.io/credebl/schema-file-server:latest
     env_file:
       - ./.env
   

@@ -47,6 +47,7 @@ import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { EcosystemService } from '../ecosystem.service';
 import { ForbiddenErrorDto } from '../../dtos/forbidden-error.dto';
+import { CreateIntentNoticeDto, UpdateIntentNoticeDto } from '../../oid4vc-verification/dtos/create-intent-notice.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('intent')
@@ -608,6 +609,185 @@ export class IntentController {
       statusCode: HttpStatus.OK,
       message: 'Intent template deleted successfully',
       data: intentTemplate
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/notice')
+  @ApiBearerAuth()
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @ApiOperation({ summary: 'Create intent notice', description: 'Stores a notice URL associated with an intent.' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Intent notice created successfully', type: ApiResponseDto })
+  async createIntentNotice(
+    @Body() createIntentNoticeDto: CreateIntentNoticeDto,
+    @User() user: PrismaUser,
+    @Res() res: Response
+  ): Promise<Response> {
+    const result = await this.ecosystemService.createIntentNotice(createIntentNoticeDto, user);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.intentNotice.success.create,
+      data: result
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Get('/notice')
+  @ApiBearerAuth()
+  @Roles(OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @ApiOperation({
+    summary: 'Get intent notices',
+    description: 'Retrieves intent notices. Filter by notice id or intentId (both optional).'
+  })
+  @ApiQuery({ name: 'id', required: false, type: String, description: 'Filter by notice PK UUID (optional)' })
+  @ApiQuery({ name: 'intentId', required: false, type: String, description: 'Filter by intent UUID (optional)' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Intent notices fetched successfully', type: ApiResponseDto })
+  async getIntentNotices(
+    @Res() res: Response,
+    @Query(
+      'id',
+      new ParseUUIDPipe({
+        version: '4',
+        optional: true,
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid notice ID');
+        }
+      })
+    )
+    id?: string,
+    @Query(
+      'intentId',
+      new ParseUUIDPipe({
+        version: '4',
+        optional: true,
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid intent ID');
+        }
+      })
+    )
+    intentId?: string
+  ): Promise<Response> {
+    const result = await this.ecosystemService.getIntentNotices(id, intentId);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.intentNotice.success.fetchAll,
+      data: result
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/ecosystem/:ecosystemId/notice')
+  @ApiBearerAuth()
+  @Roles(OrgRoles.ECOSYSTEM_LEAD, OrgRoles.ECOSYSTEM_MEMBER)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @ApiOperation({
+    summary: 'Get intent notices by ecosystem',
+    description: 'Retrieves all intent notices for an ecosystem with pagination, search, and optional intent filter.'
+  })
+  @ApiQuery({ name: 'pageNumber', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number, description: 'Page size (default: 10, max: 100)' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search by notice URL' })
+  @ApiQuery({ name: 'intentId', required: false, type: String, description: 'Filter by intent UUID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Intent notices fetched successfully', type: ApiResponseDto })
+  async getIntentNoticesByEcosystemId(
+    @Param(
+      'ecosystemId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.ecosystem.error.invalidFormatOfEcosystemId);
+        }
+      })
+    )
+    ecosystemId: string,
+    @Query() pageDto: PaginationDto,
+    @Query(
+      'intentId',
+      new ParseUUIDPipe({
+        version: '4',
+        optional: true,
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid intent ID');
+        }
+      })
+    )
+    intentId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const result = await this.ecosystemService.getIntentNoticesByEcosystemId(
+      ecosystemId,
+      pageDto.pageNumber,
+      pageDto.pageSize,
+      pageDto.search,
+      intentId
+    );
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.intentNotice.success.fetchAll,
+      data: result
+    });
+  }
+
+  @Put('/notice/:id')
+  @ApiBearerAuth()
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @ApiOperation({
+    summary: 'Update intent notice',
+    description: 'Updates the notice URL for a given notice ID.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Intent notice updated successfully', type: ApiResponseDto })
+  async updateIntentNotice(
+    @Param(
+      'id',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid notice ID');
+        }
+      })
+    )
+    id: string,
+    @Body() updateIntentNoticeDto: UpdateIntentNoticeDto,
+    @User() user: PrismaUser,
+    @Res() res: Response
+  ): Promise<Response> {
+    const result = await this.ecosystemService.updateIntentNotice(id, updateIntentNoticeDto, user);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.intentNotice.success.update,
+      data: result
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Delete('/notice/:id')
+  @ApiBearerAuth()
+  @Roles(OrgRoles.ECOSYSTEM_LEAD)
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @ApiOperation({ summary: 'Delete intent notice', description: 'Deletes an intent notice by its ID.' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Intent notice deleted successfully', type: ApiResponseDto })
+  async deleteIntentNotice(
+    @Param(
+      'id',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid notice ID');
+        }
+      })
+    )
+    id: string,
+    @User() user: PrismaUser,
+    @Res() res: Response
+  ): Promise<Response> {
+    const result = await this.ecosystemService.deleteIntentNotice(id, user);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.intentNotice.success.delete,
+      data: result
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }

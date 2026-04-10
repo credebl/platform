@@ -22,6 +22,7 @@ export interface CreateCredentialTemplate {
   appearance?: Prisma.JsonValue;
   issuerId: string;
   template: SdJwtTemplate | MdocTemplate;
+  noticeUrl?: string;
 }
 
 export interface UpdateCredentialTemplate extends Partial<CreateCredentialTemplate> {}

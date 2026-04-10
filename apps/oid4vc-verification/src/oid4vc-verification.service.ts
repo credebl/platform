@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
+import { fetchConsentNotice } from './oid4vc-verification.helper';
 
 import {
   BadRequestException,
@@ -313,10 +314,11 @@ export class Oid4vpVerificationService extends BaseService {
     responseMode: string,
     requestSigner: IRequestSigner,
     userDetails: user,
+    ecosystemId: string,
     expectedOrigins?: string[]
   ): Promise<object> {
     this.logger.debug(
-      `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
+      `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, ecosystemId=${ecosystemId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
     );
     try {
       // Fetch agent details
@@ -339,7 +341,7 @@ export class Oid4vpVerificationService extends BaseService {
       const templateData = await this.natsClient.sendNatsMessage(
         this.oid4vpVerificationServiceProxy,
         'get-intent-template-by-intent-and-org',
-        { intentName: intent, verifierOrgId: orgId }
+        { intentName: intent, verifierOrgId: orgId, ecosystemId }
       );
 
       if (!templateData) {
@@ -405,6 +407,29 @@ export class Oid4vpVerificationService extends BaseService {
       this.logger.debug(
         `[createIntentBasedVerificationPresentation] verification presentation created successfully for orgId=${orgId}`
       );
+      if (createdSession) {
+        const intentId: string = templateData?.intentId;
+        if (intentId) {
+          const intentNotice: any = await this.natsClient
+            .sendNatsMessage(this.oid4vpVerificationServiceProxy, 'get-intent-notice-by-intent-id', {
+              intentId,
+              orgId
+            })
+            .catch(() => null);
+
+          if (intentNotice?.noticeUrl) {
+            createdSession.consentNoticeUrl = await fetchConsentNotice(
+              intentNotice.noticeUrl,
+              createdSession.verificationSession.id
+            ).catch((err) => {
+              this.logger.warn(
+                `[createIntentBasedVerificationPresentation] consent notice enrichment failed: ${err?.message}`
+              );
+              return null;
+            });
+          }
+        }
+      }
       return createdSession;
     } catch (error) {
       this.logger.error(

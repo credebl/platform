@@ -129,6 +129,7 @@ services:
       - ./.env
     environment:
       - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
+    user: root
     volumes:
       - $PWD/apps/agent-provisioning/AFJ/agent-config:/app/agent-provisioning/AFJ/agent-config
       - /var/run/docker.sock:/var/run/docker.sock
@@ -151,6 +152,7 @@ services:
       dockerfile: Dockerfiles/Dockerfile.agent-service
     env_file:
       - ./.env
+    user: root
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     volumes_from:
@@ -191,9 +193,42 @@ services:
       dockerfile: Dockerfiles/Dockerfile.webhook
     env_file:
       - ./.env
-  
-  
-
+  ecosystem:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.ecosystem
+    env_file:
+      - ./.env
+  oid4vc-issuance:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.oid4vc-issuance
+    env_file:
+      - ./.env
+  oid4vc-verification:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.oid4vc-verification
+    env_file:
+      - ./.env
+  x509:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.x509
+    env_file:
+      - ./.env
   
 volumes:
   cache:

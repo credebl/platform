@@ -319,6 +319,7 @@ export class Oid4vcVerificationController {
     description: 'Verification presentation created successfully.',
     type: ApiResponseDto
   })
+  @ApiQuery({ name: 'ecosystemId', required: true })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
@@ -341,19 +342,29 @@ export class Oid4vcVerificationController {
       })
     )
     verifierId: string,
+    @Query(
+      'ecosystemId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException('Invalid ecosystem ID');
+        }
+      })
+    )
+    ecosystemId: string,
     @User() user: user,
     @Body() createIntentDto: CreateIntentBasedVerificationDto,
     @Res() res: Response
   ): Promise<Response> {
     this.logger.debug(
-      `[createIntentBasedVerificationPresentation] Called with orgId=${orgId}, verifierId=${verifierId}, intent=${createIntentDto?.intent}, user=${user.id}`
+      `[createIntentBasedVerificationPresentation] Called with orgId=${orgId}, verifierId=${verifierId}, intent=${createIntentDto?.intent}, ecosystemId=${ecosystemId}, user=${user.id}`
     );
 
     const presentation = await this.oid4vcVerificationService.createIntentBasedVerificationPresentation(
       orgId,
       verifierId,
       createIntentDto,
-      user
+      user,
+      ecosystemId
     );
 
     this.logger.debug(`[createIntentBasedVerificationPresentation] Presentation created successfully`);

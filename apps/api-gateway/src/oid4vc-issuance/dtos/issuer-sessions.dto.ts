@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-operators */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 import {
@@ -185,6 +186,14 @@ export class CreateOidcCredentialOfferDto {
   @IsString()
   @IsIn(['preAuthorizedCodeFlow', 'authorizationCodeFlow'])
   authorizationType!: 'preAuthorizedCodeFlow' | 'authorizationCodeFlow';
+
+  @ApiPropertyOptional({
+    example: 'https://dev-consent.sovio.id/api/consent-notice/CN-OGL70CWB',
+    description: 'Optional notice URL to attach in the response when multiple credentials are offered.'
+  })
+  @IsOptional()
+  @IsUrl()
+  noticeUrl?: string;
 
   issuerId?: string;
 }

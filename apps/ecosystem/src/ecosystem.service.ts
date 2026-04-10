@@ -16,6 +16,7 @@ import {
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
+import { validateNoticeUrl } from './ecosystem.helper';
 import { CreateEcosystemInviteTemplate } from '../templates/create-ecosystem.templates';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { InviteMemberToEcosystem } from '../templates/invite-member-template';
@@ -728,9 +729,17 @@ export class EcosystemService {
     }
   }
 
-  async getIntentTemplateByIntentAndOrg(intentName: string, verifierOrgId: string): Promise<object | null> {
+  async getIntentTemplateByIntentAndOrg(
+    intentName: string,
+    verifierOrgId: string,
+    ecosystemId?: string
+  ): Promise<object | null> {
     try {
-      const intentTemplate = await this.ecosystemRepository.getIntentTemplateByIntentAndOrg(intentName, verifierOrgId);
+      const intentTemplate = await this.ecosystemRepository.getIntentTemplateByIntentAndOrg(
+        intentName,
+        verifierOrgId,
+        ecosystemId
+      );
       if (!intentTemplate) {
         this.logger.log(
           `[getIntentTemplateByIntentAndOrg] - No template found for intent ${intentName} and org ${verifierOrgId}`
@@ -1004,5 +1013,165 @@ export class EcosystemService {
 
   async getCreateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
     return this.ecosystemRepository.getCreateEcosystemInvitationStatus(email, status);
+  }
+
+  // Intent Notice CRUD
+
+  private async validateEcosystemLead(userId: string, ecosystemId: string): Promise<void> {
+    const isLead = await this.ecosystemRepository.isEcosystemLead(userId, ecosystemId);
+    if (!isLead) {
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: 'Only Ecosystem Lead can perform this action.'
+      });
+    }
+  }
+
+  async createIntentNotice(intentId: string, noticeUrl: string, userId: string, orgId?: string): Promise<object> {
+    try {
+      await validateNoticeUrl(noticeUrl);
+
+      const intent = await this.ecosystemRepository.findIntentById(intentId);
+
+      if (!intent) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.intentNotice.error.intentNotFound
+        });
+      }
+      await this.validateEcosystemLead(userId, intent['ecosystemId']);
+
+      if (orgId) {
+        const orgEcosystemMembership = await this.ecosystemRepository.getEcosystemOrg(intent['ecosystemId'], orgId);
+        if (!orgEcosystemMembership) {
+          throw new RpcException({
+            statusCode: HttpStatus.FORBIDDEN,
+            message: 'The provided orgId is not a member or lead of this ecosystem.'
+          });
+        }
+      }
+
+      const isAlreadyExists = await this.ecosystemRepository.intentNoticeExists(intentId, orgId ?? null);
+      if (isAlreadyExists) {
+        const slotLabel = orgId ? `orgId ${orgId}` : 'no orgId';
+        throw new RpcException({
+          statusCode: HttpStatus.CONFLICT,
+          message: `An intent notice with ${slotLabel} already exists for this intent.`
+        });
+      }
+      return await this.ecosystemRepository.createIntentNotice(intentId, noticeUrl, userId, orgId);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.create);
+      this.logger.error(
+        `[createIntentNotice] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentNotices(id?: string, intentId?: string): Promise<object[]> {
+    try {
+      const records = await this.ecosystemRepository.getIntentNotices(id, intentId);
+      if (!records || 0 === records.length) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.intentNotice.error.notFound
+        });
+      }
+      return records;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.notFound);
+      this.logger.error(
+        `[getIntentNotices] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentNoticesByEcosystemId(
+    ecosystemId: string,
+    pageNumber: number,
+    pageSize: number,
+    search: string,
+    intentId?: string
+  ): Promise<object> {
+    try {
+      return await this.ecosystemRepository.getIntentNoticesByEcosystemId(
+        ecosystemId,
+        pageNumber,
+        pageSize,
+        search,
+        intentId
+      );
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.notFound);
+      this.logger.error(
+        `[getIntentNoticesByEcosystemId] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentNoticeByIntentId(intentId: string, orgId?: string | null): Promise<object | null> {
+    try {
+      return await this.ecosystemRepository.getIntentNoticeByIntentId(intentId, orgId);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.notFound);
+      this.logger.error(
+        `[getIntentNoticeByIntentId] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async updateIntentNotice(id: string, noticeUrl: string, userId: string): Promise<object> {
+    try {
+      await validateNoticeUrl(noticeUrl);
+      const [notice] = await this.ecosystemRepository.getIntentNotices(id);
+      if (!notice) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.intentNotice.error.notFound
+        });
+      }
+      const intent = await this.ecosystemRepository.findIntentById(notice['intentId']);
+      await this.validateEcosystemLead(userId, intent['ecosystemId']);
+
+      return await this.ecosystemRepository.updateIntentNotice(id, noticeUrl, userId);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.updateFailed);
+      this.logger.error(
+        `[updateIntentNotice] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async deleteIntentNotice(id: string, userId: string): Promise<object> {
+    try {
+      const [notice] = await this.ecosystemRepository.getIntentNotices(id);
+      if (!notice) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.intentNotice.error.notFound
+        });
+      }
+      const intent = await this.ecosystemRepository.findIntentById(notice['intentId']);
+      await this.validateEcosystemLead(userId, intent['ecosystemId']);
+
+      return await this.ecosystemRepository.deleteIntentNotice(id);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.deleteFailed);
+      this.logger.error(
+        `[deleteIntentNotice] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
   }
 }

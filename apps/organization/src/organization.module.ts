@@ -31,25 +31,39 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.ORGANIZATION_SERVICE, process.env.ORGANIZATION_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.ORGANIZATION_SERVICE,
+          process.env.ORGANIZATION_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,
     GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [OrganizationController],
   providers: [
-    OrganizationService, OrganizationRepository, PrismaService,
-     Logger, OrgRolesService, UserOrgRolesService, OrgRolesRepository, UserActivityRepository,
-     UserActivityRepository, UserOrgRolesRepository, UserRepository, UserActivityService,
-      ClientRegistrationService,
-      KeycloakUrlService,
-      AwsService,
-      NATSClient
-    ],
-    exports:[OrganizationRepository]
-
+    OrganizationService,
+    OrganizationRepository,
+    PrismaService,
+    Logger,
+    OrgRolesService,
+    UserOrgRolesService,
+    OrgRolesRepository,
+    UserActivityRepository,
+    UserActivityRepository,
+    UserOrgRolesRepository,
+    UserRepository,
+    UserActivityService,
+    ClientRegistrationService,
+    KeycloakUrlService,
+    AwsService,
+    NATSClient
+  ],
+  exports: [OrganizationRepository]
 })
 export class OrganizationModule {}

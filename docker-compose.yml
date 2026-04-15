@@ -174,7 +174,7 @@ services:
       - organization
       - verification
       - agent-provisioning
-    command: sh -c 'until (docker logs platform-agent-provisioning-1 | grep "Agent-Provisioning-Service Microservice is listening to NATS"); do sleep 1; done && node dist/apps/agent-service/main.js'
+    command: sh -c 'until (docker logs agent-provisioning-service | grep "Agent-Provisioning-Service Microservice is listening to NATS"); do sleep 1; done && node dist/apps/agent-service/main.js'
     image: ghcr.io/credebl/agent-service:latest
     env_file:
       - ./.env

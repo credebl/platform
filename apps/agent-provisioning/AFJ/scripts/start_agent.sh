@@ -22,7 +22,7 @@ SCHEMA_FILE_SERVER_URL="${17}"
 AGENT_API_KEY="${18}"
 
 # Validate required parameters
-if [ -z "$AGENCY" ] || [ -z "$EXTERNAL_IP" ] || [ -z "$WALLET_NAME" ]; then
+if [[ -z "$AGENCY" ]] || [[ -z "$EXTERNAL_IP" ]] || [[ -z "$WALLET_NAME" ]]; then
   echo "ERROR: Missing required parameters"
   echo "Usage: $0 AGENCY EXTERNAL_IP WALLET_NAME ..."
   exit 1

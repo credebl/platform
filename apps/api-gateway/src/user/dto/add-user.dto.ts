@@ -42,9 +42,8 @@ export class AddUserDetailsDto {
 
   @ApiPropertyOptional({ example: true, default: true, description: 'Indicates if the password is encrypted' })
   @IsOptional()
-  @Transform(({ value }) => (value !== undefined && null !== value ? value : true))
-  @IsBoolean({ message: 'isPasswordEncrypted should be boolean' })
-  isPasswordEncrypted?: boolean;
+  @IsBoolean({ message: 'isPasswordEncrypted should be boolean. Default is true' })
+  isPasswordEncrypted?: boolean = true;
 }
 
 export class AddPasskeyDetailsDto {

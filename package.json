@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.997.0",
-    "@elastic/ecs-winston-format": "^1.5.3",
     "@nestjs/axios": "catalog:",
     "@nestjs/bull": "catalog:",
     "@nestjs/cache-manager": "catalog:",
@@ -81,7 +80,7 @@
     "express-useragent": "^1.0.15",
     "firebase-admin": "^13.6.1",
     "fs": "0.0.1-security",
-    "generate-password": "^1.7.1", 
+    "generate-password": "^1.7.1",
     "helmet": "^7.2.0",
     "html-pdf": "^3.0.1",
     "html-to-image": "^1.11.13",
@@ -126,7 +125,6 @@
     "web-push": "^3.6.7",
     "winston": "~3.4.0",
     "winston-daily-rotate-file": "^5.0.0",
-    "winston-elasticsearch": "0.16.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
@@ -139,7 +137,7 @@
     "@types/node": "^20.19.33",
     "@types/passport-jwt": "3.0.9",
     "@types/passport-local": "^1.0.38",
-    "@types/supertest": "^2.0.16",
+    "@types/supertest": "^7.2.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.57.1",
@@ -154,7 +152,7 @@
     "lint-staged": "^13.3.0",
     "prettier": "^3.8.1",
     "prisma": "^5.22.0",
-    "supertest": "^6.3.4",
+    "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",

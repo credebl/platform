@@ -2,35 +2,9 @@ import * as winston from 'winston';
 import { Inject, Injectable } from '@nestjs/common';
 import { LogData, LogLevel } from '@credebl/logger/log';
 import Logger from '@credebl/logger/logger.interface';
-import * as Elasticsearch from 'winston-elasticsearch';
-import * as ecsFormat from '@elastic/ecs-winston-format';
 
 export const WinstonLoggerTransportsKey = Symbol();
 let esTransport;
-if ('true' === process.env.ELK_LOG?.toLowerCase()) {
-  const requiredVars = ['LOG_LEVEL', 'ELK_LOG_PATH', 'ELK_USERNAME', 'ELK_PASSWORD'];
-  const missingVars = requiredVars.filter((v) => !process.env[v]);
-  if (0 < missingVars.length) {
-    // eslint-disable-next-line no-console
-    console.warn(`Elasticsearch logging disabled: missing env vars [${missingVars.join(', ')}]`);
-  } else {
-    const esTransportOpts = {
-      level: `${process.env.LOG_LEVEL}`,
-      clientOpts: {
-        node: `${process.env.ELK_LOG_PATH}`,
-        auth: {
-          username: `${process.env.ELK_USERNAME}`,
-          password: `${process.env.ELK_PASSWORD}`
-        }
-      }
-    };
-    esTransport = new Elasticsearch.ElasticsearchTransport(esTransportOpts);
-    esTransport.on('error', (error) => {
-      // eslint-disable-next-line no-console
-      console.error('Elasticsearch transport error:', error);
-    });
-  }
-}
 
 @Injectable()
 export default class WinstonLogger implements Logger {
@@ -58,19 +32,10 @@ export default class WinstonLogger implements Logger {
     return {
       level: LogLevel.Debug,
       levels,
-      // format: ecsFormat.ecsFormat({ convertReqRes: true }),
       format: winston.format.combine(
-        ecsFormat.ecsFormat({ convertReqRes: true }),
-        // Add timestamp and format the date
-        // winston.format.timestamp({
-        //   format: 'DD/MM/YYYY, HH:mm:ss',
-        // }),
-        // Errors will be logged with stack trace
+        winston.format.timestamp(),
         winston.format.errors({ stack: true }),
-        // Add custom Log fields to the log
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        winston.format((info, _opts) => {
-          // Info contains an Error property
+        winston.format((info) => {
           if (info.error && info.error instanceof Error) {
             info.stack = info.error.stack;
             info.error = undefined;
@@ -80,12 +45,10 @@ export default class WinstonLogger implements Logger {
 
           return info;
         })(),
-        // Add custom fields to the data property
         winston.format.metadata({
           key: 'data',
           fillExcept: ['timestamp', 'level', 'message']
         }),
-        // Format the log as JSON
         winston.format.json()
       ),
       transports,

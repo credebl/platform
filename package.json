@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.997.0",
-    "@elastic/ecs-winston-format": "^1.5.3",
     "@nestjs/axios": "catalog:",
     "@nestjs/bull": "catalog:",
     "@nestjs/cache-manager": "catalog:",
@@ -142,7 +141,7 @@
     "@types/node": "^20.19.33",
     "@types/passport-jwt": "3.0.9",
     "@types/passport-local": "^1.0.38",
-    "@types/supertest": "^2.0.16",
+    "@types/supertest": "^7.2.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.57.1",

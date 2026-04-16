@@ -30,7 +30,7 @@ export class AddUserDetailsDto {
   @IsNotEmpty({ message: 'Password is required' })
   password: string;
 
-  @ApiProperty({ example: 'false' })
+  @ApiProperty({ example: false })
   @IsOptional()
   @IsBoolean({ message: 'isPasskey should be boolean' })
   isPasskey?: boolean;

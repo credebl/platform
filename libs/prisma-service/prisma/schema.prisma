@@ -161,6 +161,7 @@ model organisation {
   ecosystemOrgs          ecosystem_orgs[]
   ecosystem_invitations  ecosystem_invitations[]
   status_list_allocations status_list_allocation[]
+  issued_oid4vc_credentials issued_oid4vc_credentials[]
 }
 
 model org_invitations {
@@ -240,7 +241,6 @@ model org_agents {
   org_agent_type      org_agents_type?    @relation(fields: [orgAgentTypeId], references: [id])
   organisation        organisation?       @relation(fields: [orgId], references: [id])
   webhookUrl          String?             @db.VarChar
-  webhookSecret       String?             @db.VarChar
   org_dids            org_dids[]
   oidc_issuer         oidc_issuer[]
   x509_certificates   x509_certificates[]
@@ -601,7 +601,7 @@ model oidc_issuer {
 
 model oid4vc_credentials {
   id                         String   @id @default(uuid()) @db.Uuid
-  orgId                      String   @db.Uuid
+  orgId                      String?  @db.Uuid
   issuanceSessionId          String   @unique
   credentialOfferId          String
   state                      String
@@ -614,7 +614,7 @@ model oid4vc_credentials {
   issuedCredentials          String[]
   publicIssuerId              String
 
-  organisation organisation @relation(fields: [orgId], references: [id])
+  organisation organisation? @relation(fields: [orgId], references: [id])
 
   @@index([credentialConfigurationIds], type: Gin)
 }
@@ -655,10 +655,15 @@ model issued_oid4vc_credentials {
   credentialId      String   @unique
   listId            String   @db.Uuid
   index             Int
-  issuanceSessionId String   @db.VarChar
+  issuanceSessionId String   @db.VarChar(100)
+  orgId             String?  @db.Uuid
   createDateTime    DateTime @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt
   statusListUri     String
+
+  organisation organisation? @relation(fields: [orgId], references: [id])
+
+  @@index([orgId, issuanceSessionId])
 }
 
 enum SignerOption {

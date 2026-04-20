@@ -46,15 +46,32 @@ export class RandomBitmapIndexAllocator {
       throw new Error('No indexes left');
     }
 
-    while (true) {
+    const maxRandomAttempts = 32;
+    for (let i = 0; i < maxRandomAttempts; i++) {
       const idx = randomInt(this.capacity);
-
       if (!this.isSet(idx)) {
         this.set(idx);
         this.allocatedCount++;
         return idx;
       }
     }
+
+    const startByte = randomInt(this.bitmap.length);
+    for (let i = 0; i < this.bitmap.length; i++) {
+      const byteIdx = (startByte + i) % this.bitmap.length;
+      if (255 !== this.bitmap[byteIdx]) {
+        for (let bit = 0; 8 > bit; bit++) {
+          const idx = (byteIdx << 3) + bit;
+          if (idx < this.capacity && !this.isSet(idx)) {
+            this.set(idx);
+            this.allocatedCount++;
+            return idx;
+          }
+        }
+      }
+    }
+
+    throw new Error('No indexes left');
   }
 
   public isIndexAllocated(index: number): boolean {
@@ -149,6 +166,7 @@ export class StatusListAllocatorService {
   }
 
   async saveCredentialAllocation(
+    orgId: string,
     credentialId: string,
     listId: string,
     index: number,
@@ -157,6 +175,7 @@ export class StatusListAllocatorService {
   ): Promise<void> {
     await this.prisma.issued_oid4vc_credentials.create({
       data: {
+        orgId,
         credentialId,
         listId,
         index,
@@ -166,9 +185,9 @@ export class StatusListAllocatorService {
     });
   }
 
-  async getCredentialAllocations(issuanceSessionId: string): Promise<issued_oid4vc_credentials[]> {
+  async getCredentialAllocations(orgId: string, issuanceSessionId: string): Promise<issued_oid4vc_credentials[]> {
     return this.prisma.issued_oid4vc_credentials.findMany({
-      where: { issuanceSessionId }
+      where: { orgId, issuanceSessionId }
     });
   }
 

@@ -20,7 +20,8 @@ CREATE TABLE "issued_oid4vc_credentials" (
     "credentialId" TEXT NOT NULL,
     "listId" UUID NOT NULL,
     "index" INTEGER NOT NULL,
-    "issuanceSessionId" VARCHAR NOT NULL,
+    "issuanceSessionId" VARCHAR(100) NOT NULL,
+    "orgId" UUID,
     "createDateTime" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "statusListUri" TEXT NOT NULL,
@@ -36,9 +37,13 @@ CREATE INDEX "status_list_allocation_orgId_isActive_idx" ON "status_list_allocat
 
 -- CreateIndex
 CREATE UNIQUE INDEX "issued_oid4vc_credentials_credentialId_key" ON "issued_oid4vc_credentials"("credentialId");
+CREATE INDEX "issued_oid4vc_credentials_orgId_issuanceSessionId_idx" ON "issued_oid4vc_credentials"("orgId", "issuanceSessionId");
 
 -- AddForeignKey
 ALTER TABLE "status_list_allocation" ADD CONSTRAINT "status_list_allocation_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "issued_oid4vc_credentials" ADD CONSTRAINT "issued_oid4vc_credentials_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "organisation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- Add webhookSecret safely
 ALTER TABLE "org_agents" ADD COLUMN IF NOT EXISTS "webhookSecret" VARCHAR;

@@ -391,8 +391,8 @@ export class AgentServiceController {
   }
 
   @MessagePattern({ cmd: 'agent-service-oid4vc-revoke-credential' })
-  async oidcRevokeCredential(payload: { url: string; orgId: string; statusListDetails?: object }): Promise<object> {
-    return this.agentServiceService.oidcRevokeCredential(payload.url, payload.orgId, payload.statusListDetails);
+  async oidcRevokeCredential(payload: { url: string; orgId: string }): Promise<object> {
+    return this.agentServiceService.oidcRevokeCredential(payload.url, payload.orgId);
   }
 
   @MessagePattern({ cmd: 'agent-create-x509-certificate' })

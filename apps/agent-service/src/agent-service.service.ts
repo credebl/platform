@@ -1489,11 +1489,11 @@ export class AgentServiceService {
     }
   }
 
-  async oidcRevokeCredential(url: string, orgId: string, statusListDetails?: object): Promise<object> {
+  async oidcRevokeCredential(url: string, orgId: string): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
       const data = await this.commonService
-        .httpPost(`${url}`, statusListDetails || {}, { headers: { authorization: getApiKey } })
+        .httpPost(`${url}`, {}, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
       return data;
     } catch (error) {

@@ -667,6 +667,7 @@ export class Oid4vcIssuanceService {
           if (cred.statusListDetails) {
             const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;
             await this.statusListAllocatorService.saveCredentialAllocation(
+              orgId,
               `${issuanceSessionId}-${cred.statusListDetails.index}`,
               cred.statusListDetails.listId,
               cred.statusListDetails.index,
@@ -753,16 +754,12 @@ export class Oid4vcIssuanceService {
           for (const cred of oidcCredentialD2APayload.credentials) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((cred as any).format === CredentialFormat.SdJwtVc && !cred.statusListDetails) {
-              try {
-                const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
-                cred.statusListDetails = {
-                  listId: allocation.listId,
-                  index: allocation.index,
-                  listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
-                };
-              } catch (allocError) {
-                this.logger.warn(`Could not allocate status list index: ${allocError.message}`);
-              }
+              const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
+              cred.statusListDetails = {
+                listId: allocation.listId,
+                index: allocation.index,
+                listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
+              };
             }
           }
         }
@@ -773,7 +770,6 @@ export class Oid4vcIssuanceService {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
       }
 
-      // Save allocations now that we have the session id
       let parsedResponse;
       if ('string' === typeof createCredentialOfferOnAgent.response) {
         parsedResponse = JSON.parse(createCredentialOfferOnAgent.response);
@@ -791,6 +787,7 @@ export class Oid4vcIssuanceService {
           if (cred.statusListDetails) {
             const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;
             await this.statusListAllocatorService.saveCredentialAllocation(
+              orgId,
               `${issuanceSessionId}-${cred.statusListDetails.index}`,
               cred.statusListDetails.listId,
               cred.statusListDetails.index,
@@ -909,7 +906,7 @@ export class Oid4vcIssuanceService {
         throw new BadRequestException('Please provide a valid issuanceSessionId');
       }
 
-      const allocations = await this.statusListAllocatorService.getCredentialAllocations(issuanceSessionId);
+      const allocations = await this.statusListAllocatorService.getCredentialAllocations(orgId, issuanceSessionId);
 
       const url = getAgentUrl(
         await this.getAgentEndpoint(orgId),
@@ -919,25 +916,15 @@ export class Oid4vcIssuanceService {
 
       const pattern = { cmd: 'agent-service-oid4vc-revoke-credential' };
 
-      let lastResponse;
       if (allocations && 0 < allocations.length) {
-        for (const allocation of allocations) {
-          const payload: any = {
-            url,
-            orgId,
-            statusListDetails: {
-              listId: allocation.listId,
-              index: allocation.index,
-              listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
-            }
-          };
-          lastResponse = await this.natsCall(pattern, payload);
-        }
+        const payload: any = {
+          url,
+          orgId
+        };
+        return this.natsCall(pattern, payload);
       } else {
         throw new BadRequestException('Credential is not revocable as no status list allocation was found.');
       }
-
-      return lastResponse;
     } catch (error) {
       this.logger.error(`[revokeCredential] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);

@@ -282,6 +282,14 @@ export class CreateCredentialTemplateDto {
   @Type(() => AppearanceDto)
   appearance?: AppearanceDto;
 
+  @ApiPropertyOptional({
+    example: 'https://dev-consent.sovio.id/api/consent-notice/CN-OGL70CWB',
+    description: 'Optional consent notice URL associated with this credential template'
+  })
+  @IsOptional()
+  @IsString()
+  noticeUrl?: string;
+
   issuerId: string;
 }
 

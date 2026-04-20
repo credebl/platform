@@ -313,7 +313,7 @@ export class Oid4vcIssuanceService {
   ): Promise<credential_templates> {
     try {
       //TODO: add revert mechanism if agent call fails
-      const { name, description, format, canBeRevoked, appearance, signerOption } = credentialTemplate;
+      const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = credentialTemplate;
 
       const checkNameExist = await this.oid4vcIssuanceRepository.getTemplateByNameForIssuer(name, issuerId);
       if (0 < checkNameExist.length) {
@@ -327,7 +327,8 @@ export class Oid4vcIssuanceService {
         attributes: instanceToPlain(credentialTemplate.template),
         appearance: appearance ?? {},
         issuerId,
-        signerOption
+        signerOption,
+        noticeUrl: noticeUrl ?? null
       };
       // Persist in DB
       const createdTemplate = await this.oid4vcIssuanceRepository.createTemplate(issuerId, metadata);
@@ -397,7 +398,7 @@ export class Oid4vcIssuanceService {
         ...updateCredentialTemplate,
         ...(issuerId ? { issuerId } : {})
       };
-      const { name, description, format, canBeRevoked, appearance, signerOption } = normalized;
+      const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = normalized;
       const attributes = instanceToPlain(normalized.template);
 
       const payload = {
@@ -408,7 +409,8 @@ export class Oid4vcIssuanceService {
         ...(attributes !== undefined ? { attributes } : {}),
         ...(appearance !== undefined ? { appearance } : {}),
         ...(issuerId ? { issuerId } : {}),
-        ...(signerOption !== undefined ? { signerOption } : {})
+        ...(signerOption !== undefined ? { signerOption } : {}),
+        ...(noticeUrl !== undefined ? { noticeUrl } : {})
       };
 
       const updatedTemplate = await this.oid4vcIssuanceRepository.updateTemplate(templateId, payload);
@@ -444,7 +446,9 @@ export class Oid4vcIssuanceService {
             canBeRevoked: template.canBeRevoked,
             attributes: template.attributes,
             appearance: template.appearance,
-            issuerId: template.issuerId
+            issuerId: template.issuerId,
+            signerOption: template.signerOption,
+            noticeUrl: template.noticeUrl ?? null
           };
           await this.oid4vcIssuanceRepository.updateTemplate(templateId, rollbackPayload);
           this.logger.log(`Rolled back template ${templateId} to previous state after agent error`);
@@ -648,6 +652,50 @@ export class Oid4vcIssuanceService {
       const createCredentialOfferOnAgent = await this._oidcCreateCredentialOffer(buildOidcCredentialOffer, url, orgId);
       if (!createCredentialOfferOnAgent) {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
+      }
+
+      // Logic to add noticeUrl in response from agent if it is present in template or request payload
+      const { response } = createCredentialOfferOnAgent;
+
+      if (null !== response) {
+        if (1 === filterTemplateIds.length) {
+          const template = await this.oid4vcIssuanceRepository.getTemplateById(filterTemplateIds[0]);
+          if (template?.noticeUrl) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (response as any).noticeUrl = template.noticeUrl;
+          }
+        } else if (createOidcCredentialOffer.noticeUrl) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (response as any).noticeUrl = createOidcCredentialOffer.noticeUrl;
+        }
+      }
+
+      // Revocation logic to save the credential offer id and status list details in DB for later use during revocation
+      let parsedResponse;
+      if ('string' === typeof createCredentialOfferOnAgent.response) {
+        parsedResponse = JSON.parse(createCredentialOfferOnAgent.response);
+      } else {
+        parsedResponse = createCredentialOfferOnAgent.response;
+      }
+
+      const issuanceSessionId =
+        parsedResponse.issuanceSessionId ||
+        parsedResponse.credentialOfferId ||
+        parsedResponse.id ||
+        parsedResponse.issuanceSession?.id;
+      if (issuanceSessionId && createOidcCredentialOffer.isRevocable) {
+        for (const cred of buildOidcCredentialOffer.credentials) {
+          if (cred.statusListDetails) {
+            const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;
+            await this.statusListAllocatorService.saveCredentialAllocation(
+              `${issuanceSessionId}-${cred.statusListDetails.index}`,
+              cred.statusListDetails.listId,
+              cred.statusListDetails.index,
+              issuanceSessionId,
+              statusListUri
+            );
+          }
+        }
       }
 
       let parsedResponse;

@@ -33,7 +33,7 @@ export enum SignerMethodOption {
 
 export interface DisclosureFrame {
   _sd?: string[];
-  [claim: string]: DisclosureFrame | string[] | undefined;
+  [claim: string]: DisclosureFrame | DisclosureFrame[] | string[] | undefined;
 }
 
 export interface validityInfo {
@@ -230,36 +230,46 @@ export function validatePayloadAgainstTemplate(template: any, payload: any): { v
   return { valid: 0 === errors.length, errors };
 }
 
-function buildDisclosureFrameFromTemplate(attributes: CredentialAttribute[]): DisclosureFrame {
+function buildDisclosureFrameFromTemplate(
+  attributes: CredentialAttribute[],
+  payload?: Record<string, any>
+): DisclosureFrame {
   const frame: DisclosureFrame = {};
   const sd: string[] = [];
 
   for (const attr of attributes) {
-    const childFrame =
-      attr.children && 0 < attr.children.length ? buildDisclosureFrameFromTemplate(attr.children) : undefined;
+    const hasChildren = attr.children && 0 < attr.children.length;
 
-    const hasChildDisclosure =
-      childFrame && (childFrame._sd?.length || Object.keys(childFrame).some((k) => '_sd' !== k));
-
-    // Case 1: this attribute itself is disclosed
-    if (attr.disclose) {
-      // If it has children, children are handled separately
-      if (!attr.children || 0 === attr.children.length) {
-        sd.push(attr.key);
-        continue;
+    if (hasChildren) {
+      const payloadValue = payload?.[attr.key];
+      //todo:
+      //1) Need to handle the type validation here to ensure payloadValue is in expected format (object or array of objects)
+      //2) Need to add add validation based on template definition (e.g. if template defines an array, payload must be an array, etc.)
+      if (Array.isArray(payloadValue)) {
+        // Array of objects → [{ _sd: [...] }, ...]
+        const childFrame = buildDisclosureFrameFromTemplate(attr.children!);
+        frame[attr.key] = payloadValue.map(() => ({ ...childFrame }));
+      } else {
+        // Plain object → { _sd: [...] }
+        const childFrame = buildDisclosureFrameFromTemplate(attr.children!, payloadValue as Record<string, any>);
+        const hasChildDisclosure = childFrame._sd?.length || Object.keys(childFrame).some((k) => '_sd' !== k);
+        if (hasChildDisclosure) {
+          frame[attr.key] = childFrame;
+        }
       }
+      continue;
     }
 
-    // Case 2: attribute has disclosed children
-    if (hasChildDisclosure) {
-      frame[attr.key] = childFrame!;
+    // Root attribute — add to _sd if disclosed
+    if (attr.disclose) {
+      sd.push(attr.key);
     }
   }
 
   if (0 < sd.length) {
     frame._sd = sd;
   }
-
+  // console.log('Built disclosure frame:', JSON.stringify(frame, null, 2));
   return frame;
 }
 
@@ -373,8 +383,11 @@ function buildSdJwtCredential(
   const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
   const idSuffix = formatSuffix(apiFormat);
   const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
-  const disclosureFrame = buildDisclosureFrameFromTemplate(sdJwtTemplate.attributes);
 
+  const disclosureFrame = buildDisclosureFrameFromTemplate(
+    sdJwtTemplate.attributes,
+    payloadCopy as Record<string, any>
+  );
   return {
     credentialSupportedId,
     signerOptions: templateSignerOption ? templateSignerOption : undefined,

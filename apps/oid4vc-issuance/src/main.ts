@@ -11,8 +11,7 @@ const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
   if (!process.env.STATUS_LIST_HOST) {
-    logger.error('STATUS_LIST_HOST is not configured. Microservice cannot start.');
-    process.exit(1);
+    logger.warn('STATUS_LIST_HOST is not configured. Revocable SD-JWT flow will be disabled.');
   }
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(Oid4vcIssuanceModule, {

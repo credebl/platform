@@ -632,6 +632,9 @@ export class Oid4vcIssuanceService {
       if (createOidcCredentialOffer.isRevocable) {
         const hasSdJwt = buildOidcCredentialOffer.credentials.some((c) => c.format === CredentialFormat.SdJwtVc);
         if (hasSdJwt) {
+          if (!process.env.STATUS_LIST_HOST) {
+            throw new BadRequestException('Revocable SD-JWT is not supported as STATUS_LIST_HOST is not configured.');
+          }
           const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
           if (!agentDetailsForAlloc?.orgDid) {
             throw new BadRequestException('Organization DID is required for revocable SD-JWT credentials');
@@ -671,55 +674,29 @@ export class Oid4vcIssuanceService {
       }
 
       // Revocation logic to save the credential offer id and status list details in DB for later use during revocation
-      let parsedResponse;
+      let responseToSave;
       if ('string' === typeof createCredentialOfferOnAgent.response) {
-        parsedResponse = JSON.parse(createCredentialOfferOnAgent.response);
+        responseToSave = JSON.parse(createCredentialOfferOnAgent.response);
       } else {
-        parsedResponse = createCredentialOfferOnAgent.response;
+        responseToSave = createCredentialOfferOnAgent.response;
       }
 
-      const issuanceSessionId =
-        parsedResponse.issuanceSessionId ||
-        parsedResponse.credentialOfferId ||
-        parsedResponse.id ||
-        parsedResponse.issuanceSession?.id;
-      if (issuanceSessionId && createOidcCredentialOffer.isRevocable) {
-        for (const cred of buildOidcCredentialOffer.credentials) {
-          if (cred.statusListDetails) {
-            const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;
-            await this.statusListAllocatorService.saveCredentialAllocation(
-              `${issuanceSessionId}-${cred.statusListDetails.index}`,
-              cred.statusListDetails.listId,
-              cred.statusListDetails.index,
-              issuanceSessionId,
-              statusListUri
-            );
-          }
-        }
-      }
+      const sessionId =
+        responseToSave.issuanceSessionId ||
+        responseToSave.credentialOfferId ||
+        responseToSave.id ||
+        responseToSave.issuanceSession?.id;
 
-      let parsedResponse;
-      if ('string' === typeof createCredentialOfferOnAgent.response) {
-        parsedResponse = JSON.parse(createCredentialOfferOnAgent.response);
-      } else {
-        parsedResponse = createCredentialOfferOnAgent.response;
-      }
-
-      const issuanceSessionId =
-        parsedResponse.issuanceSessionId ||
-        parsedResponse.credentialOfferId ||
-        parsedResponse.id ||
-        parsedResponse.issuanceSession?.id;
-      if (issuanceSessionId && createOidcCredentialOffer.isRevocable) {
+      if (sessionId && createOidcCredentialOffer.isRevocable) {
         for (const cred of buildOidcCredentialOffer.credentials) {
           if (cred.statusListDetails) {
             const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;
             await this.statusListAllocatorService.saveCredentialAllocation(
               orgId,
-              `${issuanceSessionId}-${cred.statusListDetails.index}`,
+              `${sessionId}-${cred.statusListDetails.index}`,
               cred.statusListDetails.listId,
               cred.statusListDetails.index,
-              issuanceSessionId,
+              sessionId,
               statusListUri
             );
           }
@@ -795,6 +772,9 @@ export class Oid4vcIssuanceService {
       if (oidcCredentialD2APayload.isRevocable) {
         const hasSdJwt = oidcCredentialD2APayload.credentials.some((c) => c.format === CredentialFormat.SdJwtVc);
         if (hasSdJwt) {
+          if (!process.env.STATUS_LIST_HOST) {
+            throw new BadRequestException('Revocable SD-JWT is not supported as STATUS_LIST_HOST is not configured.');
+          }
           const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
           if (!agentDetailsForAlloc?.orgDid) {
             throw new BadRequestException('Organization DID is required for revocable credentials');

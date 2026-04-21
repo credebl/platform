@@ -1497,7 +1497,8 @@ export class AgentServiceService {
         .then(async (response) => response);
       return data;
     } catch (error) {
-      this.logger.error(`Error in _oidcRevokeCredential in agent service : ${JSON.stringify(error)}`);
+      const errorMsg = error.response ? JSON.stringify(error.response.data) : error.message;
+      this.logger.error(`Error in oidcRevokeCredential in agent service : ${errorMsg}`);
       throw error;
     }
   }

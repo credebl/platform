@@ -95,6 +95,10 @@ export class RandomBitmapIndexAllocator {
   public export(): Uint8Array {
     return new Uint8Array(this.bitmap);
   }
+
+  public getAllocatedCount(): number {
+    return this.allocatedCount;
+  }
 }
 
 @Injectable()
@@ -146,7 +150,7 @@ export class StatusListAllocatorService {
           where: { id: activeList.id },
           data: {
             bitmap: Buffer.from(allocator.export()),
-            allocatedCount: activeList.allocatedCount + 1
+            allocatedCount: allocator.getAllocatedCount()
           }
         });
 
@@ -208,7 +212,7 @@ export class StatusListAllocatorService {
         where: { listId },
         data: {
           bitmap: Buffer.from(allocator.export()),
-          allocatedCount: Math.max(0, allocation.allocatedCount - 1)
+          allocatedCount: allocator.getAllocatedCount()
         }
       });
     });

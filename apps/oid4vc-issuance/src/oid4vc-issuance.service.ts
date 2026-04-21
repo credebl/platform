@@ -533,6 +533,7 @@ export class Oid4vcIssuanceService {
     issuerId: string
   ): Promise<any> {
     let buildOidcCredentialOffer: CredentialOfferPayload;
+    const newlyAllocatedIndices: { listId: string; index: number }[] = [];
     try {
       const filterTemplateIds = extractTemplateIds(createOidcCredentialOffer);
       if (!filterTemplateIds) {
@@ -640,13 +641,14 @@ export class Oid4vcIssuanceService {
             throw new BadRequestException('Organization DID is required for revocable SD-JWT credentials');
           }
           for (const cred of buildOidcCredentialOffer.credentials) {
-            if (cred.format === CredentialFormat.SdJwtVc) {
+            if (cred.format === CredentialFormat.SdJwtVc && !cred.statusListDetails) {
               const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
               cred.statusListDetails = {
                 listId: allocation.listId,
                 index: allocation.index,
                 listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
               };
+              newlyAllocatedIndices.push({ listId: allocation.listId, index: allocation.index });
             }
           }
         }
@@ -705,18 +707,11 @@ export class Oid4vcIssuanceService {
 
       return createCredentialOfferOnAgent.response;
     } catch (error) {
-      if (buildOidcCredentialOffer?.credentials) {
-        for (const cred of buildOidcCredentialOffer.credentials) {
-          if (cred.statusListDetails) {
-            try {
-              await this.statusListAllocatorService.release(
-                cred.statusListDetails.listId,
-                cred.statusListDetails.index
-              );
-            } catch (releaseErr) {
-              this.logger.warn(`Failed to release index on rollback: ${releaseErr.message}`);
-            }
-          }
+      for (const alloc of newlyAllocatedIndices) {
+        try {
+          await this.statusListAllocatorService.release(alloc.listId, alloc.index);
+        } catch (releaseErr) {
+          this.logger.warn(`Failed to release index on rollback: ${releaseErr.message}`);
         }
       }
 
@@ -730,6 +725,7 @@ export class Oid4vcIssuanceService {
   }
 
   async createOidcCredentialOfferD2A(oidcCredentialD2APayload, orgId: string): Promise<object | string> {
+    const newlyAllocatedIndices: { listId: string; index: number }[] = [];
     try {
       for (const credential of oidcCredentialD2APayload.credentials) {
         const { signerOptions } = credential;
@@ -788,6 +784,7 @@ export class Oid4vcIssuanceService {
                 index: allocation.index,
                 listSize: Number(CommonConstants.DEFAULT_STATUS_LIST_SIZE)
               };
+              newlyAllocatedIndices.push({ listId: allocation.listId, index: allocation.index });
             }
           }
         }
@@ -828,21 +825,14 @@ export class Oid4vcIssuanceService {
 
       return createCredentialOfferOnAgent.response;
     } catch (error) {
-      if (oidcCredentialD2APayload?.credentials) {
-        for (const cred of oidcCredentialD2APayload.credentials) {
-          if (cred.statusListDetails) {
-            try {
-              await this.statusListAllocatorService.release(
-                cred.statusListDetails.listId,
-                cred.statusListDetails.index
-              );
-            } catch (releaseErr) {
-              this.logger.warn(`Failed to release index on rollback: ${releaseErr.message}`);
-            }
-          }
+      for (const alloc of newlyAllocatedIndices) {
+        try {
+          await this.statusListAllocatorService.release(alloc.listId, alloc.index);
+        } catch (releaseErr) {
+          this.logger.warn(`Failed to release index on rollback: ${releaseErr.message}`);
         }
       }
-      this.logger.error(`[createOidcCredentialOffer] - error: ${JSON.stringify(error)}`);
+      this.logger.error(`[createOidcCredentialOfferD2A] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
   }

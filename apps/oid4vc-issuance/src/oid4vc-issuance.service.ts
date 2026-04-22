@@ -94,6 +94,13 @@ export class Oid4vcIssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint, id: orgAgentId, orgAgentTypeId } = agentDetails;
+
+      const hasPrimary = await this.oid4vcIssuanceRepository.hasPrimaryIssuer(orgAgentId);
+      console.log('orgAgentId:', orgAgentId);
+
+      const isPrimary = !hasPrimary;
+      console.log('isPrimary computed:', isPrimary);
+
       const orgAgentType = await this.oid4vcIssuanceRepository.getOrgAgentType(orgAgentTypeId);
       if (!orgAgentType) {
         throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
@@ -138,8 +145,10 @@ export class Oid4vcIssuanceService {
         publicIssuerId: issuerIdFromAgent,
         createdById: userDetails.id,
         orgAgentId,
-        batchCredentialIssuanceSize: issuerCreation?.batchCredentialIssuanceSize
+        batchCredentialIssuanceSize: issuerCreation?.batchCredentialIssuanceSize,
+        isPrimary
       };
+      console.log('🚀 ~ Oid4vcIssuanceService ~ oidcIssuerCreate ~ issuerMetadata:', issuerMetadata);
       const addOidcIssuerDetails = await this.oid4vcIssuanceRepository.addOidcIssuerDetails(
         issuerMetadata,
         issuerCreation?.display

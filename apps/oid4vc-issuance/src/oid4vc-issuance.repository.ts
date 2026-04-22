@@ -190,8 +190,14 @@ export class Oid4vcIssuanceRepository {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async addOidcIssuerDetails(issuerMetadata: IssuerMetadata, issuerProfileJson): Promise<oidc_issuer> {
     try {
-      const { publicIssuerId, createdById, orgAgentId, batchCredentialIssuanceSize, authorizationServerUrl } =
-        issuerMetadata;
+      const {
+        publicIssuerId,
+        createdById,
+        orgAgentId,
+        batchCredentialIssuanceSize,
+        authorizationServerUrl,
+        isPrimary
+      } = issuerMetadata;
       const oidcIssuerDetails = await this.prisma.oidc_issuer.create({
         data: {
           metadata: issuerProfileJson,
@@ -199,7 +205,8 @@ export class Oid4vcIssuanceRepository {
           createdBy: createdById,
           orgAgentId,
           batchCredentialIssuanceSize,
-          authorizationServerUrl
+          authorizationServerUrl,
+          isPrimary
         }
       });
 
@@ -208,6 +215,16 @@ export class Oid4vcIssuanceRepository {
       this.logger.error(`[addOidcIssuerDetails] - error: ${JSON.stringify(error)}`);
       throw error;
     }
+  }
+
+  async hasPrimaryIssuer(orgAgentId: string): Promise<boolean> {
+    const count = await this.prisma.oidc_issuer.count({
+      where: {
+        orgAgentId,
+        isPrimary: true
+      }
+    });
+    return 0 < count;
   }
 
   async updateOidcIssuerDetails(createdById: string, issuerConfig: IssuerUpdation): Promise<oidc_issuer> {

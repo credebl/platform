@@ -229,6 +229,7 @@ export enum CommonConstants {
 
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   DEFAULT_CACHE_TTL = 60000,
+  DEFAULT_STATUS_LIST_SIZE = 131072,
   DEFAULT_FIELD_UPLOAD_SIZE = 10485760,
 
   // SUBSCRIPTION TYPES

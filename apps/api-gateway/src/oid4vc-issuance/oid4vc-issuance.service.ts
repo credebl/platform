@@ -131,6 +131,11 @@ export class Oid4vcIssuanceService extends BaseService {
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-credential-offer-delete', payload);
   }
 
+  async revokeCredential(issuanceSessionId: string, orgId: string): Promise<object> {
+    const payload = { issuanceSessionId, orgId };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-revoke-credential', payload);
+  }
+
   oidcIssueCredentialWebhook(
     oidcIssueCredentialDto: OidcIssueCredentialDto,
     id: string

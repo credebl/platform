@@ -672,4 +672,28 @@ export class Oid4vcIssuanceController {
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }
+
+  @Post('/orgs/:orgId/openid4vc/issuance-sessions/:issuanceSessionId/revoke')
+  @ApiOperation({
+    summary: 'Revoke an OID4VC Credential',
+    description: 'Instantly revokes a credential issued during a specific OID4VC session.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Credential revoked successfully.', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async revokeCredential(
+    @Param('orgId') orgId: string,
+    @Param('issuanceSessionId') issuanceSessionId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const revoked = await this.oid4vcIssuanceService.revokeCredential(issuanceSessionId, orgId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: 'Credential revoked successfully.',
+      data: revoked
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
 }

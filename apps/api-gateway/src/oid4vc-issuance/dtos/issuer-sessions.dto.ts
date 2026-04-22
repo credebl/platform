@@ -19,7 +19,8 @@ import {
   ValidatorConstraintInterface,
   ValidationArguments,
   Validate,
-  IsDate
+  IsDate,
+  IsBoolean
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -196,6 +197,11 @@ export class CreateOidcCredentialOfferDto {
   noticeUrl?: string;
 
   issuerId?: string;
+
+  @ApiPropertyOptional({ example: true, description: 'Flag to enable revocation for the issued credentials' })
+  @IsOptional()
+  @IsBoolean()
+  isRevocable?: boolean = false;
 }
 
 export class GetAllCredentialOfferDto {
@@ -301,7 +307,7 @@ export class CredentialDto {
         },
         iat: 1698151532,
         nbf: dateToSeconds(new Date()),
-        exp: dateToSeconds(new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000))
+        exp: dateToSeconds(new Date(Date.now() + 157680000000))
       }
     ]
   })
@@ -390,6 +396,11 @@ export class CreateCredentialOfferD2ADto {
   })
   @IsOptional()
   issuerId?: string;
+
+  @ApiPropertyOptional({ example: true, description: 'Flag to enable revocation for the issued credentials' })
+  @IsOptional()
+  @IsBoolean()
+  isRevocable?: boolean = false;
 
   @ExactlyOneOf(['preAuthorizedCodeFlowConfig', 'authorizationCodeFlowConfig'], {
     message: 'Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.'

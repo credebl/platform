@@ -48,6 +48,7 @@ export interface CreateOidcCredentialOffer {
   authenticationType: AuthenticationType; // only option selector
   credentials: CredentialRequest[]; // one or more credentials
   noticeUrl?: string;
+  isRevocable?: boolean;
 }
 
 export interface GetAllCredentialOffer {

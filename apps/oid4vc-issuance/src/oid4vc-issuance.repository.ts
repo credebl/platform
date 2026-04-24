@@ -196,7 +196,8 @@ export class Oid4vcIssuanceRepository {
         orgAgentId,
         batchCredentialIssuanceSize,
         authorizationServerUrl,
-        isPrimary
+        isPrimary,
+        orgId
       } = issuerMetadata;
       const oidcIssuerDetails = await this.prisma.oidc_issuer.create({
         data: {
@@ -206,7 +207,8 @@ export class Oid4vcIssuanceRepository {
           orgAgentId,
           batchCredentialIssuanceSize,
           authorizationServerUrl,
-          isPrimary
+          isPrimary,
+          orgId
         }
       });
 
@@ -229,19 +231,38 @@ export class Oid4vcIssuanceRepository {
 
   async updateOidcIssuerDetails(createdById: string, issuerConfig: IssuerUpdation): Promise<oidc_issuer> {
     try {
-      const { issuerId, display, batchCredentialIssuanceSize } = issuerConfig;
-      const oidcIssuerDetails = await this.prisma.oidc_issuer.update({
-        where: { id: issuerId },
-        data: {
-          metadata: display as unknown as Prisma.InputJsonValue,
-          createdBy: createdById,
-          ...(batchCredentialIssuanceSize !== undefined ? { batchCredentialIssuanceSize } : {})
-        }
-      });
+      const { issuerId, display, batchCredentialIssuanceSize, isPrimary, orgId } = issuerConfig;
 
-      return oidcIssuerDetails;
+      return await this.prisma.$transaction(async (tx) => {
+        // If setting as primary → reset others in same org
+        if (true === isPrimary) {
+          await tx.oidc_issuer.updateMany({
+            where: {
+              orgId,
+              isPrimary: true
+            },
+            data: {
+              isPrimary: false
+            }
+          });
+        }
+
+        const updatedIssuer = await tx.oidc_issuer.update({
+          where: { id: issuerId },
+          data: {
+            metadata: display as unknown as Prisma.InputJsonValue,
+            createdBy: createdById,
+            ...(batchCredentialIssuanceSize !== undefined && {
+              batchCredentialIssuanceSize
+            }),
+            ...(isPrimary !== undefined && { isPrimary })
+          }
+        });
+
+        return updatedIssuer;
+      });
     } catch (error) {
-      this.logger.error(`[addOidcIssuerDetails] - error: ${JSON.stringify(error)}`);
+      this.logger.error(`[updateOidcIssuerDetails] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

@@ -146,9 +146,9 @@ export class Oid4vcIssuanceService {
         createdById: userDetails.id,
         orgAgentId,
         batchCredentialIssuanceSize: issuerCreation?.batchCredentialIssuanceSize,
-        isPrimary
+        isPrimary,
+        orgId
       };
-      console.log('🚀 ~ Oid4vcIssuanceService ~ oidcIssuerCreate ~ issuerMetadata:', issuerMetadata);
       const addOidcIssuerDetails = await this.oid4vcIssuanceRepository.addOidcIssuerDetails(
         issuerMetadata,
         issuerCreation?.display

@@ -181,12 +181,12 @@ export class CreateOidcCredentialOfferDto {
 
   @ApiProperty({
     example: 'preAuthorizedCodeFlow',
-    enum: ['preAuthorizedCodeFlow', 'authorizationCodeFlow'],
+    enum: ['preAuthorizedCodeFlow', 'authorizationCodeFlow', 'noAuth'],
     description: 'Authorization type'
   })
   @IsString()
-  @IsIn(['preAuthorizedCodeFlow', 'authorizationCodeFlow'])
-  authorizationType!: 'preAuthorizedCodeFlow' | 'authorizationCodeFlow';
+  @IsIn(['preAuthorizedCodeFlow', 'authorizationCodeFlow', 'noAuth'])
+  authorizationType!: 'preAuthorizedCodeFlow' | 'authorizationCodeFlow' | 'noAuth';
 
   @ApiPropertyOptional({
     example: 'https://dev-consent.sovio.id/api/consent-notice/CN-OGL70CWB',

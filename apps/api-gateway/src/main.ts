@@ -122,16 +122,23 @@ function filterByTags(doc: any, tagNames: string[]) {
   };
 }
 // 🔹 Create separate documents
-const didcommDoc = filterByTags(document, ['connection', 'issuance', 'verification']);
-const oid4vcDoc = filterByTags(document, ['oid4vc-issuance', 'oid4vc-verification']);
-const utilsDoc = filterByTags(document, [
-  'utility',
-  'ledger',
-  'webhook',
-  'geo-location',
-  'notification'
+const didcommDoc = filterByTags(document, [
+  'connections',
+  'verifications'
 ]);
 
+const oid4vcDoc = filterByTags(document, [
+  'OID4VC',
+  'OID4VP'
+]);
+
+const utilsDoc = filterByTags(document, [
+  'utilities',
+  'ledgers',
+  'webhooks',
+  'geolocation',
+  'notification'
+]);
 // 🔹 Default full Swagger
 SwaggerModule.setup('api', app, document);
 

@@ -88,15 +88,57 @@ async function bootstrap(): Promise<void> {
   });
 
   // Create Swagger document
-  let document = SwaggerModule.createDocument(app, options);
-  try {
-    const ecosystemFilter = app.get(EcosystemSwaggerFilter);
-    document = await ecosystemFilter.filterDocument(document);
-  } catch (err) {
-    Logger.warn('Skipping EcosystemSwaggerFilter due to error', err as Error);
+ let document = SwaggerModule.createDocument(app, options);
+try {
+  const ecosystemFilter = app.get(EcosystemSwaggerFilter);
+  document = await ecosystemFilter.filterDocument(document);
+} catch (err) {
+  Logger.warn('Skipping EcosystemSwaggerFilter due to error', err as Error);
+}
+
+// 🔹 Helper to filter APIs by tag
+function filterByTags(doc: any, tagNames: string[]) {
+  const filteredPaths: any = {};
+
+  for (const path in doc.paths) {
+    const methods = doc.paths[path];
+
+    for (const method in methods) {
+      const operation = methods[method];
+
+      if (
+        operation.tags &&
+        operation.tags.some((tag: string) => tagNames.includes(tag))
+      ) {
+        if (!filteredPaths[path]) filteredPaths[path] = {};
+        filteredPaths[path][method] = operation;
+      }
+    }
   }
 
-  SwaggerModule.setup('api', app, document);
+  return {
+    ...doc,
+    paths: filteredPaths
+  };
+}
+// 🔹 Create separate documents
+const didcommDoc = filterByTags(document, ['connection', 'issuance', 'verification']);
+const oid4vcDoc = filterByTags(document, ['oid4vc-issuance', 'oid4vc-verification']);
+const utilsDoc = filterByTags(document, [
+  'utility',
+  'ledger',
+  'webhook',
+  'geo-location',
+  'notification'
+]);
+
+// 🔹 Default full Swagger
+SwaggerModule.setup('api', app, document);
+
+// 🔹 New grouped Swagger UIs
+SwaggerModule.setup('api/didcomm', app, didcommDoc);
+SwaggerModule.setup('api/oid4vc', app, oid4vcDoc);
+SwaggerModule.setup('api/utils', app, utilsDoc);
   const httpAdapter: HttpAdapterHost = app.get(HttpAdapterHost) as HttpAdapterHost;
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
   const { ENABLE_CORS_IP_LIST } = process.env || {};

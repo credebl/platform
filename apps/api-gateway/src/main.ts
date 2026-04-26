@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import * as express from 'express';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { OpenAPIObject } from '@nestjs/swagger';
 import { Logger, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
@@ -97,20 +98,20 @@ try {
 }
 
 // 🔹 Helper to filter APIs by tag
-function filterByTags(doc: any, tagNames: string[]) {
-  const filteredPaths: any = {};
 
-  for (const path in doc.paths) {
-    const methods = doc.paths[path];
 
-    for (const method in methods) {
-      const operation = methods[method];
+function filterByTags(doc: OpenAPIObject, tagNames: string[]): OpenAPIObject {
+  const filteredPaths: OpenAPIObject['paths'] = {};
 
+  for (const [path, methods] of Object.entries(doc.paths)) {
+    for (const [method, operation] of Object.entries(methods)) {
       if (
         operation.tags &&
         operation.tags.some((tag: string) => tagNames.includes(tag))
       ) {
-        if (!filteredPaths[path]) filteredPaths[path] = {};
+        if (!filteredPaths[path]) {
+          filteredPaths[path] = {};
+        }
         filteredPaths[path][method] = operation;
       }
     }

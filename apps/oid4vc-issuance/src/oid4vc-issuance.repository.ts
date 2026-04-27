@@ -234,7 +234,17 @@ export class Oid4vcIssuanceRepository {
       const { issuerId, display, batchCredentialIssuanceSize, isPrimary, orgId } = issuerConfig;
 
       return await this.prisma.$transaction(async (tx) => {
-        // If setting as primary → reset others in same org
+        const issuer = await tx.oidc_issuer.findFirst({
+          where: {
+            id: issuerId,
+            orgId
+          }
+        });
+
+        if (!issuer) {
+          throw new Error('Issuer not found');
+        }
+
         if (true === isPrimary) {
           await tx.oidc_issuer.updateMany({
             where: {

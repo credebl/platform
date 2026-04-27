@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
 import { Prisma, credential_templates, oidc_issuer, org_agents } from '@prisma/client';
 import { PrismaService } from '@credebl/prisma-service';
@@ -219,14 +219,19 @@ export class Oid4vcIssuanceRepository {
     }
   }
 
-  async hasPrimaryIssuer(orgAgentId: string): Promise<boolean> {
-    const count = await this.prisma.oidc_issuer.count({
-      where: {
-        orgAgentId,
-        isPrimary: true
-      }
-    });
-    return 0 < count;
+  async hasPrimaryIssuer(orgId: string): Promise<boolean> {
+    try {
+      const count = await this.prisma.oidc_issuer.count({
+        where: {
+          orgId,
+          isPrimary: true
+        }
+      });
+      return 0 < count;
+    } catch (error) {
+      this.logger.error(`[hasPrimaryIssuer] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
   }
 
   async updateOidcIssuerDetails(createdById: string, issuerConfig: IssuerUpdation): Promise<oidc_issuer> {
@@ -242,10 +247,18 @@ export class Oid4vcIssuanceRepository {
         });
 
         if (!issuer) {
-          throw new Error('Issuer not found');
+          throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
         }
 
+        const primaryCount = await tx.oidc_issuer.count({
+          where: {
+            orgId,
+            isPrimary: true
+          }
+        });
+
         if (true === isPrimary) {
+          // unset all others
           await tx.oidc_issuer.updateMany({
             where: {
               orgId,
@@ -255,6 +268,14 @@ export class Oid4vcIssuanceRepository {
               isPrimary: false
             }
           });
+        }
+
+        if (false === isPrimary) {
+          const isOnlyPrimary = 1 === primaryCount && issuer.isPrimary;
+
+          if (isOnlyPrimary) {
+            throw new BadRequestException('At least one primary issuer must exist for the organization');
+          }
         }
 
         const updatedIssuer = await tx.oidc_issuer.update({

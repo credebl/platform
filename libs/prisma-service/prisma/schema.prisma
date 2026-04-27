@@ -162,6 +162,7 @@ model organisation {
   ecosystem_invitations  ecosystem_invitations[]
   status_list_allocations status_list_allocation[]
   issued_oid4vc_credentials issued_oid4vc_credentials[]
+  oidc_issuer oidc_issuer[] 
 }
 
 model org_invitations {
@@ -595,6 +596,11 @@ model oidc_issuer {
   orgAgent                    org_agents             @relation(fields: [orgAgentId], references: [id])
   templates                   credential_templates[]
   batchCredentialIssuanceSize Int                    @default(0)
+
+  orgId     String?  @db.Uuid
+  isPrimary Boolean  @default(false)
+
+  organisation organisation? @relation(fields: [orgId], references: [id])
 
   @@index([orgAgentId])
 }

@@ -596,10 +596,6 @@ model oidc_issuer {
   templates                   credential_templates[]
   batchCredentialIssuanceSize Int                    @default(0)
 
-  orgId     String   @db.Uuid
-
-  isPrimary Boolean @default(false)
-
   @@index([orgAgentId])
 }
 

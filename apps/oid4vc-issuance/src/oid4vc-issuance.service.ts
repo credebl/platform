@@ -96,10 +96,8 @@ export class Oid4vcIssuanceService {
       const { agentEndPoint, id: orgAgentId, orgAgentTypeId } = agentDetails;
 
       const hasPrimary = await this.oid4vcIssuanceRepository.hasPrimaryIssuer(orgAgentId);
-      console.log('orgAgentId:', orgAgentId);
 
       const isPrimary = !hasPrimary;
-      console.log('isPrimary computed:', isPrimary);
 
       const orgAgentType = await this.oid4vcIssuanceRepository.getOrgAgentType(orgAgentTypeId);
       if (!orgAgentType) {

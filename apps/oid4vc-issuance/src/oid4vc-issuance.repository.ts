@@ -1,11 +1,12 @@
 /* eslint-disable camelcase */
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { IssuerMetadata, IssuerUpdation, OrgAgent } from '../interfaces/oid4vc-issuance.interfaces';
 // eslint-disable-next-line camelcase
 import { Prisma, credential_templates, oidc_issuer, org_agents } from '@prisma/client';
-import { PrismaService } from '@credebl/prisma-service';
-import { IssuerMetadata, IssuerUpdation, OrgAgent } from '../interfaces/oid4vc-issuance.interfaces';
-import { ResponseMessages } from '@credebl/common/response-messages';
 import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
+
+import { PrismaService } from '@credebl/prisma-service';
+import { ResponseMessages } from '@credebl/common/response-messages';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 
 @Injectable()
@@ -250,20 +251,12 @@ export class Oid4vcIssuanceRepository {
           throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
         }
 
-        if (true === isPrimary) {
-          // unset all others
+        if (isPrimary) {
           await tx.oidc_issuer.updateMany({
-            where: {
-              orgId,
-              isPrimary: true
-            },
-            data: {
-              isPrimary: false
-            }
+            where: { orgId, isPrimary: true },
+            data: { isPrimary: false }
           });
-        }
-
-        if (false === isPrimary) {
+        } else {
           const otherPrimaryExists = await tx.oidc_issuer.count({
             where: {
               orgId,

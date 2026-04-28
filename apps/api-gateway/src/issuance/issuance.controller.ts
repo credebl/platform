@@ -800,6 +800,7 @@ export class IssuanceController {
     ) {
       throw new BadRequestException(ResponseMessages.issuance.error.optionsNotPresent);
     }
+    console.log('Api-gateway, issuance controller - sendCredential', JSON.stringify(issueCredentialDto));
     const getCredentialDetails = await this.issueCredentialService.sendCredentialCreateOffer(issueCredentialDto, user);
     const { statusCode, message, data } = getCredentialDetails;
 

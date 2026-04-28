@@ -152,6 +152,7 @@ export class IssuanceService {
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
     try {
+      console.log('Issuance, issuance service - sendCredentialCreateOffer', JSON.stringify(payload));
       const { orgId, credentialDefinitionId, comment, credentialData, isValidateSchema } = payload || {};
 
       if (payload.credentialType === IssueCredentialType.INDY) {
@@ -215,11 +216,12 @@ export class IssuanceService {
             comment
           };
         } else if (payload.credentialType === IssueCredentialType.JSONLD) {
+          console.log('Issuance, issuance service - sendCredentialCreateOffer. JSON-LD' )
           const schemaIds = credentialData?.map((item) => {
             const context: string[] = item?.credential?.['@context'];
             return Array.isArray(context) && 1 < context.length ? context[1] : undefined;
           });
-
+          console.log("SchemaIds extracted from credential data:", schemaIds);
           const schemaDetails = await this._getSchemaDetails(schemaIds);
 
           const ledgerIds = schemaDetails?.map((item) => item?.ledgerId);
@@ -242,6 +244,7 @@ export class IssuanceService {
             autoAcceptCredential: payload.autoAcceptCredential || 'always',
             comment: comment || ''
           };
+          console.log("Issue data prepared for JSON-LD credential:", JSON.stringify(issueData, null, 2));
           const payloadAttributes = issueData?.credentialFormats?.jsonld?.credential?.credentialSubject;
 
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -252,12 +255,17 @@ export class IssuanceService {
           const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
 
           if (isValidateSchema) {
+            console.log("Validating JSON-LD credential attributes against schema attributes...");
             validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes, this.logger);
+            console.log("Validated JSON-LD credential attributes");
           }
         }
 
         await this.delay(500);
-        return this._sendCredentialCreateOffer(issueData, url, orgId);
+        console.log("Sending credential offer to agent with issue data:", JSON.stringify(issueData, null, 2));
+        const result = await this._sendCredentialCreateOffer(issueData, url, orgId);
+        console.log("Issuance service - Received response from agent:", JSON.stringify(result, null, 2));
+        return result;
       });
 
       const results = await Promise.allSettled(issuancePromises);
@@ -286,6 +294,7 @@ export class IssuanceService {
       let finalMessage: string;
 
       if (allSuccessful) {
+        console.log("Issuance service - All credential offers created successfully");
         finalStatusCode = HttpStatus.CREATED;
         const context = payload?.credentialData[0]?.credential?.['@context'] as string[];
 
@@ -301,9 +310,11 @@ export class IssuanceService {
 
         finalMessage = ResponseMessages.issuance.success.create;
       } else if (allFailed) {
+        console.log("Issuance service - All credential offers failed");
         finalStatusCode = HttpStatus.BAD_REQUEST;
         finalMessage = ResponseMessages.issuance.error.unableToCreateOffer;
       } else {
+        console.log("Issuance service - Some credential offers created successfully");
         finalStatusCode = HttpStatus.PARTIAL_CONTENT;
         finalMessage = ResponseMessages.issuance.success.partiallyOfferCreated;
       }
@@ -313,6 +324,8 @@ export class IssuanceService {
         message: finalMessage,
         data: processedResults
       };
+
+      console.log("Issuance service - Final result of credential offer creation:", JSON.stringify(finalResult, null, 2));
 
       return finalResult;
     } catch (error) {
@@ -557,7 +570,10 @@ export class IssuanceService {
     try {
       const pattern = { cmd: 'agent-send-credential-create-offer' };
       const payload: ISendOfferNatsPayload = { issueData, url, orgId };
-      return await this.natsCallAgent(pattern, payload);
+      console.log("Sending credential offer to agent with payload:", JSON.stringify(payload, null, 2));
+      const result = await this.natsCallAgent(pattern, payload);
+      console.log("Received response from agent:", JSON.stringify(result, null, 2));
+      return result;
     } catch (error) {
       this.logger.error(
         `[_sendCredentialCreateOffer] [NATS call]- error in create credentials : ${JSON.stringify(error)}`

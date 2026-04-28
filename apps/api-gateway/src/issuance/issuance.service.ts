@@ -53,6 +53,7 @@ export class IssuanceService extends BaseService {
       user
     };
 
+    console.log('Api-gateway, issuance service - sendCredential', JSON.stringify(issueCredentialDto));
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'send-credential-create-offer', payload);
   }
 

@@ -36,6 +36,7 @@ export class IssuanceController {
 
   @MessagePattern({ cmd: 'send-credential-create-offer' })
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
+    console.log('Issuance, issuance controller - sendCredentialCreateOffer', JSON.stringify(payload));
     return this.issuanceService.sendCredentialCreateOffer(payload);
   }
 

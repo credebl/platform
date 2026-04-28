@@ -250,13 +250,6 @@ export class Oid4vcIssuanceRepository {
           throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
         }
 
-        const primaryCount = await tx.oidc_issuer.count({
-          where: {
-            orgId,
-            isPrimary: true
-          }
-        });
-
         if (true === isPrimary) {
           // unset all others
           await tx.oidc_issuer.updateMany({
@@ -271,13 +264,18 @@ export class Oid4vcIssuanceRepository {
         }
 
         if (false === isPrimary) {
-          const isOnlyPrimary = 1 === primaryCount && issuer.isPrimary;
+          const otherPrimaryExists = await tx.oidc_issuer.count({
+            where: {
+              orgId,
+              isPrimary: true,
+              NOT: { id: issuerId }
+            }
+          });
 
-          if (isOnlyPrimary) {
-            throw new BadRequestException('At least one primary issuer must exist for the organization');
+          if (0 === otherPrimaryExists) {
+            throw new BadRequestException('Cannot unset primary. Please assign another issuer as primary first.');
           }
         }
-
         const updatedIssuer = await tx.oidc_issuer.update({
           where: { id: issuerId },
           data: {

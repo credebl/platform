@@ -273,7 +273,7 @@ export class Oid4vcIssuanceRepository {
           });
 
           if (0 === otherPrimaryExists) {
-            throw new BadRequestException('Cannot unset primary. Please assign another issuer as primary first.');
+            throw new BadRequestException(ResponseMessages.oidcIssuer.error.setPrimaryIssuerFailed);
           }
         }
         const updatedIssuer = await tx.oidc_issuer.update({

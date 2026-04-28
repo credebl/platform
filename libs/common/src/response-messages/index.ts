@@ -671,7 +671,8 @@ export const ResponseMessages = {
       invalidId: 'Invalid OID4VC issuer ID.',
       createFailed: 'Failed to create OID4VC issuer.',
       updateFailed: 'Failed to update OID4VC issuer.',
-      deleteFailed: 'Failed to delete OID4VC issuer.'
+      deleteFailed: 'Failed to delete OID4VC issuer.',
+      setPrimaryIssuerFailed: 'Cannot unset primary. Please assign another issuer as primary first.'
     }
   },
   oidcTemplate: {

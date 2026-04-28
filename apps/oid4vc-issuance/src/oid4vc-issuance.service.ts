@@ -95,7 +95,7 @@ export class Oid4vcIssuanceService {
       }
       const { agentEndPoint, id: orgAgentId, orgAgentTypeId } = agentDetails;
 
-      const hasPrimary = await this.oid4vcIssuanceRepository.hasPrimaryIssuer(orgAgentId);
+      const hasPrimary = await this.oid4vcIssuanceRepository.hasPrimaryIssuer(orgId);
 
       const isPrimary = !hasPrimary;
 

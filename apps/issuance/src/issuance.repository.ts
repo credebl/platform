@@ -782,12 +782,14 @@ export class IssuanceRepository {
 
   async updateSchemaIdByThreadId(threadId: string, schemaId: string): Promise<void> {
     try {
+      console.log(`[updateSchemaIdByThreadId] - Updating schemaId for threadId: ${threadId} with schemaId: ${schemaId}`);
       await this.prisma.credentials.update({
         where: { threadId },
         data: {
           schemaId
         }
       });
+      console.log(`[updateSchemaIdByThreadId] - Successfully updated schemaId for threadId: ${threadId}`);
     } catch (error) {
       this.logger.error(`[updateSchemaIdByThreadId] - error: ${JSON.stringify(error)}`);
       throw error;

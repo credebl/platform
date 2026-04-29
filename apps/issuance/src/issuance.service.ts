@@ -1125,10 +1125,11 @@ export class IssuanceService {
           const filterData = w3cSchemaId.filter((item) => CommonConstants.W3C_SCHEMA_URL !== item);
           const [schemaId] = filterData;
           if (credentialCreateOfferDetails.response.credentialRequestThId) {
-            this.issuanceRepository.updateSchemaIdByThreadId(
-              credentialCreateOfferDetails.response.credentialRequestThId,
-              schemaId
-            );
+            console.log("Commented updating schemaId for the created credential offer with threadId:", credentialCreateOfferDetails.response.credentialRequestThId);
+            // this.issuanceRepository.updateSchemaIdByThreadId(
+            //   credentialCreateOfferDetails.response.credentialRequestThId,
+            //   schemaId
+            // );
           }
         }
       }

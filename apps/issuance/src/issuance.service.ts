@@ -301,13 +301,14 @@ export class IssuanceService {
         if (Array.isArray(context) && context.includes(CommonConstants.W3C_SCHEMA_URL)) {
           const filterData = context.filter((item) => CommonConstants.W3C_SCHEMA_URL !== item);
           const [schemaId] = filterData;
-          console.log(`Issuance service - Updating schemaId ${schemaId} for all credential offers with JSON-LD credentials`);
+          // console.log(`Issuance service - Updating schemaId ${schemaId} for all credential offers with JSON-LD credentials`);
           await Promise.all(results.map(async (record) => {
             if (PromiseResult.FULFILLED === record.status && record?.value?.threadId) {
-              await this.issuanceRepository.updateSchemaIdByThreadId(record?.value?.threadId, schemaId);
+              console.log(`Skipping to update schemaId ${schemaId} for credential offers with threadId ${record?.value?.threadId} since it's already included in the credential offer request`);
+              // await this.issuanceRepository.updateSchemaIdByThreadId(record?.value?.threadId, schemaId);
             }
           }));
-          console.log("Issuance service - Successfully updated schemaId for all credential offers with JSON-LD credentials");
+          // console.log("Issuance service - Successfully updated schemaId for all credential offers with JSON-LD credentials");
         }
 
         finalMessage = ResponseMessages.issuance.success.create;

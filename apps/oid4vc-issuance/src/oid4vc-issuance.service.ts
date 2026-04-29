@@ -94,6 +94,11 @@ export class Oid4vcIssuanceService {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
       const { agentEndPoint, id: orgAgentId, orgAgentTypeId } = agentDetails;
+
+      const hasPrimary = await this.oid4vcIssuanceRepository.hasPrimaryIssuer(orgId);
+
+      const isPrimary = !hasPrimary;
+
       const orgAgentType = await this.oid4vcIssuanceRepository.getOrgAgentType(orgAgentTypeId);
       if (!orgAgentType) {
         throw new NotFoundException(ResponseMessages.issuance.error.orgAgentTypeNotFound);
@@ -138,7 +143,9 @@ export class Oid4vcIssuanceService {
         publicIssuerId: issuerIdFromAgent,
         createdById: userDetails.id,
         orgAgentId,
-        batchCredentialIssuanceSize: issuerCreation?.batchCredentialIssuanceSize
+        batchCredentialIssuanceSize: issuerCreation?.batchCredentialIssuanceSize,
+        isPrimary,
+        orgId
       };
       const addOidcIssuerDetails = await this.oid4vcIssuanceRepository.addOidcIssuerDetails(
         issuerMetadata,
@@ -157,10 +164,10 @@ export class Oid4vcIssuanceService {
 
   async oidcIssuerUpdate(issuerUpdationConfig: IssuerUpdation, orgId: string, userDetails: user): Promise<oidc_issuer> {
     try {
-      const getIssuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(
+      const existingIssuer = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(
         issuerUpdationConfig.issuerId
       );
-      if (!getIssuerDetails) {
+      if (!existingIssuer) {
         throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
       }
       const agentDetails = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
@@ -182,7 +189,7 @@ export class Oid4vcIssuanceService {
         throw new InternalServerErrorException('Error in updating OID4VC Issuer details in DB');
       }
 
-      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, getIssuerDetails.publicIssuerId);
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_ISSUER_TEMPLATE, existingIssuer.publicIssuerId);
       const issuerConfig = await this.buildOidcIssuerConfig(issuerUpdationConfig.issuerId);
       const updatedIssuer = await this._createOIDCTemplate(issuerConfig, url, orgId);
       if (updatedIssuer?.response?.statusCode && 200 !== updatedIssuer?.response?.statusCode) {

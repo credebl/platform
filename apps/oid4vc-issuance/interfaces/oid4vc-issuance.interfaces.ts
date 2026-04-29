@@ -79,6 +79,8 @@ export interface IssuerMetadata {
   createdById: string;
   orgAgentId: string;
   batchCredentialIssuanceSize?: number;
+  isPrimary: boolean;
+  orgId: string;
 }
 
 export interface initialIssuerDetails {
@@ -95,6 +97,8 @@ export interface IssuerUpdation {
   accessTokenSignerKeyType: AccessTokenSignerKeyType;
   display;
   batchCredentialIssuanceSize?: number;
+  isPrimary?: boolean;
+  orgId: string;
 }
 
 export interface IAgentNatsPayload {

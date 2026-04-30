@@ -41,15 +41,19 @@ export class AwsService {
     const putObjectAsync = promisify(this.s4.putObject).bind(this.s4);
 
     try {
+      const key = `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
       await putObjectAsync({
         Bucket: `${bucketName}`,
-        Key: `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`,
+        Key: key,
         Body: fileBuffer,
         ContentEncoding: encoding,
         ContentType: `image/png`
       });
 
-      const imageUrl = `https://${bucketName}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
+      const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN_ORG_LOGO;
+      const imageUrl = cloudfrontDomain
+        ? `https://${cloudfrontDomain}/${key}`
+        : `https://${bucketName}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${key}`;
       return imageUrl;
     } catch (error) {
       throw new HttpException(error, HttpStatus.SERVICE_UNAVAILABLE);

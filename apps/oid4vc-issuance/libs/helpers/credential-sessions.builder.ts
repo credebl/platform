@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 import { credential_templates, SignerOption } from '@prisma/client';
-import { GetAllCredentialOffer, ISignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
+import {
+  AuthenticationType,
+  GetAllCredentialOffer,
+  ISignerOption
+} from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
 import {
   CredentialAttribute,
@@ -50,6 +54,7 @@ export interface CredentialRequestDtoLike {
 
 export interface CreateOidcCredentialOfferDtoLike {
   credentials: CredentialRequestDtoLike[];
+  authorizationType?: string;
   preAuthorizedCodeFlowConfig?: {
     txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
     authorizationServerUrl: string;
@@ -103,7 +108,7 @@ export type CredentialOfferPayload = BuiltCredentialOfferBase &
   (
     | {
         preAuthorizedCodeFlowConfig: {
-          txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' } | undefined;
+          txCode?: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
           authorizationServerUrl?: string;
         };
         authorizationCodeFlowConfig?: never;
@@ -503,8 +508,16 @@ export function buildCredentialOfferPayload(
 
   // Determine which authorization flow to return:
   // Priority:
-  // 1) If issuerDetails.authorizationServerUrl is provided, return preAuthorizedCodeFlowConfig using DEFAULT_TXCODE
-  // 2) Else fall back to flows present in DTO (still enforce XOR)
+  // 1) If authorizationType is 'noAuth', return empty preAuthorizedCodeFlowConfig (no txCode, no authorizationServerUrl)
+  // 2) If issuerDetails.authorizationServerUrl is provided, return preAuthorizedCodeFlowConfig using DEFAULT_TXCODE
+  // 3) Else fall back to flows present in DTO (still enforce XOR)
+  if (dto.authorizationType === AuthenticationType.NO_AUTH) {
+    return {
+      ...baseEnvelope,
+      preAuthorizedCodeFlowConfig: {}
+    };
+  }
+
   const overrideAuthorizationServerUrl = issuerDetails?.authorizationServerUrl;
   if (overrideAuthorizationServerUrl) {
     if ('string' !== typeof overrideAuthorizationServerUrl || '' === overrideAuthorizationServerUrl.trim()) {
@@ -513,7 +526,7 @@ export function buildCredentialOfferPayload(
     return {
       ...baseEnvelope,
       preAuthorizedCodeFlowConfig: {
-        txCode: DEFAULT_TXCODE, // Pass undefined to enable no auth implementation, TODO: Need to make it configuarble.
+        txCode: DEFAULT_TXCODE,
         authorizationServerUrl: overrideAuthorizationServerUrl
       }
     };

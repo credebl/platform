@@ -600,7 +600,7 @@ model oidc_issuer {
   orgId     String?  @db.Uuid
   isPrimary Boolean  @default(false)
 
-  organisation organisation? @relation(fields: [orgId], references: [id])
+  organisation organisation? @relation(fields: [orgId], references: [id], onDelete: SetNull)
 
   @@index([orgAgentId])
 }
@@ -620,8 +620,8 @@ model oid4vc_credentials {
   issuedCredentials          String[]
   publicIssuerId              String
 
-  organisation organisation? @relation(fields: [orgId], references: [id])
-
+  organisation organisation? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  
   @@index([credentialConfigurationIds], type: Gin)
 }
 
@@ -667,7 +667,7 @@ model issued_oid4vc_credentials {
   updatedAt         DateTime @updatedAt
   statusListUri     String
 
-  organisation organisation? @relation(fields: [orgId], references: [id])
+  organisation organisation? @relation(fields: [orgId], references: [id], onDelete: SetNull)
 
   @@index([orgId, issuanceSessionId])
 }

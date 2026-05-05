@@ -1,0 +1,102 @@
+{
+  "realm": "credebl_platform",
+  "enabled": true,
+  "accessTokenLifespan": 172800,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "refreshTokenMaxReuse": 10,
+  "ssoSessionIdleTimeout": 172800,
+  "ssoSessionMaxLifespan": 36000,
+  "revokeRefreshToken": true,
+  "roles": {
+    "realm": [
+      { "name": "holder", "description": "Holder role", "composite": false },
+      { "name": "trust-role", "description": "Trust role", "composite": false }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "adminClient",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${ADMIN_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "redirectUris": ["${REDIRECT_URL}"],
+      "rootUrl": "${ROOT_URL}",
+      "webOrigins": ["${ROOT_URL}"],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "credeblClient",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${CREDEBL_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "redirectUris": ["${REDIRECT_URL}"],
+      "rootUrl": "${ROOT_URL}",
+      "webOrigins": ["${ROOT_URL}"],
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "trustClient",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${TRUST_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "redirectUris": [],
+      "rootUrl": "",
+      "webOrigins": [],
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-adminclient",
+      "enabled": true,
+      "serviceAccountClientId": "adminClient",
+      "realmRoles": ["default-roles-credebl_platform"],
+      "clientRoles": {
+        "realm-management": [
+          "create-client",
+          "manage-clients",
+          "query-clients",
+          "view-clients",
+          "manage-users",
+          "query-users",
+          "view-users"
+        ]
+      }
+    },
+    {
+      "username": "service-account-credeblclient",
+      "enabled": true,
+      "serviceAccountClientId": "credeblClient",
+      "realmRoles": ["default-roles-credebl_platform"],
+      "clientRoles": {
+        "realm-management": [
+          "create-client",
+          "manage-clients",
+          "query-clients",
+          "view-clients",
+          "manage-users",
+          "query-users",
+          "view-users"
+        ]
+      }
+    },
+    {
+      "username": "service-account-trustclient",
+      "enabled": true,
+      "serviceAccountClientId": "trustClient",
+      "realmRoles": ["default-roles-credebl_platform", "trust-role"]
+    }
+  ]
+}

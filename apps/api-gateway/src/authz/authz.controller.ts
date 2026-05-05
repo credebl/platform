@@ -156,6 +156,10 @@ export class AuthzController {
     description: 'Register new user to platform with the provided details.'
   })
   async addUserDetails(@Body() userInfo: AddUserDetailsDto, @Res() res: Response): Promise<Response> {
+    // Encrypt the password if it's not already encrypted
+    if (!userInfo.isPasswordEncrypted && userInfo.password) {
+      userInfo.password = this.commonService.dataEncryption(userInfo.password);
+    }
     const userData = await this.authzService.addUserDetails(userInfo);
     const finalResponse = {
       statusCode: HttpStatus.CREATED,
@@ -188,6 +192,11 @@ export class AuthzController {
         os: expressUa.platform,
         deviceType: expressUa.isDesktop ? 'desktop' : 'mobile'
       };
+
+      // Encrypt the password if it's not already encrypted
+      if (!loginUserDto.isPasswordEncrypted && loginUserDto.password) {
+        loginUserDto.password = this.commonService.dataEncryption(loginUserDto.password);
+      }
 
       const clientInfo = JSON.stringify({ ...device, rawDetail: ua, ip });
       const userData = await this.authzService.login(clientInfo, loginUserDto.email, loginUserDto.password);

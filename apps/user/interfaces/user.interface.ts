@@ -3,7 +3,7 @@ import { $Enums, Prisma, RecordType } from '@prisma/client';
 export interface IUsersProfile {
   id: string;
   username?: string;
-  email?: string;
+  email: string;
   firstName?: string;
   lastName?: string;
   supabaseUserId?: string;

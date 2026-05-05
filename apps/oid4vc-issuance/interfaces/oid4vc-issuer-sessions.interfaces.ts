@@ -17,11 +17,13 @@ export interface ISignerOption {
   method: SignerMethodOption;
   did?: string;
   x5c?: string[];
+  keyId?: string;
 }
 
 export enum AuthenticationType {
-  PRE_AUTHORIZED_CODE = 'pre-authorized_code',
-  AUTHORIZATION_CODE = 'authorization_code'
+  PRE_AUTHORIZED_CODE = 'preAuthorizedCodeFlow',
+  AUTHORIZATION_CODE = 'authorizationCodeFlow',
+  NO_AUTH = 'noAuth'
 }
 
 /* ---------------------------------------------------------
@@ -46,6 +48,8 @@ export interface CreateOidcCredentialOffer {
   // e.g. "abc-gov"
   authenticationType: AuthenticationType; // only option selector
   credentials: CredentialRequest[]; // one or more credentials
+  noticeUrl?: string;
+  isRevocable?: boolean;
 }
 
 export interface GetAllCredentialOffer {

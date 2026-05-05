@@ -1,6 +1,7 @@
 import { CustomExceptionFilter } from '@credebl/common/exception-handler';
-import { Body, Controller, HttpStatus, Logger, Post, Res, UseFilters } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Logger, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiExcludeEndpoint,
   ApiForbiddenResponse,
   ApiOperation,
@@ -11,11 +12,17 @@ import {
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
-import { RegisterOrgWebhhookEndpointDto, SendNotificationDto } from './dtos/notification.dto';
+import {
+  RegisterHolderForNotificationDto,
+  RegisterOrgWebhhookEndpointDto,
+  SendNotificationDto
+} from './dtos/notification.dto';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { NotificationService } from './notification.service';
+import { ClientAccessGuard } from '../authz/guards/client-access-guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('notification')
 @UseFilters(CustomExceptionFilter)
@@ -77,6 +84,37 @@ export class NotificationController {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.notification.success.sendNotification,
       data: sendNotification
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Register holder notification
+   * @param registerHolderForNotificationDto
+   * @param res
+   * @returns Stored notification data
+   */
+  @Post('/register/holder-notification')
+  // @ApiExcludeEndpoint()
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), ClientAccessGuard)
+  @ApiOperation({
+    summary: `Register holder for notification`,
+    description: `Register holder for notification`
+  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async registerHolderNotification(
+    @Body() registerHolderForNotificationDto: RegisterHolderForNotificationDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    const registerNotificationdata = await this.notificationService.registerHolderNotification(
+      registerHolderForNotificationDto
+    );
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.holderNotification.success.register,
+      data: registerNotificationdata
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

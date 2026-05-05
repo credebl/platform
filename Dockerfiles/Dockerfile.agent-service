@@ -32,25 +32,23 @@ RUN bun --bun run build agent-service
 # Stage 2: Create the final image
 FROM oven/bun:1.3-alpine
 # Install OpenSSL
-RUN apk add --no-cache openssl
 RUN apk update && apk upgrade && apk add --no-cache \
     openssl \
     openssh-client \
     aws-cli \
     docker \
-    docker-compose
-
+    docker-compose \
+    && rm -rf /var/cache/apk/* \
+    && addgroup -g 1001 -S nodejs \
+    && adduser -S nextjs -u 1001
 # RUN npm install -g pnpm
 # Set the working directory
 WORKDIR /app
-
-# Copy the compiled code from the build stage
 COPY --from=build /app/dist/apps/agent-service/ ./dist/apps/agent-service/
-
-# Copy the libs folder from the build stage
 COPY --from=build /app/libs/ ./libs/
 #COPY --from=build /app/package.json ./  
 COPY --from=build /app/node_modules  ./node_modules
+USER nextjs
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && bunx prisma migrate deploy && bunx prisma generate && cd ../.. && bun --bun dist/apps/agent-service/main.js"]

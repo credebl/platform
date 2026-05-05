@@ -36,7 +36,7 @@ export interface CredentialConfiguration {
   doctype?: string;
   scope: string;
   claims: Claim[];
-  credential_signing_alg_values_supported: string[];
+  credential_signing_alg_values_supported: string[] | number[];
   cryptographic_binding_methods_supported: string[];
   display: Display[];
 }
@@ -54,7 +54,7 @@ export interface AuthorizationServerConfig {
 export interface IssuerCreation {
   authorizationServerUrl: string;
   issuerId: string;
-  accessTokenSignerKeyType?: AccessTokenSignerKeyType;
+  accessTokenSignerKeyType?: { kty: string; crv: string };
   display: Display[];
   dpopSigningAlgValuesSupported?: string[];
   authorizationServerConfigs: AuthorizationServerConfig;
@@ -67,7 +67,7 @@ export interface IssuerInitialConfig {
   display: Display[] | {};
   // eslint-disable-next-line @typescript-eslint/ban-types
   authorizationServerConfigs: AuthorizationServerConfig | {};
-  accessTokenSignerKeyType: AccessTokenSignerKeyType;
+  accessTokenSignerKeyType: { kty: string; crv: string };
   dpopSigningAlgValuesSupported: string[];
   batchCredentialIssuance?: object;
   credentialConfigurationsSupported: object;
@@ -79,6 +79,8 @@ export interface IssuerMetadata {
   createdById: string;
   orgAgentId: string;
   batchCredentialIssuanceSize?: number;
+  isPrimary: boolean;
+  orgId: string;
 }
 
 export interface initialIssuerDetails {
@@ -87,7 +89,7 @@ export interface initialIssuerDetails {
 }
 
 export enum AccessTokenSignerKeyType {
-  ED25519 = 'ed25519'
+  ED25519 = 'Ed25519'
 }
 
 export interface IssuerUpdation {
@@ -95,6 +97,8 @@ export interface IssuerUpdation {
   accessTokenSignerKeyType: AccessTokenSignerKeyType;
   display;
   batchCredentialIssuanceSize?: number;
+  isPrimary?: boolean;
+  orgId: string;
 }
 
 export interface IAgentNatsPayload {

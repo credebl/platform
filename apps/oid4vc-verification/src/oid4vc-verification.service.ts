@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
+import { fetchConsentNotice } from './oid4vc-verification.helper';
 
 import {
   BadRequestException,
@@ -21,13 +22,22 @@ import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { getAgentUrl } from '@credebl/common/common.utils';
 import { SignerOption, user } from '@prisma/client';
 import { map } from 'rxjs';
-import { CreateVerifier, UpdateVerifier, VerifierRecord } from '@credebl/common/interfaces/oid4vp-verification';
+import {
+  CreateVerifier,
+  IRequestSigner,
+  UpdateVerifier,
+  VerifierRecord
+} from '@credebl/common/interfaces/oid4vp-verification';
 import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
 import { BaseService } from 'libs/service/base.service';
 import { NATSClient } from '@credebl/common/NATSClient';
 
-import { Oid4vpPresentationWh, RequestSigner } from '../interfaces/oid4vp-verification-sessions.interfaces';
+import {
+  Oid4vpPresentationWh,
+  RequestSigner,
+  VerifyAuthorizationResponse
+} from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { SignerMethodOption, x5cKeyType } from '@credebl/enum/enum';
 import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
@@ -213,7 +223,6 @@ export class Oid4vpVerificationService extends BaseService {
       `[oid4vpCreateVerificationSession] called for orgId=${orgId}, verifierId=${verifierId}, user=${userDetails?.id ?? 'unknown'}`
     );
     try {
-      const activeCertificateDetails: X509CertificateRecord[] = [];
       const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
@@ -234,16 +243,29 @@ export class Oid4vpVerificationService extends BaseService {
           method: SignerMethodOption.DID,
           didUrl: orgDid
         };
-      } else if (
-        sessionRequest.requestSigner.method === SignerOption.X509_P256 ||
-        sessionRequest.requestSigner.method === SignerOption.X509_ED25519
-      ) {
+      } else if (sessionRequest.requestSigner.method === SignerOption.X509_P256) {
         this.logger.debug('X5C based request signer method selected');
 
-        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(
-          orgId,
-          sessionRequest.requestSigner.method
-        );
+        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(orgId, x5cKeyType.P256);
+        this.logger.debug(`activeCertificate=${JSON.stringify(activeCertificate)}`);
+
+        if (!activeCertificate) {
+          throw new NotFoundException(`No active certificate(${sessionRequest.requestSigner.method}) found for issuer`);
+        }
+        if (!activeCertificate.keyId) {
+          throw new NotFoundException(`Active certificate keyId missing for ${sessionRequest.requestSigner.method}`);
+        }
+
+        requestSigner = {
+          method: SignerMethodOption.X5C, // "x5c"
+          x5c: [activeCertificate.certificateBase64], // array with PEM/DER base64
+          keyId: activeCertificate.keyId,
+          clientIdPrefix: sessionRequest.requestSigner.clientIdPrefix
+        };
+      } else if (sessionRequest.requestSigner.method === SignerOption.X509_ED25519) {
+        this.logger.debug('X5C based request signer method selected');
+
+        const activeCertificate = await this.oid4vpRepository.getCurrentActiveCertificate(orgId, x5cKeyType.Ed25519);
         this.logger.debug(`activeCertificate=${JSON.stringify(activeCertificate)}`);
 
         if (!activeCertificate) {
@@ -251,17 +273,18 @@ export class Oid4vpVerificationService extends BaseService {
             `No active certificate(${sessionRequest.requestSigner.method}}) found for issuer`
           );
         }
-
+        if (!activeCertificate.keyId) {
+          throw new NotFoundException(`Active certificate keyId missing for ${sessionRequest.requestSigner.method}`);
+        }
         requestSigner = {
           method: SignerMethodOption.X5C, // "x5c"
-          x5c: [activeCertificate.certificateBase64] // array with PEM/DER base64
+          x5c: [activeCertificate.certificateBase64], // array with PEM/DER base64
+          keyId: activeCertificate.keyId,
+          clientIdPrefix: sessionRequest.requestSigner.clientIdPrefix
         };
-
-        activeCertificateDetails.push(activeCertificate);
       } else {
         throw new BadRequestException(`Unsupported requestSigner method: ${sessionRequest.requestSigner.method}`);
       }
-
       // assign the single object (not an array)
       sessionRequest.requestSigner = requestSigner;
 
@@ -289,11 +312,13 @@ export class Oid4vpVerificationService extends BaseService {
     verifierId: string,
     intent: string,
     responseMode: string,
-    signerOption: SignerOption,
-    userDetails: user
+    requestSigner: IRequestSigner,
+    userDetails: user,
+    ecosystemId: string,
+    expectedOrigins?: string[]
   ): Promise<object> {
     this.logger.debug(
-      `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
+      `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, ecosystemId=${ecosystemId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
     );
     try {
       // Fetch agent details
@@ -311,12 +336,12 @@ export class Oid4vpVerificationService extends BaseService {
 
       // Fetch intent template using utilities service
       this.logger.debug(
-        `[createVerificationPresentation] fetching intent template for intent=${intent}, orgId=${orgId}`
+        `[createIntentBasedVerificationPresentation] fetching intent template for intent=${intent}, orgId=${orgId}`
       );
       const templateData = await this.natsClient.sendNatsMessage(
         this.oid4vpVerificationServiceProxy,
         'get-intent-template-by-intent-and-org',
-        { intentName: intent, verifierOrgId: orgId }
+        { intentName: intent, verifierOrgId: orgId, ecosystemId }
       );
 
       if (!templateData) {
@@ -324,7 +349,7 @@ export class Oid4vpVerificationService extends BaseService {
       }
 
       this.logger.debug(
-        `[createVerificationPresentation] template fetched successfully: ${JSON.stringify(templateData)}`
+        `[createIntentBasedVerificationPresentation] template fetched successfully: ${JSON.stringify(templateData)}`
       );
 
       // Build session request using fetched template
@@ -332,11 +357,13 @@ export class Oid4vpVerificationService extends BaseService {
         verifierId: verifier.publicVerifierId,
         dcql: templateData?.template?.templateJson.dcql,
         responseMode,
-        requestSigner: null
+        requestSigner: null,
+        expectedOrigins
       };
 
       // Handle request signer based on method
       let resolvedSigner: RequestSigner | undefined;
+      const signerOption = requestSigner?.method;
 
       if (signerOption === SignerOption.DID) {
         resolvedSigner = {
@@ -354,17 +381,21 @@ export class Oid4vpVerificationService extends BaseService {
         if (!activeCertificate) {
           throw new NotFoundException(`No active certificate(${signerOption}) found for organization`);
         }
+        if (!activeCertificate.keyId) {
+          throw new NotFoundException(`Active certificate keyId missing for ${signerOption}`);
+        }
 
         resolvedSigner = {
           method: SignerMethodOption.X5C,
-          x5c: [activeCertificate.certificateBase64]
+          x5c: [activeCertificate.certificateBase64],
+          keyId: activeCertificate.keyId,
+          clientIdPrefix: requestSigner.clientIdPrefix // Pass through clientIdPrefix if provided
         };
       } else {
         throw new BadRequestException(`Unsupported requestSigner method: ${signerOption}`);
       }
 
       sessionRequest.requestSigner = resolvedSigner;
-
       const url = getAgentUrl(agentEndPoint, CommonConstants.OID4VP_VERIFICATION_SESSION);
       this.logger.debug(`[createIntentBasedVerificationPresentation] calling agent URL=${url}`);
 
@@ -376,10 +407,33 @@ export class Oid4vpVerificationService extends BaseService {
       this.logger.debug(
         `[createIntentBasedVerificationPresentation] verification presentation created successfully for orgId=${orgId}`
       );
+      if (createdSession) {
+        const intentId: string = templateData?.intentId;
+        if (intentId) {
+          const intentNotice: any = await this.natsClient
+            .sendNatsMessage(this.oid4vpVerificationServiceProxy, 'get-intent-notice-by-intent-id', {
+              intentId,
+              orgId
+            })
+            .catch(() => null);
+
+          if (intentNotice?.noticeUrl) {
+            createdSession.consentNoticeUrl = await fetchConsentNotice(
+              intentNotice.noticeUrl,
+              createdSession.verificationSession.id
+            ).catch((err) => {
+              this.logger.warn(
+                `[createIntentBasedVerificationPresentation] consent notice enrichment failed: ${err?.message}`
+              );
+              return null;
+            });
+          }
+        }
+      }
       return createdSession;
     } catch (error) {
       this.logger.error(
-        `[createVerificationPresentation] - error creating verification presentation: ${JSON.stringify(error?.response ?? error)}`
+        `[createIntentBasedVerificationPresentation] - error creating verification presentation: ${JSON.stringify(error)}`
       );
       throw new RpcException(error?.response ?? error);
     }
@@ -399,7 +453,7 @@ export class Oid4vpVerificationService extends BaseService {
         : getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY);
 
       if (!query.id) {
-        url = buildUrlWithQuery(url, query);
+        url = buildUrlWithQuery(url, query as Record<string, object>);
       }
       this.logger.debug(`[getVerifierSession] calling agent URL=${url}`);
 
@@ -437,7 +491,7 @@ export class Oid4vpVerificationService extends BaseService {
       this.logger.debug(`[getVerificationSessionResponse] response fetched successfully for orgId=${orgId}`);
       return verifiers;
     } catch (error) {
-      this.logger.error(`[getVerificationSessionResponse] - error: ${JSON.stringify(error?.response ?? error)}`);
+      this.logger.error(`[getVerificationSessionResponse] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error?.response ?? error);
     }
   }
@@ -669,6 +723,33 @@ export class Oid4vpVerificationService extends BaseService {
         `[deleteVerificationTemplate] - error: ${JSON.stringify(error?.response ?? error?.error ?? error ?? 'Something went wrong')}`
       );
       throw new RpcException(error?.response ?? error.error ?? error);
+    }
+  }
+
+  async verifyAuthorizationResponse(
+    verifyAuthorizationResponse: VerifyAuthorizationResponse,
+    orgId: string
+  ): Promise<object> {
+    this.logger.debug(
+      `[verifyAuthorizationResponse] called for orgId=${orgId}, verificationSessionId=${JSON.stringify(verifyAuthorizationResponse.verificationSessionId)}`
+    );
+    try {
+      const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+      const { agentEndPoint, id } = agentDetails;
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY);
+      const verificationResult = await this.natsClient.sendNatsMessage(
+        this.oid4vpVerificationServiceProxy,
+        'agent-verify-oid4vp-session-auth-response',
+        { url, orgId, verifyAuthorizationResponse }
+      );
+      this.logger.debug(`[verifyAuthorizationResponse] verification result received successfully for orgId=${orgId}`);
+      return verificationResult;
+    } catch (error) {
+      this.logger.error(`[verifyAuthorizationResponse] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error?.response ?? error);
     }
   }
 }

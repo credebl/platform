@@ -14,7 +14,9 @@ import {
   IOrganizationInvitations,
   IOrganizationDashboard,
   IDeleteOrganization,
-  IOrgActivityCount
+  IOrgActivityCount,
+  IGetAllOrgsPayload,
+  IAllOrgsNameId
 } from '@credebl/common/interfaces/organization.interface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
@@ -241,5 +243,13 @@ export class OrganizationService extends BaseService {
   }
   async generateClientApiToken(clientTokenDto: ClientTokenDto): Promise<{ token: string }> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'generate-client-api-token', clientTokenDto);
+  }
+
+  async getEcosystemIdsByTenantId(tenantId: string): Promise<string[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-ids-by-tenant-id', { tenantId });
+  }
+
+  async getAllOrganizations(payload: IGetAllOrgsPayload): Promise<IAllOrgsNameId> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-all-organizations', payload);
   }
 }

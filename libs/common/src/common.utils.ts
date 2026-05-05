@@ -125,7 +125,11 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
       String(CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID),
       String(CommonConstants.URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID)
     ],
-    [String(CommonConstants.OID4VP_VERIFICATION_SESSION), String(CommonConstants.URL_OID4VP_VERIFICATION_SESSION)]
+    [String(CommonConstants.OID4VP_VERIFICATION_SESSION), String(CommonConstants.URL_OID4VP_VERIFICATION_SESSION)],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY)
+    ]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);
@@ -144,6 +148,11 @@ export function shouldLoadOidcModules(): boolean {
   const raw = process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS ?? 'true';
   const hide = 'true' === raw.toLowerCase();
   return !hide;
+}
+
+export function shouldLoadNatsNotification(): boolean {
+  const raw = process.env.ENABLE_NATS_NOTIFICATION;
+  return 'true' === raw;
 }
 
 export const escapeHtml = (value: string): string =>

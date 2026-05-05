@@ -1,0 +1,1177 @@
+import { NATSClient } from '@credebl/common/NATSClient';
+import { PrismaService } from '@credebl/prisma-service';
+import {
+  Injectable,
+  Inject,
+  Logger,
+  HttpException,
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+  ForbiddenException,
+  HttpStatus,
+  ConflictException
+} from '@nestjs/common';
+
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { ClientRegistrationService } from '@credebl/client-registration';
+import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
+import { validateNoticeUrl } from './ecosystem.helper';
+import { CreateEcosystemInviteTemplate } from '../templates/create-ecosystem.templates';
+import { EmailDto } from '@credebl/common/dtos/email.dto';
+import { InviteMemberToEcosystem } from '../templates/invite-member-template';
+import { EmailService } from '@credebl/common/email.service';
+// eslint-disable-next-line camelcase
+import { ecosystem, Prisma, user } from '@prisma/client';
+import { ResponseMessages } from '@credebl/common/response-messages';
+import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
+import { UserRepository } from 'apps/user/repositories/user.repository';
+import {
+  EcosystemOrgStatus,
+  EcosystemRoles,
+  EcosystemServiceRole,
+  Invitation,
+  InvitationViewRole,
+  InviteType
+} from '@credebl/enum/enum';
+
+import {
+  ICreateEcosystem,
+  IEcosystem,
+  IEcosystemDashboard,
+  IEcosystemInvitation,
+  IEcosystemInvitations,
+  IEcosystemMemberInvitations,
+  IGetAllOrgs,
+  IGetEcosystemOrgsResponse,
+  IPlatformDashboardCount
+} from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import {
+  IIntentTemplateList,
+  IIntentTemplateSearchCriteria
+} from '@credebl/common/interfaces/intents-template.interface';
+import { ErrorHandler } from '@credebl/common';
+import { CreateIntentDto } from '../dtos/create-intent.dto';
+import { UpdateIntentDto } from '../dtos/update-intent.dto';
+import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
+
+@Injectable()
+export class EcosystemService {
+  constructor(
+    @Inject('NATS_CLIENT') private readonly ecosystemServiceProxy: ClientProxy,
+    private readonly natsClient: NATSClient,
+    private readonly ecosystemRepository: EcosystemRepository,
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+    private readonly organizationRepository: OrganizationRepository,
+    private readonly userRepository: UserRepository,
+    private readonly clientRegistrationService: ClientRegistrationService
+  ) {}
+
+  private readonly logger = new Logger(EcosystemService.name);
+  /**
+   *
+   * @param bulkInvitationDto
+   * @param userId
+   * @returns
+   */
+  async inviteUserToCreateEcosystem(payload: {
+    email: string;
+    platformAdminId: string;
+  }): Promise<IEcosystemInvitations> {
+    const { email, platformAdminId } = payload;
+    if (!email || !platformAdminId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.emailOrPlatformAdminIdMissing);
+    }
+    const existingInvitation = await this.ecosystemRepository.getPendingInvitationByEmail(email);
+
+    if (existingInvitation?.type === InviteType.MEMBER) {
+      throw new RpcException({
+        statusCode: HttpStatus.CONFLICT,
+        message: ResponseMessages.ecosystem.error.invitationAlreadySent
+      });
+    }
+
+    const invitedUser = await this.userRepository.getUserDetails(email);
+    const invitation = await this.ecosystemRepository.createEcosystemInvitation({
+      email,
+      invitedUserId: invitedUser?.id ?? null,
+      userId: platformAdminId
+    });
+    const isUserExist = Boolean(invitedUser);
+
+    await this.sendInviteEmailTemplate(email, isUserExist);
+
+    return invitation;
+  }
+
+  async sendInviteEmailTemplate(email: string, isUserExist: boolean): Promise<boolean> {
+    const platformConfigData = await this.ecosystemRepository.getPlatformConfigData();
+    if (!platformConfigData) {
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.platformConfigNotFound);
+    }
+
+    const template = new CreateEcosystemInviteTemplate();
+    const emailData = new EmailDto();
+
+    emailData.emailFrom = platformConfigData.emailFrom;
+    emailData.emailTo = email;
+    const platformName = process.env.PLATFORM_NAME ?? 'the platform';
+    emailData.emailSubject = `Invitation to create a new ecosystem on ${platformName}`;
+    emailData.emailHtml = template.sendInviteEmailTemplate(isUserExist);
+    return this.emailService.sendEmail(emailData);
+  }
+
+  async checkUserExistInPlatform(email: string): Promise<boolean> {
+    const pattern = { cmd: 'get-user-by-mail' };
+    const payload = { email };
+
+    const userData: user = await this.natsClient
+      .send<user>(this.ecosystemServiceProxy, pattern, payload)
+      .catch((error) => {
+        this.logger.error('checkUserExistInPlatform error', error);
+
+        const status = Number(error?.status) || HttpStatus.INTERNAL_SERVER_ERROR;
+
+        throw new HttpException(
+          {
+            status,
+            error: error?.message ?? 'Unexpected error'
+          },
+          status
+        );
+      });
+
+    return Boolean(userData?.isEmailVerified);
+  }
+
+  async getUserId(userId: string): Promise<user> {
+    const pattern = { cmd: 'get-user-by-user-id' };
+
+    const userData = await this.natsClient.send<user>(this.ecosystemServiceProxy, pattern, userId).catch((error) => {
+      this.logger.error(`catch: ${JSON.stringify(error)}`);
+      throw new HttpException(
+        {
+          status: error.status,
+          error: error.error,
+          message: error.message
+        },
+        error.status
+      );
+    });
+    return userData;
+  }
+
+  async getInvitationsByUserId(
+    userId: string,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<IEcosystemInvitations>> {
+    if (!userId) {
+      throw new BadRequestException('userId missing');
+    }
+
+    try {
+      const invitations = await this.ecosystemRepository.getInvitationsByUserId(userId, pageDetail);
+      return invitations;
+    } catch (error) {
+      this.logger.error('getInvitationsByUserId error', error);
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.invitationNotFound);
+    }
+  }
+
+  /**
+   *
+   * @param createEcosystemDto
+   * @returns
+   */
+
+  // eslint-disable-next-line camelcase
+  async createEcosystem(createEcosystemDto: ICreateEcosystem): Promise<IEcosystem> {
+    try {
+      const { userId } = createEcosystemDto;
+
+      if (!userId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+      }
+
+      const invitation = await this.ecosystemRepository.findAcceptedInvitationByUserId(userId);
+
+      if (!invitation) {
+        throw new ForbiddenException(ResponseMessages.ecosystem.error.invitationRequiredFromPlatformAdmin);
+      }
+      const ecosystemExist = await this.ecosystemRepository.checkEcosystemNameExist(createEcosystemDto?.name);
+
+      if (ecosystemExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.exists);
+      }
+
+      const user = await this.userRepository.getUserById(userId);
+
+      if (!user) {
+        throw new Error('Error fetching user');
+      }
+
+      const ecosystem = await this.prisma.$transaction(async (tx) => {
+        const newEcosystem = await this.ecosystemRepository.createNewEcosystem(createEcosystemDto, tx);
+
+        if (!newEcosystem) {
+          throw new NotFoundException(ResponseMessages.ecosystem.error.notCreated);
+        }
+        await this.ecosystemRepository.updateEcosystemInvitationDetails(
+          user.email,
+          newEcosystem.id,
+          createEcosystemDto.orgId,
+          tx
+        );
+
+        return newEcosystem;
+      });
+
+      // Update Keycloak user attributes with ecosystem lead information
+      await this.updateKeycloakEcosystemLeads(user, createEcosystemDto.orgId, ecosystem.id);
+
+      return ecosystem;
+    } catch (error) {
+      this.logger.error(`Failed to create ecosystem : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  private async updateKeycloakEcosystemLeads(
+    user: { id: string; keycloakUserId?: string; clientId?: string; clientSecret?: string },
+    orgId: string,
+    ecosystemId: string
+  ): Promise<void> {
+    try {
+      const token = await this.clientRegistrationService.getPlatformManagementToken();
+
+      // Update user attributes in Keycloak with ecosystem lead info
+      if (user.keycloakUserId) {
+        await this.clientRegistrationService.updateUserEcosystemLeads(user.keycloakUserId, orgId, ecosystemId, token);
+        this.logger.log(`Successfully updated Keycloak ecosystem leads for user ${user.id}, ecosystem ${ecosystemId}`);
+      } else {
+        this.logger.warn(`User ${user.id} does not have a keycloakUserId, skipping user attribute update`);
+      }
+
+      await this.updateOrgServiceAccountEcosystem(orgId, ecosystemId, EcosystemServiceRole.LEAD, token);
+    } catch (error) {
+      this.logger.error(`Failed to update Keycloak ecosystem leads: ${error.message}`);
+      throw error;
+    }
+  }
+
+  private async updateKeycloakEcosystemMember(
+    user: { id: string; keycloakUserId?: string; clientId?: string; clientSecret?: string },
+    orgId: string,
+    ecosystemId: string
+  ): Promise<void> {
+    try {
+      const token = await this.clientRegistrationService.getPlatformManagementToken();
+
+      if (user.keycloakUserId) {
+        await this.clientRegistrationService.updateUserEcosystemMember(user.keycloakUserId, orgId, ecosystemId, token);
+        this.logger.log(`Successfully updated Keycloak ecosystem member for user ${user.id}, ecosystem ${ecosystemId}`);
+      } else {
+        this.logger.warn(`User ${user.id} does not have a keycloakUserId, skipping user attribute update`);
+      }
+
+      await this.updateOrgServiceAccountEcosystem(orgId, ecosystemId, EcosystemServiceRole.MEMBER, token);
+    } catch (error) {
+      this.logger.error(`Failed to update Keycloak ecosystem member: ${error.message}`);
+      throw error;
+    }
+  }
+
+  private async updateOrgServiceAccountEcosystem(
+    orgId: string,
+    ecosystemId: string,
+    role: EcosystemServiceRole,
+    token: string
+  ): Promise<void> {
+    try {
+      const organization = await this.organizationRepository.getOrgProfile(orgId);
+
+      if (!organization?.idpId) {
+        this.logger.warn(`Organization ${orgId} does not have an idpId, skipping service account update`);
+        return;
+      }
+
+      await this.clientRegistrationService.updateClientServiceAccountEcosystemAccess(
+        organization.idpId,
+        orgId,
+        ecosystemId,
+        role,
+        token
+      );
+
+      this.logger.log(
+        `Successfully updated service account ecosystem ${role} for org ${orgId}, ecosystem ${ecosystemId}`
+      );
+    } catch (error) {
+      this.logger.error(`Failed to update service account ecosystem access: ${error.message}`);
+    }
+  }
+
+  async inviteMemberToEcosystem(orgId: string, reqUser: string, ecosystemId: string): Promise<boolean> {
+    try {
+      const platformConfigData = await this.prisma.platform_config.findFirst();
+      if (!platformConfigData) {
+        throw new InternalServerErrorException(ResponseMessages.ecosystem.error.platformConfigNotFound);
+      }
+      const organization = await this.organizationRepository.getOrgProfile(orgId);
+      const user = await this.ecosystemRepository.getUserById(organization.createdBy);
+      if (!user) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.userNotFound);
+      }
+      if (!user.email) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userEmailRequired);
+      }
+
+      const userEmail = user.email;
+
+      const checkUser = await this.ecosystemRepository.getEcosystemInvitationsByEmail(
+        userEmail || '',
+        ecosystemId,
+        orgId
+      );
+
+      if (checkUser && Invitation.REJECTED === checkUser.status && ecosystemId === checkUser.ecosystemId) {
+        const reopenedInvitation = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
+          userEmail,
+          orgId,
+          ecosystemId,
+          Invitation.PENDING
+        );
+        if (reopenedInvitation) {
+          return true;
+        }
+      }
+
+      if (
+        checkUser?.ecosystemId === ecosystemId &&
+        checkUser.invitedOrg === orgId &&
+        checkUser.status === Invitation.PENDING &&
+        checkUser.type === InviteType.MEMBER
+      ) {
+        throw new ConflictException(`Invitation already exists for org with email ${user.email}`);
+      } else if (
+        checkUser?.ecosystemId === ecosystemId &&
+        checkUser.status === Invitation.ACCEPTED &&
+        checkUser.type === InviteType.ECOSYSTEM
+      ) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.unableToSendInvitationToLead);
+      }
+
+      const invitation = await this.ecosystemRepository.createEcosystemInvitation({
+        email: userEmail,
+        invitedUserId: user.id,
+        userId: reqUser,
+        type: InviteType.MEMBER,
+        status: Invitation.PENDING,
+        ecosystemId,
+        orgId
+      });
+
+      if (invitation && reqUser === user.id) {
+        await this.updateEcosystemInvitationStatus(Invitation.ACCEPTED, reqUser, ecosystemId, orgId);
+        return true;
+      }
+      const ecosystem = await this.ecosystemRepository.getEcosystemById(ecosystemId);
+      const emailData = new EmailDto();
+      const inviteMemberTemplate = new InviteMemberToEcosystem();
+
+      emailData.emailFrom = platformConfigData.emailFrom;
+      emailData.emailTo = [userEmail];
+      emailData.emailSubject = `Invitation for ecosystem`;
+      emailData.emailHtml = inviteMemberTemplate.sendInviteEmailTemplate(
+        `${user.firstName} ${user.lastName}`,
+        ecosystem.name
+      );
+      const response = await this.emailService.sendEmail(emailData);
+      return response;
+    } catch (error) {
+      this.logger.error(`Failed to send invitation to member : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getEcosystems(
+    userId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId: string
+  ): Promise<PaginatedResponse<IEcosystem>> {
+    if (!userId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+    }
+    try {
+      const ecosystem = await this.ecosystemRepository.getEcosystemByRole(userId, EcosystemRoles.ECOSYSTEM_LEAD);
+      if (ecosystem && ecosystem.ecosystemRole.name === EcosystemRoles.ECOSYSTEM_LEAD) {
+        const leadEcosystems = await this.ecosystemRepository.getEcosystemsForEcosystemLead(userId, pageDetail);
+        if (orgId) {
+          return this.ecosystemRepository.getAllEcosystemsByOrgId(orgId, pageDetail);
+        }
+        const userEcosystems = await this.ecosystemRepository.getEcosystemsForUser(userId, pageDetail);
+
+        if (0 < userEcosystems?.data.length) {
+          return userEcosystems;
+        }
+        return leadEcosystems;
+      } else {
+        return this.ecosystemRepository.getAllEcosystems(pageDetail);
+      }
+    } catch (error) {
+      this.logger.error('getEcosystems error', error);
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.fetch);
+    }
+  }
+
+  async getEcosystemDashboard(ecosystemId: string, orgId: string): Promise<IEcosystemDashboard> {
+    if (!ecosystemId || !orgId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.ecosystemIdOrOrgIdMissing);
+    }
+
+    try {
+      return await this.ecosystemRepository.getEcosystemDashboard(ecosystemId, orgId);
+    } catch (error) {
+      this.logger.error('getEcosystemDashboard error', error);
+      throw error;
+    }
+  }
+
+  async updateEcosystemInvitationStatus(
+    status: Invitation,
+    reqUser: string,
+    ecosystemId: string,
+    orgId: string
+  ): Promise<boolean> {
+    try {
+      const user = await this.ecosystemRepository.getUserById(reqUser);
+
+      if (!user) {
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.ecosystem.error.userNotFoundForInvitation
+        });
+      }
+
+      if (!user.email) {
+        throw new RpcException({
+          status: HttpStatus.BAD_REQUEST,
+          message: ResponseMessages.ecosystem.error.userEmailRequired
+        });
+      }
+
+      const userEmail = user.email;
+
+      const existingInvitation = await this.ecosystemRepository.getEcosystemInvitationsByEmail(
+        userEmail,
+        ecosystemId,
+        orgId
+      );
+
+      if (!existingInvitation) {
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.ecosystem.error.invitationNotFound
+        });
+      }
+
+      if (existingInvitation.status === Invitation.ACCEPTED) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.alreadyAccepted);
+      }
+      const result = await this.ecosystemRepository.updateEcosystemInvitationStatusByEmail(
+        userEmail,
+        orgId,
+        ecosystemId,
+        status
+      );
+
+      if (result && result?.status === Invitation.ACCEPTED && result?.ecosystemId) {
+        const role = await this.ecosystemRepository.getEcosystemRoleByName(EcosystemRoles.ECOSYSTEM_MEMBER);
+
+        if (!role) {
+          throw new Error('Error fetching ecosystem role');
+        }
+
+        if (!result.invitedOrg) {
+          throw new Error(ResponseMessages.ecosystem.error.orgIdMissing);
+        }
+
+        if (!result.userId) {
+          throw new Error(ResponseMessages.ecosystem.error.userIdMissing);
+        }
+
+        const { userId } = result;
+
+        const ecosystemOrgPayload = {
+          orgId: result.invitedOrg,
+          status: EcosystemOrgStatus.ACTIVE,
+          ecosystemId: result.ecosystemId,
+          ecosystemRoleId: role.id,
+          userId: result.userId,
+          createdBy: reqUser,
+          lastChangedBy: reqUser
+        };
+
+        const existingOrg = await this.ecosystemRepository.getEcosystemOrg(result.ecosystemId, userId);
+        if (!existingOrg) {
+          const userRecord = await this.ecosystemRepository.createEcosystemOrg(ecosystemOrgPayload);
+          this.logger.log('Ecosystem user record created', JSON.stringify(userRecord, null, 2));
+
+          await this.updateKeycloakEcosystemMember(user, result.invitedOrg, result.ecosystemId);
+        }
+      }
+      return Boolean(result);
+    } catch (error) {
+      this.logger.error('updateEcosystemInvitationStatus error', error);
+      throw error;
+    }
+  }
+
+  async deleteOrgsFromEcosystem(ecosystemId: string, orgIds: string[]): Promise<{ count: number }> {
+    return this.prisma.$transaction(async (tx) => {
+      const deletedCount = await this.ecosystemRepository.deleteOrgFromEcosystem(ecosystemId, orgIds, tx);
+      await this.ecosystemRepository.deleteEcosystemInvitationByOrgId(ecosystemId, orgIds, tx);
+      return deletedCount;
+    });
+  }
+
+  async updateEcosystemOrgStatus(
+    ecosystemId: string,
+    orgIds: string[],
+    status: EcosystemOrgStatus
+  ): Promise<{ count: number }> {
+    return this.ecosystemRepository.updateEcosystemOrgStatus(ecosystemId, orgIds, status);
+  }
+
+  async getAllEcosystemOrgsByEcosystemId(
+    ecosystemId: string,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<IGetAllOrgs>> {
+    return this.ecosystemRepository.getAllEcosystemOrgsByEcosystemId(ecosystemId, pageDetail);
+  }
+
+  async getEcosystemMemberInvitations(
+    params: IEcosystemMemberInvitations,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<IEcosystemInvitation>> {
+    const { role, ecosystemId, email, userId } = params;
+
+    // NOTE: where clause is constructed at service layer by design decision
+    // to keep repository free of conditional logic.
+    const baseWhere: Prisma.ecosystem_invitationsWhereInput = {
+      deletedAt: null,
+      type: InviteType.MEMBER,
+      ...(pageDetail.search && {
+        OR: [
+          { email: { contains: pageDetail.search, mode: 'insensitive' } },
+          { status: { contains: pageDetail.search, mode: 'insensitive' } },
+          { organisation: { name: { contains: pageDetail.search, mode: 'insensitive' } } }
+        ]
+      })
+    };
+
+    let where: Prisma.ecosystem_invitationsWhereInput;
+
+    if (role === InvitationViewRole.ECOSYSTEM_LEAD) {
+      where = {
+        ...baseWhere,
+        ecosystemId
+      };
+    } else {
+      where = {
+        ...baseWhere,
+        status: Invitation.PENDING,
+        AND: [
+          {
+            OR: [...(email ? [{ email }] : []), ...(userId ? [{ userId }] : [])]
+          }
+        ]
+      };
+    }
+    return this.ecosystemRepository.getEcosystemInvitations(where, pageDetail);
+  }
+
+  async getUserByKeycloakId(keycloakId: string): Promise<user> {
+    return this.ecosystemRepository.getUserByKeycloakId(keycloakId);
+  }
+
+  async getEcosystemDetailsByUserId(userId: string): Promise<ecosystem> {
+    return this.ecosystemRepository.getEcosystemDetailsByUserId(userId);
+  }
+
+  async getEcosystemOrgDetailsByUserId(
+    userId: string,
+    ecosystemId: string
+  ): Promise<{ ecosystemRole: { name: string } }[]> {
+    return this.ecosystemRepository.getEcosystemOrgDetailsByUserId(userId, ecosystemId);
+  }
+  // Intent Template CRUD operations
+  async createIntentTemplate(data: {
+    orgId?: string;
+    intentId: string;
+    templateId: string;
+    user: { id: string };
+  }): Promise<object> {
+    try {
+      const { orgId, intentId, templateId, user } = data;
+      const userId = user.id;
+
+      const intent = await this.ecosystemRepository.findIntentById(intentId);
+
+      if (!intent) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'Intent not found'
+        });
+      }
+
+      if (orgId) {
+        const orgMembership = await this.ecosystemRepository.findEcosystemOrg(intent.ecosystemId, orgId);
+
+        if (!orgMembership || orgMembership.status !== EcosystemOrgStatus.ACTIVE) {
+          throw new RpcException({
+            statusCode: HttpStatus.FORBIDDEN,
+            message: 'Provided orgId is not an ACTIVE member of this ecosystem'
+          });
+        }
+      }
+
+      const existingTemplate = await this.ecosystemRepository.findIntentTemplate({
+        orgId,
+        intentId,
+        templateId
+      });
+
+      if (existingTemplate) {
+        const scope = orgId ? `org ${orgId}` : 'globally';
+        throw new RpcException({
+          statusCode: HttpStatus.CONFLICT,
+          message: `A template is already assigned to this intent for ${scope}.`
+        });
+      }
+      return await this.ecosystemRepository.createIntentTemplate({
+        orgId,
+        intentId,
+        templateId,
+        createdBy: userId
+      });
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to create intent template');
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentTemplateById(id: string): Promise<object> {
+    try {
+      const intentTemplate = await this.ecosystemRepository.getIntentTemplateById(id);
+      if (!intentTemplate) {
+        throw new NotFoundException('Intent template not found');
+      }
+      return intentTemplate;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent template');
+      this.logger.error(
+        `[getIntentTemplateById] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentTemplatesByIntentId(intentId: string): Promise<object[]> {
+    try {
+      const intent = await this.ecosystemRepository.findIntentById(intentId);
+
+      if (!intent) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.ecosystem.error.intentNotFound
+        });
+      }
+      return await this.ecosystemRepository.getIntentTemplates({ intentId });
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
+      this.logger.error(
+        `[getIntentTemplatesByIntentId] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentTemplatesByOrgId(orgId: string): Promise<object[]> {
+    try {
+      return await this.ecosystemRepository.getIntentTemplates({ orgId });
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
+      this.logger.error(
+        `[getIntentTemplatesByOrgId] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getAllIntentTemplateByQuery(payload: {
+    intentTemplateSearchCriteria: IIntentTemplateSearchCriteria;
+  }): Promise<IIntentTemplateList> {
+    try {
+      const { intentTemplateSearchCriteria } = payload;
+      return await this.ecosystemRepository.getAllIntentTemplateByQuery(intentTemplateSearchCriteria);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent templates');
+      this.logger.error(
+        `[getAllIntentTemplateByQuery] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentTemplateByIntentAndOrg(
+    intentName: string,
+    verifierOrgId: string,
+    ecosystemId?: string
+  ): Promise<object | null> {
+    try {
+      const intentTemplate = await this.ecosystemRepository.getIntentTemplateByIntentAndOrg(
+        intentName,
+        verifierOrgId,
+        ecosystemId
+      );
+      if (!intentTemplate) {
+        this.logger.log(
+          `[getIntentTemplateByIntentAndOrg] - No template found for intent ${intentName} and org ${verifierOrgId}`
+        );
+        return null;
+      }
+      return intentTemplate;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intent template');
+      this.logger.error(
+        `[getIntentTemplateByIntentAndOrg] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async updateIntentTemplate(
+    id: string,
+    data: { orgId: string; intentId: string; templateId: string; user: { id: string } }
+  ): Promise<object> {
+    try {
+      const { user, orgId, intentId, templateId } = data;
+
+      if (!user?.id) {
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'user is required'
+        });
+      }
+
+      if (!intentId || !templateId) {
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'intentId and templateId are required'
+        });
+      }
+
+      const existing = await this.ecosystemRepository.getIntentTemplateById(id);
+
+      if (!existing) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `Intent template not found for id ${id}`
+        });
+      }
+
+      const duplicate = await this.ecosystemRepository.findIntentTemplate({
+        orgId,
+        intentId,
+        templateId
+      });
+
+      if (duplicate && duplicate.id !== id) {
+        const scope = orgId ? `org ${orgId}` : 'globally';
+
+        throw new RpcException({
+          statusCode: HttpStatus.CONFLICT,
+          message: `A template is already assigned to this intent for ${scope}.`
+        });
+      }
+
+      return await this.ecosystemRepository.updateIntentTemplate(id, {
+        orgId,
+        intentId,
+        templateId,
+        lastChangedBy: user.id
+      });
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to update intent template');
+      this.logger.error(
+        `[updateIntentTemplate] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async deleteIntentTemplate(id: string): Promise<object> {
+    try {
+      const intentTemplate = await this.ecosystemRepository.deleteIntentTemplate(id);
+      return intentTemplate;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to delete intent template');
+      this.logger.error(
+        `[deleteIntentTemplate] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  /**
+   * Create a new intent
+   */
+  async createIntent(createIntentDto: CreateIntentDto): Promise<object> {
+    try {
+      const { name, description, ecosystemId, userId } = createIntentDto;
+      const ecosystem = await this.ecosystemRepository.getEcosystemById(ecosystemId);
+
+      if (!ecosystem) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
+      }
+
+      const intentExist = await this.ecosystemRepository.checkIntentExist(createIntentDto.name, ecosystemId);
+
+      if (intentExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.intentAlreadyExists);
+      }
+
+      return this.ecosystemRepository.createIntent({
+        name,
+        description,
+        createdBy: userId,
+        ecosystemId
+      });
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to create intent');
+      this.logger.error(
+        `[createIntent] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  /**
+   * Get all intents
+   */
+  async getIntents(
+    ecosystemId: string,
+    pageDetail: IPaginationSortingDto,
+    intentId?: string
+  ): Promise<PaginatedResponse<object>> {
+    try {
+      const ecosystem = await this.ecosystemRepository.getEcosystemById(ecosystemId);
+
+      if (!ecosystem) {
+        throw new NotFoundException(ResponseMessages.ecosystem.error.ecosystemNotFound);
+      }
+
+      return await this.ecosystemRepository.getIntents(ecosystemId, pageDetail, intentId);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to retrieve intents');
+      this.logger.error(
+        `[getIntents] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getTemplatesByOrgId(
+    ecosystemId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId?: string
+  ): Promise<PaginatedResponse<object>> {
+    if (!ecosystemId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.ecosystemIdIsRequired);
+    }
+
+    return this.ecosystemRepository.getTemplatesByOrgId(ecosystemId, pageDetail, orgId);
+  }
+
+  /**
+   * Update an intent
+   */
+  async updateIntent(updateIntentDto: UpdateIntentDto): Promise<object> {
+    try {
+      const { userId, name, description, ecosystemId, intentId } = updateIntentDto;
+
+      if (!userId) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.userIdMissing);
+      }
+
+      const intentExist = await this.ecosystemRepository.checkIntentExist(name, ecosystemId, intentId);
+
+      if (intentExist) {
+        throw new ConflictException(ResponseMessages.ecosystem.error.intentAlreadyExists);
+      }
+
+      const intent = await this.ecosystemRepository.updateIntent({
+        name,
+        description,
+        intentId: updateIntentDto.intentId,
+        lastChangedBy: userId
+      });
+
+      this.logger.log(`[updateIntent] - Intent updated with id ${intent.id}`);
+      return intent;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, 'Failed to update intent');
+      this.logger.error(
+        `[updateIntent] - ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  /**
+   * Delete an intent
+   */
+  async deleteIntent(data: { ecosystemId: string; intentId: string; userId: string }): Promise<object> {
+    const { ecosystemId, intentId, userId } = data;
+
+    return this.ecosystemRepository.deleteIntent({
+      ecosystemId,
+      intentId,
+      userId
+    });
+  }
+
+  /**
+   *   Update ecosystem enable/disable flag
+   */
+  async updateEcosystemConfig(payload: {
+    isEcosystemEnabled: boolean;
+    platformAdminId: string;
+  }): Promise<{ message: string }> {
+    const { isEcosystemEnabled, platformAdminId } = payload;
+    if (!platformAdminId) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.platformIdRequired);
+    }
+    if ('boolean' !== typeof isEcosystemEnabled) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemEnabledFlag);
+    }
+
+    await this.ecosystemRepository.updateEcosystemConfig({
+      isEcosystemEnabled,
+      userId: platformAdminId
+    });
+
+    return {
+      message: ResponseMessages.ecosystem.success.updateEcosystemConfig
+    };
+  }
+
+  async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
+    return this.ecosystemRepository.getDashBoardCountPlatformAdmin();
+  }
+
+  async getEcosystemEnableStatus(): Promise<boolean> {
+    return this.ecosystemRepository.getEcosystemEnableStatus();
+  }
+
+  async getEcosystemOrgs(
+    orgId: string,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<IGetEcosystemOrgsResponse>> {
+    const rawData = await this.ecosystemRepository.getEcosystemOrgs(orgId, pageDetail);
+    const data = rawData.data.map((item) => {
+      const [leadData] = item?.ecosystem?.ecosystemOrgs || [];
+
+      return {
+        id: item?.ecosystem?.id,
+        name: item?.ecosystem?.name,
+        description: item?.ecosystem?.description,
+        memberCount: item?.ecosystem?._count.ecosystemOrgs - 1,
+        role: item?.ecosystemRole?.name,
+        leadOrg: leadData
+          ? {
+              id: leadData.orgId,
+              name: leadData.organisation.name
+            }
+          : null
+      };
+    });
+    return { totalPages: rawData.totalPages, data };
+  }
+
+  async getCreateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
+    return this.ecosystemRepository.getCreateEcosystemInvitationStatus(email, status);
+  }
+
+  // Intent Notice CRUD
+
+  private async validateEcosystemLead(userId: string, ecosystemId: string): Promise<void> {
+    const isLead = await this.ecosystemRepository.isEcosystemLead(userId, ecosystemId);
+    if (!isLead) {
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: 'Only Ecosystem Lead can perform this action.'
+      });
+    }
+  }
+
+  async createIntentNotice(intentId: string, noticeUrl: string, userId: string, orgId?: string): Promise<object> {
+    try {
+      await validateNoticeUrl(noticeUrl);
+
+      const intent = await this.ecosystemRepository.findIntentById(intentId);
+
+      if (!intent) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.intentNotice.error.intentNotFound
+        });
+      }
+      await this.validateEcosystemLead(userId, intent['ecosystemId']);
+
+      if (orgId) {
+        const orgEcosystemMembership = await this.ecosystemRepository.getEcosystemOrg(intent['ecosystemId'], orgId);
+        if (!orgEcosystemMembership) {
+          throw new RpcException({
+            statusCode: HttpStatus.FORBIDDEN,
+            message: 'The provided orgId is not a member or lead of this ecosystem.'
+          });
+        }
+      }
+
+      const isAlreadyExists = await this.ecosystemRepository.intentNoticeExists(intentId, orgId ?? null);
+      if (isAlreadyExists) {
+        const slotLabel = orgId ? `orgId ${orgId}` : 'no orgId';
+        throw new RpcException({
+          statusCode: HttpStatus.CONFLICT,
+          message: `An intent notice with ${slotLabel} already exists for this intent.`
+        });
+      }
+      return await this.ecosystemRepository.createIntentNotice(intentId, noticeUrl, userId, orgId);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.create);
+      this.logger.error(
+        `[createIntentNotice] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentNotices(id?: string, intentId?: string): Promise<object[]> {
+    try {
+      const records = await this.ecosystemRepository.getIntentNotices(id, intentId);
+      if (!records || 0 === records.length) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.intentNotice.error.notFound
+        });
+      }
+      return records;
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.notFound);
+      this.logger.error(
+        `[getIntentNotices] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentNoticesByEcosystemId(
+    ecosystemId: string,
+    pageNumber: number,
+    pageSize: number,
+    search: string,
+    intentId?: string
+  ): Promise<object> {
+    try {
+      return await this.ecosystemRepository.getIntentNoticesByEcosystemId(
+        ecosystemId,
+        pageNumber,
+        pageSize,
+        search,
+        intentId
+      );
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.notFound);
+      this.logger.error(
+        `[getIntentNoticesByEcosystemId] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async getIntentNoticeByIntentId(intentId: string, orgId?: string | null): Promise<object | null> {
+    try {
+      return await this.ecosystemRepository.getIntentNoticeByIntentId(intentId, orgId);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.notFound);
+      this.logger.error(
+        `[getIntentNoticeByIntentId] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async updateIntentNotice(id: string, noticeUrl: string, userId: string): Promise<object> {
+    try {
+      await validateNoticeUrl(noticeUrl);
+      const [notice] = await this.ecosystemRepository.getIntentNotices(id);
+      if (!notice) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.intentNotice.error.notFound
+        });
+      }
+      const intent = await this.ecosystemRepository.findIntentById(notice['intentId']);
+      await this.validateEcosystemLead(userId, intent['ecosystemId']);
+
+      return await this.ecosystemRepository.updateIntentNotice(id, noticeUrl, userId);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.updateFailed);
+      this.logger.error(
+        `[updateIntentNotice] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+
+  async deleteIntentNotice(id: string, userId: string): Promise<object> {
+    try {
+      const [notice] = await this.ecosystemRepository.getIntentNotices(id);
+      if (!notice) {
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: ResponseMessages.intentNotice.error.notFound
+        });
+      }
+      const intent = await this.ecosystemRepository.findIntentById(notice['intentId']);
+      await this.validateEcosystemLead(userId, intent['ecosystemId']);
+
+      return await this.ecosystemRepository.deleteIntentNotice(id);
+    } catch (error) {
+      const errorResponse = ErrorHandler.categorize(error, ResponseMessages.intentNotice.error.deleteFailed);
+      this.logger.error(
+        `[deleteIntentNotice] ${errorResponse.statusCode}: ${errorResponse.message}`,
+        ErrorHandler.format(error)
+      );
+      throw new RpcException(errorResponse);
+    }
+  }
+}

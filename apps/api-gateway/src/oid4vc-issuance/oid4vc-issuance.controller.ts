@@ -54,6 +54,7 @@ import {
   GetAllCredentialOfferDto,
   UpdateCredentialRequestDto
 } from './dtos/issuer-sessions.dto';
+import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -633,6 +634,7 @@ export class Oid4vcIssuanceController {
     @Param('id') id: string,
     @Res() res: Response
   ): Promise<Response> {
+    oidcIssueCredentialDto.contextCorrelationId = oidcIssueCredentialDto.contextCorrelationId?.replace(/^tenant-/, '');
     if (id && 'default' === oidcIssueCredentialDto.contextCorrelationId) {
       oidcIssueCredentialDto.orgId = id;
     }
@@ -648,20 +650,50 @@ export class Oid4vcIssuanceController {
       data: getCredentialDetails
     };
 
-    const webhookUrl = await this.oid4vcIssuanceService
+    void this.oid4vcIssuanceService
       ._getWebhookUrl(oidcIssueCredentialDto.contextCorrelationId, id)
+      .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        if (!webhookUrlInfo?.webhookUrl) {
+          return;
+        }
+        this.logger.log(`Posting response to the webhook url`);
+        const plainIssuanceDto = JSON.parse(JSON.stringify(oidcIssueCredentialDto));
+        return this.oid4vcIssuanceService._postWebhookResponse(
+          webhookUrlInfo.webhookUrl,
+          { data: plainIssuanceDto },
+          webhookUrlInfo.webhookSecret
+        );
+      })
       .catch((error) => {
-        this.logger.debug(`error in getting webhook url ::: ${JSON.stringify(error)}`);
+        this.logger.error(
+          `error in webhook dispatch flow ::: ${error?.message ?? error?.stack ?? JSON.stringify(error)}`
+        );
       });
-    if (webhookUrl) {
-      this.logger.log(`Posting response to the webhook url`);
-      const plainIssuanceDto = JSON.parse(JSON.stringify(oidcIssueCredentialDto));
-
-      await this.oid4vcIssuanceService._postWebhookResponse(webhookUrl, { data: plainIssuanceDto }).catch((error) => {
-        this.logger.debug(`error in posting webhook  response to webhook url ::: ${JSON.stringify(error)}`);
-      });
-    }
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/openid4vc/issuance-sessions/:issuanceSessionId/revoke')
+  @ApiOperation({
+    summary: 'Revoke an OID4VC Credential',
+    description: 'Instantly revokes a credential issued during a specific OID4VC session.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Credential revoked successfully.', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async revokeCredential(
+    @Param('orgId') orgId: string,
+    @Param('issuanceSessionId') issuanceSessionId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const revoked = await this.oid4vcIssuanceService.revokeCredential(issuanceSessionId, orgId);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: 'Credential revoked successfully.',
+      data: revoked
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

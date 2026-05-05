@@ -55,6 +55,8 @@ import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { ClientTokenDto } from './dtos/client-token.dto';
+import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
+import { TrustServiceRoleGuard } from '../authz/guards/trust-service-role.guard';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -314,6 +316,30 @@ export class OrganizationController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.getOrganizations,
       data: getOrganizations
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Get('/tenant/:tenantId/ecosystems')
+  @UseGuards(AuthGuard('jwt'), TrustServiceRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get ecosystem IDs by tenant ID',
+    description:
+      'Returns all ecosystem IDs associated with the organization identified by tenantId. Accessible only by trust-service clients.'
+  })
+  @ApiParam({ name: 'tenantId', description: 'Tenant ID from org_agent table' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getEcosystemIdsByTenantId(@Param('tenantId') tenantId: string, @Res() res: Response): Promise<Response> {
+    if (!tenantId?.trim()) {
+      throw new BadRequestException(ResponseMessages.organisation.error.tenantIdRequired);
+    }
+
+    const ecosystemIds = await this.organizationService.getEcosystemIdsByTenantId(tenantId.trim());
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.tenantEcosystems,
+      data: ecosystemIds
     };
     return res.status(HttpStatus.OK).json(finalResponse);
   }
@@ -801,5 +827,37 @@ export class OrganizationController {
   async generateApiToken(@Body() clientTokenDto: ClientTokenDto, @Res() res: Response): Promise<Response> {
     const finalResponse = await this.organizationService.generateClientApiToken(clientTokenDto);
     return res.status(HttpStatus.OK).header('Content-Type', 'application/json').send(finalResponse);
+  }
+
+  @Get('/:orgId/get-all-platform-organisations')
+  @ApiOperation({
+    summary: 'Get all platform organisations',
+    description: 'Get all platform organisations'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
+  @Roles(OrgRoles.PLATFORM_ADMIN, OrgRoles.ECOSYSTEM_LEAD)
+  @ApiBearerAuth()
+  async getAllOrganisations(
+    @Param(
+      'orgId',
+      TrimStringParamPipe,
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Query() paginationDto: PaginationDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    const organizations = await this.organizationService.getAllOrganizations({ ...paginationDto, orgId });
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.getOrganizations,
+      data: organizations
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

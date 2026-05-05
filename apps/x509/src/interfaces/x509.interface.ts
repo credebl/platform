@@ -10,6 +10,7 @@ export interface CreateX509CertificateEntity {
   certificateBase64: string;
   createdBy: string;
   lastChangedBy: string;
+  keyId?: string;
 }
 
 export interface UpdateCertificateStatusDto {

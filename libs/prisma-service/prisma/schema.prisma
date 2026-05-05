@@ -36,6 +36,8 @@ model user {
   cloud_wallet_user_info cloud_wallet_user_info[]
   accounts               account[]
   sessions               session[]
+  ecosystemInvitations   ecosystem_invitations[]
+  ecosystemOrgs          ecosystem_orgs[]
 }
 
 model account {
@@ -155,6 +157,12 @@ model organisation {
   oid4vp_presentations   oid4vp_presentations[]
   verification_templates verification_templates[]
   intent_templates       intent_templates[]
+  intent_notices         intent_notices[]
+  ecosystemOrgs          ecosystem_orgs[]
+  ecosystem_invitations  ecosystem_invitations[]
+  status_list_allocations status_list_allocation[]
+  issued_oid4vc_credentials issued_oid4vc_credentials[]
+  oidc_issuer oidc_issuer[] 
 }
 
 model org_invitations {
@@ -195,6 +203,7 @@ model platform_config {
   username            String    @db.VarChar
   sgApiKey            String    @db.VarChar
   emailFrom           String    @db.VarChar
+  isEcosystemEnabled  Boolean   @default(false)
   apiEndpoint         String    @db.VarChar
   tailsFileServer     String    @db.VarChar
   createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
@@ -225,6 +234,7 @@ model org_agents {
   orgAgentTypeId      String?             @db.Uuid
   ledgerId            String?             @db.Uuid
   didDocument         Json?
+  webhookSecret       String?             @db.VarChar
   agent_invitations   agent_invitations[]
   agents              agents?             @relation(fields: [agentId], references: [id])
   agents_type         agents_type?        @relation(fields: [agentsTypeId], references: [id])
@@ -587,6 +597,12 @@ model oidc_issuer {
   templates                   credential_templates[]
   batchCredentialIssuanceSize Int                    @default(0)
 
+  orgId     String?  @db.Uuid
+  isPrimary Boolean  @default(false)
+
+  organisation organisation? @relation(fields: [orgId], references: [id])
+
+
   @@index([orgAgentId])
 }
 
@@ -605,7 +621,7 @@ model oid4vc_credentials {
   issuedCredentials          String[]
   publicIssuerId              String
 
-  organisation organisation @relation(fields: [orgId], references: [id])
+  organisation organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
 
   @@index([credentialConfigurationIds], type: Gin)
 }
@@ -623,6 +639,38 @@ model oid4vp_presentations {
   lastChangedBy         String   @db.Uuid
   publicVerifierId    String
   organisation organisation @relation(fields: [orgId], references: [id])
+}
+
+model status_list_allocation {
+  id              String   @id @default(uuid()) @db.Uuid
+  orgId           String   @db.Uuid
+  issuerDid       String
+  listId          String   @unique @db.Uuid
+  listSize        Int      @default(131072)
+  allocatedCount  Int      @default(0)
+  bitmap          Bytes
+  isActive        Boolean  @default(true)
+  createDateTime  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt
+  organisation    organisation @relation(fields: [orgId], references: [id])
+
+  @@index([orgId, isActive])
+}
+
+model issued_oid4vc_credentials {
+  id                String   @id @default(uuid()) @db.Uuid
+  credentialId      String   @unique
+  listId            String   @db.Uuid
+  index             Int
+  issuanceSessionId String   @db.VarChar(100)
+  orgId             String?  @db.Uuid
+  createDateTime    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt
+  statusListUri     String
+
+  organisation organisation? @relation(fields: [orgId], references: [id], onDelete: Restrict)
+
+  @@index([orgId, issuanceSessionId])
 }
 
 enum SignerOption {
@@ -644,6 +692,8 @@ model credential_templates {
   issuerId String      @db.Uuid
   issuer   oidc_issuer @relation(fields: [issuerId], references: [id])
 
+  noticeUrl    String?
+
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   signerOption SignerOption
@@ -662,6 +712,7 @@ model x509_certificates {
   expiry            DateTime
   certificateBase64 String
   isImported        Boolean  @default(false)
+  keyId     String?
 
   createdAt           DateTime @default(now())
   createdBy           String   @db.Uuid
@@ -702,13 +753,16 @@ model verification_templates {
 
 model intents {
   id                  String             @id @default(uuid()) @db.Uuid
+  ecosystemId String @db.Uuid
   name                String             @db.VarChar(500)
   description         String?
   createDateTime      DateTime           @default(now()) @db.Timestamptz(6)
   createdBy           String             @db.Uuid
   lastChangedDateTime DateTime           @default(now()) @db.Timestamptz(6)
   lastChangedBy       String             @db.Uuid
+  ecosystem ecosystem @relation(fields: [ecosystemId], references: [id])
   intentTemplates     intent_templates[]
+  intentNotices       intent_notices[]
 }
 
 model intent_templates {
@@ -727,4 +781,104 @@ model intent_templates {
   @@index([orgId])
   @@index([intentId])
   @@index([templateId])
+}
+
+model intent_notices {
+  id                  String        @id @default(uuid()) @db.Uuid
+  intentId            String        @db.Uuid
+  orgId               String?       @db.Uuid
+  noticeUrl           String
+  createDateTime      DateTime      @default(now()) @db.Timestamptz(6)
+  createdBy           String        @db.Uuid
+  lastChangedDateTime DateTime      @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String
+  intent              intents       @relation(fields: [intentId], references: [id])
+  organisation        organisation? @relation(fields: [orgId], references: [id])
+
+  @@index([intentId])
+  @@index([orgId])
+}
+
+model ecosystem {
+  id                  String    @id @default(uuid()) @db.Uuid
+  name                String
+  description         String
+  tags                String?
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           String    @db.Uuid
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String    @db.Uuid
+  deletedAt           DateTime? @db.Timestamp(6)
+  logoUrl             String?
+  autoEndorsement     Boolean   @default(false)
+
+  ecosystemOrgs        ecosystem_orgs[]
+  ecosystemInvitations ecosystem_invitations[]
+  intent              intents[]
+  ledgers              Json?
+}
+
+model ecosystem_roles {
+  id                  String    @id @default(uuid()) @db.Uuid
+  name                String    @unique
+  description         String
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  deletedAt           DateTime? @db.Timestamp(6)
+
+  ecosystemOrgs ecosystem_orgs[]
+}
+
+model ecosystem_orgs {
+  id                  String    @id @default(uuid()) @db.Uuid
+  orgId               String    @db.Uuid
+  status              String
+  deploymentMode      String?
+  ecosystemId         String    @db.Uuid
+  ecosystemRoleId     String    @db.Uuid
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           String    @db.Uuid
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String    @db.Uuid
+  deletedAt           DateTime? @db.Timestamp(6)
+  userId              String    @db.Uuid
+  ecosystem     ecosystem       @relation(fields: [ecosystemId], references: [id])
+  ecosystemRole ecosystem_roles @relation(fields: [ecosystemRoleId], references: [id])
+  organisation  organisation    @relation(fields: [orgId], references: [id])
+  user          user            @relation(fields:[userId], references: [id])
+
+  @@unique([orgId, ecosystemId])
+}
+
+model ecosystem_invitations {
+  id                  String    @id @default(uuid()) @db.Uuid
+  email               String    
+  status              String
+  userId              String?   @db.Uuid
+  type                String
+  ecosystemId         String?   @db.Uuid
+  invitedOrg          String?   @db.Uuid
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy           String    @db.Uuid
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedBy       String    @db.Uuid
+  deletedAt           DateTime? @db.Timestamp(6)
+
+  organisation        organisation? @relation(fields: [invitedOrg], references: [id])
+  ecosystem           ecosystem? @relation(fields: [ecosystemId], references: [id])
+  user                user?      @relation(fields: [userId], references: [id])
+
+  @@unique([email, ecosystemId, invitedOrg])
+}
+
+
+model holder_notification {
+  id                  String    @id @default(uuid()) @db.Uuid
+  sessionId           String    @unique
+  holderDid           String
+  fcmToken            String
+  state               String
+  createDateTime      DateTime  @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime DateTime  @default(now()) @db.Timestamptz(6)
+  deletedAt           DateTime? @db.Timestamp(6)
 }

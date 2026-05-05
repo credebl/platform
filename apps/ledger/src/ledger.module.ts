@@ -23,7 +23,11 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.LEDGER_SERVICE, process.env.LEDGER_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.LEDGER_SERVICE,
+          process.env.LEDGER_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     SchemaModule,

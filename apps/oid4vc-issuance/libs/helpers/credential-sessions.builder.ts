@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 import { credential_templates, SignerOption } from '@prisma/client';
-import { GetAllCredentialOffer, ISignerOption } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
+import {
+  AuthenticationType,
+  GetAllCredentialOffer,
+  ISignerOption
+} from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
 import {
   CredentialAttribute,
@@ -33,7 +37,7 @@ export enum SignerMethodOption {
 
 export interface DisclosureFrame {
   _sd?: string[];
-  [claim: string]: DisclosureFrame | string[] | undefined;
+  [claim: string]: DisclosureFrame | DisclosureFrame[] | string[] | undefined;
 }
 
 export interface validityInfo {
@@ -50,6 +54,7 @@ export interface CredentialRequestDtoLike {
 
 export interface CreateOidcCredentialOfferDtoLike {
   credentials: CredentialRequestDtoLike[];
+  authorizationType?: string;
   preAuthorizedCodeFlowConfig?: {
     txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
     authorizationServerUrl: string;
@@ -58,6 +63,7 @@ export interface CreateOidcCredentialOfferDtoLike {
     authorizationServerUrl: string;
   };
   publicIssuerId?: string;
+  isRevocable?: boolean;
 }
 
 export interface ResolvedSignerOption {
@@ -84,20 +90,26 @@ export interface BuiltCredential {
   format: CredentialFormat;
   payload: Record<string, unknown>;
   disclosureFrame?: DisclosureFrame;
+  statusListDetails?: {
+    listId: string;
+    index: number;
+    listSize?: number;
+  };
 }
 
 export interface BuiltCredentialOfferBase {
   signerOption?: ResolvedSignerOption;
   credentials: BuiltCredential[];
   publicIssuerId?: string;
+  isRevocable?: boolean;
 }
 
 export type CredentialOfferPayload = BuiltCredentialOfferBase &
   (
     | {
         preAuthorizedCodeFlowConfig: {
-          txCode: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
-          authorizationServerUrl: string;
+          txCode?: { description?: string; length: number; input_mode: 'numeric' | 'text' | 'alphanumeric' };
+          authorizationServerUrl?: string;
         };
         authorizationCodeFlowConfig?: never;
       }
@@ -135,7 +147,7 @@ export const DEFAULT_TXCODE = {
 /** Map DB format string -> API enum */
 function mapDbFormatToApiFormat(dbFormat: string): CredentialFormat {
   const normalized = (dbFormat ?? '').toLowerCase();
-  if (['sd-jwt', 'vc+sd-jwt', 'sdjwt', 'sd+jwt-vc'].includes(normalized)) {
+  if (['sd-jwt', 'dc+sd-jwt', 'vc+sd-jwt', 'sdjwt', 'sd+jwt-vc'].includes(normalized)) {
     return CredentialFormat.SdJwtVc;
   }
   if ('mso_mdoc' === normalized || 'mso-mdoc' === normalized || 'mdoc' === normalized) {
@@ -223,35 +235,46 @@ export function validatePayloadAgainstTemplate(template: any, payload: any): { v
   return { valid: 0 === errors.length, errors };
 }
 
-function buildDisclosureFrameFromTemplate(attributes: CredentialAttribute[]): DisclosureFrame {
+function buildDisclosureFrameFromTemplate(
+  attributes: CredentialAttribute[],
+  payload?: Record<string, any>
+): DisclosureFrame {
   const frame: DisclosureFrame = {};
-  const rootSd: string[] = [];
+  const sd: string[] = [];
 
   for (const attr of attributes) {
-    if (!attr.disclose) {
-      continue;
-    }
+    const hasChildren = attr.children && 0 < attr.children.length;
 
-    // Case 1: attribute has children → nested disclosure
-    if (attr.children && 0 < attr.children.length) {
-      const childSd = attr.children.filter((child) => child.disclose).map((child) => child.key);
-
-      if (0 < childSd.length) {
-        frame[attr.key] = {
-          _sd: childSd
-        };
+    if (hasChildren) {
+      const payloadValue = payload?.[attr.key];
+      //todo:
+      //1) Need to handle the type validation here to ensure payloadValue is in expected format (object or array of objects)
+      //2) Need to add add validation based on template definition (e.g. if template defines an array, payload must be an array, etc.)
+      if (Array.isArray(payloadValue)) {
+        // Array of objects → [{ _sd: [...] }, ...]
+        const childFrame = buildDisclosureFrameFromTemplate(attr.children!);
+        frame[attr.key] = payloadValue.map(() => ({ ...childFrame }));
+      } else {
+        // Plain object → { _sd: [...] }
+        const childFrame = buildDisclosureFrameFromTemplate(attr.children!, payloadValue as Record<string, any>);
+        const hasChildDisclosure = childFrame._sd?.length || Object.keys(childFrame).some((k) => '_sd' !== k);
+        if (hasChildDisclosure) {
+          frame[attr.key] = childFrame;
+        }
       }
       continue;
     }
 
-    // Case 2: simple attribute → root SD
-    rootSd.push(attr.key);
+    // Root attribute — add to _sd if disclosed
+    if (attr.disclose) {
+      sd.push(attr.key);
+    }
   }
 
-  if (0 < rootSd.length) {
-    frame._sd = rootSd;
+  if (0 < sd.length) {
+    frame._sd = sd;
   }
-
+  // console.log('Built disclosure frame:', JSON.stringify(frame, null, 2));
   return frame;
 }
 
@@ -365,8 +388,11 @@ function buildSdJwtCredential(
   const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
   const idSuffix = formatSuffix(apiFormat);
   const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
-  const disclosureFrame = buildDisclosureFrameFromTemplate(sdJwtTemplate.attributes);
 
+  const disclosureFrame = buildDisclosureFrameFromTemplate(
+    sdJwtTemplate.attributes,
+    payloadCopy as Record<string, any>
+  );
   return {
     credentialSupportedId,
     signerOptions: templateSignerOption ? templateSignerOption : undefined,
@@ -458,7 +484,7 @@ export function buildCredentialOfferPayload(
       throw new UnprocessableEntityException(`${validationError.errors.join(', ')}`);
     }
 
-    const templateFormat = (templateRecord as any).format ?? 'vc+sd-jwt';
+    const templateFormat = (templateRecord as any).format ?? 'dc+sd-jwt';
     const apiFormat = mapDbFormatToApiFormat(templateFormat);
     if (apiFormat === CredentialFormat.SdJwtVc) {
       return buildSdJwtCredential(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);
@@ -476,13 +502,22 @@ export function buildCredentialOfferPayload(
 
   const baseEnvelope: BuiltCredentialOfferBase = {
     credentials: builtCredentials,
-    ...(finalPublicIssuerId ? { publicIssuerId: finalPublicIssuerId } : {})
+    ...(finalPublicIssuerId ? { publicIssuerId: finalPublicIssuerId } : {}),
+    isRevocable: dto.isRevocable
   };
 
   // Determine which authorization flow to return:
   // Priority:
-  // 1) If issuerDetails.authorizationServerUrl is provided, return preAuthorizedCodeFlowConfig using DEFAULT_TXCODE
-  // 2) Else fall back to flows present in DTO (still enforce XOR)
+  // 1) If authorizationType is 'noAuth', return empty preAuthorizedCodeFlowConfig (no txCode, no authorizationServerUrl)
+  // 2) If issuerDetails.authorizationServerUrl is provided, return preAuthorizedCodeFlowConfig using DEFAULT_TXCODE
+  // 3) Else fall back to flows present in DTO (still enforce XOR)
+  if (dto.authorizationType === AuthenticationType.NO_AUTH) {
+    return {
+      ...baseEnvelope,
+      preAuthorizedCodeFlowConfig: {}
+    };
+  }
+
   const overrideAuthorizationServerUrl = issuerDetails?.authorizationServerUrl;
   if (overrideAuthorizationServerUrl) {
     if ('string' !== typeof overrideAuthorizationServerUrl || '' === overrideAuthorizationServerUrl.trim()) {

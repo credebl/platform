@@ -16,11 +16,15 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.WEBHOOK_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.WEBHOOK_SERVICE,
+          process.env.API_GATEWAY_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ])
   ],
   controllers: [WebhookController],
   providers: [WebhookService, CommonService, AwsService, NATSClient]
 })
-export class WebhookModule { }
+export class WebhookModule {}

@@ -8,6 +8,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonModule } from '../../../../libs/common/src/common.module';
 import { CommonService } from '../../../../libs/common/src/common.service';
 import { ConnectionService } from '../connection/connection.service';
+import { EcosystemModule } from '../ecosystem/ecosystem.module';
 import { HttpModule } from '@nestjs/axios';
 import { JwtStrategy } from './jwt.strategy';
 import { MobileJwtStrategy } from './mobile-jwt.strategy';
@@ -25,6 +26,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 
 @Module({
   imports: [
+    EcosystemModule,
     HttpModule,
     PassportModule.register({
       defaultStrategy: 'jwt',
@@ -34,7 +36,11 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.AUTH_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.AUTH_SERVICE,
+          process.env.API_GATEWAY_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       },
       CommonModule
     ]),

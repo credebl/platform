@@ -12,7 +12,11 @@ const logger = new Logger();
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(GeoLocationModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(CommonConstants.GEO_LOCATION_SERVICE, process.env.GEOLOCATION_NKEY_SEED)
+    options: getNatsOptions(
+      CommonConstants.GEO_LOCATION_SERVICE,
+      process.env.GEOLOCATION_NKEY_SEED,
+      process.env.NATS_CREDS_FILE
+    )
   });
   app.useLogger(app.get(NestjsLoggerServiceAdapter));
   app.useGlobalFilters(new HttpExceptionFilter());

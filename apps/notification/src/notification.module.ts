@@ -1,8 +1,9 @@
 import { CommonModule } from '@credebl/common';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { shouldLoadNatsNotification } from '@credebl/common/common.utils';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { Logger, Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
@@ -13,6 +14,8 @@ import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { HolderNotificationRepository } from './holder-notification.repository';
+import { NatsModule } from './nats/nats.module';
 
 @Module({
   imports: [
@@ -21,15 +24,22 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.NOTIFICATION_SERVICE, process.env.NOTIFICATION_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.NOTIFICATION_SERVICE,
+          process.env.NOTIFICATION_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,
     GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
-    CacheModule.register({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT })
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
+    CacheModule.register({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }),
+    ConditionalModule.registerWhen(NatsModule, shouldLoadNatsNotification)
   ],
   controllers: [NotificationController],
-  providers: [NotificationService, NotificationRepository, PrismaService, Logger]
+  providers: [NotificationService, NotificationRepository, HolderNotificationRepository, PrismaService, Logger]
 })
-export class NotificationModule { }
+export class NotificationModule {}

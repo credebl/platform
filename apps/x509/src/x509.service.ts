@@ -89,7 +89,8 @@ export class X509CertificateService extends BaseService {
         validFrom: options.validity.notBefore,
         expiry: options.validity.notAfter,
         createdBy: user.id,
-        lastChangedBy: user.id
+        lastChangedBy: user.id,
+        keyId: certificate.response.keyId
       };
 
       return await this.x509CertificateRepository.create(createDto);
@@ -142,6 +143,29 @@ export class X509CertificateService extends BaseService {
     throw new NotFoundException(ResponseMessages.x509.error.notFound);
   }
 
+  private parseAsn1Date(
+    value: { utcTime?: string; generalTime?: string } | undefined,
+    fieldName: 'notBefore' | 'notAfter'
+  ): Date {
+    if (!value) {
+      throw new InternalServerErrorException(`Certificate validity.${fieldName} is missing`);
+    }
+
+    const dateValue = value.utcTime ?? value.generalTime;
+
+    if (!dateValue) {
+      throw new InternalServerErrorException(`Certificate validity.${fieldName} has neither utcTime nor generalTime`);
+    }
+
+    const date = new Date(dateValue);
+
+    if (!isFinite(date.getTime())) {
+      throw new InternalServerErrorException(`Invalid ${fieldName} date in certificate: ${dateValue}`);
+    }
+
+    return date;
+  }
+
   async importCertificate(payload: {
     orgId: string;
     options: IX509ImportCertificateOptionsDto;
@@ -161,24 +185,26 @@ export class X509CertificateService extends BaseService {
       this.logger.log(`Decoded certificate`);
       this.logger.debug(`certificate data:`, JSON.stringify(decodedResult));
 
-      const { publicKey } = decodedResult.response;
+      const { publicJwk } = decodedResult.response;
       const decodedCert = decodedResult.response.x509Certificate;
 
       this.logger.log(`Start validating certificate`);
-      const isValidKeyType = Object.values(x5cKeyType).includes(publicKey.keyType as x5cKeyType);
-
+      const crv = publicJwk?.jwk?.jwk?.crv;
+      const isValidKeyType = Object.values(x5cKeyType).includes(crv as x5cKeyType);
       if (!isValidKeyType) {
         this.logger.error(`keyType is not valid for importing certificate`);
         throw new InternalServerErrorException(ResponseMessages.x509.error.import);
       }
 
-      const validFrom = new Date(decodedCert.notBefore);
-      const expiry = new Date(decodedCert.notAfter);
+      const validity = decodedCert?.asn?.tbsCertificate?.validity;
+
+      const validFrom = this.parseAsn1Date(validity?.notBefore, 'notBefore');
+      const expiry = this.parseAsn1Date(validity?.notAfter, 'notAfter');
       const certificateDateCheckDto: CertificateDateCheckDto = {
         orgId,
         validFrom,
         expiry,
-        keyType: publicKey.keyType,
+        keyType: crv,
         status: x5cRecordStatus.Active
       };
       const collisionForActiveRecords = await this.x509CertificateRepository.hasDateCollision(certificateDateCheckDto);
@@ -208,13 +234,14 @@ export class X509CertificateService extends BaseService {
       this.logger.log(`Successfully imported certificate in wallet `);
       const createDto: CreateX509CertificateEntity = {
         orgId,
-        certificateBase64: certificate.response.issuerCertficicate,
-        keyType: publicKey.keyType,
+        certificateBase64: certificate.response.issuerCertificate,
+        keyType: crv,
         status: certStatus,
         validFrom,
         expiry,
         createdBy: user.id,
-        lastChangedBy: user.id
+        lastChangedBy: user.id,
+        keyId: certificate.response.keyId
       };
       this.logger.log(`Now adding certificate in platform for org : ${orgId} `);
 

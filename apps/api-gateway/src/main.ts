@@ -16,6 +16,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-validation-pipe';
 import * as useragent from 'express-useragent';
+import { EcosystemSwaggerFilter } from './authz/guards/ecosystem-swagger.filter';
 
 dotenv.config();
 
@@ -39,7 +40,11 @@ async function bootstrap(): Promise<void> {
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,
-    options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+    options: getNatsOptions(
+      CommonConstants.API_GATEWAY_SERVICE,
+      process.env.API_GATEWAY_NKEY_SEED,
+      process.env.NATS_CREDS_FILE
+    )
   });
 
   const expressApp = app.getHttpAdapter().getInstance();
@@ -67,6 +72,7 @@ async function bootstrap(): Promise<void> {
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)
     .setVersion('1.0')
     .addBearerAuth()
+    .addServer('/')
     .addServer(`${process.env.PUBLIC_DEV_API_URL}`)
     .addServer(`${process.env.PUBLIC_LOCALHOST_URL}`)
     .addServer(`${process.env.PUBLIC_QA_API_URL}`)
@@ -81,7 +87,15 @@ async function bootstrap(): Promise<void> {
     defaultVersion: ['1']
   });
 
-  const document = SwaggerModule.createDocument(app, options);
+  // Create Swagger document
+  let document = SwaggerModule.createDocument(app, options);
+  try {
+    const ecosystemFilter = app.get(EcosystemSwaggerFilter);
+    document = await ecosystemFilter.filterDocument(document);
+  } catch (err) {
+    Logger.warn('Skipping EcosystemSwaggerFilter due to error', err as Error);
+  }
+
   SwaggerModule.setup('api', app, document);
   const httpAdapter: HttpAdapterHost = app.get(HttpAdapterHost) as HttpAdapterHost;
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
@@ -116,13 +130,14 @@ async function bootstrap(): Promise<void> {
       xssFilter: true
     })
   );
+  Logger.log('API-Gateway is listening to NATS', 'NATS-CONNECTION');
   await app.listen(process.env.API_GATEWAY_PORT, `${process.env.API_GATEWAY_HOST}`);
   Logger.log(`API Gateway is listening on port ${process.env.API_GATEWAY_PORT}`, 'Success');
 
   if ('true' === process.env.DB_ALERT_ENABLE?.trim()?.toLowerCase()) {
     // in case it is enabled, log that
     Logger.log(
-      'We have enabled DB alert for \'ledger_null\' instances. This would send email in case the \'ledger_id\' column in \'org_agents\' table is set to null',
+      "We have enabled DB alert for 'ledger_null' instances. This would send email in case the 'ledger_id' column in 'org_agents' table is set to null",
       'DB alert enabled'
     );
   }
@@ -130,9 +145,8 @@ async function bootstrap(): Promise<void> {
   if ('true' === (process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS || 'true').trim().toLowerCase()) {
     Logger.warn('Hiding experimental OIDC Controllers: OID4VC, OID4VP, x509 in OpenAPI docs');
     Logger.verbose(
-      'To enable the use of experimental OIDC controllers. Set, \'HIDE_EXPERIMENTAL_OIDC_CONTROLLERS\' env variable to false'
+      "To enable the use of experimental OIDC controllers. Set, 'HIDE_EXPERIMENTAL_OIDC_CONTROLLERS' env variable to false"
     );
   }
-
 }
 bootstrap();

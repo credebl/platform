@@ -135,6 +135,7 @@ export enum CommonConstants {
   URL_OIDC_VERIFIER_SESSION_GET_BY_QUERY = '/openid4vc/verification-sessions',
   URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = '/openid4vc/verification-sessions/response/#',
   URL_OID4VP_VERIFICATION_SESSION = '/openid4vc/verification-sessions/create-presentation-request',
+  URL_OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY = '/openid4vc/verification-sessions/verify-authorization-response',
 
   //X509 agent API URLs
   URL_CREATE_X509_CERTIFICATE = '/x509',
@@ -228,6 +229,7 @@ export enum CommonConstants {
 
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   DEFAULT_CACHE_TTL = 60000,
+  DEFAULT_STATUS_LIST_SIZE = 131072,
   DEFAULT_FIELD_UPLOAD_SIZE = 10485760,
 
   // SUBSCRIPTION TYPES
@@ -253,6 +255,9 @@ export enum CommonConstants {
   TRANSACTION_CREATE_REQUEST = '/transactions/create-request',
   ENDORSE_TRANSACTION = '/transactions/#/endorse',
   WRITE_TRANSACTION = '/transactions/#/write',
+
+  // ecosystem
+  ECOSYSTEM_SERVICE = 'ecosystem',
 
   // delete wallet
   URL_DELETE_WALLET = '/agent/wallet',
@@ -436,6 +441,7 @@ export enum CommonConstants {
   OIDC_VERIFIER_SESSION_GET_BY_ID = 'get-oid4vp-verifier-session-id',
   OIDC_VERIFIER_SESSION_GET_BY_QUERY = 'get-oid4vp-verifier-session-query',
   OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = 'get-oid4vp-verifier-session-response-id',
+  OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY = 'verify-oid4vp-verifier-session-auth-response',
 
   //X509
   X509_CREATE_CERTIFICATE = 'create-x509-certificate',
@@ -444,6 +450,8 @@ export enum CommonConstants {
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;
+export const ECOSYSTEM_ROLES = ['Ecosystem Lead', 'Ecosystem Member'];
+export const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const postgresqlErrorCodes = [];
 postgresqlErrorCodes['23503'] = 'foreign_key_violation';

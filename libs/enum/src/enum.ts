@@ -70,6 +70,16 @@ export enum Invitation {
   PENDING = 'pending'
 }
 
+export enum InvitationViewRole {
+  ECOSYSTEM_MEMBER = 'Ecosystem Member',
+  ECOSYSTEM_LEAD = 'Ecosystem Lead'
+}
+
+export enum InviteType {
+  ECOSYSTEM = 'ecosystem',
+  MEMBER = 'member'
+}
+
 export enum EndorserTransactionType {
   SCHEMA = 'schema',
   CREDENTIAL_DEFINITION = 'credential-definition'
@@ -89,6 +99,48 @@ export enum AgentSpinUpStatus {
   PENDING = 0,
   WALLET_CREATED = 1,
   DID_CREATED = 2
+}
+
+export enum EcosystemRoles {
+  ECOSYSTEM_LEAD = 'Ecosystem Lead',
+  ECOSYSTEM_MEMBER = 'Ecosystem Member',
+  ECOSYSTEM_OWNER = 'Ecosystem Owner'
+}
+
+export enum EcosystemServiceRole {
+  LEAD = 'lead',
+  MEMBER = 'member'
+}
+
+export enum ProtocolMapperResult {
+  CREATED = 'created',
+  SKIPPED = 'skipped',
+  FAILED = 'failed'
+}
+
+export enum UnmanagedAttributePolicy {
+  ENABLED = 'ENABLED',
+  DISABLED = 'DISABLED',
+  ADMIN_EDIT = 'ADMIN_EDIT',
+  ADMIN_VIEW = 'ADMIN_VIEW'
+}
+
+export enum EcosystemConfigSettings {
+  URL = 'url',
+  ENABLE_ECOSYSTEM = 'enableEcosystem',
+  AUTO_ENDORSEMENT = 'autoEndorsement',
+  PARTICIPATE_IN_ECOSYSTEM = 'participateInEcosystem',
+  MULTI_ECOSYSTEM = 'multiEcosystemSupport'
+}
+
+export enum EcosystemOrgStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE'
+}
+
+export enum MemberStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive'
 }
 
 export enum UserCertificateId {
@@ -286,8 +338,8 @@ export enum OpenId4VcIssuanceSessionState {
 }
 
 export enum x5cKeyType {
-  Ed25519 = 'ed25519',
-  P256 = 'p256'
+  Ed25519 = 'Ed25519',
+  P256 = 'P-256'
 }
 
 export enum x5cRecordStatus {
@@ -319,7 +371,7 @@ export enum X509ExtendedKeyUsage {
 }
 
 export enum CredentialFormat {
-  SdJwtVc = 'vc+sd-jwt',
+  SdJwtVc = 'dc+sd-jwt',
   Mdoc = 'mso_mdoc'
 }
 
@@ -348,4 +400,20 @@ export enum ResponseMode {
   DIRECT_POST_JWT = 'direct_post.jwt',
   DC_API = 'dc_api',
   DC_API_JWT = 'dc_api.jwt'
+}
+
+export enum NotificationStatus {
+  INITIATED = 'initiated',
+  DATA_DELIVERED = 'DataDelivered',
+  DATA_DELIVERED_AND_NOTIFIED_WITH_NATS = 'DataDeliveredAndNotifiedWithNATS',
+  DATA_DELIVERED_AND_NOTIFIED_WITH_FCM = 'DataDeliveredAndNotifiedWithFCM',
+  DATA_PURGED = 'DataPurged',
+  DATA_PURGED_AND_NOTIFIED_WITH_NATS = 'DataPurgedAndNotifiedWithNATS',
+  DATA_PURGED_AND_NOTIFIED_WITH_FCM = 'DataPurgedAndNotifiedWithFCM',
+  NOTIFICATION_CONSUMED = 'NotificationConsumed'
+}
+
+export enum ClientIdPrefix {
+  X509SanDns = 'x509_san_dns',
+  X509Hash = 'x509_hash'
 }

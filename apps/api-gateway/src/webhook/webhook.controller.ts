@@ -15,7 +15,8 @@ import {
   Param,
   UseFilters,
   ParseUUIDPipe,
-  Query
+  Query,
+  Patch
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -39,6 +40,7 @@ import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { GetWebhookDto } from './dtos/get-webhoook-dto';
+import { UpdateWebhookDto } from './dtos/update-webhook-dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('webhooks')
@@ -118,6 +120,41 @@ export class WebhookController {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.agent.success.getWebhookUrl,
       data: webhookUrlData
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Patch('/orgs/:orgId')
+  @ApiOperation({
+    summary: 'Update Webhook',
+    description: 'Update the webhook URL or secret for an organization.'
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Webhook updated successfully', type: ApiResponseDto })
+  async updateWebhook(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+        }
+      })
+    )
+    orgId: string,
+    @Body() updateWebhookDto: UpdateWebhookDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    updateWebhookDto.orgId = orgId;
+
+    const webhookUpdateDetails = await this.webhookService.updateWebhook(updateWebhookDto);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.agent.success.webhookUrlUpdate,
+      data: webhookUpdateDetails
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

@@ -1,11 +1,12 @@
+/* eslint-disable camelcase */
 import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
 
+import { CommonConstants, uuidRegex } from '@credebl/common/common.constant';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 import { AuthzService } from './authz.service';
-import { CommonConstants } from '@credebl/common/common.constant';
 import { IOrganization } from '@credebl/common/interfaces/organization.interface';
 import { JwtPayload } from './jwt-payload.interface';
 import { OrganizationService } from '../organization/organization.service';
@@ -32,7 +33,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const decodedToken: any = jwt.decode(jwtToken);
         if (!decodedToken) {
-          throw new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken);
+          return done(new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken), null);
         }
 
         const audiance = decodedToken.iss.toString();
@@ -69,14 +70,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         throw new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken);
       }
     }
-
     if (payload?.email) {
       userInfo = await this.usersService.getUserByUserIdInKeycloak(payload?.email);
     }
 
-    if (payload.hasOwnProperty('client_id')) {
+    if (payload.hasOwnProperty('client_id') && uuidRegex.test(payload['client_id'])) {
       const orgDetails: IOrganization = await this.organizationService.findOrganizationOwner(payload['client_id']);
-
       this.logger.log('Organization details fetched');
       if (!orgDetails) {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
@@ -84,7 +83,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
       // eslint-disable-next-line prefer-destructuring
       const userOrgDetails = 0 < orgDetails.userOrgRoles.length && orgDetails.userOrgRoles[0];
-
       userDetails = userOrgDetails.user;
       userDetails.userOrgRoles = [];
       userDetails.userOrgRoles.push({
@@ -96,16 +94,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       });
 
       this.logger.log('User details set');
-    } else {
+    } else if (!payload.hasOwnProperty('client_id')) {
       userDetails = await this.usersService.findUserinKeycloak(payload.sub);
     }
 
-    if (!userDetails) {
+    const isServiceToken = payload.hasOwnProperty('client_id') && !uuidRegex.test(payload['client_id'] as string);
+    if (!userDetails && !isServiceToken) {
       throw new NotFoundException(ResponseMessages.user.error.notFound);
     }
     //TODO patch to QA
     if (userInfo && userInfo?.['attributes'] && userInfo?.['attributes']?.userRole) {
       userDetails['userRole'] = userInfo?.['attributes']?.userRole;
+    }
+
+    if (userDetails && payload?.ecosystem_access) {
+      userDetails.ecosystem_access = payload.ecosystem_access;
     }
 
     return {

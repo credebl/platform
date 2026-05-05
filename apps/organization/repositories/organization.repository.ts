@@ -3,6 +3,7 @@
 
 import { ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import {
+  IAllOrgsNameId,
   IDeleteOrganization,
   IOrganization,
   IOrganizationDashboard,
@@ -833,6 +834,29 @@ export class OrganizationRepository {
     }
   }
 
+  async getEcosystemIdsByTenantId(tenantId: string): Promise<string[]> {
+    try {
+      const orgAgent = await this.prisma.org_agents.findFirst({
+        where: { tenantId },
+        select: { orgId: true }
+      });
+
+      if (!orgAgent) {
+        return [];
+      }
+
+      const ecosystemOrgs = await this.prisma.ecosystem_orgs.findMany({
+        where: { orgId: orgAgent.orgId },
+        select: { ecosystemId: true }
+      });
+
+      return ecosystemOrgs.map((e) => e.ecosystemId);
+    } catch (error) {
+      this.logger.error(`Error in getEcosystemIdsByTenantId: ${error.message}`);
+      throw error;
+    }
+  }
+
   async deleteOrg(id: string): Promise<{
     deletedUserActivity: Prisma.BatchPayload;
     deletedUserOrgRole: Prisma.BatchPayload;
@@ -1220,6 +1244,47 @@ export class OrganizationRepository {
     } catch (error) {
       this.logger.error(`Error in handleGetOrganisationData: ${JSON.stringify(error)}`);
       throw error;
+    }
+  }
+
+  async getAllOrganizations(
+    search: string,
+    pageNumber: number,
+    orgId: string,
+    pageSize: number
+  ): Promise<IAllOrgsNameId> {
+    try {
+      const result = await this.prisma.$transaction([
+        this.prisma.organisation.findMany({
+          where: {
+            name: { contains: search, mode: 'insensitive' },
+            id: { not: orgId }
+          },
+          take: pageSize,
+          select: {
+            id: true,
+            name: true
+          },
+          skip: (pageNumber - 1) * pageSize,
+          orderBy: {
+            createDateTime: 'desc'
+          }
+        }),
+        this.prisma.organisation.count({
+          where: {
+            name: { contains: search, mode: 'insensitive' }
+          }
+        })
+      ]);
+
+      const orgs = result[0];
+      const totalCount = result[1];
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      return { totalPages, orgs };
+    } catch (error) {
+      this.logger.error(`error: ${JSON.stringify(error)}`);
+      throw new InternalServerErrorException(error);
     }
   }
 }

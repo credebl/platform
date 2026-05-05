@@ -33,6 +33,7 @@ export const ResponseMessages = {
     error: {
       exists: 'User already exists',
       profileNotFound: 'User public profile not found',
+      adminAlias: 'Use of ADMIN alias for user creation is forbidden',
       notUpdatePlatformSettings: 'Unable to update platform config settings',
       platformSetttingsNotFound: 'Unable to get platform settings',
       verificationAlreadySent: 'The verification link has already been sent to your email address',
@@ -98,7 +99,8 @@ export const ResponseMessages = {
       orgDids: 'Organization DIDs fetched successfully',
       primaryDid: 'Primary DID updated successfully',
       didDetails: 'DID Details updated sucessfully',
-      getOrganizationActivity: 'Organization activity count fetched successfully'
+      getOrganizationActivity: 'Organization activity count fetched successfully',
+      tenantEcosystems: 'Ecosystem IDs fetched successfully for tenant'
     },
     error: {
       exists: 'An organization name is already exist',
@@ -134,7 +136,9 @@ export const ResponseMessages = {
       MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
       adminTokenDetails: 'Error in generating admin token details',
       clientDetails: 'Error in fetching client details',
-      invalidClientCredentials: 'Invalid client credentials'
+      invalidClientCredentials: 'Invalid client credentials',
+      tenantNotFound: 'No organization found for the given tenantId',
+      tenantIdRequired: 'tenantId is required'
     }
   },
 
@@ -160,7 +164,144 @@ export const ResponseMessages = {
       registerFido: 'Please complete your fido registration'
     }
   },
-
+  ecosystem: {
+    success: {
+      create: 'Ecosystem created successfully',
+      update: 'Ecosystem details updated successfully',
+      add: 'Organization added successfully',
+      delete: 'Ecosystem invitations deleted successfully',
+      fetch: 'Ecosystem invitations fetched successfully',
+      fetchAllEcosystems: 'All Ecosystems fetched successfully',
+      getEcosystemDashboard: 'Ecosystem dashboard details fetched successfully',
+      getInvitation: 'Ecosystem invitations fetched successfully',
+      createInvitation: 'Ecosystem invitations sent',
+      schemaRequest: 'Schema transaction request created successfully',
+      credDefRequest: 'Credential definition transaction request created successfully',
+      sign: 'Endorsement request approved',
+      submit: 'Endorsement request is submitted to ledger',
+      submitNoLedgerSchema: 'Endorsement request is submitted',
+      invitationReject: 'Ecosystem invitation rejected',
+      alreadyInvitationAccept: 'Ecosystem invitation is already accepted',
+      invitationAccept: 'Ecosystem invitation accepted successfully',
+      deleteEcosystemMember: 'You are deleted as an ecosystem member',
+      fetchEndorsors: 'Endorser transactions fetched successfully',
+      DeclineEndorsementTransaction: 'Endorsement request declined',
+      AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
+      fetchOrgs: 'Ecosystem members fetched successfully',
+      allschema: 'Schema details fetched successfully',
+      AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger',
+      memberInviteSucess: 'Invitation sent successfully for the member',
+      updateInvitation: 'Status for ecosystem invitation updated successfully',
+      deletionSuccessfull: 'Record deleted successfully',
+      userStatusUpdated: 'User status updated successfully',
+      updatedEcosystemOrg: 'Updated ecosystem org successfully',
+      invitationsMemberSuccess: 'Invitation members fetched successfully',
+      intentCreated: 'Ecosystem intent created successfully',
+      intentUpdated: 'Ecosystem intent updated successfully',
+      deleteIntent: 'Ecosystem intent deleted successfully',
+      fetchIntents: 'Ecosystem intents fetched successfully',
+      fetchIntentTemplates: 'Ecosystem intent templates fetched successfully',
+      fetchVerificationTemplates: 'Verification templates fetched successfully',
+      updateEcosystemConfig: 'Ecosystem configuration updated successfully',
+      dashboard: 'Dashboard data for ecosystem fetched successfully',
+      ecosystemStatus: 'Ecosystem status fetched successfully'
+    },
+    error: {
+      orgIdNotFound: 'Provided orgId is not a member of this ecosystem',
+      featureIsDisabled: `You don't have access to this feature`,
+      userEmailRequired: 'User email is required to send invitation',
+      userNotFound: 'User not found',
+      alreadyAccepted: 'Invitation already accepted',
+      orgIdMissing: 'Organization ID is missing',
+      userNotFoundForInvitation: 'User not found to send invitation',
+      unableToSendInvitationToLead: 'You can not send member invitation to ecosystem lead',
+      memberInviteFailed: 'Failed to send invitation for the member',
+      failInvitationUpdate: 'Failed to update Ecosystem Invitation',
+      ecosystemIdIsRequired: 'ecosystemId is required',
+      notCreated: 'Error while creating ecosystem',
+      intentNotFound: 'Ecosystem intent not found',
+      agentNotSpunUp: 'Agent is not spun up for this organization',
+      userNotHaveAccess: 'You do not have access',
+      orgAlreadyExists: 'Organization already exists in ecosystem',
+      unableToAdd: 'Unable to add organization',
+      partiallyAdded: 'Organization(s) are partially added',
+      orgNotExist: 'Organization does not exist',
+      orgDidNotExist: 'Organization did does not exist',
+      exists: 'Ecosystem name already exists',
+      update: 'Error while updating ecosystem',
+      invalidInvitationStatus: 'Invalid invitation status',
+      invitationNotFound: 'Ecosystem Invitation not found',
+      invitationNotUpdate: 'Ecosystem Invitation not updated',
+      ledgerNotMatch: 'Organization ledger network not matched with Ecosystem',
+      orgsNotUpdate: 'Ecosystem Orgs not updated',
+      ecosystemNotEnabled: 'Ecosystem service is not enabled',
+      sumbitTransaction: 'Error while submitting transaction',
+      signTransactionNotApplicable: 'Signing transaction for w3c schema is not applicable',
+      requestSchemaTransaction: 'Error while requesting schema transaction',
+      requestCredDefTransaction: 'Error while submitting transaction',
+      notFound: 'Organization not found',
+      platformConfigNotFound: 'Platform configurations not found',
+      schemaNotFound: 'Schema not found',
+      ecosystemNotFound: 'Ecosystem not found',
+      ecosystemOrgNotFound: 'Ecosystem org not found',
+      ecosystemConfigNotFound: 'Ecosystem config not found',
+      credentialDefinitionNotFound: 'Credential definition not found',
+      leadNotFound: 'Lead details not found',
+      signRequestError: 'Error while signing the transaction',
+      updateTransactionError: 'Error while updating the transaction',
+      schemaAlreadyExist: 'Schema name and schema version already exist',
+      schemaNameAlreadyExist: 'Schema name already exists',
+      credDefAlreadyExist: 'Credential definition already exists',
+      saveSchema: 'Error while storing the schema details',
+      saveCredDef: 'Error while storing the credential-definition details',
+      invalidOrgId: 'Invalid organization Id',
+      invalidInvitationId: 'Invitation Id is required and must be in UUID format',
+      invalidEcosystemId: 'Ecosystem Id is required and must be in UUID format',
+      invalidTransaction: 'Transaction does not exist',
+      invalidEndorsementId: 'Endorsement Id is required and must be in UUID format',
+      transactionSubmitted: 'Transaction already submitted',
+      transactionAlreadySigned: 'Transaction already signed',
+      transactionNotSigned: 'Transaction request is not signed',
+      transactionNotRequested: 'Transaction is not requested',
+      invalidAgentUrl: 'Invalid agent url',
+      EndorsementTransactionNotFoundException: 'Endorsement transaction with status requested not found',
+      OrgOrEcosystemNotFoundExceptionForEndorsementTransaction: 'The endorsement transaction status cant be updated',
+      ecosystemOrgAlready:
+        'Organization is already part of the ecosystem. Please ensure that the organization is not duplicated.',
+      updateSchemaId: 'Error while updating the schema id',
+      updateCredDefId: 'Error while updating the credential-definition',
+      invalidMessage: 'Invalid transaction details. Missing "message" property.',
+      invalidTransactionMessage: 'Invalid transaction details',
+      ecosystemRoleNotMatch: 'Ecosystem role does not match',
+      orgEcoIdRequired: 'OrgId & EcosystemId are required',
+      ecosystemMembersNotExists: 'Ecosystem members do not exist',
+      notAbleToDeleteEcosystem: 'You cannot delete the ecosystem, because you are the ecosystem lead',
+      ecosystemNotExists: 'Ecosystem does not exist',
+      invalidFormatOfEcosystemId: 'Invalid format of ecosystemId',
+      invalidFormatOfIntentId: 'Invalid format of intentId',
+      intentIdIsRequired: 'IntentId is required',
+      intentAlreadyExists: 'Intent with this name already exists',
+      emailOrPlatformAdminIdMissing: 'Email or platformAdminId missing',
+      platformIdRequired: 'PlatformId is required',
+      userIdMissing: 'UserId is required',
+      fetch: 'Error while fetching ecosystems',
+      invitationRequiredFromPlatformAdmin: 'You need an invitation from a platform admin to create an ecosystem.',
+      userEcosystemAlreadyExists: 'User has already created an ecosystem',
+      ecosystemIdOrOrgIdMissing: 'EcosystemId or OrgId is required',
+      invitationAlreadySent: 'Ecosystem invitation is already sent to this email',
+      invitationCreateFailed: 'Error while creating ecosystem invitation',
+      fetchInvitationsFailed: 'Error while fetching ecosystem invitations',
+      invitationFetchFailed: 'Error while fetching ecosystem invitation by userId',
+      checkFailed: 'Error while checking ecosystem existence by name',
+      deletionFailed: 'Failed to delete record',
+      noRecordsFound: 'No records not found',
+      ecosystemOrgsFetchFailed: 'Failed to fetch ecosystem orgs',
+      ecosystemMemberStatusFail: 'Failed to update ecosystem member status',
+      failedEcosystemOrgUpdate: 'Failed to update ecosystem org',
+      invitationMemberfail: 'Failed to fetch invitation members',
+      invalidEcosystemEnabledFlag: 'Invalid ecosystem enabled flag'
+    }
+  },
   schema: {
     success: {
       fetch: 'Schema retrieved successfully.',
@@ -233,7 +374,8 @@ export const ResponseMessages = {
       webhookUrlRegister: 'Webhook Url registered successfully',
       getWebhookUrl: 'Webhook Url fetched successfully',
       createKeys: 'Key-pair created successfully',
-      walletDelete: 'The wallet has been deleted.'
+      walletDelete: 'The wallet has been deleted.',
+      webhookUrlUpdate: 'Webhook Url updated successfully'
     },
     error: {
       exists: 'An agent name is already exist',
@@ -426,12 +568,14 @@ export const ResponseMessages = {
   webhook: {
     success: {
       webhookUrlRegister: 'Webhook Url registered successfully',
-      getWebhookUrl: 'Webhook Url fetched successfully'
+      getWebhookUrl: 'Webhook Url fetched successfully',
+      webhookUrlUpdate: 'Webhook Url updated successfully'
     },
     error: {
       registerWebhook: 'Unable to register a webhook url',
       webhookResponse: 'Error in sending webhook response to org webhook url',
-      notFound: 'Webhook url not found'
+      notFound: 'Webhook Url not found',
+      updateWebhook: 'Unable to update webhook Url'
     }
   },
   shorteningUrl: {
@@ -451,6 +595,16 @@ export const ResponseMessages = {
     error: {
       notFound: 'Notification record not found.',
       invalidUrl: 'Invalid URL'
+    }
+  },
+  holderNotification: {
+    success: {
+      register: 'Notification registration process completed successfully',
+      sendNotification: 'Notification sent successfully'
+    },
+    error: {
+      notFound: 'Notification record not found.',
+      conflict: 'Holder already registered for this session'
     }
   },
   storeObject: {
@@ -517,7 +671,8 @@ export const ResponseMessages = {
       invalidId: 'Invalid OID4VC issuer ID.',
       createFailed: 'Failed to create OID4VC issuer.',
       updateFailed: 'Failed to update OID4VC issuer.',
-      deleteFailed: 'Failed to delete OID4VC issuer.'
+      deleteFailed: 'Failed to delete OID4VC issuer.',
+      setPrimaryIssuerFailed: 'Cannot unset primary. Please assign another issuer as primary first.'
     }
   },
   oidcTemplate: {
@@ -599,6 +754,22 @@ export const ResponseMessages = {
     error: {
       notFound: 'Intent to template mapping not found.',
       invalidId: 'Invalid id.'
+    }
+  },
+  intentNotice: {
+    success: {
+      create: 'Intent notice created successfully.',
+      fetch: 'Intent notice fetched successfully.',
+      fetchAll: 'Intent notices fetched successfully.',
+      update: 'Intent notice updated successfully.',
+      delete: 'Intent notice deleted successfully.'
+    },
+    error: {
+      create: 'Error while creating intent notice.',
+      intentNotFound: 'Intent not found.',
+      notFound: 'Intent notice not found.',
+      updateFailed: 'Error while updating intent notice.',
+      deleteFailed: 'Error while deleting intent notice.'
     }
   },
   x509: {

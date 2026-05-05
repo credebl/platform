@@ -54,7 +54,8 @@ import {
   IBasicMessage,
   WalletDetails,
   ILedger,
-  IStoreOrgAgent
+  IStoreOrgAgent,
+  VerifyAuthorizationResponse
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
@@ -1388,8 +1389,8 @@ export class AgentServiceService {
       const response = await this.commonService.httpDelete(url, {
         headers: { authorization: getApiKey }
       });
-      if (response?.status === 204) {
-        return 'Data deleted successfully';
+      if (response?.status === 204 || response?.status === 200) {
+        return response.data.message || 'Data deleted successfully';
       }
     } catch (error) {
       this.logger.error(`Error in deleteOidcIssuer in agent service : ${JSON.stringify(error)}`);
@@ -1484,6 +1485,20 @@ export class AgentServiceService {
       return data;
     } catch (error) {
       this.logger.error(`Error in _oidcDeleteCredentialOffer in agent service : ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async oidcRevokeCredential(url: string, orgId: string): Promise<object> {
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const data = await this.commonService
+        .httpPost(`${url}`, {}, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return data;
+    } catch (error) {
+      const errorMsg = error.response ? JSON.stringify(error.response.data) : error.message;
+      this.logger.error(`Error in oidcRevokeCredential in agent service : ${errorMsg}`);
       throw error;
     }
   }
@@ -2280,6 +2295,28 @@ export class AgentServiceService {
     } catch (error) {
       this.logger.error(
         `[createOid4vpVerificationSession] Error in creating oid4vp verification session in agent service : ${JSON.stringify(error)}`
+      );
+      throw error;
+    }
+  }
+
+  async verifyOid4vpSessionAuthResponse(
+    verifyAuthorizationResponse: VerifyAuthorizationResponse,
+    url: string,
+    orgId: string
+  ): Promise<object> {
+    this.logger.log(
+      `[verifyOid4vpSessionAuthResponse] Verifying OID4VP session auth response for orgId=${orgId || 'N/A'}`
+    );
+    try {
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const verifySession = await this.commonService
+        .httpPost(url, verifyAuthorizationResponse, { headers: { authorization: getApiKey } })
+        .then(async (response) => response);
+      return verifySession;
+    } catch (error) {
+      this.logger.error(
+        `[verifyOid4vpSessionAuthResponse] Error in verifying oid4vp session auth response in agent service : ${JSON.stringify(error)}`
       );
       throw error;
     }

@@ -1,38 +1,42 @@
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
+import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+
 import { AgentController } from './agent/agent.controller';
 import { AgentModule } from './agent-service/agent-service.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthzMiddleware } from './authz/authz.middleware';
 import { AuthzModule } from './authz/authz.module';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { ConditionalModule, ConfigModule } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
+import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
+import { ConnectionModule } from './connection/connection.module';
+import { ContextModule } from '@credebl/context/contextModule';
 import { CredentialDefinitionModule } from './credential-definition/credential-definition.module';
+import { EcosystemModule } from './ecosystem/ecosystem.module';
+import { EcosystemSwaggerFilter } from './authz/guards/ecosystem-swagger.filter';
 import { FidoModule } from './fido/fido.module';
+import { GeoLocationModule } from './geo-location/geo-location.module';
+import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { KeycloakConfigModule } from '@credebl/keycloak-config';
 import { IssuanceModule } from './issuance/issuance.module';
+import { LoggerModule } from '@credebl/logger/logger.module';
+import { NotificationModule } from './notification/notification.module';
+import { Oid4vcIssuanceModule } from './oid4vc-issuance/oid4vc-issuance.module';
+import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
 import { OrganizationModule } from './organization/organization.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { PlatformModule } from './platform/platform.module';
-import { VerificationModule } from './verification/verification.module';
 import { RevocationController } from './revocation/revocation.controller';
 import { RevocationModule } from './revocation/revocation.module';
 import { SchemaModule } from './schema/schema.module';
 import { UserModule } from './user/user.module';
-import { ConnectionModule } from './connection/connection.module';
-import { getNatsOptions } from '@credebl/common/nats.config';
-import { CacheModule } from '@nestjs/cache-manager';
-import { WebhookModule } from './webhook/webhook.module';
 import { UtilitiesModule } from './utilities/utilities.module';
-import { NotificationModule } from './notification/notification.module';
-import { GeoLocationModule } from './geo-location/geo-location.module';
-import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
-import { CloudWalletModule } from './cloud-wallet/cloud-wallet.module';
-import { ContextModule } from '@credebl/context/contextModule';
-import { LoggerModule } from '@credebl/logger/logger.module';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { Oid4vcIssuanceModule } from './oid4vc-issuance/oid4vc-issuance.module';
+import { VerificationModule } from './verification/verification.module';
+import { WebhookModule } from './webhook/webhook.module';
 import { X509Module } from './x509/x509.module';
-import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
+import { getNatsOptions } from '@credebl/common/nats.config';
 import { shouldLoadOidcModules } from '@credebl/common/common.utils';
 
 @Module({
@@ -45,7 +49,11 @@ import { shouldLoadOidcModules } from '@credebl/common/common.utils';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.API_GATEWAY_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.API_GATEWAY_SERVICE,
+          process.env.API_GATEWAY_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     AgentModule,
@@ -63,17 +71,20 @@ import { shouldLoadOidcModules } from '@credebl/common/common.utils';
     UtilitiesModule,
     WebhookModule,
     NotificationModule,
+    EcosystemModule,
     GlobalConfigModule,
     CacheModule.register(),
     GeoLocationModule,
     CloudWalletModule,
     ConditionalModule.registerWhen(Oid4vcIssuanceModule, shouldLoadOidcModules),
     ConditionalModule.registerWhen(Oid4vpModule, shouldLoadOidcModules),
-    ConditionalModule.registerWhen(X509Module, shouldLoadOidcModules)
+    ConditionalModule.registerWhen(X509Module, shouldLoadOidcModules),
+    KeycloakConfigModule
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    EcosystemSwaggerFilter,
     {
       provide: MICRO_SERVICE_NAME,
       useValue: 'APIGATEWAY'

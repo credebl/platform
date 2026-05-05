@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsArray, ValidateNested, IsUrl, IsInt } from 'class-validator';
+import { IsString, IsOptional, IsArray, ValidateNested, IsUrl, IsInt, Min, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class LogoDto {
@@ -96,6 +96,7 @@ export class IssuerCreationDto {
   })
   @IsOptional()
   @IsInt({ message: 'batchCredentialIssuanceSize must be an integer' })
+  @Min(1, { message: 'batchCredentialIssuanceSize must be greater than 0' })
   batchCredentialIssuanceSize?: number;
 
   @ApiProperty({
@@ -177,4 +178,12 @@ export class IssuerUpdationDto {
   @IsOptional()
   @IsInt({ message: 'batchCredentialIssuanceSize must be an integer' })
   batchCredentialIssuanceSize?: number;
+
+  @ApiPropertyOptional({
+    description: 'Marks whether this issuer is the primary issuer',
+    example: true
+  })
+  @IsOptional()
+  @IsBoolean()
+  isPrimary?: boolean;
 }

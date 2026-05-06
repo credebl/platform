@@ -444,6 +444,9 @@ export class VerificationController {
     @Body() proofPresentationPayload: WebhookPresentationProofDto,
     @Res() res: Response
   ): Promise<Response> {
+    this.logger.debug(
+      `Received webhook proof presentation for orgId: ${orgId} with payload: ${JSON.stringify(proofPresentationPayload)}`
+    );
     proofPresentationPayload.type = 'Verification';
     proofPresentationPayload.contextCorrelationId = proofPresentationPayload.contextCorrelationId?.replace(
       /^tenant-/,
@@ -463,11 +466,17 @@ export class VerificationController {
       message: ResponseMessages.verification.success.create,
       data: webhookProofPresentation
     };
-
+    this.logger.debug(
+      `Saved webhook proof presentation in platform for orgId: ${orgId}, dispatching to webhook if configured`
+    );
     void this.verificationService
       ._getWebhookUrl(proofPresentationPayload?.contextCorrelationId, orgId)
       .then((webhookUrlInfo: IWebhookUrlInfo | null) => {
+        this.logger.debug(
+          `Fetched webhook URL info for orgId: ${orgId}, webhookUrlInfo: ${JSON.stringify(webhookUrlInfo)}`
+        );
         if (!webhookUrlInfo?.webhookUrl) {
+          this.logger.debug(`No webhook URL configured for orgId: ${orgId}, skipping webhook dispatch`);
           return;
         }
         return this.verificationService._postWebhookResponse(

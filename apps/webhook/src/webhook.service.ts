@@ -119,6 +119,7 @@ export class WebhookService {
   }
   async webhookFunc(webhookUrl: string, data: object, webhookSecret?: string): Promise<Response> {
     const { isSafe } = await isValidWebhookUrl(webhookUrl);
+    this.logger.debug(`Webhook URL validation result for ${webhookUrl}: isSafe=${isSafe}`);
     if (!isSafe) {
       throw new BadRequestException('Invalid or blocked webhook URL');
     }
@@ -134,6 +135,7 @@ export class WebhookService {
         const payload = `${timestamp}.${requestBody}`;
         const decryptedSecret = await decryptClientCredential(webhookSecret);
         const signature = crypto.createHmac('sha256', decryptedSecret).update(payload).digest('hex');
+        this.logger.debug(`Generated signature for webhook response: ${signature} with timestamp: ${timestamp}`);
 
         headers['X-Signature'] = signature;
         headers['X-Timestamp'] = timestamp;
@@ -145,7 +147,7 @@ export class WebhookService {
         body: requestBody,
         redirect: 'error'
       });
-
+      this.logger.debug(`is Safe webhook call url -${webhookUrl} res -${response} payload - ${requestBody}`);
       if (!response.ok) {
         this.logger.error(`Error in sending webhook response to org webhook url:`, response.status);
         throw new HttpException(ResponseMessages.webhook.error.webhookResponse, response.status);
@@ -161,10 +163,15 @@ export class WebhookService {
   }
 
   async webhookResponse(webhookUrl: string, data: object, webhookSecret?: string): Promise<object> {
+    this.logger.debug(
+      `Sending webhook response to org webhook url: ${webhookUrl} with webhookSecret: ${JSON.stringify(webhookSecret ? 'Provided' : 'Not Provided')}`
+    );
     try {
       const response = await AsyncRetry(async (bail) => {
         try {
-          return await this.webhookFunc(webhookUrl, data, webhookSecret);
+          const wbRes = await this.webhookFunc(webhookUrl, data, webhookSecret);
+          this.logger.log(`wbRes ${wbRes}`);
+          return wbRes;
         } catch (error) {
           if (error instanceof HttpException && 400 <= error.getStatus() && 500 > error.getStatus()) {
             bail(error);

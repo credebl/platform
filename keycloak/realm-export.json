@@ -88,7 +88,8 @@
           "view-clients",
           "manage-users",
           "query-users",
-          "view-users"
+          "view-users",
+          "manage-realm"
         ]
       }
     },

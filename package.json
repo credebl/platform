@@ -128,9 +128,9 @@
     "winston-daily-rotate-file": "^5.0.0",
     "winston-elasticsearch": "0.16.0",
     "xml-js": "^1.6.11",
-    "protobufjs": "^7.5.5",
+    "protobufjs": "^7.5.6",
     "handlebars": "^4.7.9",
-    "form-data": "^4.0.4"
+    "form-data": "^4.0.5"
   },
   "devDependencies": {
     "@nestjs/cli": "catalog:",

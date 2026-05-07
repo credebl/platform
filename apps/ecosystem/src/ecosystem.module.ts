@@ -5,6 +5,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ClientRegistrationModule } from '@credebl/client-registration';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonModule } from '@credebl/common';
+import { KeycloakUrlModule } from '@credebl/keycloak-url';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { EcosystemController } from './ecosystem.controller';
 import { EcosystemRepository } from '../repositories/ecosystem.repository';
@@ -34,6 +35,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
       }
     ]),
     CommonModule,
+    KeycloakUrlModule,
     GlobalConfigModule,
     LoggerModule,
     PlatformConfig,

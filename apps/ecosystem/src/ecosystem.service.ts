@@ -990,6 +990,11 @@ export class EcosystemService {
   private async checkUnmanagedAttributeEnabled(): Promise<void> {
     const realmName = process.env.KEYCLOAK_REALM;
     const token = await this.clientRegistrationService.getPlatformManagementToken();
+
+    if (!realmName || !token) {
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.keycloakRealmOrTokenMissing);
+    }
+
     const userProfileUrl = await this.keycloakUrlService.GetUserProfileURL(realmName);
     const profileConfig = await this.commonService.httpGet(userProfileUrl, {
       headers: { authorization: `Bearer ${token}` }

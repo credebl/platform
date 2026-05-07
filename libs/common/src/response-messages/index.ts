@@ -300,6 +300,7 @@ export const ResponseMessages = {
       failedEcosystemOrgUpdate: 'Failed to update ecosystem org',
       invitationMemberfail: 'Failed to fetch invitation members',
       invalidEcosystemEnabledFlag: 'Invalid ecosystem enabled flag',
+      keycloakRealmOrTokenMissing: 'Keycloak realm is not configured or management token could not be obtained',
       unmanagedAttributeNotEnabled:
         'Unmanaged attributes are not enabled in Keycloak. Please enable unmanaged attributes in Keycloak realm settings (Realm Settings > User Profile > Unmanaged Attributes) before enabling the ecosystem feature'
     }

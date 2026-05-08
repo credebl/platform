@@ -8,7 +8,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { validate as isValidUUID } from 'uuid';
 @Injectable()
 export class OrgRolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {} // eslint-disable-next-line array-callback-return
+  constructor(private reflector: Reflector) {}
 
   private logger = new Logger('Org Role Guard');
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -35,7 +35,7 @@ export class OrgRolesGuard implements CanActivate {
       req.body.orgId = req.body.orgId?.trim() || '';
     }
 
-    const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+    const orgId = req.params.orgId || req.query.orgId || req.body?.orgId;
     if (orgId) {
       if (!isValidUUID(orgId)) {
         throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);

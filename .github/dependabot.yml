@@ -1,0 +1,115 @@
+# .github/dependabot.yml
+
+version: 2
+
+updates:
+  # =========================
+  # pnpm Dependencies (via npm ecosystem)
+  # =========================
+  - package-ecosystem: "npm"
+    directory: "/"              # or "/client" if package.json is inside a subfolder
+    target-branch: "main"       # always open PRs against main
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 10
+
+    groups:
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+
+    allow:
+      - dependency-type: "all"
+
+    labels:
+      - "dependencies"
+      - "pnpm"                   # updated from "npm" to reflect pnpm
+
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # =========================
+  # GitHub Actions
+  # =========================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "main"       # always open PRs against main
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+    commit-message:
+      prefix: "ci"
+
+    groups:
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+
+  # =========================
+  # Docker
+  # =========================
+  - package-ecosystem: "docker"
+    directories:
+      - "/"
+    target-branch: "main"       # open Docker PRs to main
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+
+    labels:
+      - "dependencies"
+      - "docker"
+
+    commit-message:
+      prefix: "build"
+
+    groups:
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+
+  # =========================
+  # Docker Compose
+  # =========================
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "/"
+    target-branch: "main"       # open Docker Compose PRs to main
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+
+    labels:
+      - "dependencies"
+      - "docker"
+
+    commit-message:
+      prefix: "build"
+
+    groups:
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"

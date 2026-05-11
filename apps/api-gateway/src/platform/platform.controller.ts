@@ -327,6 +327,7 @@ export class PlatformController {
   @UseGuards(AuthGuard('jwt'), EcosystemRolesGuard)
   @ApiBearerAuth()
   async getEcosystemEnableStatus(@Res() res: Response): Promise<Response> {
+    this.logger.debug('getEcosystemEnableStatus controller hit');
     const ecosystemStatus = await this.platformService.getEcosystemEnableStatus();
 
     return res.status(HttpStatus.OK).json({

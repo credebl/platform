@@ -339,6 +339,7 @@ export class EcosystemController {
 
   @MessagePattern({ cmd: 'get-platform-admin-dashboard-count' })
   async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
+    this.logger.debug('ecosystme module');
     return this.ecosystemService.getDashboardCountEcosystem();
   }
 

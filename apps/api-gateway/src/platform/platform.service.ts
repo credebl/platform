@@ -84,6 +84,7 @@ export class PlatformService extends BaseService {
   }
 
   async getEcosystemEnableStatus(): Promise<boolean> {
+    this.logger.debug('gateway service called');
     return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-ecosystem-enable-status', {});
   }
 

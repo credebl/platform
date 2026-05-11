@@ -19,7 +19,6 @@ RUN apk update && apk upgrade && apk add --no-cache openssl \
     && addgroup -g 1001 -S nodejs \
     && adduser -S nextjs -u 1001
 WORKDIR /app
-
 RUN mkdir -p /app/uploadedFiles/exports && chown -R nextjs:nodejs /app
 
 COPY --from=build /app/dist/apps/issuance/ ./dist/apps/issuance/

@@ -183,8 +183,8 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3
       auth0-js:
-        specifier: ^9.30.1
-        version: 9.32.0
+        specifier: ^10.0.0
+        version: 10.0.0
       aws-sdk:
         specifier: ^2.1693.0
         version: 2.1693.0
@@ -2666,8 +2666,8 @@ packages:
     resolution: {integrity: sha512-kNOjDqAh7px0XWNI+4QbzoiR/nTkHAWNud2uvnJquD1/x5a7EQZMJT0AczqK0Qn67oY/TTQ1LbUKajZpp3I9tQ==}
     engines: {node: '>=8.0.0'}
 
-  auth0-js@9.32.0:
-    resolution: {integrity: sha512-Vbt8W1sI3VLEdhaRNNP6Uq0qD5KUWQ4iSFn0nv03Xn4npC8r7YRUrvFrA27CCXK+ZV5fjy0Ajr/ElZ7ed97ukA==}
+  auth0-js@10.0.0:
+    resolution: {integrity: sha512-AuV8nhr/bRdlKI3+ESZ6si2N5ak32aP07suRApZicwIbM1OTfQmELMOnVEOlnhRKsiQAWLPDXUGOA3B/cDd8Jg==}
 
   available-typed-arrays@1.0.7:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
@@ -5074,6 +5074,7 @@ packages:
   nats@2.29.3:
     resolution: {integrity: sha512-tOQCRCwC74DgBTk4pWZ9V45sk4d7peoE2njVprMRCBXrhJ5q5cYM7i6W+Uvw2qUrcfOSnuisrX7bEx3b3Wx4QA==}
     engines: {node: '>= 14.0.0'}
+    deprecated: Package moved. Use @nats-io/transport-node from https://github.com/nats-io/nats.js
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
@@ -9722,7 +9723,7 @@ snapshots:
   atomic-sleep@1.0.0:
     optional: true
 
-  auth0-js@9.32.0:
+  auth0-js@10.0.0:
     dependencies:
       base64-js: 1.5.1
       idtoken-verifier: 2.2.4

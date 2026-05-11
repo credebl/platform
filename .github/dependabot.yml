@@ -8,7 +8,7 @@ updates:
   # =========================
   - package-ecosystem: "npm"
     directory: "/"              # or "/client" if package.json is inside a subfolder
-    target-branch: "main"       # always open PRs against main
+    target-branch: "main"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -17,6 +17,14 @@ updates:
     open-pull-requests-limit: 10
 
     groups:
+      # 1) All patch updates in one PR
+      patch-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+
+      # 2) All minor updates in one PR
       minor-updates:
         patterns:
           - "*"
@@ -28,23 +36,39 @@ updates:
 
     labels:
       - "dependencies"
-      - "pnpm"                   # updated from "npm" to reflect pnpm
+      - "pnpm"
 
     commit-message:
       prefix: "chore"
       include: "scope"
+
 
   # =========================
   # GitHub Actions
   # =========================
   - package-ecosystem: "github-actions"
     directory: "/"
-    target-branch: "main"       # always open PRs against main
+    target-branch: "main"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
       timezone: "Asia/Kolkata"
+
+    groups:
+      # 1) All patch updates in one PR
+      patch-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+
+      # 2) All minor updates in one PR
+      minor-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
 
     labels:
       - "dependencies"
@@ -53,12 +77,6 @@ updates:
     commit-message:
       prefix: "ci"
 
-    groups:
-      minor-updates:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
 
   # =========================
   # Docker
@@ -66,12 +84,27 @@ updates:
   - package-ecosystem: "docker"
     directories:
       - "/"
-    target-branch: "main"       # open Docker PRs to main
+    target-branch: "main"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
       timezone: "Asia/Kolkata"
+
+    groups:
+      # 1) All patch‑style updates in one PR
+      patch-docker:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+
+      # 2) All minor‑style updates in one PR
+      minor-docker:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
 
     labels:
       - "dependencies"
@@ -80,12 +113,6 @@ updates:
     commit-message:
       prefix: "build"
 
-    groups:
-      minor-updates:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
 
   # =========================
   # Docker Compose
@@ -93,12 +120,27 @@ updates:
   - package-ecosystem: "docker-compose"
     directories:
       - "/"
-    target-branch: "main"       # open Docker Compose PRs to main
+    target-branch: "main"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
       timezone: "Asia/Kolkata"
+
+    groups:
+      # 1) All patch‑style updates in one PR
+      patch-docker-compose:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+
+      # 2) All minor‑style updates in one PR
+      minor-docker-compose:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
 
     labels:
       - "dependencies"
@@ -106,10 +148,3 @@ updates:
 
     commit-message:
       prefix: "build"
-
-    groups:
-      minor-updates:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"

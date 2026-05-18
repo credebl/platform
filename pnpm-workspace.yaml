@@ -3,25 +3,25 @@ packages:
   - 'libs/*'
 
 catalog:
-  "@nestjs/common": ^11.1.6
-  "@nestjs/core": ^11.1.6
-  "@nestjs/platform-express": ^11.1.6
+  "@nestjs/common": ^11.1.21
+  "@nestjs/core": ^11.1.21
+  "@nestjs/platform-express": ^11.1.21
   "@nestjs/axios": ^4.0.1
   "@nestjs/bull": ^11.0.3
   "@nestjs/cache-manager": ^3.0.1
   "@nestjs/config": ^4.0.2
   "@nestjs/jwt": ^11.0.0
-  "@nestjs/microservices": ^11.1.6
+  "@nestjs/microservices": ^11.1.21
   "@nestjs/passport": ^11.0.5
-  "@nestjs/platform-socket.io": ^11.1.6
+  "@nestjs/platform-socket.io": ^11.1.21
   "@nestjs/schedule": ^6.0.1
-  "@nestjs/swagger": ^11.2.0
+  "@nestjs/swagger": ^11.4.3
   "@nestjs/typeorm": ^11.0.0
-  "@nestjs/websockets": ^11.1.6
+  "@nestjs/websockets": ^11.1.21
   "nestjs-cls": ^6.0.1
-  "@nestjs/cli": 11.0.10
+  "@nestjs/cli": 11.0.21
   "@nestjs/schematics": ^11.0.7
-  "@nestjs/testing": ^11.1.6
+  "@nestjs/testing": ^11.1.21
   "nestjs-rate-limiter": ^3.1.0
   "nestjs-supabase-auth": ^1.0.9
   "nestjs-typeorm-paginate": ^4.0.4

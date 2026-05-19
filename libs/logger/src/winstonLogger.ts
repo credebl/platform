@@ -4,17 +4,12 @@ import { LogData, LogLevel } from '@credebl/logger/log';
 import Logger from '@credebl/logger/logger.interface';
 
 export const WinstonLoggerTransportsKey = Symbol();
-let esTransport;
 
 @Injectable()
 export default class WinstonLogger implements Logger {
   private readonly logger: winston.Logger;
 
   public constructor(@Inject(WinstonLoggerTransportsKey) transports: winston.transport[]) {
-    if (esTransport) {
-      transports.push(esTransport);
-    }
-
     // Create winston logger
     this.logger = winston.createLogger(this.getLoggerFormatOptions(transports));
   }

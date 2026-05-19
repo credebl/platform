@@ -14,7 +14,6 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Asia/Kolkata"
-    open-pull-requests-limit: 10
 
     groups:
       # 1) All patch updates in one PR
@@ -71,8 +70,10 @@ updates:
           - "minor"
 
     labels:
+      - "devops"
       - "dependencies"
       - "github-actions"
+      
 
     commit-message:
       prefix: "ci"
@@ -82,8 +83,7 @@ updates:
   # Docker
   # =========================
   - package-ecosystem: "docker"
-    directories:
-      - "/"
+    directory: "/"
     target-branch: "main"
     schedule:
       interval: "weekly"
@@ -107,6 +107,7 @@ updates:
           - "minor"
 
     labels:
+      - "devops"
       - "dependencies"
       - "docker"
 
@@ -118,8 +119,7 @@ updates:
   # Docker Compose
   # =========================
   - package-ecosystem: "docker-compose"
-    directories:
-      - "/"
+    directory: "/"
     target-branch: "main"
     schedule:
       interval: "weekly"
@@ -143,6 +143,7 @@ updates:
           - "minor"
 
     labels:
+      - "devops"
       - "dependencies"
       - "docker"
 

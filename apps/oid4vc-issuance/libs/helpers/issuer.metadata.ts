@@ -266,9 +266,7 @@ function buildClaimsFromTemplate(template: SdJwtTemplate | MdocTemplate): Claim[
   return claims;
 }
 
-//TODO: Fix this eslint issue
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate) {
+export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate): Record<string, CredentialConfig> {
   const formatSuffix = 'sdjwt';
 
   // Determine the unique key for this credential configuration
@@ -297,8 +295,7 @@ export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function buildMdocCredentialConfig(name: string, template: MdocTemplate) {
+export function buildMdocCredentialConfig(name: string, template: MdocTemplate): Record<string, CredentialConfig> {
   //const claims: Claim[] = [];
 
   const formatSuffix = 'mdoc';
@@ -332,12 +329,46 @@ export function buildMdocCredentialConfig(name: string, template: MdocTemplate) 
   };
 }
 
+export function buildJwtVcJsonLdCredentialConfig(
+  name: string,
+  template: SdJwtTemplate
+): Record<string, CredentialConfig> {
+  const formatSuffix = 'jwt-vc-json-ld';
+
+  // Determine the unique key for this credential configuration
+  const configKey = `${name}-${formatSuffix}`;
+  const credentialScope = `openid4vc:${template.vct}-${formatSuffix}`;
+
+  const claims = buildClaimsFromTemplate(template);
+
+  return {
+    [configKey]: {
+      format: CredentialFormat.JwtVcJsonLd,
+      scope: credentialScope,
+      vct: template.vct,
+      credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS_FOR_SDJWT],
+      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS_FOR_SDJWT],
+      proof_types_supported: {
+        jwt: {
+          proof_signing_alg_values_supported: ['ES256', 'EdDSA']
+        }
+      },
+      credential_metadata: {
+        claims,
+        display: []
+      }
+    }
+  };
+}
+
 //TODO: Fix this eslint issue
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function buildCredentialConfig(name: string, template: SdJwtTemplate | MdocTemplate, format: CredentialFormat) {
   switch (format) {
     case CredentialFormat.SdJwtVc:
       return buildSdJwtCredentialConfig(name, template as SdJwtTemplate);
+    case CredentialFormat.JwtVcJsonLd:
+      return buildJwtVcJsonLdCredentialConfig(name, template as SdJwtTemplate);
     case CredentialFormat.Mdoc:
       return buildMdocCredentialConfig(name, template as MdocTemplate);
     default:
@@ -361,7 +392,11 @@ export function buildCredentialConfigurationsSupported(templateRows: any): Recor
     const credentialConfig = buildCredentialConfig(
       templateRow.name,
       templateToBuild,
-      format === CredentialFormat.Mdoc ? CredentialFormat.Mdoc : CredentialFormat.SdJwtVc
+      format === CredentialFormat.Mdoc
+        ? CredentialFormat.Mdoc
+        : format === CredentialFormat.JwtVcJsonLd
+          ? CredentialFormat.JwtVcJsonLd
+          : CredentialFormat.SdJwtVc
     );
     const appearanceJson = coerceJsonObject<unknown>(templateRow.appearance);
 

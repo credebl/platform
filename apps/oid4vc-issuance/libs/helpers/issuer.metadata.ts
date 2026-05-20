@@ -266,7 +266,8 @@ function buildClaimsFromTemplate(template: SdJwtTemplate | MdocTemplate): Claim[
   return claims;
 }
 
-export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate): Record<string, CredentialConfig> {
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate) {
   const formatSuffix = 'sdjwt';
 
   // Determine the unique key for this credential configuration
@@ -295,7 +296,8 @@ export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate
   };
 }
 
-export function buildMdocCredentialConfig(name: string, template: MdocTemplate): Record<string, CredentialConfig> {
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export function buildMdocCredentialConfig(name: string, template: MdocTemplate) {
   //const claims: Claim[] = [];
 
   const formatSuffix = 'mdoc';
@@ -329,10 +331,8 @@ export function buildMdocCredentialConfig(name: string, template: MdocTemplate):
   };
 }
 
-export function buildJwtVcJsonLdCredentialConfig(
-  name: string,
-  template: SdJwtTemplate
-): Record<string, CredentialConfig> {
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export function buildJwtVcJsonLdCredentialConfig(name: string, template: SdJwtTemplate) {
   const formatSuffix = 'jwt-vc-json-ld';
 
   // Determine the unique key for this credential configuration

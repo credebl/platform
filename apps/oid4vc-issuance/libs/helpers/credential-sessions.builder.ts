@@ -541,10 +541,10 @@ function buildJwtVcJsonLdCredential(
     credentialSubject: payloadCopy
   };
 
-  if (nbf) {
+  if (nbf !== undefined) {
     wrappedPayload.nbf = nbf;
   }
-  if (exp) {
+  if (exp !== undefined) {
     wrappedPayload.exp = exp;
   }
 

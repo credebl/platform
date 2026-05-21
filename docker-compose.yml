@@ -13,7 +13,7 @@ services:
       - ./nats-server.conf:/nats-server.conf:ro
   redis:
     container_name: credebl-redis
-    image: redis:6.2-alpine
+    image: redis:8.6-alpine
     restart: always
     ports:
       - '6379:6379'

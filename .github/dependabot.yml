@@ -22,7 +22,6 @@ updates:
           - "*"
         update-types:
           - "patch"
-
       # 2) All minor updates in one PR
       minor-updates:
         patterns:
@@ -61,7 +60,6 @@ updates:
           - "*"
         update-types:
           - "patch"
-
       # 2) All minor updates in one PR
       minor-actions:
         patterns:
@@ -70,10 +68,9 @@ updates:
           - "minor"
 
     labels:
-      - "devops"
       - "dependencies"
       - "github-actions"
-      
+      - "devops"
 
     commit-message:
       prefix: "ci"
@@ -83,7 +80,8 @@ updates:
   # Docker
   # =========================
   - package-ecosystem: "docker"
-    directory: "/"
+    directories:
+      - "/"
     target-branch: "main"
     schedule:
       interval: "weekly"
@@ -98,7 +96,6 @@ updates:
           - "*"
         update-types:
           - "patch"
-
       # 2) All minor‑style updates in one PR
       minor-docker:
         patterns:
@@ -107,9 +104,9 @@ updates:
           - "minor"
 
     labels:
-      - "devops"
       - "dependencies"
       - "docker"
+      - "devops"
 
     commit-message:
       prefix: "build"
@@ -119,7 +116,8 @@ updates:
   # Docker Compose
   # =========================
   - package-ecosystem: "docker-compose"
-    directory: "/"
+    directories:
+      - "/"
     target-branch: "main"
     schedule:
       interval: "weekly"
@@ -134,7 +132,6 @@ updates:
           - "*"
         update-types:
           - "patch"
-
       # 2) All minor‑style updates in one PR
       minor-docker-compose:
         patterns:
@@ -143,9 +140,9 @@ updates:
           - "minor"
 
     labels:
-      - "devops"
       - "dependencies"
-      - "docker"
+      - "docker-compose"
+      - "devops"
 
     commit-message:
       prefix: "build"

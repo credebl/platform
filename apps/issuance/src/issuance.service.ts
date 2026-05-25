@@ -202,7 +202,7 @@ export class IssuanceService {
 
         if (payload.credentialType === IssueCredentialType.INDY) {
           issueData = {
-            protocolVersion: payload.protocolVersion || 'v1',
+            protocolVersion: payload.protocolVersion || 'v2',
             connectionId,
             credentialFormats: {
               indy: {
@@ -392,7 +392,7 @@ export class IssuanceService {
       let issueData;
       if (credentialType === IssueCredentialType.INDY) {
         issueData = {
-          protocolVersion: protocolVersion || 'v1',
+          protocolVersion: protocolVersion || 'v2',
           credentialFormats: {
             indy: {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -990,7 +990,7 @@ export class IssuanceService {
       this.logger.debug('This is an email issuance of type', credentialType);
       if (IssueCredentialType.INDY === credentialType) {
         outOfBandIssuancePayload = {
-          protocolVersion: protocolVersion || 'v1',
+          protocolVersion: protocolVersion || 'v2',
           credentialFormats: {
             indy: {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars

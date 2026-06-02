@@ -67,10 +67,6 @@ export class KeycloakConfigService implements OnModuleInit {
     this.logger.log('');
     this.logger.log('--- [Step 3/4] Per-Client Protocol Mappers ---');
     await this.ensureAllClientsProtocolMapper(realmName, token);
-
-    this.logger.log('');
-    this.logger.log('--- [Step 4/4] Verification: Checking Users with ecosystem_access ---');
-    await this.verifyUsersEcosystemAccess(realmName, token);
   }
 
   private async ensureUnmanagedAttributesEnabled(realm: string, token: string): Promise<void> {
@@ -119,15 +115,6 @@ export class KeycloakConfigService implements OnModuleInit {
     const mappersUrl = await this.keycloakUrlService.GetClientScopeProtocolMappersURL(realm, scopeId);
     this.logger.log(`Fetching mappers from: ${mappersUrl}`);
     const existingMappers = await this.commonService.httpGet(mappersUrl, this.getAuthHeader(token));
-
-    this.logger.log(`Response type: ${typeof existingMappers}, isArray: ${Array.isArray(existingMappers)}`);
-    if (Array.isArray(existingMappers)) {
-      const mapperNames = existingMappers.map((m: { name: string }) => m.name);
-      this.logger.log(`Existing mappers in "profile" scope: [${mapperNames.join(', ')}]`);
-    } else {
-      this.logger.warn(`Unexpected response for mappers: ${JSON.stringify(existingMappers)}`);
-    }
-
     const mapperExists =
       Array.isArray(existingMappers) && existingMappers.some((m: { name: string }) => 'ecosystem_access' === m.name);
 
@@ -155,8 +142,7 @@ export class KeycloakConfigService implements OnModuleInit {
       return null;
     }
 
-    const scopeNames = scopes.map((s: { name: string; id: string }) => `${s.name}(${s.id})`);
-    this.logger.log(`Found ${scopes.length} client scopes: [${scopeNames.join(', ')}]`);
+    this.logger.log(`Found ${scopes.length}`);
 
     const profileScope = scopes.find((s: { name: string }) => 'profile' === s.name);
     if (!profileScope) {
@@ -190,8 +176,6 @@ export class KeycloakConfigService implements OnModuleInit {
     this.logger.log(
       `Found ${clients.length} total clients: ${targetClients.length} to process, ${excludedClients.length} excluded`
     );
-    this.logger.log('');
-    this.logger.log('Processing target clients...');
 
     let created = 0;
     let skipped = 0;
@@ -207,8 +191,6 @@ export class KeycloakConfigService implements OnModuleInit {
         failed++;
       }
     }
-
-    this.logger.log('');
     this.logger.log(
       `Per-client mapper summary: ${created} CREATED, ${skipped} SKIPPED (already existed), ${failed} FAILED`
     );
@@ -229,13 +211,8 @@ export class KeycloakConfigService implements OnModuleInit {
       const mapperExists = mapperNames.includes('ecosystem_access_mapper');
 
       if (mapperExists) {
-        this.logger.log(
-          `  [${clientId}] Has ${mapperNames.length} mappers, "ecosystem_access_mapper" EXISTS - SKIPPED`
-        );
         return ProtocolMapperResult.SKIPPED;
       }
-
-      this.logger.log(`  [${clientId}] Has ${mapperNames.length} mappers: [${mapperNames.join(', ')}]`);
       this.logger.log(`  [${clientId}] "ecosystem_access_mapper" NOT FOUND - CREATING...`);
 
       const mapperPayload = this.buildProtocolMapperPayload('ecosystem_access_mapper');
@@ -245,54 +222,6 @@ export class KeycloakConfigService implements OnModuleInit {
     } catch (error) {
       this.logger.error(`  [${clientId}] FAILED: ${error.message || JSON.stringify(error)}`);
       return ProtocolMapperResult.FAILED;
-    }
-  }
-
-  private async verifyUsersEcosystemAccess(realm: string, token: string): Promise<void> {
-    try {
-      const usersUrl = `${await this.keycloakUrlService.createUserURL(realm)}?max=1000`;
-      this.logger.log(`Fetching users from: ${usersUrl}`);
-      const users = await this.commonService.httpGet(usersUrl, this.getAuthHeader(token));
-
-      if (!Array.isArray(users)) {
-        this.logger.warn(`Unexpected response for users: ${typeof users}`);
-        return;
-      }
-
-      this.logger.log(`Found ${users.length} users in realm`);
-
-      let usersWithAttribute = 0;
-      let usersWithoutAttribute = 0;
-      let serviceAccountUsers = 0;
-
-      for (const user of users) {
-        const isServiceAccount = user.username?.startsWith('service-account-');
-        const hasEcosystemAccess = user.attributes?.ecosystem_access && 0 < user.attributes.ecosystem_access.length;
-
-        if (isServiceAccount) {
-          serviceAccountUsers++;
-        } else {
-          if (hasEcosystemAccess) {
-            usersWithAttribute++;
-          } else {
-            usersWithoutAttribute++;
-          }
-        }
-      }
-
-      this.logger.log('');
-      this.logger.log(`User attribute summary:`);
-      this.logger.log(`  Regular users WITH ecosystem_access: ${usersWithAttribute}`);
-      this.logger.log(`  Regular users WITHOUT ecosystem_access: ${usersWithoutAttribute}`);
-      this.logger.log(`  Service account users: ${serviceAccountUsers}`);
-
-      if (0 === usersWithAttribute && 0 < usersWithoutAttribute) {
-        this.logger.warn('WARNING: No regular users have ecosystem_access attribute!');
-        this.logger.warn('This means ecosystem_access will NOT appear in user login tokens');
-        this.logger.warn('The attribute is set when a user creates or joins an ecosystem');
-      }
-    } catch (error) {
-      this.logger.error(`Failed to verify users: ${error.message || error}`);
     }
   }
 

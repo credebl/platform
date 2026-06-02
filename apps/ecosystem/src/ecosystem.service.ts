@@ -15,6 +15,8 @@ import {
 
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { ClientRegistrationService } from '@credebl/client-registration';
+import { CommonService } from '@credebl/common';
+import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
 import { validateNoticeUrl } from './ecosystem.helper';
 import { CreateEcosystemInviteTemplate } from '../templates/create-ecosystem.templates';
@@ -32,7 +34,8 @@ import {
   EcosystemServiceRole,
   Invitation,
   InvitationViewRole,
-  InviteType
+  InviteType,
+  UnmanagedAttributePolicy
 } from '@credebl/enum/enum';
 
 import {
@@ -65,7 +68,9 @@ export class EcosystemService {
     private readonly emailService: EmailService,
     private readonly organizationRepository: OrganizationRepository,
     private readonly userRepository: UserRepository,
-    private readonly clientRegistrationService: ClientRegistrationService
+    private readonly clientRegistrationService: ClientRegistrationService,
+    private readonly commonService: CommonService,
+    private readonly keycloakUrlService: KeycloakUrlService
   ) {}
 
   private readonly logger = new Logger(EcosystemService.name);
@@ -968,6 +973,10 @@ export class EcosystemService {
       throw new BadRequestException(ResponseMessages.ecosystem.error.invalidEcosystemEnabledFlag);
     }
 
+    if (isEcosystemEnabled) {
+      await this.checkUnmanagedAttributeEnabled();
+    }
+
     await this.ecosystemRepository.updateEcosystemConfig({
       isEcosystemEnabled,
       userId: platformAdminId
@@ -976,6 +985,24 @@ export class EcosystemService {
     return {
       message: ResponseMessages.ecosystem.success.updateEcosystemConfig
     };
+  }
+
+  private async checkUnmanagedAttributeEnabled(): Promise<void> {
+    const realmName = process.env.KEYCLOAK_REALM;
+    const token = await this.clientRegistrationService.getPlatformManagementToken();
+
+    if (!realmName || !token) {
+      throw new InternalServerErrorException(ResponseMessages.ecosystem.error.keycloakRealmOrTokenMissing);
+    }
+
+    const userProfileUrl = await this.keycloakUrlService.GetUserProfileURL(realmName);
+    const profileConfig = await this.commonService.httpGet(userProfileUrl, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    if (!profileConfig || UnmanagedAttributePolicy.ENABLED !== profileConfig.unmanagedAttributePolicy) {
+      throw new BadRequestException(ResponseMessages.ecosystem.error.unmanagedAttributeNotEnabled);
+    }
   }
 
   async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {

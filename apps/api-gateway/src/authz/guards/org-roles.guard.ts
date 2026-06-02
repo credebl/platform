@@ -8,8 +8,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { validate as isValidUUID } from 'uuid';
 @Injectable()
 export class OrgRolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) { }            // eslint-disable-next-line array-callback-return
-
+  constructor(private reflector: Reflector) {}
 
   private logger = new Logger('Org Role Guard');
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -25,33 +24,35 @@ export class OrgRolesGuard implements CanActivate {
 
     const req = context.switchToHttp().getRequest();
     const { user } = req;
-  
+
     if (user?.userRole && user?.userRole.includes('holder')) {
       throw new ForbiddenException('This role is a holder.');
     }
 
     req.params.orgId = req.params?.orgId ? req.params?.orgId?.trim() : '';
     req.query.orgId = req.query?.orgId ? req.query?.orgId?.trim() : '';
-    req.body.orgId = req.body?.orgId ? req.body?.orgId?.trim() : '';
+    if (req.body) {
+      req.body.orgId = req.body.orgId?.trim() || '';
+    }
 
-    const orgId = req.params.orgId || req.query.orgId || req.body.orgId;
+    const orgId = req.params.orgId || req.query.orgId || req.body?.orgId;
+    if (orgId) {
+      if (!isValidUUID(orgId)) {
+        throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
+      }
 
-    if (orgId) {  
+      if (user.hasOwnProperty('resource_access') && user.resource_access[orgId]) {
+        const orgRoles: string[] = user.resource_access[orgId].roles;
+        const roleAccess = requiredRoles.some((role) => orgRoles.includes(role));
 
-    if (!isValidUUID(orgId)) {
-      throw new BadRequestException(ResponseMessages.organisation.error.invalidOrgId);
-    }    
-      
-
-        if (user.hasOwnProperty('resource_access') && user.resource_access[orgId]) {
-          const orgRoles: string[] = user.resource_access[orgId].roles;
-          const roleAccess = requiredRoles.some((role) => orgRoles.includes(role));
-    
-          if (!roleAccess) {
-            throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
-          }
-          return roleAccess;
+        if (!roleAccess) {
+          throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, {
+            cause: new Error(),
+            description: ResponseMessages.errorMessages.forbidden
+          });
         }
+        return roleAccess;
+      }
 
       const specificOrg = user.userOrgRoles.find((orgDetails) => {
         if (!orgDetails.orgId) {
@@ -59,9 +60,12 @@ export class OrgRolesGuard implements CanActivate {
         }
         return orgDetails.orgId.toString().trim() === orgId.toString().trim();
       });
-      
+
       if (!specificOrg) {
-        throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+        throw new ForbiddenException(ResponseMessages.organisation.error.orgNotMatch, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.forbidden
+        });
       }
 
       user.selectedOrg = specificOrg;
@@ -71,9 +75,7 @@ export class OrgRolesGuard implements CanActivate {
           return orgRoleItem.orgRole.name;
         }
       });
-
-    } else if (requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {      
-
+    } else if (requiredRolesNames.includes(OrgRoles.PLATFORM_ADMIN)) {
       // eslint-disable-next-line array-callback-return
       const isPlatformAdmin = user.userOrgRoles.find((orgDetails) => {
         if (orgDetails.orgRole.name === OrgRoles.PLATFORM_ADMIN) {
@@ -86,7 +88,6 @@ export class OrgRolesGuard implements CanActivate {
       }
 
       return false;
-
     } else {
       throw new BadRequestException('Please provide valid orgId');
     }
@@ -94,7 +95,10 @@ export class OrgRolesGuard implements CanActivate {
     // Sending user friendly message if a user attempts to access an API that is inaccessible to their role
     const roleAccess = requiredRoles.some((role) => user.selectedOrg?.orgRoles.includes(role));
     if (!roleAccess) {
-      throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, { cause: new Error(), description: ResponseMessages.errorMessages.forbidden });
+      throw new ForbiddenException(ResponseMessages.organisation.error.roleNotMatch, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.forbidden
+      });
     }
 
     return roleAccess;

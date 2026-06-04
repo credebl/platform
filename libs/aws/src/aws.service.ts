@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+
 import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
 import { promisify } from 'util';
@@ -8,24 +9,52 @@ export class AwsService {
   private s3: S3;
   private s4: S3;
   private s3StoreObject: S3;
+  private isLocal: boolean;
 
   constructor() {
+    this.isLocal = 'true' === process.env.IS_LOCAL_RUSTFS;
+    const accessKey = this.isLocal ? process.env.RUSTFS_ACCESS_KEY_ID : process.env.AWS_ACCESS_KEY;
+    const secretKey = this.isLocal ? process.env.RUSTFS_SECRET_ACCESS_KEY : process.env.AWS_SECRET_KEY;
+
+    const publicAccessKey = this.isLocal ? process.env.RUSTFS_ACCESS_KEY_ID : process.env.AWS_PUBLIC_ACCESS_KEY;
+    const publicSecretKey = this.isLocal ? process.env.RUSTFS_SECRET_ACCESS_KEY : process.env.AWS_PUBLIC_SECRET_KEY;
+
+    const storeAccessKey = this.isLocal ? process.env.RUSTFS_ACCESS_KEY_ID : process.env.AWS_S3_STOREOBJECT_ACCESS_KEY;
+    const storeSecretKey = this.isLocal
+      ? process.env.RUSTFS_SECRET_ACCESS_KEY
+      : process.env.AWS_S3_STOREOBJECT_SECRET_KEY;
+    // console.log('AWS_ACCESS_KEY : ', accessKey);
+    // console.log('AWS_SECRET_KEY : ', secretKey);
+    // console.log('AWS_PUBLIC_ACCESS_KEY : ', publicAccessKey);
+    // console.log('AWS_PUBLIC_SECRET_KEY : ', publicSecretKey);
+    // console.log('AWS_S3_STOREOBJECT_ACCESS_KEY : ', storeAccessKey);
+    // console.log('AWS_S3_STOREOBJECT_SECRET_KEY : ', storeSecretKey);
+    // Base config shared across environments
+    const localOverrides = this.isLocal
+      ? {
+          endpoint: process.env.AWS_LOCAL_ENDPOINT || 'http://localhost:9000',
+          s3ForcePathStyle: true
+        }
+      : {};
     this.s3 = new S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY,
-      secretAccessKey: process.env.AWS_SECRET_KEY,
-      region: process.env.AWS_REGION
+      accessKeyId: accessKey,
+      secretAccessKey: secretKey,
+      region: process.env.AWS_REGION,
+      ...localOverrides
     });
 
     this.s4 = new S3({
-      accessKeyId: process.env.AWS_PUBLIC_ACCESS_KEY,
-      secretAccessKey: process.env.AWS_PUBLIC_SECRET_KEY,
-      region: process.env.AWS_PUBLIC_REGION
+      accessKeyId: publicAccessKey,
+      secretAccessKey: publicSecretKey,
+      region: process.env.AWS_PUBLIC_REGION,
+      ...localOverrides
     });
 
     this.s3StoreObject = new S3({
-      accessKeyId: process.env.AWS_S3_STOREOBJECT_ACCESS_KEY,
-      secretAccessKey: process.env.AWS_S3_STOREOBJECT_SECRET_KEY,
-      region: process.env.AWS_S3_STOREOBJECT_REGION
+      accessKeyId: storeAccessKey,
+      secretAccessKey: storeSecretKey,
+      region: process.env.AWS_S3_STOREOBJECT_REGION,
+      ...localOverrides
     });
   }
 
@@ -39,7 +68,8 @@ export class AwsService {
   ): Promise<string> {
     const timestamp = Date.now();
     const putObjectAsync = promisify(this.s4.putObject).bind(this.s4);
-
+    const fileKey = `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
+    // console.log("bucketName : ", bucketName);
     try {
       await putObjectAsync({
         Bucket: `${bucketName}`,
@@ -48,8 +78,13 @@ export class AwsService {
         ContentEncoding: encoding,
         ContentType: `image/png`
       });
-
-      const imageUrl = `https://${bucketName}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
+      let imageUrl: string;
+      if (this.isLocal) {
+        imageUrl = `${process.env.AWS_LOCAL_ENDPOINT || 'http://localhost:9000'}/${bucketName}/${fileKey}`;
+      } else {
+        imageUrl = `https://${bucketName}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${fileKey}`;
+      }
+      // const imageUrl = `https://${bucketName}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
       return imageUrl;
     } catch (error) {
       throw new HttpException(error, HttpStatus.SERVICE_UNAVAILABLE);
@@ -62,9 +97,10 @@ export class AwsService {
       Key: key,
       Body: 'string' === typeof body ? body : body.toString()
     };
-
+    // console.log("Uploading CSV with params: ", params);
     try {
       await this.s3.upload(params).promise();
+      // console.log("Upload result: ", res);
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }

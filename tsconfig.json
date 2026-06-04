@@ -109,6 +109,12 @@
       ],
       "credebl/utility/*": [
         "libs/utility/src/*"
+      ],
+      "@credebl/user-management": [
+        "libs/user-management/src"
+      ],
+      "@credebl/user-management/*": [
+        "libs/user-management/src/*"
       ]
     },
     "baseUrl": "./"

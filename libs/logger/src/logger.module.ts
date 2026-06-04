@@ -1,22 +1,11 @@
-import {
-  Global,
-  Inject,
-  MiddlewareConsumer,
-  Module,
-  NestModule
-} from '@nestjs/common';
+import { Global, Inject, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 
-import WinstonLogger, {
-  WinstonLoggerTransportsKey
-} from '@credebl/logger/winstonLogger';
-import Logger, {
-  LoggerBaseKey,
-  LoggerKey
-} from '@credebl/logger/logger.interface';
+import WinstonLogger, { WinstonLoggerTransportsKey } from '@credebl/logger/winstonLogger';
+import Logger, { LoggerBaseKey, LoggerKey } from '@credebl/logger/logger.interface';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import ConsoleTransport from '@credebl/logger/transports/consoleTransport';
 import * as morgan from 'morgan';
-import { ConfigService } from '../../config/src/config.service';
+import { ConfigService } from '@nestjs/config';
 import LoggerService from '@credebl/logger/logger.service';
 import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 
@@ -62,7 +51,7 @@ export class LoggerModule implements NestModule {
   public configure(consumer: MiddlewareConsumer): void {
     consumer
       .apply(
-        morgan(this.configService.isProduction ? 'combined' : 'dev', {
+        morgan('production' === this.configService.get('NODE_ENV') ? 'combined' : 'dev', {
           stream: {
             write: (message: string) => {
               this.logger.debug(message, {

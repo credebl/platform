@@ -9,7 +9,7 @@ import {
   W3CSchemaDataType,
   ledgerLessDIDType,
   schemaRequestType
-} from '../../enum/src/enum';
+} from './enum/enum';
 import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
 import {
   ValidationArguments,

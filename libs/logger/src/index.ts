@@ -1,2 +1,11 @@
 export * from './logger.module';
 export * from './logger.service';
+export { default as LoggerService } from './logger.service';
+export * from './logger.interface';
+export * from './log';
+export * from './logging.interceptor';
+export * from './winstonLogger';
+export * from './nestjsLoggerServiceAdapter';
+export { default as NestjsLoggerServiceAdapter } from './nestjsLoggerServiceAdapter';
+export * from './transports/consoleTransport';
+export * from './transports/fileTransport';

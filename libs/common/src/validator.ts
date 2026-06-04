@@ -1,4 +1,4 @@
-import { DidMethod } from '../../enum/src/enum';
+import { DidMethod } from './enum/enum';
 import { IDidCreate } from './interfaces/did.interface';
 import { BadRequestException } from '@nestjs/common';
 import { ResponseMessages } from './response-messages';

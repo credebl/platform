@@ -1,0 +1,54 @@
+{
+  "name": "@credebl/api-gateway",
+  "version": "2.1.2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "ts-node src/main.ts",
+    "clean": "rimraf ./dist",
+    "compile": "tsc -p tsconfig.pkg.json",
+    "build": "pnpm run clean && pnpm run compile",
+    "generate": "npx prisma generate --schema=node_modules/@credebl/prisma-service/prisma/schema.prisma",
+    "cleanup": "rm -rf node_modules dist pnpm-lock.yaml && rm -rf ~/.cache/prisma ~/.pnpm-store"
+  },
+  "peerDependencies": {
+    "@prisma/client": "^5.22.0"
+  },
+  "dependencies": {
+    "@credebl/aws": "workspace:*",
+    "@credebl/common": "workspace:*",
+    "@credebl/logger": "workspace:*",
+    "@credebl/prisma-service": "workspace:*",
+    "@credebl/user-management": "workspace:*",
+    "@nestjs/common": "catalog:",
+    "@nestjs/core": "catalog:",
+    "@nestjs/microservices": "catalog:",
+    "@nestjs/passport": "^10.0.3",
+    "@nestjs/platform-socket.io": "catalog:",
+    "@nestjs/websockets": "catalog:",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "fs": "0.0.1-security",
+    "@nestjs/swagger": "catalog:",
+    "swagger-ui-express": "^5.0.1",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.2.0",
+    "nats": "^2.29.3",
+    "nestjs-rate-limiter": "^3.1.0",
+    "passport-jwt": "^4.0.1",
+    "path": "^0.12.7",
+    "qrcode": "^1.5.4",
+    "rxjs": "^7.8.2",
+    "uuid": "^9.0.1"
+  }
+}

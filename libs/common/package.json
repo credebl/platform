@@ -1,32 +1,41 @@
 {
   "name": "@credebl/common",
+  "version": "2.1.2",
   "main": "src/index",
   "types": "src/index",
-  "version": "0.0.1",
+  "license": "Apache-2.0",
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "access": "public"
+  },
   "scripts": {
     "build": "pnpm run clean && pnpm run compile",
-    "clean": "rimraf ../../dist/libs/common",
-    "compile": "tsc -p tsconfig.build.json",
+    "clean": "rimraf ./dist && rimraf tsconfig.lib.tsbuildinfo",
+    "compile": "tsc -p tsconfig.lib.json",
     "test": "jest"
   },
   "dependencies": {
     "@nestjs/axios": "catalog:",
+    "@nestjs/cache-manager": "catalog:",
     "@nestjs/common": "catalog:",
+    "@nestjs/config": "catalog:",
     "@nestjs/core": "catalog:",
-    "@nestjs/testing": "catalog:",
     "@nestjs/microservices": "catalog:",
     "@nestjs/swagger": "catalog:",
-    "@nestjs/cache-manager": "catalog:",
+    "@nestjs/testing": "catalog:",
     "@prisma/client": "^5.1.1",
     "@sendgrid/mail": "^7.7.0",
+    "axios": "^1.7.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "crypto-js": "^4.1.1",
     "dotenv": "^16.0.3",
     "nats": "^2.15.1",
+    "nestjs-cls": "catalog:",
     "rxjs": "^7.8.1",
     "uuid": "^9.0.0"
   },

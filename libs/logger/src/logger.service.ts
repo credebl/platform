@@ -1,11 +1,14 @@
-import { Inject, Injectable, Scope } from '@nestjs/common';
+import { Inject, Injectable, Optional, Scope } from '@nestjs/common';
 import { INQUIRER } from '@nestjs/core';
 import Logger, { LoggerBaseKey } from '@credebl/logger/logger.interface';
 import { LogData, LogLevel } from '@credebl/logger/log';
 import { ConfigService } from '@nestjs/config';
-import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
+import ContextStorageService, {
+  ContextStorageServiceKey
+} from '@credebl/common/utils/context/contextStorageService.interface';
 import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
-import { otelLogger } from '../../../apps/api-gateway/src/tracer';
+
+export const OTEL_LOGGER_TOKEN = Symbol('OTEL_LOGGER');
 
 @Injectable({ scope: Scope.TRANSIENT })
 export default class LoggerService implements Logger {
@@ -20,7 +23,9 @@ export default class LoggerService implements Logger {
     @Inject(INQUIRER) parentClass: object,
     @Inject(ContextStorageServiceKey)
     private readonly contextStorageService: ContextStorageService,
-    @Inject(MICRO_SERVICE_NAME) private readonly microserviceName: string
+    @Inject(MICRO_SERVICE_NAME) private readonly microserviceName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    @Optional() @Inject(OTEL_LOGGER_TOKEN) private readonly otelLogger?: any
   ) {
     this.sourceClass = parentClass?.constructor?.name;
     this.organization = configService.get<string>('ORGANIZATION');
@@ -69,7 +74,7 @@ export default class LoggerService implements Logger {
 
   private emitToOtel(severityText: string, message: string | Error, data?: LogData): void {
     try {
-      if (!otelLogger) {
+      if (!this.otelLogger) {
         return;
       }
       const correlationId = data?.correlationId || this.contextStorageService.getContextId();
@@ -104,7 +109,7 @@ export default class LoggerService implements Logger {
         attributes.error = errorValue;
       }
 
-      otelLogger.emit({
+      this.otelLogger.emit({
         body: `${correlationId} ${'string' === typeof message ? message : message.message}`,
         severityText,
         attributes

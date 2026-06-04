@@ -322,6 +322,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/x509/tsconfig.app.json"
       }
+    },
+    "user-management": {
+      "type": "library",
+      "root": "libs/user-management",
+      "entryFile": "index",
+      "sourceRoot": "libs/user-management/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/user-management/tsconfig.lib.json"
+      }
     }
   }
 }

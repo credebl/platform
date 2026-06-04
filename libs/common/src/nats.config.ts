@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { NATSReconnects } from '../../enum/src/enum';
+import { NATSReconnects } from './enum/enum';
 import { Authenticator, credsAuthenticator, nkeyAuthenticator, usernamePasswordAuthenticator } from 'nats';
 import path = require('node:path');
 

@@ -1,7 +1,7 @@
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { ConditionalModule, ConfigModule } from '@nestjs/config';
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { DynamicModule, MiddlewareConsumer, Module, Provider, RequestMethod } from '@nestjs/common';
 
 import { AgentController } from './agent/agent.controller';
 import { AgentModule } from './agent-service/agent-service.module';
@@ -39,60 +39,73 @@ import { X509Module } from './x509/x509.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { shouldLoadOidcModules } from '@credebl/common/common.utils';
 
-@Module({
-  imports: [
-    ConfigModule.forRoot(),
-    ContextModule,
-    PlatformConfig,
-    LoggerModule,
-    ClientsModule.register([
-      {
-        name: 'NATS_CLIENT',
-        transport: Transport.NATS,
-        options: getNatsOptions(
-          CommonConstants.API_GATEWAY_SERVICE,
-          process.env.API_GATEWAY_NKEY_SEED,
-          process.env.NATS_CREDS_FILE
-        )
-      }
-    ]),
-    AgentModule,
-    PlatformModule,
-    AuthzModule,
-    CredentialDefinitionModule,
-    SchemaModule,
-    RevocationModule,
-    VerificationModule,
-    FidoModule,
-    OrganizationModule,
-    UserModule,
-    ConnectionModule,
-    IssuanceModule,
-    UtilitiesModule,
-    WebhookModule,
-    NotificationModule,
-    EcosystemModule,
-    GlobalConfigModule,
-    CacheModule.register(),
-    GeoLocationModule,
-    CloudWalletModule,
-    ConditionalModule.registerWhen(Oid4vcIssuanceModule, shouldLoadOidcModules),
-    ConditionalModule.registerWhen(Oid4vpModule, shouldLoadOidcModules),
-    ConditionalModule.registerWhen(X509Module, shouldLoadOidcModules),
-    KeycloakConfigModule
-  ],
-  controllers: [AppController],
-  providers: [
-    AppService,
-    EcosystemSwaggerFilter,
-    {
-      provide: MICRO_SERVICE_NAME,
-      useValue: 'APIGATEWAY'
-    }
-  ],
-  exports: [CacheModule]
-})
-export class AppModule {
+@Module({})
+export class APIGatewayModule {
+  static register(
+    overrides: Provider[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    controllerOverrides: any[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    importedModules: any[] = []
+  ): DynamicModule {
+    return {
+      module: APIGatewayModule,
+      imports: [
+        ConfigModule.forRoot(),
+        ContextModule,
+        PlatformConfig,
+        LoggerModule,
+        ClientsModule.register([
+          {
+            name: 'NATS_CLIENT',
+            transport: Transport.NATS,
+            options: getNatsOptions(
+              CommonConstants.API_GATEWAY_SERVICE,
+              process.env.API_GATEWAY_NKEY_SEED,
+              process.env.NATS_CREDS_FILE
+            )
+          }
+        ]),
+        AgentModule.register(),
+        PlatformModule.register(),
+        AuthzModule.register(),
+        CredentialDefinitionModule.register(),
+        SchemaModule.register(),
+        RevocationModule.register(),
+        VerificationModule.register(),
+        FidoModule.register(),
+        OrganizationModule.register(),
+        UserModule.register(),
+        ConnectionModule.register(),
+        IssuanceModule.register(),
+        UtilitiesModule.register(),
+        WebhookModule.register(),
+        NotificationModule.register(),
+        EcosystemModule.register(),
+        GlobalConfigModule,
+        CacheModule.register(),
+        GeoLocationModule.register(),
+        CloudWalletModule.register(),
+        ConditionalModule.registerWhen(Oid4vcIssuanceModule.register(), shouldLoadOidcModules),
+        ConditionalModule.registerWhen(Oid4vpModule.register(), shouldLoadOidcModules),
+        ConditionalModule.registerWhen(X509Module.register(), shouldLoadOidcModules),
+        KeycloakConfigModule,
+        ...importedModules
+      ],
+      controllers: controllerOverrides.length ? controllerOverrides : [AppController],
+      providers: [
+        AppService,
+        EcosystemSwaggerFilter,
+        {
+          provide: MICRO_SERVICE_NAME,
+          useValue: 'APIGATEWAY'
+        },
+        ...overrides
+      ],
+      exports: [CacheModule]
+    };
+  }
+
   configure(userContext: MiddlewareConsumer): void {
     userContext
       .apply(AuthzMiddleware)
@@ -129,3 +142,6 @@ export class AppModule {
       .forRoutes(AgentController, RevocationController);
   }
 }
+
+// Keep backward-compatible alias
+export { APIGatewayModule as AppModule };

@@ -1,4 +1,4 @@
-import { CloudWalletType } from '../../../enum/src/enum';
+import { CloudWalletType } from '../enum/enum';
 import { $Enums } from '@prisma/client';
 
 export class ICreateCloudWallet {

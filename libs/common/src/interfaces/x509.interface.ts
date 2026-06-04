@@ -1,4 +1,4 @@
-import { X509ExtendedKeyUsage, X509KeyUsage, x5cKeyType, KeyType } from '@credebl/enum/enum';
+import { X509ExtendedKeyUsage, X509KeyUsage, x5cKeyType, KeyType } from '../enum/enum';
 import { IPaginationSortingDto } from './interface';
 
 // Enum remains the same

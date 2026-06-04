@@ -1,4 +1,4 @@
-import { NotificationStatus } from '@credebl/enum/enum';
+import { NotificationStatus } from '../enum/enum';
 
 export interface IHolderNotification {
   id: string;

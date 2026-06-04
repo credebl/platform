@@ -2,8 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "outDir": "../../dist/libs/user-activity"
+    "declarationMap": true,
+    "outDir": "./dist",
+    "rootDir": "."
   },
-  "include": ["src/**/*"],
+  "include": ["index.ts", "src/**/*", "interface/**/*", "repositories/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

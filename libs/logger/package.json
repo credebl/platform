@@ -1,0 +1,37 @@
+{
+  "name": "@credebl/logger",
+  "version": "2.1.2",
+  "main": "src/index",
+  "types": "src/index",
+  "license": "Apache-2.0",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "access": "public"
+  },
+  "scripts": {
+    "build": "pnpm run clean && pnpm run compile",
+    "clean": "rimraf ./dist && rimraf tsconfig.lib.tsbuildinfo",
+    "compile": "tsc -p tsconfig.lib.json",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@credebl/common": "workspace:*",
+    "@nestjs/common": "catalog:",
+    "@nestjs/config": "catalog:",
+    "@nestjs/core": "catalog:",
+    "morgan": "^1.10.1",
+    "rxjs": "^7.8.1",
+    "uuid": "^9.0.0",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^4.4.0",
+    "typescript": "^5.1.6"
+  }
+}

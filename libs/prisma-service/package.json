@@ -1,0 +1,44 @@
+{
+  "name": "@credebl/prisma-service",
+  "version": "2.1.2",
+  "main": "src/index",
+  "types": "src/index",
+  "license": "Apache-2.0",
+  "files": [
+    "dist",
+    "prisma/schema.prisma",
+    "prisma/migrations",
+    "prisma/data",
+    "prisma/seed.ts",
+    "cli.ts"
+  ],
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "access": "public"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "scripts": {
+    "postinstall": "npx prisma generate",
+    "build": "pnpm run clean && pnpm run compile",
+    "clean": "rimraf ./dist && rimraf tsconfig.lib.tsbuildinfo",
+    "compile": "tsc -p tsconfig.lib.json",
+    "prisma:generate": "npx prisma generate",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@credebl/common": "workspace:*",
+    "@nestjs/common": "catalog:"
+  },
+  "peerDependencies": {
+    "@prisma/client": "^5.1.1"
+  },
+  "devDependencies": {
+    "prisma": "^5.1.1",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^4.4.0",
+    "typescript": "^5.1.6"
+  }
+}

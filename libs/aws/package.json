@@ -1,21 +1,27 @@
 {
   "name": "@credebl/aws",
+  "version": "2.1.2",
   "main": "src/index",
   "types": "src/index",
-  "version": "0.0.1",
+  "license": "Apache-2.0",
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "access": "public"
+  },
   "scripts": {
     "build": "pnpm run clean && pnpm run compile",
-    "clean": "rimraf ../../dist/libs/aws",
-    "compile": "tsc -p tsconfig.build.json",
+    "clean": "rimraf ./dist && rimraf tsconfig.lib.tsbuildinfo",
+    "compile": "tsc -p tsconfig.lib.json",
     "test": "jest"
   },
   "dependencies": {
     "@nestjs/common": "catalog:",
-    "@nestjs/testing": "catalog:",
     "@nestjs/microservices": "catalog:",
+    "@nestjs/testing": "catalog:",
     "aws-sdk": "^2.1510.0"
   },
   "devDependencies": {

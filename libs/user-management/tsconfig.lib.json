@@ -1,0 +1,34 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "skipLibCheck": true,
+    "paths": {
+      "@credebl/common": [
+        "../common/dist"
+      ],
+      "@credebl/common/*": [
+        "../common/dist/*"
+      ],
+      "@credebl/prisma-service": [
+        "../prisma-service/dist"
+      ],
+      "@credebl/prisma-service/*": [
+        "../prisma-service/dist/*"
+      ]
+    },
+    "incremental": false
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*spec.ts"
+  ]
+}

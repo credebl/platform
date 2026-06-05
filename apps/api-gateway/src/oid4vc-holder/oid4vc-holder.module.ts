@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { Oid4vcIssuanceService } from './oid4vc-issuance.service';
-import { Oid4vcIssuanceController } from './oid4vc-issuance.controller';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { HttpModule } from '@nestjs/axios';
+import { Oid4vcHolderController } from './oid4vc-holder.controller';
+import { Oid4vcHolderService } from './oid4vc-holder.service';
 
 @Module({
   imports: [
@@ -15,14 +15,14 @@ import { HttpModule } from '@nestjs/axios';
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
         options: getNatsOptions(
-          CommonConstants.OIDC4VC_ISSUANCE_SERVICE,
+          CommonConstants.OIDC4VC_HOLDER_SERVICE,
           process.env.API_GATEWAY_NKEY_SEED,
           process.env.NATS_CREDS_FILE
         )
       }
     ])
   ],
-  controllers: [Oid4vcIssuanceController],
-  providers: [Oid4vcIssuanceService, NATSClient]
+  controllers: [Oid4vcHolderController],
+  providers: [Oid4vcHolderService, NATSClient]
 })
-export class Oid4vcIssuanceModule {}
+export class Oid4vcHolderModule {}

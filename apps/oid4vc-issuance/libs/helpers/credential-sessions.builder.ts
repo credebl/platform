@@ -536,8 +536,25 @@ function buildJwtVcJsonLdCredential(
   const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
   const idSuffix = formatSuffix(apiFormat);
   const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
+  const vct = (templateRecord.attributes as any)?.vct;
+  let typeName = '';
+  if ('string' === typeof vct) {
+    const lastSlash = vct.lastIndexOf('/');
+    typeName = -1 !== lastSlash ? vct.substring(lastSlash + 1) : vct;
+  } else {
+    typeName = templateRecord.name.replace(/\s+/g, '');
+  }
+
+  const templateContext = (templateRecord.attributes as any)?.context;
+  const context = Array.isArray(templateContext) ? templateContext : ['https://www.w3.org/2018/credentials/v1'];
+
+  if (!context.includes('https://www.w3.org/2018/credentials/v1')) {
+    context.unshift('https://www.w3.org/2018/credentials/v1');
+  }
 
   const wrappedPayload: Record<string, any> = {
+    '@context': context,
+    type: ['VerifiableCredential', typeName],
     credentialSubject: payloadCopy
   };
 
@@ -546,6 +563,13 @@ function buildJwtVcJsonLdCredential(
   }
   if (exp !== undefined) {
     wrappedPayload.exp = exp;
+  }
+
+  if (credentialRequest.validityInfo) {
+    wrappedPayload.issuanceDate = new Date(credentialRequest.validityInfo.validFrom).toISOString();
+    wrappedPayload.expirationDate = new Date(credentialRequest.validityInfo.validUntil).toISOString();
+  } else {
+    wrappedPayload.issuanceDate = new Date().toISOString();
   }
 
   return {

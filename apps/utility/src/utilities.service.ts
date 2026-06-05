@@ -71,6 +71,13 @@ export class UtilitiesService extends BaseService {
         uuid,
         payload.storeObj
       );
+      if ('true' === process.env.IS_LOCAL_FS) {
+        // For local filesystem, return the file path as URL
+        return uploadResult.Location;
+      } else if ('true' === process.env.IS_LOCAL_RUSTFS) {
+        // For local RustFS, return the file path as URL
+        return uploadResult.Location;
+      }
       const url: string = `${process.env.SHORTENED_URL_DOMAIN}/${uploadResult.Key}`;
       return url;
     } catch (error) {

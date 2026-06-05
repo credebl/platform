@@ -1290,7 +1290,6 @@ export class IssuanceService {
         credentialPayload.credentialType = SchemaType.INDY;
         credentialPayload.schemaName = credentialDetails.schemaName;
       }
-
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
       const csvData: string = getFileDetails.Body.toString();
 

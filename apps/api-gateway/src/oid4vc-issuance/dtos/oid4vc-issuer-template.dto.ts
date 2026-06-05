@@ -196,6 +196,14 @@ export class SdJwtTemplateDto {
   @IsString()
   vct: string;
 
+  @ApiPropertyOptional({
+    example: ['https://www.w3.org/2018/credentials/v1', 'https://json-ld.org/contexts/person.jsonld'],
+    description: 'JSON-LD context for the credential (optional, defaults to person schema for JSON-LD format)'
+  })
+  @IsArray()
+  @IsOptional()
+  context?: string[];
+
   @ApiProperty({
     type: 'array',
     items: { $ref: getSchemaPath(CredentialAttributeDto) },

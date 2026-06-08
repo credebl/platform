@@ -150,14 +150,23 @@ function mapDbFormatToApiFormat(dbFormat: string): CredentialFormat {
   if (['sd-jwt', 'dc+sd-jwt', 'vc+sd-jwt', 'sdjwt', 'sd+jwt-vc'].includes(normalized)) {
     return CredentialFormat.SdJwtVc;
   }
+  if (['jwt_vc_json-ld', 'jwt-vc-json-ld', 'w3c-jwt-json-ld'].includes(normalized)) {
+    return CredentialFormat.JwtVcJsonLd;
+  }
   if ('mso_mdoc' === normalized || 'mso-mdoc' === normalized || 'mdoc' === normalized) {
     return CredentialFormat.Mdoc;
   }
   throw new UnprocessableEntityException(`Unsupported template format: ${dbFormat}`);
 }
 
-function formatSuffix(apiFormat: CredentialFormat): 'sdjwt' | 'mdoc' {
-  return apiFormat === CredentialFormat.SdJwtVc ? 'sdjwt' : 'mdoc';
+function formatSuffix(apiFormat: CredentialFormat): 'sdjwt' | 'mdoc' | 'jwt-vc-json-ld' {
+  if (apiFormat === CredentialFormat.SdJwtVc) {
+    return 'sdjwt';
+  }
+  if (apiFormat === CredentialFormat.JwtVcJsonLd) {
+    return 'jwt-vc-json-ld';
+  }
+  return 'mdoc';
 }
 
 export function buildCredentialOfferUrl(baseUrl: string, getAllCredentialOffer: GetAllCredentialOffer): string {
@@ -213,7 +222,7 @@ export function validatePayloadAgainstTemplate(template: any, payload: any): { v
     }
   };
 
-  if (CredentialFormat.SdJwtVc === template.format) {
+  if (CredentialFormat.SdJwtVc === template.format || CredentialFormat.JwtVcJsonLd === template.format) {
     validateAttributes((template.attributes as SdJwtTemplate).attributes ?? [], payload);
   } else if (CredentialFormat.Mdoc === template.format) {
     const namespaces = payload?.namespaces;
@@ -456,6 +465,121 @@ function buildMdocCredential(
   };
 }
 
+function buildJwtVcJsonLdCredential(
+  credentialRequest: CredentialRequestDtoLike,
+  templateRecord: CredentialTemplateRecord,
+  signerOptions: ISignerOption[],
+  activeCertificateDetails?: X509CertificateRecord[]
+): BuiltCredential {
+  const payloadCopy = { ...(credentialRequest.payload as Record<string, unknown>) };
+
+  let expectedSignerMethod: SignerMethodOption;
+  if (templateRecord.signerOption === SignerOption.DID) {
+    expectedSignerMethod = SignerMethodOption.DID;
+  } else if (
+    templateRecord.signerOption === SignerOption.X509_P256 ||
+    templateRecord.signerOption === SignerOption.X509_ED25519
+  ) {
+    expectedSignerMethod = SignerMethodOption.X5C;
+  } else {
+    throw new UnprocessableEntityException(
+      `Unknown signer option "${templateRecord.signerOption}" for template ${templateRecord.id}`
+    );
+  }
+
+  const templateSignerOption: ISignerOption | undefined = signerOptions?.find((x) => x.method === expectedSignerMethod);
+  if (!templateSignerOption) {
+    throw new UnprocessableEntityException(
+      `Signer option "${expectedSignerMethod}" is not configured for template ${templateRecord.id}`
+    );
+  }
+
+  if (expectedSignerMethod === SignerMethodOption.X5C && credentialRequest.validityInfo) {
+    if (!activeCertificateDetails?.length) {
+      throw new UnprocessableEntityException('Active x.509 certificate details are required for x5c signer templates.');
+    }
+    const certificateDetail = activeCertificateDetails.find(
+      (x) => x.certificateBase64 === templateSignerOption.x5c?.[0]
+    );
+    if (!certificateDetail) {
+      throw new UnprocessableEntityException('No active x.509 certificate matches the configured signer option.');
+    }
+
+    const validationResult = validateCredentialDatesInCertificateWindow(
+      credentialRequest.validityInfo,
+      certificateDetail
+    );
+    if (!validationResult.isValid) {
+      throw new UnprocessableEntityException(`${JSON.stringify(validationResult.details)}`);
+    }
+  }
+
+  let nbf: number | undefined;
+  let exp: number | undefined;
+
+  if (credentialRequest.validityInfo) {
+    const credentialValidFrom = new Date(credentialRequest.validityInfo.validFrom);
+    const credentialValidTo = new Date(credentialRequest.validityInfo.validUntil);
+    const isCredentialDurationValid = credentialValidFrom <= credentialValidTo;
+    if (!isCredentialDurationValid) {
+      const errorDetails = {
+        credentialDurationValid: isCredentialDurationValid,
+        credentialValidFrom: credentialValidFrom.toISOString(),
+        credentialValidTo: credentialValidTo.toISOString()
+      };
+      throw new UnprocessableEntityException(`${JSON.stringify(errorDetails)}`);
+    }
+    nbf = dateToSeconds(credentialValidFrom);
+    exp = dateToSeconds(credentialValidTo);
+  }
+
+  const apiFormat = mapDbFormatToApiFormat(templateRecord.format);
+  const idSuffix = formatSuffix(apiFormat);
+  const credentialSupportedId = `${templateRecord.name}-${idSuffix}`;
+  const vct = (templateRecord.attributes as any)?.vct;
+  let typeName = '';
+  if ('string' === typeof vct) {
+    const lastSlash = vct.lastIndexOf('/');
+    typeName = -1 !== lastSlash ? vct.substring(lastSlash + 1) : vct;
+  } else {
+    typeName = templateRecord.name.replace(/\s+/g, '');
+  }
+
+  const templateContext = (templateRecord.attributes as any)?.context;
+  const context = Array.isArray(templateContext) ? templateContext : ['https://www.w3.org/2018/credentials/v1'];
+
+  if (!context.includes('https://www.w3.org/2018/credentials/v1')) {
+    context.unshift('https://www.w3.org/2018/credentials/v1');
+  }
+
+  const wrappedPayload: Record<string, any> = {
+    '@context': context,
+    type: ['VerifiableCredential', typeName],
+    credentialSubject: payloadCopy
+  };
+
+  if (nbf !== undefined) {
+    wrappedPayload.nbf = nbf;
+  }
+  if (exp !== undefined) {
+    wrappedPayload.exp = exp;
+  }
+
+  if (credentialRequest.validityInfo) {
+    wrappedPayload.issuanceDate = new Date(credentialRequest.validityInfo.validFrom).toISOString();
+    wrappedPayload.expirationDate = new Date(credentialRequest.validityInfo.validUntil).toISOString();
+  } else {
+    wrappedPayload.issuanceDate = new Date().toISOString();
+  }
+
+  return {
+    credentialSupportedId,
+    signerOptions: templateSignerOption ? templateSignerOption : undefined,
+    format: apiFormat,
+    payload: wrappedPayload
+  };
+}
+
 export function buildCredentialOfferPayload(
   dto: CreateOidcCredentialOfferDtoLike,
   templates: credential_templates[],
@@ -488,6 +612,9 @@ export function buildCredentialOfferPayload(
     const apiFormat = mapDbFormatToApiFormat(templateFormat);
     if (apiFormat === CredentialFormat.SdJwtVc) {
       return buildSdJwtCredential(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);
+    }
+    if (apiFormat === CredentialFormat.JwtVcJsonLd) {
+      return buildJwtVcJsonLdCredential(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);
     }
     if (apiFormat === CredentialFormat.Mdoc) {
       return buildMdocCredential(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);

@@ -25,9 +25,11 @@ export function paginator<T>(items: T[], current_page: number, items_per_page: n
   };
 }
 
-export function orderValues(key, order = 'asc') {
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types
-  return function innerSort(a, b) {
+export function orderValues(
+  key: string,
+  order = 'asc'
+): (a: Record<string, unknown>, b: Record<string, unknown>) => number {
+  return function innerSort(a: Record<string, unknown>, b: Record<string, unknown>): number {
     if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
       // property doesn't exist on either object
       return 0;
@@ -107,6 +109,19 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
     [String(CommonConstants.OIDC_ISSUER_SESSIONS_BY_ID), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET)],
     [String(CommonConstants.OIDC_ISSUER_SESSIONS), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)],
     [String(CommonConstants.OIDC_DELETE_CREDENTIAL_OFFER), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)],
+    [String(CommonConstants.OIDC_HOLDER_RESOLVE_OFFER), String(CommonConstants.URL_OIDC_HOLDER_RESOLVE_OFFER)],
+    [
+      String(CommonConstants.OIDC_HOLDER_REQUEST_CREDENTIAL),
+      String(CommonConstants.URL_OIDC_HOLDER_REQUEST_CREDENTIAL)
+    ],
+    [
+      String(CommonConstants.OIDC_HOLDER_RESOLVE_PROOF_REQUEST),
+      String(CommonConstants.URL_OIDC_HOLDER_RESOLVE_PROOF_REQUEST)
+    ],
+    [
+      String(CommonConstants.OIDC_HOLDER_ACCEPT_PROOF_REQUEST),
+      String(CommonConstants.URL_OIDC_HOLDER_ACCEPT_PROOF_REQUEST)
+    ],
     [String(CommonConstants.X509_CREATE_CERTIFICATE), String(CommonConstants.URL_CREATE_X509_CERTIFICATE)],
     [String(CommonConstants.X509_DECODE_CERTIFICATE), String(CommonConstants.URL_DECODE_X509_CERTIFICATE)],
     [String(CommonConstants.X509_IMPORT_CERTIFICATE), String(CommonConstants.URL_IMPORT_X509_CERTIFICATE)],

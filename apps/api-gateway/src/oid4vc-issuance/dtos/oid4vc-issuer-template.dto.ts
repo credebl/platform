@@ -196,6 +196,14 @@ export class SdJwtTemplateDto {
   @IsString()
   vct: string;
 
+  @ApiPropertyOptional({
+    example: ['https://www.w3.org/2018/credentials/v1', 'https://json-ld.org/contexts/person.jsonld'],
+    description: 'JSON-LD context for the credential (optional, defaults to person schema for JSON-LD format)'
+  })
+  @IsArray()
+  @IsOptional()
+  context?: string[];
+
   @ApiProperty({
     type: 'array',
     items: { $ref: getSchemaPath(CredentialAttributeDto) },
@@ -229,8 +237,11 @@ export class CreateCredentialTemplateDto {
   @IsEnum(CredentialFormat)
   format: CredentialFormat;
 
-  @ValidateIf((o: CreateCredentialTemplateDto) => CredentialFormat.SdJwtVc === o.format)
-  @IsEmpty({ message: 'doctype must not be provided when format is "dc+sd-jwt"' })
+  @ValidateIf(
+    (o: CreateCredentialTemplateDto) =>
+      CredentialFormat.SdJwtVc === o.format || CredentialFormat.JwtVcJsonLd === o.format
+  )
+  @IsEmpty({ message: 'doctype must not be provided when format is "dc+sd-jwt" or "jwt_vc_json-ld"' })
   readonly _doctypeAbsentGuard?: unknown;
 
   @ValidateIf((o: CreateCredentialTemplateDto) => CredentialFormat.Mdoc === o.format)
@@ -246,7 +257,7 @@ export class CreateCredentialTemplateDto {
   @Type(({ object }) => {
     if (object.format === CredentialFormat.Mdoc) {
       return MdocTemplateDto;
-    } else if (object.format === CredentialFormat.SdJwtVc) {
+    } else if (object.format === CredentialFormat.SdJwtVc || object.format === CredentialFormat.JwtVcJsonLd) {
       return SdJwtTemplateDto;
     }
   })

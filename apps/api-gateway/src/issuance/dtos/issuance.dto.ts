@@ -192,7 +192,7 @@ export class CredentialsIssuanceDto {
   @IsOptional()
   comment: string;
 
-  @ApiPropertyOptional({ example: 'v1' })
+  @ApiPropertyOptional({ example: 'v2' })
   @IsOptional()
   @IsNotEmpty({ message: 'Please provide valid protocol version' })
   @IsString({ message: 'protocol version should be string' })
@@ -467,7 +467,7 @@ export class OOBCredentialDtoWithEmail {
   @IsString({ message: 'comment should be string' })
   comment?: string;
 
-  @ApiProperty({ example: 'v1' })
+  @ApiProperty({ example: 'v2' })
   @IsOptional()
   @IsNotEmpty({ message: 'Please provide valid protocol version' })
   @IsString({ message: 'protocol version should be string' })

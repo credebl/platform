@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { ConflictException, HttpException, HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { CredentialDefinitionRepository } from './repositories/credential-definition.repository';
 import {
   CreateCredDefPayload,
@@ -20,7 +20,7 @@ import {
   GetCredDefAgentRedirection
 } from './interfaces/credential-definition.interface';
 import { map } from 'rxjs/operators';
-import { OrgAgentType, SchemaType, SortValue } from '@credebl/enum/enum';
+import { OrgAgentType, SchemaType, SortValue } from '@credebl/common/enum/enum';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ICredDefDetails, IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';

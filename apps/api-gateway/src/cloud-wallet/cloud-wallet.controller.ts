@@ -36,7 +36,7 @@ import {
   ReceiveInvitationUrlDTO
 } from './dtos/cloudWallet.dto';
 import { Response } from 'express';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { CloudBaseWalletConfigureDto } from './dtos/configure-base-wallet.dto';
 import { AuthGuard } from '@nestjs/passport';

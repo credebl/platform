@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { BaseService } from '../../../../libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { GenericSchemaDTO } from '../dtos/create-schema.dto';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { ISchemaInfo, IUserRequestInterface } from './interfaces';

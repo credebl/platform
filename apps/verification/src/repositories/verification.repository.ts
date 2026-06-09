@@ -11,10 +11,10 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma, agent_invitations, org_agents, organisation, platform_config, presentations } from '@prisma/client';
 
 import { CommonService } from '@credebl/common';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { IUserRequest } from '@credebl/user-management';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { SortValue } from '@credebl/enum/enum';
+import { SortValue } from '@credebl/common/enum/enum';
 
 @Injectable()
 export class VerificationRepository {

@@ -15,7 +15,7 @@ import {
   Matches
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ClientIdPrefix, ResponseMode } from '@credebl/enum/enum';
+import { ClientIdPrefix, ResponseMode } from '@credebl/common/enum/enum';
 import { SignerOption } from '@prisma/client';
 
 /**

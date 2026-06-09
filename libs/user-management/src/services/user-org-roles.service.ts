@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { UserOrgRolesRepository } from '../repositories';
 // eslint-disable-next-line camelcase
-import { user_org_roles } from '@credebl/prisma-service';
+// eslint-disable-next-line camelcase
+import { user_org_roles } from '@prisma/client';
 
 @Injectable()
 export class UserOrgRolesService {

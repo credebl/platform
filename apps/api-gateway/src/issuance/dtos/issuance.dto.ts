@@ -18,7 +18,7 @@ import {
   MaxLength,
   ValidateNested
 } from 'class-validator';
-import { AutoAccept, SchemaType, SortValue } from '@credebl/enum/enum';
+import { AutoAccept, SchemaType, SortValue } from '@credebl/common/enum/enum';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
 import {
   IssueCredentialType,

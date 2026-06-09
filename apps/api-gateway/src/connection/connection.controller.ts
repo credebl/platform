@@ -40,15 +40,15 @@ import {
 } from './dtos/connection.dto';
 import { IUserRequestInterface } from './interfaces';
 import { Response } from 'express';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { IUserRequest } from '@credebl/user-management';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { OrgRoles } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GetAllAgentConnectionsDto, GetAllConnectionsDto } from './dtos/get-all-connections.dto';
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
-import { IConnectionSearchCriteria } from '../interfaces/IConnectionSearch.interface';
-import { SortFields } from 'apps/connection/src/enum/connection.enum';
+import { IConnectionSearchCriteria } from './interfaces';
+import { SortFields } from './enums/connection.enum';
 import { BasicMessageDto, QuestionAnswerWebhookDto, QuestionDto } from './dtos/question-answer.dto';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';

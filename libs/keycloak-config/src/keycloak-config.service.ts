@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ProtocolMapperResult, UnmanagedAttributePolicy } from '@credebl/enum/enum';
+import { ProtocolMapperResult, UnmanagedAttributePolicy } from '@credebl/common/enum/enum';
 import { CommonService } from '@credebl/common';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { ClientRegistrationService } from '@credebl/client-registration';

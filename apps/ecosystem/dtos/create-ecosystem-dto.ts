@@ -3,7 +3,7 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from '
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 import { Transform, Type } from 'class-transformer';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
-import { SortValue } from '@credebl/enum/enum';
+import { SortValue } from '@credebl/common/enum/enum';
 
 @ApiExtraModels()
 export class CreateEcosystemDto {

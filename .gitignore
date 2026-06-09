@@ -1,6 +1,31 @@
 node_modules
 dist
 .env
+
+# TypeScript incremental build info (generated alongside any tsc run)
+*.tsbuildinfo
+
+# Declaration source maps — always generated, never hand-authored
+**/*.d.ts.map
+
+# Declaration files emitted in-place when tsc processes files outside rootDir.
+# Legitimate .d.ts files belong in dist/ (already covered above) not in src/.
+apps/**/*.d.ts
+libs/**/src/**/*.d.ts
+
+# JS files and source maps emitted in-place alongside source (outside dist/)
+apps/**/*.js
+apps/**/*.js.map
+libs/**/src/**/*.js
+libs/**/src/**/*.js.map
+libs/service/*.js
+libs/service/*.js.map
+libs/service/*.d.ts
+
+# Libs that store source outside src/ (org-roles, user-activity, user-org-roles)
+libs/**/*.d.ts
+libs/**/*.js
+libs/**/*.js.map
 sonar-project.properties
 .scannerwork/*
 coverage

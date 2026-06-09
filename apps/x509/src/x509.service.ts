@@ -8,7 +8,7 @@ import {
   NotFoundException,
   UnprocessableEntityException
 } from '@nestjs/common';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { X509CertificateRepository } from './repositories/x509.repository';
 import { user } from '@prisma/client';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
@@ -28,7 +28,7 @@ import {
 import { getAgentUrl } from '@credebl/common/common.utils';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
+import { x5cKeyType, x5cRecordStatus } from '@credebl/common/enum/enum';
 
 @Injectable()
 export class X509CertificateService extends BaseService {

@@ -2,7 +2,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { IssuerCreationDto, IssuerUpdationDto } from './dtos/oid4vc-issuer.dto';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 // eslint-disable-next-line camelcase
 import { oidc_issuer, user } from '@prisma/client';
 import { CreateCredentialTemplateDto, UpdateCredentialTemplateDto } from './dtos/oid4vc-issuer-template.dto';

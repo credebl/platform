@@ -27,11 +27,11 @@ import {
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 import { EcosystemService } from './ecosystem.service';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/common';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -43,7 +43,7 @@ import { CreateEcosystemDto, PaginationGetAllEcosystem } from 'apps/ecosystem/dt
 import { DeleteEcosystemOrgDto } from './dtos/delete-ecosystem-users';
 import { GetEcosystemInvitationsQueryDto, UpdateEcosystemOrgStatusDto } from './dtos/ecosystem';
 import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';
-import { EcosystemOrgStatus, Invitation, InvitationViewRole } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, Invitation, InvitationViewRole } from '@credebl/common/enum/enum';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 

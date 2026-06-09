@@ -34,8 +34,8 @@ import { user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { OrgRoles } from 'libs/org-roles/enums';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { OrgRoles } from '@credebl/common';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
 
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { X509Service } from './x509.service';
@@ -44,7 +44,7 @@ import {
   X509ImportCertificateOptionsDto,
   X509SearchCriteriaDto
 } from './dtos/x509.dto';
-import { SortFields, x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
+import { SortFields, x5cKeyType, x5cRecordStatus } from '@credebl/common/enum/enum';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('x509')

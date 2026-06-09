@@ -35,7 +35,7 @@ import {
 } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { CloudWalletRepository } from './cloud-wallet.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { CloudWalletType } from '@credebl/enum/enum';
+import { CloudWalletType } from '@credebl/common/enum/enum';
 import { CommonConstants } from '@credebl/common/common.constant';
 
 @Injectable()

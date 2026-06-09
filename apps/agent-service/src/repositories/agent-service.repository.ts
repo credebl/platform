@@ -1,4 +1,4 @@
-import { AgentSpinUpStatus, AgentType, PrismaTables } from '@credebl/enum/enum';
+import { AgentSpinUpStatus, AgentType, PrismaTables } from '@credebl/common/enum/enum';
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import {
   ICreateOrgAgent,

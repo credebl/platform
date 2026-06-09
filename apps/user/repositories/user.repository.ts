@@ -36,7 +36,7 @@ import {
   user,
   user_org_roles
 } from '@prisma/client';
-import { ProviderType, UserRole } from '@credebl/enum/enum';
+import { ProviderType, UserRole } from '@credebl/common/enum/enum';
 
 import { PrismaService } from '@credebl/prisma-service';
 import { RpcException } from '@nestjs/microservices';

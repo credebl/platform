@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Injectable, Inject } from '@nestjs/common';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 
 import { WalletDetailsDto } from '../dtos/wallet-details.dto';
 import { NATSClient } from '@credebl/common/NATSClient';

@@ -5,7 +5,7 @@ import { NotificationRepository } from './notification.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CommonService } from '@credebl/common';
 import { HolderNotificationRepository } from './holder-notification.repository';
-import { NotificationStatus } from '@credebl/enum/enum';
+import { NotificationStatus } from '@credebl/common/enum/enum';
 import {
   ICreateHolderNotification,
   IHolderNotification

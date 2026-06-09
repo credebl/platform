@@ -1,8 +1,8 @@
-import { EcosystemOrgStatus, InvitationViewRole } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, InvitationViewRole } from '@credebl/common/enum/enum';
 import { Prisma, PrismaClient, SignerOption } from '@prisma/client';
 
 import { CommonTableColumns } from '@credebl/common/interfaces/interface';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/common';
 
 export interface ICreateEcosystem {
   name: string;

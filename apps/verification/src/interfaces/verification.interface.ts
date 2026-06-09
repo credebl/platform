@@ -1,5 +1,5 @@
-import { AutoAccept } from '@credebl/enum/enum';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { AutoAccept } from '@credebl/common/enum/enum';
+import { IUserRequest } from '@credebl/user-management';
 
 export interface IProofRequestAttribute {
   attributeName?: string;

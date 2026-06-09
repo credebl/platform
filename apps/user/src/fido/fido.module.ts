@@ -8,15 +8,17 @@ import { FidoService } from './fido.service';
 import { FidoUserRepository } from '../../repositories/fido-user.repository';
 import { HttpModule } from '@nestjs/axios';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
-import { OrgRolesRepository } from 'libs/org-roles/repositories';
-import { OrgRolesService } from '@credebl/org-roles';
+import { OrgRolesRepository } from '@credebl/user-management';
+import { OrgRolesService } from '@credebl/user-management';
 import { PrismaService } from '@credebl/prisma-service';
 import { SupabaseService } from '@credebl/supabase';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
-import { UserActivityService } from '@credebl/user-activity';
+import {
+  UserActivityRepository,
+  UserActivityService,
+  UserOrgRolesRepository,
+  UserOrgRolesService
+} from '@credebl/user-management';
 import { UserDevicesRepository } from '../../repositories/user-device.repository';
-import { UserOrgRolesRepository } from 'libs/user-org-roles/repositories';
-import { UserOrgRolesService } from '@credebl/user-org-roles';
 import { UserRepository } from '../../repositories/user.repository';
 import { UserService } from '../user.service';
 import { AwsService } from '@credebl/aws';
@@ -35,7 +37,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ]),
     HttpModule,
     CommonModule
-],
+  ],
   controllers: [FidoController],
   providers: [
     AwsService,
@@ -56,6 +58,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     UserActivityService,
     UserActivityRepository,
     NATSClient
-]
+  ]
 })
-export class FidoModule { }
+export class FidoModule {}

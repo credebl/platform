@@ -21,7 +21,7 @@ import {
   IBasicMessageDetails
 } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { Inject, Injectable } from '@nestjs/common';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 

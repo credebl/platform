@@ -10,12 +10,12 @@ import { ConnectionService } from 'apps/connection/src/connection.service';
 import { ConnectionRepository } from 'apps/connection/src/connection.repository';
 import { CacheModule } from '@nestjs/cache-manager';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { UserActivityRepository } from '@credebl/user-management';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { GlobalConfigModule } from '@credebl/common/global-config.module';
+import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 

@@ -29,7 +29,7 @@ import { client_aliases, user, user_org_roles } from '@prisma/client';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
 import { AddPasskeyDetailsDto } from 'apps/api-gateway/src/user/dto/add-user.dto';
 import { Controller } from '@nestjs/common';
-import { IUsersActivity } from 'libs/user-activity/interface';
+import { IUsersActivity } from '@credebl/user-management';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';

@@ -25,7 +25,7 @@ import {
 import { organisation, user } from '@prisma/client';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
-import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrgRoles } from '@credebl/common';
 import { ClientTokenDto } from '../dtos/client-token.dto';
 
 @Controller()

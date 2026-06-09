@@ -8,10 +8,10 @@ import { WebhookRepository } from './webhook.repository';
 import { WebhookService } from './webhook.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { GlobalConfigModule } from '@credebl/common/global-config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
+import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
 
 @Module({
   imports: [

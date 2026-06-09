@@ -4,7 +4,7 @@ import { batchCredentialIssuanceDefault } from '../../constant/issuance';
 import { CreateOidcCredentialOffer } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { IssuerResponse } from 'apps/oid4vc-issuance/interfaces/oid4vc-issuance.interfaces';
 import { Claim, MdocTemplate, SdJwtTemplate } from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
-import { CredentialFormat } from '@credebl/enum/enum';
+import { CredentialFormat } from '@credebl/common/enum/enum';
 
 type AttributeDisplay = { name: string; locale: string };
 

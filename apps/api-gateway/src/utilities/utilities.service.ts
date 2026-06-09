@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { StoreObjectDto, UtilitiesDto } from './dtos/shortening-url.dto';
 import { GetAllIntentTemplatesDto } from './dtos/get-all-intent-templates.dto';
 import { NATSClient } from '@credebl/common/NATSClient';

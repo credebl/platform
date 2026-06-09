@@ -16,13 +16,13 @@ import { ClientRegistrationService } from '@credebl/client-registration';
 import { CommonService } from '@credebl/common';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { LoginUserDto } from '../dtos/login-user.dto';
-import { OrgRoles } from 'libs/org-roles/enums';
-import { OrgRolesService } from '@credebl/org-roles';
+import { OrgRoles } from '@credebl/common';
+import { OrgRolesService } from '@credebl/user-management';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { URLUserEmailTemplate } from '../templates/user-email-template';
-import { UserOrgRolesService } from '@credebl/user-org-roles';
+import { UserOrgRolesService, UserActivityService, IUsersActivity } from '@credebl/user-management';
 import { UserRepository } from '../repositories/user.repository';
 import { VerifyEmailTokenDto } from '../dtos/verify-email.dto';
 // eslint-disable-next-line camelcase
@@ -46,15 +46,13 @@ import {
   IRestrictedUserSession
 } from '../interfaces/user.interface';
 import { AcceptRejectInvitationDto } from '../dtos/accept-reject-invitation.dto';
-import { UserActivityService } from '@credebl/user-activity';
 import { SupabaseService } from '@credebl/supabase';
 import { UserDevicesRepository } from '../repositories/user-device.repository';
 import { v4 as uuidv4 } from 'uuid';
-import { Invitation, ProviderType, SessionType, TokenType, UserRole } from '@credebl/enum/enum';
+import { Invitation, ProviderType, SessionType, TokenType, UserRole } from '@credebl/common/enum/enum';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
 import { AwsService } from '@credebl/aws';
-import { IUsersActivity } from 'libs/user-activity/interface';
 import {
   ISendVerificationEmail,
   ISignInUser,

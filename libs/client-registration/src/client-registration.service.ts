@@ -16,7 +16,7 @@ import { CreateUserDto } from './dtos/create-user.dto';
 import { IClientRoles } from './interfaces/client.interface';
 import { IFormattedResponse } from '@credebl/common/interfaces/interface';
 import { JwtService } from '@nestjs/jwt';
-import { EcosystemServiceRole } from '@credebl/enum/enum';
+import { EcosystemServiceRole } from '@credebl/common/enum/enum';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
 import { ResponseMessages } from '@credebl/common/response-messages';

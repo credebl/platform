@@ -2,22 +2,28 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "declarationMap": true,
+    
     "outDir": "./dist",
     "rootDir": "./src",
     "skipLibCheck": true,
     "paths": {
       "@credebl/logger": [
-        "./src"
+        "libs/logger/src"
       ],
       "@credebl/logger/*": [
-        "./src/*"
+        "libs/logger/src/*"
       ],
       "@credebl/common": [
-        "../common/dist"
+        "libs/common/dist"
       ],
       "@credebl/common/*": [
-        "../common/dist/*"
+        "libs/common/dist/*"
+      ],
+      "@credebl/context": [
+        "libs/context/dist"
+      ],
+      "@credebl/context/*": [
+        "libs/context/dist/*"
       ]
     },
     "incremental": false

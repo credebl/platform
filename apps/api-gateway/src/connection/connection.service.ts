@@ -1,33 +1,29 @@
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { Inject, Injectable } from '@nestjs/common';
+import { IUserRequest } from '@credebl/user-management';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
 import {
   ConnectionDto,
   CreateOutOfBandConnectionInvitation,
   ReceiveInvitationDto,
   ReceiveInvitationUrlDto
 } from './dtos/connection.dto';
-import { IReceiveInvitationRes, IUserRequestInterface } from './interfaces';
 import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
-import {
-  AgentConnectionSearchCriteria,
-  IConnectionDetailsById,
-  IConnectionSearchCriteria
-} from '../interfaces/IConnectionSearch.interface';
+import { AgentConnectionSearchCriteria, IConnectionDetailsById, IConnectionSearchCriteria } from './interfaces';
 import { BasicMessageDto, QuestionDto } from './dtos/question-answer.dto';
+import { IUserRequestInterface, IReceiveInvitationResponse } from './interfaces';
 import { user } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { firstValueFrom } from 'rxjs';
 import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
+
 @Injectable()
-export class ConnectionService extends BaseService {
+export class ConnectionService {
+  protected logger = new Logger('ConnectionService');
+
   constructor(
     @Inject('NATS_CLIENT') private readonly connectionServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient
-  ) {
-    super('ConnectionService');
-  }
+  ) {}
 
   sendQuestion(questionDto: QuestionDto): Promise<object> {
     try {
@@ -54,9 +50,7 @@ export class ConnectionService extends BaseService {
     return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'webhook-get-connection', payload);
   }
 
-  getUrl(referenceId: string): Promise<{
-    response: object;
-  }> {
+  getUrl(referenceId: string): Promise<{ response: object }> {
     try {
       const connectionDetails = { referenceId };
       return this.natsClient.sendNats(this.connectionServiceProxy, 'get-connection-url', connectionDetails);
@@ -99,7 +93,7 @@ export class ConnectionService extends BaseService {
     receiveInvitationUrl: ReceiveInvitationUrlDto,
     orgId: string,
     user: IUserRequestInterface
-  ): Promise<IReceiveInvitationRes> {
+  ): Promise<IReceiveInvitationResponse> {
     const payload = { user, receiveInvitationUrl, orgId };
     return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation-url', payload);
   }
@@ -108,18 +102,15 @@ export class ConnectionService extends BaseService {
     receiveInvitation: ReceiveInvitationDto,
     orgId: string,
     user: IUserRequestInterface
-  ): Promise<IReceiveInvitationRes> {
+  ): Promise<IReceiveInvitationResponse> {
     const payload = { user, receiveInvitation, orgId };
     return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'receive-invitation', payload);
   }
 
   async _getWebhookUrl(tenantId?: string, orgId?: string): Promise<IWebhookUrlInfo> {
     const pattern = { cmd: 'get-webhookurl' };
-
     const payload = { tenantId, orgId };
-
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const message: IWebhookUrlInfo = await firstValueFrom(this.connectionServiceProxy.send(pattern, payload));
       return message;
     } catch (error) {
@@ -131,7 +122,6 @@ export class ConnectionService extends BaseService {
   async _postWebhookResponse(webhookUrl: string, data: object, webhookSecret?: string): Promise<string> {
     const pattern = { cmd: 'post-webhook-response-to-webhook-url' };
     const payload = { webhookUrl, data, webhookSecret };
-
     try {
       const message: string = await firstValueFrom(this.connectionServiceProxy.send(pattern, payload));
       return message;
@@ -144,7 +134,7 @@ export class ConnectionService extends BaseService {
   createConnectionInvitation(
     createOutOfBandConnectionInvitation: CreateOutOfBandConnectionInvitation,
     user: IUserRequestInterface
-  ): Promise<IReceiveInvitationRes> {
+  ): Promise<IReceiveInvitationResponse> {
     const payload = { user, createOutOfBandConnectionInvitation };
     return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'create-connection-invitation', payload);
   }

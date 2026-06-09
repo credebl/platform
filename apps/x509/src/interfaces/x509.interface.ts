@@ -1,5 +1,5 @@
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
-import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
+import { x5cKeyType, x5cRecordStatus } from '@credebl/common/enum/enum';
 
 export interface CreateX509CertificateEntity {
   orgId: string; // We'll accept orgId and find orgAgent internally

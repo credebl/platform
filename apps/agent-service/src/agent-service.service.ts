@@ -57,7 +57,14 @@ import {
   IStoreOrgAgent,
   VerifyAuthorizationResponse
 } from './interface/agent-service.interface';
-import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
+import {
+  AgentSpinUpStatus,
+  AgentType,
+  DidMethod,
+  Ledgers,
+  OrgAgentType,
+  PromiseResult
+} from '@credebl/common/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { Prisma, RecordType, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -72,7 +79,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ledgerName } from '@credebl/common/cast.helper';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import * as CryptoJS from 'crypto-js';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { UserActivityRepository } from '@credebl/user-management';
 import { PrismaService } from '@credebl/prisma-service';
 import { from } from 'rxjs';
 import { NATSClient } from '@credebl/common/NATSClient';

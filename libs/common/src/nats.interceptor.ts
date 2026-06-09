@@ -1,4 +1,4 @@
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { ResponseMessages } from './response-messages';
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor, HttpException, Logger } from '@nestjs/common';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';

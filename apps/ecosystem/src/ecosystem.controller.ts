@@ -1,5 +1,5 @@
 import { Controller, Logger } from '@nestjs/common';
-import { EcosystemOrgStatus, Invitation } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, Invitation } from '@credebl/common/enum/enum';
 import {
   ICreateEcosystem,
   IEcosystem,

@@ -6,7 +6,7 @@ import {
   GetAllCredentialOffer,
   ISignerOption
 } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
-import { CredentialFormat } from '@credebl/enum/enum';
+import { CredentialFormat } from '@credebl/common/enum/enum';
 import {
   CredentialAttribute,
   MdocTemplate,

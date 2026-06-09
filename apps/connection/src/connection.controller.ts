@@ -12,7 +12,7 @@ import {
   IReceiveInvitationResponse
 } from './interfaces/connection.interfaces';
 import { IConnectionList, IDeletedConnectionsRecord } from '@credebl/common/interfaces/connection.interface';
-import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+import { IConnectionDetailsById } from './interfaces/connection.interfaces';
 import { IQuestionPayload } from './interfaces/messaging.interfaces';
 import { user } from '@prisma/client';
 @Controller()

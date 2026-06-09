@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 
 import { user } from '@prisma/client';
 

@@ -1,8 +1,8 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CommonModule } from '../../../../libs/common/src/common.module';
-import { CommonService } from '../../../../libs/common/src/common.service';
+import { CommonModule } from '@credebl/common/common.module';
+import { CommonService } from '@credebl/common/common.service';
 import { ConfigModule } from '@nestjs/config';
 import { AgentController } from './agent-service.controller';
 import { AgentService } from './agent-service.service';

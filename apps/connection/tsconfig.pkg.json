@@ -1,0 +1,29 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "declaration": true,
+
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "skipLibCheck": true,
+    "incremental": false,
+    "paths": {
+      "@credebl/common": ["libs/common/dist"],
+      "@credebl/common/*": ["libs/common/dist/*"],
+      "@credebl/logger": ["libs/logger/dist"],
+      "@credebl/logger/*": ["libs/logger/dist/*"],
+      "@credebl/prisma-service": ["libs/prisma-service/dist"],
+      "@credebl/prisma-service/*": ["libs/prisma-service/dist/*"],
+      "@credebl/user-management": ["libs/user-management/dist"],
+      "@credebl/user-management/*": ["libs/user-management/dist/*"],
+      "@credebl/context": ["libs/context/dist"],
+      "@credebl/context/*": ["libs/context/dist/*"],
+      "@credebl/config": ["libs/common/dist"],
+      "@credebl/config/*": ["libs/common/dist/*"],
+      "@credebl/enum": ["libs/enum/dist"],
+      "@credebl/enum/*": ["libs/enum/dist/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*spec.ts", "src/main.ts"]
+}

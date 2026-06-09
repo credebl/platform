@@ -2,11 +2,42 @@
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
     "declaration": true,
-    "declarationMap": true,
+    
     "outDir": "./dist",
     "rootDir": "./src",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "incremental": false,
+    "paths": {
+      "@credebl/common": ["libs/common/dist"],
+      "@credebl/common/*": ["libs/common/dist/*"],
+      "@credebl/aws": ["libs/aws/dist"],
+      "@credebl/aws/*": ["libs/aws/dist/*"],
+      "@credebl/logger": ["libs/logger/dist"],
+      "@credebl/logger/*": ["libs/logger/dist/*"],
+      "@credebl/prisma-service": ["libs/prisma-service/dist"],
+      "@credebl/prisma-service/*": ["libs/prisma-service/dist/*"],
+      "@credebl/user-management": ["libs/user-management/dist"],
+      "@credebl/user-management/*": ["libs/user-management/dist/*"],
+      "@credebl/context": ["libs/context/dist"],
+      "@credebl/context/*": ["libs/context/dist/*"],
+      "@credebl/enum": ["libs/enum/dist"],
+      "@credebl/enum/*": ["libs/enum/dist/*"],
+      "@credebl/org-roles": ["libs/org-roles/src"],
+      "@credebl/org-roles/*": ["libs/org-roles/src/*"],
+      "@credebl/config": ["libs/common/dist"],
+      "@credebl/config/*": ["libs/common/dist/*"],
+      "@credebl/keycloak-config": ["libs/keycloak-config/src"],
+      "@credebl/keycloak-config/*": ["libs/keycloak-config/src/*"],
+      "@credebl/keycloak-url": ["libs/keycloak-url/src"],
+      "@credebl/keycloak-url/*": ["libs/keycloak-url/src/*"],
+      "@credebl/client-registration": ["libs/client-registration/src"],
+      "@credebl/client-registration/*": ["libs/client-registration/src/*"],
+      "@credebl/supabase": ["libs/supabase/src"],
+      "@credebl/supabase/*": ["libs/supabase/src/*"],
+      "libs/service/*": ["libs/service/*"],
+      "libs/org-roles/*": ["libs/org-roles/*"]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+  "exclude": ["node_modules", "dist", "**/*spec.ts"]
 }

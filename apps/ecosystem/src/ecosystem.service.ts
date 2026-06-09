@@ -36,7 +36,7 @@ import {
   InvitationViewRole,
   InviteType,
   UnmanagedAttributePolicy
-} from '@credebl/enum/enum';
+} from '@credebl/common/enum/enum';
 
 import {
   ICreateEcosystem,

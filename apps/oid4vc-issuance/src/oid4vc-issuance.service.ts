@@ -20,7 +20,7 @@ import {
 } from '@nestjs/common';
 import { Oid4vcIssuanceRepository } from './oid4vc-issuance.repository';
 import { StatusListAllocatorService } from './status-list-allocator.service';
-import { CredentialFormat } from '@credebl/enum/enum';
+import { CredentialFormat } from '@credebl/common/enum/enum';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
@@ -61,7 +61,7 @@ import {
   buildCredentialOfferUrl,
   CredentialOfferPayload
 } from '../libs/helpers/credential-sessions.builder';
-import { x5cKeyType } from '@credebl/enum/enum';
+import { x5cKeyType } from '@credebl/common/enum/enum';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { Oid4vcCredentialOfferWebhookPayload } from '../interfaces/oid4vc-wh-interfaces';

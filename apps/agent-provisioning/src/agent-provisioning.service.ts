@@ -3,7 +3,7 @@ import * as fs from 'fs';
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 
-import { AgentType } from '@credebl/enum/enum';
+import { AgentType } from '@credebl/common/enum/enum';
 import { IWalletProvision } from './interface/agent-provisioning.interfaces';
 import { RpcException } from '@nestjs/microservices';
 import { exec } from 'child_process';

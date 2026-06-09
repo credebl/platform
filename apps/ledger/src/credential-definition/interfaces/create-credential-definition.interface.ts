@@ -1,7 +1,6 @@
-import { SortValue } from '@credebl/enum/enum';
+import { SortValue } from '@credebl/common/enum/enum';
 import { CreateCredentialDefinitionDto } from 'apps/api-gateway/src/credential-definition/dto/create-cred-defs.dto';
 import { IUserRequestInterface } from '.';
-
 
 export interface GetCredDefPayload {
   page?: number;
@@ -29,11 +28,11 @@ export interface IPlatformCredDefs {
   sortField?: string;
   sortBy?: string;
   search?: string;
-  user: IUserRequestInterface
+  user: IUserRequestInterface;
 }
 
 export interface CredDefPayload {
-  userId?: string,
+  userId?: string;
   schemaId?: string;
   tag?: string;
   issuerId?: string;
@@ -57,13 +56,13 @@ export class GetAllCredDefsDto {
   sortByValue?: string;
 }
 export interface GetAllCredDefsPayload {
-  credDefSearchCriteria: GetAllCredDefsDto,
-  user: IUserRequestInterface,
-  orgId: string
+  credDefSearchCriteria: GetAllCredDefsDto;
+  user: IUserRequestInterface;
+  orgId: string;
 }
 
 export interface GetCredDefBySchemaId {
-  schemaId: string
+  schemaId: string;
 }
 
 export interface ISaveCredDef {
@@ -78,5 +77,5 @@ export interface ISaveCredDef {
 }
 
 export interface SaveCredDefPayload {
-  credDefDetails: ISaveCredDef
+  credDefDetails: ISaveCredDef;
 }

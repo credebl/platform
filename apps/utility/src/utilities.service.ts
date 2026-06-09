@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { AwsService } from '@credebl/aws';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { EmailService } from '@credebl/common/email.service';
 import { ResponseMessages } from '@credebl/common/response-messages';

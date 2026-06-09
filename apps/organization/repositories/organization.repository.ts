@@ -23,7 +23,7 @@ import {
   IUpdateOrganization,
   OrgInvitation
 } from '../interfaces/organization.interface';
-import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
+import { Invitation, PrismaTables, SortValue } from '@credebl/common/enum/enum';
 // eslint-disable-next-line camelcase
 import {
   Prisma,
@@ -37,10 +37,10 @@ import {
 } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
-import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrgRoles } from '@credebl/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { UserOrgRolesService } from '@credebl/user-org-roles';
+import { UserOrgRolesService } from '@credebl/user-management';
 
 @Injectable()
 export class OrganizationRepository {

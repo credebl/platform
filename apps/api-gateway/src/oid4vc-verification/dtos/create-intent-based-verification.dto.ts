@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsArray, IsDefined, IsEnum, IsOptional, IsString, ValidateIf, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ResponseMode } from '@credebl/enum/enum';
+import { ResponseMode } from '@credebl/common/enum/enum';
 import { RequestSignerDto } from './oid4vc-verifier-presentation.dto';
 
 export class CreateIntentBasedVerificationDto {

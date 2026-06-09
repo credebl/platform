@@ -13,12 +13,12 @@ import { BullModule } from '@nestjs/bull';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BulkIssuanceProcessor } from './issuance.processor';
 import { AwsService } from '@credebl/aws';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { UserActivityRepository } from '@credebl/user-management';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
+import { GlobalConfigModule } from '@credebl/common/global-config.module';
 import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({

@@ -3,10 +3,10 @@ import { HttpModule } from '@nestjs/axios';
 import { AgentController } from './agent.controller';
 import { AgentService } from './agent.service';
 import { ClientsModule } from '@nestjs/microservices';
-import { CommonModule } from '../../../../libs/common/src/common.module';
-import { CommonService } from '../../../../libs/common/src/common.service';
+import { CommonModule } from '@credebl/common/common.module';
+import { CommonService } from '@credebl/common/common.service';
 import { ConfigModule } from '@nestjs/config';
-import { commonNatsOptions } from 'libs/service/nats.options';
+import { commonNatsOptions } from '@credebl/common/nats.options';
 import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({})

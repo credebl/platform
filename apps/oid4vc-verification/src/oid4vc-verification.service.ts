@@ -30,7 +30,7 @@ import {
 } from '@credebl/common/interfaces/oid4vp-verification';
 import { buildUrlWithQuery } from '@credebl/common/cast.helper';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { NATSClient } from '@credebl/common/NATSClient';
 
 import {
@@ -39,7 +39,7 @@ import {
   VerifyAuthorizationResponse
 } from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
-import { SignerMethodOption, x5cKeyType } from '@credebl/enum/enum';
+import { SignerMethodOption, x5cKeyType } from '@credebl/common/enum/enum';
 import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
 @Injectable()
 export class Oid4vpVerificationService extends BaseService {

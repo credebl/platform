@@ -1,7 +1,7 @@
 import { NATSClient } from '@credebl/common/NATSClient';
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { EcosystemOrgStatus, Invitation } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, Invitation } from '@credebl/common/enum/enum';
 import {
   IEcosystem,
   IEcosystemDashboard,

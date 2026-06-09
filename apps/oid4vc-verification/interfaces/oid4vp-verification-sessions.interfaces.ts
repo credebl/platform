@@ -1,4 +1,4 @@
-import { ClientIdPrefix, SignerMethodOption } from '@credebl/enum/enum';
+import { ClientIdPrefix, SignerMethodOption } from '@credebl/common/enum/enum';
 
 export interface Oid4vpPresentationWh {
   id: string;

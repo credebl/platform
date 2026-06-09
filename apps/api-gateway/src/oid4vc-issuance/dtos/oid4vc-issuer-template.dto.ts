@@ -17,7 +17,7 @@ import {
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { SignerOption } from '@prisma/client';
-import { AttributeType, CredentialFormat } from '@credebl/enum/enum';
+import { AttributeType, CredentialFormat } from '@credebl/common/enum/enum';
 
 class CredentialAttributeDisplayDto {
   @ApiPropertyOptional({ example: 'First Name' })

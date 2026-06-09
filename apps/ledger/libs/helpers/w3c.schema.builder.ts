@@ -1,15 +1,15 @@
 import { IW3CAttributeValue } from '@credebl/common/interfaces/interface';
 import { ISchemaAttributesFormat } from 'apps/ledger/src/schema/interfaces/schema-payload.interface';
 import { IProductSchema } from 'apps/ledger/src/schema/interfaces/schema.interface';
-import ExclusiveMinimum from 'libs/validations/exclusiveMinimum';
-import MaxItems from 'libs/validations/maxItems';
-import MaxLength from 'libs/validations/maxLength';
-import Minimum from 'libs/validations/minimum';
-import MinItems from 'libs/validations/minItems';
-import MinLength from 'libs/validations/minLength';
-import MultipleOf from 'libs/validations/multipleOf';
-import Pattern from 'libs/validations/pattern';
-import UniqueItems from 'libs/validations/uniqueItems';
+import ExclusiveMinimum from '@credebl/common/validations/exclusiveMinimum';
+import MaxItems from '@credebl/common/validations/maxItems';
+import MaxLength from '@credebl/common/validations/maxLength';
+import Minimum from '@credebl/common/validations/minimum';
+import MinItems from '@credebl/common/validations/minItems';
+import MinLength from '@credebl/common/validations/minLength';
+import MultipleOf from '@credebl/common/validations/multipleOf';
+import Pattern from '@credebl/common/validations/pattern';
+import UniqueItems from '@credebl/common/validations/uniqueItems';
 
 export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: string, description: string): object {
   // Function to apply validations based on attribute properties

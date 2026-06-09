@@ -1,8 +1,8 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 
 import { PrismaService } from '@credebl/prisma-service';
-import { OrgRoles } from 'libs/org-roles/enums';
-import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { OrgRoles } from '@credebl/common';
+import { IOrgRoles } from '@credebl/common';
 
 @Injectable()
 export class OrgRolesRepository {

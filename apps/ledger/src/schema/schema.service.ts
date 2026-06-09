@@ -10,7 +10,7 @@ import {
   HttpStatus
 } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { SchemaRepository } from './repositories/schema.repository';
 import { Prisma, schema } from '@prisma/client';
 import {
@@ -39,7 +39,7 @@ import {
   OrgAgentType,
   SchemaType,
   SchemaTypeEnum
-} from '@credebl/enum/enum';
+} from '@credebl/common/enum/enum';
 import {
   ICredDefWithPagination,
   ISchemaData,

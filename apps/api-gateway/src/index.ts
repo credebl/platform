@@ -1,29 +1,28 @@
-// Public API of @credebl/api-gateway
-// Consumers import from here to extend or embed the platform.
-
-export * from './boostrap';
+export * from './agent';
+export * from './agent-service';
 export * from './app.module';
-
-// Feature modules (for per-module overrides)
-export { AgentModule as AgentServiceModule } from './agent-service/agent-service.module';
-export { AgentModule } from './agent/agent.module';
-export * from './authz/authz.module';
-export * from './cloud-wallet/cloud-wallet.module';
-export * from './connection/connection.module';
-export * from './credential-definition/credential-definition.module';
-export * from './ecosystem/ecosystem.module';
-export * from './fido/fido.module';
-export * from './geo-location/geo-location.module';
-export * from './issuance/issuance.module';
-export * from './notification/notification.module';
-export * from './oid4vc-issuance/oid4vc-issuance.module';
-export * from './oid4vc-verification/oid4vc-verification.module';
-export * from './organization/organization.module';
-export * from './platform/platform.module';
-export * from './revocation/revocation.module';
-export * from './schema/schema.module';
-export * from './user/user.module';
-export * from './utilities/utilities.module';
-export * from './verification/verification.module';
-export * from './webhook/webhook.module';
-export * from './x509/x509.module';
+export * from './authz';
+export * from './boostrap';
+export * from './cloud-wallet';
+export * from './common';
+export * from './connection';
+export * from './credential-definition';
+export * from './dtos';
+export * from './ecosystem';
+export * from './fido';
+export * from './geo-location';
+export * from './helper-files';
+export * from './interfaces';
+export * from './issuance';
+export * from './notification';
+export * from './oid4vc-issuance';
+export * from './oid4vc-verification';
+export * from './organization';
+export * from './platform';
+export * from './revocation';
+export * from './schema';
+export * from './user';
+export * from './utilities';
+export * from './verification';
+export * from './webhook';
+export * from './x509';

@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ClientsModule } from '@nestjs/microservices';
 import { RevocationService } from './revocation.service';
 import { RevocationController } from './revocation.controller';
-import { commonNatsOptions } from 'libs/service/nats.options';
+import { commonNatsOptions } from '@credebl/common/nats.options';
 import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({})

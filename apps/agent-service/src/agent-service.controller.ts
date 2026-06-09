@@ -23,7 +23,7 @@ import {
 } from './interface/agent-service.interface';
 
 import { AgentServiceService } from './agent-service.service';
-import { AgentSpinUpStatus } from '@credebl/enum/enum';
+import { AgentSpinUpStatus } from '@credebl/common/enum/enum';
 import { Controller, Logger } from '@nestjs/common';
 import { InvitationMessage } from '@credebl/common/interfaces/agent-service.interface';
 import { MessagePattern } from '@nestjs/microservices';

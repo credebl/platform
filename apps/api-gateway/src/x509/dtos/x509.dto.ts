@@ -15,7 +15,7 @@ import {
   ValidateNested
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { SortFields, X509ExtendedKeyUsage, X509KeyUsage, x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
+import { SortFields, X509ExtendedKeyUsage, X509KeyUsage, x5cKeyType, x5cRecordStatus } from '@credebl/common/enum/enum';
 import { IX509SearchCriteria } from '@credebl/common/interfaces/x509.interface';
 import { toNumber, trim } from '@credebl/common/cast.helper';
 

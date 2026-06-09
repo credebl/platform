@@ -5,10 +5,10 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
-import { GlobalConfigModule } from '@credebl/config/global-config.module';
+import { GlobalConfigModule } from '@credebl/common/global-config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
-import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
+import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
+import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),

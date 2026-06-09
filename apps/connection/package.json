@@ -1,0 +1,33 @@
+{
+  "name": "@credebl/connection-server",
+  "version": "2.1.2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf ./dist",
+    "compile": "tsc -p tsconfig.pkg.json",
+    "build": "pnpm run clean && pnpm run compile",
+    "generate": "npx prisma generate --schema=node_modules/@credebl/prisma-service/prisma/schema.prisma"
+  },
+  "peerDependencies": {
+    "@prisma/client": "^5.22.0"
+  },
+  "dependencies": {
+    "@credebl/common": "workspace:*",
+    "@credebl/logger": "workspace:*",
+    "@credebl/prisma-service": "workspace:*",
+    "@nestjs/cache-manager": "catalog:",
+    "@nestjs/common": "catalog:",
+    "@nestjs/core": "catalog:",
+    "@nestjs/microservices": "catalog:",
+    "nats": "^2.29.3",
+    "rxjs": "^7.8.2"
+  }
+}

@@ -13,7 +13,7 @@ import {
 import { presentations, user } from '@prisma/client';
 
 import { Controller } from '@nestjs/common';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { IUserRequest } from '@credebl/user-management';
 import { MessagePattern } from '@nestjs/microservices';
 import { VerificationService } from './verification.service';
 

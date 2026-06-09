@@ -13,7 +13,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNotSQLInjection } from '@credebl/common/cast.helper';
-import { HandshakeProtocol } from '@credebl/enum/enum';
+import { HandshakeProtocol } from '@credebl/common/enum/enum';
 
 export class CreateOutOfBandConnectionInvitation {
   @ApiPropertyOptional()

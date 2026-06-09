@@ -7,7 +7,7 @@ import { IAgentSpinupDto, IUserRequestInterface } from './interface/agent-servic
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { Ledgers } from '@credebl/enum/enum';
+import { Ledgers } from '@credebl/common/enum/enum';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 
 const logger = new Logger();

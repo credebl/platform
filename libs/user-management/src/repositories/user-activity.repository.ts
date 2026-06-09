@@ -2,8 +2,10 @@
 import { HttpException, Inject, Injectable, Logger } from '@nestjs/common';
 import { IUsersActivity } from '../interfaces';
 import { PrismaService } from '@credebl/prisma-service';
-import { user_activity, RecordType } from '@credebl/prisma-service';
-import type { user } from '@credebl/prisma-service';
+// eslint-disable-next-line camelcase
+import { user_activity, RecordType } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import type { user } from '@prisma/client';
 import { map } from 'rxjs';
 import { ClientProxy } from '@nestjs/microservices';
 

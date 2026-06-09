@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
-import { BaseService } from '../../../../libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { GetAllCredDefsDto } from '../dtos/get-cred-defs.dto';
 import { ICredDef, ICredDefs } from './interfaces';

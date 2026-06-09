@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { BaseService } from 'libs/service/base.service';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { BaseService } from '@credebl/common';
+import { IUserRequest } from '@credebl/user-management';
 import {
   ClientDetails,
   FileParameter,

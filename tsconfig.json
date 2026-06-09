@@ -21,22 +21,22 @@
         "libs/common/src/*"
       ],
       "@credebl/config": [
-        "libs/config/src"
+        "libs/common/src"
       ],
       "@credebl/config/*": [
-        "libs/config/src/*"
+        "libs/common/src/*"
       ],
       "@credebl/context": [
-        "libs/context/src"
+        "libs/common/src/utils/context"
       ],
       "@credebl/context/*": [
-        "libs/context/src/*"
+        "libs/common/src/utils/context/*"
       ],
       "@credebl/enum": [
-        "libs/enum/src"
+        "libs/common/src/enum"
       ],
       "@credebl/enum/*": [
-        "libs/enum/src/*"
+        "libs/common/src/enum/*"
       ],
       "@credebl/keycloak-config": [
         "libs/keycloak-config/src"
@@ -57,10 +57,10 @@
         "libs/logger/src/*"
       ],
       "@credebl/org-roles": [
-        "libs/org-roles/src"
+        "libs/user-management/src"
       ],
       "@credebl/org-roles/*": [
-        "libs/org-roles/src/*"
+        "libs/user-management/src/*"
       ],
       "@credebl/prisma": [
         "libs/prisma/src"
@@ -85,24 +85,6 @@
       ],
       "@credebl/supabase/*": [
         "libs/supabase/src/*"
-      ],
-      "@credebl/user-activity": [
-        "libs/user-activity/src"
-      ],
-      "@credebl/user-activity/*": [
-        "libs/user-activity/src/*"
-      ],
-      "@credebl/user-org-roles": [
-        "libs/user-org-roles/src"
-      ],
-      "@credebl/user-org-roles/*": [
-        "libs/user-org-roles/src/*"
-      ],
-      "@credebl/user-request": [
-        "libs/user-request/src"
-      ],
-      "@credebl/user-request/*": [
-        "libs/user-request/src/*"
       ],
       "credebl/utility": [
         "libs/utility/src"

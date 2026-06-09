@@ -21,7 +21,7 @@ import {
   ValidatorConstraintInterface
 } from 'class-validator';
 import { CreateDidDto } from './create-did.dto';
-import { KeyType } from '@credebl/enum/enum';
+import { KeyType } from '@credebl/common/enum/enum';
 import { RewriteValidationOptions } from '@credebl/common/custom-overrideable-validation-pipe';
 import { BadRequestException } from '@nestjs/common';
 const regex = /^[a-zA-Z0-9 ]*$/;

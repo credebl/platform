@@ -3,7 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsOptional, Max, Min } from 'class-validator';
 import { SortValue } from '../../enum';
 import { toNumber, trim } from '@credebl/common/cast.helper';
-import { SortFields } from 'apps/connection/src/enum/connection.enum';
+import { SortFields } from '../enums/connection.enum';
 
 export class GetAllConnectionsDto {
   @ApiProperty({ required: false, example: '1' })

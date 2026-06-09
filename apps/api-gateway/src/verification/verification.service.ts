@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { SendProofRequestPayload, RequestProofDtoV1, RequestProofDtoV2 } from './dto/request-proof.dto';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { IUserRequest } from '@credebl/user-management';
 import { WebhookPresentationProofDto } from './dto/webhook-proof.dto';
 import {
   IProofPresentationDetails,

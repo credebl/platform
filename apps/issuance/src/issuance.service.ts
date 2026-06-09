@@ -14,7 +14,7 @@ import {
   NotFoundException
 } from '@nestjs/common';
 import { IssuanceRepository } from './issuance.repository';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { IUserRequest } from '@credebl/user-management';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
@@ -51,7 +51,7 @@ import {
   SchemaType,
   TemplateIdentifier,
   W3CSchemaDataType
-} from '@credebl/enum/enum';
+} from '@credebl/common/enum/enum';
 import * as QRCode from 'qrcode';
 import { OutOfBandIssuance } from '../templates/out-of-band-issuance.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
@@ -85,10 +85,12 @@ import {
   validateEmail
 } from '@credebl/common/cast.helper';
 import * as pLimit from 'p-limit';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { UserActivityRepository } from '@credebl/user-management';
 import { validateW3CSchemaAttributes } from '../libs/helpers/attributes.validator';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
-import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
+import ContextStorageService, {
+  ContextStorageServiceKey
+} from '@credebl/common/utils/context/contextStorageService.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
 import { redisStore } from 'cache-manager-ioredis-yet';

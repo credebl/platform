@@ -2,7 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { InternalServerErrorException } from '@nestjs/common';
 // eslint-disable-next-line camelcase
-import { PrismaService, user_org_roles, Prisma } from '@credebl/prisma-service';
+import { PrismaService } from '@credebl/prisma-service';
+// eslint-disable-next-line camelcase
+import { user_org_roles, Prisma } from '@prisma/client';
 
 type UserOrgRolesWhereUniqueInput = Prisma.user_org_rolesWhereUniqueInput;
 

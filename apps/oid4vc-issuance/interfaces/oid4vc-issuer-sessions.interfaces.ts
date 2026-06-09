@@ -1,4 +1,4 @@
-import { OpenId4VcIssuanceSessionState } from '@credebl/enum/enum';
+import { OpenId4VcIssuanceSessionState } from '@credebl/common/enum/enum';
 
 /* ---------------------------------------------------------
  * Enums

@@ -17,16 +17,24 @@ import { PrismaService } from '@credebl/prisma-service';
 import { CommonService } from '@credebl/common';
 import { OrganizationRepository } from '../repositories/organization.repository';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { OrgRolesService } from '@credebl/org-roles';
-import { OrgRoles } from 'libs/org-roles/enums';
-import { UserOrgRolesService } from '@credebl/user-org-roles';
+import { OrgRolesService } from '@credebl/user-management';
+import { OrgRoles } from '@credebl/common';
+import { UserOrgRolesService, UserActivityService, UserActivityRepository } from '@credebl/user-management';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrganizationInviteTemplate } from '../templates/organization-invitation.template';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
 import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
-import { DidMethod, Invitation, Ledgers, PrismaTables, SessionType, TokenType, transition } from '@credebl/enum/enum';
+import {
+  DidMethod,
+  Invitation,
+  Ledgers,
+  PrismaTables,
+  SessionType,
+  TokenType,
+  transition
+} from '@credebl/common/enum/enum';
 import {
   IGetOrgById,
   IGetOrganization,
@@ -38,7 +46,6 @@ import {
   IPrimaryDidDetails,
   IOrgDetails
 } from '../interfaces/organization.interface';
-import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
@@ -58,9 +65,8 @@ import { ClientCredentialTokenPayloadDto } from '@credebl/client-registration/dt
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 import { toNumber } from '@credebl/common/cast.helper';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { DeleteOrgInvitationsEmail } from '../templates/delete-organization-invitations.template';
-import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
+import { IOrgRoles } from '@credebl/common';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { UserRepository } from 'apps/user/repositories/user.repository';
 import * as jwt from 'jsonwebtoken';

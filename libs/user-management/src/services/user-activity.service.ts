@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { Injectable } from '@nestjs/common';
 import { UserActivityRepository } from '../repositories';
-import { user_activity } from '@credebl/prisma-service';
+// eslint-disable-next-line camelcase
+import { user_activity } from '@prisma/client';
 import { IUsersActivity } from '../interfaces';
 
 @Injectable()

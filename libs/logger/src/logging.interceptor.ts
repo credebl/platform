@@ -2,7 +2,9 @@ import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Inject } fr
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
+import ContextStorageService, {
+  ContextStorageServiceKey
+} from '@credebl/common/utils/context/contextStorageService.interface';
 import Logger, { LoggerKey } from './logger.interface';
 import { ClsService } from 'nestjs-cls';
 import { v4 } from 'uuid';

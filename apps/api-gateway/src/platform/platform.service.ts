@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { BaseService } from '../../../../libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import { ILedgers, ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { INetworkUrl, ISchemaDetails } from '@credebl/common/interfaces/schema.interface';

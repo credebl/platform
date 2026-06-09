@@ -1,6 +1,6 @@
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { ConnectionController } from './connection.controller';
 import { ConnectionService } from './connection.service';
+import { ConnectionController } from './connection.controller';
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -32,7 +32,8 @@ export class ConnectionModule {
         ...importedModules
       ],
       controllers: controllerOverrides.length ? controllerOverrides : [ConnectionController],
-      providers: [ConnectionService, NATSClient, ...overrides]
+      providers: [ConnectionService, NATSClient, ...overrides],
+      exports: [ConnectionService]
     };
   }
 }

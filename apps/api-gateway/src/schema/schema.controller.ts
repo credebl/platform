@@ -37,13 +37,13 @@ import { User } from '../authz/decorators/user.decorator';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { GetAllSchemaDto, GetCredentialDefinitionBySchemaIdDto } from './dtos/get-all-schema.dto';
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { IUserRequestInterface } from './interfaces';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { GenericSchemaDTO } from '../dtos/create-schema.dto';
-import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
-import { CredDefSortFields, SortFields } from '@credebl/enum/enum';
+import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CredDefSortFields, SortFields } from '@credebl/common/enum/enum';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { UpdateSchemaDto } from './dtos/update-schema-dto';
 

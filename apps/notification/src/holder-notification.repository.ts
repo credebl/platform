@@ -1,7 +1,7 @@
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { PrismaService } from '@credebl/prisma-service';
 import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { NotificationStatus } from '@credebl/enum/enum';
+import { NotificationStatus } from '@credebl/common/enum/enum';
 import {
   ICreateHolderNotification,
   IHolderNotification

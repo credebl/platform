@@ -16,17 +16,17 @@ import {
 } from './interfaces/connection.interfaces';
 import { ConnectionRepository } from './connection.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
-import { ConnectionProcessState } from '@credebl/enum/enum';
+import { IUserRequest } from '@credebl/user-management';
+import { ConnectionProcessState } from '@credebl/common/enum/enum';
 import {
   IConnectionList,
   ICreateConnectionUrl,
   IDeletedConnectionsRecord
 } from '@credebl/common/interfaces/connection.interface';
-import { IConnectionDetailsById } from 'apps/api-gateway/src/interfaces/IConnectionSearch.interface';
+import { IConnectionDetailsById } from './interfaces/connection.interfaces';
 import { IBasicMessage, IQuestionPayload } from './interfaces/messaging.interfaces';
 import { RecordType, user } from '@prisma/client';
-import { UserActivityRepository } from 'libs/user-activity/repositories';
+import { UserActivityRepository } from '@credebl/user-management';
 import { agent_invitations } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { getAgentUrl } from '@credebl/common/common.utils';

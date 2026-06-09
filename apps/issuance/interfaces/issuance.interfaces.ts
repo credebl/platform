@@ -1,9 +1,9 @@
 // eslint-disable-next-line camelcase
-import { AutoAccept, SchemaType } from '@credebl/enum/enum';
+import { AutoAccept, SchemaType } from '@credebl/common/enum/enum';
 import { Prisma, organisation } from '@prisma/client';
 
 import { IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { IUserRequest } from '@credebl/user-management';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 

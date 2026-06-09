@@ -6,7 +6,7 @@ import {
   Logger,
   NotFoundException
 } from '@nestjs/common';
-import { EcosystemOrgStatus, EcosystemRoles, Invitation, InviteType, SortValue } from '@credebl/enum/enum';
+import { EcosystemOrgStatus, EcosystemRoles, Invitation, InviteType, SortValue } from '@credebl/common/enum/enum';
 import {
   ICreateEcosystem,
   ICreateEcosystemOrg,
@@ -39,7 +39,7 @@ import {
   user
 } from '@prisma/client';
 
-import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRoles } from '@credebl/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { RpcException } from '@nestjs/microservices';

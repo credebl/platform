@@ -71,15 +71,6 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
-    "config": {
-      "type": "library",
-      "root": "libs/config",
-      "entryFile": "index",
-      "sourceRoot": "libs/config/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/config/tsconfig.lib.json"
-      }
-    },
     "connection": {
       "type": "application",
       "root": "apps/connection",
@@ -87,24 +78,6 @@
       "sourceRoot": "apps/connection/src",
       "compilerOptions": {
         "tsConfigPath": "apps/connection/tsconfig.app.json"
-      }
-    },
-    "context": {
-      "type": "library",
-      "root": "libs/context",
-      "entryFile": "index",
-      "sourceRoot": "libs/context/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/context/tsconfig.lib.json"
-      }
-    },
-    "enum": {
-      "type": "library",
-      "root": "libs/enum",
-      "entryFile": "index",
-      "sourceRoot": "libs/enum/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/enum/tsconfig.lib.json"
       }
     },
     "geo-location": {
@@ -179,15 +152,6 @@
         "tsConfigPath": "apps/oid4vc-verification/tsconfig.app.json"
       }
     },
-    "org-roles": {
-      "type": "library",
-      "root": "libs/org-roles",
-      "entryFile": "index",
-      "sourceRoot": "libs/org-roles/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/org-roles/tsconfig.lib.json"
-      }
-    },
     "organization": {
       "type": "application",
       "root": "apps/organization",
@@ -198,13 +162,13 @@
       }
     },
     "ecosystem": {
-    "type": "application",
-    "root": "apps/ecosystem",
-    "entryFile": "main",
-    "sourceRoot": "apps/ecosystem/src",
-    "compilerOptions": {
-      "tsConfigPath": "apps/ecosystem/tsconfig.app.json"
-    }
+      "type": "application",
+      "root": "apps/ecosystem",
+      "entryFile": "main",
+      "sourceRoot": "apps/ecosystem/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ecosystem/tsconfig.app.json"
+      }
     },
     "platform-service": {
       "type": "application",
@@ -260,33 +224,6 @@
         "tsConfigPath": "apps/user/tsconfig.app.json"
       }
     },
-    "user-activity": {
-      "type": "library",
-      "root": "libs/user-activity",
-      "entryFile": "index",
-      "sourceRoot": "libs/user-activity/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/user-activity/tsconfig.lib.json"
-      }
-    },
-    "user-org-roles": {
-      "type": "library",
-      "root": "libs/user-org-roles",
-      "entryFile": "index",
-      "sourceRoot": "libs/user-org-roles/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/user-org-roles/tsconfig.lib.json"
-      }
-    },
-    "user-request": {
-      "type": "library",
-      "root": "libs/user-request",
-      "entryFile": "index",
-      "sourceRoot": "libs/user-request/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/user-request/tsconfig.lib.json"
-      }
-    },
     "utility": {
       "type": "application",
       "root": "apps/utility",
@@ -331,6 +268,6 @@
       "compilerOptions": {
         "tsConfigPath": "libs/user-management/tsconfig.lib.json"
       }
-    }
+    },
   }
 }

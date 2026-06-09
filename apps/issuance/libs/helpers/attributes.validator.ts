@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { W3CSchemaDataType } from '@credebl/enum/enum';
+import { W3CSchemaDataType } from '@credebl/common/enum/enum';
 import { BadRequestException, Logger } from '@nestjs/common';
 import { IIssuanceAttributes, ISchemaAttributes } from 'apps/issuance/interfaces/issuance.interfaces';
 

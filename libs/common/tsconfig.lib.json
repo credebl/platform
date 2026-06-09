@@ -2,11 +2,17 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "declarationMap": true,
+    
     "outDir": "./dist",
     "rootDir": "./src",
     "skipLibCheck": true,
-    "incremental": false
+    "incremental": false,
+    "paths": {
+      "@credebl/common": ["libs/common/src"],
+      "@credebl/common/*": ["libs/common/src/*"],
+      "@credebl/context": ["libs/context/dist"],
+      "@credebl/context/*": ["libs/context/dist/*"]
+    }
   },
   "include": [
     "src/**/*"

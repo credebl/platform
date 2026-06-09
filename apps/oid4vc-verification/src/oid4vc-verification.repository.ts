@@ -6,7 +6,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrgAgent } from '../interfaces/oid4vp-verifier.interfaces';
 import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
-import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
+import { x5cKeyType, x5cRecordStatus } from '@credebl/common/enum/enum';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
 

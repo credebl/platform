@@ -22,12 +22,12 @@ import {
   platform_config,
   schema
 } from '@prisma/client';
-import { PrismaTables, SortValue } from '@credebl/enum/enum';
+import { PrismaTables, SortValue } from '@credebl/common/enum/enum';
 
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
 import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/interfaces';
-import { IUserRequest } from '@credebl/user-request/user-request.interface';
+import { IUserRequest } from '@credebl/user-management';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 

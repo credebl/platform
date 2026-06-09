@@ -3,7 +3,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { IssuerMetadata, IssuerUpdation, OrgAgent } from '../interfaces/oid4vc-issuance.interfaces';
 // eslint-disable-next-line camelcase
 import { Prisma, credential_templates, oidc_issuer, org_agents } from '@prisma/client';
-import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
+import { x5cKeyType, x5cRecordStatus } from '@credebl/common/enum/enum';
 
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
-import { BaseService } from 'libs/service/base.service';
+import { BaseService } from '@credebl/common';
 import {
   UpdateFidoUserDetailsDto,
   VerifyRegistrationDto,

@@ -69,6 +69,15 @@ export class AwsService {
     await fs.mkdir(dirPath, { recursive: true });
   }
 
+  private resolveUnderBase(baseDir: string, relativePath: string): string {
+    const resolvedBase = path.resolve(baseDir);
+    const resolvedTarget = path.resolve(baseDir, relativePath);
+    if (!resolvedTarget.startsWith(`${resolvedBase}${path.sep}`) && resolvedTarget !== resolvedBase) {
+      throw new HttpException('Invalid file key/path', HttpStatus.BAD_REQUEST);
+    }
+    return resolvedTarget;
+  }
+
   async uploadFileToS3Bucket(
     fileBuffer: Buffer,
     ext: string,
@@ -82,7 +91,7 @@ export class AwsService {
       await this.ensureDir(path.join(bucketDir, pathAWS));
       const timestamp = Date.now();
       const fileKey = `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
-      const filePath = path.join(bucketDir, fileKey);
+      const filePath = this.resolveUnderBase(bucketDir, fileKey);
       await fs.writeFile(filePath, fileBuffer);
       return `${process.env.PLATFORM_URL}/uploadedFiles/${bucketName}/${fileKey}`;
     }
@@ -114,8 +123,8 @@ export class AwsService {
   async uploadCsvFile(key: string, body: unknown): Promise<void> {
     if (this.isLocalFs) {
       const bucketDir = path.join(this.localStoragePath, process.env.AWS_BUCKET);
-      await this.ensureDir(bucketDir);
       const filePath = path.join(bucketDir, key);
+      await this.ensureDir(path.dirname(filePath));
       const data = 'string' === typeof body ? body : body.toString();
       await fs.writeFile(filePath, data);
       return;

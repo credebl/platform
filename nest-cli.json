@@ -35,15 +35,6 @@
         "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
       }
     },
-    "aws": {
-      "type": "library",
-      "root": "libs/aws",
-      "entryFile": "index",
-      "sourceRoot": "libs/aws/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/aws/tsconfig.lib.json"
-      }
-    },
     "client-registration": {
       "type": "library",
       "root": "libs/client-registration",

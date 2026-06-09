@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { BaseService } from 'libs/service/base.service';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { EmailService } from '@credebl/common/email.service';
@@ -17,7 +17,7 @@ export class UtilitiesService extends BaseService {
 
   constructor(
     private readonly utilitiesRepository: UtilitiesRepository,
-    private readonly awsService: AwsService,
+    private readonly awsService: StorageService,
     private readonly emailService: EmailService
   ) {
     super('UtilitiesService');
@@ -71,11 +71,8 @@ export class UtilitiesService extends BaseService {
         uuid,
         payload.storeObj
       );
-      if ('true' === process.env.IS_LOCAL_FS) {
-        // For local filesystem, return the file path as URL
-        return uploadResult.Location;
-      } else if ('true' === process.env.IS_LOCAL_RUSTFS) {
-        // For local RustFS, return the file path as URL
+      const storageType = process.env.STORAGE_TYPE || 'aws';
+      if ('local' === storageType || 'rustfs' === storageType) {
         return uploadResult.Location;
       }
       const url: string = `${process.env.SHORTENED_URL_DOMAIN}/${uploadResult.Key}`;

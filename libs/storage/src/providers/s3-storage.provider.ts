@@ -1,5 +1,5 @@
+import { BaseS3StorageService } from './base-s3-storage.provider';
 import { Injectable } from '@nestjs/common';
-import { BaseS3StorageService } from './base-s3-storage.service';
 
 @Injectable()
 export class S3StorageService extends BaseS3StorageService {

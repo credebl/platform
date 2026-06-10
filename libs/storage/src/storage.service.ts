@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { S3 } from 'aws-sdk';
 import { IStorageService } from './storage.interface';
-import { S3StorageService } from './providers/s3-storage.service';
-import { RustFsStorageService } from './providers/rustfs-storage.service';
-import { LocalFsStorageService } from './providers/local-fs-storage.service';
+import { Injectable } from '@nestjs/common';
+import { LocalFsStorageService } from './providers/local-fs-storage.provider';
+import { RustFsStorageService } from './providers/rustfs-storage.provider';
+import { S3 } from 'aws-sdk';
+import { S3StorageService } from './providers/s3-storage.provider';
 
 @Injectable()
 export class StorageService implements IStorageService {

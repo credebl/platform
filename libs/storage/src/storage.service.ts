@@ -10,7 +10,7 @@ export class StorageService implements IStorageService {
   private storage: IStorageService;
 
   constructor() {
-    const storageType = process.env.STORAGE_TYPE || 'aws';
+    const storageType = process.env.FILE_STORAGE_TYPE || 'aws';
     switch (storageType) {
       case 'local':
         this.storage = new LocalFsStorageService();

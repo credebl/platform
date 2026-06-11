@@ -71,7 +71,7 @@ export class UtilitiesService extends BaseService {
         uuid,
         payload.storeObj
       );
-      const storageType = process.env.STORAGE_TYPE || 'aws';
+      const storageType = process.env.FILE_STORAGE_TYPE || 'aws';
       if ('local' === storageType || 'rustfs' === storageType) {
         return uploadResult.Location;
       }

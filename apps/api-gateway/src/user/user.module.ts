@@ -6,7 +6,7 @@ import { Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
 
@@ -27,6 +27,6 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ])
   ],
   controllers: [UserController],
-  providers: [UserService, CommonService, AwsService, NATSClient]
+  providers: [UserService, CommonService, StorageService, NATSClient]
 })
 export class UserModule {}

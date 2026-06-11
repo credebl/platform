@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { BaseService } from 'libs/service/base.service';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { EmailService } from '@credebl/common/email.service';
@@ -17,7 +17,7 @@ export class UtilitiesService extends BaseService {
 
   constructor(
     private readonly utilitiesRepository: UtilitiesRepository,
-    private readonly awsService: AwsService,
+    private readonly awsService: StorageService,
     private readonly emailService: EmailService
   ) {
     super('UtilitiesService');
@@ -71,6 +71,10 @@ export class UtilitiesService extends BaseService {
         uuid,
         payload.storeObj
       );
+      const storageType = process.env.FILE_STORAGE_TYPE || 'aws';
+      if ('local' === storageType || 'rustfs' === storageType) {
+        return uploadResult.Location;
+      }
       const url: string = `${process.env.SHORTENED_URL_DOMAIN}/${uploadResult.Key}`;
       return url;
     } catch (error) {

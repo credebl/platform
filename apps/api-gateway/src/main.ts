@@ -122,6 +122,7 @@ async function bootstrap(): Promise<void> {
   app.use(express.static('invoice-pdf'));
   app.use(express.static('uploadedFiles/bulk-verification-templates'));
   app.use(express.static('uploadedFiles/import'));
+  app.use('/uploadedFiles', express.static('uploadedFiles'));
   // Use custom updatable global pipes
   const reflector = app.get(Reflector);
   app.useGlobalPipes(new UpdatableValidationPipe(reflector, { whitelist: true, transform: true }));

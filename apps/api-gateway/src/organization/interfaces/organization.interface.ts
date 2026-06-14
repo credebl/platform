@@ -49,7 +49,7 @@ export interface ICreateConnectionUrl {
   lastChangedBy: number;
 }
 
-export interface IOrgAgent {
+export interface IOrgAgentConfig {
   url: string;
   apiKey: string;
 }

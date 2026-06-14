@@ -9,7 +9,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { CloudWalletRepository } from './cloud-wallet.repository';
 import { GlobalConfigModule } from '@credebl/common/global-config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 

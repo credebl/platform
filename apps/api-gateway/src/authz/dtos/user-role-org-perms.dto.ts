@@ -1,19 +1,4 @@
+export { UserRoleOrgPermsDto, UserRoleDto, UserOrgDto } from '@credebl/common';
 
-export class UserRoleOrgPermsDto {
-   id :string;
-   role : userRoleDto;            
-   Organization: userOrgDto;
-}
-
-export class userRoleDto {
-    id: string;
-    name : string;
-    permissions :string[];
-
-}
-
-export class userOrgDto {
-   id: number;
-   orgName :string;
-}
-
+// legacy lowercase aliases kept for backward compatibility within this module
+export { UserRoleDto as userRoleDto, UserOrgDto as userOrgDto } from '@credebl/common';

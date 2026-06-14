@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { OrgRolesRepository, UserActivityRepository, UserOrgRolesRepository } from './repositories';
 import { PrismaServiceModule } from '@credebl/prisma-service';
 import {
@@ -9,13 +9,13 @@ import {
   UserActivityService,
   UserOrgRolesService
 } from './services';
-import { CommonConstants, CommonModule, getNatsOptions } from '@credebl/common';
+import { CommonConstants, GlobalConfigModule, getNatsOptions } from '@credebl/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
     PrismaServiceModule,
-    CommonModule,
+    GlobalConfigModule,
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
@@ -33,7 +33,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     ClientRegistrationService,
     UserOrgRolesRepository,
     UserActivityRepository,
-    UserOrgRolesService
+    UserOrgRolesService,
+    Logger
   ],
   exports: [
     KeycloakUrlService,
@@ -48,3 +49,5 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
   ]
 })
 export class UserManagementModule {}
+
+export { UserManagementModule as OrgRolesModule };

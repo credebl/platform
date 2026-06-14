@@ -16,12 +16,12 @@
       "@credebl/prisma-service/*": ["libs/prisma-service/dist/*"],
       "@credebl/user-management": ["libs/user-management/dist"],
       "@credebl/user-management/*": ["libs/user-management/dist/*"],
-      "@credebl/context": ["libs/context/dist"],
-      "@credebl/context/*": ["libs/context/dist/*"],
-      "@credebl/config": ["libs/common/dist"],
-      "@credebl/config/*": ["libs/common/dist/*"],
-      "@credebl/enum": ["libs/enum/dist"],
-      "@credebl/enum/*": ["libs/enum/dist/*"]
+      "@credebl/context": ["libs/common/dist"],
+      "@credebl/context/*": ["libs/common/dist/*"],
+      "@credebl/config": ["libs/config/src"],
+      "@credebl/config/*": ["libs/config/src/*"],
+      "@credebl/enum": ["libs/common/dist"],
+      "@credebl/enum/*": ["libs/common/dist/*"]
     }
   },
   "include": ["src/**/*"],

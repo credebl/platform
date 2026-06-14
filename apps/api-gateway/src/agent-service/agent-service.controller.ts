@@ -37,7 +37,7 @@ import { Response } from 'express';
 import { user } from '@prisma/client';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { User } from '../authz/decorators/user.decorator';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common/exception-handler';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from '@credebl/common';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
@@ -57,7 +57,7 @@ const seedLength = 32;
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ description: 'Unauthorized', type: UnauthorizedErrorDto })
 @ApiForbiddenResponse({ description: 'Forbidden', type: ForbiddenErrorDto })
-export class AgentController {
+export class AgentServiceController {
   constructor(private readonly agentService: AgentService) {}
   private readonly logger = new Logger();
 

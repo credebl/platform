@@ -482,6 +482,12 @@ importers:
       '@credebl/common':
         specifier: workspace:*
         version: link:../../libs/common
+      '@credebl/config':
+        specifier: workspace:*
+        version: link:../../libs/config
+      '@credebl/keycloak':
+        specifier: workspace:*
+        version: link:../../libs/keycloak
       '@credebl/logger':
         specifier: workspace:*
         version: link:../../libs/logger
@@ -527,6 +533,9 @@ importers:
       express:
         specifier: ^4.21.2
         version: 4.22.2
+      express-useragent:
+        specifier: ^1.0.15
+        version: 1.0.15
       fs:
         specifier: 0.0.1-security
         version: 0.0.1-security
@@ -551,6 +560,9 @@ importers:
       path:
         specifier: ^0.12.7
         version: 0.12.7
+      pg:
+        specifier: ^8.20.0
+        version: 8.20.0
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -700,6 +712,50 @@ importers:
       reflect-metadata:
         specifier: ^0.1.13
         version: 0.1.14
+      rimraf:
+        specifier: ^4.4.0
+        version: 4.4.1
+      typescript:
+        specifier: ^5.1.6
+        version: 5.9.3
+
+  libs/config:
+    dependencies:
+      '@credebl/prisma-service':
+        specifier: workspace:*
+        version: link:../prisma-service
+      '@nestjs/common':
+        specifier: 11.1.19
+        version: 11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: 'catalog:'
+        version: 4.0.4(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+    devDependencies:
+      rimraf:
+        specifier: ^4.4.0
+        version: 4.4.1
+      typescript:
+        specifier: ^5.1.6
+        version: 5.9.3
+
+  libs/keycloak:
+    dependencies:
+      '@credebl/common':
+        specifier: workspace:*
+        version: link:../common
+      '@nestjs/common':
+        specifier: 11.1.19
+        version: 11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/jwt':
+        specifier: 'catalog:'
+        version: 11.0.2(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@nestjs/swagger':
+        specifier: 'catalog:'
+        version: 11.4.2(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)
+      qs:
+        specifier: ^6.11.0
+        version: 6.15.1
+    devDependencies:
       rimraf:
         specifier: ^4.4.0
         version: 4.4.1
@@ -5270,6 +5326,7 @@ packages:
   nats@2.29.3:
     resolution: {integrity: sha512-tOQCRCwC74DgBTk4pWZ9V45sk4d7peoE2njVprMRCBXrhJ5q5cYM7i6W+Uvw2qUrcfOSnuisrX7bEx3b3Wx4QA==}
     engines: {node: '>= 14.0.0'}
+    deprecated: Package moved. Use @nats-io/transport-node from https://github.com/nats-io/nats.js
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
@@ -8278,6 +8335,14 @@ snapshots:
       lodash: 4.18.1
       rxjs: 7.8.2
 
+  '@nestjs/config@4.0.4(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)':
+    dependencies:
+      '@nestjs/common': 11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      dotenv: 17.4.1
+      dotenv-expand: 12.0.3
+      lodash: 4.18.1
+      rxjs: 7.8.2
+
   '@nestjs/core@11.1.19(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/microservices@11.1.19)(@nestjs/platform-express@11.1.19)(@nestjs/websockets@11.1.19)(reflect-metadata@0.1.14)(rxjs@7.8.2)':
     dependencies:
       '@nestjs/common': 11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2)
@@ -8319,6 +8384,12 @@ snapshots:
   '@nestjs/jwt@11.0.2(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))':
     dependencies:
       '@nestjs/common': 11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2)
+      '@types/jsonwebtoken': 9.0.10
+      jsonwebtoken: 9.0.3
+
+  '@nestjs/jwt@11.0.2(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))':
+    dependencies:
+      '@nestjs/common': 11.1.19(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@types/jsonwebtoken': 9.0.10
       jsonwebtoken: 9.0.3
 

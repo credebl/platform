@@ -13,7 +13,7 @@ import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { OrgRolesRepository } from '@credebl/user-management';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { PrismaService } from '@credebl/prisma-service';
 import { SupabaseService } from '@credebl/supabase';
 import {

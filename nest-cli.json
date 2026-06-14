@@ -44,13 +44,13 @@
         "tsConfigPath": "libs/aws/tsconfig.lib.json"
       }
     },
-    "client-registration": {
+    "config": {
       "type": "library",
-      "root": "libs/client-registration",
+      "root": "libs/config",
       "entryFile": "index",
-      "sourceRoot": "libs/client-registration/src",
+      "sourceRoot": "libs/config/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/client-registration/tsconfig.lib.json"
+        "tsConfigPath": "libs/config/tsconfig.lib.json"
       }
     },
     "cloud-wallet": {
@@ -98,13 +98,13 @@
         "tsConfigPath": "apps/issuance/tsconfig.app.json"
       }
     },
-    "keycloak-url": {
+    "keycloak": {
       "type": "library",
-      "root": "libs/keycloak-url",
+      "root": "libs/keycloak",
       "entryFile": "index",
-      "sourceRoot": "libs/keycloak-url/src",
+      "sourceRoot": "libs/keycloak/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/keycloak-url/tsconfig.lib.json"
+        "tsConfigPath": "libs/keycloak/tsconfig.lib.json"
       }
     },
     "ledger": {
@@ -268,6 +268,6 @@
       "compilerOptions": {
         "tsConfigPath": "libs/user-management/tsconfig.lib.json"
       }
-    },
+    }
   }
 }

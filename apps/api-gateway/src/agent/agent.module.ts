@@ -1,9 +1,9 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { AgentController } from './agent.controller';
-import { AgentService } from './agent.service';
+import { AgentServiceService } from './agent.service';
 import { ClientsModule } from '@nestjs/microservices';
-import { CommonModule } from '@credebl/common/common.module';
+import { GlobalConfigModule } from '@credebl/common/global-config.module';
 import { CommonService } from '@credebl/common/common.service';
 import { ConfigModule } from '@nestjs/config';
 import { commonNatsOptions } from '@credebl/common/nats.options';
@@ -28,12 +28,12 @@ export class AgentModule {
             name: 'NATS_CLIENT',
             ...commonNatsOptions('AGENT_SERVICE:REQUESTER')
           },
-          CommonModule
+          GlobalConfigModule
         ]),
         ...importedModules
       ],
       controllers: controllerOverrides.length ? controllerOverrides : [AgentController],
-      providers: [AgentService, CommonService, NATSClient, ...overrides]
+      providers: [AgentServiceService, CommonService, NATSClient, ...overrides]
     };
   }
 }

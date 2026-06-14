@@ -14,7 +14,7 @@ import { GlobalConfigModule } from '@credebl/common';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { OrganizationRepository } from 'apps/organization/repositories/organization.repository';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserOrgRolesRepository } from '@credebl/user-management';
 import { UserOrgRolesService } from '@credebl/user-management';

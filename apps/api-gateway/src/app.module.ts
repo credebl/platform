@@ -4,7 +4,7 @@ import { ConditionalModule, ConfigModule } from '@nestjs/config';
 import { DynamicModule, MiddlewareConsumer, Module, Provider, RequestMethod } from '@nestjs/common';
 
 import { AgentController } from './agent/agent.controller';
-import { AgentModule } from './agent-service/agent-service.module';
+import { AgentServiceModule } from './agent-service/agent-service.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthzMiddleware } from './authz/authz.middleware';
@@ -15,18 +15,19 @@ import { ConnectionModule } from './connection/connection.module';
 import { ContextModule } from '@credebl/common/utils/context/contextModule';
 import { CredentialDefinitionModule } from './credential-definition/credential-definition.module';
 import { EcosystemModule } from './ecosystem/ecosystem.module';
+import { EcosystemFeatureGuard } from './authz/guards/ecosystem-feature-guard';
 import { EcosystemSwaggerFilter } from './authz/guards/ecosystem-swagger.filter';
 import { FidoModule } from './fido/fido.module';
 import { GeoLocationModule } from './geo-location/geo-location.module';
 import { GlobalConfigModule } from '@credebl/common/global-config.module';
-import { KeycloakConfigModule } from '@credebl/keycloak-config';
+import { KeycloakConfigModule } from '@credebl/keycloak';
 import { IssuanceModule } from './issuance/issuance.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { NotificationModule } from './notification/notification.module';
 import { Oid4vcIssuanceModule } from './oid4vc-issuance/oid4vc-issuance.module';
 import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
 import { OrganizationModule } from './organization/organization.module';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { PlatformModule } from './platform/platform.module';
 import { RevocationController } from './revocation/revocation.controller';
 import { RevocationModule } from './revocation/revocation.module';
@@ -66,7 +67,7 @@ export class APIGatewayModule {
             )
           }
         ]),
-        AgentModule.register(),
+        AgentServiceModule.register(),
         PlatformModule.register(),
         AuthzModule.register(),
         CredentialDefinitionModule.register(),
@@ -95,6 +96,7 @@ export class APIGatewayModule {
       controllers: controllerOverrides.length ? controllerOverrides : [AppController],
       providers: [
         AppService,
+        EcosystemFeatureGuard,
         EcosystemSwaggerFilter,
         {
           provide: MICRO_SERVICE_NAME,

@@ -1,4 +1,4 @@
-export * from './common.module';
+export * from './dtos';
 export * from './common.service';
 export * from './nats.interceptor';
 export * from './nats.config';
@@ -13,7 +13,6 @@ export * from './response-messages';
 export * from './interfaces/interface';
 export * from './interfaces/organization.interface';
 export * from './interfaces/response.interface';
-export * from './config.service';
-export * from './config.module';
 export * from './global-config.module';
+export { GlobalConfigModule as CommonModule } from './global-config.module';
 export * from './nats.options';

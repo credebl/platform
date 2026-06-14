@@ -62,7 +62,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from '@credebl/common';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common/exception-handler';
 import {
   FileExportResponse,
   IIssuedCredentialSearchParams,

@@ -28,7 +28,7 @@ import {
 } from '../interfaces';
 import { Transform, Type } from 'class-transformer';
 
-import { SortFields } from 'apps/connection/src/enum/connection.enum';
+import { ConnectionSortFields as SortFields } from '@credebl/common';
 import { trim } from '@credebl/common/cast.helper';
 
 class Issuer {

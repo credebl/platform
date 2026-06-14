@@ -7,7 +7,7 @@ import { GetAllPlatformCredDefsDto } from '../credential-definition/dto/get-all-
 import { IPlatformCredDefsData } from '@credebl/common/interfaces/cred-def.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
-import { IEcosystemInvitations, IPlatformDashboardCount } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
+import { IEcosystemInvitations, IPlatformDashboardCount } from '@credebl/common/interfaces/ecosystem.interface';
 import { IPaginationSortingDto, PaginatedResponse } from '@credebl/common/interfaces/interface';
 
 @Injectable()

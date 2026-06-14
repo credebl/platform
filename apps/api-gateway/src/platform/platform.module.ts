@@ -3,7 +3,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ConfigModule } from '@nestjs/config';
 import { DynamicModule, Module, Provider } from '@nestjs/common';
-import { EcosystemModule as EcosystemServiceModule } from 'apps/ecosystem/src/ecosystem.module';
+// import { EcosystemModule as EcosystemServiceModule } from 'apps/ecosystem/src/ecosystem.module';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { PlatformController } from './platform.controller';
 import { PlatformService } from './platform.service';
@@ -21,7 +21,6 @@ export class PlatformModule {
     return {
       module: PlatformModule,
       imports: [
-        EcosystemServiceModule,
         ConfigModule.forRoot(),
         ClientsModule.register([
           {
@@ -38,7 +37,7 @@ export class PlatformModule {
       ],
       controllers: controllerOverrides.length ? controllerOverrides : [PlatformController],
       providers: [PlatformService, NATSClient, ...overrides],
-      exports: [EcosystemServiceModule]
+      exports: []
     };
   }
 }

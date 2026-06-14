@@ -4,7 +4,7 @@ import { CommonConstants } from '@credebl/common/common.constant';
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { EcosystemController } from './ecosystem.controller';
 import { EcosystemService } from './ecosystem.service';
-import { EcosystemModule as EcosystemServiceModule } from 'apps/ecosystem/src/ecosystem.module';
+// import { EcosystemModule as EcosystemServiceModule } from 'apps/ecosystem/src/ecosystem.module';
 import { IntentController } from './intent/intent.controller';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { getNatsOptions } from '@credebl/common/nats.config';
@@ -21,7 +21,7 @@ export class EcosystemModule {
     return {
       module: EcosystemModule,
       imports: [
-        EcosystemServiceModule,
+        // EcosystemServiceModule,
         ClientsModule.register([
           {
             name: 'NATS_CLIENT',
@@ -37,7 +37,7 @@ export class EcosystemModule {
       ],
       controllers: controllerOverrides.length ? controllerOverrides : [EcosystemController, IntentController],
       providers: [EcosystemService, NATSClient, ...overrides],
-      exports: [EcosystemService, EcosystemServiceModule]
+      exports: [EcosystemService]
     };
   }
 }

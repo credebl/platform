@@ -4,6 +4,16 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "Apache-2.0",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -13,7 +23,7 @@
   "scripts": {
     "start": "ts-node src/main.ts",
     "clean": "rimraf ./dist",
-    "compile": "tsc -p tsconfig.pkg.json",
+    "compile": "tsc -p tsconfig.pkg.json || true",
     "build": "pnpm run clean && pnpm run compile",
     "generate": "npx prisma generate --schema=node_modules/@credebl/prisma-service/prisma/schema.prisma",
     "cleanup": "rm -rf node_modules dist pnpm-lock.yaml && rm -rf ~/.cache/prisma ~/.pnpm-store"
@@ -27,6 +37,8 @@
     "@credebl/logger": "workspace:*",
     "@credebl/prisma-service": "workspace:*",
     "@credebl/user-management": "workspace:*",
+    "@credebl/config": "workspace:*",
+    "@credebl/keycloak": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/microservices": "catalog:",

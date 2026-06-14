@@ -35,7 +35,7 @@ import { ResponseMessages } from '@credebl/common/response-messages';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from '@credebl/common';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common/exception-handler';
 
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { X509Service } from './x509.service';

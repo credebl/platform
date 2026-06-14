@@ -1,13 +1,13 @@
-import { EcosystemRepository } from 'apps/ecosystem/repositories/ecosystem.repository';
+import { PlatformConfigRepository } from '@credebl/config';
 import { Injectable } from '@nestjs/common';
 import { OpenAPIObject } from '@nestjs/swagger';
 
 @Injectable()
 export class EcosystemSwaggerFilter {
-  constructor(private readonly ecosystemRepository: EcosystemRepository) {}
+  constructor(private readonly platformConfigRepository: PlatformConfigRepository) {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async filterDocument(document: OpenAPIObject): Promise<OpenAPIObject> {
-    const config = await this.ecosystemRepository.getPlatformConfig();
+    const config = await this.platformConfigRepository.getPlatformConfig();
     const enabled = Boolean(config?.isEcosystemEnabled);
 
     if (!enabled) {

@@ -120,3 +120,7 @@ export interface IPlatformSchemasWithOrg {
   schemasCount: number;
   schemasResult: ISchemaDataWithOrg[];
 }
+
+export interface UpdateSchemaResponse {
+  count: number;
+}

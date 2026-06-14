@@ -35,7 +35,7 @@ import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { WebhookService } from './webhook.service';
 import { RegisterWebhookDto } from './dtos/register-webhook-dto';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common/exception-handler';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { OrgRoles } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';

@@ -1,3 +1,22 @@
+export interface IUsersProfile {
+  id: string;
+  username?: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  supabaseUserId?: string;
+  keycloakUserId?: string;
+  userOrgRoles?: object[];
+}
+
+export interface ICheckUserDetails {
+  isEmailVerified?: boolean;
+  isFidoVerified?: boolean;
+  isRegistrationCompleted?: boolean;
+  userId?: number;
+  message?: string;
+}
+
 export interface ISignInUser {
   access_token: string;
   token_type?: string;

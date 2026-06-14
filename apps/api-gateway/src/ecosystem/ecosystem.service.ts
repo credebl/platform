@@ -9,16 +9,14 @@ import {
   IEcosystemMemberInvitations,
   IGetAllOrgs,
   IPlatformDashboardCount
-} from 'apps/ecosystem/interfaces/ecosystem.interfaces';
-import { CreateEcosystemDto } from 'apps/ecosystem/dtos/create-ecosystem-dto';
+} from '@credebl/common/interfaces/ecosystem.interface';
+import { CreateEcosystemDto, CreateIntentDto, UpdateIntentDto } from '@credebl/common';
 // eslint-disable-next-line camelcase
 import { user } from '@prisma/client';
-import { CreateIntentDto } from 'apps/ecosystem/dtos/create-intent.dto';
-import { UpdateIntentDto } from 'apps/ecosystem/dtos/update-intent.dto';
 import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/dtos/intent-template.dto';
 import { GetAllIntentTemplatesDto } from '../utilities/dtos/get-all-intent-templates.dto';
 import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
-import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
+import { IPaginationSortingDto, PaginatedResponse } from '@credebl/common';
 import { CreateIntentNoticeDto, UpdateIntentNoticeDto } from '../oid4vc-verification/dtos/create-intent-notice.dto';
 
 @Injectable()

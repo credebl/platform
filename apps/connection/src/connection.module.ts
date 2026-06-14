@@ -12,7 +12,7 @@ import { UserActivityRepository } from '@credebl/user-management';
 import { CommonConstants } from '@credebl/common/common.constant';
 // import { nkeyAuthenticator } from 'nats';
 import { GlobalConfigModule } from '@credebl/common/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
 import { NATSClient } from '@credebl/common/NATSClient';
@@ -45,7 +45,9 @@ export class ConnectionModule {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static register(
     overrides: Provider[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     controllerOverrides: any[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     importedModules: any[] = []
   ): DynamicModule {
     return {

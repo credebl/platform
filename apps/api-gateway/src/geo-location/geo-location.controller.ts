@@ -5,7 +5,7 @@ import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import IResponseType from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Response } from 'express';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common/exception-handler';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('/')

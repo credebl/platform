@@ -18,10 +18,9 @@ import {
 import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
 import { ecosystem, user } from '@prisma/client';
 
-import { CreateIntentDto } from '../dtos/create-intent.dto';
+import { CreateIntentDto, UpdateIntentDto } from '@credebl/common';
 import { EcosystemService } from './ecosystem.service';
 import { MessagePattern } from '@nestjs/microservices';
-import { UpdateIntentDto } from '../dtos/update-intent.dto';
 
 @Controller()
 export class EcosystemController {

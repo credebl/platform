@@ -15,7 +15,7 @@ import {
   SetMetadata,
   HttpStatus
 } from '@nestjs/common';
-import { AgentService } from './agent.service';
+import { AgentServiceService } from './agent.service';
 import {
   ApiTags,
   ApiResponse,
@@ -44,7 +44,7 @@ import { User } from '../authz/decorators/user.decorator';
 @Controller('agent')
 export class AgentController {
   constructor(
-    private readonly agentService: AgentService,
+    private readonly agentService: AgentServiceService,
     private readonly commonService: CommonService
   ) {}
 

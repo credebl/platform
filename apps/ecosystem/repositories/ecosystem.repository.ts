@@ -1350,13 +1350,13 @@ export class EcosystemRepository {
   /**
    * Fetches the global platform configuration
    */
-  async getPlatformConfig(): Promise<{ isEcosystemEnabled: boolean } | null> {
-    return this.prisma.platform_config.findFirst({
-      select: {
-        isEcosystemEnabled: true
-      }
-    });
-  }
+  // async getPlatformConfig(): Promise<{ isEcosystemEnabled: boolean } | null> {
+  //   return this.prisma.platform_config.findFirst({
+  //     select: {
+  //       isEcosystemEnabled: true
+  //     }
+  //   });
+  // }
 
   async getEcosystemsForEcosystemLead(
     userId: string,

@@ -11,7 +11,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
-export class AgentService extends BaseService {
+export class AgentServiceService extends BaseService {
   constructor(
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
     private readonly natsClient: NATSClient

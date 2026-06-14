@@ -1,0 +1,27 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "skipLibCheck": true,
+    "incremental": false,
+    "paths": {
+      "@credebl/common": ["../common/dist"],
+      "@credebl/common/*": ["../common/dist/*"],
+      "@credebl/common/common.constant": ["../common/dist/common.constant"],
+      "@credebl/common/enum/enum": ["../common/dist/enum/enum"],
+      "@credebl/common/interfaces/interface": ["../common/dist/interfaces/interface"],
+      "@credebl/common/response-messages": ["../common/dist/response-messages/index"]
+    }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*spec.ts"
+  ]
+}

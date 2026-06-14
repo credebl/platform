@@ -54,8 +54,7 @@ import {
   IIntentTemplateSearchCriteria
 } from '@credebl/common/interfaces/intents-template.interface';
 import { ErrorHandler } from '@credebl/common';
-import { CreateIntentDto } from '../dtos/create-intent.dto';
-import { UpdateIntentDto } from '../dtos/update-intent.dto';
+import { CreateIntentDto, UpdateIntentDto } from '@credebl/common';
 import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
 
 @Injectable()

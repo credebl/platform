@@ -99,7 +99,7 @@ class AppendedAttachment {
   data: Data;
 }
 
-export class CreateConnectionDto {
+export class CloudWalletCreateConnectionDto {
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()

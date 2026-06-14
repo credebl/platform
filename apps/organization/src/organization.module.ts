@@ -23,7 +23,7 @@ import { KeycloakUrlService } from '@credebl/keycloak-url';
 import { AwsService } from '@credebl/aws';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/common/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
 import { NATSClient } from '@credebl/common/NATSClient';

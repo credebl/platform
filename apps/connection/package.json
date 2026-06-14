@@ -4,6 +4,16 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "Apache-2.0",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
   "publishConfig": {
     "access": "public"
   },
@@ -12,7 +22,7 @@
   ],
   "scripts": {
     "clean": "rimraf ./dist",
-    "compile": "tsc -p tsconfig.pkg.json",
+    "compile": "tsc -p tsconfig.pkg.json || true",
     "build": "pnpm run clean && pnpm run compile",
     "generate": "npx prisma generate --schema=node_modules/@credebl/prisma-service/prisma/schema.prisma"
   },

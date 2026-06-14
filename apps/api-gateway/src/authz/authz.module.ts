@@ -1,11 +1,11 @@
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { DynamicModule, Logger, Module, Provider } from '@nestjs/common';
 
-import { AgentService } from '../agent/agent.service';
+import { AgentServiceService } from '../agent/agent.service';
 import { AuthzController } from './authz.controller';
 import { AuthzService } from './authz.service';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { CommonModule } from '@credebl/common/common.module';
+import { GlobalConfigModule } from '@credebl/common/global-config.module';
 import { CommonService } from '@credebl/common/common.service';
 import { ConnectionService } from '../connection/connection.service';
 import { EcosystemModule } from '../ecosystem/ecosystem.module';
@@ -17,12 +17,12 @@ import { OrganizationService } from '../organization/organization.service';
 import { PassportModule } from '@nestjs/passport';
 import { PrismaServiceModule } from '@credebl/prisma-service';
 import { SocketGateway } from './socket.gateway';
-import { SupabaseService } from '@credebl/supabase';
 import { UserModule } from '../user/user.module';
-import { UserRepository } from 'apps/user/repositories/user.repository';
+import { SessionRepository } from '@credebl/user-management';
 import { UserService } from '../user/user.service';
 import { VerificationService } from '../verification/verification.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { ConfigModule } from '@credebl/config';
 
 @Module({})
 export class AuthzModule {
@@ -37,6 +37,7 @@ export class AuthzModule {
       module: AuthzModule,
       imports: [
         EcosystemModule,
+        ConfigModule,
         HttpModule,
         PassportModule.register({
           defaultStrategy: 'jwt',
@@ -52,7 +53,7 @@ export class AuthzModule {
               process.env.NATS_CREDS_FILE
             )
           },
-          CommonModule
+          GlobalConfigModule
         ]),
         UserModule,
         PrismaServiceModule,
@@ -67,12 +68,11 @@ export class AuthzModule {
         NATSClient,
         VerificationService,
         ConnectionService,
-        AgentService,
+        AgentServiceService,
         CommonService,
         UserService,
-        SupabaseService,
         OrganizationService,
-        UserRepository,
+        SessionRepository,
         Logger,
         ...overrides
       ],

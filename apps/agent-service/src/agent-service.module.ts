@@ -13,7 +13,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { UserActivityRepository } from '@credebl/user-management';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { LoggerModule } from '@credebl/logger/logger.module';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { GlobalConfigModule } from '@credebl/common/global-config.module';
 import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
 import { NATSClient } from '@credebl/common/NATSClient';

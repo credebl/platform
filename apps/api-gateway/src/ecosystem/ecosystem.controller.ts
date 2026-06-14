@@ -27,7 +27,7 @@ import {
 import { ApiResponseDto } from '../dtos/apiResponse.dto';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common/exception-handler';
 import { EcosystemService } from './ecosystem.service';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
@@ -39,7 +39,7 @@ import { InviteMemberToEcosystemDto, UpdateEcosystemInvitationDto } from './dtos
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { user } from '@prisma/client';
 import { User } from '../authz/decorators/user.decorator';
-import { CreateEcosystemDto, PaginationGetAllEcosystem } from 'apps/ecosystem/dtos/create-ecosystem-dto';
+import { CreateEcosystemDto, PaginationGetAllEcosystem } from '@credebl/common';
 import { DeleteEcosystemOrgDto } from './dtos/delete-ecosystem-users';
 import { GetEcosystemInvitationsQueryDto, UpdateEcosystemOrgStatusDto } from './dtos/ecosystem';
 import { EcosystemFeatureGuard } from '../authz/guards/ecosystem-feature-guard';

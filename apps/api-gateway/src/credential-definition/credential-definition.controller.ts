@@ -22,9 +22,9 @@ import {
   ApiUnauthorizedResponse,
   ApiForbiddenResponse
 } from '@nestjs/swagger';
-import { ApiResponseDto } from 'apps/api-gateway/src/dtos/apiResponse.dto';
-import { UnauthorizedErrorDto } from 'apps/api-gateway/src/dtos/unauthorized-error.dto';
-import { ForbiddenErrorDto } from 'apps/api-gateway/src/dtos/forbidden-error.dto';
+import { ApiResponseDto } from '../dtos/apiResponse.dto';
+import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
+import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { User } from '../authz/decorators/user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
@@ -36,7 +36,7 @@ import { IUserRequestInterface } from '../interfaces/IUserRequestInterface';
 import { CreateCredentialDefinitionDto } from './dto/create-cred-defs.dto';
 import { OrgRoles } from '@credebl/common';
 import { Roles } from '../authz/decorators/roles.decorator';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common/exception-handler';
 import { EmptyStringParamPipe, TrimStringParamPipe } from '@credebl/common/cast.helper';
 
 @ApiBearerAuth()

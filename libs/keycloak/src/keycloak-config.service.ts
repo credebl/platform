@@ -3,10 +3,9 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ProtocolMapperResult, UnmanagedAttributePolicy } from '@credebl/common/enum/enum';
-import { CommonService } from '@credebl/common';
-import { KeycloakUrlService } from '@credebl/keycloak-url';
-import { ClientRegistrationService } from '@credebl/client-registration';
+import { CommonService, ProtocolMapperResult, UnmanagedAttributePolicy } from '@credebl/common';
+import { KeycloakUrlService } from './keycloak-url.service';
+import { ClientRegistrationService } from './client-registration.service';
 
 @Injectable()
 export class KeycloakConfigService implements OnModuleInit {
@@ -28,7 +27,6 @@ export class KeycloakConfigService implements OnModuleInit {
       this.logger.log('=== Configuration Finished: SUCCESS  ===');
       this.logger.log('========================================');
     } catch (error) {
-      //TODO: remove this after testing
       this.logger.error('========================================');
       this.logger.error('=== Configuration Finished: FAILED  ===');
       this.logger.error(`=== Error: ${error.message || error}`);
@@ -94,11 +92,9 @@ export class KeycloakConfigService implements OnModuleInit {
 
       await this.commonService.httpPut(userProfileUrl, profileConfig, this.getAuthHeader(token));
       this.logger.log('Result: unmanagedAttributePolicy set to ENABLED');
-      this.logger.log('This allows custom attributes like ecosystem_access to be stored on users');
     } catch (error) {
       this.logger.warn(`Could not configure User Profile: ${error.message || error}`);
       this.logger.warn('If using Keycloak < 24, this is expected and can be ignored');
-      this.logger.warn('If using Keycloak 24+, manually enable Unmanaged Attributes in Realm Settings > User Profile');
     }
   }
 
@@ -107,7 +103,6 @@ export class KeycloakConfigService implements OnModuleInit {
     const scopeId = await this.getDefaultClientScopeId(realm, token);
     if (!scopeId) {
       this.logger.warn('PROBLEM: "profile" client scope NOT FOUND in realm');
-      this.logger.warn('This means ecosystem_access will NOT appear in user login tokens');
       return;
     }
     this.logger.log(`Found "profile" client scope ID: ${scopeId}`);
@@ -125,8 +120,6 @@ export class KeycloakConfigService implements OnModuleInit {
 
     this.logger.log('Result: "ecosystem_access" mapper NOT FOUND - CREATING...');
     const mapperPayload = this.buildProtocolMapperPayload('ecosystem_access');
-    this.logger.log(`Payload: ${JSON.stringify(mapperPayload)}`);
-
     const createResponse = await this.commonService.httpPost(mappersUrl, mapperPayload, this.getAuthHeader(token));
     this.logger.log(`Create response: ${JSON.stringify(createResponse)}`);
     this.logger.log('Result: "ecosystem_access" mapper CREATED on "profile" client scope');

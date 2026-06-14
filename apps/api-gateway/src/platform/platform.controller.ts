@@ -23,7 +23,7 @@ import { Response } from 'express';
 import { ISchemaSearchPayload } from '../interfaces/ISchemaSearch.interface';
 import { IResponse } from '@credebl/common/interfaces/response.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common/exception-handler';
 import { AuthGuard } from '@nestjs/passport';
 import * as QRCode from 'qrcode';
 import { CredDefSortFields, SchemaType, SortFields } from '@credebl/common/enum/enum';

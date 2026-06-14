@@ -290,9 +290,9 @@ export interface IAccountDetails {
   id_token?: string;
   session_state?: string;
 }
-export interface ISessionData {
-  sessionId: string;
-}
+// export interface ISessionData {
+//   sessionId: string;
+// }
 
 export interface IRestrictedUserSession {
   id: string;

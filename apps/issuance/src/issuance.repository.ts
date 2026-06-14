@@ -9,7 +9,7 @@ import {
   PreviewRequest,
   SchemaDetails
 } from '../interfaces/issuance.interfaces';
-import { IssueCredentials, IssuedCredentialStatus } from '../enum/issuance.enum';
+import { IssueCredentials, IssuedCredentialStatus } from '@credebl/common';
 // eslint-disable-next-line camelcase
 import {
   Prisma,

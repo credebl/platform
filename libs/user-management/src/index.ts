@@ -2,5 +2,4 @@ export * from './dtos';
 export * from './interfaces';
 export * from './repositories';
 export * from './services';
-export * from './user-management.module';
-export * from './org-roles.module';
+export * from './global-config.module';

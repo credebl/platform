@@ -41,7 +41,7 @@ import IResponseType from '@credebl/common/interfaces/response.interface';
 import { Response } from 'express';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from '@credebl/common';
-import { CustomExceptionFilter } from 'apps/api-gateway/src/common/exception-handler';
+import { CustomExceptionFilter } from '../common/exception-handler';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('auth')

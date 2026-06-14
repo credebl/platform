@@ -12,7 +12,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { UserActivityService } from '@credebl/user-management';
 import { UserActivityRepository } from '@credebl/user-management';
 import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { GlobalConfigModule } from '@credebl/common/global-config.module';

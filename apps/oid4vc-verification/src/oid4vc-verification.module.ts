@@ -9,7 +9,7 @@ import { GlobalConfigModule } from '@credebl/common';
 import { ContextInterceptorModule } from '@credebl/common/utils/context';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { CacheModule } from '@nestjs/cache-manager';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { PrismaService, PrismaServiceModule } from '@credebl/prisma-service';
 import { Oid4vpRepository } from './oid4vc-verification.repository';

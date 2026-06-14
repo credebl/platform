@@ -1,17 +1,17 @@
 import { DynamicModule, Module, Provider } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CommonModule } from '@credebl/common/common.module';
+import { GlobalConfigModule } from '@credebl/common/global-config.module';
 import { CommonService } from '@credebl/common/common.service';
 import { ConfigModule } from '@nestjs/config';
-import { AgentController } from './agent-service.controller';
+import { AgentServiceController } from './agent-service.controller';
 import { AgentService } from './agent-service.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({})
-export class AgentModule {
+export class AgentServiceModule {
   static register(
     overrides: Provider[] = [],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,7 +20,7 @@ export class AgentModule {
     importedModules: any[] = []
   ): DynamicModule {
     return {
-      module: AgentModule,
+      module: AgentServiceModule,
       imports: [
         HttpModule,
         ConfigModule.forRoot(),
@@ -34,11 +34,11 @@ export class AgentModule {
               process.env.NATS_CREDS_FILE
             )
           },
-          CommonModule
+          GlobalConfigModule
         ]),
         ...importedModules
       ],
-      controllers: controllerOverrides.length ? controllerOverrides : [AgentController],
+      controllers: controllerOverrides.length ? controllerOverrides : [AgentServiceController],
       providers: [AgentService, CommonService, NATSClient, ...overrides]
     };
   }

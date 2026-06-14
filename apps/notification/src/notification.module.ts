@@ -11,7 +11,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { NotificationRepository } from './notification.repository';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/common/global-config.module';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';
 import { HolderNotificationRepository } from './holder-notification.repository';

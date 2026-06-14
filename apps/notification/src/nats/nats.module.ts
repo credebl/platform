@@ -6,7 +6,7 @@ import { NotificationNATSSubsciber } from './nats-subscriber';
 import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from '@credebl/common';
 import { GlobalConfigModule } from '@credebl/common';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { LoggerModule } from '@credebl/logger';
 import { ContextInterceptorModule } from '@credebl/common/utils/context';
 import { PendingAckStore } from './pendingAckStore';

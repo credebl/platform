@@ -8,7 +8,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { LedgerRepository } from './repositories/ledger.repository';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { ConfigModule as PlatformConfig } from '@credebl/common/config.module';
+import { ConfigModule as PlatformConfig } from '@credebl/config';
 import { GlobalConfigModule } from '@credebl/common/global-config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ContextInterceptorModule } from '@credebl/common/utils/context/contextInterceptorModule';

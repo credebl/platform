@@ -2,7 +2,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { BaseService } from '@credebl/common';
 import { RegisterWebhookDto } from './dtos/register-webhook-dto';
-import { ICreateWebhookUrl, IGetWebhookUrl } from 'apps/webhook/interfaces/webhook.interfaces';
+import { ICreateWebhookUrl, IGetWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
 import { GetWebhookDto } from './dtos/get-webhoook-dto';
 import { UpdateWebhookDto } from './dtos/update-webhook-dto';
 import { NATSClient } from '@credebl/common/NATSClient';

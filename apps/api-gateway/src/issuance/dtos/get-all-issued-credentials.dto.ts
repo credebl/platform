@@ -3,11 +3,10 @@ import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional } from 'class-validator';
 import { SortValue } from '../../enum';
 import { trim } from '@credebl/common/cast.helper';
-import { SortFields } from 'apps/issuance/enum/issuance.enum';
+import { IssuanceSortFields as SortFields } from '@credebl/common';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 
 export class IGetAllIssuedCredentialsDto extends PaginationDto {
-
   @ApiProperty({ required: false, enum: SortFields })
   @Transform(({ value }) => trim(value))
   @IsOptional()

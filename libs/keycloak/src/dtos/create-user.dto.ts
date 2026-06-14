@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import { ApiExtraModels } from '@nestjs/swagger';
-// import { Role } from 'apps/platform-service/src/entities/role.entity';
 
 @ApiExtraModels()
 export class CreateUserDto {
@@ -13,7 +12,6 @@ export class CreateUserDto {
   is_active?: boolean;
   firstName?: string;
   lastName?: string;
-  // role?: Role;
   isEmailVerified?: boolean;
   createdBy?: string;
   clientId?: string;

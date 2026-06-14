@@ -5,7 +5,7 @@ import { GetAllInvitationsDto } from './dto/get-all-invitations.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { AddPasskeyDetailsDto } from './dto/add-user.dto';
 import { UpdatePlatformSettingsDto } from './dto/update-platform-settings.dto';
-import { IUsersProfile, ICheckUserDetails } from 'apps/user/interfaces/user.interface';
+import { IUsersProfile, ICheckUserDetails } from '@credebl/common/interfaces/user.interface';
 import { IUsersActivity } from '@credebl/user-management';
 import { IUserInvitations } from '@credebl/common/interfaces/user.interface';
 import { user } from '@prisma/client';

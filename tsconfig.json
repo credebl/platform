@@ -9,10 +9,10 @@
         "libs/aws/src/*"
       ],
       "@credebl/client-registration": [
-        "libs/client-registration/src"
+        "libs/keycloak/src"
       ],
       "@credebl/client-registration/*": [
-        "libs/client-registration/src/*"
+        "libs/keycloak/src/*"
       ],
       "@credebl/common": [
         "libs/common/src"
@@ -21,10 +21,10 @@
         "libs/common/src/*"
       ],
       "@credebl/config": [
-        "libs/common/src"
+        "libs/config/src"
       ],
       "@credebl/config/*": [
-        "libs/common/src/*"
+        "libs/config/src/*"
       ],
       "@credebl/context": [
         "libs/common/src/utils/context"
@@ -38,17 +38,23 @@
       "@credebl/enum/*": [
         "libs/common/src/enum/*"
       ],
+      "@credebl/keycloak": [
+        "libs/keycloak/src"
+      ],
+      "@credebl/keycloak/*": [
+        "libs/keycloak/src/*"
+      ],
       "@credebl/keycloak-config": [
-        "libs/keycloak-config/src"
+        "libs/keycloak/src"
       ],
       "@credebl/keycloak-config/*": [
-        "libs/keycloak-config/src/*"
+        "libs/keycloak/src/*"
       ],
       "@credebl/keycloak-url": [
-        "libs/keycloak-url/src"
+        "libs/keycloak/src"
       ],
       "@credebl/keycloak-url/*": [
-        "libs/keycloak-url/src/*"
+        "libs/keycloak/src/*"
       ],
       "@credebl/logger": [
         "libs/logger/src"

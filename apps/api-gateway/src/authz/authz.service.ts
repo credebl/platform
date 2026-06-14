@@ -16,7 +16,7 @@ import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetTokenPasswordDto } from './dtos/reset-token-password';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { user } from '@prisma/client';
-import { IRestrictedUserSession, ISessionDetails } from 'apps/user/interfaces/user.interface';
+import { IRestrictedUserSession, ISessionDetails } from '@credebl/user-management/interfaces/user-session.interface';
 import { UserLogoutDto } from './dtos/user-logout.dto';
 import type { Prisma } from '@prisma/client';
 import { ClientProxy } from '@nestjs/microservices';

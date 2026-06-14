@@ -10,16 +10,18 @@ import { BadRequestException, Injectable, Logger, NotFoundException, Unauthorize
 
 import { ClientCredentialTokenPayloadDto } from './dtos/client-credential-token-payload.dto';
 import { ClientTokenDto } from './dtos/client-token.dto';
-import { CommonConstants } from '@credebl/common/common.constant';
-import { CommonService } from '@credebl/common';
+import {
+  CommonConstants,
+  CommonService,
+  EcosystemServiceRole,
+  IFormattedResponse,
+  ResponseMessages
+} from '@credebl/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { IClientRoles } from './interfaces/client.interface';
-import { IFormattedResponse } from '@credebl/common/interfaces/interface';
 import { JwtService } from '@nestjs/jwt';
-import { EcosystemServiceRole } from '@credebl/common/enum/enum';
-import { KeycloakUrlService } from '@credebl/keycloak-url';
-import { KeycloakUserRegistrationDto } from 'apps/user/dtos/keycloak-register.dto';
-import { ResponseMessages } from '@credebl/common/response-messages';
+import { KeycloakUrlService } from './keycloak-url.service';
+import { KeycloakUserRegistrationDto } from './dtos/keycloak-register.dto';
 import { accessTokenPayloadDto } from './dtos/accessTokenPayloadDto';
 import { userTokenPayloadDto } from './dtos/userTokenPayloadDto';
 
@@ -116,7 +118,6 @@ export class ClientRegistrationService {
       temporary: false
     };
     const setPasswordResponse = await this.commonService.httpPut(
-      //await this.keycloakUrlService.ResetPasswordURL(`${process.env.KEYCLOAK_CREDEBL_REALM}`, userid),
       await this.keycloakUrlService.ResetPasswordURL(realm, userid),
       passwordPayload,
       this.getAuthHeader(token)
@@ -169,9 +170,6 @@ export class ClientRegistrationService {
     }
   }
 
-  /**
-   * Get management token using ENV variables directly (without decryption)
-   */
   async getPlatformManagementToken(): Promise<string> {
     try {
       const clientId = process.env.KEYCLOAK_MANAGEMENT_CLIENT_ID;
@@ -211,7 +209,6 @@ export class ClientRegistrationService {
     clientId: string,
     token: string
   ): Promise<{ clientId: string; clientSecret: string }> | undefined {
-    // Client id cannot be undefined
     if (!clientId) {
       return;
     }
@@ -241,8 +238,8 @@ export class ClientRegistrationService {
       }
     }
   }
-
-  async deleteClient(idpId: string, token: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async deleteClient(idpId: string, token: string): Promise<any> {
     const realmName = process.env.KEYCLOAK_REALM;
 
     const getClientDeleteResponse = await this.commonService.httpDelete(
@@ -383,7 +380,6 @@ export class ClientRegistrationService {
   }
 
   async createClient(orgName: string, orgId: string, token: string) {
-    //create client for respective created realm in order to access its resources
     const realmName = process.env.KEYCLOAK_REALM;
     const clientPayload = {
       clientId: `${orgId}`,
@@ -499,12 +495,10 @@ export class ClientRegistrationService {
       this.getAuthHeader(token)
     );
 
-    // If an grant matching the client id is already found, don't recreate it.
     let grantResponse = { data: undefined };
     grantResponse.data = existingGrantsResponse.data.find((grant) => grant.client_id === clientId);
     this.logger.debug(`ClientRegistrationService existing grant ${JSON.stringify(grantResponse)}`);
 
-    // Grant wasn't found, so we need to create it
     if (!grantResponse.data) {
       const payload = {
         client_id: clientId,
@@ -539,64 +533,6 @@ export class ClientRegistrationService {
     );
 
     return tokenResponse;
-  }
-
-  async CreateConnection(clientId: string, token: string) {
-    const payload = {
-      name: 'TestConnection1',
-      display_name: 'Connectiondisplay',
-      strategy: 'auth0',
-      options: {
-        enabledDatabaseCustomization: true,
-        import_mode: false,
-        customScripts: {
-          login:
-            "function login(email, password, callback) {\n  //this example uses the \"pg\" library\n  //more info here: https://github.com/brianc/node-postgres\n\n  const bcrypt = require('bcrypt');\n  const postgres = require('pg');\n\n  const conString = `postgres://${configuration.pg_user}:${configuration.pg_pass}@${configuration.pg_ip}/${configuration.pg_db}`;\n  postgres.connect(conString, function (err, client, done) {\n    if (err) return callback(err);\n\t\t\t\n    const query = 'SELECT id, email, password FROM public.user WHERE email = $1 or username = $1';\n    client.query(query, [email], function (err, result) {\n      // NOTE: always call done() here to close\n      // the connection to the database\n      done();\n\n      if (err || result.rows.length === 0) return callback(err || new WrongUsernameOrPasswordError(email));\n\n      const user = result.rows[0];\n\n      //if(password === user.password) {\n        this.logger.log(email);\n        if (password === user.password) return callback(err || new WrongUsernameOrPasswordError(email));\n\n        return callback(null, {\n          user_id: user.id,\n          email: user.email\n        });\n      });\n      \n    });\n  //});\n}",
-          create:
-            'function create(user, callback) {\n  // This script should create a user entry in your existing database. It will\n  // be executed when a user attempts to sign up, or when a user is created\n  // through the Auth0 dashboard or API.\n  // When this script has finished executing, the Login script will be\n  // executed immediately afterwards, to verify that the user was created\n  // successfully.\n  //\n  // The user object will always contain the following properties:\n  // * email: the user\'s email\n  // * password: the password entered by the user, in plain text\n  // * tenant: the name of this Auth0 account\n  // * client_id: the client ID of the application where the user signed up, or\n  //              API key if created through the API or Auth0 dashboard\n  // * connection: the name of this database connection\n  //\n  // There are three ways this script can finish:\n  // 1. A user was successfully created\n  //     callback(null);\n  // 2. This user already exists in your database\n  //     callback(new ValidationError("user_exists", "my error message"));\n  // 3. Something went wrong while trying to reach your database\n  //     callback(new Error("my error message"));\n\n  const msg = \'Please implement the Create script for this database connection \' +\n    \'at https://manage.auth0.com/#/connections/database\';\n  return callback(new Error(msg));\n}\n',
-          delete:
-            "function remove(id, callback) {\n  // This script remove a user from your existing database.\n  // It is executed whenever a user is deleted from the API or Auth0 dashboard.\n  //\n  // There are two ways that this script can finish:\n  // 1. The user was removed successfully:\n  //     callback(null);\n  // 2. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n\n  const msg = 'Please implement the Delete script for this database ' +\n    'connection at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
-          verify:
-            "function verify(email, callback) {\n  // This script should mark the current user's email address as verified in\n  // your database.\n  // It is executed whenever a user clicks the verification link sent by email.\n  // These emails can be customized at https://manage.auth0.com/#/emails.\n  // It is safe to assume that the user's email already exists in your database,\n  // because verification emails, if enabled, are sent immediately after a\n  // successful signup.\n  //\n  // There are two ways that this script can finish:\n  // 1. The user's email was verified successfully\n  //     callback(null, true);\n  // 2. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n  //\n  // If an error is returned, it will be passed to the query string of the page\n  // where the user is being redirected to after clicking the verification link.\n  // For example, returning `callback(new Error(\"error\"))` and redirecting to\n  // https://example.com would redirect to the following URL:\n  //     https://example.com?email=alice%40example.com&message=error&success=false\n\n  const msg = 'Please implement the Verify script for this database connection ' +\n    'at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
-          get_user:
-            "function getByEmail(email, callback) {\n  // This script should retrieve a user profile from your existing database,\n  // without authenticating the user.\n  // It is used to check if a user exists before executing flows that do not\n  // require authentication (signup and password reset).\n  //\n  // There are three ways this script can finish:\n  // 1. A user was successfully found. The profile should be in the following\n  // format: https://auth0.com/docs/users/normalized/auth0/normalized-user-profile-schema.\n  //     callback(null, profile);\n  // 2. A user was not found\n  //     callback(null);\n  // 3. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n\n  const msg = 'Please implement the Get User script for this database connection ' +\n    'at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n",
-          change_password:
-            "function changePassword(email, newPassword, callback) {\n  // This script should change the password stored for the current user in your\n  // database. It is executed when the user clicks on the confirmation link\n  // after a reset password request.\n  // The content and behavior of password confirmation emails can be customized\n  // here: https://manage.auth0.com/#/emails\n  // The `newPassword` parameter of this function is in plain text. It must be\n  // hashed/salted to match whatever is stored in your database.\n  //\n  // There are three ways that this script can finish:\n  // 1. The user's password was updated successfully:\n  //     callback(null, true);\n  // 2. The user's password was not updated:\n  //     callback(null, false);\n  // 3. Something went wrong while trying to reach your database:\n  //     callback(new Error(\"my error message\"));\n  //\n  // If an error is returned, it will be passed to the query string of the page\n  // where the user is being redirected to after clicking the confirmation link.\n  // For example, returning `callback(new Error(\"error\"))` and redirecting to\n  // https://example.com would redirect to the following URL:\n  //     https://example.com?email=alice%40example.com&message=error&success=false\n\n  const msg = 'Please implement the Change Password script for this database ' +\n    'connection at https://manage.auth0.com/#/connections/database';\n  return callback(new Error(msg));\n}\n"
-        },
-        passwordPolicy: 'good',
-        password_complexity_options: {
-          min_length: 8
-        },
-        password_history: {
-          size: 5,
-          enable: false
-        },
-        password_no_personal_info: {
-          enable: false
-        },
-        password_dictionary: {
-          enable: false,
-          dictionary: []
-        },
-
-        gateway_authentication: 'object'
-      },
-      enabled_clients: [clientId],
-      realms: [''],
-      metadata: {}
-    };
-
-    const clientConnResponse = await this.commonService.httpPost(
-      `${process.env.KEYCLOAK_DOMAIN}${CommonConstants.URL_KEYCLOAK_MANAGEMENT_CONNECTIONS}`,
-      payload,
-      this.getAuthHeader(token)
-    );
-    this.logger.debug(`ClientRegistrationService create connection app ${JSON.stringify(clientConnResponse)}`);
-
-    return {
-      name: clientConnResponse.data.name,
-      id: clientConnResponse.data.id
-    };
   }
 
   async getUserToken(email: string, password: string, clientId: string, clientSecret: string) {
@@ -789,39 +725,25 @@ export class ClientRegistrationService {
     try {
       const realmName = process.env.KEYCLOAK_REALM;
       const userUrl = await this.keycloakUrlService.GetUserInfoURL(realmName, keycloakUserId);
-      this.logger.log(`[updateUserEcosystemAccess] User URL: ${userUrl}`);
-      this.logger.log(`[updateUserEcosystemAccess] Adding ecosystem ${ecosystemId} as ${role} for org ${orgId}`);
       const currentUser = await this.commonService.httpGet(userUrl, this.getAuthHeader(token));
-      this.logger.log(`[updateUserEcosystemAccess] Current user fetched: ${currentUser ? 'success' : 'null'}`);
 
       if (!currentUser) {
         throw new NotFoundException(`User not found in Keycloak: ${keycloakUserId}`);
       }
 
       const attributes = currentUser.attributes || {};
-      this.logger.log(`[updateUserEcosystemAccess] Current attribute keys: ${Object.keys(attributes).join(', ')}`);
 
       let ecosystemAccess: Record<string, { ecosystem_role: { lead: string[]; member: string[] } }> = {};
       if (attributes.ecosystem_access && attributes.ecosystem_access[0]) {
         try {
           ecosystemAccess = JSON.parse(attributes.ecosystem_access[0]);
-          this.logger.log(
-            `[updateUserEcosystemAccess] Parsed existing ecosystem_access: ${JSON.stringify(ecosystemAccess)}`
-          );
         } catch (error) {
-          this.logger.warn(`[updateUserEcosystemAccess] Failed to parse existing ecosystem_access, initializing empty`);
           ecosystemAccess = {};
         }
       }
 
       if (!ecosystemAccess[orgId]) {
-        ecosystemAccess[orgId] = {
-          ecosystem_role: {
-            lead: [],
-            member: []
-          }
-        };
-        this.logger.log(`[updateUserEcosystemAccess] Initialized ecosystem_access for org ${orgId}`);
+        ecosystemAccess[orgId] = { ecosystem_role: { lead: [], member: [] } };
       }
 
       if (!ecosystemAccess[orgId].ecosystem_role) {
@@ -835,28 +757,16 @@ export class ClientRegistrationService {
       }
 
       const existingEcosystems = ecosystemAccess[orgId].ecosystem_role[role];
-      this.logger.log(`[updateUserEcosystemAccess] Existing ${role} ecosystems: ${JSON.stringify(existingEcosystems)}`);
 
       if (!existingEcosystems.includes(ecosystemId)) {
         existingEcosystems.push(ecosystemId);
-        this.logger.log(`[updateUserEcosystemAccess] Added ecosystem ${ecosystemId} to ${role}`);
-      } else {
-        this.logger.log(`[updateUserEcosystemAccess] Ecosystem ${ecosystemId} already exists in ${role}`);
       }
 
       ecosystemAccess[orgId].ecosystem_role[role] = existingEcosystems;
-      this.logger.log(`[updateUserEcosystemAccess] Updated ecosystem_access: ${JSON.stringify(ecosystemAccess)}`);
-
       attributes.ecosystem_access = [JSON.stringify(ecosystemAccess)];
 
       const updatePayload = { ...currentUser, attributes };
-      this.logger.log(`[updateUserEcosystemAccess] Sending update to Keycloak...`);
-
       await this.commonService.httpPut(userUrl, updatePayload, this.getAuthHeader(token));
-
-      this.logger.log(
-        `[updateUserEcosystemAccess] Successfully updated ecosystem_access for user ${keycloakUserId}, org ${orgId}, role ${role}`
-      );
     } catch (error) {
       this.logger.error(`[updateUserEcosystemAccess] Error: ${JSON.stringify(error)}`);
       throw error;
@@ -881,9 +791,6 @@ export class ClientRegistrationService {
     return this.updateUserEcosystemAccess(keycloakUserId, orgId, ecosystemId, EcosystemServiceRole.MEMBER, token);
   }
 
-  /**
-   * Update the service account user's ecosystem_access attribute for a client
-   */
   async updateClientServiceAccountEcosystemAccess(
     clientIdpId: string,
     orgId: string,
@@ -893,36 +800,20 @@ export class ClientRegistrationService {
   ): Promise<void> {
     try {
       const realmName = process.env.KEYCLOAK_REALM;
-
       const serviceAccountUrl = await this.keycloakUrlService.GetServiceAccountUserURL(realmName, clientIdpId);
-      this.logger.log(`[updateClientServiceAccountEcosystemAccess] Service Account URL: ${serviceAccountUrl}`);
-
       const serviceAccountUser = await this.commonService.httpGet(serviceAccountUrl, this.getAuthHeader(token));
 
       if (!serviceAccountUser || !serviceAccountUser.id) {
-        this.logger.warn(
-          `[updateClientServiceAccountEcosystemAccess] No service account found for client ${clientIdpId}`
-        );
         return;
       }
 
-      this.logger.log(
-        `[updateClientServiceAccountEcosystemAccess] Found service account user: ${serviceAccountUser.id}`
-      );
       await this.updateUserEcosystemAccess(serviceAccountUser.id, orgId, ecosystemId, role, token);
-
-      this.logger.log(
-        `[updateClientServiceAccountEcosystemAccess] Successfully updated service account for client ${clientIdpId}`
-      );
     } catch (error) {
       this.logger.error(`[updateClientServiceAccountEcosystemAccess] Error: ${JSON.stringify(error)}`);
       throw error;
     }
   }
 
-  /**
-   * Wrapper for adding ecosystem lead to client service account
-   */
   async updateClientServiceAccountEcosystemLead(
     clientIdpId: string,
     orgId: string,
@@ -938,9 +829,6 @@ export class ClientRegistrationService {
     );
   }
 
-  /**
-   * Wrapper for adding ecosystem member to client service account
-   */
   async updateClientServiceAccountEcosystemMember(
     clientIdpId: string,
     orgId: string,
@@ -956,9 +844,6 @@ export class ClientRegistrationService {
     );
   }
 
-  /**
-   * Remove an ecosystem from user's ecosystem_access attribute in Keycloak
-   */
   async removeUserEcosystemAccess(
     keycloakUserId: string,
     orgId: string,
@@ -969,66 +854,44 @@ export class ClientRegistrationService {
     try {
       const realmName = process.env.KEYCLOAK_REALM;
       const userUrl = await this.keycloakUrlService.GetUserInfoURL(realmName, keycloakUserId);
-      this.logger.log(`[removeUserEcosystemAccess] User URL: ${userUrl}`);
-      this.logger.log(`[removeUserEcosystemAccess] Removing ecosystem ${ecosystemId} from ${role} for org ${orgId}`);
       const currentUser = await this.commonService.httpGet(userUrl, this.getAuthHeader(token));
-      this.logger.log(`[removeUserEcosystemAccess] Current user fetched: ${currentUser ? 'success' : 'null'}`);
 
       if (!currentUser) {
         throw new NotFoundException(`User not found in Keycloak: ${keycloakUserId}`);
       }
       const attributes = currentUser.attributes || {};
-      this.logger.log(`[removeUserEcosystemAccess] Current attribute keys: ${Object.keys(attributes).join(', ')}`);
 
       let ecosystemAccess: Record<string, { ecosystem_role: { lead: string[]; member: string[] } }> = {};
       if (attributes.ecosystem_access && attributes.ecosystem_access[0]) {
         try {
           ecosystemAccess = JSON.parse(attributes.ecosystem_access[0]);
-          this.logger.log(
-            `[removeUserEcosystemAccess] Parsed existing ecosystem_access: ${JSON.stringify(ecosystemAccess)}`
-          );
         } catch {
-          this.logger.warn(`[removeUserEcosystemAccess] Failed to parse existing ecosystem_access`);
           return;
         }
       } else {
-        this.logger.log(`[removeUserEcosystemAccess] No ecosystem_access attribute found, nothing to remove`);
         return;
       }
+
       if (!ecosystemAccess[orgId] || !ecosystemAccess[orgId].ecosystem_role) {
-        this.logger.log(`[removeUserEcosystemAccess] No ecosystem_role found for org ${orgId}`);
         return;
       }
 
       const existingEcosystems = ecosystemAccess[orgId].ecosystem_role[role] || [];
-      this.logger.log(`[removeUserEcosystemAccess] Existing ${role} ecosystems: ${JSON.stringify(existingEcosystems)}`);
-
       const updatedEcosystems = existingEcosystems.filter((id) => id !== ecosystemId);
-      this.logger.log(
-        `[removeUserEcosystemAccess] Updated ${role} ecosystems after removal: ${JSON.stringify(updatedEcosystems)}`
-      );
       ecosystemAccess[orgId].ecosystem_role[role] = updatedEcosystems;
       const orgRoles = ecosystemAccess[orgId].ecosystem_role;
       if (0 === (orgRoles.lead?.length ?? 0) && 0 === (orgRoles.member?.length ?? 0)) {
         delete ecosystemAccess[orgId];
-        this.logger.log(`[removeUserEcosystemAccess] Removed org ${orgId} (no more ecosystems)`);
       }
 
       if (0 < Object.keys(ecosystemAccess).length) {
         attributes.ecosystem_access = [JSON.stringify(ecosystemAccess)];
       } else {
         delete attributes.ecosystem_access;
-        this.logger.log(`[removeUserEcosystemAccess] Removed ecosystem_access attribute (empty)`);
       }
 
       const updatePayload = { ...currentUser, attributes };
-      this.logger.log(`[removeUserEcosystemAccess] Sending update to Keycloak...`);
-
       await this.commonService.httpPut(userUrl, updatePayload, this.getAuthHeader(token));
-
-      this.logger.log(
-        `[removeUserEcosystemAccess] Successfully removed ecosystem ${ecosystemId} from ${role} for user ${keycloakUserId}, org ${orgId}`
-      );
     } catch (error) {
       this.logger.error(`[removeUserEcosystemAccess] Error: ${JSON.stringify(error)}`);
       throw error;

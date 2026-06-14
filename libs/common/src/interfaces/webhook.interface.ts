@@ -1,3 +1,13 @@
+export interface ICreateWebhookUrl {
+  webhookUrl: string;
+  webhookSecret?: string;
+}
+
+export interface IGetWebhookUrl {
+  webhookUrl: string;
+  webhookSecret?: string;
+}
+
 export interface IWebhookUrl {
   orgId?: string;
   tenantId?: string;

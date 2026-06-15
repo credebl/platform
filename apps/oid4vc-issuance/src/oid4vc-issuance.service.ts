@@ -94,26 +94,14 @@ export class Oid4vcIssuanceService {
     template: any,
     orgId: string
   ): Promise<void> {
-    if (
-      format === CredentialFormat.JwtVcJsonLd &&
-      template &&
-      'context' in template &&
-      Array.isArray(template.context)
-    ) {
-      const contexts = template.context;
+    if (format === CredentialFormat.JwtVcJsonLd && template) {
       let internalSchemaId: string | undefined;
 
-      for (const url of contexts) {
-        if (url === CREDENTIALS_CONTEXT_V1_URL || url === CREDENTIALS_CONTEXT_V2_URL) {
-          continue;
-        }
-        if (url.includes('/schemas/')) {
-          const parts = url.split('/');
-          const potentialUuid = parts[parts.length - 1];
-          if (uuidRegex.test(potentialUuid)) {
-            internalSchemaId = potentialUuid;
-            break;
-          }
+      if ('schemaUrl' in template && template.schemaUrl) {
+        const parts = template.schemaUrl.split('/');
+        const potentialUuid = parts[parts.length - 1];
+        if (uuidRegex.test(potentialUuid)) {
+          internalSchemaId = potentialUuid;
         }
       }
 
@@ -400,6 +388,14 @@ export class Oid4vcIssuanceService {
       //TODO: add revert mechanism if agent call fails
       const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = credentialTemplate;
 
+      if (
+        format === CredentialFormat.JwtVcJsonLd &&
+        'schemaUrl' in credentialTemplate.template &&
+        credentialTemplate.template.schemaUrl
+      ) {
+        credentialTemplate.template.context = [CREDENTIALS_CONTEXT_V1_URL, credentialTemplate.template.schemaUrl];
+      }
+
       await this.validateTemplateAgainstSchema(format, credentialTemplate.template, orgId);
 
       const checkNameExist = await this.oid4vcIssuanceRepository.getTemplateByNameForIssuer(name, issuerId);
@@ -486,6 +482,15 @@ export class Oid4vcIssuanceService {
         ...(issuerId ? { issuerId } : {})
       };
       const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = normalized;
+
+      if (
+        normalized.template &&
+        (format || template.format) === CredentialFormat.JwtVcJsonLd &&
+        'schemaUrl' in normalized.template &&
+        normalized.template.schemaUrl
+      ) {
+        normalized.template.context = [CREDENTIALS_CONTEXT_V1_URL, normalized.template.schemaUrl];
+      }
 
       if (normalized.template && (format || template.format)) {
         await this.validateTemplateAgainstSchema(format || template.format, normalized.template, orgId);

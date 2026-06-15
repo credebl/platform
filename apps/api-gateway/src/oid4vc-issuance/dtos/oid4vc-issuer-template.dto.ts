@@ -197,12 +197,12 @@ export class SdJwtTemplateDto {
   vct: string;
 
   @ApiPropertyOptional({
-    example: ['https://www.w3.org/2018/credentials/v1', 'https://json-ld.org/contexts/person.jsonld'],
-    description: 'JSON-LD context for the credential (optional, defaults to person schema for JSON-LD format)'
+    example: 'https://dev-schema.sovio.id/schemas/a99d55b6-c663-4af8-bcd3-4fe6699df91a',
+    description: 'JSON-LD schema URL for the credential'
   })
-  @IsArray()
+  @IsString()
   @IsOptional()
-  context?: string[];
+  schemaUrl?: string;
 
   @ApiProperty({
     type: 'array',

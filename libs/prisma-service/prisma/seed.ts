@@ -662,6 +662,65 @@ export async function getKeycloakToken(): Promise<string> {
   return data.access_token;
 }
 
+async function getExistingKeycloakUserId(
+  keycloakDomain: string,
+  keycloakRealm: string,
+  username: string
+): Promise<string> {
+  // User already exists in Keycloak — look up their ID so we can still update the DB.
+  // Without this, keycloakUserId stays empty and login silently falls through to Supabase.
+  logger.log(`⚠️ User ${username} already exists in Keycloak — looking up existing user ID`);
+  const lookupToken = await getKeycloakToken();
+  const lookupRes = await fetch(
+    `${keycloakDomain}admin/realms/${keycloakRealm}/users?username=${encodeURIComponent(username)}&exact=true`,
+    {
+      headers: { Authorization: `Bearer ${lookupToken}` }
+    }
+  );
+  if (!lookupRes.ok) {
+    const errText = await lookupRes.text();
+    throw new Error(`Failed to look up existing Keycloak user (${lookupRes.status}): ${errText}`);
+  }
+  const existingUsers = await lookupRes.json();
+  if (!Array.isArray(existingUsers) || 0 === existingUsers.length) {
+    throw new Error(`Keycloak returned 409 but no user found for username: ${username}`);
+  }
+  const userId = existingUsers[0].id;
+  logger.log(`✅ Found existing Keycloak user ID: ${userId}`);
+  return userId;
+}
+
+async function updatePlatformAdminInDb(
+  userId: string,
+  adminKeycloakId: string,
+  adminKeycloakSecret: string,
+  cryptoPrivateKey: string
+): Promise<void> {
+  logger.log('Check if platform admin exists');
+  const existingUser = await prisma.user.findUnique({
+    where: { email: cachedConfig.platformEmail }
+  });
+
+  if (!existingUser) {
+    throw new Error(`User with email ${cachedConfig.platformEmail} not found in database`);
+  }
+  logger.log(`✅ Platform admin found in database`);
+
+  const encClientId = CryptoJS.AES.encrypt(JSON.stringify(adminKeycloakId), cryptoPrivateKey).toString();
+
+  const encClientSecret = CryptoJS.AES.encrypt(JSON.stringify(adminKeycloakSecret), cryptoPrivateKey).toString();
+
+  await prisma.user.update({
+    where: { email: cachedConfig.platformEmail },
+    data: {
+      keycloakUserId: userId,
+      clientId: encClientId,
+      clientSecret: encClientSecret
+    }
+  });
+  logger.log(`✅ Platform admin keycloakUserId, clientId, clientSecret updated in DB successfully`);
+}
+
 export async function createKeycloakUser(): Promise<void> {
   logger.log(`✅ Creating keycloak user for platform admin`);
   const { platformAdminData } = JSON.parse(configData);
@@ -731,26 +790,7 @@ export async function createKeycloakUser(): Promise<void> {
   let userId: string | undefined;
 
   if (HttpStatus.CONFLICT === res.status) {
-    // User already exists in Keycloak — look up their ID so we can still update the DB.
-    // Without this, keycloakUserId stays empty and login silently falls through to Supabase.
-    logger.log(`⚠️ User ${user.username} already exists in Keycloak — looking up existing user ID`);
-    const lookupToken = await getKeycloakToken();
-    const lookupRes = await fetch(
-      `${KEYCLOAK_DOMAIN}admin/realms/${KEYCLOAK_REALM}/users?username=${encodeURIComponent(user.username)}&exact=true`,
-      {
-        headers: { Authorization: `Bearer ${lookupToken}` }
-      }
-    );
-    if (!lookupRes.ok) {
-      const errText = await lookupRes.text();
-      throw new Error(`Failed to look up existing Keycloak user (${lookupRes.status}): ${errText}`);
-    }
-    const existingUsers = await lookupRes.json();
-    if (!Array.isArray(existingUsers) || 0 === existingUsers.length) {
-      throw new Error(`Keycloak returned 409 but no user found for username: ${user.username}`);
-    }
-    userId = existingUsers[0].id;
-    logger.log(`✅ Found existing Keycloak user ID: ${userId}`);
+    userId = await getExistingKeycloakUserId(KEYCLOAK_DOMAIN, KEYCLOAK_REALM, user.username);
   } else if (HttpStatus.CREATED !== res.status) {
     const errorText = await res.text();
     throw new Error(`Failed to create Keycloak user (${res.status}): ${errorText}`);
@@ -763,29 +803,7 @@ export async function createKeycloakUser(): Promise<void> {
   }
 
   if (userId) {
-    logger.log('Check if platform admin exists');
-    const existingUser = await prisma.user.findUnique({
-      where: { email: cachedConfig.platformEmail }
-    });
-
-    if (!existingUser) {
-      throw new Error(`User with email ${cachedConfig.platformEmail} not found in database`);
-    }
-    logger.log(`✅ Platform admin found in database`);
-
-    const encClientId = CryptoJS.AES.encrypt(JSON.stringify(ADMIN_KEYCLOAK_ID), CRYPTO_PRIVATE_KEY).toString();
-
-    const encClientSecret = CryptoJS.AES.encrypt(JSON.stringify(ADMIN_KEYCLOAK_SECRET), CRYPTO_PRIVATE_KEY).toString();
-
-    await prisma.user.update({
-      where: { email: cachedConfig.platformEmail },
-      data: {
-        keycloakUserId: userId,
-        clientId: encClientId,
-        clientSecret: encClientSecret
-      }
-    });
-    logger.log(`✅ Platform admin keycloakUserId, clientId, clientSecret updated in DB successfully`);
+    await updatePlatformAdminInDb(userId, ADMIN_KEYCLOAK_ID, ADMIN_KEYCLOAK_SECRET, CRYPTO_PRIVATE_KEY);
   } else {
     throw new Error('Failed to extract user ID from Location header');
   }

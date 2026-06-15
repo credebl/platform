@@ -251,3 +251,5 @@ services:
 volumes:
   cache:
     driver: local
+  platform-volume:
+    driver: local

@@ -728,22 +728,39 @@ export async function createKeycloakUser(): Promise<void> {
     })
   });
 
-  if (HttpStatus.CONFLICT === res.status) {
-    logger.log(`⚠️ User ${user.username} already exists`);
-    return;
-  }
+  let userId: string | undefined;
 
-  if (HttpStatus.CREATED !== res.status) {
+  if (HttpStatus.CONFLICT === res.status) {
+    // User already exists in Keycloak — look up their ID so we can still update the DB.
+    // Without this, keycloakUserId stays empty and login silently falls through to Supabase.
+    logger.log(`⚠️ User ${user.username} already exists in Keycloak — looking up existing user ID`);
+    const lookupToken = await getKeycloakToken();
+    const lookupRes = await fetch(
+      `${KEYCLOAK_DOMAIN}admin/realms/${KEYCLOAK_REALM}/users?username=${encodeURIComponent(user.username)}&exact=true`,
+      {
+        headers: { Authorization: `Bearer ${lookupToken}` }
+      }
+    );
+    if (!lookupRes.ok) {
+      const errText = await lookupRes.text();
+      throw new Error(`Failed to look up existing Keycloak user (${lookupRes.status}): ${errText}`);
+    }
+    const existingUsers = await lookupRes.json();
+    if (!Array.isArray(existingUsers) || 0 === existingUsers.length) {
+      throw new Error(`Keycloak returned 409 but no user found for username: ${user.username}`);
+    }
+    userId = existingUsers[0].id;
+    logger.log(`✅ Found existing Keycloak user ID: ${userId}`);
+  } else if (HttpStatus.CREATED !== res.status) {
     const errorText = await res.text();
     throw new Error(`Failed to create Keycloak user (${res.status}): ${errorText}`);
+  } else {
+    const location = res.headers.get('location');
+    if (!location) {
+      throw new Error('Keycloak did not return Location header');
+    }
+    userId = location.split('/').pop();
   }
-  const location = res.headers.get('location');
-
-  if (!location) {
-    throw new Error('Keycloak did not return Location header');
-  }
-
-  const userId = location.split('/').pop();
 
   if (userId) {
     logger.log('Check if platform admin exists');
@@ -768,7 +785,7 @@ export async function createKeycloakUser(): Promise<void> {
         clientSecret: encClientSecret
       }
     });
-    logger.log(`✅ Platform admin added and updated to user's table sucessfully`);
+    logger.log(`✅ Platform admin keycloakUserId, clientId, clientSecret updated in DB successfully`);
   } else {
     throw new Error('Failed to extract user ID from Location header');
   }

@@ -51,7 +51,9 @@ async function bootstrap(): Promise<void> {
 
     // Inject the fetched secrets into the process.env so NestJS ConfigService can read them
     Object.keys(secrets).forEach((key) => {
-      process.env[key] = secrets[key];
+      if ('__proto__' !== key && 'constructor' !== key && 'prototype' !== key) {
+        process.env[key] = secrets[key];
+      }
     });
 
     // console.log('✅ Environment variables successfully loaded from OpenBao',secrets);

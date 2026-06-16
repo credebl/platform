@@ -49,11 +49,32 @@ async function bootstrap(): Promise<void> {
     // OpenBao structures KV v2 data inside data.data
     const secrets = result.data.data;
 
-    // Inject the fetched secrets into the process.env so NestJS ConfigService can read them
+    const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+    if (!secrets || 'object' !== typeof secrets || Array.isArray(secrets)) {
+      throw new Error('Unexpected secrets payload received from OpenBao');
+    }
+
     Object.keys(secrets).forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(secrets, key)) {
-        process.env[key] = secrets[key];
+      if (FORBIDDEN_KEYS.has(key)) {
+        // eslint-disable-next-line no-console
+        console.warn(`Skipping forbidden key from OpenBao response: ${key}`);
+        return;
       }
+
+      if (!Object.prototype.hasOwnProperty.call(secrets, key)) {
+        return;
+      }
+
+      const value = secrets[key];
+
+      // process.env values must be strings
+      Object.defineProperty(process.env, key, {
+        value: String(value),
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
     });
 
     // console.log('✅ Environment variables successfully loaded from OpenBao',secrets);

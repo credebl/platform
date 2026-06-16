@@ -21,6 +21,46 @@ import { EcosystemSwaggerFilter } from './authz/guards/ecosystem-swagger.filter'
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
+  const baoUrl = process.env.BAO_URL;
+  const baoToken = process.env.BAO_TOKEN;
+  const secretPath = process.env.BAO_SECRET_PATH;
+
+  if (!baoToken) {
+    throw new Error('Missing BAO_TOKEN environment variable');
+  }
+
+  // Fetch secrets from OpenBao before initializing the NestJS ConfigModule
+  // console.log('🔐 Fetching secrets from OpenBao...',baoUrl, baoToken, secretPath);
+  try {
+    const response = await fetch(`${baoUrl}/v1/${secretPath}`, {
+      method: 'GET',
+      headers: {
+        'X-Vault-Token': baoToken,
+        'Content-Type': 'application/json'
+      }
+    });
+    // console.log('Received response from OpenBao with status:', response);
+    if (!response.ok) {
+      throw new Error(`OpenBao responded with status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    // OpenBao structures KV v2 data inside data.data
+    const secrets = result.data.data;
+
+    // Inject the fetched secrets into the process.env so NestJS ConfigService can read them
+    Object.keys(secrets).forEach((key) => {
+      process.env[key] = secrets[key];
+    });
+
+    // console.log('✅ Environment variables successfully loaded from OpenBao',secrets);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('❌ Failed to load secrets from OpenBao:', error.message);
+    process.exit(1); // Stop the app if secrets can't be loaded
+  }
+
   try {
     if (otelSDK) {
       await otelSDK.start();

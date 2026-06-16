@@ -48,7 +48,6 @@ async function bootstrap(): Promise<void> {
 
     // OpenBao structures KV v2 data inside data.data
     const secrets = result.data.data;
-
     const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
     if (!secrets || 'object' !== typeof secrets || Array.isArray(secrets)) {
@@ -57,20 +56,11 @@ async function bootstrap(): Promise<void> {
 
     Object.keys(secrets).forEach((key) => {
       if (FORBIDDEN_KEYS.has(key)) {
-        // eslint-disable-next-line no-console
-        console.warn(`Skipping forbidden key from OpenBao response: ${key}`);
         return;
       }
 
-      if (!Object.prototype.hasOwnProperty.call(secrets, key)) {
-        return;
-      }
-
-      const value = secrets[key];
-
-      // process.env values must be strings
       Object.defineProperty(process.env, key, {
-        value: String(value),
+        value: String(secrets[key]),
         enumerable: true,
         configurable: true,
         writable: true

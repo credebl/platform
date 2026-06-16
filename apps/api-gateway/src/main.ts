@@ -51,7 +51,7 @@ async function bootstrap(): Promise<void> {
 
     // Inject the fetched secrets into the process.env so NestJS ConfigService can read them
     Object.keys(secrets).forEach((key) => {
-      if ('__proto__' !== key && 'constructor' !== key && 'prototype' !== key) {
+      if (Object.prototype.hasOwnProperty.call(secrets, key)) {
         process.env[key] = secrets[key];
       }
     });

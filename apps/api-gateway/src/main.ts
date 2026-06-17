@@ -22,15 +22,42 @@ dotenv.config();
 
 async function bootstrap(): Promise<void> {
   const baoUrl = process.env.BAO_URL;
-  const baoToken = process.env.BAO_TOKEN;
+  let baoToken = '';
   const secretPath = process.env.BAO_SECRET_PATH;
+  const roleId = process.env.BAO_ROLE_ID;
+  const secretId = process.env.BAO_SECRET_ID;
+
+  if (!roleId || !secretId) {
+    // eslint-disable-next-line no-console
+    console.error('❌ Critical Error: BAO_ROLE_ID and BAO_SECRET_ID must be set in the environment.');
+    process.exit(1);
+  }
+
+  try {
+    // 2. Simple POST request to exchange RoleID/SecretID for an access token
+    const authResponse = await fetch(`${baoUrl}/v1/auth/approle/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role_id: roleId, secret_id: secretId })
+    });
+
+    if (!authResponse.ok) {
+      throw new Error(`Authentication failed with status ${authResponse.status}`);
+    }
+
+    const authData: { auth: { client_token: string } } = await authResponse.json();
+    baoToken = authData.auth.client_token;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('❌ OpenBao Lifecycle Boot Failure:', error.message);
+    process.exit(1); // Force shutdown if secrets cannot be securely mounted
+  }
 
   if (!baoToken) {
     throw new Error('Missing BAO_TOKEN environment variable');
   }
 
   // Fetch secrets from OpenBao before initializing the NestJS ConfigModule
-  // console.log('🔐 Fetching secrets from OpenBao...',baoUrl, baoToken, secretPath);
   try {
     const response = await fetch(`${baoUrl}/v1/${secretPath}`, {
       method: 'GET',
@@ -39,7 +66,6 @@ async function bootstrap(): Promise<void> {
         'Content-Type': 'application/json'
       }
     });
-    // console.log('Received response from OpenBao with status:', response);
     if (!response.ok) {
       throw new Error(`OpenBao responded with status: ${response.status}`);
     }
@@ -66,8 +92,6 @@ async function bootstrap(): Promise<void> {
         writable: true
       });
     });
-
-    // console.log('✅ Environment variables successfully loaded from OpenBao',secrets);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('❌ Failed to load secrets from OpenBao:', error.message);

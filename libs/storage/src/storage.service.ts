@@ -7,7 +7,7 @@ import { S3StorageService } from './providers/s3-storage.provider';
 
 @Injectable()
 export class StorageService implements IStorageService {
-  private storage: IStorageService;
+  private readonly storage: IStorageService;
 
   constructor() {
     const storageType = process.env.FILE_STORAGE_TYPE || 'aws';

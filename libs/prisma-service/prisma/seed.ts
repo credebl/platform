@@ -187,6 +187,9 @@ const createPlatformUser = async (): Promise<void> => {
 
       logger.log(platformUser);
     } else {
+      // User already exists — still need to set platformUserId so downstream
+      // functions (createPlatformOrganization) have a valid UUID for createdBy/lastChangedBy
+      platformUserId = existPlatformAdminUser[0].id;
       logger.log('Already seeding in user');
     }
   } catch (error) {

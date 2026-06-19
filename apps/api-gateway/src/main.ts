@@ -17,86 +17,12 @@ import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapt
 import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-validation-pipe';
 import * as useragent from 'express-useragent';
 import { EcosystemSwaggerFilter } from './authz/guards/ecosystem-swagger.filter';
+import { loadBaoSecrets } from '@credebl/config/bao-secrets';
 
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
-  const baoUrl = process.env.BAO_URL;
-  let baoToken = '';
-  const secretPath = process.env.BAO_SECRET_PATH;
-  const roleId = process.env.BAO_ROLE_ID;
-  const secretId = process.env.BAO_SECRET_ID;
-
-  if (!roleId || !secretId) {
-    // eslint-disable-next-line no-console
-    console.error('❌ Critical Error: BAO_ROLE_ID and BAO_SECRET_ID must be set in the environment.');
-    process.exit(1);
-  }
-
-  try {
-    // 2. Simple POST request to exchange RoleID/SecretID for an access token
-    const authResponse = await fetch(`${baoUrl}/v1/auth/approle/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role_id: roleId, secret_id: secretId })
-    });
-
-    if (!authResponse.ok) {
-      throw new Error(`Authentication failed with status ${authResponse.status}`);
-    }
-
-    const authData: { auth: { client_token: string } } = await authResponse.json();
-    baoToken = authData.auth.client_token;
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('❌ OpenBao Lifecycle Boot Failure:', error.message);
-    process.exit(1); // Force shutdown if secrets cannot be securely mounted
-  }
-
-  if (!baoToken) {
-    throw new Error('Missing BAO_TOKEN environment variable');
-  }
-
-  // Fetch secrets from OpenBao before initializing the NestJS ConfigModule
-  try {
-    const response = await fetch(`${baoUrl}/v1/${secretPath}`, {
-      method: 'GET',
-      headers: {
-        'X-Vault-Token': baoToken,
-        'Content-Type': 'application/json'
-      }
-    });
-    if (!response.ok) {
-      throw new Error(`OpenBao responded with status: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    // OpenBao structures KV v2 data inside data.data
-    const secrets = result.data.data;
-    const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
-
-    if (!secrets || 'object' !== typeof secrets || Array.isArray(secrets)) {
-      throw new Error('Unexpected secrets payload received from OpenBao');
-    }
-
-    Object.keys(secrets).forEach((key) => {
-      if (FORBIDDEN_KEYS.has(key)) {
-        return;
-      }
-
-      Object.defineProperty(process.env, key, {
-        value: String(secrets[key]),
-        enumerable: true,
-        configurable: true,
-        writable: true
-      });
-    });
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('❌ Failed to load secrets from OpenBao:', error.message);
-    process.exit(1); // Stop the app if secrets can't be loaded
-  }
+  await loadBaoSecrets();
 
   try {
     if (otelSDK) {

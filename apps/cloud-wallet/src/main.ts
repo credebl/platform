@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { CloudWalletModule } from './cloud-wallet.module';
 import { HttpExceptionFilter } from 'libs/http-exception.filter';
@@ -6,10 +7,14 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
+import { loadBaoSecrets } from '@credebl/config/bao-secrets';
+
+dotenv.config();
 
 const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
+  await loadBaoSecrets();
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(CloudWalletModule, {
     transport: Transport.NATS,
     options: getNatsOptions(

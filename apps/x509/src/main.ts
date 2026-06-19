@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { HttpExceptionFilter } from 'libs/http-exception.filter';
 import { Logger } from '@nestjs/common';
@@ -6,8 +7,12 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import { X509Module } from './x509.module';
+import { loadBaoSecrets } from '@credebl/config/bao-secrets';
+
+dotenv.config();
 
 async function bootstrap(): Promise<void> {
+  await loadBaoSecrets();
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(X509Module, {
     transport: Transport.NATS,
     options: getNatsOptions(CommonConstants.X509_SERVICE, process.env.X509_NKEY_SEED, process.env.NATS_CREDS_FILE)

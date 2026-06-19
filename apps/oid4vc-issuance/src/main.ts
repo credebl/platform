@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { HttpExceptionFilter } from 'libs/http-exception.filter';
 import { Logger } from '@nestjs/common';
@@ -6,10 +7,15 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import { Oid4vcIssuanceModule } from './oid4vc-issuance.module';
+import { loadBaoSecrets } from '@credebl/config/bao-secrets';
+
+dotenv.config();
 
 const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
+  await loadBaoSecrets();
+
   if (!process.env.STATUS_LIST_HOST) {
     logger.warn('STATUS_LIST_HOST is not configured. Revocable SD-JWT flow will be disabled.');
   }

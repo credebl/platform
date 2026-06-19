@@ -1,26 +1,29 @@
-import * as dotenv from 'dotenv';
-
 import { EmailDto } from './dtos/email.dto';
 import { Logger } from '@nestjs/common';
 import { Resend } from 'resend';
 
-dotenv.config();
-
-const emailProvider = process.env.EMAIL_PROVIDER;
-const apiKey = process.env.RESEND_API_KEY;
-
 let resend: Resend | null = null;
 
-if ('resend' === emailProvider) {
+function getResendClient(): Resend {
+  if (resend) {
+    return resend;
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
+
   if (!apiKey) {
     throw new Error('Missing RESEND_API_KEY in environment variables.');
   }
+
   resend = new Resend(apiKey);
+  return resend;
 }
 
 export const sendWithResend = async (emailDto: EmailDto): Promise<boolean> => {
   try {
-    const response = await resend.emails.send({
+    const client = getResendClient();
+
+    const response = await client.emails.send({
       from: emailDto.emailFrom,
       to: emailDto.emailTo,
       subject: emailDto.emailSubject,

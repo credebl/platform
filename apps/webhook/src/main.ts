@@ -1,3 +1,4 @@
+import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { HttpExceptionFilter } from 'libs/http-exception.filter';
 import { Logger } from '@nestjs/common';
@@ -6,10 +7,14 @@ import { WebhookModule } from '../src/webhook.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { CommonConstants } from '@credebl/common/common.constant';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
+import { loadBaoSecrets } from '@credebl/config/bao-secrets';
+
+dotenv.config();
 
 const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
+  await loadBaoSecrets();
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(WebhookModule, {
     transport: Transport.NATS,
     options: getNatsOptions(

@@ -99,7 +99,7 @@
     "nestjs-typeorm-paginate": "catalog:",
     "node-html-to-image": "^4.0.0",
     "node-qpdf2": "^2.0.0",
-    "nodemailer": "^7.0.13",
+    "nodemailer": "^9.0.1",
     "p-limit": "^3.1.0",
     "papaparse": "^5.5.3",
     "passport": "^0.6.0",

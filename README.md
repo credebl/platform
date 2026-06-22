@@ -27,7 +27,7 @@ The project is pinned to `pnpm@9.15.3` (see `"packageManager"` in `package.json`
 
 ### • Install NestJS CLI
 ```bash
-pnpm add -g @nestjs/cli
+npm i @nestjs/cli@latest
 ```
 
 ---
@@ -53,26 +53,37 @@ Start PostgreSQL via Docker. The credentials and DB name **must match** what you
 ```bash
 docker run --name credebl-postgres \
   -p 5432:5432 \
-  -e POSTGRES_USER=credebl \
-  -e POSTGRES_PASSWORD=changeme \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=credebl \
   -v credebl_pgdata:/var/lib/postgresql/data \
   --network platform_default \
   -d postgres:16
 ```
 
+> ⚠️ **If you later run `docker compose up`, Docker Compose also defines a service named `credebl-postgres`.** To avoid a container name collision, stop and remove the manually started container first (`docker rm -f credebl-postgres`) before running `docker compose up`.
+
 Then update your `.env` to match those credentials:
 
 ```env
-DATABASE_URL="postgresql://credebl:changeme@localhost:5432/credebl"
-POOL_DATABASE_URL="postgresql://credebl:changeme@localhost:5432/credebl"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/credebl"
+POOL_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/credebl"
 ```
 
 > ⚠️ **Do not use `localhost` in `DATABASE_URL` when services run inside Docker containers.** Inside a container, `localhost` resolves to the container itself — not the host. Use your machine's LAN IP (e.g. `192.168.x.x`) or a Docker service name instead. This applies to `KEYCLOAK_DOMAIN` and `KEYCLOAK_ADMIN_URL` as well (see Step 5).
 
 ---
 
-### Step 3 — Run Prisma Migrations (Schema Generation)
+### Step 3 — Install Dependencies
+
+```bash
+# From repo root — use pnpm, not npm
+pnpm install
+```
+
+---
+
+### Step 4 — Run Prisma Migrations (Schema Generation)
 
 > ⚠️ **Migrations must run before seeding.** If you seed first, it will fail because the tables don't exist yet.
 
@@ -92,11 +103,11 @@ npx prisma migrate deploy --schema=./libs/prisma-service/prisma/schema.prisma
 
 ---
 
-### Step 4 — Set Up Keycloak
+### Step 5 — Set Up Keycloak
 
 Keycloak is required for authentication. It is **not started automatically** — you must run it separately and configure it fully before seeding.
 
-#### 4a — Run the Keycloak container
+#### 5a — Run the Keycloak container
 
 > ⚠️ **Keycloak must be on the same Docker network as the platform services** (`platform_default`), otherwise the containers cannot reach it. Include `--network platform_default` when creating the container.
 
@@ -109,13 +120,13 @@ docker run --name credebl-keycloak \
   -d quay.io/keycloak/keycloak:latest start-dev
 ```
 
-#### 4b — Create a Realm
+#### 5b — Create a Realm
 
 1. Open the Keycloak Admin Console: `http://localhost:8080`
 2. Log in with `admin` / `admin`
 3. Create a new **Realm** named exactly: `credebl-platform`
 
-#### 4c — Create Client 1: `adminClient`
+#### 5c — Create Client 1: `adminClient`
 
 This client is used by the platform seed script and user-service to authenticate platform admin users.
 
@@ -135,7 +146,7 @@ ADMIN_KEYCLOAK_ID=adminClient
 ADMIN_KEYCLOAK_SECRET=<copied-secret-from-keycloak>
 ```
 
-#### 4d — Create Client 2: `credeblClient`
+#### 5d — Create Client 2: `credeblClient`
 
 This client is the management client used for general Keycloak operations.
 
@@ -158,7 +169,7 @@ KEYCLOAK_REALM=credebl-platform
 KEYCLOAK_MASTER_REALM=master
 ```
 
-#### 4e — Set Keycloak domain in `.env`
+#### 5e — Set Keycloak domain in `.env`
 
 > ⚠️ **If platform services run in Docker containers, do NOT use `localhost` for Keycloak URLs.**  
 > Use your machine's LAN IP address instead (e.g. `192.168.1.x`). You can find it with `ip addr show` or `hostname -I`.
@@ -175,7 +186,7 @@ KEYCLOAK_ADMIN_URL=http://192.168.x.x:8080
 
 ---
 
-### Step 5 — Configure Remaining `.env` Values
+### Step 6 — Configure Remaining `.env` Values
 
 Set the following before seeding:
 
@@ -188,7 +199,7 @@ CRYPTO_PRIVATE_KEY=YourSecretPrivateKeyHere
 
 ---
 
-### Step 6 — Seed Initial Data
+### Step 7 — Seed Initial Data
 
 ```bash
 # From repo root
@@ -206,7 +217,7 @@ The seed script will:
 
 ---
 
-### Step 7 — Install NATS Message Broker
+### Step 8 — Install NATS Message Broker
 
 NATS is used for inter-service communication.
 
@@ -222,20 +233,11 @@ docker compose up -d
 
 ---
 
-### Step 8 — Install Dependencies
-
-```bash
-# From repo root — use pnpm, not npm
-pnpm install
-```
-
----
-
 ### Step 9 — Run CREDEBL Microservices
 
 #### Configure environment variables
 
-Ensure all values in `.env` are set correctly before starting services (see Steps 4–5 above).
+Ensure all values in `.env` are set correctly before starting services (see Steps 5–6 above).
 
 #### Running the API Gateway
 
@@ -263,7 +265,7 @@ nest start agent-service [--watch]
 
 Once the API Gateway is running, Swagger UI is available at:
 
-```
+```text
 http://localhost:5000/api
 ```
 

@@ -109,19 +109,6 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
     [String(CommonConstants.OIDC_ISSUER_SESSIONS_BY_ID), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET)],
     [String(CommonConstants.OIDC_ISSUER_SESSIONS), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)],
     [String(CommonConstants.OIDC_DELETE_CREDENTIAL_OFFER), String(CommonConstants.URL_OIDC_ISSUER_SESSIONS_GET_ALL)],
-    [String(CommonConstants.OIDC_HOLDER_RESOLVE_OFFER), String(CommonConstants.URL_OIDC_HOLDER_RESOLVE_OFFER)],
-    [
-      String(CommonConstants.OIDC_HOLDER_REQUEST_CREDENTIAL),
-      String(CommonConstants.URL_OIDC_HOLDER_REQUEST_CREDENTIAL)
-    ],
-    [
-      String(CommonConstants.OIDC_HOLDER_RESOLVE_PROOF_REQUEST),
-      String(CommonConstants.URL_OIDC_HOLDER_RESOLVE_PROOF_REQUEST)
-    ],
-    [
-      String(CommonConstants.OIDC_HOLDER_ACCEPT_PROOF_REQUEST),
-      String(CommonConstants.URL_OIDC_HOLDER_ACCEPT_PROOF_REQUEST)
-    ],
     [String(CommonConstants.X509_CREATE_CERTIFICATE), String(CommonConstants.URL_CREATE_X509_CERTIFICATE)],
     [String(CommonConstants.X509_DECODE_CERTIFICATE), String(CommonConstants.URL_DECODE_X509_CERTIFICATE)],
     [String(CommonConstants.X509_IMPORT_CERTIFICATE), String(CommonConstants.URL_IMPORT_X509_CERTIFICATE)],

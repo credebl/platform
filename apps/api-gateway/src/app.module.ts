@@ -24,7 +24,6 @@ import { IssuanceModule } from './issuance/issuance.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { NotificationModule } from './notification/notification.module';
 import { Oid4vcIssuanceModule } from './oid4vc-issuance/oid4vc-issuance.module';
-import { Oid4vcHolderModule } from './oid4vc-holder/oid4vc-holder.module';
 import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
 
 import { OrganizationModule } from './organization/organization.module';
@@ -79,7 +78,6 @@ import { shouldLoadOidcModules } from '@credebl/common/common.utils';
     GeoLocationModule,
     CloudWalletModule,
     ConditionalModule.registerWhen(Oid4vcIssuanceModule, shouldLoadOidcModules),
-    ConditionalModule.registerWhen(Oid4vcHolderModule, shouldLoadOidcModules),
     ConditionalModule.registerWhen(Oid4vpModule, shouldLoadOidcModules),
     ConditionalModule.registerWhen(X509Module, shouldLoadOidcModules),
     KeycloakConfigModule

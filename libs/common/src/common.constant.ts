@@ -137,12 +137,6 @@ export enum CommonConstants {
   URL_OID4VP_VERIFICATION_SESSION = '/openid4vc/verification-sessions/create-presentation-request',
   URL_OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY = '/openid4vc/verification-sessions/verify-authorization-response',
 
-  // OID4VC Holder URLs
-  URL_OIDC_HOLDER_RESOLVE_OFFER = '/openid4vc/holder/resolve-credential-offer',
-  URL_OIDC_HOLDER_REQUEST_CREDENTIAL = '/openid4vc/holder/request-credential',
-  URL_OIDC_HOLDER_RESOLVE_PROOF_REQUEST = '/openid4vc/holder/resolve-proof-request',
-  URL_OIDC_HOLDER_ACCEPT_PROOF_REQUEST = '/openid4vc/holder/accept-proof-request',
-
   //X509 agent API URLs
   URL_CREATE_X509_CERTIFICATE = '/x509',
   URL_IMPORT_X509_CERTIFICATE = '/x509/import',
@@ -403,7 +397,6 @@ export enum CommonConstants {
   CLOUD_WALLET_SERVICE = 'cloud-wallet',
   OIDC4VC_ISSUANCE_SERVICE = 'oid4vc-issuance',
   OIDC4VC_VERIFICATION_SERVICE = 'oid4vc-verification',
-  OIDC4VC_HOLDER_SERVICE = 'oid4vc-holder',
   OID4VP_VERIFICATION_SESSION = 'oid4vp-verification-session',
   X509_SERVICE = 'x509-service',
 
@@ -440,12 +433,6 @@ export enum CommonConstants {
   OIDC_ISSUER_SESSIONS_BY_ID = 'get-oid4vc-session-by-id',
   OIDC_ISSUER_SESSIONS = 'get-oid4vc-sessions',
   OIDC_DELETE_CREDENTIAL_OFFER = 'delete-oid4vc-credential-offer',
-
-  // OID4VC Holder
-  OIDC_HOLDER_RESOLVE_OFFER = 'resolve-credential-offer',
-  OIDC_HOLDER_REQUEST_CREDENTIAL = 'request-credential',
-  OIDC_HOLDER_RESOLVE_PROOF_REQUEST = 'resolve-proof-request',
-  OIDC_HOLDER_ACCEPT_PROOF_REQUEST = 'accept-proof-request',
 
   // OID4VP
   OIDC_VERIFIER_CREATE = 'create-oid4vp-verifier',

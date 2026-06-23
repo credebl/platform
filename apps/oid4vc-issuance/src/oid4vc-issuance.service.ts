@@ -98,10 +98,28 @@ export class Oid4vcIssuanceService {
       let internalSchemaId: string | undefined;
 
       if ('schemaUrl' in template && template.schemaUrl) {
-        const parts = template.schemaUrl.split('/');
-        const potentialUuid = parts[parts.length - 1];
-        if (uuidRegex.test(potentialUuid)) {
-          internalSchemaId = potentialUuid;
+        let isInternal = false;
+        try {
+          const schemaUrlObj = new URL(template.schemaUrl);
+          const serverUrlStr = process.env.SCHEMA_FILE_SERVER_URL;
+          if (serverUrlStr) {
+            const serverUrlObj = new URL(serverUrlStr);
+            if (schemaUrlObj.hostname === serverUrlObj.hostname) {
+              isInternal = true;
+            }
+          }
+        } catch (error) {
+          if (process.env.SCHEMA_FILE_SERVER_URL && template.schemaUrl.startsWith(process.env.SCHEMA_FILE_SERVER_URL)) {
+            isInternal = true;
+          }
+        }
+
+        if (isInternal) {
+          const parts = template.schemaUrl.split('/');
+          const potentialUuid = parts[parts.length - 1];
+          if (uuidRegex.test(potentialUuid)) {
+            internalSchemaId = potentialUuid;
+          }
         }
       }
 
@@ -113,7 +131,7 @@ export class Oid4vcIssuanceService {
             .toPromise();
         } catch (error) {
           this.logger.error(`Error fetching schema ${internalSchemaId} from ledger: ${error.message}`);
-          return;
+          throw new NotFoundException(`Schema with ID ${internalSchemaId} not found or unreachable: ${error.message}`);
         }
 
         if (schemaResponse && schemaResponse.attributes) {

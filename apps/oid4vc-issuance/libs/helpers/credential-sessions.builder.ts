@@ -539,17 +539,33 @@ function buildJwtVcJsonLdCredential(
   const vct = (templateRecord.attributes as any)?.vct;
   let typeName = '';
   if ('string' === typeof vct) {
-    const lastSlash = vct.lastIndexOf('/');
-    typeName = -1 !== lastSlash ? vct.substring(lastSlash + 1) : vct;
+    const cleanVct = vct.replace(/\/+$/, '');
+    const lastSlash = cleanVct.lastIndexOf('/');
+    typeName = -1 !== lastSlash ? cleanVct.substring(lastSlash + 1) : cleanVct;
   } else {
     typeName = templateRecord.name.replace(/\s+/g, '');
   }
 
   const templateContext = (templateRecord.attributes as any)?.context;
-  const context = Array.isArray(templateContext) ? templateContext : ['https://www.w3.org/2018/credentials/v1'];
+  const context = Array.isArray(templateContext) ? [...templateContext] : ['https://www.w3.org/2018/credentials/v1'];
+  const requiredContextUrl = 'https://www.w3.org/2018/credentials/v1';
+  const normalizeUrlForComparison = (value: unknown): string | null => {
+    if ('string' !== typeof value) {
+      return null;
+    }
+    try {
+      return new URL(value).toString();
+    } catch {
+      return null;
+    }
+  };
+  const normalizedRequiredContext = normalizeUrlForComparison(requiredContextUrl);
+  const hasRequiredContext = context.some(
+    (ctx) => null !== normalizedRequiredContext && normalizeUrlForComparison(ctx) === normalizedRequiredContext
+  );
 
-  if (!context.includes('https://www.w3.org/2018/credentials/v1')) {
-    context.unshift('https://www.w3.org/2018/credentials/v1');
+  if (!hasRequiredContext) {
+    context.unshift(requiredContextUrl);
   }
 
   const wrappedPayload: Record<string, any> = {

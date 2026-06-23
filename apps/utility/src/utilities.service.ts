@@ -73,7 +73,7 @@ export class UtilitiesService extends BaseService {
         payload.storeObj
       );
       const storageType = process.env.FILE_STORAGE_TYPE || CommonConstants.STORAGE_TYPE_AWS;
-      if (storageType !== CommonConstants.STORAGE_TYPE_AWS) {
+      if (storageType === CommonConstants.STORAGE_TYPE_AWS) {
         return `${process.env.SHORTENED_URL_DOMAIN}/${uploadResult.Key}`;
       }
       return uploadResult.Location;

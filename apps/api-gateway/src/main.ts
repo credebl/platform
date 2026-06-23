@@ -17,12 +17,12 @@ import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapt
 import { UpdatableValidationPipe } from '@credebl/common/custom-overrideable-validation-pipe';
 import * as useragent from 'express-useragent';
 import { EcosystemSwaggerFilter } from './authz/guards/ecosystem-swagger.filter';
-import { loadBaoSecrets } from '@credebl/config/bao-secrets';
+import { loadConfigSecrets } from '@credebl/config/secret-storage/secrets-loader';
 
 dotenv.config();
 
 async function bootstrap(): Promise<void> {
-  await loadBaoSecrets();
+  await loadConfigSecrets();
 
   try {
     if (otelSDK) {

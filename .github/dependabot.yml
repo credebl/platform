@@ -14,7 +14,6 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Asia/Kolkata"
-    open-pull-requests-limit: 10
 
     groups:
       # 1) All patch updates in one PR
@@ -23,7 +22,6 @@ updates:
           - "*"
         update-types:
           - "patch"
-
       # 2) All minor updates in one PR
       minor-updates:
         patterns:
@@ -62,7 +60,6 @@ updates:
           - "*"
         update-types:
           - "patch"
-
       # 2) All minor updates in one PR
       minor-actions:
         patterns:
@@ -73,6 +70,7 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+      - "devops"
 
     commit-message:
       prefix: "ci"
@@ -98,7 +96,6 @@ updates:
           - "*"
         update-types:
           - "patch"
-
       # 2) All minor‑style updates in one PR
       minor-docker:
         patterns:
@@ -109,6 +106,7 @@ updates:
     labels:
       - "dependencies"
       - "docker"
+      - "devops"
 
     commit-message:
       prefix: "build"
@@ -134,7 +132,6 @@ updates:
           - "*"
         update-types:
           - "patch"
-
       # 2) All minor‑style updates in one PR
       minor-docker-compose:
         patterns:
@@ -144,7 +141,8 @@ updates:
 
     labels:
       - "dependencies"
-      - "docker"
+      - "docker-compose"
+      - "devops"
 
     commit-message:
       prefix: "build"

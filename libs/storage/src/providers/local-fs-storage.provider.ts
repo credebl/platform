@@ -1,14 +1,15 @@
-import * as path from 'path';
+import * as path from 'node:path';
 
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
+import { Buffer } from 'buffer';
 import { IStorageService } from '../storage.interface';
 import { S3 } from 'aws-sdk';
-import { promises as fs } from 'fs';
+import { promises as fs } from 'node:fs';
 
 @Injectable()
 export class LocalFsStorageService implements IStorageService {
-  private localStoragePath: string;
+  private readonly localStoragePath: string;
 
   constructor() {
     this.localStoragePath = path.resolve(process.cwd(), 'uploadedFiles');
@@ -48,7 +49,15 @@ export class LocalFsStorageService implements IStorageService {
     const bucketDir = path.join(this.localStoragePath, process.env.FILE_SHARING_BUCKET);
     const filePath = path.join(bucketDir, key);
     await this.ensureDir(path.dirname(filePath));
-    const data = 'string' === typeof body ? body : body.toString();
+    let data: string;
+
+    if ('string' === typeof body) {
+      data = body;
+    } else if (Buffer.isBuffer(body)) {
+      data = body.toString('utf-8');
+    } else {
+      data = JSON.stringify(body);
+    }
     await fs.writeFile(filePath, data);
   }
 

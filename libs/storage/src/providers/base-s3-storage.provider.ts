@@ -1,9 +1,10 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
+import { Buffer } from 'buffer';
 import { IStorageService } from '../storage.interface';
 import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
-import { promisify } from 'util';
+import { promisify } from 'node:util';
 
 export abstract class BaseS3StorageService implements IStorageService {
   protected s3: S3;
@@ -48,10 +49,19 @@ export abstract class BaseS3StorageService implements IStorageService {
   }
 
   async uploadCsvFile(key: string, body: unknown): Promise<void> {
+    let data: string;
+    if ('string' === typeof body) {
+      data = body;
+    } else if (Buffer.isBuffer(body)) {
+      data = body.toString('utf-8');
+    } else {
+      data = JSON.stringify(body);
+    }
+
     const params: AWS.S3.PutObjectRequest = {
       Bucket: process.env.FILE_SHARING_BUCKET,
       Key: key,
-      Body: 'string' === typeof body ? body : body.toString()
+      Body: data
     };
     try {
       await this.s3.upload(params).promise();

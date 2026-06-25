@@ -443,6 +443,10 @@ export enum CommonConstants {
   OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = 'get-oid4vp-verifier-session-response-id',
   OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY = 'verify-oid4vp-verifier-session-auth-response',
 
+  // BAO_STORAGE_PATH
+  CREDEBL_RESEND_API_KEY_PATH = 'credebl_resend_api_key',
+  
+
   //X509
   X509_CREATE_CERTIFICATE = 'create-x509-certificate',
   X509_IMPORT_CERTIFICATE = 'import-x509-certificate',

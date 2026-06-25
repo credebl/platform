@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-import { Buffer } from 'buffer';
+import { Buffer } from 'node:buffer';
 import { IStorageService } from '../storage.interface';
 import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
@@ -53,7 +53,7 @@ export abstract class BaseS3StorageService implements IStorageService {
     if ('string' === typeof body) {
       data = body;
     } else if (Buffer.isBuffer(body)) {
-      data = body.toString('utf-8');
+      data = (body as Buffer).toString('utf-8');
     } else {
       data = JSON.stringify(body);
     }

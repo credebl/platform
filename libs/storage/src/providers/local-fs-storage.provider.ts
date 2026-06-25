@@ -2,7 +2,7 @@ import * as path from 'node:path';
 
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
-import { Buffer } from 'buffer';
+import { Buffer } from 'node:buffer';
 import { IStorageService } from '../storage.interface';
 import { S3 } from 'aws-sdk';
 import { promises as fs } from 'node:fs';
@@ -54,7 +54,7 @@ export class LocalFsStorageService implements IStorageService {
     if ('string' === typeof body) {
       data = body;
     } else if (Buffer.isBuffer(body)) {
-      data = body.toString('utf-8');
+      data = (body as Buffer).toString('utf-8');
     } else {
       data = JSON.stringify(body);
     }

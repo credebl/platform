@@ -239,9 +239,11 @@ export class CreateCredentialTemplateDto {
 
   @ValidateIf(
     (o: CreateCredentialTemplateDto) =>
-      CredentialFormat.SdJwtVc === o.format || CredentialFormat.JwtVcJsonLd === o.format
+      CredentialFormat.SdJwtVc === o.format ||
+      CredentialFormat.JwtVcJsonLd === o.format ||
+      CredentialFormat.LdpVc === o.format
   )
-  @IsEmpty({ message: 'doctype must not be provided when format is "dc+sd-jwt" or "jwt_vc_json-ld"' })
+  @IsEmpty({ message: 'doctype must not be provided when format is "dc+sd-jwt", "jwt_vc_json-ld" or "ldp_vc"' })
   readonly _doctypeAbsentGuard?: unknown;
 
   @ValidateIf((o: CreateCredentialTemplateDto) => CredentialFormat.Mdoc === o.format)
@@ -257,7 +259,11 @@ export class CreateCredentialTemplateDto {
   @Type(({ object }) => {
     if (object.format === CredentialFormat.Mdoc) {
       return MdocTemplateDto;
-    } else if (object.format === CredentialFormat.SdJwtVc || object.format === CredentialFormat.JwtVcJsonLd) {
+    } else if (
+      object.format === CredentialFormat.SdJwtVc ||
+      object.format === CredentialFormat.JwtVcJsonLd ||
+      object.format === CredentialFormat.LdpVc
+    ) {
       return SdJwtTemplateDto;
     }
   })

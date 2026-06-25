@@ -330,6 +330,46 @@ export function buildJwtVcJsonLdCredentialConfig(
   };
 }
 
+export function buildLdpVcCredentialConfig(name: string, template: SdJwtTemplate): Record<string, CredentialConfig> {
+  const formatSuffix = 'ldp-vc';
+
+  // Determine the unique key for this credential configuration
+  const configKey = `${name}-${formatSuffix}`;
+  const credentialScope = `openid4vc:${template.vct}-${formatSuffix}`;
+
+  const claims = buildClaimsFromTemplate(template);
+
+  const { vct } = template;
+  let typeName = name ? name.replace(/[^a-zA-Z0-9]/g, '') : 'GenericCredential';
+  if ('string' === typeof vct && '' !== vct.trim()) {
+    const lastSlash = vct.lastIndexOf('/');
+    typeName = -1 !== lastSlash ? vct.substring(lastSlash + 1) : vct;
+  }
+
+  return {
+    [configKey]: {
+      format: CredentialFormat.LdpVc,
+      scope: credentialScope,
+      vct: template.vct,
+      credential_signing_alg_values_supported: ['Ed25519Signature2018', 'Ed25519Signature2020', 'EdDSA'],
+      cryptographic_binding_methods_supported: ['did:key'],
+      proof_types_supported: {
+        jwt: {
+          proof_signing_alg_values_supported: ['Ed25519Signature2018', 'Ed25519Signature2020', 'EdDSA']
+        }
+      },
+      credential_definition: {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        type: ['VerifiableCredential', typeName]
+      },
+      credential_metadata: {
+        claims,
+        display: []
+      }
+    }
+  };
+}
+
 //TODO: Fix this eslint issue
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function buildCredentialConfig(
@@ -342,6 +382,8 @@ export function buildCredentialConfig(
       return buildSdJwtCredentialConfig(name, template as SdJwtTemplate);
     case CredentialFormat.JwtVcJsonLd:
       return buildJwtVcJsonLdCredentialConfig(name, template as SdJwtTemplate);
+    case CredentialFormat.LdpVc:
+      return buildLdpVcCredentialConfig(name, template as SdJwtTemplate);
     case CredentialFormat.Mdoc:
       return buildMdocCredentialConfig(name, template as MdocTemplate);
     default:
@@ -367,7 +409,9 @@ export function buildCredentialConfigurationsSupported(templateRows: unknown[]):
         ? CredentialFormat.Mdoc
         : format === CredentialFormat.JwtVcJsonLd
           ? CredentialFormat.JwtVcJsonLd
-          : CredentialFormat.SdJwtVc
+          : format === CredentialFormat.LdpVc
+            ? CredentialFormat.LdpVc
+            : CredentialFormat.SdJwtVc
     );
 
     const appearance = coerceJson<Appearance>(templateRow.appearance as Prisma.JsonValue);

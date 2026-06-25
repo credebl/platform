@@ -153,18 +153,24 @@ function mapDbFormatToApiFormat(dbFormat: string): CredentialFormat {
   if (['jwt_vc_json-ld', 'jwt-vc-json-ld', 'w3c-jwt-json-ld'].includes(normalized)) {
     return CredentialFormat.JwtVcJsonLd;
   }
+  if (['ldp_vc', 'ldp-vc'].includes(normalized)) {
+    return CredentialFormat.LdpVc;
+  }
   if ('mso_mdoc' === normalized || 'mso-mdoc' === normalized || 'mdoc' === normalized) {
     return CredentialFormat.Mdoc;
   }
   throw new UnprocessableEntityException(`Unsupported template format: ${dbFormat}`);
 }
 
-function formatSuffix(apiFormat: CredentialFormat): 'sdjwt' | 'mdoc' | 'jwt-vc-json-ld' {
+function formatSuffix(apiFormat: CredentialFormat): 'sdjwt' | 'mdoc' | 'jwt-vc-json-ld' | 'ldp-vc' {
   if (apiFormat === CredentialFormat.SdJwtVc) {
     return 'sdjwt';
   }
   if (apiFormat === CredentialFormat.JwtVcJsonLd) {
     return 'jwt-vc-json-ld';
+  }
+  if (apiFormat === CredentialFormat.LdpVc) {
+    return 'ldp-vc';
   }
   return 'mdoc';
 }
@@ -222,7 +228,11 @@ export function validatePayloadAgainstTemplate(template: any, payload: any): { v
     }
   };
 
-  if (CredentialFormat.SdJwtVc === template.format || CredentialFormat.JwtVcJsonLd === template.format) {
+  if (
+    CredentialFormat.SdJwtVc === template.format ||
+    CredentialFormat.JwtVcJsonLd === template.format ||
+    CredentialFormat.LdpVc === template.format
+  ) {
     validateAttributes((template.attributes as SdJwtTemplate).attributes ?? [], payload);
   } else if (CredentialFormat.Mdoc === template.format) {
     const namespaces = payload?.namespaces;
@@ -629,7 +639,7 @@ export function buildCredentialOfferPayload(
     if (apiFormat === CredentialFormat.SdJwtVc) {
       return buildSdJwtCredential(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);
     }
-    if (apiFormat === CredentialFormat.JwtVcJsonLd) {
+    if (apiFormat === CredentialFormat.JwtVcJsonLd || apiFormat === CredentialFormat.LdpVc) {
       return buildJwtVcJsonLdCredential(credentialRequest, templateRecord, signerOptions, activeCertificateDetails);
     }
     if (apiFormat === CredentialFormat.Mdoc) {

@@ -94,7 +94,7 @@ export class Oid4vcIssuanceService {
     template: any,
     orgId: string
   ): Promise<void> {
-    if (format === CredentialFormat.JwtVcJsonLd && template) {
+    if ((format === CredentialFormat.JwtVcJsonLd || format === CredentialFormat.LdpVc) && template) {
       let internalSchemaId: string | undefined;
 
       if ('schemaUrl' in template && template.schemaUrl) {
@@ -407,7 +407,7 @@ export class Oid4vcIssuanceService {
       const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = credentialTemplate;
 
       if (
-        format === CredentialFormat.JwtVcJsonLd &&
+        (format === CredentialFormat.JwtVcJsonLd || format === CredentialFormat.LdpVc) &&
         'schemaUrl' in credentialTemplate.template &&
         credentialTemplate.template.schemaUrl
       ) {
@@ -503,7 +503,8 @@ export class Oid4vcIssuanceService {
 
       if (
         normalized.template &&
-        (format || template.format) === CredentialFormat.JwtVcJsonLd &&
+        ((format || template.format) === CredentialFormat.JwtVcJsonLd ||
+          (format || template.format) === CredentialFormat.LdpVc) &&
         'schemaUrl' in normalized.template &&
         normalized.template.schemaUrl
       ) {

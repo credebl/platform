@@ -29,7 +29,7 @@ async function getResendClient(): Promise<Resend> {
 export const sendWithResend = async (emailDto: EmailDto): Promise<boolean> => {
   try {
     const client = await getResendClient();
-
+    console.log('Sending email with Resend:', emailDto);
     const response = await client.emails.send({
       from: emailDto.emailFrom,
       to: emailDto.emailTo,
@@ -38,7 +38,7 @@ export const sendWithResend = async (emailDto: EmailDto): Promise<boolean> => {
       html: emailDto.emailHtml,
       attachments: emailDto.emailAttachments
     });
-
+    console.log('Resend email response:', response);
     return Boolean(response.data?.id);
   } catch (error) {
     Logger.error('Error while sending email with Resend', error);

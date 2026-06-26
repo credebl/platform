@@ -444,7 +444,7 @@ export enum CommonConstants {
   OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY = 'verify-oid4vp-verifier-session-auth-response',
 
   // BAO_STORAGE_PATH
-  CREDEBL_RESEND_API_KEY_PATH = 'credebl_resend_api_key',
+  CREDEBL_RESEND_API_KEY_PATH = 'secret/data/credebl_resend_api_key',
   
 
   //X509

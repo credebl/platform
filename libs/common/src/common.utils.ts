@@ -25,9 +25,11 @@ export function paginator<T>(items: T[], current_page: number, items_per_page: n
   };
 }
 
-export function orderValues(key, order = 'asc') {
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types
-  return function innerSort(a, b) {
+export function orderValues(
+  key: string,
+  order = 'asc'
+): (a: Record<string, unknown>, b: Record<string, unknown>) => number {
+  return function innerSort(a: Record<string, unknown>, b: Record<string, unknown>): number {
     if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
       // property doesn't exist on either object
       return 0;

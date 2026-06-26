@@ -40,8 +40,11 @@ import {
   accessTokenSignerKeyType,
   batchCredentialIssuanceDefault,
   credentialConfigurationsSupported,
-  dpopSigningAlgValuesSupported
+  dpopSigningAlgValuesSupported,
+  CREDENTIALS_CONTEXT_V1_URL,
+  CREDENTIALS_CONTEXT_V2_URL
 } from '../constant/issuance';
+import { uuidRegex } from '@credebl/common/common.constant';
 import {
   buildCredentialConfigurationsSupported,
   buildIssuerPayload,
@@ -85,6 +88,87 @@ export class Oid4vcIssuanceService {
     private readonly oid4vcIssuanceRepository: Oid4vcIssuanceRepository,
     private readonly statusListAllocatorService: StatusListAllocatorService
   ) {}
+
+  private async validateTemplateAgainstSchema(
+    format: string | CredentialFormat,
+    template: any,
+    orgId: string
+  ): Promise<void> {
+    if ((format === CredentialFormat.JwtVcJsonLd || format === CredentialFormat.LdpVc) && template) {
+      let internalSchemaId: string | undefined;
+
+      if ('schemaUrl' in template && template.schemaUrl) {
+        let isInternal = false;
+        try {
+          const schemaUrlObj = new URL(template.schemaUrl);
+          const serverUrlStr = process.env.SCHEMA_FILE_SERVER_URL;
+          if (serverUrlStr) {
+            const serverUrlObj = new URL(serverUrlStr);
+            if (schemaUrlObj.hostname === serverUrlObj.hostname) {
+              isInternal = true;
+            }
+          }
+        } catch (error) {
+          if (process.env.SCHEMA_FILE_SERVER_URL && template.schemaUrl.startsWith(process.env.SCHEMA_FILE_SERVER_URL)) {
+            isInternal = true;
+          }
+        }
+
+        if (isInternal) {
+          const parts = template.schemaUrl.split('/');
+          const potentialUuid = parts[parts.length - 1];
+          if (uuidRegex.test(potentialUuid)) {
+            internalSchemaId = potentialUuid;
+          }
+        }
+      }
+
+      if (internalSchemaId) {
+        let schemaResponse;
+        try {
+          schemaResponse = await this.issuanceServiceProxy
+            .send({ cmd: 'get-schema-by-id' }, { schemaId: internalSchemaId, orgId })
+            .toPromise();
+        } catch (error) {
+          this.logger.error(`Error fetching schema ${internalSchemaId} from ledger: ${error.message}`);
+          throw new NotFoundException(`Schema with ID ${internalSchemaId} not found or unreachable: ${error.message}`);
+        }
+
+        if (schemaResponse && schemaResponse.attributes) {
+          const schemaAttributes =
+            'string' === typeof schemaResponse.attributes
+              ? JSON.parse(schemaResponse.attributes)
+              : schemaResponse.attributes;
+          const schemaAttributeNames = schemaAttributes.map((attr: any) => attr.attributeName);
+          const templateAttributes = template.attributes;
+
+          const missingAttributes: string[] = [];
+          const checkAttributes = (attrs: any[]) => {
+            if (!attrs) {
+              return;
+            }
+            for (const attr of attrs) {
+              if (!schemaAttributeNames.includes(attr.key)) {
+                missingAttributes.push(attr.key);
+              }
+              if (attr.children) {
+                checkAttributes(attr.children);
+              }
+            }
+          };
+          checkAttributes(templateAttributes);
+
+          if (0 < missingAttributes.length) {
+            throw new BadRequestException(
+              `Attributes [ '${missingAttributes.join("', '")}' ] are not defined in the referenced schema.`
+            );
+          }
+        }
+      } else {
+        this.logger.log('No internal schema reference found; skipping strict attribute validation.');
+      }
+    }
+  }
 
   async oidcIssuerCreate(issuerCreation: IssuerCreation, orgId: string, userDetails: user): Promise<oidc_issuer> {
     try {
@@ -322,6 +406,16 @@ export class Oid4vcIssuanceService {
       //TODO: add revert mechanism if agent call fails
       const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = credentialTemplate;
 
+      if (
+        (format === CredentialFormat.JwtVcJsonLd || format === CredentialFormat.LdpVc) &&
+        'schemaUrl' in credentialTemplate.template &&
+        credentialTemplate.template.schemaUrl
+      ) {
+        credentialTemplate.template.context = [CREDENTIALS_CONTEXT_V1_URL, credentialTemplate.template.schemaUrl];
+      }
+
+      await this.validateTemplateAgainstSchema(format, credentialTemplate.template, orgId);
+
       const checkNameExist = await this.oid4vcIssuanceRepository.getTemplateByNameForIssuer(name, issuerId);
       if (0 < checkNameExist.length) {
         throw new ConflictException(ResponseMessages.oidcTemplate.error.templateNameAlreadyExist);
@@ -406,6 +500,21 @@ export class Oid4vcIssuanceService {
         ...(issuerId ? { issuerId } : {})
       };
       const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = normalized;
+
+      if (
+        normalized.template &&
+        ((format || template.format) === CredentialFormat.JwtVcJsonLd ||
+          (format || template.format) === CredentialFormat.LdpVc) &&
+        'schemaUrl' in normalized.template &&
+        normalized.template.schemaUrl
+      ) {
+        normalized.template.context = [CREDENTIALS_CONTEXT_V1_URL, normalized.template.schemaUrl];
+      }
+
+      if (normalized.template && (format || template.format)) {
+        await this.validateTemplateAgainstSchema(format || template.format, normalized.template, orgId);
+      }
+
       const attributes = instanceToPlain(normalized.template);
 
       const payload = {

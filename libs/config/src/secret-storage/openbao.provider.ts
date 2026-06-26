@@ -16,26 +16,28 @@ export class OpenBaoProvider implements SecretProvider {
     if (!roleId || !secretId) {
       throw new Error('BAO_ROLE_ID and BAO_SECRET_ID must be set.');
     }
-
+    console.log(`🔐 OpenBaoProvider: Using roleId=${roleId} and secretId=${secretId}`);
+    console.log(`${baoUrl}/v1/auth/approle/login`)
     // --- Authentication ---
     const authResponse = await fetch(`${baoUrl}/v1/auth/approle/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       // eslint-disable-next-line camelcase
       body: JSON.stringify({ role_id: roleId, secret_id: secretId })
-    });
-    console.log(`🔐 OpenBaoProvider: Authentication response status: ${JSON.stringify(authResponse)}`);
+    })
+    console.log(`🔐 OpenBaoProvider: Authentication response status: ${authResponse}`);
     if (!authResponse.ok) {
       throw new Error(`Authentication failed: Status ${authResponse.status}`);
     }
-
+    
     const authData = await authResponse.json();
+    console.log("authresponse", authData);
     const baoToken = authData.auth?.client_token;
 
     if (!baoToken) {
       throw new Error('Failed to retrieve client token from OpenBao.');
     }
-
+    console.log("request url",`${baoUrl}/v1/${secretPath}`)
     // --- Fetch Secrets ---
     const response = await fetch(`${baoUrl}/v1/${secretPath}`, {
       method: 'GET',
@@ -44,14 +46,15 @@ export class OpenBaoProvider implements SecretProvider {
         'Content-Type': 'application/json'
       }
     });
-    console.log(`🔐 OpenBaoProvider: Fetch secrets response status: ${JSON.stringify(response)}`);
+    console.log(`🔐 OpenBaoProvider: Fetch secrets response status: ${response}`);
     if (!response.ok) {
+      console.log("inside not ok")
       throw new Error(`Fetch failed: Status ${response.status}`);
     }
 
     const result = await response.json();
     const secrets = result.data?.data;
-    // console.log('🔐 Successfully fetched secrets from OpenBao', result);
+    console.log('🔐 Successfully fetched secrets from OpenBao', result);
     if (!secrets || 'object' !== typeof secrets || Array.isArray(secrets)) {
       throw new Error('Unexpected secrets payload structure.');
     }

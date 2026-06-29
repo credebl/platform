@@ -450,7 +450,12 @@ export enum CommonConstants {
   //X509
   X509_CREATE_CERTIFICATE = 'create-x509-certificate',
   X509_IMPORT_CERTIFICATE = 'import-x509-certificate',
-  X509_DECODE_CERTIFICATE = 'decode-x509-certificate'
+  X509_DECODE_CERTIFICATE = 'decode-x509-certificate',
+
+  // Storage Types
+  STORAGE_TYPE_AWS = 'aws',
+  STORAGE_TYPE_LOCAL = 'local',
+  STORAGE_TYPE_RUSTFS = 'rustfs'
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

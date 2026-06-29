@@ -25,6 +25,7 @@ import { LoggerModule } from '@credebl/logger/logger.module';
 import { NotificationModule } from './notification/notification.module';
 import { Oid4vcIssuanceModule } from './oid4vc-issuance/oid4vc-issuance.module';
 import { Oid4vpModule } from './oid4vc-verification/oid4vc-verification.module';
+
 import { OrganizationModule } from './organization/organization.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { PlatformModule } from './platform/platform.module';

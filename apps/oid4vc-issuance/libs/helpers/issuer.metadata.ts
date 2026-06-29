@@ -3,7 +3,13 @@ import { oidc_issuer, Prisma } from '@prisma/client';
 import { batchCredentialIssuanceDefault } from '../../constant/issuance';
 import { CreateOidcCredentialOffer } from '../../interfaces/oid4vc-issuer-sessions.interfaces';
 import { IssuerResponse } from 'apps/oid4vc-issuance/interfaces/oid4vc-issuance.interfaces';
-import { Claim, MdocTemplate, SdJwtTemplate } from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
+import {
+  Claim,
+  ClaimDisplay,
+  CredentialAttribute,
+  MdocTemplate,
+  SdJwtTemplate
+} from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
 
 type AttributeDisplay = { name: string; locale: string };
@@ -30,13 +36,6 @@ type Appearance = {
   display: CredentialDisplayItem[];
 };
 
-// type Claim = {
-//   mandatory?: boolean;
-//   // value_type: string;
-//   path: string[];
-//   display?: AttributeDisplay[];
-// };
-
 type CredentialConfig = {
   format: string;
   vct?: string;
@@ -45,6 +44,8 @@ type CredentialConfig = {
 
   credential_signing_alg_values_supported: string[] | number[];
   cryptographic_binding_methods_supported: string[];
+  proof_types_supported?: Record<string, unknown>;
+  credential_definition?: Record<string, unknown>;
 
   credential_metadata: {
     claims: Claim[];
@@ -56,110 +57,57 @@ type CredentialConfigurationsSupported = {
   credentialConfigurationsSupported: Record<string, CredentialConfig>;
 };
 
-// ---- Static Lists (as requested) ----
-const STATIC_CREDENTIAL_ALGS_FOR_SDJWT = ['ES256', 'EdDSA'] as const;
-const STATIC_CREDENTIAL_ALGS_FOR_MDOC = [-7, -9] as const;
-const STATIC_BINDING_METHODS_FOR_SDJWT = ['did:key', 'did:web', 'did:jwk', 'jwk'] as const;
-const STATIC_BINDING_METHODS_FOR_MDOC = ['cose_key'] as const; // We need to test 'did:key', 'did:web', 'did:jwk', 'jwk',
+const ISSUER_DPOP_ALGS_DEFAULT = ['RS256', 'ES256'];
 
-// Safe coercion helpers
-function coerceJsonObject<T>(v: Prisma.JsonValue): T | null {
-  if (null == v) {
-    return null;
-  }
-  if ('string' === typeof v) {
-    try {
-      return JSON.parse(v) as T;
-    } catch {
-      return null;
-    }
-  }
-  return v as unknown as T; // already a JsonObject/JsonArray
-}
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-// function isAttributesMap(x: any): x is AttributesMap {
-//   return x && 'object' === typeof x && Array.isArray(x);
-// }
-// // eslint-disable-next-line @typescript-eslint/no-explicit-any
-// function isAppearance(x: any): x is Appearance {
-//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//   return x && 'object' === typeof x && Array.isArray((x as any).display);
-// }
+const STATIC_CREDENTIAL_ALGS_FOR_SDJWT = ['ES256'];
+const STATIC_BINDING_METHODS_FOR_SDJWT = ['did:key', 'did:web', 'did:jwk', 'jwk'];
 
-// // Prisma row shape
-// type TemplateRowPrisma = {
-//   id: string;
-//   name: string;
-//   description?: string | null;
-//   format?: string | null;
-//   canBeRevoked?: boolean | null;
-//   attributes: Prisma.JsonValue; // JsonValue from DB
-//   appearance: Prisma.JsonValue; // JsonValue from DB
-//   issuerId: string;
-//   createdAt?: Date | string;
-//   updatedAt?: Date | string;
-// };
+const STATIC_CREDENTIAL_ALGS_FOR_MDOC = ['ES256'];
+const STATIC_BINDING_METHODS_FOR_MDOC = ['jwk'];
 
-// Prisma row shape
-//TODO: Fix this eslint issue
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type TemplateRowPrisma = {
-  id: string;
-  name: string;
-  description?: string | null;
-  format?: string | null;
-  canBeRevoked?: boolean | null;
-  attributes: SdJwtTemplate | MdocTemplate; // JsonValue from DB
-  appearance: Prisma.JsonValue; // JsonValue from DB
-  issuerId: string;
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
-};
-
-// Default DPoP list for issuer-level metadata (match your example)
-const ISSUER_DPOP_ALGS_DEFAULT = ['RS256', 'ES256'] as const;
-
-// ---------- Safe coercion ----------
-function coerceJson<T>(v: Prisma.JsonValue): T | null {
-  if (null == v) {
-    return null;
-  }
-  if ('string' === typeof v) {
-    try {
-      return JSON.parse(v) as T;
-    } catch {
-      return null;
-    }
-  }
-  return v as unknown as T;
+/**
+ * Checks if a value is an array of DisplayItem.
+ * (Simple runtime check, could be more elaborate)
+ */
+function isDisplayArray(val: unknown): val is DisplayItem[] {
+  return Array.isArray(val);
 }
 
 type DisplayItem = {
-  name: string;
+  name?: string;
   locale?: string;
-  description?: string;
-  logo?: { uri: string; alt_text?: string };
+  logo?: {
+    uri: string;
+    alt_text?: string;
+  };
 };
 
-function isDisplayArray(x: unknown): x is DisplayItem[] {
-  return (
-    Array.isArray(x) &&
-    x.every(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (i) => i && 'object' === typeof i && 'string' === typeof (i as any).name
-    )
-  );
+/**
+ * Safely coerces a Prisma.JsonValue (from oidc_issuer.metadata) into a JS object.
+ */
+function coerceJson<T>(val: Prisma.JsonValue): T {
+  if (null === val || undefined === val) {
+    return {} as T;
+  }
+  if ('string' === typeof val) {
+    try {
+      return JSON.parse(val) as T;
+    } catch {
+      return {} as T;
+    }
+  }
+  return val as T;
 }
 
-// ---------- Builder you asked for ----------
 /**
- * Build issuer metadata payload from issuer row + credential configurations.
+ * Builder #1: Issuer Metadata Payload
  *
- * @param credentialConfigurations Object with credentialConfigurationsSupported (from your template builder)
- * @param oidcIssuer               OID4VC issuer row (uses publicIssuerId and metadata -> display)
+ * Builds the root OIDC Issuer metadata object (including "display", "dpop...", etc.).
+ *
+ * @param credentialConfigurations The "credential_configurations_supported" block built by Builder #2.
+ * @param oidcIssuer               The Prisma row for the OIDC Issuer.
  * @param opts                     Optional overrides: dpopAlgs[], accessTokenSignerKeyType
  */
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function buildIssuerPayload(
   credentialConfigurations: CredentialConfigurationsSupported,
   oidcIssuer: oidc_issuer,
@@ -167,7 +115,7 @@ export function buildIssuerPayload(
     dpopAlgs?: string[];
     accessTokenSignerKeyType?: string;
   }
-) {
+): Record<string, unknown> {
   if (!oidcIssuer?.publicIssuerId || 'string' !== typeof oidcIssuer.publicIssuerId) {
     throw new Error('Invalid issuer: missing publicIssuerId');
   }
@@ -175,14 +123,21 @@ export function buildIssuerPayload(
   const rawDisplay = coerceJson<unknown>(oidcIssuer.metadata);
   const display: DisplayItem[] = isDisplayArray(rawDisplay) ? rawDisplay : [];
 
-  return {
+  const batchSize = oidcIssuer?.batchCredentialIssuanceSize ?? batchCredentialIssuanceDefault;
+
+  const payload: Record<string, unknown> = {
     display,
     dpopSigningAlgValuesSupported: opts?.dpopAlgs ?? [...ISSUER_DPOP_ALGS_DEFAULT],
-    credentialConfigurationsSupported: credentialConfigurations.credentialConfigurationsSupported ?? {},
-    batchCredentialIssuance: {
-      batchSize: oidcIssuer?.batchCredentialIssuanceSize ?? batchCredentialIssuanceDefault
-    }
+    credentialConfigurationsSupported: credentialConfigurations.credentialConfigurationsSupported ?? {}
   };
+
+  if (0 < batchSize) {
+    payload.batchCredentialIssuance = {
+      batchSize
+    };
+  }
+
+  return payload;
 }
 
 export function extractTemplateIds(offer: CreateOidcCredentialOffer): string[] {
@@ -211,7 +166,7 @@ export function encodeIssuerPublicId(publicIssuerId: string): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function generateClaims(attributes: any[], namespace?: string, parentPath: string[] = []): Claim[] {
+function generateClaims(attributes: CredentialAttribute[], namespace?: string, parentPath: string[] = []): Claim[] {
   const result: Claim[] = [];
 
   for (const attr of attributes) {
@@ -222,7 +177,7 @@ function generateClaims(attributes: any[], namespace?: string, parentPath: strin
     const claim: Claim = { path };
 
     if (attr.display) {
-      claim.display = attr.display;
+      claim.display = attr.display as ClaimDisplay[];
     }
 
     if (true === attr.mandatory) {
@@ -266,9 +221,8 @@ function buildClaimsFromTemplate(template: SdJwtTemplate | MdocTemplate): Claim[
   return claims;
 }
 
-//TODO: Fix this eslint issue
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate) {
+export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate): Record<string, CredentialConfig> {
   const formatSuffix = 'sdjwt';
 
   // Determine the unique key for this credential configuration
@@ -298,7 +252,7 @@ export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function buildMdocCredentialConfig(name: string, template: MdocTemplate) {
+export function buildMdocCredentialConfig(name: string, template: MdocTemplate): Record<string, CredentialConfig> {
   //const claims: Claim[] = [];
 
   const formatSuffix = 'mdoc';
@@ -332,12 +286,104 @@ export function buildMdocCredentialConfig(name: string, template: MdocTemplate) 
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export function buildJwtVcJsonLdCredentialConfig(
+  name: string,
+  template: SdJwtTemplate
+): Record<string, CredentialConfig> {
+  const formatSuffix = 'jwt-vc-json-ld';
+
+  // Determine the unique key for this credential configuration
+  const configKey = `${name}-${formatSuffix}`;
+  const credentialScope = `openid4vc:${template.vct}-${formatSuffix}`;
+
+  const claims = buildClaimsFromTemplate(template);
+
+  const { vct } = template;
+  let typeName = name ? name.replace(/[^a-zA-Z0-9]/g, '') : 'GenericCredential';
+  if ('string' === typeof vct && '' !== vct.trim()) {
+    const lastSlash = vct.lastIndexOf('/');
+    typeName = -1 !== lastSlash ? vct.substring(lastSlash + 1) : vct;
+  }
+
+  return {
+    [configKey]: {
+      format: CredentialFormat.JwtVcJsonLd,
+      scope: credentialScope,
+      vct: template.vct,
+      credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS_FOR_SDJWT],
+      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS_FOR_SDJWT],
+      proof_types_supported: {
+        jwt: {
+          proof_signing_alg_values_supported: ['ES256', 'EdDSA']
+        }
+      },
+      credential_definition: {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        type: ['VerifiableCredential', typeName]
+      },
+      credential_metadata: {
+        claims,
+        display: []
+      }
+    }
+  };
+}
+
+export function buildLdpVcCredentialConfig(name: string, template: SdJwtTemplate): Record<string, CredentialConfig> {
+  const formatSuffix = 'ldp-vc';
+
+  // Determine the unique key for this credential configuration
+  const configKey = `${name}-${formatSuffix}`;
+  const credentialScope = `openid4vc:${template.vct}-${formatSuffix}`;
+
+  const claims = buildClaimsFromTemplate(template);
+
+  const { vct } = template;
+  let typeName = name ? name.replace(/[^a-zA-Z0-9]/g, '') : 'GenericCredential';
+  if ('string' === typeof vct && '' !== vct.trim()) {
+    const lastSlash = vct.lastIndexOf('/');
+    typeName = -1 !== lastSlash ? vct.substring(lastSlash + 1) : vct;
+  }
+
+  return {
+    [configKey]: {
+      format: CredentialFormat.LdpVc,
+      scope: credentialScope,
+      vct: template.vct,
+      credential_signing_alg_values_supported: ['Ed25519Signature2018', 'Ed25519Signature2020', 'EdDSA'],
+      cryptographic_binding_methods_supported: ['did:key'],
+      proof_types_supported: {
+        jwt: {
+          proof_signing_alg_values_supported: ['Ed25519Signature2018', 'Ed25519Signature2020', 'EdDSA']
+        }
+      },
+      credential_definition: {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        type: ['VerifiableCredential', typeName]
+      },
+      credential_metadata: {
+        claims,
+        display: []
+      }
+    }
+  };
+}
+
 //TODO: Fix this eslint issue
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export function buildCredentialConfig(name: string, template: SdJwtTemplate | MdocTemplate, format: CredentialFormat) {
+export function buildCredentialConfig(
+  name: string,
+  template: SdJwtTemplate | MdocTemplate,
+  format: CredentialFormat
+): Record<string, CredentialConfig> {
   switch (format) {
     case CredentialFormat.SdJwtVc:
       return buildSdJwtCredentialConfig(name, template as SdJwtTemplate);
+    case CredentialFormat.JwtVcJsonLd:
+      return buildJwtVcJsonLdCredentialConfig(name, template as SdJwtTemplate);
+    case CredentialFormat.LdpVc:
+      return buildLdpVcCredentialConfig(name, template as SdJwtTemplate);
     case CredentialFormat.Mdoc:
       return buildMdocCredentialConfig(name, template as MdocTemplate);
     default:
@@ -349,39 +395,33 @@ export function buildCredentialConfig(name: string, template: SdJwtTemplate | Md
  * Build agent payload from Prisma rows (attributes/appearance are Prisma.JsonValue).
  * Safely coerces JSON and then builds the same structure as Builder #2.
  */
-//TODO: Fix this eslint issue
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function buildCredentialConfigurationsSupported(templateRows: any): Record<string, CredentialConfig> {
+export function buildCredentialConfigurationsSupported(templateRows: unknown[]): Record<string, CredentialConfig> {
   const credentialConfigMap: Record<string, CredentialConfig> = {};
 
-  for (const templateRow of templateRows) {
-    const { format } = templateRow;
-    const templateToBuild = templateRow.attributes;
+  for (const templateRow of templateRows as Record<string, unknown>[]) {
+    const format = templateRow.format as string;
+    const templateToBuild = templateRow.attributes as SdJwtTemplate | MdocTemplate;
 
     const credentialConfig = buildCredentialConfig(
-      templateRow.name,
+      templateRow.name as string,
       templateToBuild,
-      format === CredentialFormat.Mdoc ? CredentialFormat.Mdoc : CredentialFormat.SdJwtVc
+      format === CredentialFormat.Mdoc
+        ? CredentialFormat.Mdoc
+        : format === CredentialFormat.JwtVcJsonLd
+          ? CredentialFormat.JwtVcJsonLd
+          : format === CredentialFormat.LdpVc
+            ? CredentialFormat.LdpVc
+            : CredentialFormat.SdJwtVc
     );
-    const appearanceJson = coerceJsonObject<unknown>(templateRow.appearance);
 
-    // Prepare the display configuration
-    const displayConfigurations =
-      (appearanceJson as Appearance).display?.map((displayEntry) => ({
+    const appearance = coerceJson<Appearance>(templateRow.appearance as Prisma.JsonValue);
+    const displayConfigurations: CredentialDisplayItem[] =
+      appearance.display?.map((displayEntry) => ({
         name: displayEntry.name,
-        description: displayEntry.description,
         locale: displayEntry.locale,
-        logo: displayEntry?.logo
-          ? {
-              uri: displayEntry.logo.uri,
-              alt_text: displayEntry.logo.alt_text
-            }
-          : undefined,
-        background_image: displayEntry?.background_image?.uri
-          ? {
-              uri: displayEntry.background_image.uri
-            }
-          : undefined,
+        logo: displayEntry.logo,
+        description: displayEntry.description,
+        background_image: displayEntry.background_image,
         background_color: displayEntry.background_color,
         text_color: displayEntry.text_color
       })) ?? [];

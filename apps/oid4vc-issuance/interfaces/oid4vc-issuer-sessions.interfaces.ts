@@ -5,7 +5,9 @@ import { OpenId4VcIssuanceSessionState } from '@credebl/enum/enum';
  * --------------------------------------------------------- */
 export enum CredentialFormat {
   SdJwtVc = 'vc+sd-jwt',
-  MsoMdoc = 'mso_mdoc'
+  MsoMdoc = 'mso_mdoc',
+  JwtVcJsonLd = 'jwt_vc_json-ld',
+  LdpVc = 'ldp_vc'
 }
 
 export enum SignerMethodOption {

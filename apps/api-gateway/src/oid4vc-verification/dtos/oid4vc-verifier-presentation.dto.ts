@@ -289,7 +289,7 @@ export class DcqlDto {
 @ValidatorConstraint({ name: 'OnlyOneOf', async: false })
 export class OnlyOneOfConstraint implements ValidatorConstraintInterface {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  validate(_: any, args: ValidationArguments): Promise<boolean> | boolean {
+  validate(_: unknown, args: ValidationArguments): Promise<boolean> | boolean {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const object = args.object as Record<string, any>;
     const properties = args.constraints as string[];
@@ -356,9 +356,17 @@ export class PresentationRequestDto {
   @IsDefined()
   @IsEnum(ResponseMode)
   responseMode: ResponseMode;
-  //TODO: check e2e flow and add ResponseMode based restrictions
   @IsOptional()
   expectedOrigins: string[];
+
+  @ApiPropertyOptional({
+    description: 'OpenID4VP version to use',
+    enum: ['v1', 'v1.draft21', 'v1.draft24'],
+    example: 'v1.draft24'
+  })
+  @IsOptional()
+  @IsEnum(['v1', 'v1.draft21', 'v1.draft24'])
+  version?: 'v1' | 'v1.draft21' | 'v1.draft24';
 
   /**
    * Dummy property used to run a class-level validation ensuring mutual exclusivity.

@@ -201,7 +201,7 @@
       "^@credebl/user-org-roles(|/.*)$": "<rootDir>/libs/user-org-roles/src/$1",
       "^y/user-activity(|/.*)$": "<rootDir>/libs/user-activity/src/$1",
       "^@app/supabase(|/.*)$": "<rootDir>/libs/supabase/src/$1",
-      "^@credebl/aws(|/.*)$": "<rootDir>/libs/aws/src/$1",
+
       "^credebl/utility(|/.*)$": "<rootDir>/libs/utility/src/$1",
       "^@credebl/config(|/.*)$": "<rootDir>/libs/config/src/$1",
       "^@credebl/context(|/.*)$": "<rootDir>/libs/context/src/$1",

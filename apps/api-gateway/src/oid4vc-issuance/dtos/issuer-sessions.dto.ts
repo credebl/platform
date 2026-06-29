@@ -274,11 +274,13 @@ export class CredentialDto {
 
   @ApiProperty({
     description: 'Credential format type',
-    enum: ['mso_mdoc', 'vc+sd-jwt'],
+    enum: ['mso_mdoc', 'vc+sd-jwt', 'jwt_vc_json-ld', 'ldp_vc'],
     example: 'mso_mdoc'
   })
   @IsString()
-  @IsIn(['mso_mdoc', 'vc+sd-jwt'], { message: 'format must be either "mso_mdoc" or "vc+sd-jwt"' })
+  @IsIn(['mso_mdoc', 'vc+sd-jwt', 'jwt_vc_json-ld', 'ldp_vc'], {
+    message: 'format must be either "mso_mdoc", "vc+sd-jwt", "jwt_vc_json-ld" or "ldp_vc"'
+  })
   format: string;
 
   @ApiProperty({

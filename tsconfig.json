@@ -2,12 +2,6 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "paths": {
-      "@credebl/aws": [
-        "libs/aws/src"
-      ],
-      "@credebl/aws/*": [
-        "libs/aws/src/*"
-      ],
       "@credebl/client-registration": [
         "libs/client-registration/src"
       ],
@@ -31,6 +25,12 @@
       ],
       "@credebl/context/*": [
         "libs/context/src/*"
+      ],
+      "@credebl/storage": [
+        "libs/storage/src"
+      ],
+      "@credebl/storage/*": [
+        "libs/storage/src/*"
       ],
       "@credebl/enum": [
         "libs/enum/src"

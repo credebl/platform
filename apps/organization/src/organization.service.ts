@@ -42,7 +42,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   IOrgCredentials,
@@ -77,7 +77,7 @@ export class OrganizationService {
     private readonly organizationRepository: OrganizationRepository,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
-    private readonly awsService: AwsService,
+    private readonly awsService: StorageService,
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     // TODO: Remove duplicate, unused variable
@@ -498,7 +498,7 @@ export class OrganizationService {
         imgData,
         'png',
         'orgLogo',
-        process.env.AWS_ORG_LOGO_BUCKET_NAME,
+        process.env.ORG_LOGO_BUCKET_NAME,
         'base64',
         'orgLogos'
       );

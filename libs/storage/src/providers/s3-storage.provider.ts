@@ -1,12 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
+import { Buffer } from 'node:buffer';
 import { CommonConstants } from 'libs/common/src/common.constant';
 import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
 import { fetchOpenBaoSecrets } from 'libs/common/src/utils/openbao.util';
+import { promisify } from 'node:util';
 
 @Injectable()
-export class AwsService {
+export class S3StorageService {
   private async getS3Client(): Promise<S3> {
     const secrets = await fetchOpenBaoSecrets(CommonConstants.CREDEBL_AWS_KEY_PATH);
     return new S3({
@@ -34,6 +36,10 @@ export class AwsService {
     });
   }
 
+  getPublicUrl(bucketName: string, fileKey: string): string {
+    return `https://${bucketName}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${fileKey}`;
+  }
+
   async uploadFileToS3Bucket(
     fileBuffer: Buffer,
     ext: string,
@@ -44,20 +50,17 @@ export class AwsService {
   ): Promise<string> {
     const s4 = await this.getPublicS3Client();
     const timestamp = Date.now();
-
+    const putObjectAsync = promisify(s4.putObject).bind(s4);
+    const fileKey = `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
     try {
-      await s4
-        .putObject({
-          Bucket: bucketName,
-          Key: `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`,
-          Body: fileBuffer,
-          ContentEncoding: encoding,
-          ContentType: 'image/png'
-        })
-        .promise();
-
-      const imageUrl = `https://${bucketName}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
-      return imageUrl;
+      await putObjectAsync({
+        Bucket: `${bucketName}`,
+        Key: `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`,
+        Body: fileBuffer,
+        ContentEncoding: encoding,
+        ContentType: `image/png`
+      });
+      return this.getPublicUrl(bucketName, fileKey);
     } catch (error) {
       throw new HttpException(error, HttpStatus.SERVICE_UNAVAILABLE);
     }
@@ -65,12 +68,20 @@ export class AwsService {
 
   async uploadCsvFile(key: string, body: unknown): Promise<void> {
     const s3 = await this.getS3Client();
+    let data: string;
+    if ('string' === typeof body) {
+      data = body;
+    } else if (Buffer.isBuffer(body)) {
+      data = (body as Buffer).toString('utf-8');
+    } else {
+      data = JSON.stringify(body);
+    }
+
     const params: AWS.S3.PutObjectRequest = {
       Bucket: process.env.FILE_SHARING_BUCKET,
       Key: key,
-      Body: 'string' === typeof body ? body : body.toString()
+      Body: data
     };
-
     try {
       await s3.upload(params).promise();
     } catch (error) {
@@ -109,7 +120,7 @@ export class AwsService {
     const objKey: string = persistent.valueOf() ? `persist/${key}` : `default/${key}`;
     const buf = Buffer.from(JSON.stringify(body));
     const params: AWS.S3.PutObjectRequest = {
-      Bucket: process.env.AWS_S3_STOREOBJECT_BUCKET,
+      Bucket: process.env.STOREOBJECT_BUCKET,
       Body: buf,
       Key: objKey,
       ContentEncoding: 'base64',
@@ -117,8 +128,7 @@ export class AwsService {
     };
 
     try {
-      const receivedData = await s3StoreObject.upload(params).promise();
-      return receivedData;
+      return await s3StoreObject.upload(params).promise();
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }

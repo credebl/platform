@@ -7,3 +7,6 @@ export const accessTokenSignerKeyType = { kty: 'OKP', crv: 'Ed25519' } as {
   crv: AccessTokenSignerKeyType;
 };
 export const batchCredentialIssuanceDefault = 0;
+
+export const CREDENTIALS_CONTEXT_V1_URL = 'https://www.w3.org/2018/credentials/v1';
+export const CREDENTIALS_CONTEXT_V2_URL = 'https://www.w3.org/ns/credentials/v2';

@@ -2,7 +2,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Logger, Module } from '@nestjs/common';
 import { OrgRolesModule, OrgRolesService } from '@credebl/org-roles';
 
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonModule } from '@credebl/common';
@@ -46,7 +46,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
   ],
   controllers: [UserController],
   providers: [
-    AwsService,
+    StorageService,
     UserService,
     UserRepository,
     PrismaService,

@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer';
 import { IStorageService } from '../storage.interface';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
+import { CommonConstants } from 'libs/common/src/common.constant';
 import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
 import { promisify } from 'node:util';
@@ -31,6 +32,7 @@ export abstract class BaseS3StorageService implements IStorageService {
     encoding: string,
     pathAWS: string = ''
   ): Promise<string> {
+    const s4 = await this.getPublicS3Client();
     const timestamp = Date.now();
     const putObjectAsync = promisify(this.s4.putObject).bind(this.s4);
     const fileKey = `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
@@ -64,37 +66,40 @@ export abstract class BaseS3StorageService implements IStorageService {
       Body: data
     };
     try {
-      await this.s3.upload(params).promise();
+      await s3.upload(params).promise();
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
   async getFile(key: string): Promise<AWS.S3.GetObjectOutput> {
+    const s3 = await this.getS3Client();
     const params: AWS.S3.GetObjectRequest = {
       Bucket: process.env.FILE_SHARING_BUCKET,
       Key: key
     };
     try {
-      return this.s3.getObject(params).promise();
+      return s3.getObject(params).promise();
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
   async deleteFile(key: string): Promise<void> {
+    const s3 = await this.getS3Client();
     const params: AWS.S3.DeleteObjectRequest = {
       Bucket: process.env.FILE_SHARING_BUCKET,
       Key: key
     };
     try {
-      await this.s3.deleteObject(params).promise();
+      await s3.deleteObject(params).promise();
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
   async storeObject(persistent: boolean, key: string, body: unknown): Promise<S3.ManagedUpload.SendData> {
+    const s3StoreObject = await this.getStoreObjectS3Client();
     const objKey: string = persistent.valueOf() ? `persist/${key}` : `default/${key}`;
     const buf = Buffer.from(JSON.stringify(body));
     const params: AWS.S3.PutObjectRequest = {

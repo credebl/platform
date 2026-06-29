@@ -69,7 +69,7 @@ import {
   IssueCredentialType,
   UploadedFileDetails
 } from './interfaces';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { v4 as uuidv4 } from 'uuid';
 import { RpcException } from '@nestjs/microservices';
@@ -90,7 +90,7 @@ import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
 export class IssuanceController {
   constructor(
     private readonly issueCredentialService: IssuanceService,
-    private readonly awsService: AwsService
+    private readonly awsService: StorageService
   ) {}
   private readonly logger = new Logger('IssuanceController');
 

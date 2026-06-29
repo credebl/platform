@@ -1,33 +1,27 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus } from '@nestjs/common';
+
+import { Buffer } from 'node:buffer';
+import { IStorageService } from '../storage.interface';
 import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
-import { promisify } from 'util';
+import { promisify } from 'node:util';
 
-@Injectable()
-export class AwsService {
-  private s3: S3;
-  private s4: S3;
-  private s3StoreObject: S3;
+export abstract class BaseS3StorageService implements IStorageService {
+  protected s3: S3;
+  protected s4: S3;
+  protected s3StoreObject: S3;
 
-  constructor() {
-    this.s3 = new S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY,
-      secretAccessKey: process.env.AWS_SECRET_KEY,
-      region: process.env.AWS_REGION
-    });
-
-    this.s4 = new S3({
-      accessKeyId: process.env.AWS_PUBLIC_ACCESS_KEY,
-      secretAccessKey: process.env.AWS_PUBLIC_SECRET_KEY,
-      region: process.env.AWS_PUBLIC_REGION
-    });
-
-    this.s3StoreObject = new S3({
-      accessKeyId: process.env.AWS_S3_STOREOBJECT_ACCESS_KEY,
-      secretAccessKey: process.env.AWS_S3_STOREOBJECT_SECRET_KEY,
-      region: process.env.AWS_S3_STOREOBJECT_REGION
-    });
+  constructor(
+    s3Config: Record<string, unknown>,
+    s4Config: Record<string, unknown>,
+    storeObjectConfig: Record<string, unknown>
+  ) {
+    this.s3 = new S3(s3Config);
+    this.s4 = new S3(s4Config);
+    this.s3StoreObject = new S3(storeObjectConfig);
   }
+
+  abstract getPublicUrl(bucketName: string, fileKey: string): string;
 
   async uploadFileToS3Bucket(
     fileBuffer: Buffer,
@@ -39,7 +33,7 @@ export class AwsService {
   ): Promise<string> {
     const timestamp = Date.now();
     const putObjectAsync = promisify(this.s4.putObject).bind(this.s4);
-
+    const fileKey = `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
     try {
       await putObjectAsync({
         Bucket: `${bucketName}`,
@@ -48,21 +42,27 @@ export class AwsService {
         ContentEncoding: encoding,
         ContentType: `image/png`
       });
-
-      const imageUrl = `https://${bucketName}.s3.${process.env.AWS_PUBLIC_REGION}.amazonaws.com/${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
-      return imageUrl;
+      return this.getPublicUrl(bucketName, fileKey);
     } catch (error) {
       throw new HttpException(error, HttpStatus.SERVICE_UNAVAILABLE);
     }
   }
 
   async uploadCsvFile(key: string, body: unknown): Promise<void> {
-    const params: AWS.S3.PutObjectRequest = {
-      Bucket: process.env.AWS_BUCKET,
-      Key: key,
-      Body: 'string' === typeof body ? body : body.toString()
-    };
+    let data: string;
+    if ('string' === typeof body) {
+      data = body;
+    } else if (Buffer.isBuffer(body)) {
+      data = (body as Buffer).toString('utf-8');
+    } else {
+      data = JSON.stringify(body);
+    }
 
+    const params: AWS.S3.PutObjectRequest = {
+      Bucket: process.env.FILE_SHARING_BUCKET,
+      Key: key,
+      Body: data
+    };
     try {
       await this.s3.upload(params).promise();
     } catch (error) {
@@ -72,7 +72,7 @@ export class AwsService {
 
   async getFile(key: string): Promise<AWS.S3.GetObjectOutput> {
     const params: AWS.S3.GetObjectRequest = {
-      Bucket: process.env.AWS_BUCKET,
+      Bucket: process.env.FILE_SHARING_BUCKET,
       Key: key
     };
     try {
@@ -84,7 +84,7 @@ export class AwsService {
 
   async deleteFile(key: string): Promise<void> {
     const params: AWS.S3.DeleteObjectRequest = {
-      Bucket: process.env.AWS_BUCKET,
+      Bucket: process.env.FILE_SHARING_BUCKET,
       Key: key
     };
     try {
@@ -98,7 +98,7 @@ export class AwsService {
     const objKey: string = persistent.valueOf() ? `persist/${key}` : `default/${key}`;
     const buf = Buffer.from(JSON.stringify(body));
     const params: AWS.S3.PutObjectRequest = {
-      Bucket: process.env.AWS_S3_STOREOBJECT_BUCKET,
+      Bucket: process.env.STOREOBJECT_BUCKET,
       Body: buf,
       Key: objKey,
       ContentEncoding: 'base64',
@@ -106,8 +106,7 @@ export class AwsService {
     };
 
     try {
-      const receivedData = await this.s3StoreObject.upload(params).promise();
-      return receivedData;
+      return await this.s3StoreObject.upload(params).promise();
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }

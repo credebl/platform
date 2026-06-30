@@ -4,16 +4,22 @@ import { Logger } from '@nestjs/common';
 import { Resend } from 'resend';
 import { fetchOpenBaoSecrets } from './utils/openbao.util';
 
+let resendClientPromise: Promise<Resend> | undefined;
+
 async function getResendClient(): Promise<Resend> {
-  const secretPath = CommonConstants.CREDEBL_RESEND_API_KEY_PATH;
-  const secrets = await fetchOpenBaoSecrets(secretPath);
-  const apiKey = secrets.RESEND_API_KEY;
+  resendClientPromise ??= (async (): Promise<Resend> => {
+    const secretPath = CommonConstants.CREDEBL_RESEND_API_KEY_PATH;
+    const secrets = await fetchOpenBaoSecrets(secretPath);
+    const apiKey = secrets.RESEND_API_KEY;
 
-  if (!apiKey) {
-    throw new Error('Missing RESEND_API_KEY in environment variables.');
-  }
+    if (!apiKey) {
+      throw new Error('Missing RESEND_API_KEY in secret payload.');
+    }
 
-  return new Resend(apiKey);
+    return new Resend(apiKey);
+  })();
+
+  return resendClientPromise;
 }
 
 export const sendWithResend = async (emailDto: EmailDto): Promise<boolean> => {

@@ -1,5 +1,3 @@
-// import { AwsSecretsProvider } from './providers/aws-secrets.provider';
-// libs/config/src/secrets-loader.ts
 import { Logger } from '@nestjs/common';
 import { OpenBaoProvider } from './openbao.provider';
 import { SecretProvider } from './secret-provider.interface';
@@ -57,7 +55,6 @@ export async function loadConfigSecrets(): Promise<void> {
 
     logger.log(`Successfully injected secrets from ${provider.name} into process.env`);
   } catch (error) {
-    // Safely handles instances where error might not be a standard Error object
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Critical Lifecycle Boot Failure (${provider.name}): ${errorMessage}`);
     throw new Error(`Failed to load secrets from ${provider.name}`);

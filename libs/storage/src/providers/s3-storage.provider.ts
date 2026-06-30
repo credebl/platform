@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
-
+import { BaseS3StorageService } from './base-s3-storage.provider';
 import { CommonConstants } from 'libs/common/src/common.constant';
+import { Injectable } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
 import { fetchOpenBaoSecrets } from 'libs/common/src/utils/openbao.util';
-import { BaseS3StorageService } from './base-s3-storage.provider';
 
 @Injectable()
 export class S3StorageService extends BaseS3StorageService {
@@ -12,7 +11,7 @@ export class S3StorageService extends BaseS3StorageService {
     return new S3({
       accessKeyId: secrets.AWS_ACCESS_KEY,
       secretAccessKey: secrets.AWS_SECRET_KEY,
-      region: secrets.AWS_REGION
+      region: process.env.AWS_REGION
     });
   }
 
@@ -21,7 +20,7 @@ export class S3StorageService extends BaseS3StorageService {
     return new S3({
       accessKeyId: secrets.AWS_PUBLIC_ACCESS_KEY,
       secretAccessKey: secrets.AWS_PUBLIC_SECRET_KEY,
-      region: secrets.AWS_PUBLIC_REGION
+      region: process.env.AWS_PUBLIC_REGION
     });
   }
 
@@ -30,7 +29,7 @@ export class S3StorageService extends BaseS3StorageService {
     return new S3({
       accessKeyId: secrets.AWS_S3_STOREOBJECT_ACCESS_KEY,
       secretAccessKey: secrets.AWS_S3_STOREOBJECT_SECRET_KEY,
-      region: secrets.AWS_S3_STOREOBJECT_REGION
+      region: process.env.AWS_S3_STOREOBJECT_REGION
     });
   }
 

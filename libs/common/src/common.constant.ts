@@ -455,7 +455,9 @@ export enum CommonConstants {
   // Storage Types
   STORAGE_TYPE_AWS = 'aws',
   STORAGE_TYPE_LOCAL = 'local',
-  STORAGE_TYPE_RUSTFS = 'rustfs'
+  STORAGE_TYPE_RUSTFS = 'rustfs',
+
+  OPENBAO_REQUEST_TIMEOUT = 10000
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

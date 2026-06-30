@@ -7,19 +7,9 @@ import { S3 } from 'aws-sdk';
 import { promisify } from 'node:util';
 
 export abstract class BaseS3StorageService implements IStorageService {
-  protected s3: S3;
-  protected s4: S3;
-  protected s3StoreObject: S3;
-
-  constructor(
-    s3Config: Record<string, unknown>,
-    s4Config: Record<string, unknown>,
-    storeObjectConfig: Record<string, unknown>
-  ) {
-    this.s3 = new S3(s3Config);
-    this.s4 = new S3(s4Config);
-    this.s3StoreObject = new S3(storeObjectConfig);
-  }
+  protected abstract getS3Client(): Promise<S3>;
+  protected abstract getPublicS3Client(): Promise<S3>;
+  protected abstract getStoreObjectS3Client(): Promise<S3>;
 
   abstract getPublicUrl(bucketName: string, fileKey: string): string;
 
@@ -31,8 +21,9 @@ export abstract class BaseS3StorageService implements IStorageService {
     encoding: string,
     pathAWS: string = ''
   ): Promise<string> {
+    const s4 = await this.getPublicS3Client();
     const timestamp = Date.now();
-    const putObjectAsync = promisify(this.s4.putObject).bind(this.s4);
+    const putObjectAsync = promisify(s4.putObject).bind(s4);
     const fileKey = `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
     try {
       await putObjectAsync({
@@ -49,6 +40,7 @@ export abstract class BaseS3StorageService implements IStorageService {
   }
 
   async uploadCsvFile(key: string, body: unknown): Promise<void> {
+    const s3 = await this.getS3Client();
     let data: string;
     if ('string' === typeof body) {
       data = body;
@@ -64,37 +56,40 @@ export abstract class BaseS3StorageService implements IStorageService {
       Body: data
     };
     try {
-      await this.s3.upload(params).promise();
+      await s3.upload(params).promise();
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
   async getFile(key: string): Promise<AWS.S3.GetObjectOutput> {
+    const s3 = await this.getS3Client();
     const params: AWS.S3.GetObjectRequest = {
       Bucket: process.env.FILE_SHARING_BUCKET,
       Key: key
     };
     try {
-      return this.s3.getObject(params).promise();
+      return s3.getObject(params).promise();
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
   async deleteFile(key: string): Promise<void> {
+    const s3 = await this.getS3Client();
     const params: AWS.S3.DeleteObjectRequest = {
       Bucket: process.env.FILE_SHARING_BUCKET,
       Key: key
     };
     try {
-      await this.s3.deleteObject(params).promise();
+      await s3.deleteObject(params).promise();
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }
   }
 
   async storeObject(persistent: boolean, key: string, body: unknown): Promise<S3.ManagedUpload.SendData> {
+    const s3StoreObject = await this.getStoreObjectS3Client();
     const objKey: string = persistent.valueOf() ? `persist/${key}` : `default/${key}`;
     const buf = Buffer.from(JSON.stringify(body));
     const params: AWS.S3.PutObjectRequest = {
@@ -106,7 +101,7 @@ export abstract class BaseS3StorageService implements IStorageService {
     };
 
     try {
-      return await this.s3StoreObject.upload(params).promise();
+      return await s3StoreObject.upload(params).promise();
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }

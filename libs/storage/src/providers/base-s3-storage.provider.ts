@@ -6,6 +6,28 @@ import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
 import { promisify } from 'node:util';
 
+function extToMimeType(ext: string): string {
+  const mime: Record<string, string> = {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    svg: 'image/svg+xml',
+    bmp: 'image/bmp',
+    pdf: 'application/pdf',
+    csv: 'text/csv',
+    json: 'application/json',
+    txt: 'text/plain',
+    html: 'text/html',
+    xml: 'application/xml',
+    zip: 'application/zip',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  };
+  return mime[ext.toLowerCase()] ?? 'application/octet-stream';
+}
+
 export abstract class BaseS3StorageService implements IStorageService {
   protected abstract getS3Client(): Promise<S3>;
   protected abstract getPublicS3Client(): Promise<S3>;
@@ -31,7 +53,7 @@ export abstract class BaseS3StorageService implements IStorageService {
         Key: `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`,
         Body: fileBuffer,
         ContentEncoding: encoding,
-        ContentType: `image/png`
+        ContentType: extToMimeType(ext)
       });
       return this.getPublicUrl(bucketName, fileKey);
     } catch (error) {

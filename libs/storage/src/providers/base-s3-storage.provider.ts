@@ -8,19 +8,9 @@ import { S3 } from 'aws-sdk';
 import { promisify } from 'node:util';
 
 export abstract class BaseS3StorageService implements IStorageService {
-  protected s3: S3;
-  protected s4: S3;
-  protected s3StoreObject: S3;
-
-  constructor(
-    s3Config: Record<string, unknown>,
-    s4Config: Record<string, unknown>,
-    storeObjectConfig: Record<string, unknown>
-  ) {
-    this.s3 = new S3(s3Config);
-    this.s4 = new S3(s4Config);
-    this.s3StoreObject = new S3(storeObjectConfig);
-  }
+  protected abstract getS3Client(): Promise<S3>;
+  protected abstract getPublicS3Client(): Promise<S3>;
+  protected abstract getStoreObjectS3Client(): Promise<S3>;
 
   abstract getPublicUrl(bucketName: string, fileKey: string): string;
 
@@ -34,7 +24,7 @@ export abstract class BaseS3StorageService implements IStorageService {
   ): Promise<string> {
     const s4 = await this.getPublicS3Client();
     const timestamp = Date.now();
-    const putObjectAsync = promisify(this.s4.putObject).bind(this.s4);
+    const putObjectAsync = promisify(s4.putObject).bind(s4);
     const fileKey = `${pathAWS}/${encodeURIComponent(filename)}-${timestamp}.${ext}`;
     try {
       await putObjectAsync({
@@ -51,6 +41,7 @@ export abstract class BaseS3StorageService implements IStorageService {
   }
 
   async uploadCsvFile(key: string, body: unknown): Promise<void> {
+    const s3 = await this.getS3Client();
     let data: string;
     if ('string' === typeof body) {
       data = body;
@@ -111,7 +102,7 @@ export abstract class BaseS3StorageService implements IStorageService {
     };
 
     try {
-      return await this.s3StoreObject.upload(params).promise();
+      return await s3StoreObject.upload(params).promise();
     } catch (error) {
       throw new RpcException(error.response ? error.response : error);
     }

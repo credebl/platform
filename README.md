@@ -51,14 +51,7 @@ Edit `.env` with your actual values before proceeding. Key variables are called 
 Start PostgreSQL via Docker. The credentials and DB name **must match** what you set in `DATABASE_URL` / `POOL_DATABASE_URL` in your `.env`.
 
 ```bash
-docker run --name credebl-postgres \
-  -p 5432:5432 \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=credebl \
-  -v credebl_pgdata:/var/lib/postgresql/data \
-  --network platform_default \
-  -d postgres:16
+docker compose up -d postgres
 ```
 
 > ⚠️ **If you later run `docker compose up`, Docker Compose also defines a service named `credebl-postgres`.** To avoid a container name collision, stop and remove the manually started container first (`docker rm -f credebl-postgres`) before running `docker compose up`.
@@ -70,7 +63,7 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/credebl"
 POOL_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/credebl"
 ```
 
-> ⚠️ **Do not use `localhost` in `DATABASE_URL` when services run inside Docker containers.** Inside a container, `localhost` resolves to the container itself — not the host. Use your machine's LAN IP (e.g. `192.168.x.x`) or a Docker service name instead. This applies to `KEYCLOAK_DOMAIN` and `KEYCLOAK_ADMIN_URL` as well (see Step 5).
+> ⚠️ **Do not use `localhost` in `DATABASE_URL` when services run inside Docker containers.** Inside a container, `localhost` resolves to the container itself not the host. Use your machine's LAN IP (e.g. `192.168.x.x`) or a Docker service name instead. This applies to `KEYCLOAK_DOMAIN` and `KEYCLOAK_ADMIN_URL` as well (see Step 5).
 
 ---
 
@@ -105,11 +98,11 @@ npx prisma migrate deploy --schema=./libs/prisma-service/prisma/schema.prisma
 
 ### Step 5 — Set Up Keycloak
 
-Keycloak is required for authentication. It is **not started automatically** — you must run it separately and configure it fully before seeding.
+Keycloak is required for authentication and must be started separately before seeding.
 
 #### 5a — Run the Keycloak container
 
-> ⚠️ **Keycloak must be on the same Docker network as the platform services** (`platform_default`), otherwise the containers cannot reach it. Include `--network platform_default` when creating the container.
+> ⚠️ Keycloak must run on the same Docker network as the platform services (`platform_default`), otherwise containers cannot reach it.
 
 ```bash
 docker run --name credebl-keycloak \
@@ -117,87 +110,42 @@ docker run --name credebl-keycloak \
   -e KEYCLOAK_ADMIN=admin \
   -e KEYCLOAK_ADMIN_PASSWORD=admin \
   --network platform_default \
-  -d quay.io/keycloak/keycloak:latest start-dev
+  -d quay.io/keycloak/keycloak:25.0.6 start-dev
 ```
 
-#### 5b — Create a Realm
+#### 5b — Complete Realm & Client Setup
 
-1. Open the Keycloak Admin Console: `http://localhost:8080`
-2. Log in with `admin` / `admin`
-3. Create a new **Realm** named exactly: `credebl-platform`
+For creating the `credebl-platform` realm, `adminClient`, and `credeblClient`, follow the official docs:
+👉 https://docs.credebl.id/docs/contribute/setup/service-setup#keycloak
 
-#### 5c — Create Client 1: `adminClient`
+#### 5c — Set Keycloak domain in `.env`
 
-This client is used by the platform seed script and user-service to authenticate platform admin users.
-
-1. In the `credebl-platform` realm → **Clients** → **Create client**
-2. **Client ID:** `adminClient`
-3. **Client authentication:** ON (confidential)
-4. **Service accounts enabled:** ON  
-5. Go to **Service account roles** tab → **Assign role** → filter by `realm-management` → add:
-   - `manage-users`
-   - `view-users`
-   - `query-users`
-6. Go to **Credentials** tab → copy the **Client Secret**
-7. Update `.env`:
+> ⚠️ If platform services run in Docker, do **not** use `localhost` — use your machine's LAN IP instead.
+> Find it with: `hostname -I`
 
 ```env
-ADMIN_KEYCLOAK_ID=adminClient
-ADMIN_KEYCLOAK_SECRET=<copied-secret-from-keycloak>
+KEYCLOAK_DOMAIN=http://<YOUR_LAN_IP>:8080/
+KEYCLOAK_ADMIN_URL=http://<YOUR_LAN_IP>:8080
 ```
 
-#### 5d — Create Client 2: `credeblClient`
+> For remaining Keycloak env variables (`KEYCLOAK_REALM`, `KEYCLOAK_MASTER_REALM`, `KEYCLOAK_MANAGEMENT_CLIENT_ID`, `KEYCLOAK_MANAGEMENT_CLIENT_SECRET`, `ADMIN_KEYCLOAK_ID`, `ADMIN_KEYCLOAK_SECRET`), refer to the official docs linked above.
 
-This client is the management client used for general Keycloak operations.
+> **Note:** If you want to log into Studio UI, follow the optional user creation step in docs — use the **same email** as `PLATFORM_ADMIN_EMAIL` when adding the user in Keycloak, otherwise authentication will fail.
 
-1. **Clients** → **Create client**
-2. **Client ID:** `credeblClient`
-3. **Client authentication:** ON (confidential)
-4. **Service accounts enabled:** ON
-5. Go to **Service account roles** tab → **Assign role** → filter by `realm-management` → add:
-   - `manage-users`
-   - `view-users`
-   - `query-users`
-   - `manage-realm`
-6. Go to **Credentials** tab → copy the **Client Secret**
-7. Update `.env`:
-
-```env
-KEYCLOAK_MANAGEMENT_CLIENT_ID=credeblClient
-KEYCLOAK_MANAGEMENT_CLIENT_SECRET=<copied-secret-from-keycloak>
-KEYCLOAK_REALM=credebl-platform
-KEYCLOAK_MASTER_REALM=master
-```
-
-#### 5e — Set Keycloak domain in `.env`
-
-> ⚠️ **If platform services run in Docker containers, do NOT use `localhost` for Keycloak URLs.**  
-> Use your machine's LAN IP address instead (e.g. `192.168.1.x`). You can find it with `ip addr show` or `hostname -I`.
-
-```env
-# For Docker-based deployments — replace with your actual LAN IP:
-KEYCLOAK_DOMAIN=http://192.168.x.x:8080/
-KEYCLOAK_ADMIN_URL=http://192.168.x.x:8080
-
-# For host-only (no Docker for platform services):
-# KEYCLOAK_DOMAIN=http://localhost:8080/
-# KEYCLOAK_ADMIN_URL=http://localhost:8080
-```
+> ⚠️ All Keycloak env variables must be fully configured before running the seed — the seed script connects to Keycloak directly.
 
 ---
 
 ### Step 6 — Configure Remaining `.env` Values
-
-Set the following before seeding:
 
 ```env
 PLATFORM_ADMIN_EMAIL=platform.admin@yopmail.com
 CRYPTO_PRIVATE_KEY=YourSecretPrivateKeyHere
 ```
 
-> `CRYPTO_PRIVATE_KEY` is used to encrypt/decrypt Keycloak client credentials stored in the DB. Keep it consistent across all runs — changing it after seeding will break decryption.
+> ⚠️ `CRYPTO_PRIVATE_KEY` encrypts Keycloak credentials stored in the DB. Keep it consistent across all runs changing it after seeding will break decryption.
 
----
+--- 
 
 ### Step 7 — Seed Initial Data
 
@@ -210,10 +158,12 @@ npx prisma db seed
 The seed script will:
 1. Create org roles, agent types, ecosystem roles, ledgers, and user roles
 2. Create the platform admin user and organization
-3. Create the Keycloak user for the platform admin (or look up an existing one — see note below)
+3. Create the Keycloak user for the platform admin (or look up an existing one)
 4. Encrypt and store Keycloak `clientId` / `clientSecret` in the DB
 
-> **Re-seeding note:** If the Keycloak user already exists (e.g. on a re-seed), the script will look up the existing user's Keycloak ID and still update the DB record — so `keycloakUserId`, `clientId`, and `clientSecret` are always kept in sync.
+> **Re-seeding note:** Safe to run multiple times, existing users, 
+> roles, and Keycloak credentials are detected and skipped or synced automatically.
+
 
 ---
 
@@ -300,7 +250,7 @@ For core SSI capabilities, it leverages the great work from multiple open-source
 
 ## Contributing
 
-Pull requests are welcome! Please read our [contributions guide](https://github.com/credebl/platform/blob/main/CONTRIBUTING.md) and submit your PRs. We enforce [developer certificate of origin](https://developercertificate.org/) (DCO) commit signing — [guidance](https://github.com/apps/dco) on this is available. We also welcome issues submitted about problems you encounter in using CREDEBL.
+Pull requests are welcome! Please read our [contributions guide](https://github.com/credebl/platform/blob/main/CONTRIBUTING.md) and submit your PRs. We enforce [developer certificate of origin](https://developercertificate.org/) (DCO) commit signing [guidance](https://github.com/apps/dco) on this is available. We also welcome issues submitted about problems you encounter in using CREDEBL.
 
 ## License
 

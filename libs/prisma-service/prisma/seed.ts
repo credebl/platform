@@ -168,6 +168,9 @@ const createEcosystemRoles = async (): Promise<void> => {
 
 const createPlatformUser = async (): Promise<void> => {
   try {
+    if (!process.env.PLATFORM_ADMIN_EMAIL) {
+      throw new Error('Missing required environment variable: PLATFORM_ADMIN_EMAIL');
+    }
     const { platformAdminData } = JSON.parse(configData);
     platformAdminData.email = process.env.PLATFORM_ADMIN_EMAIL;
     platformAdminData.username = process.env.PLATFORM_ADMIN_EMAIL;
@@ -771,7 +774,21 @@ export async function createKeycloakUser(): Promise<void> {
   const res = await postKeycloakUser(token, user, KEYCLOAK_DOMAIN, KEYCLOAK_REALM);
 
   if (HttpStatus.CONFLICT === res.status) {
-    logger.log(`⚠️ User ${user.username} already exists`);
+    logger.log(`⚠️ User ${user.username} already exists in Keycloak — looking up existing user ID`);
+    const lookupToken = await getKeycloakToken();
+    const lookupRes = await fetch(
+      `${KEYCLOAK_DOMAIN}admin/realms/${KEYCLOAK_REALM}/users?username=${encodeURIComponent(user.username)}&exact=true`,
+      { headers: { Authorization: `Bearer ${lookupToken}` } }
+    );
+    if (!lookupRes.ok) {
+      const errText = await lookupRes.text();
+      throw new Error(`Failed to look up existing Keycloak user (${lookupRes.status}): ${errText}`);
+    }
+    const existingUsers = (await lookupRes.json()) as { id: string }[];
+    if (!Array.isArray(existingUsers) || 0 === existingUsers.length) {
+      throw new Error(`Keycloak returned 409 but no user found for username: ${user.username}`);
+    }
+    await syncKeycloakUserToDb(existingUsers[0].id, ADMIN_KEYCLOAK_ID, ADMIN_KEYCLOAK_SECRET, CRYPTO_PRIVATE_KEY);
     return;
   }
 

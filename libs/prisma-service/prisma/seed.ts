@@ -710,7 +710,10 @@ async function postKeycloakUser(
   keycloakDomain: string,
   keycloakRealm: string
 ): Promise<Response> {
-  const credentials = user.password ? [{ type: 'password', value: user.password, temporary: false }] : [];
+  if (!user.password) {
+    throw new Error('Platform admin password could not be decrypted');
+  }
+  const credentials = [{ type: 'password', value: user.password, temporary: false }];
   return fetch(`${keycloakDomain}admin/realms/${keycloakRealm}/users`, {
     method: 'POST',
     headers: {

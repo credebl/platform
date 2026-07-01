@@ -9,5 +9,5 @@ export interface SecretProvider {
    * as a flat key-value object of strings.
    * * @returns A promise resolving to Record<string, string>
    */
-  loadSecrets(): Promise<Record<string, string>>;
+  loadSecrets(options?: Record<string, unknown>): Promise<Record<string, string>>;
 }

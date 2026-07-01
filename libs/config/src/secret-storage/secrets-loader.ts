@@ -8,7 +8,7 @@ const logger = new Logger('SecretsLoader');
 /**
  * Factory function to get the requested secret provider
  */
-function getSecretProvider(providerType: string): SecretProvider | null {
+export function getSecretProvider(providerType: string): SecretProvider | null {
   switch (providerType.toLowerCase()) {
     case 'openbao':
       return new OpenBaoProvider();
@@ -19,6 +19,10 @@ function getSecretProvider(providerType: string): SecretProvider | null {
 }
 
 export async function loadConfigSecrets(): Promise<void> {
+  if ('true' !== process.env.ENABLE_BAO?.trim()?.toLowerCase()) {
+    logger.log('OpenBao secrets management is disabled. Skipping remote secrets fetching.');
+    return;
+  }
   const providerType = process.env.SECRETS_PROVIDER?.trim();
 
   if (!providerType) {

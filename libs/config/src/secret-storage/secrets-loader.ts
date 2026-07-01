@@ -61,6 +61,6 @@ export async function loadConfigSecrets(): Promise<void> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Critical Lifecycle Boot Failure (${provider.name}): ${errorMessage}`);
-    throw new Error(`Failed to load secrets from ${provider.name}`);
+    logger.error(`Failed to load secrets from ${provider.name}`);
   }
 }

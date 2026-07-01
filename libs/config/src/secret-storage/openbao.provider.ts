@@ -87,7 +87,7 @@ export class OpenBaoProvider implements SecretProvider {
 
     const result = await response.json();
     const secrets = result.data?.data;
-    this.logger.log('Successfully fetched secrets from OpenBao', secrets);
+    this.logger.log('Successfully fetched secrets from OpenBao');
     if (!secrets || 'object' !== typeof secrets || Array.isArray(secrets)) {
       throw new Error('Unexpected secrets payload structure.');
     }

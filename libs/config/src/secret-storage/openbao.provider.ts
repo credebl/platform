@@ -21,9 +21,9 @@ export class OpenBaoProvider implements SecretProvider {
     return 'true' === process.env.ENABLE_BAO?.trim()?.toLowerCase();
   }
 
-  async loadSecrets(customPath: string = ''): Promise<Record<string, string>> {
+  async loadSecrets(options?: { customPath?: string }): Promise<Record<string, string>> {
     const baoUrl = process.env.BAO_URL;
-    const secretPath = customPath || process.env.BAO_SECRET_PATH;
+    const secretPath = options?.customPath || process.env.BAO_SECRET_PATH;
     const roleId = process.env.BAO_ROLE_ID;
     const secretId = process.env.BAO_SECRET_ID;
     if (!baoUrl || !secretPath || !roleId || !secretId) {
@@ -87,7 +87,7 @@ export class OpenBaoProvider implements SecretProvider {
 
     const result = await response.json();
     const secrets = result.data?.data;
-    this.logger.log('Successfully fetched secrets from OpenBao');
+    this.logger.log('Successfully fetched secrets from OpenBao', secrets);
     if (!secrets || 'object' !== typeof secrets || Array.isArray(secrets)) {
       throw new Error('Unexpected secrets payload structure.');
     }

@@ -445,6 +445,8 @@ export enum CommonConstants {
 
   // BAO_STORAGE_PATH
   CREDEBL_RESEND_API_KEY_PATH = 'secret/data/credebl_resend_api_key',
+  CREDEBL_SMTP_CONFIG_PATH = 'secret/data/credebl_smtp_config',
+  CREDEBL_SENDGRID_API_KEY_PATH = 'secret/data/credebl_sendgrid_api_key',
   CREDEBL_AWS_KEY_PATH = 'secret/data/credebl_aws_keys',
 
   //X509

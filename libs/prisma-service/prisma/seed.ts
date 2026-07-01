@@ -248,7 +248,19 @@ const createPlatformUserOrgRoles = async (): Promise<void> => {
       }
     });
 
-    if (userId && orgId && orgRoleId) {
+    if (!userId || !orgId || !orgRoleId) {
+      throw new Error('Missing prerequisite: platform admin user, organization, or org role');
+    }
+
+    const existingUserOrgRole = await prisma.user_org_roles.findFirst({
+      where: {
+        userId: userId.id,
+        orgRoleId: orgRoleId.id,
+        orgId: orgId.id
+      }
+    });
+
+    if (existingUserOrgRole) {
       logger.log('Already seeding in org_roles');
     } else {
       const platformOrganization = await prisma.user_org_roles.create({

@@ -5,10 +5,8 @@ import { EmailDto } from './dtos/email.dto';
 import { Logger } from '@nestjs/common';
 import { fetchSecrets } from './utils/secretLoader.util';
 
-let transporterPromise: Promise<nodemailer.Transporter> | undefined;
-
-async function getSmtpTransporter(): Promise<nodemailer.Transporter> {
-  transporterPromise ??= (async (): Promise<nodemailer.Transporter> => {
+export const sendWithSMTP = async (emailDto: EmailDto): Promise<boolean> => {
+  try {
     const secretPath = CommonConstants.CREDEBL_SMTP_CONFIG_PATH;
     const secrets = await fetchSecrets(secretPath);
     const smtpHost = secrets.SMTP_HOST ?? process.env.SMTP_HOST;
@@ -26,7 +24,7 @@ async function getSmtpTransporter(): Promise<nodemailer.Transporter> {
       throw new Error(`Invalid SMTP_PORT value: "${smtpPort}". Must be a valid number.`);
     }
 
-    return nodemailer.createTransport({
+    const transporter = nodemailer.createTransport({
       host: smtpHost,
       port,
       secure: 465 === port,
@@ -36,14 +34,7 @@ async function getSmtpTransporter(): Promise<nodemailer.Transporter> {
       },
       requireTLS: 587 === port
     });
-  })();
 
-  return transporterPromise;
-}
-
-export const sendWithSMTP = async (emailDto: EmailDto): Promise<boolean> => {
-  try {
-    const transporter = await getSmtpTransporter();
     await transporter.sendMail({
       from: emailDto.emailFrom,
       to: emailDto.emailTo,

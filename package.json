@@ -22,7 +22,7 @@
     "prisma:generate": "npx prisma generate",
     "prepare": "husky install",
     "build:libs": "pnpm --filter \"@credebl/common\" run build && pnpm --filter \"@credebl/aws\" run build && pnpm --filter \"@credebl/logger\" run build && pnpm --filter \"@credebl/prisma-service\" run build && pnpm --filter \"@credebl/user-management\" run build",
-    "pack:libs": "pnpm run build:libs && mkdir -p packages && for lib in libs/common libs/aws libs/logger libs/prisma-service libs/user-management apps/api-gateway apps/connection; do (cd $lib && pnpm pack --pack-destination ../../packages); done"
+    "pack:libs": "pnpm run build:libs && mkdir -p packages && for lib in libs/common libs/aws libs/logger libs/prisma-service libs/user-management apps/api-gateway apps/connection apps/agent-provisioning; do (cd $lib && pnpm pack --pack-destination ../../packages); done"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import { MICRO_SERVICE_NAME } from '@credebl/common/common.constant';
 import { otelLogger } from '../../../apps/api-gateway/src/tracer';
-
+import type { Attributes } from '@opentelemetry/api';
 @Injectable({ scope: Scope.TRANSIENT })
 export default class LoggerService implements Logger {
   private readonly sourceClass: string;
@@ -74,34 +74,30 @@ export default class LoggerService implements Logger {
       }
       const correlationId = data?.correlationId || this.contextStorageService.getContextId();
 
-      const attributes = {
+      const attributes: Attributes = {
         app: data?.app || this.app,
         organization: data?.organization || this.organization,
         context: data?.context || this.context,
         sourceClass: data?.sourceClass || this.sourceClass,
         correlationId,
-        microservice: this.microserviceName,
-        ...(data ?? {})
+        microservice: this.microserviceName
       };
 
       if (data?.error) {
-        let errorValue;
+        if (data.error instanceof Error) {
+          attributes['exception.type'] = data.error.name;
+          attributes['exception.message'] = data.error.message;
 
-        if ('string' === typeof data.error) {
-          errorValue = data.error;
-        } else if (data.error instanceof Error) {
-          errorValue = {
-            name: data.error.name,
-            message: data.error.message,
-            stack: data.error.stack
-          };
-        } else if ('object' === typeof data.error) {
-          errorValue = JSON.parse(JSON.stringify(data.error));
+          if (data.error.stack) {
+            attributes['exception.stacktrace'] = data.error.stack;
+          }
         } else {
-          errorValue = String(data.error);
+          attributes['exception.message'] = String(data.error);
         }
+      }
 
-        attributes.error = errorValue;
+      if (data?.props) {
+        attributes.props = JSON.stringify(data.props);
       }
 
       otelLogger.emit({

@@ -67,6 +67,7 @@ import * as jwt from 'jsonwebtoken';
 import { ClientTokenDto } from '../dtos/client-token.dto';
 import { EmailService } from '@credebl/common/email.service';
 import { uuidRegex } from '@credebl/common/common.constant';
+import { isUUID } from 'class-validator';
 
 @Injectable()
 export class OrganizationService {
@@ -771,7 +772,8 @@ export class OrganizationService {
         publicProfile: true,
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } }
+          { description: { contains: search, mode: 'insensitive' } },
+          ...(isUUID(search) ? [{ id: { equals: search } }] : [])
         ]
       };
 

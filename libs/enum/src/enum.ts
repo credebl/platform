@@ -373,7 +373,8 @@ export enum X509ExtendedKeyUsage {
 export enum CredentialFormat {
   SdJwtVc = 'dc+sd-jwt',
   Mdoc = 'mso_mdoc',
-  JwtVcJsonLd = 'jwt_vc_json-ld'
+  JwtVcJsonLd = 'jwt_vc_json-ld',
+  LdpVc = 'ldp_vc'
 }
 
 export enum AttributeType {

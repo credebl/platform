@@ -303,8 +303,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       nodemailer:
-        specifier: ^7.0.13
-        version: 7.0.13
+        specifier: ^9.0.1
+        version: 9.0.1
       p-limit:
         specifier: ^3.1.0
         version: 3.1.0
@@ -4921,6 +4921,7 @@ packages:
   nats@2.29.3:
     resolution: {integrity: sha512-tOQCRCwC74DgBTk4pWZ9V45sk4d7peoE2njVprMRCBXrhJ5q5cYM7i6W+Uvw2qUrcfOSnuisrX7bEx3b3Wx4QA==}
     engines: {node: '>= 14.0.0'}
+    deprecated: Package moved. Use @nats-io/transport-node from https://github.com/nats-io/nats.js
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
@@ -5022,8 +5023,8 @@ packages:
   node-releases@2.0.38:
     resolution: {integrity: sha512-3qT/88Y3FbH/Kx4szpQQ4HzUbVrHPKTLVpVocKiLfoYvw9XSGOX2FmD2d6DrXbVYyAQTF2HeF6My8jmzx7/CRw==}
 
-  nodemailer@7.0.13:
-    resolution: {integrity: sha512-PNDFSJdP+KFgdsG3ZzMXCgquO7I6McjY2vlqILjtJd0hy8wEvtugS9xKRF2NWlPNGxvLCXlTNIae4serI7dinw==}
+  nodemailer@9.0.1:
+    resolution: {integrity: sha512-Gwv8SQewT616ZM/URn0H54b8PWo/Wum7md3EW2aWy1lO27+WZCX+Xyak3J+NlmHUjDh5ME+uesJUDRbR3Ye8Bw==}
     engines: {node: '>=6.0.0'}
 
   normalize-path@3.0.0:
@@ -12365,7 +12366,7 @@ snapshots:
 
   node-releases@2.0.38: {}
 
-  nodemailer@7.0.13: {}
+  nodemailer@9.0.1: {}
 
   normalize-path@3.0.0: {}
 

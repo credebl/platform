@@ -28,4 +28,26 @@ describe('UtilitiesDto', () => {
     const attributesError = errors.find((error) => 'attributes' === error.property);
     expect(attributesError?.constraints?.arrayNotEmpty).toBe('attributes should not be empty');
   });
+
+  it('should fail validation when an attribute item is missing required fields', async () => {
+    const dto = plainToInstance(UtilitiesDto, {
+      ...basePayload,
+      attributes: [{}]
+    });
+    const errors = await validate(dto);
+    const attributesError = errors.find((error) => 'attributes' === error.property);
+    expect(attributesError?.children?.length).toBeGreaterThan(0);
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('should fail validation when an attribute name is not a string', async () => {
+    const dto = plainToInstance(UtilitiesDto, {
+      ...basePayload,
+      attributes: [{ name: 123, value: 'value' }]
+    });
+    const errors = await validate(dto);
+    const attributesError = errors.find((error) => 'attributes' === error.property);
+    const nameError = attributesError?.children?.[0]?.children?.find((error) => 'name' === error.property);
+    expect(nameError?.constraints?.isString).toBeDefined();
+  });
 });

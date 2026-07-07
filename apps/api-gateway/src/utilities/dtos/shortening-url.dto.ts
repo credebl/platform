@@ -1,5 +1,18 @@
 import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
-import { ArrayNotEmpty, IsArray, IsNotEmpty } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ArrayNotEmpty, IsArray, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+
+export class Attribute {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  value: string;
+}
 
 @ApiExtraModels()
 export class UtilitiesDto {
@@ -29,13 +42,10 @@ export class UtilitiesDto {
   })
   @IsArray({ message: 'attributes must be a valid array' })
   @ArrayNotEmpty({ message: 'attributes should not be empty' })
+  @ValidateNested({ each: true })
+  @Type(() => Attribute)
   @IsNotEmpty({ message: 'please provide valid attributes' })
   attributes: Attribute[];
-}
-
-interface Attribute {
-  name: string;
-  value: string;
 }
 
 export class StoreObjectDto {

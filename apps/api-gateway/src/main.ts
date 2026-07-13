@@ -2,8 +2,7 @@ import { otelSDK } from './tracer';
 import * as dotenv from 'dotenv';
 import * as express from 'express';
 
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { OpenAPIObject } from '@nestjs/swagger';
+import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { Logger, VERSION_NEUTRAL, VersioningType } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
@@ -89,64 +88,60 @@ async function bootstrap(): Promise<void> {
   });
 
   // Create Swagger document
- let document = SwaggerModule.createDocument(app, options);
-try {
-  const ecosystemFilter = app.get(EcosystemSwaggerFilter);
-  document = await ecosystemFilter.filterDocument(document);
-} catch (err) {
-  Logger.warn('Skipping EcosystemSwaggerFilter due to error', err as Error);
-}
-
-// 🔹 Helper to filter APIs by tag
-
-
-function filterByTags(doc: OpenAPIObject, tagNames: string[]): OpenAPIObject {
-  const filteredPaths: OpenAPIObject['paths'] = {};
-
-  for (const [path, methods] of Object.entries(doc.paths)) {
-    for (const [method, operation] of Object.entries(methods)) {
-      if (
-        operation.tags &&
-        operation.tags.some((tag: string) => tagNames.includes(tag))
-      ) {
-        if (!filteredPaths[path]) {
-          filteredPaths[path] = {};
-        }
-        filteredPaths[path][method] = operation;
-      }
-    }
+  let document = SwaggerModule.createDocument(app, options);
+  try {
+    const ecosystemFilter = app.get(EcosystemSwaggerFilter);
+    document = await ecosystemFilter.filterDocument(document);
+  } catch (err) {
+    Logger.warn('Skipping EcosystemSwaggerFilter due to error', err as Error);
   }
 
-  return {
-    ...doc,
-    paths: filteredPaths
-  };
-}
-// 🔹 Create separate documents
-const didcommDoc = filterByTags(document, [
-  'connections',
-  'verifications'
-]);
+  // Filter operations by tag into a standalone Swagger document
+  function filterByTags(doc: OpenAPIObject, tagNames: string[]): OpenAPIObject {
+    const filteredPaths: OpenAPIObject['paths'] = {};
 
-const oid4vcDoc = filterByTags(document, [
-  'OID4VC',
-  'OID4VP'
-]);
+    for (const [path, methods] of Object.entries(doc.paths)) {
+      for (const [method, operation] of Object.entries(methods)) {
+        if (operation.tags && operation.tags.some((tag: string) => tagNames.includes(tag))) {
+          if (!filteredPaths[path]) {
+            filteredPaths[path] = {};
+          }
+          filteredPaths[path][method] = operation;
+        }
+      }
+    }
 
-const utilsDoc = filterByTags(document, [
-  'utilities',
-  'ledgers',
-  'webhooks',
-  'geolocation',
-  'notification'
-]);
-// 🔹 Default full Swagger
-SwaggerModule.setup('api', app, document);
+    return {
+      ...doc,
+      paths: filteredPaths
+    };
+  }
 
-// 🔹 New grouped Swagger UIs
-SwaggerModule.setup('api/didcomm', app, didcommDoc);
-SwaggerModule.setup('api/oid4vc', app, oid4vcDoc);
-SwaggerModule.setup('api/utils', app, utilsDoc);
+  // Credential APIs are grouped under DIDComm rather than as a standalone section
+  const didcommDoc = filterByTags(document, [
+    'connections',
+    'verifications',
+    'credentials',
+    'credential-definitions',
+    'revocation-registry',
+    'schemas'
+  ]);
+
+  const oid4vcDoc = filterByTags(document, ['OID4VC', 'OID4VP']);
+
+  const authDoc = filterByTags(document, ['auth']);
+
+  // Platform and Webhook APIs are excluded from the Utils section
+  const utilsDoc = filterByTags(document, ['utilities', 'ledgers', 'geolocation', 'notification']);
+
+  // Default full Swagger
+  SwaggerModule.setup('api', app, document);
+
+  // Grouped Swagger UIs
+  SwaggerModule.setup('api/didcomm', app, didcommDoc);
+  SwaggerModule.setup('api/oid4vc', app, oid4vcDoc);
+  SwaggerModule.setup('api/auth', app, authDoc);
+  SwaggerModule.setup('api/utils', app, utilsDoc);
   const httpAdapter: HttpAdapterHost = app.get(HttpAdapterHost) as HttpAdapterHost;
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
   const { ENABLE_CORS_IP_LIST } = process.env || {};
@@ -172,6 +167,9 @@ SwaggerModule.setup('api/utils', app, utilsDoc);
   app.use(express.static('invoice-pdf'));
   app.use(express.static('uploadedFiles/bulk-verification-templates'));
   app.use(express.static('uploadedFiles/import'));
+  app.use('/uploadedFiles/dev-org-logo', express.static('uploadedFiles/dev-org-logo'));
+  app.use('/uploadedFiles/demo-shortening-url', express.static('uploadedFiles/demo-shortening-url'));
+
   // Use custom updatable global pipes
   const reflector = app.get(Reflector);
   app.useGlobalPipes(new UpdatableValidationPipe(reflector, { whitelist: true, transform: true }));

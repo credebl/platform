@@ -12,7 +12,7 @@ services:
    # volumes:
     #  - ./nats-server.conf:/nats-server.conf  # Mount the config file
   redis:
-    image: redis:6.2-alpine
+    image: redis:8.8-alpine
     restart: always
     ports:
       - '6379:6379'

@@ -17,7 +17,7 @@ export class AppController {
   @Redirect('/api', 301)
   @ApiExcludeEndpoint()
   redirectToSwagger(): { url?: string; statusCode: number } {
-    if (this.configService.isDevelopment) {
+    if (this.configService.isSwaggerAvailable) {
       return { url: '/api', statusCode: 301 };
     }
 

@@ -14,11 +14,11 @@ export class AppController {
   private readonly logger = new Logger('AppController');
 
   @Get()
-  @Redirect('/api', 301)
+  @Redirect('/api', 302)
   @ApiExcludeEndpoint()
   redirectToSwagger(): { url?: string; statusCode: number } {
     if (this.configService.isSwaggerAvailable) {
-      return { url: '/api', statusCode: 301 };
+      return { url: '/api', statusCode: 302 };
     }
 
     return { statusCode: 200 };

@@ -27,6 +27,6 @@ export class ConfigService {
   }
 
   get isSwaggerAvailable(): boolean {
-    return this.configService.get<boolean>('ENABLE_SWAGGER');
+    return 'true' === this.configService.get<string>('ENABLE_SWAGGER');
   }
 }

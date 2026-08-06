@@ -1,5 +1,5 @@
 storage "file" {
-  path = "/bao/data"
+  path = "/openbao/file"
 }
 
 listener "tcp" {

@@ -28,4 +28,13 @@ describe('trusted JWT issuers', () => {
   it('fails closed when no trusted issuer configuration exists', () => {
     expect(() => getTrustedJwtIssuers({})).toThrow('JWT_TRUSTED_ISSUERS');
   });
+
+  it('allows HTTP only for explicit loopback issuers', () => {
+    expect(getTrustedJwtIssuers({ JWT_TRUSTED_ISSUERS: 'http://localhost:8080/realms/platform' })).toEqual([
+      'http://localhost:8080/realms/platform'
+    ]);
+    expect(() => getTrustedJwtIssuers({ JWT_TRUSTED_ISSUERS: 'http://identity.example/realms/platform' })).toThrow(
+      'Invalid trusted JWT issuer'
+    );
+  });
 });

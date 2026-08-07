@@ -14,6 +14,9 @@ const response = (): { status: jest.Mock; json: jest.Mock } => {
 describe('FidoController passkey management authorization', () => {
   const fidoService = {
     fetchFidoUserDetails: jest.fn(),
+    generateRegistrationOption: jest.fn(),
+    verifyRegistration: jest.fn(),
+    updateFidoUser: jest.fn(),
     updateFidoUserDeviceName: jest.fn(),
     deleteFidoUserDevice: jest.fn()
   };
@@ -51,5 +54,28 @@ describe('FidoController passkey management authorization', () => {
       response() as never
     );
     expect(fidoService.deleteFidoUserDevice).toHaveBeenCalledWith('credential-id', 'owner@example.com');
+  });
+
+  it('rejects registration for another user', async () => {
+    await expect(
+      controller.generateRegistrationOption(
+        { user: { email: 'owner@example.com' } },
+        { deviceFlag: false },
+        'other@example.com',
+        response() as never
+      )
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(fidoService.generateRegistrationOption).not.toHaveBeenCalled();
+  });
+
+  it('passes the authenticated identity to passkey detail updates', async () => {
+    fidoService.updateFidoUser.mockResolvedValue({ response: 'updated' });
+    await controller.updateFidoUser(
+      { user: { email: 'Owner@Example.com' } },
+      { credentialId: 'credential-id', deviceFriendlyName: 'phone', userName: 'owner' },
+      'credential-id',
+      response() as never
+    );
+    expect(fidoService.updateFidoUser).toHaveBeenCalledWith(expect.any(Object), 'credential-id', 'owner@example.com');
   });
 });

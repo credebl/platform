@@ -43,6 +43,9 @@ describe('StatusListAllocatorService', () => {
         update: jest.fn(() => Promise.resolve(activeList)),
         updateMany: jest.fn(),
         create: jest.fn()
+      },
+      issued_oid4vc_credentials: {
+        deleteMany: jest.fn()
       }
     };
     const prisma = {
@@ -58,5 +61,82 @@ describe('StatusListAllocatorService', () => {
     expect(calls.slice(0, 2)).toEqual(['lock', 'find']);
     expect(result.listId).toBe(activeList.listId);
     expect(tx.status_list_allocation.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('commits full-list deactivation before reporting the bitmap is full', async () => {
+    const activeList = {
+      id: 'allocation-id',
+      orgId: 'org-id',
+      issuerDid: 'did:example:issuer',
+      listId: '00000000-0000-0000-0000-000000000001',
+      listSize: 8,
+      allocatedCount: 0,
+      bitmap: Buffer.from([0b11111111]),
+      isActive: true
+    };
+    const tx = {
+      $executeRaw: jest.fn(() => Promise.resolve(1)),
+      status_list_allocation: {
+        findFirst: jest.fn(() => Promise.resolve(activeList)),
+        update: jest.fn(() => Promise.resolve(activeList)),
+        updateMany: jest.fn(() => Promise.resolve({ count: 1 })),
+        create: jest.fn()
+      }
+    };
+    const prisma = {
+      $transaction: jest.fn((callback) => callback(tx))
+    };
+
+    await expect(
+      new StatusListAllocatorService(prisma as never).allocate(
+        activeList.orgId,
+        activeList.issuerDid,
+        activeList.listSize
+      )
+    ).rejects.toThrow('Status list bitmap is full');
+    expect(tx.status_list_allocation.update).toHaveBeenCalledWith({
+      where: { id: activeList.id },
+      data: { isActive: false }
+    });
+  });
+
+  it('removes a persisted credential before releasing its status-list slot', async () => {
+    const calls: string[] = [];
+    const allocation = {
+      id: 'allocation-id',
+      orgId: 'org-id',
+      issuerDid: 'did:example:issuer',
+      listId: '00000000-0000-0000-0000-000000000001',
+      listSize: 8,
+      allocatedCount: 1,
+      bitmap: Buffer.from([0b00000001]),
+      isActive: true
+    };
+    const tx = {
+      $executeRaw: jest.fn(() => Promise.resolve(1)),
+      issued_oid4vc_credentials: {
+        deleteMany: jest.fn(() => {
+          calls.push('delete-credential');
+          return Promise.resolve({ count: 1 });
+        })
+      },
+      status_list_allocation: {
+        findUnique: jest.fn(() => Promise.resolve(allocation)),
+        update: jest.fn(() => {
+          calls.push('release-slot');
+          return Promise.resolve(allocation);
+        })
+      }
+    };
+    const prisma = {
+      $transaction: jest.fn((callback) => callback(tx))
+    };
+
+    await new StatusListAllocatorService(prisma as never).release(allocation.listId, 0);
+
+    expect(tx.issued_oid4vc_credentials.deleteMany).toHaveBeenCalledWith({
+      where: { listId: allocation.listId, index: 0 }
+    });
+    expect(calls).toEqual(['delete-credential', 'release-slot']);
   });
 });

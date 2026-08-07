@@ -196,17 +196,17 @@ export class FidoService {
     }
   }
 
-  async updateUser(updateFidoUserDetailsDto: UpdateFidoUserDetailsDto): Promise<string> {
+  async updateUser(updateFidoUserDetailsDto: UpdateFidoUserDetailsDto & { actorEmail: string }): Promise<string> {
     try {
-      const updateFidoUserDetails = JSON.stringify(updateFidoUserDetailsDto);
-      const updateFidoUser = await this.userDevicesRepository.updateDeviceByCredentialId(
-        updateFidoUserDetailsDto.credentialId
-      );
+      const { actorEmail, credentialId, ...userDetails } = updateFidoUserDetailsDto;
+      const ownedDevice = await this.assertDeviceOwnership(credentialId, actorEmail);
+      const updateFidoUserDetails = JSON.stringify({ ...userDetails, credentialId });
+      const updateFidoUser = await this.userDevicesRepository.updateDeviceByCredentialId(credentialId);
 
-      if (updateFidoUser[0].id) {
-        await this.userDevicesRepository.addCredentialIdAndNameById(updateFidoUser[0].id, updateFidoUserDetails);
+      if (updateFidoUser[0]?.id && updateFidoUser[0].id === ownedDevice.id) {
+        await this.userDevicesRepository.addCredentialIdAndNameById(ownedDevice.id, updateFidoUserDetails);
       }
-      if (updateFidoUser[0].id) {
+      if (updateFidoUser[0]?.id) {
         return 'User updated.';
       } else {
         throw new InternalServerErrorException(ResponseMessages.fido.error.updateFidoUser);

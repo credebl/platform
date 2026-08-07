@@ -9,7 +9,9 @@ describe('FidoService passkey device ownership', () => {
   const userDevicesRepository = {
     checkUserDeviceByCredentialId: jest.fn(),
     deleteUserDeviceByCredentialId: jest.fn(),
-    updateUserDeviceByCredentialId: jest.fn()
+    updateUserDeviceByCredentialId: jest.fn(),
+    updateDeviceByCredentialId: jest.fn(),
+    addCredentialIdAndNameById: jest.fn()
   };
   const service = new FidoService(
     fidoUserRepository as never,
@@ -47,5 +49,19 @@ describe('FidoService passkey device ownership', () => {
     await expect(
       service.deleteFidoUserDevice({ credentialId: 'credential-id', actorEmail: 'actor@example.com' })
     ).resolves.toBe('Device deleted successfully');
+  });
+
+  it('does not update a credential owned by another user', async () => {
+    fidoUserRepository.checkFidoUserExist.mockResolvedValue({ id: 'actor-id' });
+    userDevicesRepository.checkUserDeviceByCredentialId.mockResolvedValue({
+      id: 'device-id',
+      userId: 'other-user-id',
+      deletedAt: null
+    });
+
+    await expect(
+      service.updateUser({ credentialId: 'credential-id', actorEmail: 'actor@example.com' } as never)
+    ).rejects.toBeDefined();
+    expect(userDevicesRepository.updateDeviceByCredentialId).not.toHaveBeenCalled();
   });
 });

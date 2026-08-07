@@ -47,9 +47,10 @@ export class FidoService extends BaseService {
 
   async updateFidoUser(
     updateFidoUserDetailsDto: UpdateFidoUserDetailsDto,
-    credentialId: string
+    credentialId: string,
+    actorEmail: string
   ): Promise<{ response: object }> {
-    const payload = { updateFidoUserDetailsDto, credentialId };
+    const payload = { updateFidoUserDetailsDto, credentialId, actorEmail };
     return this.natsClient.sendNats(this.fidoServiceProxy, 'update-user', payload);
   }
 

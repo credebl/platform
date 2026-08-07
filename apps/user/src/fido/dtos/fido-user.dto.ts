@@ -136,6 +136,19 @@ export class UpdateFidoUserDetailsDto {
   deviceFriendlyName: string;
 }
 
+export class UpdateFidoUserPayloadDto {
+  @ApiProperty()
+  updateFidoUserDetailsDto: UpdateFidoUserDetailsDto;
+
+  @ApiProperty()
+  @IsString()
+  credentialId: string;
+
+  @ApiProperty()
+  @IsString()
+  actorEmail: string;
+}
+
 export class UserNameDto {
   @ApiProperty()
   @IsString()

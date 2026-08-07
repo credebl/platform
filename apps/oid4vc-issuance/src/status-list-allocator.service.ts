@@ -112,7 +112,7 @@ export class StatusListAllocatorService {
       throw new Error('orgId and issuerDid are required for status list allocation');
     }
     const defaultListSize = CommonConstants.DEFAULT_STATUS_LIST_SIZE;
-    return this.prisma.$transaction(async (tx) => {
+    const allocation = await this.prisma.$transaction(async (tx) => {
       // Serialize allocations for the same tenant and issuer. A database-level lock is
       // required because multiple service replicas can execute this code concurrently.
       const allocationLockKey = `${orgId}:${issuerDid}`;
@@ -168,11 +168,17 @@ export class StatusListAllocatorService {
             where: { id: activeList.id },
             data: { isActive: false }
           });
-          throw new Error('Status list bitmap is full');
+          return undefined;
         }
         throw error;
       }
     });
+
+    if (!allocation) {
+      throw new Error('Status list bitmap is full');
+    }
+
+    return allocation;
   }
 
   async saveCredentialAllocation(
@@ -223,6 +229,11 @@ export class StatusListAllocatorService {
 
       const allocator = new RandomBitmapIndexAllocator(allocation.listSize, new Uint8Array(allocation.bitmap));
       allocator.release(index);
+
+      // A previously persisted credential must be removed before its slot can be reused.
+      await tx.issued_oid4vc_credentials.deleteMany({
+        where: { listId, index }
+      });
 
       await tx.status_list_allocation.update({
         where: { id: allocation.id },

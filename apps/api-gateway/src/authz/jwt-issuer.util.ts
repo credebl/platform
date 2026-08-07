@@ -5,14 +5,10 @@ const trimTrailingSlashes = (value: string): string => value.trim().replace(/\/+
 const validateIssuer = (value: string): string => {
   const issuer = trimTrailingSlashes(value);
   const parsed = new URL(issuer);
+  const isLoopbackHost = ['localhost', '127.0.0.1', '[::1]', '::1'].includes(parsed.hostname.toLowerCase());
+  const usesAllowedProtocol = 'https:' === parsed.protocol || ('http:' === parsed.protocol && isLoopbackHost);
 
-  if (
-    !['http:', 'https:'].includes(parsed.protocol) ||
-    parsed.username ||
-    parsed.password ||
-    parsed.search ||
-    parsed.hash
-  ) {
+  if (!usesAllowedProtocol || parsed.username || parsed.password || parsed.search || parsed.hash) {
     throw new Error(`Invalid trusted JWT issuer: ${value}`);
   }
 

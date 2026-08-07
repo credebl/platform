@@ -1,3 +1,27 @@
+-- Fail before enforcing new invariants if legacy rows would violate them. We cannot
+-- safely choose a credential allocation to delete because that changes revocation semantics.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM "issued_oid4vc_credentials"
+    GROUP BY "listId", "index"
+    HAVING COUNT(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'Cannot create status-list slot uniqueness constraint: duplicate credential allocations exist';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM "status_list_allocation"
+    WHERE "isActive" = true
+    GROUP BY "orgId", "issuerDid"
+    HAVING COUNT(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'Cannot create active status-list constraint: multiple active lists exist for a tenant and issuer';
+  END IF;
+END $$;
+
 -- Prevent two service replicas from persisting the same status-list slot.
 CREATE UNIQUE INDEX "issued_oid4vc_credentials_listId_index_key"
 ON "issued_oid4vc_credentials"("listId", "index");

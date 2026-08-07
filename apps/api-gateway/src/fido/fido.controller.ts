@@ -5,13 +5,15 @@ import {
   Get,
   HttpStatus,
   Logger,
+  ForbiddenException,
   Param,
   Post,
   Put,
   Query,
   Request,
   Res,
-  UseFilters
+  UseFilters,
+  UseGuards
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -42,6 +44,7 @@ import { Response } from 'express';
 import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { CustomExceptionFilter } from 'apps/api-gateway/common/exception-handler';
+import { AuthGuard } from '@nestjs/passport';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('auth')
@@ -60,8 +63,7 @@ export class FidoController {
    * @returns User details
    */
   @Get('/passkey/:email')
-  // TODO: Check if roles are required here?
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
   @ApiBearerAuth()
   @ApiOperation({
@@ -74,7 +76,11 @@ export class FidoController {
   @ApiBadRequestResponse({ description: 'Bad Request', type: BadRequestErrorDto })
   async fetchFidoUserDetails(@Request() req, @Param('email') email: string, @Res() res: Response): Promise<Response> {
     try {
-      const fidoUserDetails = await this.fidoService.fetchFidoUserDetails(email.toLowerCase());
+      const authenticatedEmail = this.getAuthenticatedEmail(req);
+      if (authenticatedEmail !== email.toLowerCase()) {
+        throw new ForbiddenException('Passkey details can only be accessed by their owner');
+      }
+      const fidoUserDetails = await this.fidoService.fetchFidoUserDetails(authenticatedEmail);
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.user.success.fetchUsers,
@@ -241,19 +247,23 @@ export class FidoController {
    */
   @Put('/passkey/:credentialId')
   @ApiBearerAuth()
-  // TODO: Check if roles are required here?
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
   @ApiOperation({ summary: 'Update fido user device name', description: 'Update the device name of a FIDO user.' })
   @ApiQuery({ name: 'deviceName', required: true })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
   async updateFidoUserDeviceName(
+    @Request() req,
     @Param('credentialId') credentialId: string,
     @Query('deviceName') deviceName: string,
     @Res() res: Response
   ): Promise<Response> {
     try {
-      const updateDeviceName = await this.fidoService.updateFidoUserDeviceName(credentialId, deviceName);
+      const updateDeviceName = await this.fidoService.updateFidoUserDeviceName(
+        credentialId,
+        deviceName,
+        this.getAuthenticatedEmail(req)
+      );
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.fido.success.updateDeviceName,
@@ -274,14 +284,17 @@ export class FidoController {
    */
   @Delete('/passkey/:credentialId')
   @ApiBearerAuth()
-  // TODO: Check if roles are required here?
-  // @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @UseGuards(AuthGuard('jwt'))
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.HOLDER, OrgRoles.ISSUER, OrgRoles.SUPER_ADMIN, OrgRoles.MEMBER)
   @ApiOperation({ summary: 'Delete fido user device', description: 'Delete a FIDO user device by its credential ID.' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
-  async deleteFidoUserDevice(@Param('credentialId') credentialId: string, @Res() res: Response): Promise<Response> {
+  async deleteFidoUserDevice(
+    @Request() req,
+    @Param('credentialId') credentialId: string,
+    @Res() res: Response
+  ): Promise<Response> {
     try {
-      const deleteFidoUser = await this.fidoService.deleteFidoUserDevice(credentialId);
+      const deleteFidoUser = await this.fidoService.deleteFidoUserDevice(credentialId, this.getAuthenticatedEmail(req));
       const finalResponse: IResponseType = {
         statusCode: HttpStatus.OK,
         message: ResponseMessages.fido.success.deleteDevice,
@@ -292,5 +305,13 @@ export class FidoController {
       this.logger.error(`Error::${error}`);
       throw error;
     }
+  }
+
+  private getAuthenticatedEmail(req): string {
+    const email = req?.user?.email;
+    if ('string' !== typeof email || !email.trim()) {
+      throw new ForbiddenException('Authenticated user email is required for passkey management');
+    }
+    return email.trim().toLowerCase();
   }
 }

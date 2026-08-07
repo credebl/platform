@@ -113,16 +113,22 @@ export class StatusListAllocatorService {
     }
     const defaultListSize = CommonConstants.DEFAULT_STATUS_LIST_SIZE;
     return this.prisma.$transaction(async (tx) => {
+      // Serialize allocations for the same tenant and issuer. A database-level lock is
+      // required because multiple service replicas can execute this code concurrently.
+      const allocationLockKey = `${orgId}:${issuerDid}`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${allocationLockKey}, 0))`;
+
       // Find active list or create one
       let activeList = await tx.status_list_allocation.findFirst({
-        where: { orgId, issuerDid, isActive: true }
+        where: { orgId, issuerDid, isActive: true },
+        orderBy: { createDateTime: 'desc' }
       });
 
       if (!activeList || activeList.allocatedCount >= activeList.listSize) {
         // Mark inactive if full
         if (activeList) {
-          await tx.status_list_allocation.update({
-            where: { id: activeList.id },
+          await tx.status_list_allocation.updateMany({
+            where: { orgId, issuerDid, isActive: true },
             data: { isActive: false }
           });
         }
@@ -157,12 +163,12 @@ export class StatusListAllocatorService {
         return { listId: activeList.listId, index };
       } catch (error) {
         if ('No indexes left' === error.message) {
-          // Retry rotation if we hit the race condition limit
+          // A mismatched bitmap/count should not leave a full list active.
           await tx.status_list_allocation.update({
             where: { id: activeList.id },
             data: { isActive: false }
           });
-          throw new Error('Retry allocation, list full');
+          throw new Error('Status list bitmap is full');
         }
         throw error;
       }
@@ -197,7 +203,17 @@ export class StatusListAllocatorService {
 
   async release(listId: string, index: number): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      const allocation = await tx.status_list_allocation.findUnique({
+      let allocation = await tx.status_list_allocation.findUnique({
+        where: { listId }
+      });
+
+      if (!allocation) {
+        return;
+      }
+
+      const allocationLockKey = `${allocation.orgId}:${allocation.issuerDid}`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${allocationLockKey}, 0))`;
+      allocation = await tx.status_list_allocation.findUnique({
         where: { listId }
       });
 
@@ -209,7 +225,7 @@ export class StatusListAllocatorService {
       allocator.release(index);
 
       await tx.status_list_allocation.update({
-        where: { listId },
+        where: { id: allocation.id },
         data: {
           bitmap: Buffer.from(allocator.export()),
           allocatedCount: allocator.getAllocatedCount()

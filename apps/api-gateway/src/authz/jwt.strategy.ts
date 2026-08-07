@@ -2,7 +2,7 @@
 import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
 
-import { CommonConstants, uuidRegex } from '@credebl/common/common.constant';
+import { uuidRegex } from '@credebl/common/common.constant';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
@@ -14,6 +14,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { UserService } from '../user/user.service';
 import { passportJwtSecret } from 'jwks-rsa';
+import { getTrustedJwksUri, getTrustedJwtIssuers } from './jwt-issuer.util';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly organizationService: OrganizationService,
     private readonly authzService: AuthzService
   ) {
+    const trustedIssuers = getTrustedJwtIssuers();
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKeyProvider: async (request, jwtToken, done) => {
@@ -36,21 +38,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           return done(new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken), null);
         }
 
-        const audiance = decodedToken.iss.toString();
-        const jwtOptions = {
-          cache: true,
-          rateLimit: true,
-          jwksRequestsPerMinute: 5,
-          jwksUri: `${audiance}${CommonConstants.URL_KEYCLOAK_JWKS}`
-        };
-        const secretprovider = passportJwtSecret(jwtOptions);
-        let certkey;
-        secretprovider(request, jwtToken, async (err, data) => {
-          certkey = data;
-          done(null, certkey);
-        });
+        try {
+          const jwtOptions = {
+            cache: true,
+            rateLimit: true,
+            jwksRequestsPerMinute: 5,
+            jwksUri: getTrustedJwksUri(decodedToken.iss, trustedIssuers)
+          };
+          const secretprovider = passportJwtSecret(jwtOptions);
+          secretprovider(request, jwtToken, (err, data) => done(err, data));
+        } catch (error) {
+          return done(new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken), null);
+        }
       },
-      algorithms: ['RS256']
+      algorithms: ['RS256'],
+      issuer: trustedIssuers
     });
   }
 

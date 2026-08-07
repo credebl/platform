@@ -1,3 +1,10 @@
+BEGIN;
+
+-- Keep duplicate validation and index creation in the same write-exclusion window.
+-- ACCESS SHARE would permit concurrent inserts, so it is not sufficient here.
+LOCK TABLE "issued_oid4vc_credentials" IN SHARE ROW EXCLUSIVE MODE;
+LOCK TABLE "status_list_allocation" IN SHARE ROW EXCLUSIVE MODE;
+
 -- Fail before enforcing new invariants if legacy rows would violate them. We cannot
 -- safely choose a credential allocation to delete because that changes revocation semantics.
 DO $$
@@ -31,3 +38,5 @@ ON "issued_oid4vc_credentials"("listId", "index");
 CREATE UNIQUE INDEX "status_list_allocation_one_active_per_issuer_key"
 ON "status_list_allocation"("orgId", "issuerDid")
 WHERE "isActive" = true;
+
+COMMIT;

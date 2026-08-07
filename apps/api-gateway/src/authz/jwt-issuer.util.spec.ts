@@ -2,9 +2,8 @@ import { getTrustedJwksUri, getTrustedJwtIssuers } from './jwt-issuer.util';
 
 describe('trusted JWT issuers', () => {
   it('derives the Keycloak realm issuer when an explicit allowlist is not configured', () => {
-    expect(getTrustedJwtIssuers({ KEYCLOAK_DOMAIN: 'https://identity.example/', KEYCLOAK_REALM: 'platform' })).toEqual([
-      'https://identity.example/realms/platform'
-    ]);
+    const env = { KEYCLOAK_DOMAIN: 'https://identity.example/', KEYCLOAK_REALM: 'platform' };
+    expect(getTrustedJwtIssuers(env)).toEqual(['https://identity.example/realms/platform']);
   });
 
   it('supports an explicit issuer allowlist and removes duplicates', () => {
@@ -17,12 +16,13 @@ describe('trusted JWT issuers', () => {
   });
 
   it('builds a JWKS URI only for an allowlisted issuer', () => {
-    expect(
-      getTrustedJwksUri('https://identity.example/realms/platform', ['https://identity.example/realms/platform'])
-    ).toBe('https://identity.example/realms/platform/protocol/openid-connect/certs');
-    expect(() =>
-      getTrustedJwksUri('https://attacker.example/realms/platform', ['https://identity.example/realms/platform'])
-    ).toThrow('JWT issuer is not trusted');
+    const issuer = 'https://identity.example/realms/platform';
+    const attackerIssuer = 'https://attacker.example/realms/platform';
+    const trustedIssuers = [issuer];
+    expect(getTrustedJwksUri(issuer, trustedIssuers)).toBe(
+      'https://identity.example/realms/platform/protocol/openid-connect/certs'
+    );
+    expect(() => getTrustedJwksUri(attackerIssuer, trustedIssuers)).toThrow('JWT issuer is not trusted');
   });
 
   it('fails closed when no trusted issuer configuration exists', () => {
@@ -30,9 +30,8 @@ describe('trusted JWT issuers', () => {
   });
 
   it('allows HTTP only for explicit loopback issuers', () => {
-    expect(getTrustedJwtIssuers({ JWT_TRUSTED_ISSUERS: 'http://localhost:8080/realms/platform' })).toEqual([
-      'http://localhost:8080/realms/platform'
-    ]);
+    const loopbackEnv = { JWT_TRUSTED_ISSUERS: 'http://localhost:8080/realms/platform' };
+    expect(getTrustedJwtIssuers(loopbackEnv)).toEqual(['http://localhost:8080/realms/platform']);
     expect(() => getTrustedJwtIssuers({ JWT_TRUSTED_ISSUERS: 'http://identity.example/realms/platform' })).toThrow(
       'Invalid trusted JWT issuer'
     );

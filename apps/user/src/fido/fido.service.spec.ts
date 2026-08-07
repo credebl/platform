@@ -64,4 +64,22 @@ describe('FidoService passkey device ownership', () => {
     ).rejects.toBeDefined();
     expect(userDevicesRepository.updateDeviceByCredentialId).not.toHaveBeenCalled();
   });
+
+  it('does not rename a credential owned by another user', async () => {
+    fidoUserRepository.checkFidoUserExist.mockResolvedValue({ id: 'actor-id' });
+    userDevicesRepository.checkUserDeviceByCredentialId.mockResolvedValue({
+      id: 'device-id',
+      userId: 'other-user-id',
+      deletedAt: null
+    });
+
+    await expect(
+      service.updateFidoUserDeviceName({
+        credentialId: 'credential-id',
+        deviceName: 'new name',
+        actorEmail: 'actor@example.com'
+      })
+    ).rejects.toBeDefined();
+    expect(userDevicesRepository.updateUserDeviceByCredentialId).not.toHaveBeenCalled();
+  });
 });

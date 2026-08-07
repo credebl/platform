@@ -209,6 +209,11 @@ export class StatusListAllocatorService {
 
   async release(listId: string, index: number): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
+      // Use the same relation lock order as the migration before reading either table.
+      // ROW SHARE establishes order without serializing normal allocation writes.
+      await tx.$executeRaw`LOCK TABLE "issued_oid4vc_credentials" IN ROW SHARE MODE`;
+      await tx.$executeRaw`LOCK TABLE "status_list_allocation" IN ROW SHARE MODE`;
+
       let allocation = await tx.status_list_allocation.findUnique({
         where: { listId }
       });

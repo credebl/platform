@@ -1,5 +1,6 @@
 jest.mock('../user.service', () => ({ UserService: jest.fn() }));
 
+import { ForbiddenException } from '@nestjs/common';
 import { FidoService } from './fido.service';
 
 describe('FidoService passkey device ownership', () => {
@@ -23,8 +24,15 @@ describe('FidoService passkey device ownership', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
+  const mockAuthenticatedActor = (): void => {
+    async function resolveActor(email: string): Promise<{ id: string } | undefined> {
+      return 'actor@example.com' === email ? { id: 'actor-id' } : undefined;
+    }
+    fidoUserRepository.checkFidoUserExist.mockImplementation(resolveActor);
+  };
+
   it('does not delete a credential owned by another user', async () => {
-    fidoUserRepository.checkFidoUserExist.mockResolvedValue({ id: 'actor-id' });
+    mockAuthenticatedActor();
     userDevicesRepository.checkUserDeviceByCredentialId.mockResolvedValue({
       id: 'device-id',
       userId: 'other-user-id',
@@ -33,12 +41,12 @@ describe('FidoService passkey device ownership', () => {
 
     await expect(
       service.deleteFidoUserDevice({ credentialId: 'credential-id', actorEmail: 'actor@example.com' })
-    ).rejects.toBeDefined();
+    ).rejects.toEqual(expect.objectContaining({ error: expect.any(ForbiddenException) }));
     expect(userDevicesRepository.deleteUserDeviceByCredentialId).not.toHaveBeenCalled();
   });
 
   it('deletes a credential owned by the authenticated user', async () => {
-    fidoUserRepository.checkFidoUserExist.mockResolvedValue({ id: 'actor-id' });
+    mockAuthenticatedActor();
     userDevicesRepository.checkUserDeviceByCredentialId.mockResolvedValue({
       id: 'device-id',
       userId: 'actor-id',
@@ -49,10 +57,11 @@ describe('FidoService passkey device ownership', () => {
     await expect(
       service.deleteFidoUserDevice({ credentialId: 'credential-id', actorEmail: 'actor@example.com' })
     ).resolves.toBe('Device deleted successfully');
+    expect(userDevicesRepository.deleteUserDeviceByCredentialId).toHaveBeenCalledWith('credential-id');
   });
 
   it('does not update a credential owned by another user', async () => {
-    fidoUserRepository.checkFidoUserExist.mockResolvedValue({ id: 'actor-id' });
+    mockAuthenticatedActor();
     userDevicesRepository.checkUserDeviceByCredentialId.mockResolvedValue({
       id: 'device-id',
       userId: 'other-user-id',
@@ -61,12 +70,12 @@ describe('FidoService passkey device ownership', () => {
 
     await expect(
       service.updateUser({ credentialId: 'credential-id', actorEmail: 'actor@example.com' } as never)
-    ).rejects.toBeDefined();
+    ).rejects.toEqual(expect.objectContaining({ error: expect.any(ForbiddenException) }));
     expect(userDevicesRepository.updateDeviceByCredentialId).not.toHaveBeenCalled();
   });
 
   it('does not rename a credential owned by another user', async () => {
-    fidoUserRepository.checkFidoUserExist.mockResolvedValue({ id: 'actor-id' });
+    mockAuthenticatedActor();
     userDevicesRepository.checkUserDeviceByCredentialId.mockResolvedValue({
       id: 'device-id',
       userId: 'other-user-id',
@@ -79,7 +88,7 @@ describe('FidoService passkey device ownership', () => {
         deviceName: 'new name',
         actorEmail: 'actor@example.com'
       })
-    ).rejects.toBeDefined();
+    ).rejects.toEqual(expect.objectContaining({ error: expect.any(ForbiddenException) }));
     expect(userDevicesRepository.updateUserDeviceByCredentialId).not.toHaveBeenCalled();
   });
 });

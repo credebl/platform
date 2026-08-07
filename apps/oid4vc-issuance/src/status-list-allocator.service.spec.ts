@@ -122,7 +122,17 @@ describe('StatusListAllocatorService', () => {
       isActive: true
     };
     const tx = {
-      $executeRaw: jest.fn(() => Promise.resolve(1)),
+      $executeRaw: jest.fn((strings: TemplateStringsArray) => {
+        const query = strings.join('');
+        if (query.includes('issued_oid4vc_credentials')) {
+          calls.push('lock-credentials');
+        } else if (query.includes('status_list_allocation')) {
+          calls.push('lock-allocation');
+        } else {
+          calls.push('lock-advisory');
+        }
+        return Promise.resolve(1);
+      }),
       issued_oid4vc_credentials: {
         deleteMany: jest.fn(() => {
           calls.push('delete-credential');
@@ -146,6 +156,12 @@ describe('StatusListAllocatorService', () => {
     expect(tx.issued_oid4vc_credentials.deleteMany).toHaveBeenCalledWith({
       where: { listId: allocation.listId, index: 0 }
     });
-    expect(calls).toEqual(['delete-credential', 'release-slot']);
+    expect(calls).toEqual([
+      'lock-credentials',
+      'lock-allocation',
+      'lock-advisory',
+      'delete-credential',
+      'release-slot'
+    ]);
   });
 });

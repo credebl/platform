@@ -95,7 +95,9 @@ export class AgentProvisioningService {
             ...requiredEnvironment.map((name) => process.env[name] as string)
           ],
           { timeout: AGENT_PROVISION_TIMEOUT_MS, maxBuffer: 1024 * 1024 }
-        );
+        ).catch(() => {
+          throw new Error('Agent provisioning script failed');
+        });
 
         const agentEndpointPath = `${process.cwd()}${endpointDirectory}${orgId}_${containerName}.json`;
         const agentEndPointExists = await this.checkFileExistence(agentEndpointPath);
@@ -104,7 +106,7 @@ export class AgentProvisioningService {
         }
 
         const agentEndPoint = await fs.readFile(agentEndpointPath, 'utf8');
-        let parsedEndpoint: { CONTROLLER_ENDPOINT?: string };
+        let parsedEndpoint: { CONTROLLER_ENDPOINT?: unknown };
         try {
           parsedEndpoint = JSON.parse(agentEndPoint);
         } catch (parseError) {
@@ -112,7 +114,7 @@ export class AgentProvisioningService {
           throw new Error(`Invalid JSON in agent endpoint file: ${agentEndpointPath}`);
         }
 
-        if (!parsedEndpoint.CONTROLLER_ENDPOINT) {
+        if ('string' !== typeof parsedEndpoint.CONTROLLER_ENDPOINT || !parsedEndpoint.CONTROLLER_ENDPOINT.trim()) {
           throw new Error(`Missing CONTROLLER_ENDPOINT in: ${agentEndpointPath}`);
         }
 
@@ -135,8 +137,8 @@ export class AgentProvisioningService {
     }
   }
 
-  private assertSafeFileIdentifier(value: string, field: string): void {
-    if (!SAFE_FILE_IDENTIFIER.test(value)) {
+  private assertSafeFileIdentifier(value: unknown, field: string): void {
+    if ('string' !== typeof value || !SAFE_FILE_IDENTIFIER.test(value)) {
       throw new Error(`${field} contains unsafe characters`);
     }
   }

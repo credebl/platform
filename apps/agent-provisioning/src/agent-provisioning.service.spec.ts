@@ -79,10 +79,31 @@ describe('AgentProvisioningService', () => {
     expect(mockExecFile).not.toHaveBeenCalled();
   });
 
-  it('propagates a provisioning script failure instead of attempting to read an endpoint file', async () => {
-    mockExecFile.mockRejectedValue(new Error('script failed'));
+  it('rejects non-string identifiers before executing a script', async () => {
+    await expect(service.walletProvision({ ...payload, orgId: 123 as unknown as string })).rejects.toThrow(
+      'orgId contains unsafe characters'
+    );
+    expect(mockExecFile).not.toHaveBeenCalled();
+  });
 
-    await expect(service.walletProvision(payload)).rejects.toBeDefined();
+  it.each([{}, 1, [], '', '   '])('rejects invalid CONTROLLER_ENDPOINT values', async (endpoint) => {
+    mockExecFile.mockResolvedValue({ stdout: '', stderr: '' });
+    mockReadFile.mockResolvedValue(JSON.stringify({ CONTROLLER_ENDPOINT: endpoint }));
+
+    await expect(service.walletProvision(payload)).rejects.toThrow('Missing CONTROLLER_ENDPOINT');
+  });
+
+  it('propagates a provisioning script failure instead of attempting to read an endpoint file', async () => {
+    const failure = Object.assign(new Error('script failed'), {
+      stdout: 'stdout-secret',
+      stderr: 'stderr-secret'
+    });
+    mockExecFile.mockRejectedValue(failure);
+
+    await expect(service.walletProvision(payload)).rejects.toThrow('Agent provisioning script failed');
     expect(mockReadFile).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalled();
+    expect(JSON.stringify(logger.error.mock.calls)).not.toContain('stdout-secret');
+    expect(JSON.stringify(logger.error.mock.calls)).not.toContain('stderr-secret');
   });
 });

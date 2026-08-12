@@ -1774,6 +1774,8 @@ export class AgentServiceService {
   ): Promise<object> {
     try {
       const getApiKey = await this.getOrgAgentApiKey(orgId);
+      this.logger.log(`outOfBandIssuancePayload: ${JSON.stringify(outOfBandIssuancePayload)}`);
+      this.logger.log(`url: ${url}`);
       const sendOutOfbandCredentialOffer = await this.commonService
         .httpPost(url, outOfBandIssuancePayload, { headers: { authorization: getApiKey } })
         .then(async (response) => response);
@@ -1822,9 +1824,8 @@ export class AgentServiceService {
       // Perform the deletion in a transaction
       return await this.prisma.$transaction(async (prisma) => {
         // Delete org agent and related records
-        const { orgDid, agentInvitation, deleteOrgAgent } = await this.agentServiceRepository.deleteOrgAgentByOrg(
-          orgId
-        );
+        const { orgDid, agentInvitation, deleteOrgAgent } =
+          await this.agentServiceRepository.deleteOrgAgentByOrg(orgId);
 
         // Make the HTTP DELETE request
         const deleteWallet = await this.commonService.httpDelete(url, {
@@ -2087,8 +2088,8 @@ export class AgentServiceService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_AGENT_SIGN_DATA}`
               : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHARED_AGENT_SIGN_DATA}`.replace('#', tenantId)
-              : null;
+                ? `${agentEndPoint}${CommonConstants.URL_SHARED_AGENT_SIGN_DATA}`.replace('#', tenantId)
+                : null;
           break;
         }
         case 'verify-signed-data-from-agent': {
@@ -2096,8 +2097,8 @@ export class AgentServiceService {
             orgAgentType === OrgAgentType.DEDICATED
               ? `${agentEndPoint}${CommonConstants.URL_AGENT_VERIFY_SIGNED_DATA}`
               : orgAgentType === OrgAgentType.SHARED
-              ? `${agentEndPoint}${CommonConstants.URL_SHARED_AGENT_VERIFY_SIGNED_DATA}`.replace('#', tenantId)
-              : null;
+                ? `${agentEndPoint}${CommonConstants.URL_SHARED_AGENT_VERIFY_SIGNED_DATA}`.replace('#', tenantId)
+                : null;
           break;
         }
         default: {

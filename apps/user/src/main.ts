@@ -1,3 +1,5 @@
+import * as dotenv from 'dotenv';
+
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 import { CommonConstants } from '@credebl/common/common.constant';
@@ -7,10 +9,14 @@ import { NestFactory } from '@nestjs/core';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import { UserModule } from './user.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { loadConfigSecrets } from '@credebl/config/secret-storage/secrets-loader';
+
+dotenv.config();
 
 const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
+  await loadConfigSecrets();
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(UserModule, {
     transport: Transport.NATS,
     options: getNatsOptions(CommonConstants.USER_SERVICE, process.env.USER_NKEY_SEED, process.env.NATS_CREDS_FILE)

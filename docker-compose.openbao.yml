@@ -1,0 +1,20 @@
+services:
+  openbao:
+    image: openbao/openbao:latest
+    container_name: openbao
+    # Entrypoint runs as root, chowns the data volume, then drops to openbao user
+    ports:
+      - "8200:8200"
+    environment:
+      - BAO_ADDR=http://127.0.0.1:8200
+    volumes:
+      - openbao_data:/openbao/file
+      - ./config.hcl:/bao/config/bao.hcl:ro
+    cap_add:
+      - IPC_LOCK
+    # Expressly point to the HCL config file
+    command: ["server", "-config=/bao/config/bao.hcl"]
+    restart: unless-stopped
+
+volumes:
+  openbao_data:

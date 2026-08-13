@@ -443,6 +443,12 @@ export enum CommonConstants {
   OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = 'get-oid4vp-verifier-session-response-id',
   OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY = 'verify-oid4vp-verifier-session-auth-response',
 
+  // BAO_STORAGE_PATH
+  CREDEBL_RESEND_API_KEY_PATH = 'secret/data/credebl_resend_api_key',
+  CREDEBL_SMTP_CONFIG_PATH = 'secret/data/credebl_smtp_config',
+  CREDEBL_SENDGRID_API_KEY_PATH = 'secret/data/credebl_sendgrid_api_key',
+  CREDEBL_AWS_KEY_PATH = 'secret/data/credebl_aws_keys',
+
   //X509
   X509_CREATE_CERTIFICATE = 'create-x509-certificate',
   X509_IMPORT_CERTIFICATE = 'import-x509-certificate',
@@ -451,7 +457,9 @@ export enum CommonConstants {
   // Storage Types
   STORAGE_TYPE_AWS = 'aws',
   STORAGE_TYPE_LOCAL = 'local',
-  STORAGE_TYPE_RUSTFS = 'rustfs'
+  STORAGE_TYPE_RUSTFS = 'rustfs',
+
+  OPENBAO_REQUEST_TIMEOUT = 10000
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

@@ -1,18 +1,25 @@
-import { HttpExceptionFilter } from 'libs/http-exception.filter';
-import { Logger } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { AgentServiceModule } from './agent-service.module';
-import { AgentServiceService } from './agent-service.service';
+import * as dotenv from 'dotenv';
+
 import { IAgentSpinupDto, IUserRequestInterface } from './interface/agent-service.interface';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { getNatsOptions } from '@credebl/common/nats.config';
+
+import { AgentServiceModule } from './agent-service.module';
+import { AgentServiceService } from './agent-service.service';
 import { CommonConstants } from '@credebl/common/common.constant';
+import { HttpExceptionFilter } from 'libs/http-exception.filter';
 import { Ledgers } from '@credebl/enum/enum';
+import { Logger } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
+import { getNatsOptions } from '@credebl/common/nats.config';
+import { loadConfigSecrets } from '@credebl/config/secret-storage/secrets-loader';
+
+dotenv.config();
 
 const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
+  await loadConfigSecrets();
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AgentServiceModule, {
     transport: Transport.NATS,
     options: getNatsOptions(

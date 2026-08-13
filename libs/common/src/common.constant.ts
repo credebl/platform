@@ -129,7 +129,7 @@ export enum CommonConstants {
   URL_GET_PROOF_PRESENTATIONS = '/proofs',
   URL_GET_PROOF_PRESENTATION_BY_ID = '/proofs/#',
   URL_VERIFY_PRESENTATION = '/proofs/#/accept-presentation',
-  URL_SEND_OUT_OF_BAND_CREATE_REQUEST = '/proofs/create-request-oob',
+  URL_SEND_OUT_OF_BAND_CREATE_REQUEST = '/didcomm/proofs/create-request-oob',
   URL_PROOF_FORM_DATA = '/proofs/#/form-data',
 
   // server or agent

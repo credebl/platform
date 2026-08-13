@@ -7,8 +7,8 @@ import { fetchSecrets } from './utils/secretLoader.util';
 
 export const sendWithSMTP = async (emailDto: EmailDto): Promise<boolean> => {
   try {
-    const secretPath = CommonConstants.CREDEBL_SMTP_CONFIG_PATH;
-    const secrets = await fetchSecrets(secretPath);
+    const secretKey = CommonConstants.SMTP_CONFIG;
+    const secrets = await fetchSecrets(secretKey);
     const smtpHost = secrets.SMTP_HOST ?? process.env.SMTP_HOST;
     const smtpPort = secrets.SMTP_PORT ?? process.env.SMTP_PORT;
     const smtpUser = secrets.SMTP_USER ?? process.env.SMTP_USER;

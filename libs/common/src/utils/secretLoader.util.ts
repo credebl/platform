@@ -5,14 +5,14 @@ const CACHE_TTL_MS = 10 * 60 * 1000;
 
 const secretCaches = new Map<string, TtlCache<Record<string, string>>>();
 
-export async function fetchSecrets(secretPath: string): Promise<Record<string, string>> {
+export async function fetchSecrets(secretKey: string): Promise<Record<string, string>> {
   if ('true' !== process.env.ENABLE_BAO?.trim()?.toLowerCase()) {
     return {};
   }
-  let cache = secretCaches.get(secretPath);
+  let cache = secretCaches.get(secretKey);
   if (!cache) {
     cache = new TtlCache<Record<string, string>>(CACHE_TTL_MS);
-    secretCaches.set(secretPath, cache);
+    secretCaches.set(secretKey, cache);
   }
   return cache.get(async () => {
     const providerType = process.env.SECRETS_PROVIDER?.trim();
@@ -23,6 +23,6 @@ export async function fetchSecrets(secretPath: string): Promise<Record<string, s
     if (!provider) {
       return {};
     }
-    return provider.loadSecrets({ customPath: secretPath });
+    return provider.loadSecrets({ secretKey });
   });
 }

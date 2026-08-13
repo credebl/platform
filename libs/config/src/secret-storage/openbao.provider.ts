@@ -17,13 +17,26 @@ export class OpenBaoProvider implements SecretProvider {
   readonly name = 'OpenBao';
   private readonly logger = new Logger(OpenBaoProvider.name);
 
+  private readonly secretPathMap: Record<string, string> = {
+    [CommonConstants.RESEND_API_KEY]: 'secret/data/credebl_resend_api_key',
+    [CommonConstants.SMTP_CONFIG]: 'secret/data/credebl_smtp_config',
+    [CommonConstants.SENDGRID_API_KEY]: 'secret/data/credebl_sendgrid_api_key',
+    [CommonConstants.AWS_KEY]: 'secret/data/credebl_aws_keys'
+  };
+
   isEnabled(): boolean {
     return 'true' === process.env.ENABLE_BAO?.trim()?.toLowerCase();
   }
 
-  async loadSecrets(options?: { customPath?: string }): Promise<Record<string, string>> {
+  async loadSecrets(options?: { secretKey?: string }): Promise<Record<string, string>> {
     const baoUrl = process.env.BAO_URL;
-    const secretPath = options?.customPath || process.env.BAO_SECRET_PATH;
+    let secretPath = process.env.BAO_SECRET_PATH;
+    if (options?.secretKey) {
+      secretPath = this.secretPathMap[options.secretKey];
+      if (!secretPath) {
+        throw new Error(`No OpenBao path mapped for secret key: ${options.secretKey}`);
+      }
+    }
     const roleId = process.env.BAO_ROLE_ID;
     const secretId = process.env.BAO_SECRET_ID;
     if (!baoUrl || !secretPath || !roleId || !secretId) {

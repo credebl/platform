@@ -39,7 +39,8 @@ run_bao() {
 }
 
 echo_step() {
-  printf '\n==> %s\n' "$1"
+  local message="$1"
+  printf '\n==> %s\n' "$message"
 }
 
 echo "Connecting to OpenBao in container '${CONTAINER_NAME}' (${BAO_ADDR_IN_CONTAINER})..."

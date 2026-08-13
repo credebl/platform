@@ -243,7 +243,9 @@ export class VerificationService {
       const getProofPresentationById = await this._getProofPresentationById(payload);
       return getProofPresentationById?.response;
     } catch (error) {
-      this.logger.error(`[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[getProofPresentationById] - error in get proof presentation by proofId : ${JSON.stringify(error)}`
+      );
       const errorMessage = error?.response?.error?.reason || error?.message;
 
       if (errorMessage?.includes('not found')) {
@@ -490,7 +492,7 @@ export class VerificationService {
   ): Promise<boolean | object> {
     try {
       // const { requestedAttributes, requestedPredicates } = await this._proofRequestPayload(outOfBandRequestProof);
-
+      this.logger.log('sendOutOfBandPresentationRequest outOfBandRequestProof', JSON.stringify(outOfBandRequestProof));
       const [getAgentDetails, getOrganization] = await Promise.all([
         this.verificationRepository.getAgentEndPoint(user.orgId),
         this.verificationRepository.getOrganization(user.orgId)
@@ -619,7 +621,7 @@ export class VerificationService {
     try {
       const accumulatedErrors = [];
       const accumulatedResponse = [];
-
+      this.logger.log(`[sendEmailInBatches] - emailIds: ${JSON.stringify(emailIds)}`);
       for (const email of emailIds) {
         try {
           const response = await this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
@@ -627,7 +629,7 @@ export class VerificationService {
 
           await this.delay(500);
         } catch (error) {
-          this.logger.error(`Error sending email to ${email}::::::`, error);
+          this.logger.error(`[sendEmailInBatches] - Error sending email to ${email}::::::`, error);
           accumulatedErrors.push(error);
         }
       }
@@ -651,8 +653,10 @@ export class VerificationService {
     getAgentDetails: org_agents,
     organizationDetails: organisation
   ): Promise<object> {
+    this.logger.log('sendOutOfBandProofRequest payload', JSON.stringify(payload));
+    this.logger.log('\n\nsendOutOfBandProofRequest email', email);
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
-
+    this.logger.log('\n\ngetProofPresentation', JSON.stringify(getProofPresentation));
     if (!getProofPresentation) {
       throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
     }
@@ -687,6 +691,7 @@ export class VerificationService {
         disposition: 'attachment'
       }
     ];
+    this.logger.log('\n\nemailData', JSON.stringify(this.emailData));
     const isEmailSent = await sendEmail(this.emailData);
 
     if (!isEmailSent) {

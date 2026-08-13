@@ -1,14 +1,22 @@
-import * as dotenv from 'dotenv';
 import * as sendgrid from '@sendgrid/mail';
 
+import { CommonConstants } from './common.constant';
 import { EmailDto } from './dtos/email.dto';
-
-dotenv.config();
-
-sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
+import { Logger } from '@nestjs/common';
+import { fetchSecrets } from './utils/secretLoader.util';
 
 export const sendWithSendGrid = async (EmailDto: EmailDto): Promise<boolean> => {
   try {
+    const secretPath = CommonConstants.CREDEBL_SENDGRID_API_KEY_PATH;
+    const secrets = await fetchSecrets(secretPath);
+    const apiKey = secrets.SENDGRID_API_KEY ?? process.env.SENDGRID_API_KEY;
+
+    if (!apiKey) {
+      throw new Error('Missing SENDGRID_API_KEY in secret payload.');
+    }
+
+    sendgrid.setApiKey(apiKey);
+
     const msg = {
       to: EmailDto.emailTo,
       from: EmailDto.emailFrom,
@@ -22,6 +30,7 @@ export const sendWithSendGrid = async (EmailDto: EmailDto): Promise<boolean> => 
       .then(() => true)
       .catch(() => false);
   } catch (error) {
+    Logger.error('Error while sending email with SendGrid', error);
     return false;
   }
 };

@@ -1,15 +1,22 @@
-import { NestFactory } from '@nestjs/core';
+import * as dotenv from 'dotenv';
+
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+
+import { CommonConstants } from '@credebl/common/common.constant';
 import { ConnectionModule } from './connection.module';
 import { HttpExceptionFilter } from 'libs/http-exception.filter';
 import { Logger } from '@nestjs/common';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { getNatsOptions } from '@credebl/common/nats.config';
-import { CommonConstants } from '@credebl/common/common.constant';
+import { NestFactory } from '@nestjs/core';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
+import { getNatsOptions } from '@credebl/common/nats.config';
+import { loadConfigSecrets } from '@credebl/config/secret-storage/secrets-loader';
+
+dotenv.config();
 
 const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
+  await loadConfigSecrets();
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(ConnectionModule, {
     transport: Transport.NATS,
     options: getNatsOptions(

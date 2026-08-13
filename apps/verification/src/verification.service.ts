@@ -624,6 +624,7 @@ export class VerificationService {
       this.logger.log(`[sendEmailInBatches] - emailIds: ${JSON.stringify(emailIds)}`);
       for (const email of emailIds) {
         try {
+          this.logger.log(`[sendEmailInBatches] - Sending email to ${email} and type of email is ${typeof email}`);
           const response = await this.sendOutOfBandProofRequest(payload, email, getAgentDetails, organizationDetails);
           accumulatedResponse.push({ email, ...response });
 
@@ -654,9 +655,9 @@ export class VerificationService {
     organizationDetails: organisation
   ): Promise<object> {
     this.logger.log('sendOutOfBandProofRequest payload', JSON.stringify(payload));
-    this.logger.log('\n\nsendOutOfBandProofRequest email', email);
+    this.logger.log('sendOutOfBandProofRequest email', email);
     const getProofPresentation = await this._sendOutOfBandProofRequest(payload);
-    this.logger.log('\n\ngetProofPresentation', JSON.stringify(getProofPresentation));
+    this.logger.log('getProofPresentation', JSON.stringify(getProofPresentation));
     if (!getProofPresentation) {
       throw new Error(ResponseMessages.verification.error.proofPresentationNotFound);
     }
@@ -691,7 +692,7 @@ export class VerificationService {
         disposition: 'attachment'
       }
     ];
-    this.logger.log('\n\nemailData', JSON.stringify(this.emailData));
+    this.logger.log('emailData', JSON.stringify(this.emailData));
     const isEmailSent = await sendEmail(this.emailData);
 
     if (!isEmailSent) {

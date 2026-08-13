@@ -9,13 +9,11 @@ const logger = new Logger('SecretsLoader');
  * Factory function to get the requested secret provider
  */
 export function getSecretProvider(providerType: string): SecretProvider | null {
-  switch (providerType.toLowerCase()) {
-    case 'openbao':
-      return new OpenBaoProvider();
-
-    default:
-      return null;
+  if ('openbao' === providerType.toLowerCase()) {
+    return new OpenBaoProvider();
   }
+
+  return null;
 }
 
 export async function loadConfigSecrets(): Promise<void> {

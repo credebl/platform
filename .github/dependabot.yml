@@ -32,6 +32,15 @@ updates:
     allow:
       - dependency-type: "all"
 
+    # uuid 11+ is ESM-only and cannot be loaded by the CommonJS jest runtime
+    # (see revert of the uuid 14.0.0 bump). Re-enable once the app migrates to ESM.
+    ignore:
+      - dependency-name: "uuid"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+
     labels:
       - "dependencies"
       - "pnpm"

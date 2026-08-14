@@ -11,4 +11,12 @@ end-user and developer demos (if any) in the repo should include updates or exte
 
 If you would like to propose a significant change, please open an issue first to discuss the work with the community.
 
+## Dependency updates
+
+[Dependabot](https://github.com/credebl/platform/blob/main/.github/dependabot.yml) opens grouped pull requests for npm (patch and minor), GitHub Actions, Docker, and Docker Compose dependencies on a weekly schedule.
+
+Because the unit specs mock the affected libraries away, dependency and security bumps should be verified against the real runtime packages before merging. Run the matching `*.integration.spec.ts` suite from the [README Testing section](https://github.com/credebl/platform/blob/main/README.md#testing) (e.g. SMTP for nodemailer changes, the HTTP suite for axios, the tracer suite for @opentelemetry/sdk-node, the multipart upload suite for form-data/multer). These suites run entirely in-process and require no external services or credentials.
+
+When Dependabot PRs conflict with merged updates, prefer rebasing the PR onto `main` (resolving the lockfile with `pnpm install --lockfile-only`) over closing and reopening, so review history is preserved. All commits must remain signed and DCO-compliant.
+
 Contributions are made pursuant to the Developer's Certificate of Origin, available at [https://developercertificate.org](https://developercertificate.org), and licensed under the Apache License, version 2.0 (Apache-2.0).

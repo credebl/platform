@@ -53,7 +53,9 @@ export const sendWithSMTP = async (emailDto: EmailDto): Promise<boolean> => {
       throw new Error('Missing SMTP configuration. Required: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS');
     }
 
-    const transporter = nodemailer.createTransport(buildSmtpTransportConfig(smtpHost, smtpPort, smtpUser, smtpPass));
+    // TLS is enforced by buildSmtpTransportConfig (implicit TLS on 465, STARTTLS on 587);
+    // plaintext applies only to non-standard ports and is required for the local integration tests.
+    const transporter = nodemailer.createTransport(buildSmtpTransportConfig(smtpHost, smtpPort, smtpUser, smtpPass)); // NOSONAR typescript:S5332
 
     await transporter.sendMail({
       from: emailDto.emailFrom,

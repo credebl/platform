@@ -8,6 +8,9 @@ import * as nodemailer from 'nodemailer';
 import { buildSmtpTransportConfig, sendWithSMTP } from './smtp-helper-file';
 import { EmailDto } from './dtos/email.dto';
 
+const SMTP_TEST_FIXTURES = path.join(__dirname, '__fixtures__', 'smtp');
+const SMTP_TEST_CERT = fs.readFileSync(path.join(SMTP_TEST_FIXTURES, 'server-cert.pem'), 'utf8');
+
 interface CapturedMail {
   from?: string;
   recipients: string[];
@@ -43,8 +46,8 @@ class TestSmtpServer {
   constructor(options: TestSmtpServerOptions) {
     this.secure = options.secure;
     this.advertiseStarttls = options.secure ? false : (options.advertiseStarttls ?? false);
-    this.cert = fs.readFileSync(path.join(__dirname, '__fixtures__', 'smtp', 'server-cert.pem'), 'utf8');
-    this.key = fs.readFileSync(path.join(__dirname, '__fixtures__', 'smtp', 'server-key.pem'), 'utf8');
+    this.cert = SMTP_TEST_CERT;
+    this.key = fs.readFileSync(path.join(SMTP_TEST_FIXTURES, 'server-key.pem'), 'utf8');
   }
 
   async start(port: number): Promise<void> {
@@ -242,7 +245,6 @@ describe('sendWithSMTP with a real SMTP transport (nodemailer 9)', () => {
   });
 
   beforeEach(() => {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     delete process.env.ENABLE_BAO;
     delete process.env.SMTP_HOST;
     delete process.env.SMTP_PORT;
@@ -311,7 +313,11 @@ describe('sendWithSMTP with a real SMTP transport (nodemailer 9)', () => {
 
     server = new TestSmtpServer({ secure: true });
     await server.start(4465);
-    const transporter = nodemailer.createTransport({ ...config, port: 4465, tls: { rejectUnauthorized: false } });
+    const transporter = nodemailer.createTransport({
+      ...config,
+      port: 4465,
+      tls: { ca: [SMTP_TEST_CERT], servername: 'localhost' }
+    });
     await transporter.sendMail({
       from: emailDto.emailFrom,
       to: emailDto.emailTo,
@@ -332,7 +338,11 @@ describe('sendWithSMTP with a real SMTP transport (nodemailer 9)', () => {
 
     server = new TestSmtpServer({ secure: false, advertiseStarttls: true });
     await server.start(4587);
-    const transporter = nodemailer.createTransport({ ...config, port: 4587, tls: { rejectUnauthorized: false } });
+    const transporter = nodemailer.createTransport({
+      ...config,
+      port: 4587,
+      tls: { ca: [SMTP_TEST_CERT], servername: 'localhost' }
+    });
     await transporter.sendMail({
       from: emailDto.emailFrom,
       to: emailDto.emailTo,

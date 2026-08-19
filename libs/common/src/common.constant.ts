@@ -443,11 +443,11 @@ export enum CommonConstants {
   OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID = 'get-oid4vp-verifier-session-response-id',
   OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY = 'verify-oid4vp-verifier-session-auth-response',
 
-  // BAO_STORAGE_PATH
-  CREDEBL_RESEND_API_KEY_PATH = 'secret/data/credebl_resend_api_key',
-  CREDEBL_SMTP_CONFIG_PATH = 'secret/data/credebl_smtp_config',
-  CREDEBL_SENDGRID_API_KEY_PATH = 'secret/data/credebl_sendgrid_api_key',
-  CREDEBL_AWS_KEY_PATH = 'secret/data/credebl_aws_keys',
+  // Secret storage keys (provider-agnostic; each provider resolves these to its backend path)
+  RESEND_API_KEY = 'credebl_resend_api_key',
+  SMTP_CONFIG = 'credebl_smtp_config',
+  SENDGRID_API_KEY = 'credebl_sendgrid_api_key',
+  AWS_KEY = 'credebl_aws_keys',
 
   //X509
   X509_CREATE_CERTIFICATE = 'create-x509-certificate',

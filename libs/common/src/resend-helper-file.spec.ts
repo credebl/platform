@@ -1,5 +1,6 @@
 import { sendWithResend } from './resend-helper-file';
 import { fetchSecrets } from './utils/secretLoader.util';
+import { CommonConstants } from './common.constant';
 
 jest.mock('resend', () => ({
   Resend: jest.fn()
@@ -42,7 +43,7 @@ describe('sendWithResend', () => {
 
     await expect(sendWithResend(emailDto)).resolves.toBe(true);
 
-    expect(mockedFetchSecrets).toHaveBeenCalledWith('secret/data/credebl_resend_api_key');
+    expect(mockedFetchSecrets).toHaveBeenCalledWith(CommonConstants.RESEND_API_KEY);
     expect(MockedResend).toHaveBeenCalledWith('resend-key');
     expect(sendMock).toHaveBeenCalledWith(
       expect.objectContaining({ to: emailDto.emailTo, subject: emailDto.emailSubject })

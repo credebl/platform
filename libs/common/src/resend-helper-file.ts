@@ -6,8 +6,8 @@ import { fetchSecrets } from './utils/secretLoader.util';
 
 export const sendWithResend = async (emailDto: EmailDto): Promise<boolean> => {
   try {
-    const secretPath = CommonConstants.CREDEBL_RESEND_API_KEY_PATH;
-    const secrets = await fetchSecrets(secretPath);
+    const secretKey = CommonConstants.RESEND_API_KEY;
+    const secrets = await fetchSecrets(secretKey);
     const apiKey = secrets.RESEND_API_KEY ?? process.env.RESEND_API_KEY;
 
     if (!apiKey) {

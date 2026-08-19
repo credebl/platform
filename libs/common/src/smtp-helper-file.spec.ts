@@ -1,5 +1,6 @@
 import { sendWithSMTP } from './smtp-helper-file';
 import { fetchSecrets } from './utils/secretLoader.util';
+import { CommonConstants } from './common.constant';
 
 jest.mock('nodemailer', () => ({
   createTransport: jest.fn()
@@ -50,7 +51,7 @@ describe('sendWithSMTP', () => {
 
     await expect(sendWithSMTP(emailDto)).resolves.toBe(true);
 
-    expect(mockedFetchSecrets).toHaveBeenCalledWith('secret/data/credebl_smtp_config');
+    expect(mockedFetchSecrets).toHaveBeenCalledWith(CommonConstants.SMTP_CONFIG);
     expect(mockedCreateTransport).toHaveBeenCalledWith(
       expect.objectContaining({
         host: 'smtp.example.com',

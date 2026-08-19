@@ -7,8 +7,8 @@ import { fetchSecrets } from './utils/secretLoader.util';
 
 export const sendWithSendGrid = async (EmailDto: EmailDto): Promise<boolean> => {
   try {
-    const secretPath = CommonConstants.CREDEBL_SENDGRID_API_KEY_PATH;
-    const secrets = await fetchSecrets(secretPath);
+    const secretKey = CommonConstants.SENDGRID_API_KEY;
+    const secrets = await fetchSecrets(secretKey);
     const apiKey = secrets.SENDGRID_API_KEY ?? process.env.SENDGRID_API_KEY;
 
     if (!apiKey) {

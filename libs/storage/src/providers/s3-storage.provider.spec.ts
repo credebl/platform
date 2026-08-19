@@ -1,5 +1,6 @@
 import { S3StorageService } from './s3-storage.provider';
 import { fetchSecrets } from '@credebl/common/utils/secretLoader.util';
+import { CommonConstants } from '@credebl/common/common.constant';
 
 jest.mock('aws-sdk', () => ({
   S3: jest.fn()
@@ -43,7 +44,7 @@ describe('S3StorageService', () => {
 
     await (service as unknown as { getS3Client: ClientGetter }).getS3Client();
 
-    expect(mockedFetchSecrets).toHaveBeenCalledWith('secret/data/credebl_aws_keys');
+    expect(mockedFetchSecrets).toHaveBeenCalledWith(CommonConstants.AWS_KEY);
     expect(MockedS3).toHaveBeenCalledWith({
       accessKeyId: 'secret-key',
       secretAccessKey: 'secret-secret',

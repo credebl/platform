@@ -1,5 +1,6 @@
 import { sendWithSendGrid } from './send-grid-helper-file';
 import { fetchSecrets } from './utils/secretLoader.util';
+import { CommonConstants } from './common.constant';
 
 jest.mock('@sendgrid/mail', () => ({
   setApiKey: jest.fn(),
@@ -42,7 +43,7 @@ describe('sendWithSendGrid', () => {
 
     await expect(sendWithSendGrid(emailDto)).resolves.toBe(true);
 
-    expect(mockedFetchSecrets).toHaveBeenCalledWith('secret/data/credebl_sendgrid_api_key');
+    expect(mockedFetchSecrets).toHaveBeenCalledWith(CommonConstants.SENDGRID_API_KEY);
     expect(mockedSetApiKey).toHaveBeenCalledWith('sg-key');
     expect(mockedSend).toHaveBeenCalledWith(expect.objectContaining({ to: emailDto.emailTo }));
   });

@@ -1,18 +1,25 @@
-import { fetchSecrets } from './secretLoader.util';
-import { getSecretProvider } from 'libs/config/src/secret-storage/secrets-loader';
+import { CommonConstants } from '../common.constant';
 
 jest.mock('libs/config/src/secret-storage/secrets-loader', () => ({
   getSecretProvider: jest.fn()
 }));
 
-const mockedGetSecretProvider = getSecretProvider as jest.MockedFunction<typeof getSecretProvider>;
-
 describe('fetchSecrets', () => {
   const originalEnv = { ...process.env };
 
+  let fetchSecrets: (secretKey: string) => Promise<Record<string, string>>;
+  let mockedGetSecretProvider: jest.Mock;
+
   beforeEach(() => {
+    jest.resetModules();
     delete process.env.ENABLE_BAO;
     delete process.env.SECRETS_PROVIDER;
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    ({ fetchSecrets } = require('./secretLoader.util'));
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    mockedGetSecretProvider = require('libs/config/src/secret-storage/secrets-loader').getSecretProvider;
+
     jest.clearAllMocks();
   });
 
@@ -23,7 +30,7 @@ describe('fetchSecrets', () => {
   it('returns an empty object when OpenBao is disabled', async () => {
     process.env.ENABLE_BAO = 'false';
 
-    await expect(fetchSecrets('secret/data/credebl_smtp_config')).resolves.toEqual({});
+    await expect(fetchSecrets(CommonConstants.SMTP_CONFIG)).resolves.toEqual({});
     expect(mockedGetSecretProvider).not.toHaveBeenCalled();
   });
 
@@ -31,7 +38,7 @@ describe('fetchSecrets', () => {
     process.env.ENABLE_BAO = 'true';
     delete process.env.SECRETS_PROVIDER;
 
-    await expect(fetchSecrets('secret/data/credebl_smtp_config_2')).resolves.toEqual({});
+    await expect(fetchSecrets(CommonConstants.SMTP_CONFIG)).resolves.toEqual({});
     expect(mockedGetSecretProvider).not.toHaveBeenCalled();
   });
 
@@ -40,47 +47,52 @@ describe('fetchSecrets', () => {
     process.env.SECRETS_PROVIDER = 'consul';
     mockedGetSecretProvider.mockReturnValue(null);
 
-    await expect(fetchSecrets('secret/data/credebl_smtp_config_3')).resolves.toEqual({});
+    await expect(fetchSecrets(CommonConstants.SMTP_CONFIG)).resolves.toEqual({});
     expect(mockedGetSecretProvider).toHaveBeenCalledWith('consul');
   });
 
-  it('fetches the secrets for the requested path via the active provider', async () => {
+  it.each([
+    CommonConstants.RESEND_API_KEY as string,
+    CommonConstants.SMTP_CONFIG as string,
+    CommonConstants.SENDGRID_API_KEY as string,
+    CommonConstants.AWS_KEY as string
+  ])('fetches secrets for %s via the active provider through the secretKey option', async (secretKey: string) => {
     process.env.ENABLE_BAO = 'true';
     process.env.SECRETS_PROVIDER = 'openbao';
     const loadSecrets = jest.fn().mockResolvedValue({ SMTP_HOST: 'smtp.example.com', SMTP_PORT: '587' });
     mockedGetSecretProvider.mockReturnValue({ name: 'OpenBao', loadSecrets });
 
-    await expect(fetchSecrets('secret/data/credebl_smtp_config_4')).resolves.toEqual({
+    await expect(fetchSecrets(secretKey)).resolves.toEqual({
       SMTP_HOST: 'smtp.example.com',
       SMTP_PORT: '587'
     });
 
-    expect(loadSecrets).toHaveBeenCalledWith({ customPath: 'secret/data/credebl_smtp_config_4' });
+    expect(loadSecrets).toHaveBeenCalledWith({ secretKey });
   });
 
-  it('caches the result per path and does not re-invoke the provider', async () => {
+  it('caches the result per secret key and does not re-invoke the provider', async () => {
     process.env.ENABLE_BAO = 'true';
     process.env.SECRETS_PROVIDER = 'openbao';
     const loadSecrets = jest.fn().mockResolvedValue({ RESEND_API_KEY: 'k' });
     mockedGetSecretProvider.mockReturnValue({ name: 'OpenBao', loadSecrets });
 
-    await fetchSecrets('secret/data/credebl_resend_api_key');
-    await fetchSecrets('secret/data/credebl_resend_api_key');
+    await fetchSecrets(CommonConstants.RESEND_API_KEY);
+    await fetchSecrets(CommonConstants.RESEND_API_KEY);
 
     expect(loadSecrets).toHaveBeenCalledTimes(1);
   });
 
-  it('uses an independent cache per secret path', async () => {
+  it('uses an independent cache per secret key', async () => {
     process.env.ENABLE_BAO = 'true';
     process.env.SECRETS_PROVIDER = 'openbao';
     const loadSecrets = jest.fn().mockResolvedValue({ SOME_KEY: 'v' });
     mockedGetSecretProvider.mockReturnValue({ name: 'OpenBao', loadSecrets });
 
-    await fetchSecrets('secret/data/path_a');
-    await fetchSecrets('secret/data/path_b');
+    await fetchSecrets(CommonConstants.SMTP_CONFIG);
+    await fetchSecrets(CommonConstants.RESEND_API_KEY);
 
     expect(loadSecrets).toHaveBeenCalledTimes(2);
-    expect(loadSecrets).toHaveBeenCalledWith({ customPath: 'secret/data/path_a' });
-    expect(loadSecrets).toHaveBeenCalledWith({ customPath: 'secret/data/path_b' });
+    expect(loadSecrets).toHaveBeenCalledWith({ secretKey: CommonConstants.SMTP_CONFIG });
+    expect(loadSecrets).toHaveBeenCalledWith({ secretKey: CommonConstants.RESEND_API_KEY });
   });
 });

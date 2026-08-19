@@ -7,7 +7,7 @@ import { fetchSecrets } from '@credebl/common/utils/secretLoader.util';
 @Injectable()
 export class S3StorageService extends BaseS3StorageService {
   protected async getS3Client(): Promise<S3> {
-    const secrets = await fetchSecrets(CommonConstants.CREDEBL_AWS_KEY_PATH);
+    const secrets = await fetchSecrets(CommonConstants.AWS_KEY);
     return new S3({
       accessKeyId: secrets.AWS_ACCESS_KEY ?? process.env.AWS_ACCESS_KEY,
       secretAccessKey: secrets.AWS_SECRET_KEY ?? process.env.AWS_SECRET_KEY,
@@ -16,7 +16,7 @@ export class S3StorageService extends BaseS3StorageService {
   }
 
   protected async getPublicS3Client(): Promise<S3> {
-    const secrets = await fetchSecrets(CommonConstants.CREDEBL_AWS_KEY_PATH);
+    const secrets = await fetchSecrets(CommonConstants.AWS_KEY);
     return new S3({
       accessKeyId: secrets.AWS_PUBLIC_ACCESS_KEY ?? process.env.AWS_PUBLIC_ACCESS_KEY,
       secretAccessKey: secrets.AWS_PUBLIC_SECRET_KEY ?? process.env.AWS_PUBLIC_SECRET_KEY,
@@ -25,7 +25,7 @@ export class S3StorageService extends BaseS3StorageService {
   }
 
   protected async getStoreObjectS3Client(): Promise<S3> {
-    const secrets = await fetchSecrets(CommonConstants.CREDEBL_AWS_KEY_PATH);
+    const secrets = await fetchSecrets(CommonConstants.AWS_KEY);
     return new S3({
       accessKeyId: secrets.AWS_S3_STOREOBJECT_ACCESS_KEY ?? process.env.AWS_S3_STOREOBJECT_ACCESS_KEY,
       secretAccessKey: secrets.AWS_S3_STOREOBJECT_SECRET_KEY ?? process.env.AWS_S3_STOREOBJECT_SECRET_KEY,

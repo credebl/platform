@@ -1,3 +1,4 @@
+import { CommonConstants } from '@credebl/common/common.constant';
 import { OpenBaoProvider } from './openbao.provider';
 
 describe('OpenBaoProvider', () => {
@@ -41,6 +42,7 @@ describe('OpenBaoProvider', () => {
 
   it('authenticates with AppRole and fetches secrets from the configured path', async () => {
     fetchMock
+      // eslint-disable-next-line camelcase
       .mockResolvedValueOnce(jsonResponse({ auth: { client_token: 'client-token' } }))
       .mockResolvedValueOnce(jsonResponse({ data: { data: { RESEND_API_KEY: 'resend-key' } } }));
 
@@ -51,6 +53,7 @@ describe('OpenBaoProvider', () => {
       'http://bao:8200/v1/auth/approle/login',
       expect.objectContaining({
         method: 'POST',
+        // eslint-disable-next-line camelcase
         body: JSON.stringify({ role_id: 'role-id', secret_id: 'secret-id' })
       })
     );
@@ -64,18 +67,31 @@ describe('OpenBaoProvider', () => {
     );
   });
 
-  it('fetches from a custom path when one is supplied', async () => {
-    fetchMock
-      .mockResolvedValueOnce(jsonResponse({ auth: { client_token: 'client-token' } }))
-      .mockResolvedValueOnce(jsonResponse({ data: { data: { KEY: 'value' } } }));
+  it.each([
+    [CommonConstants.RESEND_API_KEY as string, 'secret/data/credebl_resend_api_key'],
+    [CommonConstants.SMTP_CONFIG as string, 'secret/data/credebl_smtp_config'],
+    [CommonConstants.SENDGRID_API_KEY as string, 'secret/data/credebl_sendgrid_api_key'],
+    [CommonConstants.AWS_KEY as string, 'secret/data/credebl_aws_keys']
+  ])(
+    'fetches %s from its mapped OpenBao path (%s), independent of BAO_SECRET_PATH',
+    async (secretKey: string, expectedPath: string) => {
+      delete process.env.BAO_SECRET_PATH;
+      fetchMock
+        // eslint-disable-next-line camelcase
+        .mockResolvedValueOnce(jsonResponse({ auth: { client_token: 'client-token' } }))
+        .mockResolvedValueOnce(jsonResponse({ data: { data: { KEY: 'value' } } }));
 
-    await provider.loadSecrets({ customPath: 'secret/data/credebl_smtp_config' });
+      await expect(provider.loadSecrets({ secretKey })).resolves.toEqual({ KEY: 'value' });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      'http://bao:8200/v1/secret/data/credebl_smtp_config',
-      expect.anything()
+      expect(fetchMock).toHaveBeenNthCalledWith(2, `http://bao:8200/v1/${expectedPath}`, expect.anything());
+    }
+  );
+
+  it('rejects when a secret key has no mapped OpenBao path', async () => {
+    await expect(provider.loadSecrets({ secretKey: 'unknown_key' })).rejects.toThrow(
+      'No OpenBao path mapped for secret key: unknown_key'
     );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('rejects when the AppRole login response is not ok', async () => {
@@ -92,6 +108,7 @@ describe('OpenBaoProvider', () => {
 
   it('rejects when the secrets fetch response is not ok', async () => {
     fetchMock
+      // eslint-disable-next-line camelcase
       .mockResolvedValueOnce(jsonResponse({ auth: { client_token: 'client-token' } }))
       .mockResolvedValueOnce(jsonResponse({}, false, 404));
 
@@ -100,6 +117,7 @@ describe('OpenBaoProvider', () => {
 
   it('rejects when the payload has an unexpected structure', async () => {
     fetchMock
+      // eslint-disable-next-line camelcase
       .mockResolvedValueOnce(jsonResponse({ auth: { client_token: 'client-token' } }))
       .mockResolvedValueOnce(jsonResponse({ data: {} }));
 
@@ -108,6 +126,7 @@ describe('OpenBaoProvider', () => {
 
   it('rejects when the payload data is an array', async () => {
     fetchMock
+      // eslint-disable-next-line camelcase
       .mockResolvedValueOnce(jsonResponse({ auth: { client_token: 'client-token' } }))
       .mockResolvedValueOnce(jsonResponse({ data: { data: [] } }));
 
@@ -122,6 +141,7 @@ describe('OpenBaoProvider', () => {
 
   it('rejects with a timeout error when the secrets fetch is aborted', async () => {
     fetchMock
+      // eslint-disable-next-line camelcase
       .mockResolvedValueOnce(jsonResponse({ auth: { client_token: 'client-token' } }))
       .mockRejectedValueOnce(new DOMException('The operation was aborted.', 'AbortError'));
 

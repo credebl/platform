@@ -42,7 +42,7 @@ import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
 import { Cache } from 'cache-manager';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   IOrgCredentials,
@@ -66,6 +66,8 @@ import { UserRepository } from 'apps/user/repositories/user.repository';
 import * as jwt from 'jsonwebtoken';
 import { ClientTokenDto } from '../dtos/client-token.dto';
 import { EmailService } from '@credebl/common/email.service';
+import { uuidRegex } from '@credebl/common/common.constant';
+import { isUUID } from 'class-validator';
 
 @Injectable()
 export class OrganizationService {
@@ -76,7 +78,7 @@ export class OrganizationService {
     private readonly organizationRepository: OrganizationRepository,
     private readonly orgRoleService: OrgRolesService,
     private readonly userOrgRoleService: UserOrgRolesService,
-    private readonly awsService: AwsService,
+    private readonly awsService: StorageService,
     private readonly userActivityService: UserActivityService,
     private readonly logger: Logger,
     // TODO: Remove duplicate, unused variable
@@ -497,7 +499,7 @@ export class OrganizationService {
         imgData,
         'png',
         'orgLogo',
-        process.env.AWS_ORG_LOGO_BUCKET_NAME,
+        process.env.ORG_LOGO_BUCKET_NAME,
         'base64',
         'orgLogos'
       );
@@ -675,6 +677,11 @@ export class OrganizationService {
     const { clientId, clientSecret } = clientCredentials;
     // This method used to authenticate the requested user on keycloak
     const authenticationResult = await this.authenticateClientKeycloak(clientId, clientSecret);
+    // If the client id is not in uuid format then it will directly authenticate on keycloak without creating session because it is used by trust-service (other associated application) to authenticate and create session is not required for services
+    //TODO: We will UUID validator here
+    if (!uuidRegex.test(clientId)) {
+      return authenticationResult;
+    }
     let addSessionDetails;
     // Fetch owner organization details for getting the user id
     const orgRoleDetails = await this.organizationRepository.getOrgAndOwnerUser(clientId);
@@ -730,11 +737,7 @@ export class OrganizationService {
 
   async authenticateClientKeycloak(clientId: string, clientSecret: string): Promise<IAccessTokenData> {
     try {
-      const payload = new ClientCredentialTokenPayloadDto();
-      // eslint-disable-next-line camelcase
-      payload.client_id = clientId;
-      // eslint-disable-next-line camelcase
-      payload.client_secret = clientSecret;
+      const payload = new ClientCredentialTokenPayloadDto(clientId, clientSecret);
 
       try {
         const mgmtTokenResponse = await this.clientRegistrationService.getToken(payload);
@@ -744,6 +747,15 @@ export class OrganizationService {
       }
     } catch (error) {
       this.logger.error(`Error in authenticateClientKeycloak : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async getEcosystemIdsByTenantId(tenantId: string): Promise<string[]> {
+    try {
+      return this.organizationRepository.getEcosystemIdsByTenantId(tenantId);
+    } catch (error) {
+      this.logger.error(`Error in getEcosystemIdsByTenantId: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -760,7 +772,8 @@ export class OrganizationService {
         publicProfile: true,
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } }
+          { description: { contains: search, mode: 'insensitive' } },
+          ...(isUUID(search) ? [{ id: { equals: search } }] : [])
         ]
       };
 

@@ -5,20 +5,24 @@ This repository hosts the codebase for CREDEBL SSI Platform backend.
 ## Prerequisites
 
 ### • Install Docker and Docker Compose
+
 See: https://docs.docker.com/engine/install/
 
 ### • Install Node.js
+
 Version: >= 18.17.0  
 See: https://nodejs.dev/en/learn/how-to-install-nodejs/
 
 ### • Install NestJS CLI
+
 ```bash
-npm i @nestjs/cli@latest 
+npm i @nestjs/cli@latest
 ```
 
 ## Setup Instructions
 
 ### • Setup and Run PostgreSQL
+
 Start the PostgreSQL service using Docker:
 
 ```bash
@@ -57,23 +61,75 @@ docker pull nats:latest
 ```
 
 ### • Run NATS using Docker Compose
+
 The `docker-compose.yml` file is available in the root folder.
 
 ```bash
 docker-compose up
 ```
 
+## OpenBao Secret Storage (Optional)
+
+The platform can source the credentials used by email and file-storage integrations from an [OpenBao](https://openbao.org) server instead of plain environment variables. This is opt-in and disabled by default.
+
+### • Run OpenBao using Docker Compose
+
+```bash
+docker compose -f docker-compose.openbao.yml up -d
+```
+
+This starts an OpenBao server on `http://127.0.0.1:8200` with file-backed storage persisted on a named volume. Server settings live in `config.hcl`.
+
+### • Provision the server
+
+OpenBao starts sealed and uninitialized. Run the one-shot provisioning script (idempotent — safe to re-run):
+
+```bash
+./openbao-init.sh
+```
+
+The script initializes and unseals the server, enables the KV v2 secrets engine at `secret/`, enables the AppRole auth method, creates a `credebl` role scoped to the `credebl_*` secret paths, stores the secret values found in the environment (e.g. `RESEND_API_KEY`, `SMTP_HOST`, `AWS_ACCESS_KEY`), and prints the values to copy into your env file:
+
+```bash
+BAO_URL=http://127.0.0.1:8200
+BAO_SECRET_PATH=secret/data/credebl_resend_api_key
+BAO_ROLE_ID=<generated>
+BAO_SECRET_ID=<generated>
+```
+
+Keep the printed `BAO_UNSEAL_KEY` and `BAO_ROOT_TOKEN` safe — they are shown only once. On later runs, pass `BAO_ROOT_TOKEN` (and `BAO_SECRET_ID` to re-print it).
+
+### • Configure the platform
+
+Add the following to your `.env` (values are already present as placeholders in `.env.demo`):
+
+```bash
+ENABLE_BAO=true
+SECRETS_PROVIDER=openbao
+BAO_URL=http://127.0.0.1:8200
+BAO_SECRET_PATH=secret/data/credebl_resend_api_key
+BAO_ROLE_ID=<from openbao-init.sh>
+BAO_SECRET_ID=<from openbao-init.sh>
+```
+
+At startup every microservice authenticates to OpenBao via AppRole, fetches the secrets at `BAO_SECRET_PATH`, and injects them into `process.env` before the NATS listener starts. Email and S3 integrations re-fetch their own credential paths on demand (e.g. `secret/data/credebl_smtp_config`, `secret/data/credebl_aws_keys`) with a 10-minute TTL cache.
+
+Set `ENABLE_BAO=false` (or omit it) to fall back to local environment variables.
+
 ## Run CREDEBL Microservices
 
 ### • Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### • Configure Environment Variables
+
 Configure environment variables in `.env` before you start the API Gateway.
 
 ### • Running the API Gateway
+
 You can optionally use the `--watch` flag during development/testing.
 
 ```bash
@@ -100,6 +156,27 @@ nest start agent-provisioning [--watch]
 nest start agent-service [--watch]
 ```
 
+## Testing
+
+Tests are written with [Jest](https://jestjs.io) and run via pnpm (the repo's package manager):
+
+```bash
+pnpm install
+pnpm jest                 # run the full suite
+pnpm jest <path/to/spec>  # run a single spec file or folder
+```
+
+Two kinds of suites exist:
+
+- **Unit specs** (`*.spec.ts`) mock external libraries and run quickly.
+- **Integration specs** (`*.integration.spec.ts`) exercise the real wire protocol of the runtime dependencies against in-process loopback servers — no external services or credentials are needed. They cover:
+  - SMTP delivery with **nodemailer** (plain SMTP, implicit TLS on port 465, STARTTLS on port 587) using self-signed fixtures in `libs/common/src/__fixtures__/smtp/`;
+  - real outbound HTTP through **@nestjs/axios** (`HttpService`), including the `HTTP_PROXY` path;
+  - **@opentelemetry/sdk-node** boot and OTLP span export;
+  - **multipart file upload** through form-data/multer.
+
+These suites are the recommended way to verify Dependabot or security-relevant dependency bumps before merging — the unit specs mock the affected libraries away. Before running tests, generate the Prisma client as described in [Setup Instructions](#setup-instructions).
+
 ## Access Microservice Endpoints
 
 To access microservice endpoints using the API Gateway, navigate to:
@@ -110,7 +187,7 @@ http://localhost:5000/api
 
 ## Credit
 
-The CREDEBL platform is built by AYANWORKS team. 
+The CREDEBL platform is built by AYANWORKS team.
 For the core SSI capabilities, it leverages the great work from multiple open-source projects such as Hyperledger Aries, Bifold, Asker, Indy, etc.
 
 ## Contributing

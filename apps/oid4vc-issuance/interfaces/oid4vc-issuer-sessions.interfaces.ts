@@ -5,7 +5,9 @@ import { OpenId4VcIssuanceSessionState } from '@credebl/enum/enum';
  * --------------------------------------------------------- */
 export enum CredentialFormat {
   SdJwtVc = 'vc+sd-jwt',
-  MsoMdoc = 'mso_mdoc'
+  MsoMdoc = 'mso_mdoc',
+  JwtVcJsonLd = 'jwt_vc_json-ld',
+  LdpVc = 'ldp_vc'
 }
 
 export enum SignerMethodOption {
@@ -21,8 +23,9 @@ export interface ISignerOption {
 }
 
 export enum AuthenticationType {
-  PRE_AUTHORIZED_CODE = 'pre-authorized_code',
-  AUTHORIZATION_CODE = 'authorization_code'
+  PRE_AUTHORIZED_CODE = 'preAuthorizedCodeFlow',
+  AUTHORIZATION_CODE = 'authorizationCodeFlow',
+  NO_AUTH = 'noAuth'
 }
 
 /* ---------------------------------------------------------
@@ -47,6 +50,8 @@ export interface CreateOidcCredentialOffer {
   // e.g. "abc-gov"
   authenticationType: AuthenticationType; // only option selector
   credentials: CredentialRequest[]; // one or more credentials
+  noticeUrl?: string;
+  isRevocable?: boolean;
 }
 
 export interface GetAllCredentialOffer {

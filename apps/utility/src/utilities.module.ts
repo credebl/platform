@@ -7,7 +7,7 @@ import { PrismaService } from '@credebl/prisma-service';
 import { UtilitiesController } from './utilities.controller';
 import { UtilitiesService } from './utilities.service';
 import { UtilitiesRepository } from './utilities.repository';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
@@ -20,15 +20,21 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.UTILITY_SERVICE, process.env.UTILITIES_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.UTILITY_SERVICE,
+          process.env.UTILITIES_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,
     GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [UtilitiesController],
-  providers: [UtilitiesService, Logger, PrismaService, UtilitiesRepository, AwsService]
+  providers: [UtilitiesService, Logger, PrismaService, UtilitiesRepository, StorageService]
 })
-export class UtilitiesModule { }
+export class UtilitiesModule {}

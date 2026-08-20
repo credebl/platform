@@ -13,6 +13,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { Oid4vcIssuanceRepository } from './oid4vc-issuance.repository';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { PrismaService } from '@credebl/prisma-service';
+import { StatusListAllocatorService } from './status-list-allocator.service';
 
 @Module({
   imports: [
@@ -20,7 +21,11 @@ import { PrismaService } from '@credebl/prisma-service';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.OIDC4VC_ISSUANCE_SERVICE, process.env.OIDC4VC_ISSUANCE_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.OIDC4VC_ISSUANCE_SERVICE,
+          process.env.OIDC4VC_ISSUANCE_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,
@@ -31,6 +36,13 @@ import { PrismaService } from '@credebl/prisma-service';
     CacheModule.register()
   ],
   controllers: [Oid4vcIssuanceController],
-  providers: [Oid4vcIssuanceService, Oid4vcIssuanceRepository, PrismaService, Logger, NATSClient]
+  providers: [
+    Oid4vcIssuanceService,
+    Oid4vcIssuanceRepository,
+    PrismaService,
+    Logger,
+    NATSClient,
+    StatusListAllocatorService
+  ]
 })
 export class Oid4vcIssuanceModule {}

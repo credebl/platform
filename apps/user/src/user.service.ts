@@ -8,7 +8,8 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   Inject,
-  HttpException
+  HttpException,
+  ForbiddenException
 } from '@nestjs/common';
 
 import { ClientRegistrationService } from '@credebl/client-registration';
@@ -52,7 +53,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Invitation, ProviderType, SessionType, TokenType, UserRole } from '@credebl/enum/enum';
 import validator from 'validator';
 import { DISALLOWED_EMAIL_DOMAIN } from '@credebl/common/common.constant';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { IUsersActivity } from 'libs/user-activity/interface';
 import {
   ISendVerificationEmail,
@@ -82,7 +83,7 @@ export class UserService {
     private readonly userOrgRoleService: UserOrgRolesService,
     private readonly userActivityService: UserActivityService,
     private readonly userRepository: UserRepository,
-    private readonly awsService: AwsService,
+    private readonly awsService: StorageService,
     private readonly userDevicesRepository: UserDevicesRepository,
     private readonly logger: Logger,
     @Inject('NATS_CLIENT') private readonly userServiceProxy: ClientProxy,
@@ -139,6 +140,9 @@ export class UserService {
 
       const clientDetails = await getCredentialsByAlias(clientAlias);
 
+      if (process.env.ADMIN_CLIENT_ALIAS === clientAlias) {
+        throw new ForbiddenException(ResponseMessages.user.error.adminAlias);
+      }
       try {
         const token = await this.clientRegistrationService.getManagementToken(
           clientDetails.clientId,

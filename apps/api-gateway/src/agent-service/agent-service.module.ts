@@ -18,8 +18,11 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.AGENT_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
-
+        options: getNatsOptions(
+          CommonConstants.AGENT_SERVICE,
+          process.env.API_GATEWAY_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       },
       CommonModule
     ])
@@ -27,4 +30,4 @@ import { NATSClient } from '@credebl/common/NATSClient';
   controllers: [AgentController],
   providers: [AgentService, CommonService, NATSClient]
 })
-export class AgentModule { }
+export class AgentModule {}

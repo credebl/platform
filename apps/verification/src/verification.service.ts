@@ -303,7 +303,7 @@ export class VerificationService {
             requestProof as IRequestProof
           );
           payload.proofRequestPayload = {
-            protocolVersion: requestProof.protocolVersion || ProtocolVersionType.PROTOCOL_VERSION_1,
+            protocolVersion: requestProof.protocolVersion || ProtocolVersionType.PROTOCOL_VERSION_2,
             proofFormats: {
               indy: {
                 name: ProofRequestLabel.PROOF_REQUEST,
@@ -494,7 +494,7 @@ export class VerificationService {
       let payload: IProofRequestPayload;
 
       if (ProofRequestType.INDY === type) {
-        updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v1';
+        updateOutOfBandRequestProof.protocolVersion = updateOutOfBandRequestProof.protocolVersion || 'v2';
         updateOutOfBandRequestProof.invitationDid = invitationDid || undefined;
         updateOutOfBandRequestProof.imageUrl = getOrganization?.logoUrl || undefined;
         payload = {

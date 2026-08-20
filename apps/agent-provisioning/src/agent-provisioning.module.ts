@@ -20,7 +20,11 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.AGENT_PROVISIONING, process.env.AGENT_PROVISIONING_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.AGENT_PROVISIONING,
+          process.env.AGENT_PROVISIONING_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ])
   ],

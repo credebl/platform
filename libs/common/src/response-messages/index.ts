@@ -33,6 +33,7 @@ export const ResponseMessages = {
     error: {
       exists: 'User already exists',
       profileNotFound: 'User public profile not found',
+      adminAlias: 'Use of ADMIN alias for user creation is forbidden',
       notUpdatePlatformSettings: 'Unable to update platform config settings',
       platformSetttingsNotFound: 'Unable to get platform settings',
       verificationAlreadySent: 'The verification link has already been sent to your email address',
@@ -98,7 +99,8 @@ export const ResponseMessages = {
       orgDids: 'Organization DIDs fetched successfully',
       primaryDid: 'Primary DID updated successfully',
       didDetails: 'DID Details updated sucessfully',
-      getOrganizationActivity: 'Organization activity count fetched successfully'
+      getOrganizationActivity: 'Organization activity count fetched successfully',
+      tenantEcosystems: 'Ecosystem IDs fetched successfully for tenant'
     },
     error: {
       exists: 'An organization name is already exist',
@@ -134,7 +136,9 @@ export const ResponseMessages = {
       MaximumOrgsLimit: 'Limit reached: You can be associated with or create maximum 10 organizations.',
       adminTokenDetails: 'Error in generating admin token details',
       clientDetails: 'Error in fetching client details',
-      invalidClientCredentials: 'Invalid client credentials'
+      invalidClientCredentials: 'Invalid client credentials',
+      tenantNotFound: 'No organization found for the given tenantId',
+      tenantIdRequired: 'tenantId is required'
     }
   },
 
@@ -183,7 +187,7 @@ export const ResponseMessages = {
       fetchEndorsors: 'Endorser transactions fetched successfully',
       DeclineEndorsementTransaction: 'Endorsement request declined',
       AutoEndorsementTransaction: 'The flag for transactions has been successfully set',
-      fetchOrgs: 'Ecosystem orgs fetched successfully',
+      fetchOrgs: 'Ecosystem members fetched successfully',
       allschema: 'Schema details fetched successfully',
       AutoSignAndSubmit: 'Endorsement request approved & submitted to ledger',
       memberInviteSucess: 'Invitation sent successfully for the member',
@@ -203,6 +207,7 @@ export const ResponseMessages = {
       ecosystemStatus: 'Ecosystem status fetched successfully'
     },
     error: {
+      orgIdNotFound: 'Provided orgId is not a member of this ecosystem',
       featureIsDisabled: `You don't have access to this feature`,
       userEmailRequired: 'User email is required to send invitation',
       userNotFound: 'User not found',
@@ -294,7 +299,10 @@ export const ResponseMessages = {
       ecosystemMemberStatusFail: 'Failed to update ecosystem member status',
       failedEcosystemOrgUpdate: 'Failed to update ecosystem org',
       invitationMemberfail: 'Failed to fetch invitation members',
-      invalidEcosystemEnabledFlag: 'Invalid ecosystem enabled flag'
+      invalidEcosystemEnabledFlag: 'Invalid ecosystem enabled flag',
+      keycloakRealmOrTokenMissing: 'Keycloak realm is not configured or management token could not be obtained',
+      unmanagedAttributeNotEnabled:
+        'Unmanaged attributes are not enabled in Keycloak. Please enable unmanaged attributes in Keycloak realm settings (Realm Settings > User Profile > Unmanaged Attributes) before enabling the ecosystem feature'
     }
   },
   schema: {
@@ -369,7 +377,8 @@ export const ResponseMessages = {
       webhookUrlRegister: 'Webhook Url registered successfully',
       getWebhookUrl: 'Webhook Url fetched successfully',
       createKeys: 'Key-pair created successfully',
-      walletDelete: 'The wallet has been deleted.'
+      walletDelete: 'The wallet has been deleted.',
+      webhookUrlUpdate: 'Webhook Url updated successfully'
     },
     error: {
       exists: 'An agent name is already exist',
@@ -562,12 +571,14 @@ export const ResponseMessages = {
   webhook: {
     success: {
       webhookUrlRegister: 'Webhook Url registered successfully',
-      getWebhookUrl: 'Webhook Url fetched successfully'
+      getWebhookUrl: 'Webhook Url fetched successfully',
+      webhookUrlUpdate: 'Webhook Url updated successfully'
     },
     error: {
       registerWebhook: 'Unable to register a webhook url',
       webhookResponse: 'Error in sending webhook response to org webhook url',
-      notFound: 'Webhook url not found'
+      notFound: 'Webhook Url not found',
+      updateWebhook: 'Unable to update webhook Url'
     }
   },
   shorteningUrl: {
@@ -663,7 +674,8 @@ export const ResponseMessages = {
       invalidId: 'Invalid OID4VC issuer ID.',
       createFailed: 'Failed to create OID4VC issuer.',
       updateFailed: 'Failed to update OID4VC issuer.',
-      deleteFailed: 'Failed to delete OID4VC issuer.'
+      deleteFailed: 'Failed to delete OID4VC issuer.',
+      setPrimaryIssuerFailed: 'Cannot unset primary. Please assign another issuer as primary first.'
     }
   },
   oidcTemplate: {
@@ -745,6 +757,22 @@ export const ResponseMessages = {
     error: {
       notFound: 'Intent to template mapping not found.',
       invalidId: 'Invalid id.'
+    }
+  },
+  intentNotice: {
+    success: {
+      create: 'Intent notice created successfully.',
+      fetch: 'Intent notice fetched successfully.',
+      fetchAll: 'Intent notices fetched successfully.',
+      update: 'Intent notice updated successfully.',
+      delete: 'Intent notice deleted successfully.'
+    },
+    error: {
+      create: 'Error while creating intent notice.',
+      intentNotFound: 'Intent not found.',
+      notFound: 'Intent notice not found.',
+      updateFailed: 'Error while updating intent notice.',
+      deleteFailed: 'Error while deleting intent notice.'
     }
   },
   x509: {

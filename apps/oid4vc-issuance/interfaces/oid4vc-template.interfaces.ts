@@ -2,6 +2,8 @@ import { Prisma, SignerOption } from '@prisma/client';
 import { AttributeType, CredentialFormat } from '@credebl/enum/enum';
 export interface SdJwtTemplate {
   vct: string;
+  schemaUrl?: string;
+  context?: string[];
   attributes: CredentialAttribute[];
 }
 
@@ -22,6 +24,7 @@ export interface CreateCredentialTemplate {
   appearance?: Prisma.JsonValue;
   issuerId: string;
   template: SdJwtTemplate | MdocTemplate;
+  noticeUrl?: string;
 }
 
 export interface UpdateCredentialTemplate extends Partial<CreateCredentialTemplate> {}

@@ -23,3 +23,9 @@ export interface X5cSigner {
 }
 
 export type RequestSigner = DidSigner | X5cSigner;
+
+export interface VerifyAuthorizationResponse {
+  verificationSessionId: string;
+  authorizationResponse: Record<string, unknown>;
+  origin?: string;
+}

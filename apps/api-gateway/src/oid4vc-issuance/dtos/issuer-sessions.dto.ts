@@ -1,3 +1,4 @@
+/* eslint-disable no-mixed-operators */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
 import {
@@ -18,7 +19,8 @@ import {
   ValidatorConstraintInterface,
   ValidationArguments,
   Validate,
-  IsDate
+  IsDate,
+  IsBoolean
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -179,14 +181,27 @@ export class CreateOidcCredentialOfferDto {
 
   @ApiProperty({
     example: 'preAuthorizedCodeFlow',
-    enum: ['preAuthorizedCodeFlow', 'authorizationCodeFlow'],
+    enum: ['preAuthorizedCodeFlow', 'authorizationCodeFlow', 'noAuth'],
     description: 'Authorization type'
   })
   @IsString()
-  @IsIn(['preAuthorizedCodeFlow', 'authorizationCodeFlow'])
-  authorizationType!: 'preAuthorizedCodeFlow' | 'authorizationCodeFlow';
+  @IsIn(['preAuthorizedCodeFlow', 'authorizationCodeFlow', 'noAuth'])
+  authorizationType!: 'preAuthorizedCodeFlow' | 'authorizationCodeFlow' | 'noAuth';
+
+  @ApiPropertyOptional({
+    example: 'https://dev-consent.sovio.id/api/consent-notice/CN-OGL70CWB',
+    description: 'Optional notice URL to attach in the response when multiple credentials are offered.'
+  })
+  @IsOptional()
+  @IsUrl()
+  noticeUrl?: string;
 
   issuerId?: string;
+
+  @ApiPropertyOptional({ example: true, description: 'Flag to enable revocation for the issued credentials' })
+  @IsOptional()
+  @IsBoolean()
+  isRevocable?: boolean = false;
 }
 
 export class GetAllCredentialOfferDto {
@@ -259,11 +274,13 @@ export class CredentialDto {
 
   @ApiProperty({
     description: 'Credential format type',
-    enum: ['mso_mdoc', 'vc+sd-jwt'],
+    enum: ['mso_mdoc', 'vc+sd-jwt', 'jwt_vc_json-ld', 'ldp_vc'],
     example: 'mso_mdoc'
   })
   @IsString()
-  @IsIn(['mso_mdoc', 'vc+sd-jwt'], { message: 'format must be either "mso_mdoc" or "vc+sd-jwt"' })
+  @IsIn(['mso_mdoc', 'vc+sd-jwt', 'jwt_vc_json-ld', 'ldp_vc'], {
+    message: 'format must be either "mso_mdoc", "vc+sd-jwt", "jwt_vc_json-ld" or "ldp_vc"'
+  })
   format: string;
 
   @ApiProperty({
@@ -292,7 +309,7 @@ export class CredentialDto {
         },
         iat: 1698151532,
         nbf: dateToSeconds(new Date()),
-        exp: dateToSeconds(new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000))
+        exp: dateToSeconds(new Date(Date.now() + 157680000000))
       }
     ]
   })
@@ -381,6 +398,11 @@ export class CreateCredentialOfferD2ADto {
   })
   @IsOptional()
   issuerId?: string;
+
+  @ApiPropertyOptional({ example: true, description: 'Flag to enable revocation for the issued credentials' })
+  @IsOptional()
+  @IsBoolean()
+  isRevocable?: boolean = false;
 
   @ExactlyOneOf(['preAuthorizedCodeFlowConfig', 'authorizationCodeFlowConfig'], {
     message: 'Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.'

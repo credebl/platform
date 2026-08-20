@@ -165,14 +165,15 @@ export class Oid4vcIssuanceController {
   }
 
   @MessagePattern({ cmd: 'oid4vc-credential-offer-delete' })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async deleteCredentialOffers(payload: {
-    orgId: string;
-    credentialId: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }): Promise<any> {
+  async deleteCredentialOffers(payload: { orgId: string; credentialId: string }): Promise<object> {
     const { orgId, credentialId } = payload;
     return this.oid4vcIssuanceService.deleteCredentialOffers(orgId, credentialId);
+  }
+
+  @MessagePattern({ cmd: 'oid4vc-revoke-credential' })
+  async revokeCredential(payload: { issuanceSessionId: string; orgId: string }): Promise<object> {
+    const { issuanceSessionId, orgId } = payload;
+    return this.oid4vcIssuanceService.revokeCredential(issuanceSessionId, orgId);
   }
 
   @MessagePattern({ cmd: 'webhook-oid4vc-issue-credential' })

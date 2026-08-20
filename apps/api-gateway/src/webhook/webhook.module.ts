@@ -5,7 +5,7 @@ import { WebhookService } from './webhook.service';
 import { CommonService } from '@credebl/common';
 import { HttpModule } from '@nestjs/axios';
 import { getNatsOptions } from '@credebl/common/nats.config';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
 
@@ -16,11 +16,15 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.WEBHOOK_SERVICE, process.env.API_GATEWAY_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.WEBHOOK_SERVICE,
+          process.env.API_GATEWAY_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ])
   ],
   controllers: [WebhookController],
-  providers: [WebhookService, CommonService, AwsService, NATSClient]
+  providers: [WebhookService, CommonService, StorageService, NATSClient]
 })
-export class WebhookModule { }
+export class WebhookModule {}

@@ -25,9 +25,11 @@ export function paginator<T>(items: T[], current_page: number, items_per_page: n
   };
 }
 
-export function orderValues(key, order = 'asc') {
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types
-  return function innerSort(a, b) {
+export function orderValues(
+  key: string,
+  order = 'asc'
+): (a: Record<string, unknown>, b: Record<string, unknown>) => number {
+  return function innerSort(a: Record<string, unknown>, b: Record<string, unknown>): number {
     if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
       // property doesn't exist on either object
       return 0;
@@ -125,7 +127,11 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
       String(CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID),
       String(CommonConstants.URL_OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID)
     ],
-    [String(CommonConstants.OID4VP_VERIFICATION_SESSION), String(CommonConstants.URL_OID4VP_VERIFICATION_SESSION)]
+    [String(CommonConstants.OID4VP_VERIFICATION_SESSION), String(CommonConstants.URL_OID4VP_VERIFICATION_SESSION)],
+    [
+      String(CommonConstants.OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY),
+      String(CommonConstants.URL_OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY)
+    ]
   ]);
 
   const urlSuffix = agentUrlMap.get(urlFlag);
@@ -144,6 +150,11 @@ export function shouldLoadOidcModules(): boolean {
   const raw = process.env.HIDE_EXPERIMENTAL_OIDC_CONTROLLERS ?? 'true';
   const hide = 'true' === raw.toLowerCase();
   return !hide;
+}
+
+export function shouldLoadNatsNotification(): boolean {
+  const raw = process.env.ENABLE_NATS_NOTIFICATION;
+  return 'true' === raw;
 }
 
 export const escapeHtml = (value: string): string =>

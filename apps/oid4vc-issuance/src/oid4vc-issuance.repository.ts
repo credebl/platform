@@ -1,11 +1,12 @@
 /* eslint-disable camelcase */
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { IssuerMetadata, IssuerUpdation, OrgAgent } from '../interfaces/oid4vc-issuance.interfaces';
 // eslint-disable-next-line camelcase
 import { Prisma, credential_templates, oidc_issuer, org_agents } from '@prisma/client';
-import { PrismaService } from '@credebl/prisma-service';
-import { IssuerMetadata, IssuerUpdation, OrgAgent } from '../interfaces/oid4vc-issuance.interfaces';
-import { ResponseMessages } from '@credebl/common/response-messages';
 import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
+
+import { PrismaService } from '@credebl/prisma-service';
+import { ResponseMessages } from '@credebl/common/response-messages';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 
 @Injectable()
@@ -190,8 +191,15 @@ export class Oid4vcIssuanceRepository {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async addOidcIssuerDetails(issuerMetadata: IssuerMetadata, issuerProfileJson): Promise<oidc_issuer> {
     try {
-      const { publicIssuerId, createdById, orgAgentId, batchCredentialIssuanceSize, authorizationServerUrl } =
-        issuerMetadata;
+      const {
+        publicIssuerId,
+        createdById,
+        orgAgentId,
+        batchCredentialIssuanceSize,
+        authorizationServerUrl,
+        isPrimary,
+        orgId
+      } = issuerMetadata;
       const oidcIssuerDetails = await this.prisma.oidc_issuer.create({
         data: {
           metadata: issuerProfileJson,
@@ -199,7 +207,9 @@ export class Oid4vcIssuanceRepository {
           createdBy: createdById,
           orgAgentId,
           batchCredentialIssuanceSize,
-          authorizationServerUrl
+          authorizationServerUrl,
+          isPrimary,
+          orgId
         }
       });
 
@@ -210,21 +220,71 @@ export class Oid4vcIssuanceRepository {
     }
   }
 
-  async updateOidcIssuerDetails(createdById: string, issuerConfig: IssuerUpdation): Promise<oidc_issuer> {
+  async hasPrimaryIssuer(orgId: string): Promise<boolean> {
     try {
-      const { issuerId, display, batchCredentialIssuanceSize } = issuerConfig;
-      const oidcIssuerDetails = await this.prisma.oidc_issuer.update({
-        where: { id: issuerId },
-        data: {
-          metadata: display as unknown as Prisma.InputJsonValue,
-          createdBy: createdById,
-          ...(batchCredentialIssuanceSize !== undefined ? { batchCredentialIssuanceSize } : {})
+      const count = await this.prisma.oidc_issuer.count({
+        where: {
+          orgId,
+          isPrimary: true
         }
       });
-
-      return oidcIssuerDetails;
+      return 0 < count;
     } catch (error) {
-      this.logger.error(`[addOidcIssuerDetails] - error: ${JSON.stringify(error)}`);
+      this.logger.error(`[hasPrimaryIssuer] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateOidcIssuerDetails(createdById: string, issuerConfig: IssuerUpdation): Promise<oidc_issuer> {
+    try {
+      const { issuerId, display, batchCredentialIssuanceSize, isPrimary, orgId } = issuerConfig;
+
+      return await this.prisma.$transaction(async (tx) => {
+        const issuer = await tx.oidc_issuer.findFirst({
+          where: {
+            id: issuerId,
+            orgId
+          }
+        });
+
+        if (!issuer) {
+          throw new NotFoundException(ResponseMessages.oidcIssuer.error.notFound);
+        }
+
+        if (isPrimary) {
+          await tx.oidc_issuer.updateMany({
+            where: { orgId, isPrimary: true },
+            data: { isPrimary: false }
+          });
+        } else {
+          const otherPrimaryExists = await tx.oidc_issuer.count({
+            where: {
+              orgId,
+              isPrimary: true,
+              NOT: { id: issuerId }
+            }
+          });
+
+          if (0 === otherPrimaryExists) {
+            throw new BadRequestException(ResponseMessages.oidcIssuer.error.setPrimaryIssuerFailed);
+          }
+        }
+        const updatedIssuer = await tx.oidc_issuer.update({
+          where: { id: issuerId },
+          data: {
+            metadata: display as unknown as Prisma.InputJsonValue,
+            createdBy: createdById,
+            ...(batchCredentialIssuanceSize !== undefined && {
+              batchCredentialIssuanceSize
+            }),
+            ...(isPrimary !== undefined && { isPrimary })
+          }
+        });
+
+        return updatedIssuer;
+      });
+    } catch (error) {
+      this.logger.error(`[updateOidcIssuerDetails] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

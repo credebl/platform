@@ -71,4 +71,31 @@ export class KeycloakUrlService {
   async GetClient(realm: string, clientId: string): Promise<string> {
     return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients?clientId=${clientId}`;
   }
+  async GetServiceAccountUserURL(realm: string, clientIdpId: string): Promise<string> {
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${clientIdpId}/service-account-user`;
+  }
+
+  async GetClientProtocolMappersURL(realm: string, clientIdpId: string): Promise<string> {
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${clientIdpId}/protocol-mappers/models`;
+  }
+
+  async GetClientScopesURL(realm: string): Promise<string> {
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/client-scopes`;
+  }
+
+  async GetClientScopeProtocolMappersURL(realm: string, scopeId: string): Promise<string> {
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/client-scopes/${scopeId}/protocol-mappers/models`;
+  }
+
+  async GetClientProtocolMappersByIdURL(realm: string, clientIdpId: string): Promise<string> {
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients/${clientIdpId}/protocol-mappers/models`;
+  }
+
+  async GetClientsURL(realm: string): Promise<string> {
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/clients?max=1000`;
+  }
+
+  async GetUserProfileURL(realm: string): Promise<string> {
+    return `${process.env.KEYCLOAK_DOMAIN}admin/realms/${realm}/users/profile`;
+  }
 }

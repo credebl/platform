@@ -17,20 +17,18 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.CREDENTIAL_DEFINITION_SERVICE, process.env.CREDENTAILDEFINITION_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.CREDENTIAL_DEFINITION_SERVICE,
+          process.env.CREDENTAILDEFINITION_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     HttpModule,
     CommonModule,
     CacheModule.register()
   ],
-  providers: [
-    CredentialDefinitionService,
-    CredentialDefinitionRepository,
-    Logger,
-    PrismaService,
-    NATSClient
-  ],
+  providers: [CredentialDefinitionService, CredentialDefinitionRepository, Logger, PrismaService, NATSClient],
   controllers: [CredentialDefinitionController]
 })
-export class CredentialDefinitionModule { }
+export class CredentialDefinitionModule {}

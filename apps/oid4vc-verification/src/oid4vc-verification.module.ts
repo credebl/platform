@@ -28,7 +28,8 @@ import { ConfigModule } from '@nestjs/config';
         transport: Transport.NATS,
         options: getNatsOptions(
           CommonConstants.OIDC4VC_VERIFICATION_SERVICE,
-          process.env.OIDC4VC_VERIFICATION_NKEY_SEED
+          process.env.OIDC4VC_VERIFICATION_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
         )
       }
     ]),

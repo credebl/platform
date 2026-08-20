@@ -15,7 +15,9 @@ import {
   IEcosystemInvitation,
   IGetAllOrgs,
   IGetEcosystemOrgStatus,
+  IGetEcosystemOrgs,
   IPlatformDashboardCount,
+  IVerificationTemplateList,
   PrismaExecutor
 } from '../interfaces/ecosystem.interfaces';
 import {
@@ -34,8 +36,7 @@ import {
   intent_templates,
   intents,
   platform_config,
-  user,
-  verification_templates
+  user
 } from '@prisma/client';
 
 import { OrgRoles } from 'libs/org-roles/enums';
@@ -100,9 +101,10 @@ export class EcosystemRepository {
     // eslint-disable-next-line camelcase
   ): Promise<PaginatedResponse<ecosystem_invitations>> {
     try {
-      const whereClause = {
+      const whereClause: Prisma.ecosystem_invitationsWhereInput = {
         createdBy: userId,
-        deletedAt: null
+        deletedAt: null,
+        ...(pageDetail.search && { email: { contains: pageDetail.search, mode: 'insensitive' } })
       };
       const [data, count] = await this.prisma.$transaction([
         this.prisma.ecosystem_invitations.findMany({
@@ -397,8 +399,8 @@ export class EcosystemRepository {
   }
 
   async updateEcosystemInvitationStatusByEmail(
-    orgId: string,
     email: string,
+    orgId: string,
     ecosystemId: string,
     status: Invitation
   ): Promise<ecosystem_invitations> {
@@ -809,11 +811,15 @@ export class EcosystemRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getIntentTemplateByIntentAndOrg(intentName: string, verifierOrgId: string): Promise<intent_templates | null> {
+  async getIntentTemplateByIntentAndOrg(
+    intentName: string,
+    verifierOrgId: string,
+    ecosystemId?: string
+  ): Promise<intent_templates | null> {
     try {
       const template = await this.prisma.intent_templates.findFirst({
         where: {
-          intent: { is: { name: intentName } },
+          intent: { is: { name: intentName, ...(ecosystemId && { ecosystemId }) } },
           OR: [{ orgId: verifierOrgId }, { orgId: null }]
         },
         select: {
@@ -861,8 +867,19 @@ export class EcosystemRepository {
     pageDetail: IPaginationSortingDto
   ): Promise<PaginatedResponse<IGetAllOrgs>> {
     try {
-      const whereClause = {
-        ecosystemId
+      const whereClause: Prisma.ecosystem_orgsWhereInput = {
+        deletedAt: null,
+        ...(pageDetail.search && {
+          OR: [
+            { user: { email: { contains: pageDetail.search, mode: 'insensitive' } } },
+            { status: { contains: pageDetail.search, mode: 'insensitive' } },
+            { organisation: { name: { contains: pageDetail.search, mode: 'insensitive' } } }
+          ]
+        }),
+        ecosystemId,
+        ecosystemRole: {
+          name: OrgRoles.ECOSYSTEM_MEMBER
+        }
       };
       const [data, count] = await this.prisma.$transaction([
         this.prisma.ecosystem_orgs.findMany({
@@ -870,48 +887,24 @@ export class EcosystemRepository {
           select: {
             id: true,
             status: true,
-            userId: true,
-            ecosystemRole: {
+            createDateTime: true,
+            ecosystem: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            organisation: {
               select: {
                 id: true,
                 name: true
               }
             },
 
-            ecosystem: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
-                tags: true,
-                createDateTime: true,
-                createdBy: true,
-                logoUrl: true,
-                autoEndorsement: true,
-                ledgers: true
-              }
-            },
-
-            organisation: {
-              select: {
-                id: true,
-                createDateTime: true,
-                createdBy: true,
-                name: true,
-                description: true,
-                orgSlug: true
-              }
-            },
-
             user: {
               select: {
                 id: true,
-                createDateTime: true,
-                lastChangedDateTime: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                username: true
+                email: true
               }
             }
           },
@@ -1145,20 +1138,12 @@ export class EcosystemRepository {
             select: {
               id: true,
               name: true,
-              description: true,
-              logoUrl: true,
-              autoEndorsement: true
+              description: true
             }
           },
-
-          user: {
+          organisation: {
             select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              username: true,
-              profileImg: true
+              name: true
             }
           }
         },
@@ -1202,24 +1187,63 @@ export class EcosystemRepository {
 
   // eslint-disable-next-line camelcase
   async getTemplatesByOrgId(
-    orgId: string,
-    pageDetail: IPaginationSortingDto
-  ): Promise<PaginatedResponse<verification_templates>> {
-    const whereClause = {
-      organisation: {
-        ecosystemOrgs: {
-          some: {
-            orgId,
-            deletedAt: null,
-            status: EcosystemOrgStatus.ACTIVE // optional but recommended
-          }
+    ecosystemId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId?: string
+  ): Promise<PaginatedResponse<IVerificationTemplateList>> {
+    let finalOrgIds: string[];
+
+    if (orgId) {
+      const membership = await this.prisma.ecosystem_orgs.findFirst({
+        where: {
+          ecosystemId,
+          orgId,
+          deletedAt: null,
+          status: EcosystemOrgStatus.ACTIVE
+        },
+        select: { orgId: true }
+      });
+      if (!membership) {
+        throw new BadRequestException(ResponseMessages.ecosystem.error.orgIdNotFound);
+      }
+      finalOrgIds = membership ? [membership.orgId] : [];
+    } else {
+      const memberOrgs = await this.prisma.ecosystem_orgs.findMany({
+        where: {
+          ecosystemId,
+          deletedAt: null,
+          status: EcosystemOrgStatus.ACTIVE
+        },
+        select: {
+          orgId: true
         }
+      });
+
+      finalOrgIds = memberOrgs.map((o) => o.orgId);
+    }
+
+    if (!finalOrgIds.length) {
+      return { totalPages: 0, data: [] };
+    }
+
+    const whereClause = {
+      orgId: {
+        in: finalOrgIds
       }
     };
+
     const [data, count] = await this.prisma.$transaction([
       this.prisma.verification_templates.findMany({
         where: whereClause,
-        include: {
+        select: {
+          id: true,
+          name: true,
+          orgId: true,
+          createDateTime: true,
+          createdBy: true,
+          lastChangedDateTime: true,
+          lastChangedBy: true,
+          signerOption: true,
           organisation: {
             select: {
               id: true,
@@ -1233,10 +1257,15 @@ export class EcosystemRepository {
         take: pageDetail.pageSize,
         skip: (pageDetail.pageNumber - 1) * pageDetail.pageSize
       }),
-      this.prisma.verification_templates.count({ where: whereClause })
+      this.prisma.verification_templates.count({
+        where: whereClause
+      })
     ]);
-    const totalPages = Math.ceil(count / pageDetail.pageSize);
-    return { totalPages, data };
+
+    return {
+      totalPages: Math.ceil(count / pageDetail.pageSize),
+      data
+    };
   }
 
   /**
@@ -1574,6 +1603,266 @@ export class EcosystemRepository {
       return data?.isEcosystemEnabled ?? false;
     } catch (error) {
       this.logger.error(`getEcosystemEnableStatus error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getEcosystemOrgs(
+    orgId: string,
+    pageDetail: IPaginationSortingDto
+  ): Promise<PaginatedResponse<IGetEcosystemOrgs>> {
+    try {
+      const whereClause: Prisma.ecosystem_orgsWhereInput = {
+        orgId,
+        ...(pageDetail.search && {
+          ecosystem: {
+            is: {
+              name: {
+                contains: pageDetail.search,
+                mode: 'insensitive'
+              }
+            }
+          }
+        })
+      };
+      const [data, count] = await this.prisma.$transaction([
+        this.prisma.ecosystem_orgs.findMany({
+          where: whereClause,
+          orderBy: {
+            [pageDetail.sortField || 'createDateTime']: SortValue.ASC === pageDetail.sortBy ? 'asc' : 'desc'
+          },
+          select: {
+            ecosystem: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                _count: {
+                  select: { ecosystemOrgs: true }
+                },
+                ecosystemOrgs: {
+                  where: {
+                    ecosystemRole: {
+                      name: EcosystemRoles.ECOSYSTEM_LEAD
+                    }
+                  },
+                  select: {
+                    id: true,
+                    orgId: true,
+                    organisation: {
+                      select: {
+                        name: true
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            ecosystemRole: {
+              select: { id: true, name: true }
+            }
+          },
+          take: pageDetail.pageSize,
+          skip: (pageDetail.pageNumber - 1) * pageDetail.pageSize
+        }),
+        this.prisma.ecosystem_orgs.count({ where: whereClause })
+      ]);
+      const totalPages = Math.ceil(count / pageDetail.pageSize);
+      return { totalPages, data };
+    } catch (error) {
+      this.logger.error(`getEcosystemOrgs error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getCreateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
+    try {
+      const trimEmail = email?.trim();
+      if (!trimEmail) {
+        throw new BadRequestException('email missing');
+      }
+      const data = await this.prisma.ecosystem_invitations.findFirst({
+        where: {
+          email: trimEmail,
+          status,
+          invitedOrg: null,
+          ecosystemId: null,
+          deletedAt: null
+        }
+      });
+      return Boolean(data);
+    } catch (error) {
+      this.logger.error(`getCreateEcosystemInvitationStatus error: ${error}`);
+      throw error;
+    }
+  }
+
+  // Intent Notice CRUD
+  async createIntentNotice(intentId: string, noticeUrl: string, userId: string, orgId?: string): Promise<object> {
+    try {
+      return await this.prisma.intent_notices.create({
+        data: {
+          intent: { connect: { id: intentId } },
+          ...(orgId && { organisation: { connect: { id: orgId } } }),
+          noticeUrl,
+          createdBy: userId,
+          lastChangedBy: userId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`createIntentNotice error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getIntentNotices(id?: string, intentId?: string): Promise<object[]> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const where: any = {
+        ...(id && { id })
+      };
+
+      if (intentId) {
+        const intent = await this.prisma.intents.findUnique({
+          where: { id: intentId },
+          select: { ecosystemId: true }
+        });
+        where.intent = {
+          is: {
+            id: intentId,
+            ...(intent && { ecosystemId: intent.ecosystemId })
+          }
+        };
+      }
+
+      return await this.prisma.intent_notices.findMany({
+        where,
+        include: {
+          intent: { select: { id: true, name: true, ecosystemId: true } },
+          organisation: { select: { name: true, description: true } }
+        },
+        orderBy: { createDateTime: 'desc' }
+      });
+    } catch (error) {
+      this.logger.error(`getIntentNotices error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getIntentNoticesByEcosystemId(
+    ecosystemId: string,
+    pageNumber: number,
+    pageSize: number,
+    search: string,
+    intentId?: string
+  ): Promise<{ data: object[]; totalPages: number; totalCount: number }> {
+    try {
+      const where = {
+        intent: { ecosystemId },
+        ...(intentId && { intentId }),
+        ...(search && { noticeUrl: { contains: search, mode: 'insensitive' as const } })
+      };
+
+      const [data, totalCount] = await this.prisma.$transaction([
+        this.prisma.intent_notices.findMany({
+          where,
+          include: {
+            intent: { select: { id: true, name: true, ecosystemId: true } },
+            organisation: { select: { name: true, description: true } }
+          },
+          orderBy: { createDateTime: 'desc' },
+          skip: (pageNumber - 1) * pageSize,
+          take: pageSize
+        }),
+        this.prisma.intent_notices.count({ where })
+      ]);
+
+      return { data, totalPages: Math.ceil(totalCount / pageSize), totalCount };
+    } catch (error) {
+      this.logger.error(`getIntentNoticesByEcosystemId error: ${error}`);
+      throw error;
+    }
+  }
+
+  async getIntentNoticeByIntentId(intentId: string, orgId?: string | null): Promise<object | null> {
+    try {
+      const where: { intentId: string; orgId?: string | null } = { intentId };
+      if (orgId !== undefined) {
+        where.orgId = orgId;
+      }
+      return await this.prisma.intent_notices.findFirst({ where });
+    } catch (error) {
+      this.logger.error(`getIntentNoticeByIntentId error: ${error}`);
+      throw error;
+    }
+  }
+
+  async intentNoticeExists(intentId: string, orgId: string | null): Promise<boolean> {
+    try {
+      const record = await this.prisma.intent_notices.findFirst({
+        where: { intentId, orgId: orgId ?? null }
+      });
+      return Boolean(record);
+    } catch (error) {
+      this.logger.error(`intentNoticeSlotExists error: ${error}`);
+      throw error;
+    }
+  }
+
+  async isEcosystemLead(userId: string, ecosystemId: string): Promise<boolean> {
+    try {
+      const record = await this.prisma.ecosystem_orgs.findFirst({
+        where: {
+          userId,
+          ecosystemId,
+          deletedAt: null,
+          ecosystemRole: { name: EcosystemRoles.ECOSYSTEM_LEAD }
+        }
+      });
+      return Boolean(record);
+    } catch (error) {
+      this.logger.error(`isEcosystemLead error: ${error}`);
+      throw error;
+    }
+  }
+
+  async isUserInOrganisation(userId: string, orgId: string): Promise<boolean> {
+    try {
+      const record = await this.prisma.user_org_roles.findFirst({
+        where: { userId, orgId }
+      });
+      return Boolean(record);
+    } catch (error) {
+      this.logger.error(`isUserInOrganisation error: ${error}`);
+      throw error;
+    }
+  }
+
+  async updateIntentNotice(id: string, noticeUrl: string, userId: string): Promise<object> {
+    try {
+      const record = await this.prisma.intent_notices.findFirst({ where: { id } });
+      if (!record) {
+        return null;
+      }
+      return await this.prisma.intent_notices.update({
+        where: { id: record['id'] },
+        data: { noticeUrl, lastChangedBy: userId }
+      });
+    } catch (error) {
+      this.logger.error(`updateIntentNotice error: ${error}`);
+      throw error;
+    }
+  }
+
+  async deleteIntentNotice(id: string): Promise<object> {
+    try {
+      const record = await this.prisma.intent_notices.findFirst({ where: { id } });
+      if (!record) {
+        return null;
+      }
+      return await this.prisma.intent_notices.delete({ where: { id: record['id'] } });
+    } catch (error) {
+      this.logger.error(`deleteIntentNotice error: ${error}`);
       throw error;
     }
   }

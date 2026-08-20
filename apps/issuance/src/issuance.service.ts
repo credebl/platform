@@ -66,7 +66,7 @@ import { convertUrlToDeepLinkUrl, getAgentUrl, paginator } from '@credebl/common
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { FileUploadStatus, FileUploadType } from 'apps/api-gateway/src/enum';
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { io } from 'socket.io-client';
 import { IIssuedCredentialSearchParams, IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
 import {
@@ -107,7 +107,7 @@ export class IssuanceService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly outOfBandIssuance: OutOfBandIssuance,
     private readonly emailData: EmailDto,
-    private readonly awsService: AwsService,
+    private readonly awsService: StorageService,
     @InjectQueue('bulk-issuance') private readonly bulkIssuanceQueue: Queue,
     // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
@@ -202,7 +202,7 @@ export class IssuanceService {
 
         if (payload.credentialType === IssueCredentialType.INDY) {
           issueData = {
-            protocolVersion: payload.protocolVersion || 'v1',
+            protocolVersion: payload.protocolVersion || 'v2',
             connectionId,
             credentialFormats: {
               indy: {
@@ -392,7 +392,7 @@ export class IssuanceService {
       let issueData;
       if (credentialType === IssueCredentialType.INDY) {
         issueData = {
-          protocolVersion: protocolVersion || 'v1',
+          protocolVersion: protocolVersion || 'v2',
           credentialFormats: {
             indy: {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -990,7 +990,7 @@ export class IssuanceService {
       this.logger.debug('This is an email issuance of type', credentialType);
       if (IssueCredentialType.INDY === credentialType) {
         outOfBandIssuancePayload = {
-          protocolVersion: protocolVersion || 'v1',
+          protocolVersion: protocolVersion || 'v2',
           credentialFormats: {
             indy: {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1290,7 +1290,6 @@ export class IssuanceService {
         credentialPayload.credentialType = SchemaType.INDY;
         credentialPayload.schemaName = credentialDetails.schemaName;
       }
-
       const getFileDetails = await this.awsService.getFile(importFileDetails.fileKey);
       const csvData: string = getFileDetails.Body.toString();
 

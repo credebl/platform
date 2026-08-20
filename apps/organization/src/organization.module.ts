@@ -18,7 +18,7 @@ import { getNatsOptions } from '@credebl/common/nats.config';
 import { ClientRegistrationService } from '@credebl/client-registration';
 import { KeycloakUrlService } from '@credebl/keycloak-url';
 
-import { AwsService } from '@credebl/aws';
+import { StorageService } from '@credebl/storage';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
@@ -31,25 +31,39 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.ORGANIZATION_SERVICE, process.env.ORGANIZATION_NKEY_SEED)
+        options: getNatsOptions(
+          CommonConstants.ORGANIZATION_SERVICE,
+          process.env.ORGANIZATION_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
     CommonModule,
     GlobalConfigModule,
-    LoggerModule, PlatformConfig, ContextInterceptorModule,
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [OrganizationController],
   providers: [
-    OrganizationService, OrganizationRepository, PrismaService,
-     Logger, OrgRolesService, UserOrgRolesService, OrgRolesRepository, UserActivityRepository,
-     UserActivityRepository, UserOrgRolesRepository, UserRepository, UserActivityService,
-      ClientRegistrationService,
-      KeycloakUrlService,
-      AwsService,
-      NATSClient
-    ],
-    exports:[OrganizationRepository]
-
+    OrganizationService,
+    OrganizationRepository,
+    PrismaService,
+    Logger,
+    OrgRolesService,
+    UserOrgRolesService,
+    OrgRolesRepository,
+    UserActivityRepository,
+    UserActivityRepository,
+    UserOrgRolesRepository,
+    UserRepository,
+    UserActivityService,
+    ClientRegistrationService,
+    KeycloakUrlService,
+    StorageService,
+    NATSClient
+  ],
+  exports: [OrganizationRepository]
 })
 export class OrganizationModule {}

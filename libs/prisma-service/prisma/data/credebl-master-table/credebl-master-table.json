@@ -13,7 +13,7 @@
     "lastName": "CREDEBL",
     "email": "",
     "username": "",
-    "password": "####Please provide encrypted password using crypto-js###",
+    "password": "##Please provide encrypted password using crypto-js##",
     "verificationCode": "",
     "isEmailVerified": true,
     "supabaseUserId": "96cef763-e106-46c1-ac78-fadf2803b11f"
@@ -26,7 +26,7 @@
     "createdBy": "",
     "lastChangedBy": ""
   },
-  "platformAdminKeycloakPassword":"Admin@123",
+  "platformAdminKeycloakPassword":"##Please provide encrypted password using crypto-js##",
   "orgRoleData": [
     {
       "name": "owner",

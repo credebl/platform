@@ -19,6 +19,7 @@ import { CreateIntentTemplateDto, UpdateIntentTemplateDto } from '../utilities/d
 import { GetAllIntentTemplatesDto } from '../utilities/dtos/get-all-intent-templates.dto';
 import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
 import { IPaginationSortingDto, PaginatedResponse } from 'libs/common/src/interfaces/interface';
+import { CreateIntentNoticeDto, UpdateIntentNoticeDto } from '../oid4vc-verification/dtos/create-intent-notice.dto';
 
 @Injectable()
 export class EcosystemService {
@@ -186,10 +187,15 @@ export class EcosystemService {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intents', { ecosystemId, intentId, pageDetail });
   }
 
-  async getVerificationTemplates(orgId: string, pageDetail: IPaginationSortingDto): Promise<PaginatedResponse<object>> {
+  async getVerificationTemplates(
+    ecosystemId: string,
+    pageDetail: IPaginationSortingDto,
+    orgId?: string
+  ): Promise<PaginatedResponse<object>> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-verification-templates-by-org-id', {
-      orgId,
-      pageDetail
+      ecosystemId,
+      pageDetail,
+      orgId
     });
   }
 
@@ -237,5 +243,51 @@ export class EcosystemService {
 
   async getDashboardCountEcosystem(): Promise<IPlatformDashboardCount> {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-platform-admin-dashboard-count', {});
+  }
+
+  async getEcosystemOrgs(orgId: string | null, pageDetail: IPaginationSortingDto): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-orgs-by-orgId', { orgId, pageDetail });
+  }
+
+  async getCreateEcosystemInvitationStatus(email: string, status: Invitation): Promise<boolean> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-ecosystem-created-status', { email, status });
+  }
+
+  async createIntentNotice(createIntentNoticeDto: CreateIntentNoticeDto, userDetails: user): Promise<object> {
+    const payload = { createIntentNoticeDto, userId: userDetails.id };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-intent-notice', payload);
+  }
+
+  async getIntentNotices(id?: string, intentId?: string): Promise<object[]> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-notices', { id, intentId });
+  }
+
+  async getIntentNoticesByEcosystemId(
+    ecosystemId: string,
+    pageNumber: number,
+    pageSize: number,
+    search: string,
+    intentId?: string
+  ): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-intent-notices-by-ecosystem', {
+      ecosystemId,
+      pageNumber,
+      pageSize,
+      search,
+      intentId
+    });
+  }
+
+  async updateIntentNotice(
+    id: string,
+    updateIntentNoticeDto: UpdateIntentNoticeDto,
+    userDetails: user
+  ): Promise<object> {
+    const payload = { id, updateIntentNoticeDto, userId: userDetails.id };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'update-intent-notice', payload);
+  }
+
+  async deleteIntentNotice(id: string, userDetails: user): Promise<object> {
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-intent-notice', { id, userId: userDetails.id });
   }
 }

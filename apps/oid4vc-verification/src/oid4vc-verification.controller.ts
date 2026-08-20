@@ -9,7 +9,10 @@ import {
 } from '@credebl/common/interfaces/oid4vp-verification';
 import { MessagePattern } from '@nestjs/microservices';
 import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfaces';
-import { Oid4vpPresentationWh } from '../interfaces/oid4vp-verification-sessions.interfaces';
+import {
+  Oid4vpPresentationWh,
+  VerifyAuthorizationResponse
+} from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
 
 @Controller()
@@ -109,8 +112,11 @@ export class Oid4vpVerificationController {
     responseMode: string;
     requestSigner: IRequestSigner;
     userDetails: user;
+    expectedOrigins?: string[];
+    ecosystemId: string;
   }): Promise<object> {
-    const { orgId, verifierId, intent, responseMode, requestSigner, userDetails } = payload;
+    const { orgId, verifierId, intent, responseMode, requestSigner, expectedOrigins, userDetails, ecosystemId } =
+      payload;
     this.logger.debug(
       `[createIntentBasedVerificationPresentation] Received 'oid4vp-intent-based-verification-presentation' for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
     );
@@ -120,7 +126,9 @@ export class Oid4vpVerificationController {
       intent,
       responseMode,
       requestSigner,
-      userDetails
+      userDetails,
+      ecosystemId,
+      expectedOrigins
     );
   }
 
@@ -180,5 +188,17 @@ export class Oid4vpVerificationController {
       `[deleteVerificationTemplate] Received 'verification-template-delete' for orgId=${orgId}, templateId=${templateId}`
     );
     return this.oid4vpVerificationService.deleteVerificationTemplate(orgId, templateId);
+  }
+
+  @MessagePattern({ cmd: 'verify-authorization-response' })
+  async verifyAuthorizationResponse(payload: {
+    verifyAuthorizationResponse: VerifyAuthorizationResponse;
+    orgId: string;
+  }): Promise<object> {
+    const { verifyAuthorizationResponse, orgId } = payload;
+    this.logger.debug(
+      `[verifyAuthorizationResponse] Received 'verify-authorization-response' request for orgId=${orgId}`
+    );
+    return this.oid4vpVerificationService.verifyAuthorizationResponse(verifyAuthorizationResponse, orgId);
   }
 }

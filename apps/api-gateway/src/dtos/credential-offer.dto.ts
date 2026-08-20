@@ -7,7 +7,7 @@ interface attributeValue {
 }
 
 export class IssueCredentialOffer {
-  @ApiProperty({ example: { protocolVersion: 'v1' } })
+  @ApiProperty({ example: { protocolVersion: 'v2' } })
   @IsNotEmpty({ message: 'Please provide valid protocol-version' })
   @IsString({ message: 'protocol-version should be string' })
   protocolVersion: string;

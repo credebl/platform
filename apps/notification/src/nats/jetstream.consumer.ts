@@ -102,7 +102,7 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
 
           const ackKey = await this.pendingAckStore.save(AGGREGATE_STREAM, PULL_CONSUMER, msg);
 
-          await this.nats.publish(`${notificationDetail.holderDid}`, {
+          await this.nats.publish(`didkey.${notificationDetail.holderDid}`, {
             payload,
             ackKey,
             subject: msg.subject,

@@ -24,23 +24,36 @@ import { NATSClient } from '@credebl/common/NATSClient';
       {
         name: 'NATS_CLIENT',
         transport: Transport.NATS,
-        options: getNatsOptions(CommonConstants.VERIFICATION_SERVICE, process.env.VERIFICATION_NKEY_SEED)
-
+        options: getNatsOptions(
+          CommonConstants.VERIFICATION_SERVICE,
+          process.env.VERIFICATION_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ]),
 
     GlobalConfigModule,
-    CommonModule, LoggerModule, PlatformConfig, ContextInterceptorModule,
+    CommonModule,
+    LoggerModule,
+    PlatformConfig,
+    ContextInterceptorModule,
     CacheModule.register()
   ],
   controllers: [VerificationController],
   providers: [
-    VerificationService, VerificationRepository, PrismaService, UserActivityService, 
-  UserActivityRepository, Logger, OutOfBandVerification, EmailDto, NATSClient,
-  {
-    provide: MICRO_SERVICE_NAME,
-    useValue: 'Verification-Service'
-  }
-]
+    VerificationService,
+    VerificationRepository,
+    PrismaService,
+    UserActivityService,
+    UserActivityRepository,
+    Logger,
+    OutOfBandVerification,
+    EmailDto,
+    NATSClient,
+    {
+      provide: MICRO_SERVICE_NAME,
+      useValue: 'Verification-Service'
+    }
+  ]
 })
-export class VerificationModule { }
+export class VerificationModule {}

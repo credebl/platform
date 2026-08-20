@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { AwsService } from '@credebl/aws';
 import { BaseService } from 'libs/service/base.service';
+import { CommonConstants } from 'libs/common/src/common.constant';
 import { EmailDto } from '@credebl/common/dtos/email.dto';
 import { EmailService } from '@credebl/common/email.service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
+import { StorageService } from '@credebl/storage';
 import { UtilitiesRepository } from './utilities.repository';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -17,7 +18,7 @@ export class UtilitiesService extends BaseService {
 
   constructor(
     private readonly utilitiesRepository: UtilitiesRepository,
-    private readonly awsService: AwsService,
+    private readonly awsService: StorageService,
     private readonly emailService: EmailService
   ) {
     super('UtilitiesService');
@@ -71,8 +72,11 @@ export class UtilitiesService extends BaseService {
         uuid,
         payload.storeObj
       );
-      const url: string = `${process.env.SHORTENED_URL_DOMAIN}/${uploadResult.Key}`;
-      return url;
+      const storageType = process.env.FILE_STORAGE_TYPE || CommonConstants.STORAGE_TYPE_AWS;
+      if (storageType === CommonConstants.STORAGE_TYPE_AWS) {
+        return `${process.env.SHORTENED_URL_DOMAIN}/${uploadResult.Key}`;
+      }
+      return uploadResult.Location;
     } catch (error) {
       this.logger.error(error);
       throw new Error(

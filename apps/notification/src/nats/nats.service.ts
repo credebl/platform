@@ -1,5 +1,19 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { connect, JetStreamClient, JetStreamManager, NatsConnection, usernamePasswordAuthenticator } from 'nats';
+import { readFileSync } from 'node:fs';
+import {
+  Authenticator,
+  connect,
+  credsAuthenticator,
+  JetStreamClient,
+  JetStreamManager,
+  KV,
+  NatsConnection,
+  nkeyAuthenticator,
+  usernamePasswordAuthenticator
+} from 'nats';
+import path = require('node:path');
+
+type NatsAuthType = 'nkey' | 'creds' | 'usernamePassword' | 'none';
 
 @Injectable()
 export class NatsService implements OnModuleDestroy {
@@ -7,6 +21,7 @@ export class NatsService implements OnModuleDestroy {
   private js!: JetStreamClient;
   private jsm!: JetStreamManager;
   private connected = false;
+  private kv!: KV;
 
   constructor(private readonly logger: Logger) {}
 
@@ -17,15 +32,46 @@ export class NatsService implements OnModuleDestroy {
 
     this.logger.log('[NATS] starting connection...');
 
-    const { NATS_URL, NATS_USER, NATS_PASSWORD } = process.env;
-    if (!NATS_URL || !NATS_USER || !NATS_PASSWORD) {
-      throw new Error('Missing NATS connection env vars (NATS_URL, NATS_USER, NATS_PASSWORD)');
+    const { NATS_URL, NOTIFICATION_NKEY_SEED, NATS_CREDS_FILE, NATS_USER, NATS_PASSWORD } = process.env;
+
+    if (!NATS_URL) {
+      throw new Error('NATS_URL is required');
     }
 
-    this.nc = await connect({
-      servers: `${process.env.NATS_URL}`.split(','),
-      authenticator: usernamePasswordAuthenticator(`${process.env.NATS_USER}`, `${process.env.NATS_PASSWORD}`)
-    });
+    const authType =
+      (process.env.NOTIFICATION_NATS_AUTH_TYPE as NatsAuthType) ||
+      (process.env.NATS_AUTH_TYPE as NatsAuthType) ||
+      'nkey';
+
+    const options: { servers: string[]; authenticator?: Authenticator } = {
+      servers: NATS_URL.split(',')
+    };
+
+    switch (authType) {
+      case 'creds':
+        if (NATS_CREDS_FILE) {
+          const utf8 = readFileSync(path.resolve(NATS_CREDS_FILE));
+          options.authenticator = credsAuthenticator(utf8);
+        }
+        break;
+
+      case 'usernamePassword':
+        if (NATS_USER && NATS_PASSWORD) {
+          options.authenticator = usernamePasswordAuthenticator(NATS_USER, NATS_PASSWORD);
+        }
+        break;
+
+      case 'none':
+        break;
+
+      case 'nkey':
+      default:
+        if (NOTIFICATION_NKEY_SEED) {
+          options.authenticator = nkeyAuthenticator(new TextEncoder().encode(NOTIFICATION_NKEY_SEED));
+        }
+        break;
+    }
+    this.nc = await connect(options);
     this.js = this.nc.jetstream();
     this.jsm = await this.nc.jetstreamManager();
 
@@ -59,5 +105,15 @@ export class NatsService implements OnModuleDestroy {
       throw new Error('NATS not connected yet');
     }
     this.nc.publish(subject, Buffer.from(JSON.stringify(payload)));
+  }
+
+  async getKV(bucketName: string): Promise<KV> {
+    if (!this.connected) {
+      throw new Error('NATS not connected yet');
+    }
+    if (!this.kv) {
+      this.kv = await this.js.views.kv(bucketName);
+    }
+    return this.kv;
   }
 }

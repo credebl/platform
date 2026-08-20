@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDefined, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsDefined, IsEnum, IsOptional, IsString, ValidateIf, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ResponseMode } from '@credebl/enum/enum';
 import { RequestSignerDto } from './oid4vc-verifier-presentation.dto';
@@ -20,4 +20,16 @@ export class CreateIntentBasedVerificationDto {
   @ValidateNested()
   @Type(() => RequestSignerDto)
   requestSigner?: RequestSignerDto;
+
+  //TODO: check e2e flow and add ResponseMode based restrictions
+  // @IsOptional()
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Required when responseMode is dc_api or dc_api.jwt',
+    example: ['https://example.com']
+  })
+  @ValidateIf((obj) => obj.responseMode === ResponseMode.DC_API || obj.responseMode === ResponseMode.DC_API_JWT)
+  @IsDefined({ message: 'expectedOrigins is required when responseMode is dc_api or dc_api.jwt' })
+  @IsArray()
+  expectedOrigins: string[];
 }

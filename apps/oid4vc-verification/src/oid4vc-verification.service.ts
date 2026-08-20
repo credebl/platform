@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
+import { fetchConsentNotice } from './oid4vc-verification.helper';
 
 import {
   BadRequestException,
@@ -32,7 +33,11 @@ import { VerificationSessionQuery } from '../interfaces/oid4vp-verifier.interfac
 import { BaseService } from 'libs/service/base.service';
 import { NATSClient } from '@credebl/common/NATSClient';
 
-import { Oid4vpPresentationWh, RequestSigner } from '../interfaces/oid4vp-verification-sessions.interfaces';
+import {
+  Oid4vpPresentationWh,
+  RequestSigner,
+  VerifyAuthorizationResponse
+} from '../interfaces/oid4vp-verification-sessions.interfaces';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { SignerMethodOption, x5cKeyType } from '@credebl/enum/enum';
 import { CreateVerificationTemplate, UpdateVerificationTemplate } from '../interfaces/verification-template.interfaces';
@@ -308,10 +313,12 @@ export class Oid4vpVerificationService extends BaseService {
     intent: string,
     responseMode: string,
     requestSigner: IRequestSigner,
-    userDetails: user
+    userDetails: user,
+    ecosystemId: string,
+    expectedOrigins?: string[]
   ): Promise<object> {
     this.logger.debug(
-      `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
+      `[createIntentBasedVerificationPresentation] called for orgId=${orgId}, verifierId=${verifierId}, ecosystemId=${ecosystemId}, intent=${intent}, user=${userDetails?.id ?? 'unknown'}`
     );
     try {
       // Fetch agent details
@@ -334,7 +341,7 @@ export class Oid4vpVerificationService extends BaseService {
       const templateData = await this.natsClient.sendNatsMessage(
         this.oid4vpVerificationServiceProxy,
         'get-intent-template-by-intent-and-org',
-        { intentName: intent, verifierOrgId: orgId }
+        { intentName: intent, verifierOrgId: orgId, ecosystemId }
       );
 
       if (!templateData) {
@@ -350,7 +357,8 @@ export class Oid4vpVerificationService extends BaseService {
         verifierId: verifier.publicVerifierId,
         dcql: templateData?.template?.templateJson.dcql,
         responseMode,
-        requestSigner: null
+        requestSigner: null,
+        expectedOrigins
       };
 
       // Handle request signer based on method
@@ -399,6 +407,29 @@ export class Oid4vpVerificationService extends BaseService {
       this.logger.debug(
         `[createIntentBasedVerificationPresentation] verification presentation created successfully for orgId=${orgId}`
       );
+      if (createdSession) {
+        const intentId: string = templateData?.intentId;
+        if (intentId) {
+          const intentNotice: any = await this.natsClient
+            .sendNatsMessage(this.oid4vpVerificationServiceProxy, 'get-intent-notice-by-intent-id', {
+              intentId,
+              orgId
+            })
+            .catch(() => null);
+
+          if (intentNotice?.noticeUrl) {
+            createdSession.consentNoticeUrl = await fetchConsentNotice(
+              intentNotice.noticeUrl,
+              createdSession.verificationSession.id
+            ).catch((err) => {
+              this.logger.warn(
+                `[createIntentBasedVerificationPresentation] consent notice enrichment failed: ${err?.message}`
+              );
+              return null;
+            });
+          }
+        }
+      }
       return createdSession;
     } catch (error) {
       this.logger.error(
@@ -422,7 +453,7 @@ export class Oid4vpVerificationService extends BaseService {
         : getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_QUERY);
 
       if (!query.id) {
-        url = buildUrlWithQuery(url, query);
+        url = buildUrlWithQuery(url, query as Record<string, object>);
       }
       this.logger.debug(`[getVerifierSession] calling agent URL=${url}`);
 
@@ -692,6 +723,33 @@ export class Oid4vpVerificationService extends BaseService {
         `[deleteVerificationTemplate] - error: ${JSON.stringify(error?.response ?? error?.error ?? error ?? 'Something went wrong')}`
       );
       throw new RpcException(error?.response ?? error.error ?? error);
+    }
+  }
+
+  async verifyAuthorizationResponse(
+    verifyAuthorizationResponse: VerifyAuthorizationResponse,
+    orgId: string
+  ): Promise<object> {
+    this.logger.debug(
+      `[verifyAuthorizationResponse] called for orgId=${orgId}, verificationSessionId=${JSON.stringify(verifyAuthorizationResponse.verificationSessionId)}`
+    );
+    try {
+      const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
+      if (!agentDetails) {
+        throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+      const { agentEndPoint, id } = agentDetails;
+      const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY);
+      const verificationResult = await this.natsClient.sendNatsMessage(
+        this.oid4vpVerificationServiceProxy,
+        'agent-verify-oid4vp-session-auth-response',
+        { url, orgId, verifyAuthorizationResponse }
+      );
+      this.logger.debug(`[verifyAuthorizationResponse] verification result received successfully for orgId=${orgId}`);
+      return verificationResult;
+    } catch (error) {
+      this.logger.error(`[verifyAuthorizationResponse] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error?.response ?? error);
     }
   }
 }

@@ -631,9 +631,9 @@ const updatePlatformUserRole = async (): Promise<void> => {
 };
 
 export async function getKeycloakToken(): Promise<string> {
-  const { KEYCLOAK_DOMAIN, KEYCLOAK_REALM, PLATFORM_ADMIN_KEYCLOAK_ID, PLATFORM_ADMIN_KEYCLOAK_SECRET } = process.env;
+  const { KEYCLOAK_DOMAIN, KEYCLOAK_REALM, ADMIN_KEYCLOAK_ID, ADMIN_KEYCLOAK_SECRET } = process.env;
 
-  if (!KEYCLOAK_DOMAIN || !KEYCLOAK_REALM || !PLATFORM_ADMIN_KEYCLOAK_ID || !PLATFORM_ADMIN_KEYCLOAK_SECRET) {
+  if (!KEYCLOAK_DOMAIN || !KEYCLOAK_REALM || !ADMIN_KEYCLOAK_ID || !ADMIN_KEYCLOAK_SECRET) {
     throw new Error('Missing Keycloak env vars');
   }
 
@@ -644,8 +644,8 @@ export async function getKeycloakToken(): Promise<string> {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'client_credentials',
-        client_id: PLATFORM_ADMIN_KEYCLOAK_ID,
-        client_secret: PLATFORM_ADMIN_KEYCLOAK_SECRET
+        client_id: ADMIN_KEYCLOAK_ID,
+        client_secret: ADMIN_KEYCLOAK_SECRET
       })
     }
   );
@@ -672,25 +672,28 @@ export async function createKeycloakUser(): Promise<void> {
     throw new Error('failed to load platform config data from db');
   }
 
-  const {
-    KEYCLOAK_DOMAIN,
-    KEYCLOAK_REALM,
-    PLATFORM_ADMIN_KEYCLOAK_ID,
-    PLATFORM_ADMIN_KEYCLOAK_SECRET,
-    CRYPTO_PRIVATE_KEY
-  } = process.env;
+  const { KEYCLOAK_DOMAIN, KEYCLOAK_REALM, ADMIN_KEYCLOAK_ID, ADMIN_KEYCLOAK_SECRET, CRYPTO_PRIVATE_KEY } = process.env;
 
-  if (
-    !KEYCLOAK_DOMAIN ||
-    !KEYCLOAK_REALM ||
-    !PLATFORM_ADMIN_KEYCLOAK_ID ||
-    !PLATFORM_ADMIN_KEYCLOAK_SECRET ||
-    !CRYPTO_PRIVATE_KEY
-  ) {
-    throw new Error(
-      'Missing required environment variables for either PLATFORM_ADMIN_USER_PASSWORD or KEYCLOAK_DOMAIN or KEYCLOAK_REALM or PLATFORM_ADMIN_KEYCLOAK_ID or PLATFORM_ADMIN_KEYCLOAK_SECRET or CRYPTO_PRIVATE_KEY'
-    );
+  if (!KEYCLOAK_DOMAIN) {
+    throw new Error('Missing environment variable: KEYCLOAK_DOMAIN');
   }
+
+  if (!KEYCLOAK_REALM) {
+    throw new Error('Missing environment variable: KEYCLOAK_REALM');
+  }
+
+  if (!ADMIN_KEYCLOAK_ID) {
+    throw new Error('Missing environment variable: ADMIN_KEYCLOAK_ID');
+  }
+
+  if (!ADMIN_KEYCLOAK_SECRET) {
+    throw new Error('Missing environment variable: ADMIN_KEYCLOAK_SECRET');
+  }
+
+  if (!CRYPTO_PRIVATE_KEY) {
+    throw new Error('Missing environment variable: CRYPTO_PRIVATE_KEY');
+  }
+
   const decryptedPassword = CryptoJS.AES.decrypt(platformAdminData.password, CRYPTO_PRIVATE_KEY);
   const token = await getKeycloakToken();
   const user = {
@@ -753,12 +756,9 @@ export async function createKeycloakUser(): Promise<void> {
     }
     logger.log(`✅ Platform admin found in database`);
 
-    const encClientId = CryptoJS.AES.encrypt(JSON.stringify(PLATFORM_ADMIN_KEYCLOAK_ID), CRYPTO_PRIVATE_KEY).toString();
+    const encClientId = CryptoJS.AES.encrypt(JSON.stringify(ADMIN_KEYCLOAK_ID), CRYPTO_PRIVATE_KEY).toString();
 
-    const encClientSecret = CryptoJS.AES.encrypt(
-      JSON.stringify(PLATFORM_ADMIN_KEYCLOAK_SECRET),
-      CRYPTO_PRIVATE_KEY
-    ).toString();
+    const encClientSecret = CryptoJS.AES.encrypt(JSON.stringify(ADMIN_KEYCLOAK_SECRET), CRYPTO_PRIVATE_KEY).toString();
 
     await prisma.user.update({
       where: { email: cachedConfig.platformEmail },

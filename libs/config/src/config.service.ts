@@ -25,4 +25,8 @@ export class ConfigService {
   private get environment(): string {
     return this.configService.get<string>('NODE_ENV');
   }
+
+  get isSwaggerAvailable(): boolean {
+    return 'true' === this.configService.get<string>('ENABLE_SWAGGER');
+  }
 }

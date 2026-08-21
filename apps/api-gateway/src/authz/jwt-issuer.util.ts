@@ -1,0 +1,54 @@
+import { CommonConstants } from '@credebl/common/common.constant';
+
+const trimTrailingSlashes = (value: string): string => value.trim().replace(/\/+$/, '');
+
+const validateIssuer = (value: string): string => {
+  const issuer = trimTrailingSlashes(value);
+  let parsed: URL;
+  try {
+    parsed = new URL(issuer);
+  } catch {
+    throw new Error(`Invalid trusted JWT issuer: ${value}`);
+  }
+  const isLoopbackHost = ['localhost', '127.0.0.1', '[::1]', '::1'].includes(parsed.hostname.toLowerCase());
+  const usesAllowedProtocol = 'https:' === parsed.protocol || ('http:' === parsed.protocol && isLoopbackHost);
+
+  if (!usesAllowedProtocol || parsed.username || parsed.password || parsed.search || parsed.hash) {
+    throw new Error(`Invalid trusted JWT issuer: ${value}`);
+  }
+
+  return issuer;
+};
+
+export const getTrustedJwtIssuers = (env: NodeJS.ProcessEnv = process.env): string[] => {
+  const configuredIssuers = env.JWT_TRUSTED_ISSUERS?.split(',')
+    .map((issuer) => issuer.trim())
+    .filter(Boolean);
+
+  const issuers = configuredIssuers?.length
+    ? configuredIssuers
+    : env.KEYCLOAK_DOMAIN && env.KEYCLOAK_REALM
+      ? [`${trimTrailingSlashes(env.KEYCLOAK_DOMAIN)}/realms/${env.KEYCLOAK_REALM.trim()}`]
+      : [];
+
+  if (0 === issuers.length) {
+    throw new Error('JWT_TRUSTED_ISSUERS or both KEYCLOAK_DOMAIN and KEYCLOAK_REALM must be configured');
+  }
+
+  return [...new Set(issuers.map(validateIssuer))];
+};
+
+export const getTrustedJwtIssuerVariants = (trustedIssuers: string[]): string[] => [...new Set(trustedIssuers.flatMap((issuer) => [issuer, `${issuer}/`]))];
+
+export const getTrustedJwksUri = (issuer: unknown, trustedIssuers: string[]): string => {
+  if ('string' !== typeof issuer) {
+    throw new Error('JWT issuer is missing');
+  }
+
+  const normalizedIssuer = trimTrailingSlashes(issuer);
+  if (!trustedIssuers.includes(normalizedIssuer)) {
+    throw new Error('JWT issuer is not trusted');
+  }
+
+  return `${normalizedIssuer}${CommonConstants.URL_KEYCLOAK_JWKS}`;
+};

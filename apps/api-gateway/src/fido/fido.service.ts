@@ -47,9 +47,10 @@ export class FidoService extends BaseService {
 
   async updateFidoUser(
     updateFidoUserDetailsDto: UpdateFidoUserDetailsDto,
-    credentialId: string
+    credentialId: string,
+    actorEmail: string
   ): Promise<{ response: object }> {
-    const payload = { updateFidoUserDetailsDto, credentialId };
+    const payload = { updateFidoUserDetailsDto, credentialId, actorEmail };
     return this.natsClient.sendNats(this.fidoServiceProxy, 'update-user', payload);
   }
 
@@ -58,13 +59,17 @@ export class FidoService extends BaseService {
     return this.natsClient.sendNats(this.fidoServiceProxy, 'fetch-fido-user-details', payload);
   }
 
-  async deleteFidoUserDevice(credentialId: string): Promise<{ response: object }> {
-    const payload = { credentialId };
+  async deleteFidoUserDevice(credentialId: string, actorEmail: string): Promise<{ response: object }> {
+    const payload = { credentialId, actorEmail };
     return this.natsClient.sendNats(this.fidoServiceProxy, 'delete-fido-user-device', payload);
   }
 
-  async updateFidoUserDeviceName(credentialId: string, deviceName: string): Promise<{ response: string }> {
-    const payload = { credentialId, deviceName };
+  async updateFidoUserDeviceName(
+    credentialId: string,
+    deviceName: string,
+    actorEmail: string
+  ): Promise<{ response: string }> {
+    const payload = { credentialId, deviceName, actorEmail };
     return this.natsClient.sendNats(this.fidoServiceProxy, 'update-fido-user-device-name', payload);
   }
 }

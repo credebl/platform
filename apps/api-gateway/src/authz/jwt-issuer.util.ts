@@ -38,9 +38,7 @@ export const getTrustedJwtIssuers = (env: NodeJS.ProcessEnv = process.env): stri
   return [...new Set(issuers.map(validateIssuer))];
 };
 
-export const getTrustedJwtIssuerVariants = (trustedIssuers: string[]): string[] => [
-  ...new Set(trustedIssuers.flatMap((issuer) => [issuer, `${issuer}/`]))
-];
+export const getTrustedJwtIssuerVariants = (trustedIssuers: string[]): string[] => [...new Set(trustedIssuers.flatMap((issuer) => [issuer, `${issuer}/`]))];
 
 export const getTrustedJwksUri = (issuer: unknown, trustedIssuers: string[]): string => {
   if ('string' !== typeof issuer) {

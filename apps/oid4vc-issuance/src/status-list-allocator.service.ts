@@ -125,14 +125,6 @@ export class StatusListAllocatorService {
       });
 
       if (!activeList) {
-        // Mark inactive if full
-        if (activeList) {
-          await tx.status_list_allocation.updateMany({
-            where: { orgId, issuerDid, isActive: true },
-            data: { isActive: false }
-          });
-        }
-
         activeList = await tx.status_list_allocation.create({
           data: {
             orgId,

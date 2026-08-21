@@ -11,7 +11,7 @@ import { promisify } from 'util';
 
 const execFileAsync = promisify(execFile);
 const SAFE_FILE_IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
-const AGENT_PROVISION_TIMEOUT_MS = 120_000;
+const DEFAULT_AGENT_PROVISION_TIMEOUT_MS = 300_000;
 
 dotenv.config();
 
@@ -47,7 +47,7 @@ export class AgentProvisioningService {
       } = payload;
       if (agentType === AgentType.AFJ) {
         this.assertSafeFileIdentifier(orgId, 'orgId');
-        this.assertSafeFileIdentifier(containerName, 'containerName');
+        const safeContainerName = this.normalizeContainerName(containerName);
 
         const spinUpScript = process.env.AFJ_AGENT_SPIN_UP;
         const endpointDirectory = process.env.AFJ_AGENT_ENDPOINT_PATH;
@@ -73,6 +73,7 @@ export class AgentProvisioningService {
           throw new Error(`Missing provisioning configuration: ${missingEnvironment.join(', ')}`);
         }
 
+        const provisionTimeoutMs = this.getProvisionTimeoutMs();
         await execFileAsync(
           `${process.cwd()}${spinUpScript}`,
           [
@@ -86,7 +87,7 @@ export class AgentProvisioningService {
             walletStoragePort,
             walletStorageUser,
             walletStoragePassword,
-            containerName,
+            safeContainerName,
             protocol,
             String(tenant),
             credoImage,
@@ -94,12 +95,18 @@ export class AgentProvisioningService {
             inboundEndpoint,
             ...requiredEnvironment.map((name) => process.env[name] as string)
           ],
-          { timeout: AGENT_PROVISION_TIMEOUT_MS, maxBuffer: 1024 * 1024 }
-        ).catch(() => {
-          throw new Error('Agent provisioning script failed');
+          { timeout: provisionTimeoutMs, maxBuffer: 1024 * 1024 }
+        ).catch((error) => {
+          const failureDetail =
+            'number' === typeof error?.code
+              ? ` (exit code ${error.code})`
+              : 'string' === typeof error?.signal
+                ? ` (signal ${error.signal})`
+                : '';
+          throw new Error(`Agent provisioning script failed${failureDetail}`);
         });
 
-        const agentEndpointPath = `${process.cwd()}${endpointDirectory}${orgId}_${containerName}.json`;
+        const agentEndpointPath = `${process.cwd()}${endpointDirectory}${orgId}_${safeContainerName}.json`;
         const agentEndPointExists = await this.checkFileExistence(agentEndpointPath);
         if (!agentEndPointExists) {
           throw new NotFoundException(`Agent endpoint file does not exist: ${agentEndpointPath}`);
@@ -123,9 +130,40 @@ export class AgentProvisioningService {
         // TODO: ACA-PY Agent Spin-Up
       }
     } catch (error) {
-      this.logger.error(`[walletProvision] - error in wallet provision: ${JSON.stringify(error)}`);
+      this.logger.error(
+        `[walletProvision] - error in wallet provision: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
       throw new RpcException(error);
     }
+  }
+
+  private getProvisionTimeoutMs(): number {
+    const configuredTimeout = process.env.AFJ_AGENT_PROVISION_TIMEOUT_MS;
+    if (!configuredTimeout) {
+      return DEFAULT_AGENT_PROVISION_TIMEOUT_MS;
+    }
+
+    const timeout = Number(configuredTimeout);
+    if (!Number.isInteger(timeout) || 0 >= timeout) {
+      throw new Error('AFJ_AGENT_PROVISION_TIMEOUT_MS must be a positive integer');
+    }
+
+    return timeout;
+  }
+
+  private normalizeContainerName(value: unknown): string {
+    if ('string' !== typeof value) {
+      throw new Error('containerName contains unsafe characters');
+    }
+
+    const normalized = value
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^A-Za-z0-9_-]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 128);
+
+    return normalized || 'agent';
   }
 
   async checkFileExistence(filePath: string): Promise<boolean> {

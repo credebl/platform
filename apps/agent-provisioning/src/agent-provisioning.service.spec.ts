@@ -68,15 +68,23 @@ describe('AgentProvisioningService', () => {
     expect(mockExecFile).toHaveBeenCalledWith(
       expect.stringContaining('/apps/agent-provisioning/AFJ/scripts/start_agent.sh'),
       expect.arrayContaining([payload.orgId, payload.containerName, payload.walletPassword]),
-      expect.objectContaining({ timeout: 120000 })
+      expect.objectContaining({ timeout: 300000 })
     );
   });
 
-  it('rejects identifiers that could escape the generated endpoint path before executing a script', async () => {
-    await expect(service.walletProvision({ ...payload, containerName: '../../tmp/owned' })).rejects.toThrow(
-      'containerName contains unsafe characters'
+  it('normalizes organization-derived container names before executing the script and reading its endpoint', async () => {
+    mockExecFile.mockResolvedValue({ stdout: '', stderr: '' });
+    mockReadFile.mockResolvedValue('{"CONTROLLER_ENDPOINT":"https://agent.example"}');
+
+    await expect(service.walletProvision({ ...payload, containerName: 'Crédit Agricole, Inc.' })).resolves.toEqual({
+      agentEndPoint: 'https://agent.example'
+    });
+    expect(mockExecFile).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.arrayContaining(['Credit_Agricole_Inc']),
+      expect.any(Object)
     );
-    expect(mockExecFile).not.toHaveBeenCalled();
+    expect(mockReadFile).toHaveBeenCalledWith(expect.stringContaining('org-123_Credit_Agricole_Inc.json'), 'utf8');
   });
 
   it('rejects non-string identifiers before executing a script', async () => {
@@ -84,6 +92,19 @@ describe('AgentProvisioningService', () => {
       'orgId contains unsafe characters'
     );
     expect(mockExecFile).not.toHaveBeenCalled();
+  });
+
+  it('uses a configured provisioning timeout', async () => {
+    process.env.AFJ_AGENT_PROVISION_TIMEOUT_MS = '600000';
+    mockExecFile.mockResolvedValue({ stdout: '', stderr: '' });
+    mockReadFile.mockResolvedValue('{"CONTROLLER_ENDPOINT":"https://agent.example"}');
+
+    await service.walletProvision(payload);
+    expect(mockExecFile).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Array),
+      expect.objectContaining({ timeout: 600000 })
+    );
   });
 
   it.each([{}, 1, [], '', '   '])('rejects invalid CONTROLLER_ENDPOINT values', async (endpoint) => {
@@ -95,6 +116,7 @@ describe('AgentProvisioningService', () => {
 
   it('propagates a provisioning script failure instead of attempting to read an endpoint file', async () => {
     const failure = Object.assign(new Error('script failed'), {
+      code: 17,
       stdout: 'stdout-secret',
       stderr: 'stderr-secret'
     });
@@ -105,5 +127,6 @@ describe('AgentProvisioningService', () => {
     expect(logger.error).toHaveBeenCalled();
     expect(JSON.stringify(logger.error.mock.calls)).not.toContain('stdout-secret');
     expect(JSON.stringify(logger.error.mock.calls)).not.toContain('stderr-secret');
+    expect(JSON.stringify(logger.error.mock.calls)).toContain('exit code 17');
   });
 });

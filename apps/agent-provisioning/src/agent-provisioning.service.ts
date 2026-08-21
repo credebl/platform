@@ -113,7 +113,7 @@ export class AgentProvisioningService {
         }
 
         const agentEndPoint = await fs.readFile(agentEndpointPath, 'utf8');
-        let parsedEndpoint: { CONTROLLER_ENDPOINT?: unknown };
+        let parsedEndpoint: unknown;
         try {
           parsedEndpoint = JSON.parse(agentEndPoint);
         } catch (parseError) {
@@ -121,11 +121,15 @@ export class AgentProvisioningService {
           throw new Error(`Invalid JSON in agent endpoint file: ${agentEndpointPath}`);
         }
 
-        if ('string' !== typeof parsedEndpoint.CONTROLLER_ENDPOINT || !parsedEndpoint.CONTROLLER_ENDPOINT.trim()) {
+        const controllerEndpoint =
+          null !== parsedEndpoint && 'object' === typeof parsedEndpoint && !Array.isArray(parsedEndpoint)
+            ? (parsedEndpoint as Record<string, unknown>).CONTROLLER_ENDPOINT
+            : undefined;
+        if ('string' !== typeof controllerEndpoint || !controllerEndpoint.trim()) {
           throw new Error(`Missing CONTROLLER_ENDPOINT in: ${agentEndpointPath}`);
         }
 
-        return { agentEndPoint: parsedEndpoint.CONTROLLER_ENDPOINT };
+        return { agentEndPoint: controllerEndpoint };
       } else if (agentType === AgentType.ACAPY) {
         // TODO: ACA-PY Agent Spin-Up
       }

@@ -114,6 +114,13 @@ describe('AgentProvisioningService', () => {
     await expect(service.walletProvision(payload)).rejects.toThrow('Missing CONTROLLER_ENDPOINT');
   });
 
+  it('rejects a non-object endpoint document', async () => {
+    mockExecFile.mockResolvedValue({ stdout: '', stderr: '' });
+    mockReadFile.mockResolvedValue('null');
+
+    await expect(service.walletProvision(payload)).rejects.toThrow('Missing CONTROLLER_ENDPOINT');
+  });
+
   it('propagates a provisioning script failure instead of attempting to read an endpoint file', async () => {
     const failure = Object.assign(new Error('script failed'), {
       code: 17,

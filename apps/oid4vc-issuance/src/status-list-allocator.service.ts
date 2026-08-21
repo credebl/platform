@@ -124,7 +124,7 @@ export class StatusListAllocatorService {
         orderBy: { createDateTime: 'desc' }
       });
 
-      if (!activeList || activeList.allocatedCount >= activeList.listSize) {
+      if (!activeList) {
         // Mark inactive if full
         if (activeList) {
           await tx.status_list_allocation.updateMany({
@@ -146,7 +146,26 @@ export class StatusListAllocatorService {
         });
       }
 
-      const allocator = new RandomBitmapIndexAllocator(activeList.listSize, new Uint8Array(activeList.bitmap));
+      let allocator = new RandomBitmapIndexAllocator(activeList.listSize, new Uint8Array(activeList.bitmap));
+
+      if (allocator.getAllocatedCount() >= activeList.listSize) {
+        await tx.status_list_allocation.updateMany({
+          where: { orgId, issuerDid, isActive: true },
+          data: { isActive: false }
+        });
+        activeList = await tx.status_list_allocation.create({
+          data: {
+            orgId,
+            issuerDid,
+            listId: randomUUID(),
+            listSize: listSize || defaultListSize,
+            allocatedCount: 0,
+            bitmap: Buffer.from(new Uint8Array(Math.ceil((listSize || defaultListSize) / 8))),
+            isActive: true
+          }
+        });
+        allocator = new RandomBitmapIndexAllocator(activeList.listSize, new Uint8Array(activeList.bitmap));
+      }
 
       try {
         const index = allocator.allocate();

@@ -75,6 +75,13 @@ describe('StatusListAllocatorService', () => {
       bitmap: Buffer.from([0b11111111]),
       isActive: true
     };
+    const replacementList = {
+      ...activeList,
+      id: 'replacement-allocation-id',
+      listId: '00000000-0000-0000-0000-000000000002',
+      allocatedCount: 0,
+      bitmap: Buffer.from([0])
+    };
     const tx = {
       $executeRaw: jest.fn(() => Promise.resolve(1)),
       status_list_allocation: {
@@ -84,7 +91,7 @@ describe('StatusListAllocatorService', () => {
           return Promise.resolve(activeList);
         }),
         updateMany: jest.fn(() => Promise.resolve({ count: 1 })),
-        create: jest.fn()
+        create: jest.fn(() => Promise.resolve(replacementList))
       }
     };
     const prisma = {
@@ -101,12 +108,9 @@ describe('StatusListAllocatorService', () => {
         activeList.issuerDid,
         activeList.listSize
       )
-    ).rejects.toThrow('Status list bitmap is full');
-    expect(tx.status_list_allocation.update).toHaveBeenCalledWith({
-      where: { id: activeList.id },
-      data: { isActive: false }
-    });
-    expect(calls).toEqual(['deactivate', 'commit']);
+    ).resolves.toEqual({ listId: replacementList.listId, index: expect.any(Number) });
+    expect(tx.status_list_allocation.updateMany).toHaveBeenCalledTimes(1);
+    expect(calls).toContain('commit');
   });
 
   it('removes a persisted credential before releasing its status-list slot', async () => {

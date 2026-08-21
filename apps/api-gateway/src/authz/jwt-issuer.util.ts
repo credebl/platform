@@ -4,7 +4,12 @@ const trimTrailingSlashes = (value: string): string => value.trim().replace(/\/+
 
 const validateIssuer = (value: string): string => {
   const issuer = trimTrailingSlashes(value);
-  const parsed = new URL(issuer);
+  let parsed: URL;
+  try {
+    parsed = new URL(issuer);
+  } catch {
+    throw new Error(`Invalid trusted JWT issuer: ${value}`);
+  }
   const isLoopbackHost = ['localhost', '127.0.0.1', '[::1]', '::1'].includes(parsed.hostname.toLowerCase());
   const usesAllowedProtocol = 'https:' === parsed.protocol || ('http:' === parsed.protocol && isLoopbackHost);
 
@@ -32,6 +37,10 @@ export const getTrustedJwtIssuers = (env: NodeJS.ProcessEnv = process.env): stri
 
   return [...new Set(issuers.map(validateIssuer))];
 };
+
+export const getTrustedJwtIssuerVariants = (trustedIssuers: string[]): string[] => [
+  ...new Set(trustedIssuers.flatMap((issuer) => [issuer, `${issuer}/`]))
+];
 
 export const getTrustedJwksUri = (issuer: unknown, trustedIssuers: string[]): string => {
   if ('string' !== typeof issuer) {

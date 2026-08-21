@@ -14,7 +14,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { UserService } from '../user/user.service';
 import { passportJwtSecret } from 'jwks-rsa';
-import { getTrustedJwksUri, getTrustedJwtIssuers } from './jwt-issuer.util';
+import { getTrustedJwksUri, getTrustedJwtIssuerVariants, getTrustedJwtIssuers } from './jwt-issuer.util';
 
 dotenv.config();
 
@@ -28,6 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly authzService: AuthzService
   ) {
     const trustedIssuers = getTrustedJwtIssuers();
+    const trustedIssuerVariants = getTrustedJwtIssuerVariants(trustedIssuers);
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKeyProvider: async (request, jwtToken, done) => {
@@ -52,7 +53,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         }
       },
       algorithms: ['RS256'],
-      issuer: trustedIssuers
+      issuer: trustedIssuerVariants
     });
   }
 

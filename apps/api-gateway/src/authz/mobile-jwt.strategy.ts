@@ -6,7 +6,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { PassportStrategy } from '@nestjs/passport';
 import { passportJwtSecret } from 'jwks-rsa';
-import { getTrustedJwksUri, getTrustedJwtIssuers } from './jwt-issuer.util';
+import { getTrustedJwksUri, getTrustedJwtIssuerVariants, getTrustedJwtIssuers } from './jwt-issuer.util';
 dotenv.config();
 
 interface MobileJwtPayload {
@@ -19,6 +19,7 @@ interface MobileJwtPayload {
 export class MobileJwtStrategy extends PassportStrategy(Strategy, 'mobile-jwt') {
   constructor() {
     const trustedIssuers = getTrustedJwtIssuers();
+    const trustedIssuerVariants = getTrustedJwtIssuerVariants(trustedIssuers);
     super({
       secretOrKeyProvider: (request, jwtToken, done) => {
         const decodedToken = jwt.decode(jwtToken);
@@ -38,7 +39,7 @@ export class MobileJwtStrategy extends PassportStrategy(Strategy, 'mobile-jwt') 
       },
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       algorithms: ['RS256'],
-      issuer: trustedIssuers
+      issuer: trustedIssuerVariants
     });
   }
 

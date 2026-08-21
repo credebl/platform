@@ -5,7 +5,8 @@ import { FidoService } from './fido.service';
 
 describe('FidoService passkey device ownership', () => {
   const fidoUserRepository = {
-    checkFidoUserExist: jest.fn()
+    checkFidoUserExist: jest.fn(),
+    getUserDetails: jest.fn()
   };
   const userDevicesRepository = {
     checkUserDeviceByCredentialId: jest.fn(),
@@ -28,7 +29,7 @@ describe('FidoService passkey device ownership', () => {
     async function resolveActor(email: string): Promise<{ id: string } | undefined> {
       return 'actor@example.com' === email ? { id: 'actor-id' } : undefined;
     }
-    fidoUserRepository.checkFidoUserExist.mockImplementation(resolveActor);
+    fidoUserRepository.getUserDetails.mockImplementation(resolveActor);
   };
 
   it('does not delete a credential owned by another user', async () => {
@@ -40,7 +41,7 @@ describe('FidoService passkey device ownership', () => {
     });
 
     await expect(
-      service.deleteFidoUserDevice({ credentialId: 'credential-id', actorEmail: 'actor@example.com' })
+      service.deleteFidoUserDevice({ credentialId: 'Y3JlZGVudGlhbC1pZA', actorEmail: 'actor@example.com' })
     ).rejects.toEqual(expect.objectContaining({ error: expect.any(ForbiddenException) }));
     expect(userDevicesRepository.deleteUserDeviceByCredentialId).not.toHaveBeenCalled();
   });
@@ -55,9 +56,9 @@ describe('FidoService passkey device ownership', () => {
     userDevicesRepository.deleteUserDeviceByCredentialId.mockResolvedValue({ count: 1 });
 
     await expect(
-      service.deleteFidoUserDevice({ credentialId: 'credential-id', actorEmail: 'actor@example.com' })
+      service.deleteFidoUserDevice({ credentialId: 'Y3JlZGVudGlhbC1pZA', actorEmail: 'actor@example.com' })
     ).resolves.toBe('Device deleted successfully');
-    expect(userDevicesRepository.deleteUserDeviceByCredentialId).toHaveBeenCalledWith('credential-id');
+    expect(userDevicesRepository.deleteUserDeviceByCredentialId).toHaveBeenCalledWith('Y3JlZGVudGlhbC1pZA');
   });
 
   it('does not update a credential owned by another user', async () => {
@@ -69,7 +70,7 @@ describe('FidoService passkey device ownership', () => {
     });
 
     await expect(
-      service.updateUser({ credentialId: 'credential-id', actorEmail: 'actor@example.com' } as never)
+      service.updateUser({ credentialId: 'Y3JlZGVudGlhbC1pZA', actorEmail: 'actor@example.com' } as never)
     ).rejects.toEqual(expect.objectContaining({ error: expect.any(ForbiddenException) }));
     expect(userDevicesRepository.updateDeviceByCredentialId).not.toHaveBeenCalled();
   });
@@ -84,7 +85,7 @@ describe('FidoService passkey device ownership', () => {
 
     await expect(
       service.updateFidoUserDeviceName({
-        credentialId: 'credential-id',
+        credentialId: 'Y3JlZGVudGlhbC1pZA',
         deviceName: 'new name',
         actorEmail: 'actor@example.com'
       })

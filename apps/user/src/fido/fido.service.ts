@@ -104,10 +104,10 @@ export class FidoService {
       });
       if (response?.verified && email.toLowerCase()) {
         await this.fidoUserRepository.updateUserDetails(email.toLowerCase(), [{ isFidoVerified: true }]);
-        const credentialID = response.newDevice.credentialID.replace(/=*$/, '');
+        const credentialID = this.normalizeCredentialId(response.newDevice.credentialID);
         response.newDevice.credentialID = credentialID;
         const getUser = await this.fidoUserRepository.checkFidoUserExist(email.toLowerCase());
-        await this.userDevicesRepository.createMultiDevice(response?.newDevice, getUser.id);
+        await this.userDevicesRepository.createMultiDevice(response?.newDevice, getUser.id, credentialID);
         return response;
       } else {
         throw new InternalServerErrorException(ResponseMessages.fido.error.verification);
@@ -155,16 +155,7 @@ export class FidoService {
         devices: fidoMultiDevice
       };
 
-      const credentialIdChars = {
-        '-': '+',
-        _: '/'
-      };
-
-      const verifyAuthenticationId = verifyAuthenticationDetails.id.replace(
-        /[-_]/g,
-        (replaceCredentialId) => credentialIdChars[replaceCredentialId]
-      );
-      const credentialId = `${verifyAuthenticationId}`;
+      const credentialId = this.normalizeCredentialId(verifyAuthenticationDetails.id);
       const getUserDevice = await this.userDevicesRepository.checkUserDeviceByCredentialId(credentialId);
       if (getUserDevice) {
         const loginCounter = getUserDevice?.authCounter + 1;
@@ -199,9 +190,10 @@ export class FidoService {
   async updateUser(updateFidoUserDetailsDto: UpdateFidoUserDetailsDto & { actorEmail: string }): Promise<string> {
     try {
       const { actorEmail, credentialId, ...userDetails } = updateFidoUserDetailsDto;
-      const ownedDevice = await this.assertDeviceOwnership(credentialId, actorEmail);
-      const updateFidoUserDetails = JSON.stringify({ ...userDetails, credentialId });
-      const updateFidoUser = await this.userDevicesRepository.updateDeviceByCredentialId(credentialId);
+      const normalizedCredentialId = this.normalizeCredentialId(credentialId);
+      const ownedDevice = await this.assertDeviceOwnership(normalizedCredentialId, actorEmail);
+      const updateFidoUserDetails = JSON.stringify({ ...userDetails, credentialId: normalizedCredentialId });
+      const updateFidoUser = await this.userDevicesRepository.updateDeviceByCredentialId(normalizedCredentialId);
 
       if (updateFidoUser[0]?.id && updateFidoUser[0].id === ownedDevice.id) {
         await this.userDevicesRepository.addCredentialIdAndNameById(ownedDevice.id, updateFidoUserDetails);
@@ -238,8 +230,9 @@ export class FidoService {
   async deleteFidoUserDevice(payload: credentialDto): Promise<string> {
     try {
       const { credentialId, actorEmail } = payload;
-      await this.assertDeviceOwnership(credentialId, actorEmail);
-      const deleteUserDevice = await this.userDevicesRepository.deleteUserDeviceByCredentialId(credentialId);
+      const normalizedCredentialId = this.normalizeCredentialId(credentialId);
+      await this.assertDeviceOwnership(normalizedCredentialId, actorEmail);
+      const deleteUserDevice = await this.userDevicesRepository.deleteUserDeviceByCredentialId(normalizedCredentialId);
       if (1 === deleteUserDevice.count) {
         return 'Device deleted successfully';
       } else {
@@ -254,7 +247,8 @@ export class FidoService {
   async updateFidoUserDeviceName(payload: updateDeviceDto): Promise<string> {
     try {
       const { credentialId, deviceName, actorEmail } = payload;
-      const getUserDevice = await this.assertDeviceOwnership(credentialId, actorEmail);
+      const normalizedCredentialId = this.normalizeCredentialId(credentialId);
+      const getUserDevice = await this.assertDeviceOwnership(normalizedCredentialId, actorEmail);
       const updateUserDevice = await this.userDevicesRepository.updateUserDeviceByCredentialId(
         getUserDevice.id,
         deviceName
@@ -271,13 +265,26 @@ export class FidoService {
   }
 
   private async assertDeviceOwnership(credentialId: string, actorEmail: string): Promise<PasskeyDeviceOwnership> {
-    const actor = await this.fidoUserRepository.checkFidoUserExist(actorEmail.toLowerCase());
+    const actor = await this.fidoUserRepository.getUserDetails(actorEmail.toLowerCase());
     const device = await this.userDevicesRepository.checkUserDeviceByCredentialId(credentialId);
 
-    if (!device || device.userId !== actor.id || device.deletedAt) {
+    if (!actor || !device || device.userId !== actor.id || device.deletedAt) {
       throw new ForbiddenException('Passkey device can only be managed by its owner');
     }
 
     return device;
+  }
+
+  private normalizeCredentialId(credentialId: string): string {
+    if ('string' !== typeof credentialId || !/^[A-Za-z0-9+/_-]+={0,2}$/.test(credentialId)) {
+      throw new BadRequestException('Invalid passkey credential ID');
+    }
+
+    const unpaddedCredentialId = credentialId.replace(/=+$/, '');
+    if (1 === unpaddedCredentialId.length % 4) {
+      throw new BadRequestException('Invalid passkey credential ID');
+    }
+
+    return unpaddedCredentialId.replace(/\+/g, '-').replace(/\//g, '_');
   }
 }

@@ -1,6 +1,13 @@
 import { CommonConstants } from '@credebl/common/common.constant';
 
-const trimTrailingSlashes = (value: string): string => value.trim().replace(/\/+$/, '');
+const trimTrailingSlashes = (value: string): string => {
+  const trimmedValue = value.trim();
+  let endIndex = trimmedValue.length;
+  while (0 < endIndex && '/' === trimmedValue.charAt(endIndex - 1)) {
+    endIndex -= 1;
+  }
+  return trimmedValue.slice(0, endIndex);
+};
 
 const validateIssuer = (value: string): string => {
   const issuer = trimTrailingSlashes(value);
@@ -25,11 +32,10 @@ export const getTrustedJwtIssuers = (env: NodeJS.ProcessEnv = process.env): stri
     .map((issuer) => issuer.trim())
     .filter(Boolean);
 
-  const issuers = configuredIssuers?.length
-    ? configuredIssuers
-    : env.KEYCLOAK_DOMAIN && env.KEYCLOAK_REALM
-      ? [`${trimTrailingSlashes(env.KEYCLOAK_DOMAIN)}/realms/${env.KEYCLOAK_REALM.trim()}`]
-      : [];
+  let issuers = [...(configuredIssuers ?? [])];
+  if (0 === issuers.length && env.KEYCLOAK_DOMAIN && env.KEYCLOAK_REALM) {
+    issuers = [`${trimTrailingSlashes(env.KEYCLOAK_DOMAIN)}/realms/${env.KEYCLOAK_REALM.trim()}`];
+  }
 
   if (0 === issuers.length) {
     throw new Error('JWT_TRUSTED_ISSUERS or both KEYCLOAK_DOMAIN and KEYCLOAK_REALM must be configured');
@@ -38,11 +44,13 @@ export const getTrustedJwtIssuers = (env: NodeJS.ProcessEnv = process.env): stri
   return [...new Set(issuers.map(validateIssuer))];
 };
 
-export const getTrustedJwtIssuerVariants = (trustedIssuers: string[]): string[] => [...new Set(trustedIssuers.flatMap((issuer) => [issuer, `${issuer}/`]))];
+export const getTrustedJwtIssuerVariants = (trustedIssuers: string[]): string[] => [
+  ...new Set(trustedIssuers.flatMap((issuer) => [issuer, `${issuer}/`]))
+];
 
 export const getTrustedJwksUri = (issuer: unknown, trustedIssuers: string[]): string => {
   if ('string' !== typeof issuer) {
-    throw new Error('JWT issuer is missing');
+    throw new TypeError('JWT issuer is missing');
   }
 
   const normalizedIssuer = trimTrailingSlashes(issuer);

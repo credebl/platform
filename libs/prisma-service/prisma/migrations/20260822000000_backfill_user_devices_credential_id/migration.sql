@@ -7,49 +7,33 @@
 -- Legacy JSON values were stored padding-stripped but not URL-safe encoded. They are
 -- normalized to unpadded base64url (strip '=' padding, '+' -> '-', '/' -> '_') to match
 -- what FidoService.normalizeCredentialId produces before every lookup.
+--
+-- The UPDATE below is a single statement, so it is atomic: if two devices collide on the
+-- same normalized credential ID (the column has a unique constraint), the exception
+-- handler replaces the constraint error with an actionable message and nothing is written.
 
 BEGIN;
 
--- The credentialId column has a unique constraint. Fail with a clear message instead of
--- letting the UPDATE hit a constraint violation mid-migration.
 DO $$
-DECLARE
-  collision_count int;
 BEGIN
-  SELECT COUNT(*)
-  INTO collision_count
-  FROM (
-    SELECT translate(regexp_replace("devices"->>'credentialID', '=+$', ''), '+/', '-_') AS normalized_id
+  WITH normalized AS (
+    SELECT
+      "id",
+      translate(regexp_replace("devices"->>'credentialID', '=+$', ''), '+/', '-_') AS normalized_id
     FROM "user_devices"
-    WHERE "devices" ? 'credentialID'
-      AND "devices"->>'credentialID' IS NOT NULL
-    GROUP BY 1
-    HAVING COUNT(*) > 1
-  ) collisions;
+    WHERE "devices"->>'credentialID' IS NOT NULL
+  )
+  UPDATE "user_devices" ud
+  SET
+    "credentialId" = n.normalized_id,
+    "devices" = jsonb_set(ud."devices", '{credentialID}', to_jsonb(n.normalized_id)),
+    "lastChangedDateTime" = now()
+  FROM normalized n
+  WHERE ud."id" = n."id";
 
-  IF collision_count > 0 THEN
-    RAISE EXCEPTION 'Cannot backfill user_devices.credentialId: % device(s) collide on the same credential ID after normalization; resolve manually first', collision_count;
-  END IF;
+EXCEPTION
+  WHEN unique_violation THEN
+    RAISE EXCEPTION 'Cannot backfill user_devices.credentialId: devices collide on the same credential ID after normalization; resolve manually first';
 END $$;
-
-WITH normalized AS (
-  SELECT
-    "id",
-    translate(regexp_replace("devices"->>'credentialID', '=+$', ''), '+/', '-_') AS normalized_id
-  FROM "user_devices"
-  WHERE "devices" ? 'credentialID'
-    AND "devices"->>'credentialID' IS NOT NULL
-)
-UPDATE "user_devices" ud
-SET
-  "credentialId" = n.normalized_id,
-  "devices" = jsonb_set(ud."devices", '{credentialID}', to_jsonb(n.normalized_id)),
-  "lastChangedDateTime" = now()
-FROM normalized n
-WHERE ud."id" = n."id"
-  AND (
-    ud."credentialId" IS DISTINCT FROM n.normalized_id
-    OR ud."devices"->>'credentialID' IS DISTINCT FROM n.normalized_id
-  );
 
 COMMIT;

@@ -276,11 +276,19 @@ export class FidoService {
   }
 
   private normalizeCredentialId(credentialId: string): string {
-    if ('string' !== typeof credentialId || !/^[A-Za-z0-9+/_-]+={0,2}$/.test(credentialId)) {
+    if ('string' !== typeof credentialId) {
       throw new BadRequestException('Invalid passkey credential ID');
     }
 
-    const unpaddedCredentialId = credentialId.replace(/=+$/, '');
+    let endIndex = credentialId.length;
+    while (0 < endIndex && '=' === credentialId.charAt(endIndex - 1)) {
+      endIndex -= 1;
+    }
+    const unpaddedCredentialId = credentialId.slice(0, endIndex);
+    if (!/^[A-Za-z0-9+/_-]+$/.test(unpaddedCredentialId)) {
+      throw new BadRequestException('Invalid passkey credential ID');
+    }
+
     if (1 === unpaddedCredentialId.length % 4) {
       throw new BadRequestException('Invalid passkey credential ID');
     }

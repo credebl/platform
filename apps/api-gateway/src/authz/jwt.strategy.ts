@@ -49,6 +49,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           const secretprovider = passportJwtSecret(jwtOptions);
           secretprovider(request, jwtToken, (err, data) => done(err, data));
         } catch (error) {
+          this.logger.error(`Error resolving JWKS secret:::${error}`);
           return done(new UnauthorizedException(ResponseMessages.user.error.invalidAccessToken), null);
         }
       },

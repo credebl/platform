@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
 
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
 import { PassportStrategy } from '@nestjs/passport';
 import { passportJwtSecret } from 'jwks-rsa';
@@ -17,6 +17,8 @@ interface MobileJwtPayload {
 
 @Injectable()
 export class MobileJwtStrategy extends PassportStrategy(Strategy, 'mobile-jwt') {
+  private readonly logger = new Logger('MobileJwt Strategy');
+
   constructor() {
     const trustedIssuers = getTrustedJwtIssuers();
     const trustedIssuerVariants = getTrustedJwtIssuerVariants(trustedIssuers);
@@ -34,6 +36,7 @@ export class MobileJwtStrategy extends PassportStrategy(Strategy, 'mobile-jwt') 
           const secretprovider = passportJwtSecret(jwtOptions);
           secretprovider(request, jwtToken, (err, data) => done(err, data));
         } catch (error) {
+          this.logger.error(`Error resolving JWKS secret:::${error}`);
           return done(new UnauthorizedException('Authorization header contains an invalid token'), null);
         }
       },

@@ -5,7 +5,8 @@ import { CreateOrganizationDto } from './dtos/create-organization-dto';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
-import { organisation, user } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import { org_invitations, organisation, user } from '@prisma/client';
 import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
 import {
@@ -176,7 +177,12 @@ export class OrganizationService extends BaseService {
    * @param sendInvitationDto
    * @returns Organization invitation creation Success
    */
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
+  async createInvitation(
+    bulkInvitationDto: BulkSendInvitationDto,
+    userId: string,
+    userEmail: string
+    // eslint-disable-next-line camelcase
+  ): Promise<org_invitations[]> {
     const payload = { bulkInvitationDto, userId, userEmail };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'send-invitation', payload);
   }

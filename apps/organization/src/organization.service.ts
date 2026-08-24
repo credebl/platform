@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable prefer-destructuring */
 // eslint-disable-next-line camelcase
 import { RecordType, org_invitations, organisation, user } from '@prisma/client';
@@ -931,8 +932,9 @@ export class OrganizationService {
     userEmail: string,
     userId: string,
     orgName: string
-  ): Promise<void> {
+  ): Promise<org_invitations[]> {
     const { invitations, orgId } = bulkInvitationDto;
+    const createdInvitations: org_invitations[] = [];
 
     for (const invitation of invitations) {
       const { orgRoleId, email } = invitation;
@@ -951,7 +953,13 @@ export class OrganizationService {
       const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
       if (!isInvitationExist && userEmail !== invitation.email) {
-        await this.organizationRepository.createSendInvitation(email, String(orgId), String(userId), orgRoleId);
+        const createdInvitation = await this.organizationRepository.createSendInvitation(
+          email,
+          String(orgId),
+          String(userId),
+          orgRoleId
+        );
+        createdInvitations.push(createdInvitation);
 
         try {
           await this.sendInviteEmailTemplate(email, orgName, orgRolesDetails, firstName, isUserExist);
@@ -960,6 +968,8 @@ export class OrganizationService {
         }
       }
     }
+
+    return createdInvitations;
   }
 
   async createInvitationByClientRoles(
@@ -968,8 +978,9 @@ export class OrganizationService {
     userId: string,
     orgName: string,
     idpId: string
-  ): Promise<void> {
+  ): Promise<org_invitations[]> {
     const { invitations, orgId } = bulkInvitationDto;
+    const createdInvitations: org_invitations[] = [];
 
     const userDetails = await this.organizationRepository.getUser(userId);
     const token = await this.clientRegistrationService.getManagementToken(
@@ -1001,12 +1012,13 @@ export class OrganizationService {
       const isInvitationExist = await this.checkInvitationExist(email, orgId);
 
       if (!isInvitationExist && userEmail !== invitation.email) {
-        await this.organizationRepository.createSendInvitation(
+        const createdInvitation = await this.organizationRepository.createSendInvitation(
           email,
           String(orgId),
           String(userId),
           filteredOrgRoles.map((role) => role.id)
         );
+        createdInvitations.push(createdInvitation);
 
         try {
           await this.sendInviteEmailTemplate(email, orgName, filteredOrgRoles, firstName, isUserExist);
@@ -1015,6 +1027,8 @@ export class OrganizationService {
         }
       }
     }
+
+    return createdInvitations;
   }
 
   /**
@@ -1023,7 +1037,11 @@ export class OrganizationService {
    * @returns createInvitation
    */
 
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
+  async createInvitation(
+    bulkInvitationDto: BulkSendInvitationDto,
+    userId: string,
+    userEmail: string
+  ): Promise<org_invitations[]> {
     const { orgId } = bulkInvitationDto;
 
     try {
@@ -1033,10 +1051,16 @@ export class OrganizationService {
         throw new NotFoundException(ResponseMessages.organisation.error.orgNotFound);
       }
 
+      let createdInvitations: org_invitations[];
       if (!organizationDetails.idpId) {
-        await this.createInvitationByOrgRoles(bulkInvitationDto, userEmail, userId, organizationDetails.name);
+        createdInvitations = await this.createInvitationByOrgRoles(
+          bulkInvitationDto,
+          userEmail,
+          userId,
+          organizationDetails.name
+        );
       } else {
-        await this.createInvitationByClientRoles(
+        createdInvitations = await this.createInvitationByClientRoles(
           bulkInvitationDto,
           userEmail,
           userId,
@@ -1051,7 +1075,7 @@ export class OrganizationService {
         `Invitations sent for ${organizationDetails.name}`,
         'Get started with user role management once invitations accepted'
       );
-      return ResponseMessages.organisation.success.createInvitation;
+      return createdInvitations;
     } catch (error) {
       this.logger.error(`In send Invitation : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);

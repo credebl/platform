@@ -15,7 +15,7 @@ catalog:
   "@nestjs/passport": ^11.0.5
   "@nestjs/platform-socket.io": ^11.1.29
   "@nestjs/schedule": ^6.0.1
-  "@nestjs/swagger": ^11.4.6
+  "@nestjs/swagger": ^11.4.7
   "@nestjs/typeorm": ^11.0.3
   "@nestjs/websockets": ^11.1.29
   "nestjs-cls": ^6.2.1

@@ -22,7 +22,8 @@ import {
   IGetAllOrgsPayload,
   IAllOrgsNameId
 } from '@credebl/common/interfaces/organization.interface';
-import { organisation, user } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import { org_invitations, organisation, user } from '@prisma/client';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
@@ -180,7 +181,8 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'send-invitation' })
   async createInvitation(
     @Body() payload: { bulkInvitationDto: BulkSendInvitationDto; userId: string; userEmail: string }
-  ): Promise<string> {
+    // eslint-disable-next-line camelcase
+  ): Promise<org_invitations[]> {
     return this.organizationService.createInvitation(payload.bulkInvitationDto, payload.userId, payload.userEmail);
   }
 

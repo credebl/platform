@@ -37,7 +37,8 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
-import { user } from '@prisma/client';
+// eslint-disable-next-line camelcase
+import { org_invitations, user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
@@ -636,11 +637,17 @@ export class OrganizationController {
     @Res() res: Response
   ): Promise<Response> {
     bulkInvitationDto.orgId = orgId;
-    await this.organizationService.createInvitation(bulkInvitationDto, user.id, user.email);
+    // eslint-disable-next-line camelcase
+    const invitationDetails: org_invitations[] = await this.organizationService.createInvitation(
+      bulkInvitationDto,
+      user.id,
+      user.email
+    );
 
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.organisation.success.createInvitation
+      message: ResponseMessages.organisation.success.createInvitation,
+      data: invitationDetails
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

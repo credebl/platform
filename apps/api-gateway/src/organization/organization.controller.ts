@@ -57,6 +57,7 @@ import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { ClientTokenDto } from './dtos/client-token.dto';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { TrustServiceRoleGuard } from '../authz/guards/trust-service-role.guard';
+import { IOrgInvitation } from '@credebl/common/interfaces/organization.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -636,11 +637,16 @@ export class OrganizationController {
     @Res() res: Response
   ): Promise<Response> {
     bulkInvitationDto.orgId = orgId;
-    await this.organizationService.createInvitation(bulkInvitationDto, user.id, user.email);
-
+    // eslint-disable-next-line camelcase
+    const invitationDetails: IOrgInvitation[] = await this.organizationService.createInvitation(
+      bulkInvitationDto,
+      user.id,
+      user.email
+    );
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
-      message: ResponseMessages.organisation.success.createInvitation
+      message: ResponseMessages.organisation.success.createInvitation,
+      data: invitationDetails
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

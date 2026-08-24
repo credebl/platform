@@ -16,7 +16,8 @@ import {
   IDeleteOrganization,
   IOrgActivityCount,
   IGetAllOrgsPayload,
-  IAllOrgsNameId
+  IAllOrgsNameId,
+  IOrgInvitation
 } from '@credebl/common/interfaces/organization.interface';
 import { ClientCredentialsDto } from './dtos/client-credentials.dto';
 import { IAccessTokenData } from '@credebl/common/interfaces/interface';
@@ -176,7 +177,12 @@ export class OrganizationService extends BaseService {
    * @param sendInvitationDto
    * @returns Organization invitation creation Success
    */
-  async createInvitation(bulkInvitationDto: BulkSendInvitationDto, userId: string, userEmail: string): Promise<string> {
+  async createInvitation(
+    bulkInvitationDto: BulkSendInvitationDto,
+    userId: string,
+    userEmail: string
+    // eslint-disable-next-line camelcase
+  ): Promise<IOrgInvitation[]> {
     const payload = { bulkInvitationDto, userId, userEmail };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'send-invitation', payload);
   }

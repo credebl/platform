@@ -58,7 +58,7 @@ export interface IOrganizationInvitations {
   invitations: IOrgInvitation[];
 }
 
-interface IOrgInvitation {
+export interface IOrgInvitation {
   id: string;
   orgId: string;
   email: string;

@@ -37,8 +37,7 @@ import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
 import { ForbiddenErrorDto } from '../dtos/forbidden-error.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from '../authz/decorators/user.decorator';
-// eslint-disable-next-line camelcase
-import { org_invitations, user } from '@prisma/client';
+import { user } from '@prisma/client';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
@@ -58,6 +57,7 @@ import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { ClientTokenDto } from './dtos/client-token.dto';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
 import { TrustServiceRoleGuard } from '../authz/guards/trust-service-role.guard';
+import { IOrgInvitation } from '@credebl/common/interfaces/organization.interface';
 
 @UseFilters(CustomExceptionFilter)
 @Controller('orgs')
@@ -638,12 +638,11 @@ export class OrganizationController {
   ): Promise<Response> {
     bulkInvitationDto.orgId = orgId;
     // eslint-disable-next-line camelcase
-    const invitationDetails: org_invitations[] = await this.organizationService.createInvitation(
+    const invitationDetails: IOrgInvitation[] = await this.organizationService.createInvitation(
       bulkInvitationDto,
       user.id,
       user.email
     );
-
     const finalResponse: IResponse = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.organisation.success.createInvitation,

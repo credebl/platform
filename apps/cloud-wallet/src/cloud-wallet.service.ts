@@ -148,7 +148,7 @@ export class CloudWalletService {
       const { proofRecordId, userId } = proofPrsentationByIdPayload;
       const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
       const { agentEndpoint } = baseWalletDetails;
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${proofRecordId}}`;
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${proofRecordId}`;
 
       const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
       return getProofById;
@@ -169,9 +169,11 @@ export class CloudWalletService {
 
       const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
       const { agentEndpoint } = baseWalletDetails;
-      const threadParam = threadId ? `?threadId=${threadId}` : '';
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${threadParam}}`;
-      const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}`;
+      const getProofById = await this.commonService.httpGet(url, {
+        headers: { authorization: decryptedApiKey },
+        ...(threadId ? { params: { threadId } } : {})
+      });
       return getProofById;
     } catch (error) {
       await this.commonService.handleError(error);
@@ -197,14 +199,11 @@ export class CloudWalletService {
       throw new NotFoundException(ResponseMessages.cloudWallet.error.notFoundBaseWallet);
     }
 
-    const getAgentDetails = await this.commonService.httpGet(
-      `${baseWalletDetails?.agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`
-    );
-    if (!getAgentDetails?.isInitialized) {
+    const decryptedApiKey = await this.commonService.decryptPassword(getTenant.agentApiKey);
+    const isAgentHealthy = await this.commonService.checkAgentHealth(baseWalletDetails.agentEndpoint, decryptedApiKey);
+    if (!isAgentHealthy) {
       throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
     }
-
-    const decryptedApiKey = await this.commonService.decryptPassword(getTenant?.agentApiKey);
 
     return [baseWalletDetails, decryptedApiKey];
   }

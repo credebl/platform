@@ -16,8 +16,9 @@ describe('CloudWalletService holder isolation', () => {
 
   function createService(getCloudSubWallet = jest.fn().mockResolvedValue(holderWallet)) {
     const commonService = {
-      httpGet: jest.fn().mockResolvedValueOnce({ isInitialized: true }).mockResolvedValueOnce([]),
-      decryptPassword: jest.fn().mockResolvedValue('holder-token')
+      httpGet: jest.fn().mockResolvedValue([]),
+      decryptPassword: jest.fn().mockResolvedValue('holder-token'),
+      checkAgentHealth: jest.fn().mockResolvedValue(true)
     };
     const repository = {
       getCloudSubWallet,
@@ -35,6 +36,7 @@ describe('CloudWalletService holder isolation', () => {
 
     expect(repository.getCloudSubWallet).toHaveBeenCalledWith('holder-user');
     expect(commonService.decryptPassword).toHaveBeenCalledWith('encrypted-holder-token');
+    expect(commonService.checkAgentHealth).toHaveBeenCalledWith('https://wallet-agent.example', 'holder-token');
     expect(commonService.httpGet).toHaveBeenLastCalledWith('https://wallet-agent.example/dids', {
       headers: { authorization: 'holder-token' }
     });
@@ -57,5 +59,47 @@ describe('CloudWalletService holder isolation', () => {
 
     expect(repository.getCloudWalletDetails).not.toHaveBeenCalled();
     expect(commonService.decryptPassword).not.toHaveBeenCalled();
+  });
+
+  it('uses the exact proof record route without appending stray characters', async () => {
+    const { commonService, service } = createService();
+
+    await service.getProofById({
+      userId: 'holder-user',
+      email: 'holder@example.test',
+      proofRecordId: 'proof-record'
+    });
+
+    expect(commonService.httpGet).toHaveBeenLastCalledWith('https://wallet-agent.example/didcomm/proofs/proof-record', {
+      headers: { authorization: 'holder-token' }
+    });
+  });
+
+  it('gets all proofs from the collection route when no thread filter is supplied', async () => {
+    const { commonService, service } = createService();
+
+    await service.getProofPresentation({
+      userId: 'holder-user',
+      email: 'holder@example.test'
+    });
+
+    expect(commonService.httpGet).toHaveBeenLastCalledWith('https://wallet-agent.example/didcomm/proofs', {
+      headers: { authorization: 'holder-token' }
+    });
+  });
+
+  it('passes the proof thread filter as an encoded HTTP query parameter', async () => {
+    const { commonService, service } = createService();
+
+    await service.getProofPresentation({
+      userId: 'holder-user',
+      email: 'holder@example.test',
+      threadId: 'thread/with?reserved=characters'
+    });
+
+    expect(commonService.httpGet).toHaveBeenLastCalledWith('https://wallet-agent.example/didcomm/proofs', {
+      headers: { authorization: 'holder-token' },
+      params: { threadId: 'thread/with?reserved=characters' }
+    });
   });
 });

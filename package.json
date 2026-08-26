@@ -213,7 +213,11 @@
       "ip-address@<=10.3.0": "10.5.0",
       "websocket-driver@<0.7.5": "0.7.5",
       "handlebars@<4.7.9": "4.7.9",
-      "fast-uri@<3.1.6": "3.1.6"
+      "fast-uri@<3.1.6": "3.1.6",
+      "js-yaml@<4.3.2": "4.3.2",
+      "minimatch@<9.0.7": "9.0.9",
+      "form-data@<2.5.6": "2.5.6",
+      "@babel/core@<7.29.6": "7.29.6"
     }
   },
   "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a",

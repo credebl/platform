@@ -2,8 +2,8 @@ const mockExecFile = jest.fn();
 const mockReadFile = jest.fn();
 const mockAccess = jest.fn();
 
-jest.mock('child_process', () => ({ execFile: mockExecFile }));
-jest.mock('util', () => ({ promisify: jest.fn(() => mockExecFile) }));
+jest.mock('node:child_process', () => ({ execFile: mockExecFile }));
+jest.mock('node:util', () => ({ promisify: jest.fn(() => mockExecFile) }));
 jest.mock('fs', () => ({ promises: { access: mockAccess, readFile: mockReadFile } }));
 
 import { AgentType } from '@credebl/enum/enum';

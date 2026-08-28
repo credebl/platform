@@ -1,24 +1,37 @@
 # Stage 1: Build the application
-FROM node:24-alpine3.23 AS build
+FROM oven/bun:1.3-alpine AS build
+# Install OpenSSL
 RUN apk update && apk upgrade && apk add --no-cache \
     openssl \
     openssh-client \
     aws-cli \
     docker \
-    docker-compose \
-    && rm -rf /var/cache/apk/*
-RUN npm install -g pnpm@9.15.3 --ignore-scripts
+    docker-compose
+    
+# Set the working directory
 WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy package.json and package-lock.json
+COPY package.json ./
+COPY bun.lock ./
+COPY pnpm-workspace.yaml ./
+
 ENV PUPPETEER_SKIP_DOWNLOAD=true
-RUN pnpm i --frozen-lockfile --ignore-scripts
+
+# Install dependencies while ignoring scripts (including Puppeteer's installation)
+RUN bun install
+
+# Copy the rest of the application code
 COPY . .
-RUN cd libs/prisma-service && npx prisma generate
-RUN pnpm run build agent-service
-RUN pnpm prune --prod
+# RUN cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate
+RUN cd libs/prisma-service && bunx prisma generate
+
+# Build the user service
+RUN bun --bun run build agent-service
 
 # Stage 2: Create the final image
-FROM node:24-alpine3.23
+FROM oven/bun:1.3-alpine
+# Install OpenSSL
 RUN apk update && apk upgrade && apk add --no-cache \
     openssl \
     openssh-client \
@@ -28,9 +41,14 @@ RUN apk update && apk upgrade && apk add --no-cache \
     && rm -rf /var/cache/apk/* \
     && addgroup -g 1001 -S nodejs \
     && adduser -S nextjs -u 1001
+# RUN npm install -g pnpm
+# Set the working directory
 WORKDIR /app
 COPY --from=build /app/dist/apps/agent-service/ ./dist/apps/agent-service/
 COPY --from=build /app/libs/ ./libs/
-COPY --from=build /app/node_modules ./node_modules
+#COPY --from=build /app/package.json ./  
+COPY --from=build /app/node_modules  ./node_modules
 USER nextjs
-CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/agent-service/main.js"]
+
+# Set the command to run the microservice
+CMD ["sh", "-c", "cd libs/prisma-service && bunx prisma migrate deploy && bunx prisma generate && cd ../.. && bun --bun dist/apps/agent-service/main.js"]

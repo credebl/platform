@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM node:24-alpine3.23 AS build
+FROM node:24-alpine3.24 AS build
 RUN apk update && apk upgrade && apk add --no-cache \
     openssl \
     openssh-client \
@@ -7,7 +7,7 @@ RUN apk update && apk upgrade && apk add --no-cache \
     docker \
     docker-compose \
     && rm -rf /var/cache/apk/*
-RUN npm install -g pnpm@9.15.3 --ignore-scripts
+RUN npm install -g pnpm@9.15.9 --ignore-scripts
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 ENV PUPPETEER_SKIP_DOWNLOAD=true
@@ -18,7 +18,7 @@ RUN pnpm run build agent-service
 RUN pnpm prune --prod
 
 # Stage 2: Create the final image
-FROM node:24-alpine3.23
+FROM node:24-alpine3.24
 RUN apk update && apk upgrade && apk add --no-cache \
     openssl \
     openssh-client \

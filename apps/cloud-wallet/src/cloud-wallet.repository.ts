@@ -30,6 +30,20 @@ export class CloudWalletRepository {
   }
 
   // eslint-disable-next-line camelcase
+  async getCloudBaseWallet(): Promise<cloud_wallet_user_info> {
+    try {
+      return await this.prisma.cloud_wallet_user_info.findFirst({
+        where: {
+          type: CloudWalletType.BASE_WALLET
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getCloudBaseWallet: ${error}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
   async checkUserExist(email: string): Promise<cloud_wallet_user_info> {
     try {
       const agentDetails = await this.prisma.cloud_wallet_user_info.findUnique({
@@ -80,16 +94,16 @@ export class CloudWalletRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getCloudWalletInfo(email: string): Promise<cloud_wallet_user_info> {
+  async getCloudSubWallet(userId: string): Promise<cloud_wallet_user_info> {
     try {
-      const walletInfoData = await this.prisma.cloud_wallet_user_info.findUnique({
+      return await this.prisma.cloud_wallet_user_info.findFirst({
         where: {
-          email
+          userId,
+          type: CloudWalletType.SUB_WALLET
         }
       });
-      return walletInfoData;
     } catch (error) {
-      this.logger.error(`Error in getCloudWalletInfo: ${error}`);
+      this.logger.error(`Error in getCloudSubWallet: ${error}`);
       throw error;
     }
   }
@@ -119,21 +133,6 @@ export class CloudWalletRepository {
       return walletInfoData;
     } catch (error) {
       this.logger.error(`Error in storeCloudWalletInfo: ${error}`);
-      throw error;
-    }
-  }
-
-  // eslint-disable-next-line camelcase
-  async getCloudSubWallet(userId: string): Promise<cloud_wallet_user_info> {
-    try {
-      const cloudSubWalletDetails = await this.prisma.cloud_wallet_user_info.findFirstOrThrow({
-        where: {
-          userId
-        }
-      });
-      return cloudSubWalletDetails;
-    } catch (error) {
-      this.logger.error(`Error in getCloudSubWallet: ${error}`);
       throw error;
     }
   }

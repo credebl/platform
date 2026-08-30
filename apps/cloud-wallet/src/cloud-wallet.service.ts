@@ -55,7 +55,7 @@ export class CloudWalletService {
     const { agentEndpoint, apiKey, email, walletKey, userId } = configureBaseWalletPayload;
 
     try {
-      const existingWalletInfo = await this.cloudWalletRepository.getCloudWalletInfo(email);
+      const existingWalletInfo = await this.cloudWalletRepository.getCloudBaseWallet();
       if (existingWalletInfo) {
         throw new ConflictException(ResponseMessages.cloudWallet.error.agentAlreadyExist);
       }
@@ -148,7 +148,7 @@ export class CloudWalletService {
       const { proofRecordId, userId } = proofPrsentationByIdPayload;
       const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
       const { agentEndpoint } = baseWalletDetails;
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${proofRecordId}}`;
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${proofRecordId}`;
 
       const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
       return getProofById;
@@ -169,9 +169,11 @@ export class CloudWalletService {
 
       const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
       const { agentEndpoint } = baseWalletDetails;
-      const threadParam = threadId ? `?threadId=${threadId}` : '';
-      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}/${threadParam}}`;
-      const getProofById = await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
+      const url = `${agentEndpoint}${CommonConstants.CLOUD_WALLET_GET_PROOF_REQUEST}`;
+      const getProofById = await this.commonService.httpGet(url, {
+        headers: { authorization: decryptedApiKey },
+        ...(threadId ? { params: { threadId } } : {})
+      });
       return getProofById;
     } catch (error) {
       await this.commonService.handleError(error);
@@ -185,26 +187,23 @@ export class CloudWalletService {
    * @returns cloud wallet info
    */
   async _commonCloudWalletInfo(userId: string): Promise<[CloudWallet, string]> {
-    const baseWalletDetails = await this.cloudWalletRepository.getCloudWalletDetails(CloudWalletType.BASE_WALLET);
-
-    if (!baseWalletDetails) {
-      throw new NotFoundException(ResponseMessages.cloudWallet.error.notFoundBaseWallet);
-    }
-
-    const getAgentDetails = await this.commonService.httpGet(
-      `${baseWalletDetails?.agentEndpoint}${CommonConstants.URL_AGENT_GET_ENDPOINT}`
-    );
-    if (!getAgentDetails?.isInitialized) {
-      throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
-    }
-
     const getTenant = await this.cloudWalletRepository.getCloudSubWallet(userId);
 
     if (!getTenant || !getTenant?.tenantId) {
       throw new NotFoundException(ResponseMessages.cloudWallet.error.walletRecordNotFound);
     }
 
-    const decryptedApiKey = await this.commonService.decryptPassword(getTenant?.agentApiKey);
+    const baseWalletDetails = await this.cloudWalletRepository.getCloudWalletDetails(CloudWalletType.BASE_WALLET);
+
+    if (!baseWalletDetails) {
+      throw new NotFoundException(ResponseMessages.cloudWallet.error.notFoundBaseWallet);
+    }
+
+    const decryptedApiKey = await this.commonService.decryptPassword(getTenant.agentApiKey);
+    const isAgentHealthy = await this.commonService.checkAgentHealth(baseWalletDetails.agentEndpoint, decryptedApiKey);
+    if (!isAgentHealthy) {
+      throw new BadRequestException(ResponseMessages.cloudWallet.error.notReachable);
+    }
 
     return [baseWalletDetails, decryptedApiKey];
   }
@@ -224,7 +223,7 @@ export class CloudWalletService {
         }
       };
 
-      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email);
+      const checkUserExist = await this.cloudWalletRepository.getCloudSubWallet(userId);
 
       if (checkUserExist) {
         throw new ConflictException(ResponseMessages.cloudWallet.error.userExist);
@@ -295,11 +294,11 @@ export class CloudWalletService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { email, userId, ...invitationDetails } = ReceiveInvitationDetails;
 
-      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email);
-
-      if (!checkUserExist) {
+      const cloudSubWallet = await this.cloudWalletRepository.getCloudSubWallet(userId);
+      if (!cloudSubWallet) {
         throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist);
       }
+
       const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
 
       const { agentEndpoint } = baseWalletDetails;
@@ -338,11 +337,11 @@ export class CloudWalletService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { email, userId, ...offerDetails } = acceptOfferDetails;
 
-      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email);
-
-      if (!checkUserExist) {
+      const cloudSubWallet = await this.cloudWalletRepository.getCloudSubWallet(userId);
+      if (!cloudSubWallet) {
         throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist);
       }
+
       const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
       const { agentEndpoint } = baseWalletDetails;
 
@@ -381,11 +380,11 @@ export class CloudWalletService {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { email, userId, ...didDetails } = createDidDetails;
 
-      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email);
-
-      if (!checkUserExist) {
+      const cloudSubWallet = await this.cloudWalletRepository.getCloudSubWallet(userId);
+      if (!cloudSubWallet) {
         throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist);
       }
+
       const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
       const { agentEndpoint } = baseWalletDetails;
 

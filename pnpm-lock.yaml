@@ -60,9 +60,6 @@ catalogs:
     '@nestjs/websockets':
       specifier: ^11.1.29
       version: 11.1.29
-    nestjs-cls:
-      specifier: ^6.2.1
-      version: 6.2.1
     nestjs-rate-limiter:
       specifier: ^3.1.0
       version: 3.1.0
@@ -285,8 +282,8 @@ importers:
         specifier: ^2.29.3
         version: 2.29.3
       nestjs-cls:
-        specifier: 'catalog:'
-        version: 6.2.1(@nestjs/common@11.1.29(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.29)(reflect-metadata@0.1.14)(rxjs@7.8.2)
+        specifier: ^6.2.2
+        version: 6.2.2(@nestjs/common@11.1.29(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.29)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       nestjs-rate-limiter:
         specifier: 'catalog:'
         version: 3.1.0
@@ -303,8 +300,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       nodemailer:
-        specifier: ^9.0.5
-        version: 9.0.5
+        specifier: ^9.0.6
+        version: 9.0.6
       p-limit:
         specifier: ^3.1.0
         version: 3.1.0
@@ -5034,8 +5031,8 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
-  nestjs-cls@6.2.1:
-    resolution: {integrity: sha512-LTVvreuhH132+rjP4MwnykUS3byBAuN6WQzh2QA3YSYCjy9GfgRyoiSKE5qrzQe+uCB1/TUNHPCxEMYgR3tRlg==}
+  nestjs-cls@6.2.2:
+    resolution: {integrity: sha512-4wgnikGUTwbkZFFLc/R7WkAb7qxLPYoIQsuvc+LqHZFmVWk7pMQaVDQZP0BNayP8Zdk+8pTYouTGsVCkZs3F3A==}
     engines: {node: '>=18'}
     peerDependencies:
       '@nestjs/common': '>= 10 < 12'
@@ -5121,8 +5118,8 @@ packages:
     resolution: {integrity: sha512-D9UOmYG3UH1V+ENW56t5QXBwJw1YEY18ruVeus89Rw+SyIgjPkCO84bRzO3uNIYosJbNwiabWVn48o3uJLjxFQ==}
     engines: {node: '>=18'}
 
-  nodemailer@9.0.5:
-    resolution: {integrity: sha512-wvjiKvjczmsN7U/8006JOdXubgBk2XFAbioDMbT+sM7cPs0QrhJTa6KBRX7P5REGGkDcLUz/EarWidb8G8C1jQ==}
+  nodemailer@9.0.6:
+    resolution: {integrity: sha512-IQUGFdhdGwI9+AWX+FpUt4DLmvFaOjTMEoneTIWX/RXxuy1TdenPwWrvFMSfLkPKl+HQEXWuSAxEMMbPYXtBmg==}
     engines: {node: '>=6.0.0'}
 
   normalize-path@3.0.0:
@@ -12543,7 +12540,7 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  nestjs-cls@6.2.1(@nestjs/common@11.1.29(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.29)(reflect-metadata@0.1.14)(rxjs@7.8.2):
+  nestjs-cls@6.2.2(@nestjs/common@11.1.29(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@11.1.29)(reflect-metadata@0.1.14)(rxjs@7.8.2):
     dependencies:
       '@nestjs/common': 11.1.29(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       '@nestjs/core': 11.1.29(@nestjs/common@11.1.29(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/microservices@11.1.29)(@nestjs/platform-express@11.1.29)(@nestjs/websockets@11.1.29)(reflect-metadata@0.1.14)(rxjs@7.8.2)
@@ -12623,7 +12620,7 @@ snapshots:
 
   node-releases@2.0.53: {}
 
-  nodemailer@9.0.5: {}
+  nodemailer@9.0.6: {}
 
   normalize-path@3.0.0: {}
 

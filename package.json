@@ -2,8 +2,8 @@
   "name": "api-gateway",
   "version": "2.1.2",
   "description": "CREDEBL SSI Platform API Gateway",
-  "author": "",
-  "license": "MIT",
+  "author": "LFDT",
+  "license": "Apache-2.0",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",

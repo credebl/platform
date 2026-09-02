@@ -1,6 +1,13 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# ANSI colors
+RED="\033[0;31m"
+YELLOW="\033[0;33m"
+CYAN="\033[0;36m"
+GREEN="\033[0;32m"
+RESET="\033[0m"
+
 commit_msg_file=$1
 
 # Guard: ensure commit message file exists
@@ -11,7 +18,7 @@ if [ -z "$commit_msg_file" ] || [ ! -f "$commit_msg_file" ]; then
 fi
 
 if ! grep -q "Signed-off-by:" "$commit_msg_file"; then
-  echo "Commit message missing Signed-off-by line"
-  echo "Use: git commit -s ..."
+  echo "${RED} Commit message missing Signed-off-by line ${RESET}"
+  echo "${GREEN} Use: git commit -s ... ${RESET}"
   exit 1
 fi

@@ -50,7 +50,9 @@ RUN set -eux \
         jq \
     && npm install -g pnpm@9.15.9 --ignore-scripts \
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* \
+    && addgroup -g 1001 -S nodejs \
+    && adduser -S nextjs -u 1001
 
 WORKDIR /app
 
@@ -77,6 +79,10 @@ RUN chmod 777 /app/agent-provisioning/AFJ/token
 
 # Copy the libs folder
 COPY libs/ ./libs/
+
+# Run as non-root
+RUN chown -R nextjs:nodejs /app
+USER nextjs
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js"]

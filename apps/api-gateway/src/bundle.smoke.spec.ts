@@ -4,12 +4,13 @@ import { join } from 'node:path';
 
 const distEntry = join(process.cwd(), 'dist', 'apps', 'api-gateway', 'main.js');
 
-// CI does not run `nest build` yet, so the bundle only exists on demand after
-// `pnpm build`. The test guards the tree-shaking-style runtime failure that was
-// flagged during review of the @opentelemetry/sdk-node upgrade: a successful
-// webpack build is worthless if module evaluation throws at boot. Skipped when
-// the bundle has not been built; runs locally and once CI gains a build job.
-const skipWithoutBundle = !existsSync(distEntry);
+// CI builds the webpack bundle in .github/workflows/test.yml, so the suite
+// always runs there. It is only skipped for local `pnpm jest` runs that have
+// not run `nest build api-gateway` first. The test guards the tree-shaking
+// runtime failure that was flagged during review of the @opentelemetry/sdk-node
+// upgrade: a successful webpack build is worthless if module evaluation breaks
+// at boot.
+const skipWithoutBundle = !existsSync(distEntry) && 'true' !== process.env.CI;
 const describeBundle = skipWithoutBundle ? describe.skip : describe;
 
 describeBundle('webpack production bundle — api-gateway', () => {

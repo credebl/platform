@@ -7,8 +7,17 @@ import { trace } from '@opentelemetry/api';
 // (see the tree-shaking review concern on #1729).
 describe('tracer — NodeSDK bootstrap', () => {
   const pristineEnv = { ...process.env };
+  let sdkUnderTest: (typeof import('./tracer'))['otelSDK'];
 
-  afterEach(() => {
+  afterEach(async () => {
+    if (sdkUnderTest) {
+      // Offline suite (no OTLP listener): shutting down may flush a pending
+      // batch and reject with ECONNREFUSED. The successful export path is
+      // covered by tracer.integration.spec.ts, so swallow it here.
+      await sdkUnderTest.shutdown().catch(() => {});
+      sdkUnderTest = null;
+    }
+    trace.disable();
     process.env = { ...pristineEnv };
     jest.resetModules();
   });
@@ -56,6 +65,7 @@ describe('tracer — NodeSDK bootstrap', () => {
 
     it('allows the SDK to start and shut down cleanly', async () => {
       const tracerModule = await import('./tracer');
+      sdkUnderTest = tracerModule.otelSDK;
 
       expect(() => tracerModule.otelSDK?.start()).not.toThrow();
       await expect(tracerModule.otelSDK?.shutdown()).resolves.toBeUndefined();
@@ -63,14 +73,13 @@ describe('tracer — NodeSDK bootstrap', () => {
 
     it('returns a working tracer from the global API after start', async () => {
       const tracerModule = await import('./tracer');
+      sdkUnderTest = tracerModule.otelSDK;
       await tracerModule.otelSDK?.start();
 
       const tracer = trace.getTracer('unit-test');
       const span = tracer.startSpan('unit-test-span');
       expect(span.isRecording()).toBe(true);
       span.end();
-
-      await tracerModule.otelSDK?.shutdown();
     });
   });
 });

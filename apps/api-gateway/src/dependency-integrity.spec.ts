@@ -87,10 +87,11 @@ describe('dependency integrity — direct dependencies resolve within declared r
     if (range.startsWith('^')) {
       satisfies = caretSatisfies(installedVersion, range);
     } else if (range.startsWith('~')) {
-      const minor = toTuple(range.replace(/^~/, ''))[1] ?? 0;
+      const minimum = toTuple(range.replace(/^~/, ''));
+      const [major, minor] = minimum;
+      const upperMinor = (minor ?? 0) + 1;
       satisfies =
-        0 === cmp(toTuple(installedVersion), [toTuple(range)[0], minor, 0]) &&
-        1 === cmp(toTuple(installedVersion), [toTuple(range)[0], minor + 1, 0]);
+        0 <= cmp(toTuple(installedVersion), minimum) && 0 > cmp(toTuple(installedVersion), [major ?? 0, upperMinor, 0]);
     } else if ('' === range) {
       satisfies = true;
     } else {

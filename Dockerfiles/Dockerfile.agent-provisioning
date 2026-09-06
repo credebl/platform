@@ -10,21 +10,20 @@ RUN set -eux \
         docker \
         docker-compose \
         jq \
-    && npm install -g pnpm --ignore-scripts \
+    && npm install -g pnpm@9.15.9 --ignore-scripts \
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
     && rm -rf /var/cache/apk/*
 
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package.json ./
-COPY pnpm-workspace.yaml ./
+# Copy package.json, pnpm-lock.yaml and pnpm-workspace.yaml
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Install dependencies while ignoring scripts (including Puppeteer's installation)
-RUN pnpm i --ignore-scripts
+RUN pnpm i --frozen-lockfile --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
@@ -49,7 +48,7 @@ RUN set -eux \
         docker \
         docker-compose \
         jq \
-    && npm install -g pnpm --ignore-scripts \
+    && npm install -g pnpm@9.15.9 --ignore-scripts \
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
     && rm -rf /var/cache/apk/*
 

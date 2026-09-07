@@ -1,11 +1,11 @@
-FROM node:24-alpine3.23
+FROM node:24-alpine3.24
 RUN apk update && apk upgrade && apk add --no-cache \
     postgresql-client \
     openssl \
     && rm -rf /var/cache/apk/* \
     && addgroup -g 1001 -S nodejs \
     && adduser -S nextjs -u 1001 \
-    && npm install -g pnpm@9.15.3 --ignore-scripts
+    && npm install -g pnpm@9.15.9 --ignore-scripts
 WORKDIR /app
 COPY . .
 ENV PUPPETEER_SKIP_DOWNLOAD=true

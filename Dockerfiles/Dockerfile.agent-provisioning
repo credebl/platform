@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM  node:24-alpine3.23 AS build
+FROM  node:24-alpine3.24 AS build
 # Install OpenSSL
 RUN apk update && apk upgrade
 RUN apk add --no-cache openssl
@@ -10,21 +10,20 @@ RUN set -eux \
         docker \
         docker-compose \
         jq \
-    && npm install -g pnpm --ignore-scripts \
+    && npm install -g pnpm@9.15.9 --ignore-scripts \
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
     && rm -rf /var/cache/apk/*
 
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package.json ./
-COPY pnpm-workspace.yaml ./
+# Copy package.json, pnpm-lock.yaml and pnpm-workspace.yaml
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Install dependencies while ignoring scripts (including Puppeteer's installation)
-RUN pnpm i --ignore-scripts
+RUN pnpm i --frozen-lockfile --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
@@ -38,7 +37,7 @@ RUN ls -R /app/apps/agent-provisioning/AFJ/
 RUN pnpm run build agent-provisioning
 
 # Stage 2: Create the final image
-FROM  node:24-alpine3.23
+FROM  node:24-alpine3.24
 # Install OpenSSL
 RUN apk update && apk upgrade
 RUN apk add --no-cache openssl
@@ -49,9 +48,11 @@ RUN set -eux \
         docker \
         docker-compose \
         jq \
-    && npm install -g pnpm --ignore-scripts \
+    && npm install -g pnpm@9.15.9 --ignore-scripts \
     && export PATH=$PATH:/usr/lib/node_modules/pnpm/bin \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/cache/apk/* \
+    && addgroup -g 1001 -S nodejs \
+    && adduser -S nextjs -u 1001
 
 WORKDIR /app
 
@@ -78,6 +79,10 @@ RUN chmod 777 /app/agent-provisioning/AFJ/token
 
 # Copy the libs folder
 COPY libs/ ./libs/
+
+# Run as non-root
+RUN chown -R nextjs:nodejs /app
+USER nextjs
 
 # Set the command to run the microservice
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && npx prisma generate && cd ../.. && node dist/apps/agent-provisioning/main.js"]

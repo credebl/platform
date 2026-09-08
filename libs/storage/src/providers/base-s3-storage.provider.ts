@@ -1,7 +1,7 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
-
 import { Buffer } from 'node:buffer';
 import { IStorageService } from '../storage.interface';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+
 import { RpcException } from '@nestjs/microservices';
 import { S3 } from 'aws-sdk';
 import { promisify } from 'node:util';

@@ -30,6 +30,7 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { agent_invitations } from '@prisma/client';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { getAgentUrl } from '@credebl/common/common.utils';
+import { UtilityService } from '@credebl/utility';
 @Injectable()
 export class ConnectionService {
   constructor(
@@ -38,7 +39,8 @@ export class ConnectionService {
     private readonly connectionRepository: ConnectionRepository,
     private readonly userActivityRepository: UserActivityRepository,
     private readonly logger: Logger,
-    private readonly natsClient: NATSClient
+    private readonly natsClient: NATSClient,
+    private readonly utilityService: UtilityService
   ) {}
 
   /**
@@ -443,12 +445,8 @@ export class ConnectionService {
 
   async storeConnectionObjectAndReturnUrl(connectionInvitationUrl: string, persistent: boolean): Promise<string> {
     const storeObj = connectionInvitationUrl;
-    //nats call in agent-service to create an invitation url
-    const pattern = { cmd: 'store-object-return-url' };
-    const payload = { persistent, storeObj };
-
     try {
-      const message = await this.natsClient.send<string>(this.connectionServiceProxy, pattern, payload);
+      const message = await this.utilityService.storeObject({ persistent, storeObj });
       return message;
     } catch (error) {
       this.logger.error(`catch: ${JSON.stringify(error)}`);

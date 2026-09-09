@@ -8,15 +8,6 @@
     "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
   },
   "projects": {
-    "agent-provisioning": {
-      "type": "application",
-      "root": "apps/agent-provisioning",
-      "entryFile": "main",
-      "sourceRoot": "apps/agent-provisioning/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/agent-provisioning/tsconfig.app.json"
-      }
-    },
     "agent-service": {
       "type": "application",
       "root": "apps/agent-service",
@@ -279,12 +270,12 @@
       }
     },
     "utility": {
-      "type": "application",
-      "root": "apps/utility",
-      "entryFile": "main",
-      "sourceRoot": "apps/utility/src",
+      "type": "library",
+      "root": "libs/utility",
+      "entryFile": "index",
+      "sourceRoot": "libs/utility/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/utility/tsconfig.app.json"
+        "tsConfigPath": "libs/utility/tsconfig.lib.json"
       }
     },
     "verification": {
@@ -294,24 +285,6 @@
       "sourceRoot": "apps/verification/src",
       "compilerOptions": {
         "tsConfigPath": "apps/verification/tsconfig.app.json"
-      }
-    },
-    "webhook": {
-      "type": "application",
-      "root": "apps/webhook",
-      "entryFile": "main",
-      "sourceRoot": "apps/webhook/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/webhook/tsconfig.app.json"
-      }
-    },
-    "x509": {
-      "type": "application",
-      "root": "apps/x509",
-      "entryFile": "main",
-      "sourceRoot": "apps/x509/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/x509/tsconfig.app.json"
       }
     }
   }

@@ -7,6 +7,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { Client as PgClient } from 'pg';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { IIntentTemplateList } from '@credebl/common/interfaces/intents-template.interface';
+import { UtilityService } from '@credebl/utility';
 
 @Injectable()
 export class UtilitiesService extends BaseService {
@@ -15,7 +16,8 @@ export class UtilitiesService extends BaseService {
 
   constructor(
     @Inject('NATS_CLIENT') private readonly serviceProxy: ClientProxy,
-    private readonly natsClient: NATSClient
+    private readonly natsClient: NATSClient,
+    private readonly utilityService: UtilityService
   ) {
     super('UtilitiesService');
     if ('true' === process.env.DB_ALERT_ENABLE?.trim()?.toLowerCase()) {
@@ -104,10 +106,7 @@ export class UtilitiesService extends BaseService {
             )}% of <code>org_agents</code> have <code>ledgerId</code> = NULL.</p>`
           };
 
-          const result = await this.natsClient.sendNatsMessage(this.serviceProxy, 'alert-db-ledgerId-null', {
-            emailDto
-          });
-          this.logger.debug('Received result', JSON.stringify(result, null, 2));
+          await this.utilityService.handleLedgerAlert(emailDto);
         } catch (err) {
           this.logger.error(err?.message ?? 'Error in ledgerId alert handler');
         } finally {
@@ -123,13 +122,12 @@ export class UtilitiesService extends BaseService {
   }
 
   async createShorteningUrl(shorteningUrlDto: UtilitiesDto): Promise<string> {
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'create-shortening-url', shorteningUrlDto);
+    return this.utilityService.createAndStoreShorteningUrl(shorteningUrlDto);
   }
 
   async storeObject(persistent: boolean, storeObjectDto: StoreObjectDto): Promise<string> {
     const storeObj = storeObjectDto.data;
-    const payload = { persistent, storeObj };
-    return this.natsClient.sendNatsMessage(this.serviceProxy, 'store-object-return-url', payload);
+    return this.utilityService.storeObject({ persistent, storeObj });
   }
 
   async getAllIntentTemplatesByQuery(

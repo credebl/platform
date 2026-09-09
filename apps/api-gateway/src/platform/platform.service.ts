@@ -9,12 +9,14 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 import { IEcosystemInvitations, IPlatformDashboardCount } from 'apps/ecosystem/interfaces/ecosystem.interfaces';
 import { IPaginationSortingDto, PaginatedResponse } from '@credebl/common/interfaces/interface';
+import { UtilityService } from '@credebl/utility';
 
 @Injectable()
 export class PlatformService extends BaseService {
   constructor(
     @Inject('NATS_CLIENT') private readonly platformServiceProxy: ClientProxy,
-    private readonly natsClient: NATSClient
+    private readonly natsClient: NATSClient,
+    private readonly utilityService: UtilityService
   ) {
     super('PlatformService');
   }
@@ -42,8 +44,7 @@ export class PlatformService extends BaseService {
   }
 
   async getShorteningUrlById(referenceId: string): Promise<object> {
-    // NATS call
-    return this.natsClient.sendNatsMessage(this.platformServiceProxy, 'get-shortening-url', referenceId);
+    return this.utilityService.getShorteningUrl(referenceId);
   }
 
   /**

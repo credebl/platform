@@ -9,6 +9,7 @@ import { UtilitiesController } from './utilities.controller';
 import { UtilitiesService } from './utilities.service';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { UtilityModule } from '@credebl/utility';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { NATSClient } from '@credebl/common/NATSClient';
         )
       },
       CommonModule
-    ])
+    ]),
+    UtilityModule
   ],
   controllers: [UtilitiesController],
   providers: [UtilitiesService, CommonService, NATSClient]

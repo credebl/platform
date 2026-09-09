@@ -52,6 +52,7 @@ import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { ISchemaDetail } from '@credebl/common/interfaces/schema.interface';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { EmailService } from '@credebl/common/email.service';
+import { UtilityService } from '@credebl/utility';
 
 @Injectable()
 export class VerificationService {
@@ -68,7 +69,8 @@ export class VerificationService {
     // TODO: Remove duplicate, unused variable
     @Inject(CACHE_MANAGER) private readonly cacheService: Cache,
     private readonly natsClient: NATSClient,
-    private readonly emailService: EmailService
+    private readonly emailService: EmailService,
+    private readonly utilityService: UtilityService
   ) {}
 
   /**
@@ -559,11 +561,7 @@ export class VerificationService {
   }
 
   async storeVerificationObjectAndReturnUrl(storeObj: string, persistent: boolean): Promise<string> {
-    //nats call in agent-service to create an invitation url
-    const pattern = { cmd: 'store-object-return-url' };
-    const payload = { persistent, storeObj };
-    const message = await this.natsClient.send<string>(this.verificationServiceProxy, pattern, payload);
-    return message;
+    return this.utilityService.storeObject({ persistent, storeObj });
   }
 
   private async generateOOBProofReq(payload: IProofRequestPayload): Promise<unknown> {

@@ -93,6 +93,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
 import { redisStore } from 'cache-manager-ioredis-yet';
 import { EmailService } from '@credebl/common/email.service';
+import { UtilityService } from '@credebl/utility';
 
 @Injectable()
 export class IssuanceService {
@@ -114,7 +115,8 @@ export class IssuanceService {
     @Inject(ContextStorageServiceKey)
     private readonly contextStorageService: ContextStorageService,
     private readonly natsClient: NATSClient,
-    private readonly emailService: EmailService
+    private readonly emailService: EmailService,
+    private readonly utilityService: UtilityService
   ) {}
 
   async getIssuanceRecords(orgId: string): Promise<number> {
@@ -485,11 +487,7 @@ export class IssuanceService {
     try {
       // Set default to false, since currently our invitation are not multi-use
       const persistent: boolean = false;
-      //nats call in agent-service to create an invitation url
-      const pattern = { cmd: 'store-object-return-url' };
-      const payload = { persistent, storeObj };
-      const message = await this.natsCall(pattern, payload);
-      return message.response;
+      return await this.utilityService.storeObject({ persistent, storeObj });
     } catch (error) {
       this.logger.error(
         `[storeIssuanceObjectReturnUrl] [NATS call]- error in storing object and returning url : ${JSON.stringify(error)}`

@@ -7,6 +7,12 @@ import { OrgRolesService } from '@credebl/org-roles';
 import { OrganizationController } from './organization.controller';
 import { OrganizationRepository } from '../repositories/organization.repository';
 import { OrganizationService } from './organization.service';
+import { WebhookController } from './webhook.controller';
+import { WebhookRepository } from '../repositories/webhook.repository';
+import { WebhookService } from './webhook.service';
+import { X509CertificateController } from './x509.controller';
+import { X509CertificateRepository } from '../repositories/x509.repository';
+import { X509CertificateService } from './x509.service';
 import { PrismaService } from '@credebl/prisma-service';
 import { UserActivityRepository } from 'libs/user-activity/repositories';
 import { UserActivityService } from '@credebl/user-activity';
@@ -45,10 +51,14 @@ import { NATSClient } from '@credebl/common/NATSClient';
     ContextInterceptorModule,
     CacheModule.register()
   ],
-  controllers: [OrganizationController],
+  controllers: [OrganizationController, WebhookController, X509CertificateController],
   providers: [
     OrganizationService,
     OrganizationRepository,
+    WebhookService,
+    WebhookRepository,
+    X509CertificateService,
+    X509CertificateRepository,
     PrismaService,
     Logger,
     OrgRolesService,

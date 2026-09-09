@@ -1,0 +1,31 @@
+import { Controller, Logger } from '@nestjs/common';
+import { MessagePattern } from '@nestjs/microservices';
+import { WebhookService } from './webhook.service';
+import { ICreateWebhookUrl, IGetWebhookUrl, IWebhookDto } from '../interfaces/webhook.interface';
+import { IWebhookUrl } from '@credebl/common/interfaces/webhook.interface';
+
+@Controller()
+export class WebhookController {
+  private readonly logger = new Logger('webhookService');
+  constructor(private readonly webhookService: WebhookService) {}
+
+  @MessagePattern({ cmd: 'register-webhook' })
+  async registerWebhook(payload: { registerWebhookDto: IWebhookDto }): Promise<ICreateWebhookUrl> {
+    return this.webhookService.registerWebhook(payload.registerWebhookDto);
+  }
+
+  @MessagePattern({ cmd: 'get-webhookurl' })
+  async getWebhookUrl(payload: IWebhookUrl): Promise<IGetWebhookUrl> {
+    return this.webhookService.getWebhookUrl(payload);
+  }
+
+  @MessagePattern({ cmd: 'update-webhook' })
+  async updateWebhook(payload: { updateWebhookDto: IWebhookDto }): Promise<ICreateWebhookUrl> {
+    return this.webhookService.updateWebhook(payload.updateWebhookDto);
+  }
+
+  @MessagePattern({ cmd: 'post-webhook-response-to-webhook-url' })
+  async webhookResponse(payload: { webhookUrl: string; data: object; webhookSecret?: string }): Promise<object> {
+    return this.webhookService.webhookResponse(payload.webhookUrl, payload.data, payload.webhookSecret);
+  }
+}

@@ -17,6 +17,7 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { UtilityModule } from '@credebl/utility';
 
 @Module({
   imports: [
@@ -37,7 +38,8 @@ import { NATSClient } from '@credebl/common/NATSClient';
     LoggerModule,
     PlatformConfig,
     ContextInterceptorModule,
-    CacheModule.register()
+    CacheModule.register(),
+    UtilityModule
   ],
   controllers: [VerificationController],
   providers: [

@@ -20,6 +20,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { UtilityModule } from '@credebl/utility';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
     PlatformConfig,
     ContextInterceptorModule,
     CacheModule.register(),
+    UtilityModule,
     BullModule.forRoot({
       redis: {
         host: process.env.REDIS_HOST,

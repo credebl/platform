@@ -388,7 +388,6 @@ export enum CommonConstants {
   SCHEMA_SERVICE = 'schema',
   CREDENTIAL_DEFINITION_SERVICE = 'credential-definition',
   AGENT_SERVICE = 'agent-service',
-  AGENT_PROVISIONING = 'agent-provisioning',
   ISSUANCE_SERVICE = 'issuance',
   VERIFICATION_SERVICE = 'verification',
   WEBHOOK_SERVICE = 'webhook',

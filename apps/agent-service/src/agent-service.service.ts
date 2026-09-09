@@ -59,6 +59,7 @@ import {
 } from './interface/agent-service.interface';
 import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, PromiseResult } from '@credebl/enum/enum';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
+import { AgentProvisioningService } from './agent-provisioning.service';
 import { Prisma, RecordType, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CommonService } from '@credebl/common';
@@ -92,6 +93,7 @@ export class AgentServiceService {
 
   constructor(
     private readonly agentServiceRepository: AgentServiceRepository,
+    private readonly agentProvisioningService: AgentProvisioningService,
     private readonly prisma: PrismaService,
     private readonly commonService: CommonService,
     @Inject('NATS_CLIENT') private readonly agentServiceProxy: ClientProxy,
@@ -710,13 +712,10 @@ export class AgentServiceService {
 
   async _walletProvision(payload: IWalletProvision): Promise<Partial<IStoreOrgAgent>> {
     try {
-      const pattern = {
-        cmd: 'wallet-provisioning'
-      };
-      const result = await this.natsClient.send<Partial<IStoreOrgAgent>>(this.agentServiceProxy, pattern, payload);
-      return result;
+      const result = await this.agentProvisioningService.walletProvision(payload);
+      return result as Partial<IStoreOrgAgent>;
     } catch (error) {
-      this.logger.error(`[natsCall] - error in wallet provision : ${JSON.stringify(error)}`);
+      this.logger.error(`[walletProvision] - error in wallet provision : ${JSON.stringify(error)}`);
       throw error;
     }
   }

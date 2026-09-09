@@ -6,6 +6,7 @@ RUN apk update && apk upgrade && apk add --no-cache \
     aws-cli \
     docker \
     docker-compose \
+    jq \
     && rm -rf /var/cache/apk/*
 RUN npm install -g pnpm@9.15.9 --ignore-scripts
 WORKDIR /app
@@ -25,12 +26,32 @@ RUN apk update && apk upgrade && apk add --no-cache \
     aws-cli \
     docker \
     docker-compose \
+    jq \
     && rm -rf /var/cache/apk/* \
     && addgroup -g 1001 -S nodejs \
     && adduser -S nextjs -u 1001
 WORKDIR /app
+
+RUN mkdir -p ./agent-service/AFJ/endpoints
+RUN mkdir -p ./agent-service/AFJ/agent-config
+RUN mkdir -p ./agent-service/AFJ/port-file
+RUN mkdir -p ./agent-service/AFJ/token
+
 COPY --from=build /app/dist/apps/agent-service/ ./dist/apps/agent-service/
 COPY --from=build /app/libs/ ./libs/
 COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps/agent-service/AFJ/scripts ./agent-service/AFJ/scripts
+COPY --from=build /app/apps/agent-service/AFJ/port-file ./agent-service/AFJ/port-file
+
+# Set permissions
+RUN chmod +x /app/agent-service/AFJ/scripts/start_agent.sh
+RUN chmod +x /app/agent-service/AFJ/scripts/start_agent_ecs.sh
+RUN chmod +x /app/agent-service/AFJ/scripts/docker_start_agent.sh
+RUN chmod +x /app/agent-service/AFJ/scripts/fargate.sh
+RUN chmod 777 /app/agent-service/AFJ/endpoints
+RUN chmod 777 /app/agent-service/AFJ/agent-config
+RUN chmod 777 /app/agent-service/AFJ/token
+
+RUN chown -R nextjs:nodejs /app
 USER nextjs
 CMD ["sh", "-c", "cd libs/prisma-service && npx prisma migrate deploy && cd ../.. && node dist/apps/agent-service/main.js"]

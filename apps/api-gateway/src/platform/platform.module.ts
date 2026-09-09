@@ -8,6 +8,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { PlatformController } from './platform.controller';
 import { PlatformService } from './platform.service';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { UtilityModule } from '@credebl/utility';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { getNatsOptions } from '@credebl/common/nats.config';
           process.env.NATS_CREDS_FILE
         )
       }
-    ])
+    ]),
+    UtilityModule
   ],
   controllers: [PlatformController],
   providers: [PlatformService, NATSClient],

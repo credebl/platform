@@ -16,6 +16,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { LoggerModule } from '@credebl/logger/logger.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { UtilityModule } from '@credebl/utility';
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { NATSClient } from '@credebl/common/NATSClient';
     LoggerModule,
     PlatformConfig,
     ContextInterceptorModule,
-    CacheModule.register()
+    CacheModule.register(),
+    UtilityModule
   ],
   controllers: [ConnectionController],
   providers: [ConnectionService, ConnectionRepository, UserActivityRepository, PrismaService, Logger, NATSClient]

@@ -5,6 +5,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AgentServiceController } from './agent-service.controller';
 import { AgentServiceService } from './agent-service.service';
 import { AgentServiceRepository } from './repositories/agent-service.repository';
+import { AgentProvisioningService } from './agent-provisioning.service';
 import { ConfigModule } from '@nestjs/config';
 import { ConnectionService } from 'apps/connection/src/connection.service';
 import { ConnectionRepository } from 'apps/connection/src/connection.repository';
@@ -44,6 +45,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
   providers: [
     AgentServiceService,
     AgentServiceRepository,
+    AgentProvisioningService,
     PrismaService,
     Logger,
     ConnectionService,

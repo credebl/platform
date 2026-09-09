@@ -72,20 +72,11 @@ services:
     image: ghcr.io/credebl/user:latest
     env_file:
       - ./.env
-  utility:
-    container_name: utility-service
-    depends_on:
-      - nats  # Use depends_on instead of needs
-      - api-gateway
-    image: ghcr.io/credebl/utility:latest
-    env_file:
-      - ./.env
   connection:
     container_name: connection-service
     depends_on:
       - nats  # Use depends_on instead of needs
       - api-gateway
-      - utility
       - user
     image: ghcr.io/credebl/connection:latest
     env_file:
@@ -139,29 +130,6 @@ services:
     image: ghcr.io/credebl/verification:latest
     env_file:
       - ./.env
-  agent-provisioning:
-    container_name: agent-provisioning-service
-    depends_on:
-      - nats  # Use depends_on instead of needs
-      - api-gateway
-      - user
-      - connection
-      - issuance
-      - ledger
-      - organization
-      - verification
-    image: ghcr.io/credebl/agent-provisioning:latest
-    # args:
-    #   - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
-    env_file:
-      - ./.env
-    environment:
-      - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
-    user: root
-    volumes:
-      - $PWD/apps/agent-provisioning/AFJ/agent-config:/app/agent-provisioning/AFJ/agent-config
-      - /var/run/docker.sock:/var/run/docker.sock
-      - $PWD/agent.env:/app/agent.env
   agent-service:
     container_name: agent-service
     depends_on:
@@ -173,16 +141,16 @@ services:
       - ledger
       - organization
       - verification
-      - agent-provisioning
-    command: sh -c 'until (docker logs agent-provisioning-service | grep "Agent-Provisioning-Service Microservice is listening to NATS"); do sleep 1; done && node dist/apps/agent-service/main.js'
     image: ghcr.io/credebl/agent-service:latest
     env_file:
       - ./.env
+    environment:
+      - ROOT_PATH=$PWD/apps/agent-service/AFJ/agent-config
     user: root
     volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    volumes_from:
-      - agent-provisioning
+      - $PWD/apps/agent-service/AFJ/agent-config:/app/agent-service/AFJ/agent-config
+      - /var/run/docker.sock:/var/run/docker.sock
+      - $PWD/agent.env:/app/agent.env
   cloud-wallet:
     container_name: cloud-wallet-service
     depends_on:
@@ -205,14 +173,6 @@ services:
       - nats
       - api-gateway
     image: ghcr.io/credebl/notification:latest
-    env_file:
-      - ./.env
-  webhook:
-    container_name: webhook-service
-    depends_on:
-      - nats
-      - api-gateway
-    image: ghcr.io/credebl/webhook:latest
     env_file:
       - ./.env
   ecosystem:
@@ -239,15 +199,7 @@ services:
     image: ghcr.io/credebl/oid4vc-verification:latest
     env_file:
       - ./.env
-  x509:
-    container_name: x509-service
-    depends_on:
-      - nats
-      - api-gateway
-    image: ghcr.io/credebl/x509:latest
-    env_file:
-      - ./.env
-  
+
 volumes:
   cache:
     driver: local

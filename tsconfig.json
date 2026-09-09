@@ -104,10 +104,10 @@
       "@credebl/user-request/*": [
         "libs/user-request/src/*"
       ],
-      "credebl/utility": [
+      "@credebl/utility": [
         "libs/utility/src"
       ],
-      "credebl/utility/*": [
+      "@credebl/utility/*": [
         "libs/utility/src/*"
       ]
     },

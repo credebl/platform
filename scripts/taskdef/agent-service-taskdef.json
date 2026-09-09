@@ -15,7 +15,18 @@
                     "type": "s3"
                 }
             ],
-            "mountPoints": [],
+            "mountPoints": [
+                {
+                    "sourceVolume": "agent-config",
+                    "containerPath": "/app/agent-service/AFJ/agent-config",
+                    "readOnly": false
+                },
+                {
+                    "sourceVolume": "port-file",
+                    "containerPath": "/app/agent-service/AFJ/port-file",
+                    "readOnly": false
+                }
+            ],
             "volumesFrom": [],
             "ulimits": [],
             "logConfiguration": {
@@ -28,7 +39,7 @@
                 }
             }
         }
-        
+
     ],
     "taskRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
     "executionRoleArn": "arn:aws:iam::${ACCOUNT_ID}:role/ecsTaskExecutionRole",
@@ -38,5 +49,31 @@
         "FARGATE"
     ],
     "cpu": "256",
-    "memory": "512"
+    "memory": "512",
+    "volumes": [
+        {
+            "name": "agent-config",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "${EFS}",
+                "rootDirectory": "/",
+                "transitEncryption": "ENABLED",
+                "authorizationConfig": {
+                    "accessPointId": "${AGENT_CONFIG_ACCESS_POINT}",
+                    "iam": "DISABLED"
+                }
+            }
+        },
+        {
+            "name": "port-file",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "${EFS}",
+                "rootDirectory": "/",
+                "transitEncryption": "ENABLED",
+                "authorizationConfig": {
+                    "accessPointId": "${PORT_FILE_ACCESS_POINT}",
+                    "iam": "DISABLED"
+                }
+            }
+        }
+    ]
 }

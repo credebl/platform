@@ -377,8 +377,8 @@ export class IssuanceService {
       if (true === reuseConnection) {
         const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
         if (data && 0 < data.length) {
-          const [firstElement] = data;
-          invitationDid = firstElement?.invitationDid ?? undefined;
+          const lastElement = data[data.length - 1];
+          invitationDid = lastElement?.invitationDid ?? undefined;
         }
       }
       const { agentEndPoint, organisation } = agentDetails;
@@ -981,8 +981,8 @@ export class IssuanceService {
         this.logger.debug('This is a reuse connection, fetching invitation did');
         const data: agent_invitations[] = await this.issuanceRepository.getInvitationDidByOrgId(orgId);
         if (data && 0 < data.length) {
-          const [firstElement] = data;
-          invitationDid = firstElement?.invitationDid ?? undefined;
+          const lastElement = data[data.length - 1];
+          invitationDid = lastElement?.invitationDid ?? undefined;
         }
       }
 

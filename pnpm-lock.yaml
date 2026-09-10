@@ -306,8 +306,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       nodemailer:
-        specifier: ^9.0.5
-        version: 9.0.5
+        specifier: ^9.1.1
+        version: 9.1.1
       p-limit:
         specifier: ^3.1.0
         version: 3.1.0
@@ -5089,8 +5089,8 @@ packages:
     resolution: {integrity: sha512-D9UOmYG3UH1V+ENW56t5QXBwJw1YEY18ruVeus89Rw+SyIgjPkCO84bRzO3uNIYosJbNwiabWVn48o3uJLjxFQ==}
     engines: {node: '>=18'}
 
-  nodemailer@9.0.5:
-    resolution: {integrity: sha512-wvjiKvjczmsN7U/8006JOdXubgBk2XFAbioDMbT+sM7cPs0QrhJTa6KBRX7P5REGGkDcLUz/EarWidb8G8C1jQ==}
+  nodemailer@9.1.1:
+    resolution: {integrity: sha512-izw9mVKFix6YSnC9eLgV6g1opl9DUlRio9ZNcq+Wu9Ujn2UwF+8Nl0B8nz22kEC+CTZCvinkxwJ0DeFbb6NwcQ==}
     engines: {node: '>=6.0.0'}
 
   normalize-path@3.0.0:
@@ -5699,6 +5699,7 @@ packages:
 
   rsync@0.6.1:
     resolution: {integrity: sha512-39HcwWuM67CQ9tHloazShXWUOWa2m3SGqX6XQhQMSj0VCQMkSI9PodoxM7/+hKf2p4v2umbhfoarYqd1gwII/w==}
+    deprecated: This package is no longer maintained. Please migrate to an actively maintained alternative.
 
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
@@ -12480,7 +12481,7 @@ snapshots:
 
   node-releases@2.0.53: {}
 
-  nodemailer@9.0.5: {}
+  nodemailer@9.1.1: {}
 
   normalize-path@3.0.0: {}
 

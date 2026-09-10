@@ -14,7 +14,7 @@ COPY pnpm-workspace.yaml ./
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Install dependencies while ignoring scripts (including Puppeteer's installation)
-RUN pnpm i --ignore-scripts
+RUN pnpm i --ignore-scripts --config.verify-store-integrity=false
 
 # Copy the rest of the application code
 COPY . .

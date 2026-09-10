@@ -14,7 +14,7 @@ RUN chmod +x /app/libs/prisma-service/prisma/scripts/update_client_credential_da
 
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 COPY pnpm-workspace.yaml ./
-RUN pnpm i --ignore-scripts
+RUN pnpm i --ignore-scripts --config.verify-store-integrity=false
 
 # Run Prisma commands
 RUN cd libs/prisma-service && npx prisma generate

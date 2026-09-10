@@ -3,7 +3,7 @@ FROM node:18-alpine AS build
 
 # Install OpenSSL
 RUN apk add --no-cache openssl
-RUN npm install -g pnpm
+RUN npm install -g pnpm@8 --ignore-scripts
 
 # Set the working directory
 WORKDIR /app

@@ -494,8 +494,8 @@ export class VerificationService {
       if (true === reuseConnection) {
         const data: agent_invitations[] = await this.verificationRepository.getInvitationDidByOrgId(user.orgId);
         if (data && 0 < data.length) {
-          const [firstElement] = data;
-          invitationDid = firstElement?.invitationDid ?? undefined;
+          const lastElement = data[data.length - 1];
+          invitationDid = lastElement?.invitationDid ?? undefined;
         }
       }
       outOfBandRequestProof.autoAcceptProof = outOfBandRequestProof.autoAcceptProof || AutoAccept.Always;

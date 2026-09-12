@@ -119,7 +119,7 @@ export class CommonService {
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error.response.data ? error.response.data : error.message
+          error: error?.response?.data ? error.response.data : error.message
         },
         HttpStatus.INTERNAL_SERVER_ERROR
       );

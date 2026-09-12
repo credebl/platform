@@ -14,10 +14,10 @@ export class CloudBaseWalletConfigureDto {
   @IsNotEmpty({ message: 'please provide valid apiKey' })
   apiKey: string;
 
-  @ApiProperty({ example: 'http://0.0.0.0:4001' })
+  @ApiProperty({ example: 'https://0.0.0.0:4001' })
   @IsString({ message: 'agentEndpoint must be a string' })
   @IsNotEmpty({ message: 'please provide valid agentEndpoint' })
-  @IsHostPortOrDomain({ message: 'Agent Endpoint must be a valid protocol://host:port or domain'})
+  @IsHostPortOrDomain({ message: 'Agent Endpoint must be a valid protocol://host:port or domain' })
   agentEndpoint: string;
 
   userId: string;

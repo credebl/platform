@@ -106,8 +106,8 @@ export class CommonService {
   }
 
   sendError(error: any): IFormattedResponse {
-    this.logger.error(`in sendError: ${error} StatusCode: ${error.response?.status}`);
-    if (error.response?.status) {
+    this.logger.error(`in sendError: ${error} StatusCode: ${error?.response?.status}`);
+    if (error?.response?.status) {
       throw new HttpException(
         {
           statusCode: error.response.status,
@@ -119,7 +119,7 @@ export class CommonService {
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error?.response?.data ? error.response.data : error.message
+          error: error?.response?.data ? error.response.data : error?.message
         },
         HttpStatus.INTERNAL_SERVER_ERROR
       );

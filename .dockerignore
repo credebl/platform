@@ -1,1 +1,21 @@
-node_modules
+# Version control
+.git/
+.gitignore
+.gitmodules
+.github/
+
+# Local environment files and secrets
+agent.env
+.env*
+**/*.env
+
+# Build artifacts
+dist/
+coverage/
+node_modules/
+
+# Logs
+*.log
+
+# Docs and references not needed in images
+openspec/

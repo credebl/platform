@@ -76,9 +76,8 @@ describe('CommonService', () => {
     });
 
     it('maps ERR_HTTP_INVALID_HEADER_VALUE to a 401 HttpException', () => {
-      const captured = catchThrow(() =>
-        service.handleCommonErrors(new Error('axios Error: ERR_HTTP_INVALID_HEADER_VALUE for header name'))
-      );
+      const err = new Error('axios Error: ERR_HTTP_INVALID_HEADER_VALUE for header name');
+      const captured = catchThrow(() => service.handleCommonErrors(err));
 
       expect(captured).toBeInstanceOf(HttpException);
       expect((captured as HttpException).getStatus()).toBe(HttpStatus.UNAUTHORIZED);
@@ -186,6 +185,17 @@ describe('CommonService', () => {
       expect((captured as HttpException).getResponse()).toEqual({
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         error: 'network timeout'
+      });
+    });
+
+    it('falls back to 500 when passed undefined', () => {
+      const captured = catchThrow(() => service.sendError(undefined));
+
+      expect(captured).toBeInstanceOf(HttpException);
+      expect((captured as HttpException).getStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+      expect((captured as HttpException).getResponse()).toEqual({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        error: undefined
       });
     });
   });

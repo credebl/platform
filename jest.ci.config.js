@@ -17,7 +17,6 @@ module.exports = {
     '<rootDir>/apps/api-gateway/src/schema/',
     '<rootDir>/apps/api-gateway/test/',
     '<rootDir>/libs/client-registration/src/client-registration.service.spec.ts',
-    '<rootDir>/libs/common/src/common.service.spec.ts',
     '<rootDir>/apps/ledger/src/ledger.controller.spec.ts',
     '<rootDir>/apps/connection/test/',
     '<rootDir>/apps/oid4vc-verification/',

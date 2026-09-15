@@ -403,7 +403,8 @@ export class AgentServiceService {
       indyNamespace: ledger.indyNamespace
     }));
 
-    const escapedJsonString = JSON.stringify(ledgerArray).replace(/"/g, '\\"');
+    // execFile passes arguments directly; the ledger payload must remain valid JSON.
+    const indyLedger = JSON.stringify(ledgerArray);
 
     const walletProvisionPayload: IWalletProvision = {
       orgId: orgData?.id,
@@ -420,7 +421,7 @@ export class AgentServiceService {
       containerName: orgData.name.split(' ').join('_'),
       agentType: AgentType.AFJ,
       orgName: orgData?.name,
-      indyLedger: escapedJsonString,
+      indyLedger,
       credoImage: process.env.AFJ_VERSION || '',
       protocol: process.env.AGENT_PROTOCOL || '',
       tenant: agentSpinupDto.tenant || false,

@@ -72,6 +72,25 @@ describe('AgentProvisioningService', () => {
     );
   });
 
+  it('passes nonempty ledger JSON unchanged as the fifteenth script argument', async () => {
+    const ledgers = [
+      {
+        genesisTransactions: '{"txn":{"alias":"Node1"}}\n{"txn":{"alias":"Node2"}}',
+        indyNamespace: 'test:ledger'
+      }
+    ];
+    const indyLedger = JSON.stringify(ledgers);
+    mockExecFile.mockResolvedValue({ stdout: '', stderr: '' });
+    mockReadFile.mockResolvedValue('{"CONTROLLER_ENDPOINT":"https://agent.example"}');
+
+    await service.walletProvision({ ...payload, indyLedger });
+
+    const [[, args]] = mockExecFile.mock.calls;
+    expect(args[14]).toBe(indyLedger);
+    expect(JSON.parse(args[14])).toEqual(ledgers);
+    expect(args[15]).toBe(payload.inboundEndpoint);
+  });
+
   it('normalizes organization-derived container names before executing the script and reading its endpoint', async () => {
     mockExecFile.mockResolvedValue({ stdout: '', stderr: '' });
     mockReadFile.mockResolvedValue('{"CONTROLLER_ENDPOINT":"https://agent.example"}');

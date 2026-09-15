@@ -6,12 +6,25 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AgentType } from '@credebl/enum/enum';
 import { IWalletProvision } from './interface/agent-provisioning.interfaces';
 import { RpcException } from '@nestjs/microservices';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { spawn } from 'node:child_process';
+import { basename } from 'node:path';
 
-const execFileAsync = promisify(execFile);
 const SAFE_FILE_IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 const DEFAULT_AGENT_PROVISION_TIMEOUT_MS = 300_000;
+// Keep the script's positional arguments fixed, including unused cloud settings.
+const PROVISIONING_ENVIRONMENT = [
+  'SCHEMA_FILE_SERVER_URL',
+  'AGENT_API_KEY',
+  'AWS_ACCOUNT_ID',
+  'S3_BUCKET_ARN',
+  'CLUSTER_NAME',
+  'TASKDEFINITION_FAMILY',
+  'ADMIN_TG_ARN',
+  'INBOUND_TG_ARN',
+  'FILESYSTEMID',
+  'ECS_SUBNET_ID',
+  'ECS_SECURITY_GROUP_ID'
+];
 
 dotenv.config();
 
@@ -47,89 +60,109 @@ export class AgentProvisioningService {
     this.assertSafeFileIdentifier(payload.orgId, 'orgId');
     const safeContainerName = this.normalizeContainerName(payload.containerName);
 
-    const { spinUpScript, endpointDirectory, requiredEnvironment } = this.validateAfjConfig();
+    const { spinUpScript, endpointDirectory } = this.validateAfjConfig();
     const provisionTimeoutMs = this.getProvisionTimeoutMs();
 
-    await this.executeProvisioningScript(
-      payload,
-      safeContainerName,
-      spinUpScript,
-      requiredEnvironment,
-      provisionTimeoutMs
-    );
+    await this.executeProvisioningScript(payload, safeContainerName, spinUpScript, provisionTimeoutMs);
 
     return this.readAgentEndpoint(payload.orgId, safeContainerName, endpointDirectory);
   }
 
-  private validateAfjConfig(): {
-    spinUpScript: string;
-    endpointDirectory: string;
-    requiredEnvironment: string[];
-  } {
+  private validateAfjConfig(): { spinUpScript: string; endpointDirectory: string } {
     const spinUpScript = process.env.AFJ_AGENT_SPIN_UP;
     const endpointDirectory = process.env.AFJ_AGENT_ENDPOINT_PATH;
     if (!spinUpScript || !endpointDirectory) {
       throw new Error('AFJ_AGENT_SPIN_UP and AFJ_AGENT_ENDPOINT_PATH must be configured');
     }
 
-    const requiredEnvironment = [
-      'SCHEMA_FILE_SERVER_URL',
-      'AGENT_API_KEY',
-      'AWS_ACCOUNT_ID',
-      'S3_BUCKET_ARN',
-      'CLUSTER_NAME',
-      'TASKDEFINITION_FAMILY',
-      'ADMIN_TG_ARN',
-      'INBOUND_TG_ARN',
-      'FILESYSTEMID',
-      'ECS_SUBNET_ID',
-      'ECS_SECURITY_GROUP_ID'
-    ];
+    let requiredEnvironment = PROVISIONING_ENVIRONMENT.slice(0, 2);
+    switch (basename(spinUpScript)) {
+      case 'start_agent_ecs.sh':
+        requiredEnvironment = PROVISIONING_ENVIRONMENT.slice(0, 9);
+        break;
+      case 'fargate.sh':
+        requiredEnvironment = PROVISIONING_ENVIRONMENT;
+        break;
+      default:
+        break;
+    }
     const missingEnvironment = requiredEnvironment.filter((name) => !process.env[name]);
     if (missingEnvironment.length) {
       throw new Error(`Missing provisioning configuration: ${missingEnvironment.join(', ')}`);
     }
 
-    return { spinUpScript, endpointDirectory, requiredEnvironment };
+    return { spinUpScript, endpointDirectory };
   }
 
   private async executeProvisioningScript(
     payload: IWalletProvision,
     safeContainerName: string,
     spinUpScript: string,
-    requiredEnvironment: string[],
     provisionTimeoutMs: number
   ): Promise<void> {
-    await execFileAsync(
-      `${process.cwd()}${spinUpScript}`,
-      [
-        payload.orgId,
-        payload.externalIp,
-        payload.walletName,
-        payload.walletPassword,
-        payload.seed,
-        payload.webhookEndpoint,
-        payload.walletStorageHost,
-        payload.walletStoragePort,
-        payload.walletStorageUser,
-        payload.walletStoragePassword,
-        safeContainerName,
-        payload.protocol,
-        String(payload.tenant),
-        payload.credoImage,
-        payload.indyLedger,
-        payload.inboundEndpoint,
-        ...requiredEnvironment.map((name) => process.env[name] as string)
-      ],
-      { timeout: provisionTimeoutMs, maxBuffer: 1024 * 1024 }
-    ).catch((error) => {
+    let childPid: number | undefined;
+    try {
+      const child = spawn(
+        `${process.cwd()}${spinUpScript}`,
+        [
+          payload.orgId,
+          payload.externalIp,
+          payload.walletName,
+          payload.walletPassword,
+          payload.seed,
+          payload.webhookEndpoint,
+          payload.walletStorageHost,
+          payload.walletStoragePort,
+          payload.walletStorageUser,
+          payload.walletStoragePassword,
+          safeContainerName,
+          payload.protocol,
+          String(payload.tenant),
+          payload.credoImage,
+          payload.indyLedger,
+          payload.inboundEndpoint,
+          ...PROVISIONING_ENVIRONMENT.map((name) => process.env[name] || '')
+        ],
+        { detached: true, timeout: provisionTimeoutMs, killSignal: 'SIGKILL', stdio: 'ignore', env: process.env }
+      );
+      childPid = child.pid;
+      await new Promise<void>((resolve, reject) => {
+        child.once('error', reject);
+        child.once('close', (code, signal) => {
+          if (0 === code) {
+            resolve();
+          } else {
+            reject(Object.assign(new Error('Provisioning process failed'), { code, signal }));
+          }
+        });
+      });
+    } catch (error) {
+      this.stopProvisioningProcessGroup(childPid);
       throw new Error(`Agent provisioning script failed${this.formatScriptFailure(error)}`);
-    });
+    }
+  }
+
+  private stopProvisioningProcessGroup(pid: number | undefined): void {
+    if ('win32' === process.platform || !pid || !Number.isInteger(pid) || 0 >= pid) {
+      return;
+    }
+    try {
+      // Provisioning uses POSIX shell scripts; detached gives each run its own group.
+      process.kill(-pid, 'SIGKILL');
+    } catch (error) {
+      if ('ESRCH' !== (error as NodeJS.ErrnoException).code) {
+        this.logger.error('Failed to terminate provisioning process group');
+      }
+    }
   }
 
   private formatScriptFailure(error: { code?: unknown; signal?: unknown }): string {
     if ('number' === typeof error?.code) {
       return ` (exit code ${error.code})`;
+    }
+    const safeCodes = ['ENOENT', 'EACCES', 'ENOEXEC', 'E2BIG'];
+    if ('string' === typeof error?.code && safeCodes.includes(error.code)) {
+      return ` (${error.code})`;
     }
     if ('string' === typeof error?.signal) {
       return ` (signal ${error.signal})`;

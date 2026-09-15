@@ -31,8 +31,7 @@ describe('Indy ledger configuration generation', () => {
 
   it.each([
     ['empty', []],
-    ['quoted and multiline genesis', [ledger]],
-    ['multiple', [ledger, { ...ledger, indyNamespace: 'test:second' }]]
+    ['multiple with quoted and multiline genesis', [ledger, { ...ledger, indyNamespace: 'test:second' }]]
   ])('preserves %s ledger data passed without shell escaping', (_name, ledgers) => {
     execFileSync(
       scriptPath,

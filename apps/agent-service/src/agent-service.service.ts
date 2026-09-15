@@ -403,7 +403,7 @@ export class AgentServiceService {
       indyNamespace: ledger.indyNamespace
     }));
 
-    // execFile passes arguments directly; the ledger payload must remain valid JSON.
+    // Provisioning passes arguments directly; keep the ledger payload as valid JSON.
     const indyLedger = JSON.stringify(ledgerArray);
 
     const walletProvisionPayload: IWalletProvision = {

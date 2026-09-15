@@ -156,6 +156,10 @@ nest start agent-provisioning [--watch]
 nest start agent-service [--watch]
 ```
 
+### Agent provisioning
+
+Deploy `agent-service` and `agent-provisioning` together: ledger JSON is now passed directly as a process argument. Local and Docker scripts need `SCHEMA_FILE_SERVER_URL` and `AGENT_API_KEY`; AWS settings are required only for the corresponding ECS/Fargate scripts.
+
 ## Testing
 
 Tests are written with [Jest](https://jestjs.io) and run via pnpm (the repo's package manager):

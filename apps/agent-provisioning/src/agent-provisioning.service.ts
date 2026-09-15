@@ -191,11 +191,14 @@ export class AgentProvisioningService {
       .normalize('NFKD')
       .replace(/\p{M}/gu, '')
       .replace(/[^A-Za-z0-9_-]+/g, '_')
-      .replace(/^_+/, '')
-      .replace(/_+$/, '')
-      .slice(0, 128);
+      .replace(/^_+/, '');
 
-    return normalized || 'agent';
+    let end = normalized.length;
+    while (0 < end && '_' === normalized[end - 1]) {
+      end--;
+    }
+
+    return normalized.slice(0, Math.min(end, 128)) || 'agent';
   }
 
   async checkFileExistence(filePath: string): Promise<boolean> {

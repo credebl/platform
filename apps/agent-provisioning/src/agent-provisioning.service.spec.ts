@@ -106,6 +106,28 @@ describe('AgentProvisioningService', () => {
     expect(mockReadFile).toHaveBeenCalledWith(expect.stringContaining('org-123_Credit_Agricole_Inc.json'), 'utf8');
   });
 
+  it.each([
+    ['', 'agent'],
+    ['____', 'agent'],
+    ['___agent___', 'agent'],
+    ['agent__name___', 'agent__name'],
+    ['-agent-', '-agent-'],
+    ['  Crédit Agricole, Inc.  ', 'Credit_Agricole_Inc'],
+    [`${'a'.repeat(128)}___`, 'a'.repeat(128)],
+    [`${'a'.repeat(127)}_b`, `${'a'.repeat(127)}_`],
+    [`a${'_'.repeat(100_000)}b`, `a${'_'.repeat(127)}`],
+    [`a${'_'.repeat(100_000)}`, 'a']
+  ])('preserves container normalization for case %#', async (containerName, expected) => {
+    mockExecFile.mockResolvedValue({ stdout: '', stderr: '' });
+    mockReadFile.mockResolvedValue('{"CONTROLLER_ENDPOINT":"https://agent.example"}');
+
+    await service.walletProvision({ ...payload, containerName });
+
+    const [[, args]] = mockExecFile.mock.calls;
+    expect(args[10]).toBe(expected);
+    expect(mockReadFile).toHaveBeenCalledWith(expect.stringContaining(`org-123_${expected}.json`), 'utf8');
+  });
+
   it('rejects non-string identifiers before executing a script', async () => {
     await expect(service.walletProvision({ ...payload, orgId: 123 as unknown as string })).rejects.toThrow(
       'orgId contains unsafe characters'

@@ -6,9 +6,11 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AgentType } from '@credebl/enum/enum';
 import { IWalletProvision } from './interface/agent-provisioning.interfaces';
 import { RpcException } from '@nestjs/microservices';
-import { spawn } from 'node:child_process';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { basename } from 'node:path';
 
+const execFileAsync = promisify(execFile);
 const SAFE_FILE_IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 const DEFAULT_AGENT_PROVISION_TIMEOUT_MS = 300_000;
 // Keep the script's positional arguments fixed, including unused cloud settings.
@@ -100,69 +102,36 @@ export class AgentProvisioningService {
     spinUpScript: string,
     provisionTimeoutMs: number
   ): Promise<void> {
-    let childPid: number | undefined;
-    try {
-      const child = spawn(
-        `${process.cwd()}${spinUpScript}`,
-        [
-          payload.orgId,
-          payload.externalIp,
-          payload.walletName,
-          payload.walletPassword,
-          payload.seed,
-          payload.webhookEndpoint,
-          payload.walletStorageHost,
-          payload.walletStoragePort,
-          payload.walletStorageUser,
-          payload.walletStoragePassword,
-          safeContainerName,
-          payload.protocol,
-          String(payload.tenant),
-          payload.credoImage,
-          payload.indyLedger,
-          payload.inboundEndpoint,
-          ...PROVISIONING_ENVIRONMENT.map((name) => process.env[name] || '')
-        ],
-        { detached: true, timeout: provisionTimeoutMs, killSignal: 'SIGKILL', stdio: 'ignore', env: process.env }
-      );
-      childPid = child.pid;
-      await new Promise<void>((resolve, reject) => {
-        child.once('error', reject);
-        child.once('close', (code, signal) => {
-          if (0 === code) {
-            resolve();
-          } else {
-            reject(Object.assign(new Error('Provisioning process failed'), { code, signal }));
-          }
-        });
-      });
-    } catch (error) {
-      this.stopProvisioningProcessGroup(childPid);
+    await execFileAsync(
+      `${process.cwd()}${spinUpScript}`,
+      [
+        payload.orgId,
+        payload.externalIp,
+        payload.walletName,
+        payload.walletPassword,
+        payload.seed,
+        payload.webhookEndpoint,
+        payload.walletStorageHost,
+        payload.walletStoragePort,
+        payload.walletStorageUser,
+        payload.walletStoragePassword,
+        safeContainerName,
+        payload.protocol,
+        String(payload.tenant),
+        payload.credoImage,
+        payload.indyLedger,
+        payload.inboundEndpoint,
+        ...PROVISIONING_ENVIRONMENT.map((name) => process.env[name] || '')
+      ],
+      { timeout: provisionTimeoutMs, maxBuffer: 1024 * 1024 }
+    ).catch((error) => {
       throw new Error(`Agent provisioning script failed${this.formatScriptFailure(error)}`);
-    }
-  }
-
-  private stopProvisioningProcessGroup(pid: number | undefined): void {
-    if ('win32' === process.platform || !pid || !Number.isInteger(pid) || 0 >= pid) {
-      return;
-    }
-    try {
-      // Provisioning uses POSIX shell scripts; detached gives each run its own group.
-      process.kill(-pid, 'SIGKILL');
-    } catch (error) {
-      if ('ESRCH' !== (error as NodeJS.ErrnoException).code) {
-        this.logger.error('Failed to terminate provisioning process group');
-      }
-    }
+    });
   }
 
   private formatScriptFailure(error: { code?: unknown; signal?: unknown }): string {
     if ('number' === typeof error?.code) {
       return ` (exit code ${error.code})`;
-    }
-    const safeCodes = ['ENOENT', 'EACCES', 'ENOEXEC', 'E2BIG'];
-    if ('string' === typeof error?.code && safeCodes.includes(error.code)) {
-      return ` (${error.code})`;
     }
     if ('string' === typeof error?.signal) {
       return ` (signal ${error.signal})`;

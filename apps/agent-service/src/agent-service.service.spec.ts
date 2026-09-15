@@ -43,17 +43,12 @@ describe('AgentServiceService.prepareWalletProvisionPayload', () => {
       JSON.stringify({ txn: { data: { alias: 'Node Two' } } })
     ].join('\n');
     const indyNamespace = 'test:local';
-    const payload = await provision([{ poolConfig: genesisTransactions, indyNamespace }]);
-    expect(JSON.parse(payload.indyLedger)).toEqual([{ genesisTransactions, indyNamespace }]);
-  });
-
-  it('preserves multiple ledgers in their input order', async () => {
     const payload = await provision([
-      { poolConfig: 'first genesis', indyNamespace: 'test:first' },
+      { poolConfig: genesisTransactions, indyNamespace },
       { poolConfig: 'second genesis', indyNamespace: 'test:second' }
     ]);
     expect(JSON.parse(payload.indyLedger)).toEqual([
-      { genesisTransactions: 'first genesis', indyNamespace: 'test:first' },
+      { genesisTransactions, indyNamespace },
       { genesisTransactions: 'second genesis', indyNamespace: 'test:second' }
     ]);
   });

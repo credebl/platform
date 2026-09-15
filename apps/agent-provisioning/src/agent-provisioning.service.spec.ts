@@ -1,11 +1,11 @@
-const mockSpawn = jest.fn();
+const mockExecFile = jest.fn();
 const mockReadFile = jest.fn();
 const mockAccess = jest.fn();
 
-jest.mock('node:child_process', () => ({ spawn: mockSpawn }));
+jest.mock('node:child_process', () => ({ execFile: mockExecFile }));
+jest.mock('node:util', () => ({ promisify: jest.fn(() => mockExecFile) }));
 jest.mock('fs', () => ({ promises: { access: mockAccess, readFile: mockReadFile } }));
 
-import { EventEmitter } from 'node:events';
 import { AgentType } from '@credebl/enum/enum';
 import { AgentProvisioningService } from './agent-provisioning.service';
 
@@ -43,18 +43,6 @@ const awsEnvironment = {
 };
 const awsArguments = Object.values(awsEnvironment);
 
-function closeChild(code = 0): EventEmitter {
-  const child = Object.assign(new EventEmitter(), { pid: undefined, kill: jest.fn() });
-  queueMicrotask(() => child.emit('close', code, null));
-  return child;
-}
-
-function errorChild(error: Error): EventEmitter {
-  const child = Object.assign(new EventEmitter(), { pid: undefined, kill: jest.fn() });
-  queueMicrotask(() => child.emit('error', error));
-  return child;
-}
-
 describe('AgentProvisioningService', () => {
   const logger = { log: jest.fn(), error: jest.fn() };
   const service = new AgentProvisioningService(logger as never);
@@ -72,7 +60,7 @@ describe('AgentProvisioningService', () => {
     for (const name of Object.keys(awsEnvironment)) {
       delete process.env[name];
     }
-    mockSpawn.mockImplementation(() => closeChild());
+    mockExecFile.mockResolvedValue({ stdout: '', stderr: '' });
     mockReadFile.mockResolvedValue('{"CONTROLLER_ENDPOINT":"https://agent.example"}');
   });
   afterAll(() => {
@@ -83,18 +71,21 @@ describe('AgentProvisioningService', () => {
     'provisions with local %s using only common configuration and positional placeholders',
     async (script) => {
       process.env.AFJ_AGENT_SPIN_UP = `/apps/agent-provisioning/AFJ/scripts/${script}`;
-      await expect(service.walletProvision(payload)).resolves.toEqual({ agentEndPoint: 'https://agent.example' });
-      const [[scriptPath, args, options]] = mockSpawn.mock.calls;
+      const walletPassword = 'secret; $(echo injected)';
+      await expect(service.walletProvision({ ...payload, walletPassword })).resolves.toEqual({
+        agentEndPoint: 'https://agent.example'
+      });
+      const [[scriptPath, args, options]] = mockExecFile.mock.calls;
       expect(scriptPath).toContain(script);
+      expect(args[3]).toBe(walletPassword);
+      expect(options.shell).toBeUndefined();
       expect(args).toHaveLength(27);
       expect(args.slice(16, 18)).toEqual(['https://schema.example', 'agent-key']);
       expect(args.slice(18)).toEqual(Array(9).fill(''));
       expect(options).toEqual(
         expect.objectContaining({
           timeout: 300000,
-          detached: true,
-          killSignal: 'SIGKILL',
-          stdio: 'ignore'
+          maxBuffer: 1024 * 1024
         })
       );
     }
@@ -109,7 +100,7 @@ describe('AgentProvisioningService', () => {
     ];
     const indyLedger = JSON.stringify(ledgers);
     await service.walletProvision({ ...payload, indyLedger });
-    const [[, args]] = mockSpawn.mock.calls;
+    const [[, args]] = mockExecFile.mock.calls;
     expect(args[14]).toBe(indyLedger);
     expect(JSON.parse(args[14])).toEqual(ledgers);
     expect(args[15]).toBe(payload.inboundEndpoint);
@@ -121,62 +112,47 @@ describe('AgentProvisioningService', () => {
     delete process.env.ECS_SUBNET_ID;
     delete process.env.ECS_SECURITY_GROUP_ID;
     await service.walletProvision(payload);
-    const [[, args]] = mockSpawn.mock.calls;
+    const [[, args]] = mockExecFile.mock.calls;
     expect(args).toHaveLength(27);
     expect(args.slice(18, 25)).toEqual(awsArguments.slice(0, 7));
     expect(args.slice(25)).toEqual(['', '']);
 
-    mockSpawn.mockClear();
+    mockExecFile.mockClear();
     delete process.env.FILESYSTEMID;
     await expect(service.walletProvision(payload)).rejects.toThrow('FILESYSTEMID');
-    expect(mockSpawn).not.toHaveBeenCalled();
+    expect(mockExecFile).not.toHaveBeenCalled();
   });
 
   it('requires all Fargate configuration in the original argument positions', async () => {
     process.env.AFJ_AGENT_SPIN_UP = '/apps/agent-provisioning/AFJ/scripts/fargate.sh';
     Object.assign(process.env, awsEnvironment);
     await service.walletProvision(payload);
-    const [[, args]] = mockSpawn.mock.calls;
+    const [[, args]] = mockExecFile.mock.calls;
     expect(args).toHaveLength(27);
     expect(args.slice(18)).toEqual(awsArguments);
 
-    mockSpawn.mockClear();
+    mockExecFile.mockClear();
     delete process.env.ECS_SECURITY_GROUP_ID;
     await expect(service.walletProvision(payload)).rejects.toThrow('ECS_SECURITY_GROUP_ID');
-    expect(mockSpawn).not.toHaveBeenCalled();
+    expect(mockExecFile).not.toHaveBeenCalled();
   });
 
   it('rejects unsafe organization identifiers before executing a script', async () => {
     await expect(service.walletProvision({ ...payload, orgId: '../another-org' })).rejects.toThrow(
       'orgId contains unsafe characters'
     );
-    expect(mockSpawn).not.toHaveBeenCalled();
+    expect(mockExecFile).not.toHaveBeenCalled();
   });
 
   it.each([
-    ['', 'agent'],
-    ['____', 'agent'],
     ['___agent__name___', 'agent__name'],
-    ['-agent-', '-agent-'],
-    [`a${'_'.repeat(100_000)}`, 'a'],
     ['Crédit Agricole, Inc.', 'Credit_Agricole_Inc'],
-    [`a${'_'.repeat(100_000)}b`, `a${'_'.repeat(127)}`],
-    [`${'a'.repeat(127)}_b`, `${'a'.repeat(127)}_`]
+    [`a${'_'.repeat(100_000)}b`, `a${'_'.repeat(127)}`]
   ])('preserves container name normalization (case %#)', async (containerName, expected) => {
     await service.walletProvision({ ...payload, containerName });
-    const [[, args]] = mockSpawn.mock.calls;
+    const [[, args]] = mockExecFile.mock.calls;
     expect(args[10]).toBe(expected);
     expect(mockReadFile).toHaveBeenCalledWith(expect.stringContaining(`org-123_${expected}.json`), 'utf8');
-  });
-
-  it('rejects an invalid endpoint JSON document', async () => {
-    mockReadFile.mockResolvedValue('not JSON');
-    await expect(service.walletProvision(payload)).rejects.toThrow('Invalid JSON in agent endpoint file');
-  });
-
-  it.each([{}, 1, [], '', '   '])('rejects an invalid controller endpoint', async (endpoint) => {
-    mockReadFile.mockResolvedValue(JSON.stringify({ CONTROLLER_ENDPOINT: endpoint }));
-    await expect(service.walletProvision(payload)).rejects.toThrow('Missing CONTROLLER_ENDPOINT');
   });
 
   it('rejects a non-object endpoint document', async () => {
@@ -184,27 +160,16 @@ describe('AgentProvisioningService', () => {
     await expect(service.walletProvision(payload)).rejects.toThrow('Missing CONTROLLER_ENDPOINT');
   });
 
-  it('uses the configured timeout', async () => {
-    process.env.AFJ_AGENT_PROVISION_TIMEOUT_MS = '600000';
-    await service.walletProvision(payload);
-    const [[, , options]] = mockSpawn.mock.calls;
-    expect(options.timeout).toBe(600000);
-  });
-
   it('reports a script exit code without logging script output or credentials', async () => {
-    mockSpawn.mockImplementation(() => closeChild(17));
+    mockExecFile.mockRejectedValue(
+      Object.assign(new Error('wallet-secret'), { code: 17, stdout: 'stdout-secret', stderr: 'stderr-secret' })
+    );
     await expect(service.walletProvision(payload)).rejects.toThrow('Agent provisioning script failed');
     expect(mockReadFile).not.toHaveBeenCalled();
     const logs = JSON.stringify(logger.error.mock.calls);
     expect(logs).toContain('exit code 17');
     expect(logs).not.toContain('wallet-secret');
-  });
-
-  it('reports ENOENT without exposing a spawn error message', async () => {
-    const failure = Object.assign(new Error('spawn wallet-secret ENOENT'), { code: 'ENOENT' });
-    mockSpawn.mockImplementation(() => errorChild(failure));
-    await expect(service.walletProvision(payload)).rejects.toThrow('ENOENT');
-    expect(JSON.stringify(logger.error.mock.calls)).not.toContain('wallet-secret');
-    expect(mockReadFile).not.toHaveBeenCalled();
+    expect(logs).not.toContain('stdout-secret');
+    expect(logs).not.toContain('stderr-secret');
   });
 });

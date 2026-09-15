@@ -158,11 +158,7 @@ nest start agent-service [--watch]
 
 ### Agent provisioning
 
-Set `AFJ_AGENT_SPIN_UP`, `AFJ_AGENT_ENDPOINT_PATH`, `SCHEMA_FILE_SERVER_URL`, and `AGENT_API_KEY` before provisioning. Local and Docker scripts do not require AWS settings. `start_agent_ecs.sh` also requires the ECS settings through `FILESYSTEMID` listed in `.env.demo`; `fargate.sh` additionally requires `ECS_SUBNET_ID` and `ECS_SECURITY_GROUP_ID`. Custom scripts must validate their own additional settings.
-
-Deploy `agent-service` and `agent-provisioning` from the same release: ledger JSON is passed directly as a process argument, without shell escaping. Pause new provisioning requests while updating the pair.
-
-`AFJ_AGENT_PROVISION_TIMEOUT_MS` defaults to 300000 (five minutes). On failure or timeout, the service stops the script's process group. This does not remove containers or cloud resources already created; inspect those before retrying a failed request.
+Deploy `agent-service` and `agent-provisioning` together: ledger JSON is now passed directly as a process argument. Local and Docker scripts need `SCHEMA_FILE_SERVER_URL` and `AGENT_API_KEY`; AWS settings are required only for the corresponding ECS/Fargate scripts.
 
 ## Testing
 

@@ -112,21 +112,19 @@ export class StatusListAllocatorService {
       throw new Error('orgId and issuerDid are required for status list allocation');
     }
     const defaultListSize = CommonConstants.DEFAULT_STATUS_LIST_SIZE;
-    return this.prisma.$transaction(async (tx) => {
+    const allocation = await this.prisma.$transaction(async (tx) => {
+      // Serialize allocations for the same tenant and issuer. A database-level lock is
+      // required because multiple service replicas can execute this code concurrently.
+      const allocationLockKey = `${orgId}:${issuerDid}`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${allocationLockKey}, 0))`;
+
       // Find active list or create one
       let activeList = await tx.status_list_allocation.findFirst({
-        where: { orgId, issuerDid, isActive: true }
+        where: { orgId, issuerDid, isActive: true },
+        orderBy: { createDateTime: 'desc' }
       });
 
-      if (!activeList || activeList.allocatedCount >= activeList.listSize) {
-        // Mark inactive if full
-        if (activeList) {
-          await tx.status_list_allocation.update({
-            where: { id: activeList.id },
-            data: { isActive: false }
-          });
-        }
-
+      if (!activeList) {
         activeList = await tx.status_list_allocation.create({
           data: {
             orgId,
@@ -140,7 +138,26 @@ export class StatusListAllocatorService {
         });
       }
 
-      const allocator = new RandomBitmapIndexAllocator(activeList.listSize, new Uint8Array(activeList.bitmap));
+      let allocator = new RandomBitmapIndexAllocator(activeList.listSize, new Uint8Array(activeList.bitmap));
+
+      if (allocator.getAllocatedCount() >= activeList.listSize) {
+        await tx.status_list_allocation.updateMany({
+          where: { orgId, issuerDid, isActive: true },
+          data: { isActive: false }
+        });
+        activeList = await tx.status_list_allocation.create({
+          data: {
+            orgId,
+            issuerDid,
+            listId: randomUUID(),
+            listSize: listSize || defaultListSize,
+            allocatedCount: 0,
+            bitmap: Buffer.from(new Uint8Array(Math.ceil((listSize || defaultListSize) / 8))),
+            isActive: true
+          }
+        });
+        allocator = new RandomBitmapIndexAllocator(activeList.listSize, new Uint8Array(activeList.bitmap));
+      }
 
       try {
         const index = allocator.allocate();
@@ -157,16 +174,22 @@ export class StatusListAllocatorService {
         return { listId: activeList.listId, index };
       } catch (error) {
         if ('No indexes left' === error.message) {
-          // Retry rotation if we hit the race condition limit
+          // A mismatched bitmap/count should not leave a full list active.
           await tx.status_list_allocation.update({
             where: { id: activeList.id },
             data: { isActive: false }
           });
-          throw new Error('Retry allocation, list full');
+          return undefined;
         }
         throw error;
       }
     });
+
+    if (!allocation) {
+      throw new Error('Status list bitmap is full');
+    }
+
+    return allocation;
   }
 
   async saveCredentialAllocation(
@@ -197,7 +220,22 @@ export class StatusListAllocatorService {
 
   async release(listId: string, index: number): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
-      const allocation = await tx.status_list_allocation.findUnique({
+      // Use the same relation lock order as the migration before reading either table.
+      // ROW SHARE establishes order without serializing normal allocation writes.
+      await tx.$executeRaw`LOCK TABLE "issued_oid4vc_credentials" IN ROW SHARE MODE`;
+      await tx.$executeRaw`LOCK TABLE "status_list_allocation" IN ROW SHARE MODE`;
+
+      let allocation = await tx.status_list_allocation.findUnique({
+        where: { listId }
+      });
+
+      if (!allocation) {
+        return;
+      }
+
+      const allocationLockKey = `${allocation.orgId}:${allocation.issuerDid}`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${allocationLockKey}, 0))`;
+      allocation = await tx.status_list_allocation.findUnique({
         where: { listId }
       });
 
@@ -208,8 +246,13 @@ export class StatusListAllocatorService {
       const allocator = new RandomBitmapIndexAllocator(allocation.listSize, new Uint8Array(allocation.bitmap));
       allocator.release(index);
 
+      // A previously persisted credential must be removed before its slot can be reused.
+      await tx.issued_oid4vc_credentials.deleteMany({
+        where: { listId, index }
+      });
+
       await tx.status_list_allocation.update({
-        where: { listId },
+        where: { id: allocation.id },
         data: {
           bitmap: Buffer.from(allocator.export()),
           allocatedCount: allocator.getAllocatedCount()

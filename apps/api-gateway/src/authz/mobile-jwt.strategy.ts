@@ -2,50 +2,55 @@ import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
 
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
-import { CommonConstants } from '@credebl/common/common.constant';
 import { PassportStrategy } from '@nestjs/passport';
 import { passportJwtSecret } from 'jwks-rsa';
+import { getTrustedJwksUri, getTrustedJwtIssuerVariants, getTrustedJwtIssuers } from './jwt-issuer.util';
 dotenv.config();
-const logger = new Logger();
+
+interface MobileJwtPayload {
+  azp?: string;
+  iss?: string;
+  [key: string]: unknown;
+}
 
 @Injectable()
 export class MobileJwtStrategy extends PassportStrategy(Strategy, 'mobile-jwt') {
-  private readonly logger = new Logger();
+  private readonly logger = new Logger('MobileJwt Strategy');
 
   constructor() {
+    const trustedIssuers = getTrustedJwtIssuers();
+    const trustedIssuerVariants = getTrustedJwtIssuerVariants(trustedIssuers);
     super({
-
       secretOrKeyProvider: (request, jwtToken, done) => {
-        const decodedToken: any = jwt.decode(jwtToken);       
-        const audiance = decodedToken.iss.toString();      
-        const jwtOptions = {
-          cache: true,
-          rateLimit: true,
-          jwksRequestsPerMinute: 5,
-          jwksUri: `${audiance}${CommonConstants.URL_KEYCLOAK_JWKS}`
-        };
-        const secretprovider = passportJwtSecret(jwtOptions);
-        let certkey;
-        secretprovider(request, jwtToken, async (err, data) => {         
-          certkey = data;
-          done(null, certkey);
-        });
+        const decodedToken = jwt.decode(jwtToken);
+        const issuer = decodedToken && 'object' === typeof decodedToken ? decodedToken.iss : undefined;
+        try {
+          const jwtOptions = {
+            cache: true,
+            rateLimit: true,
+            jwksRequestsPerMinute: 5,
+            jwksUri: getTrustedJwksUri(issuer, trustedIssuers)
+          };
+          const secretprovider = passportJwtSecret(jwtOptions);
+          secretprovider(request, jwtToken, (err, data) => done(err, data));
+        } catch (error) {
+          this.logger.error(`Error resolving JWKS secret:::${error}`);
+          return done(new UnauthorizedException('Authorization header contains an invalid token'), null);
+        }
       },
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      algorithms: ['RS256']
+      algorithms: ['RS256'],
+      issuer: trustedIssuerVariants
     });
   }
 
-  validate(payload: any) {
+  validate(payload: MobileJwtPayload): MobileJwtPayload {
     if ('adeyaClient' !== payload.azp) {
-      throw new UnauthorizedException(
-        'Authorization header contains an invalid token'
-      );
+      throw new UnauthorizedException('Authorization header contains an invalid token');
     } else {
       return payload;
     }
-    
   }
 }

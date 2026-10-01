@@ -932,6 +932,27 @@ export class AgentServiceService {
     } catch (error) {
       this.logger.error(`error in create did : ${JSON.stringify(error)}`);
 
+      const errorText =
+        error?.response?.error?.message ??
+        error?.response?.error ??
+        error?.response?.data?.error ??
+        error?.response?.data?.message ??
+        error?.response?.data ??
+        error?.message ??
+        (typeof error === 'string' ? error : JSON.stringify(error));
+
+      const isDuplicateDid =
+        typeof errorText === 'string' &&
+        (errorText.includes('Key already exists') || errorText.includes('already exist'));
+
+      if (isDuplicateDid) {
+        throw new RpcException({
+          statusCode: HttpStatus.CONFLICT,
+          message: ResponseMessages.agent.error.didAlreadyExist,
+          error: 'Conflict'
+        });
+      }
+
       if (error?.response?.error?.message) {
         throw new RpcException({
           statusCode: error?.response?.status,
@@ -965,10 +986,7 @@ export class AgentServiceService {
   private checkDidExistence(getDidByOrg, didDetails): void {
     const didExist = getDidByOrg.some((orgDidExist) => orgDidExist.did === didDetails.did);
     if (didExist) {
-      throw new ConflictException(ResponseMessages.agent.error.didAlreadyExist, {
-        cause: new Error(),
-        description: ResponseMessages.errorMessages.serverError
-      });
+      throw new ConflictException(ResponseMessages.agent.error.didAlreadyExist);
     }
   }
 

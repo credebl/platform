@@ -612,11 +612,10 @@ export class ClientDetails {
 
 export class TemplateDetails {
   @ApiProperty({ required: true, example: 'R2Wh9dJmnvkPnzKaiiBptR:2:BulkCredentials:0.1' })
-  @IsOptional()
-  @IsString({ message: 'templateId should be string' })
-  @IsNotEmpty({ message: 'Template Id is required' })
   @Transform(({ value }) => trim(value))
-  templateId: string = '';
+  @IsNotEmpty({ message: 'Template Id is required' })
+  @IsString({ message: 'templateId should be string' })
+  templateId: string;
 
   @ApiProperty({ enum: SchemaType, required: true })
   @IsEnum(SchemaType, { message: 'Schema type should be a valid' })

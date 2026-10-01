@@ -449,7 +449,7 @@ export const ResponseMessages = {
       basicMessage: 'Basic message sent successfully'
     },
     error: {
-      invalidConnectionId: 'Invalid format for connectionId',
+      invalidConnectionId: 'Please provide valid connectionId',
       exists: 'Connection is already exist',
       connectionNotFound: 'Connection not found',
       agentEndPointNotFound: 'agentEndPoint Not Found',

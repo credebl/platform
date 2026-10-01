@@ -9,6 +9,7 @@ export class GetWebhookDto {
     @ApiPropertyOptional({example: '2a041d6e-d24c-4ed9-b011-1cfc371a8b8e'})
     @IsOptional()
     @Transform(({ value }) => trim(value))
+    @IsUUID('4', { message: 'Please provide valid orgId' })
     @IsString({ message: 'Organization id must be in string format.' })
     orgId?: string;
 

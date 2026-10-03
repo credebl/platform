@@ -520,7 +520,7 @@ export class ConnectionController {
       TrimStringParamPipe,
       new ParseUUIDPipe({
         exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.connection.error.invalidConnectionId);
+          throw new BadRequestException(ResponseMessages.connection.error.invalidBasicMessageConnectionId);
         }
       })
     )

@@ -69,6 +69,40 @@ export class ConnectionController {
   ) {}
 
   /**
+   * Get latest connection invitation by orgId
+   * @param orgId The ID of the organization
+   * @returns Latest connection invitation details for a specific organization
+   */
+  @Get('orgs/:orgId/connections/latest-invitation')
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER)
+  @ApiOperation({
+    summary: `Fetch latest connection invitation by orgId`,
+    description: `Retrieve the latest connection invitation for a specific organization.`
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getLatestInvitationByOrgId(
+    @Param(
+      'orgId',
+      new ParseUUIDPipe({
+        exceptionFactory: (): Error => {
+          throw new BadRequestException(`Invalid format for orgId`);
+        }
+      })
+    )
+    orgId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const invitationDetails = await this.connectionService.getLatestInvitationByOrgId(orgId);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.connection.success.invitationFetched,
+      data: invitationDetails
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
    * Get connection details by connectionId
    * @param connectionId The ID of the connection
    * @param orgId The ID of the organization

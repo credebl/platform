@@ -446,7 +446,8 @@ export const ResponseMessages = {
       questionAnswerRecord: 'Question Answer record fetched successfully',
       questionSend: 'Question sent successfully',
       deleteConnectionRecord: 'Connection records deleted',
-      basicMessage: 'Basic message sent successfully'
+      basicMessage: 'Basic message sent successfully',
+      invitationFetched: 'Connection invitation fetched successfully'
     },
     error: {
       invalidConnectionId: 'Invalid format for connectionId',
@@ -455,7 +456,8 @@ export const ResponseMessages = {
       agentEndPointNotFound: 'agentEndPoint Not Found',
       agentUrlNotFound: 'agent url not found',
       connectionRecordNotFound: 'Connection records does not exists',
-      removeConnectionReferences: 'First you have to remove credentials data and verification data'
+      removeConnectionReferences: 'First you have to remove credentials data and verification data',
+      invitationNotFound: 'Connection invitation not found'
     }
   },
   issuance: {

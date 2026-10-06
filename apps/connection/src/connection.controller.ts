@@ -106,4 +106,10 @@ export class ConnectionController {
   async sendBasicMessage(payload: { content: string; orgId: string; connectionId: string }): Promise<object> {
     return this.connectionService.sendBasicMessage(payload);
   }
+
+  @MessagePattern({ cmd: 'get-latest-connection-invitation' })
+  async getLatestInvitationByOrgId(payload: { orgId: string }): Promise<object> {
+    const { orgId } = payload;
+    return this.connectionService.getLatestInvitationByOrgId(orgId);
+  }
 }

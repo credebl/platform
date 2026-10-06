@@ -90,7 +90,6 @@ export class ConnectionRepository {
     }
   }
 
-
   async getConnectionRecordsCount(orgId: string): Promise<number> {
     try {
       const connectionRecordsCount = await this.prisma.connections.count({
@@ -104,7 +103,6 @@ export class ConnectionRepository {
       throw error;
     }
   }
-
 
   /**
    * Description: Save connection details
@@ -333,7 +331,7 @@ export class ConnectionRepository {
 
         if (0 < referencedTables.length) {
           let errorMessage = `Organization ID ${orgId} is referenced in the following table(s): ${referencedTables.join(', ')}`;
-        
+
           if (1 === referencedTables.length) {
             if (referencedTables.includes(`${PrismaTables.PRESENTATIONS}`)) {
               errorMessage += `, ${ResponseMessages.verification.error.removeVerificationData}`;
@@ -343,34 +341,31 @@ export class ConnectionRepository {
           } else if (2 === referencedTables.length) {
             errorMessage += `, ${ResponseMessages.connection.error.removeConnectionReferences}`;
           }
-        
+
           throw new ConflictException(errorMessage);
         }
-  
-        const getConnectionRecords = await prisma.connections.findMany(
-          { 
-            where: { 
-              orgId 
-            },
-            select: {
-              createDateTime: true,
-              createdBy: true,
-              connectionId: true,
-              theirLabel: true,
-              state: true,
-              orgId: true
 
-            }
-          });
+        const getConnectionRecords = await prisma.connections.findMany({
+          where: {
+            orgId
+          },
+          select: {
+            createDateTime: true,
+            createdBy: true,
+            connectionId: true,
+            theirLabel: true,
+            state: true,
+            orgId: true
+          }
+        });
 
-        const deleteConnectionRecords = await prisma.connections.deleteMany(
-          { 
-            where: { 
-              orgId 
-            }
-          });
+        const deleteConnectionRecords = await prisma.connections.deleteMany({
+          where: {
+            orgId
+          }
+        });
 
-        return {getConnectionRecords, deleteConnectionRecords };
+        return { getConnectionRecords, deleteConnectionRecords };
       });
     } catch (error) {
       this.logger.error(`Error in deleting connection records: ${error.message}`);
@@ -378,8 +373,8 @@ export class ConnectionRepository {
     }
   }
 
-   // eslint-disable-next-line camelcase
-   async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
+  // eslint-disable-next-line camelcase
+  async getInvitationDidByOrgId(orgId: string): Promise<agent_invitations[]> {
     try {
       return this.prisma.agent_invitations.findMany({
         where: {
@@ -391,6 +386,23 @@ export class ConnectionRepository {
       });
     } catch (error) {
       this.logger.error(`Error in getInvitationDid in connection repository: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // eslint-disable-next-line camelcase
+  async getLatestInvitationByOrgId(orgId: string): Promise<agent_invitations> {
+    try {
+      return this.prisma.agent_invitations.findFirst({
+        where: {
+          orgId
+        },
+        orderBy: {
+          createDateTime: 'desc'
+        }
+      });
+    } catch (error) {
+      this.logger.error(`Error in getLatestInvitationByOrgId in connection repository: ${error.message}`);
       throw error;
     }
   }

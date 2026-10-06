@@ -153,4 +153,9 @@ export class ConnectionService extends BaseService {
     const payload = { orgId, userDetails };
     return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'delete-connection-records', payload);
   }
+
+  getLatestInvitationByOrgId(orgId: string): Promise<object> {
+    const payload = { orgId };
+    return this.natsClient.sendNatsMessage(this.connectionServiceProxy, 'get-latest-connection-invitation', payload);
+  }
 }

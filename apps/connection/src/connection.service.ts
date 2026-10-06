@@ -682,4 +682,26 @@ export class ConnectionService {
     const payload = { content, url, orgId };
     return this.natsClient.send(this.connectionServiceProxy, pattern, payload);
   }
+
+  /**
+   * Description: Fetch latest connection invitation by orgId
+   * @param orgId
+   * @returns Latest connection invitation details
+   */
+  async getLatestInvitationByOrgId(orgId: string): Promise<agent_invitations> {
+    try {
+      const agentInvitationDetails = await this.connectionRepository.getLatestInvitationByOrgId(orgId);
+
+      if (!agentInvitationDetails) {
+        throw new NotFoundException(ResponseMessages.connection.error.invitationNotFound);
+      }
+
+      return agentInvitationDetails;
+    } catch (error) {
+      this.logger.error(
+        `[getLatestInvitationByOrgId] - error in fetch latest connection invitation: ${JSON.stringify(error)}`
+      );
+      throw new RpcException(error?.response ?? error);
+    }
+  }
 }

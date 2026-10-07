@@ -1,3 +1,5 @@
+import { createServer, type Server } from 'node:http';
+
 import { trace } from '@opentelemetry/api';
 
 // Guards the NodeSDK bootstrap path in ./tracer. Kept intentionally offline
@@ -8,15 +10,40 @@ import { trace } from '@opentelemetry/api';
 describe('tracer — NodeSDK bootstrap', () => {
   const pristineEnv = { ...process.env };
   let sdkUnderTest: (typeof import('./tracer'))['otelSDK'];
+  let loggerProviderUnderTest: (typeof import('./tracer'))['otelLoggerProviderInstance'];
+  let otlpServer: Server;
+  let otlpPort = 0;
+
+  beforeEach(async () => {
+    // A live 200-OK sink guarantees the SDK/LoggerProvider shutdown resolves
+    // promptly even when a span/log was produced: the newer otlp exporter
+    // retries refused connections, which would otherwise leave timers behind
+    // and hang the jest exit (see #1750).
+    otlpServer = createServer((_req, res) => {
+      res.statusCode = 200;
+      res.end();
+    });
+    await new Promise<void>((resolve) => otlpServer.listen(0, '127.0.0.1', resolve));
+    const address = otlpServer.address();
+    otlpPort = 'object' === typeof address ? address.port : 0;
+  });
 
   afterEach(async () => {
     if (sdkUnderTest) {
-      // Offline suite (no OTLP listener): shutting down may flush a pending
-      // batch and reject with ECONNREFUSED. The successful export path is
-      // covered by tracer.integration.spec.ts, so swallow it here.
-      await sdkUnderTest.shutdown().catch(() => {});
+      await Promise.race([
+        sdkUnderTest.shutdown().catch(() => {}),
+        new Promise<void>((resolve) => setTimeout(resolve, 3000))
+      ]);
       sdkUnderTest = null;
     }
+    if (loggerProviderUnderTest) {
+      await Promise.race([
+        loggerProviderUnderTest.shutdown().catch(() => {}),
+        new Promise<void>((resolve) => setTimeout(resolve, 3000))
+      ]);
+      loggerProviderUnderTest = null;
+    }
+    await new Promise<void>((resolve) => otlpServer.close(() => resolve()));
     trace.disable();
     process.env = { ...pristineEnv };
     jest.resetModules();
@@ -48,8 +75,8 @@ describe('tracer — NodeSDK bootstrap', () => {
       process.env.OTEL_SERVICE_NAME = 'unit-test';
       process.env.OTEL_SERVICE_VERSION = '1.0.0';
       process.env.OTEL_SERVICE_INSTANCE_ID = 'unit-instance';
-      process.env.OTEL_TRACES_OTLP_ENDPOINT = 'http://127.0.0.1:4318';
-      process.env.OTEL_LOGS_OTLP_ENDPOINT = 'http://127.0.0.1:4319';
+      process.env.OTEL_TRACES_OTLP_ENDPOINT = `http://127.0.0.1:${otlpPort}`;
+      process.env.OTEL_LOGS_OTLP_ENDPOINT = `http://127.0.0.1:${otlpPort}`;
       process.env.OTEL_HEADERS_KEY = 'unit-key';
       process.env.OTEL_LOGGER_NAME = 'unit-logger';
       process.env.HOSTNAME = 'unit-host';
@@ -57,6 +84,7 @@ describe('tracer — NodeSDK bootstrap', () => {
 
     it('boots NodeSDK, logger provider and exposes both', async () => {
       const tracerModule = await import('./tracer');
+      loggerProviderUnderTest = tracerModule.otelLoggerProviderInstance;
 
       expect(tracerModule.otelSDK).not.toBeNull();
       expect(tracerModule.otelLogger).not.toBeNull();
@@ -66,14 +94,17 @@ describe('tracer — NodeSDK bootstrap', () => {
     it('allows the SDK to start and shut down cleanly', async () => {
       const tracerModule = await import('./tracer');
       sdkUnderTest = tracerModule.otelSDK;
+      loggerProviderUnderTest = tracerModule.otelLoggerProviderInstance;
 
       expect(() => tracerModule.otelSDK?.start()).not.toThrow();
       await expect(tracerModule.otelSDK?.shutdown()).resolves.toBeUndefined();
+      sdkUnderTest = null;
     });
 
     it('returns a working tracer from the global API after start', async () => {
       const tracerModule = await import('./tracer');
       sdkUnderTest = tracerModule.otelSDK;
+      loggerProviderUnderTest = tracerModule.otelLoggerProviderInstance;
       await tracerModule.otelSDK?.start();
 
       const tracer = trace.getTracer('unit-test');

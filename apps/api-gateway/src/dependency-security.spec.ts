@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { satisfiesMin, toTuple } from './spec-utils/version';
 
 const root = process.cwd();
 const read = (rel: string): string => readFileSync(join(root, rel), 'utf8');
@@ -36,24 +37,6 @@ function lockfilePackages(lockfile: string): PkgKey[] {
   }
   return keys;
 }
-
-const toTuple = (value: string): number[] =>
-  value
-    .trim()
-    .split('.')
-    .map((part) => parseInt(part, 10))
-    .map((n) => (Number.isNaN(n) ? 0 : n));
-
-function cmp(a: number[], b: number[]): number {
-  for (let index = 0; 3 > index; index += 1) {
-    if ((a[index] ?? 0) !== (b[index] ?? 0)) {
-      return (a[index] ?? 0) - (b[index] ?? 0);
-    }
-  }
-  return 0;
-}
-
-const satisfiesMin = (version: string, minimum: string): boolean => 0 <= cmp(toTuple(version), toTuple(minimum));
 
 /**
  * Minimum patched version for every package protected by the P0/P1 overrides

@@ -45,7 +45,10 @@ if ('true' === process.env.IS_ENABLE_OTEL) {
     }
   });
 
-  const logProvider = new LoggerProvider({ resource, processors: [new BatchLogRecordProcessor(logExporter)] });
+  const logProvider = new LoggerProvider({
+    resource,
+    processors: [new BatchLogRecordProcessor({ exporter: logExporter })]
+  });
   otelLogger = logProvider.getLogger(process.env.OTEL_LOGGER_NAME);
   otelLoggerProviderInstance = logProvider;
 

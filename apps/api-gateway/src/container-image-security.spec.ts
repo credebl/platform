@@ -17,11 +17,12 @@ const PINNED_BASE = 'node:24-alpine3.24@sha256:ebfe2f90462722a7a4de65e91990e97fe
 const dockerfilesDir = join(root, 'Dockerfiles');
 const read = (rel: string): string => readFileSync(join(root, rel), 'utf8');
 
-const fromLines = (dockerfile: string): string[] =>
-  read(join('Dockerfiles', dockerfile))
+function fromLines(dockerfile: string): string[] {
+  return read(join('Dockerfiles', dockerfile))
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line.startsWith('FROM '));
+}
 
 const dockerfiles = readdirSync(dockerfilesDir).filter((name) => name.startsWith('Dockerfile.'));
 

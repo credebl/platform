@@ -28,7 +28,8 @@ interface PkgKey {
 /** Extract `name@semver` package keys from the lockfile's `packages:`/`snapshots:` sections. */
 function lockfilePackages(lockfile: string): PkgKey[] {
   const keys: PkgKey[] = [];
-  const linePattern = /^\s{2}(@?[^@\s/)[]+)@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)(?=\s*[/:(])/;
+  // Handles both plain (`name@1.2.3:`) and quoted scoped (`'@scope/name@1.2.3':`) keys.
+  const linePattern = /^\s{2}'?((?:@[^@\s'"/]+\/)?[^@\s'"/]+)'?@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)(?=[\s(':])/;
   for (const raw of lockfile.split('\n')) {
     const match = linePattern.exec(raw);
     if (match) {
@@ -94,6 +95,30 @@ describe('dependency security — no regression after P0/P1 remediation', () => 
     pnpm?: { overrides?: Record<string, string> };
   };
   const packages = lockfilePackages(read('pnpm-lock.yaml'));
+
+  it('parses quoted scoped package keys so they are actually inspected', () => {
+    const fixture = `
+lockfileVersion: '9.0'
+packages:
+  '@fastify/busboy@3.2.2':
+    resolution: {integrity: sha512-aaa}
+  '@grpc/grpc-js@1.14.5':
+    resolution: {integrity: sha512-bbb}
+  '@nestjs/microservices@11.2.7(@grpc/grpc-js@1.14.5)':
+    resolution: {integrity: sha512-ccc}
+  axios@1.20.0:
+    resolution: {integrity: sha512-ddd}
+`;
+    const parsed = lockfilePackages(fixture);
+    expect(parsed).toEqual(
+      expect.arrayContaining([
+        { name: '@fastify/busboy', version: '3.2.2' },
+        { name: '@grpc/grpc-js', version: '1.14.5' },
+        { name: '@nestjs/microservices', version: '11.2.7' },
+        { name: 'axios', version: '1.20.0' }
+      ])
+    );
+  });
 
   it('removed dead dependencies are absent from package.json', () => {
     const declared = { ...packageJson.dependencies, ...packageJson.devDependencies };

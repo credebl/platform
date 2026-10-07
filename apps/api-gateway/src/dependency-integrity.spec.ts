@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { cmp, toTuple } from './spec-utils/version';
 
 interface PkgJson {
   version: string;
@@ -38,35 +39,11 @@ function declaredRange(pkg: string, dependencies: Record<string, string>, catalo
   return 'catalog:' === declared ? (catalog[pkg] ?? declared) : declared;
 }
 
-const toTuple = (value: string): number[] =>
-  value
-    .trim()
-    .split('.')
-    .map((part) => parseInt(part, 10))
-    .map((n) => (Number.isNaN(n) ? 0 : n));
-
-function cmp(a: number[], b: number[]): number {
-  for (let index = 0; 3 > index; index += 1) {
-    if ((a[index] ?? 0) !== (b[index] ?? 0)) {
-      return (a[index] ?? 0) - (b[index] ?? 0);
-    }
-  }
-  return 0;
-}
-
 function caretSatisfies(version: string, range: string): boolean {
   const minimum = toTuple(range.replace(/^\^/, ''));
   const major = minimum[0] ?? 0;
   const minBound = [major, 0, 0];
   const maxBound = 0 === major ? [0, (minimum[1] ?? 0) + 1, 0] : [major + 1, 0, 0];
-  const cmp = (a: number[], b: number[]): number => {
-    for (let index = 0; 3 > index; index += 1) {
-      if ((a[index] ?? 0) !== (b[index] ?? 0)) {
-        return (a[index] ?? 0) - (b[index] ?? 0);
-      }
-    }
-    return 0;
-  };
   return 0 <= cmp(toTuple(version), minBound) && 0 > cmp(toTuple(version), maxBound);
 }
 

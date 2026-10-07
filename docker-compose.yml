@@ -3,7 +3,7 @@ version: '3'
 services:
   nats:
     container_name: credebl-nats
-    image: nats
+    image: nats:2.15.0
     command: ["-c", "/nats-server.conf"]
     ports:
       - '4222:4222'

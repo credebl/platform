@@ -16,6 +16,7 @@ import { BadRequestException, NotFoundException, UnprocessableEntityException } 
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { dateToSeconds } from '@credebl/common/date-only';
+import { VC_CONTEXT_V1, VC_CONTEXT_V2 } from '@credebl/common/vc/vc.constants';
 
 /* ============================================================================
    Domain Types
@@ -592,10 +593,16 @@ function buildJwtVcJsonLdCredential(
   }
 
   if (credentialRequest.validityInfo) {
-    wrappedPayload.issuanceDate = new Date(credentialRequest.validityInfo.validFrom).toISOString();
-    wrappedPayload.expirationDate = new Date(credentialRequest.validityInfo.validUntil).toISOString();
+    const validFrom = new Date(credentialRequest.validityInfo.validFrom).toISOString();
+    const validUntil = new Date(credentialRequest.validityInfo.validUntil).toISOString();
+    wrappedPayload.validFrom = validFrom;
+    wrappedPayload.validUntil = validUntil;
+    wrappedPayload.issuanceDate = validFrom;
+    wrappedPayload.expirationDate = validUntil;
   } else {
-    wrappedPayload.issuanceDate = new Date().toISOString();
+    const now = new Date().toISOString();
+    wrappedPayload.issuanceDate = now;
+    wrappedPayload.validFrom = now;
   }
 
   return {

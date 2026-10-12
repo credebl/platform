@@ -140,14 +140,21 @@ export interface ICredentialAttributesInterface {
 }
 
 export interface ICredential {
-  '@context': [];
+  '@context': string[] | [];
   type: string[];
   prettyVc?: IPrettyVc;
   issuer?: {
     id: string;
-  };
+  } | string;
   issuanceDate?: string;
-  credentialSubject?: ICredentialSubject;
+  validFrom?: string;
+  expirationDate?: string;
+  validUntil?: string;
+  credentialSubject?: ICredentialSubject | ICredentialSubject[];
+  credentialStatus?: any;
+  credentialSchema?: any;
+  id?: string;
+  [key: string]: any;
 }
 
 interface ICredentialSubject {

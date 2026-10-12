@@ -11,6 +11,10 @@ import {
   schemaRequestType
 } from '../../enum/src/enum';
 import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import { mapCredentialForVersion } from './vc/shape-mapper';
+import { VCContext } from './vc/vc.context';
+import { VCVersion, DEFAULT_VC_VERSION } from './vc/vc.constants';
+
 import {
   ValidationArguments,
   ValidationOptions,
@@ -356,13 +360,14 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
       {
         emailId: `${credentialData.email_identifier}`,
         credential: {
-          '@context': ['https://www.w3.org/2018/credentials/v1', `${schemaLedgerId}`],
-          type: ['VerifiableCredential', `${schemaName}`],
-          issuer: {
-            id: `${orgDid}`
-          },
-          issuanceDate: new Date().toISOString(),
-          credentialSubject,
+          ...mapCredentialForVersion({
+            version: DEFAULT_VC_VERSION as VCVersion,
+            schemaLedgerId,
+            issuer: { id: `${orgDid}` },
+            credentialSubject,
+            type: ['VerifiableCredential', `${schemaName}`],
+            issuanceDate: new Date().toISOString()
+          }),
           prettyVc
         },
         options: {
@@ -423,21 +428,23 @@ export function checkDidLedgerAndNetwork(schemaType: string, did: string): boole
   return false;
 }
 
-export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICredentialData[] {
-  // Get current date in 'YYYY-MM-DD' format
-  // eslint-disable-next-line prefer-destructuring
+export function validateAndUpdateIssuanceDates(data: any[]): any[] {
   const currentDate = new Date().toISOString().split('T')[0];
 
   return data.map((item) => {
-    const { issuanceDate } = item.credential;
-    // eslint-disable-next-line prefer-destructuring
-    const issuanceDateOnly = issuanceDate.split('T')[0];
-
-    // If the date does not match the current date, then update it
-    if (issuanceDateOnly !== currentDate) {
-      item.credential.issuanceDate = new Date().toISOString();
+    const cred = item.credential;
+    if (!cred) return item;
+    const startDate = cred.validFrom || cred.issuanceDate;
+    if (startDate) {
+      const startDateOnly = startDate.split('T')[0];
+      if (startDateOnly !== currentDate) {
+        const newDate = new Date().toISOString();
+        if (cred.validFrom) {
+          cred.validFrom = newDate;
+        }
+        cred.issuanceDate = newDate;
+      }
     }
-
     return item;
   });
 }

@@ -11,6 +11,7 @@ import {
   SdJwtTemplate
 } from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
+import { VC_CONTEXT_V1, VC_CONTEXT_V2 } from '@credebl/common/vc/vc.constants';
 
 type AttributeDisplay = { name: string; locale: string };
 
@@ -319,7 +320,7 @@ export function buildJwtVcJsonLdCredentialConfig(
         }
       },
       credential_definition: {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        '@context': [VC_CONTEXT_V1],
         type: ['VerifiableCredential', typeName]
       },
       credential_metadata: {
@@ -359,7 +360,7 @@ export function buildLdpVcCredentialConfig(name: string, template: SdJwtTemplate
         }
       },
       credential_definition: {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        '@context': [VC_CONTEXT_V1],
         type: ['VerifiableCredential', typeName]
       },
       credential_metadata: {

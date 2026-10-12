@@ -30,6 +30,7 @@ import { Transform, Type } from 'class-transformer';
 
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { trim } from '@credebl/common/cast.helper';
+import { VCVersion, SUPPORTED_VC_VERSIONS, DEFAULT_VC_VERSION } from '@credebl/common/constants/vc.constants';
 
 class Issuer {
   @ApiProperty()
@@ -112,6 +113,13 @@ export class Credential {
   @ApiProperty()
   @IsNotEmpty({ message: ' credential subject required' })
   credentialSubject: SingleOrArray<JsonObject>;
+
+  @ApiPropertyOptional({ enum: SUPPORTED_VC_VERSIONS, default: DEFAULT_VC_VERSION })
+  @IsOptional()
+  @IsEnum(SUPPORTED_VC_VERSIONS, { message: 'VC version must be one of v1, v1.1, v2' })
+  @Transform(({ value }) => value || DEFAULT_VC_VERSION)
+  version?: VCVersion = DEFAULT_VC_VERSION;
+
   [key: string]: unknown;
 }
 
@@ -386,6 +394,12 @@ export class IssuanceDto {
   @ApiProperty()
   @IsOptional()
   contextCorrelationId: string;
+
+  @ApiPropertyOptional({ enum: SUPPORTED_VC_VERSIONS, default: DEFAULT_VC_VERSION })
+  @IsOptional()
+  @IsEnum(SUPPORTED_VC_VERSIONS, { message: 'VC version must be one of v1, v1.1, v2' })
+  @Transform(({ value }) => value || DEFAULT_VC_VERSION)
+  version?: VCVersion = DEFAULT_VC_VERSION;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -10,8 +10,9 @@ import MinLength from 'libs/validations/minLength';
 import MultipleOf from 'libs/validations/multipleOf';
 import Pattern from 'libs/validations/pattern';
 import UniqueItems from 'libs/validations/uniqueItems';
+import { VC_CONTEXT_V1, VC_CONTEXT_V2, VCVersion, DEFAULT_VC_VERSION } from '@credebl/common/vc/vc.constants';
 
-export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: string, description: string): object {
+export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: string, description: string, version: VCVersion = DEFAULT_VC_VERSION): object {
   // Function to apply validations based on attribute properties
   const applyValidations = (attribute, propertyObj): ISchemaAttributesFormat => {
     const context = { ...propertyObj };
@@ -291,7 +292,7 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
     title: schemaName,
     description,
     type: 'object',
-    required: ['@context', 'issuer', 'issuanceDate', 'type', 'credentialSubject'],
+    required: version === 'v2' ? ['@context', 'issuer', 'type', 'credentialSubject'] : ['@context', 'issuer', 'issuanceDate', 'type', 'credentialSubject'],
     properties: {
       '@context': {
         $ref: '#/$defs/context'
@@ -327,6 +328,14 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
         type: 'string',
         format: 'date-time'
       },
+      validFrom: {
+        type: 'string',
+        format: 'date-time'
+      },
+      validUntil: {
+        type: 'string',
+        format: 'date-time'
+      },
       credentialStatus: {
         $ref: '#/$defs/credentialStatus'
       },
@@ -339,7 +348,7 @@ export function w3cSchemaBuilder(attributes: IW3CAttributeValue[], schemaName: s
         type: 'array',
         prefixItems: [
           {
-            const: 'https://www.w3.org/2018/credentials/v1'
+            const: version === 'v2' ? VC_CONTEXT_V2 : VC_CONTEXT_V1
           }
         ],
         items: {

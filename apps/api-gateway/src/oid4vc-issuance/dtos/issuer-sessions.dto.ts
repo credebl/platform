@@ -23,7 +23,8 @@ import {
   IsBoolean
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { VCVersion, SUPPORTED_VC_VERSIONS, DEFAULT_VC_VERSION } from '@credebl/common/constants/vc.constants';
+import { Type, Transform } from 'class-transformer';
 import { dateToSeconds } from '@credebl/common/date-only';
 
 /* ========= disclosureFrame custom validator ========= */
@@ -166,6 +167,13 @@ export class CredentialRequestDto {
   })
   @IsOptional()
   validityInfo?: ValidityInfo;
+
+  @ApiPropertyOptional({ enum: SUPPORTED_VC_VERSIONS, default: DEFAULT_VC_VERSION })
+  @IsOptional()
+  @IsIn(SUPPORTED_VC_VERSIONS, { message: 'VC version must be one of v1, v1.1, v2' })
+  @Transform(({ value }) => value || DEFAULT_VC_VERSION)
+  version?: VCVersion = DEFAULT_VC_VERSION;
+
 }
 
 export class CreateOidcCredentialOfferDto {

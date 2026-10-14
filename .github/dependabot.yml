@@ -91,6 +91,7 @@ updates:
   - package-ecosystem: "docker"
     directories:
       - "/"
+      - "/Dockerfiles"
     target-branch: "main"
     schedule:
       interval: "weekly"

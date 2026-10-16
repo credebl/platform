@@ -62,7 +62,7 @@ const ISSUER_DPOP_ALGS_DEFAULT = ['RS256', 'ES256'];
 const STATIC_CREDENTIAL_ALGS_FOR_SDJWT = ['ES256'];
 const STATIC_BINDING_METHODS_FOR_SDJWT = ['did:key', 'did:web', 'did:jwk', 'jwk'];
 
-const STATIC_CREDENTIAL_ALGS_FOR_MDOC = ['ES256'];
+const STATIC_CREDENTIAL_ALGS_FOR_MDOC = [-7, -9] as const;
 const STATIC_BINDING_METHODS_FOR_MDOC = ['jwk'];
 
 /**

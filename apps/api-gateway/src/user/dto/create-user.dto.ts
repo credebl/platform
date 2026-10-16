@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 import { toLowerCase, trim } from '@credebl/common/cast.helper';
 
 import { Transform } from 'class-transformer';
@@ -38,4 +38,9 @@ export class UserEmailVerificationDto {
   @IsString({ message: 'clientAlias should be string' })
   @Transform(({ value }) => trim(value))
   clientAlias?: string;
+
+  @ApiHideProperty()
+  @IsOptional()
+  @IsBoolean({ message: 'isDefaultVerified should be boolean' })
+  isDefaultVerified: boolean = false;
 }

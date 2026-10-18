@@ -24,10 +24,24 @@ updates:
       # over the catch-all groups below, and cover security updates too —
       # #1778 itself was a Dependabot security PR, which bypasses
       # version-update groups unless listed explicitly.
+      #
+      # Split majors out (see #1781, which bundled a Nest 11 -> 12 major into
+      # the group and failed CI): minor/patch updates stay continuously
+      # mergeable — including security fixes — while majors bundle into one
+      # deferred PR that never holds back the rest.
       nestjs:
         applies-to: version-updates
         patterns:
           - "@nestjs/*"
+        update-types:
+          - "minor"
+          - "patch"
+      nestjs-major:
+        applies-to: version-updates
+        patterns:
+          - "@nestjs/*"
+        update-types:
+          - "major"
       nestjs-security:
         applies-to: security-updates
         patterns:

@@ -37,4 +37,4 @@ jobs:
         run: pnpm exec nest build api-gateway
 
       - name: Run tests
-        run: pnpm jest --config jest.ci.config.js --runInBand
+        run: NODE_OPTIONS=--experimental-vm-modules pnpm jest --config jest.ci.config.js --runInBand

@@ -14,7 +14,9 @@ APPS=(oid4vc-issuance oid4vc-verification api-gateway)
 
 # build if needed
 for app in "${APPS[@]}"; do
-  test -f "dist/apps/${app}/main.js" || npx --yes nest build "$app" >/dev/null 2>&1 || true
+  if [[ ! -f "dist/apps/${app}/main.js" ]]; then
+    ./node_modules/.bin/nest build "$app" >/dev/null 2>&1 || true
+  fi
 done
 
 # env
@@ -29,7 +31,7 @@ done
 sleep 15
 
 # jest integration (skip if not flagged)
-npx --yes pnpm@9.15.9 jest --config jest.integration.config.js --maxWorkers=1 2>&1 | tail -20 || true
+./node_modules/.bin/jest --config jest.integration.config.js --maxWorkers=1 2>&1 | tail -20 || true
 
 for p in "${PIDS[@]}"; do kill "$p" 2>/dev/null || true; done
 docker compose -f /tmp/integration-infra.yml down -v >/dev/null 2>&1 || true

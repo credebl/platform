@@ -2,9 +2,9 @@ module.exports = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
   testEnvironment: 'node',
-  testRegex: '.*\\.(integration\\.spec|e2e-spec)\\.ts$',
+  testRegex: String.raw`.*\.(integration\.spec|e2e-spec)\.ts$`,
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\.(t|j)s$': 'ts-jest',
   },
   moduleNameMapper: {
     '^@credebl/(.*)$': '<rootDir>/libs/$1/src',
@@ -14,7 +14,3 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   setupFiles: ['dotenv/config'],
 };
-
-if (process.env.CI === 'true' && process.env.RUN_INTEGRATION !== 'true') {
-  console.log('CI=true and RUN_INTEGRATION!=true: skipping integration config execution context');
-}

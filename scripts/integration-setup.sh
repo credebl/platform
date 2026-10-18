@@ -30,6 +30,6 @@ docker compose -f /tmp/integration-infra.yml up -d >/dev/null 2>&1 || true
 sleep 10
 
 # migrate
-npx --yes pnpm@9.15.9 prisma migrate deploy --schema libs/prisma-service/prisma/schema.prisma 2>&1 | tail -1
+./node_modules/.bin/prisma migrate deploy --schema libs/prisma-service/prisma/schema.prisma 2>&1 | tail -1
 
 echo "SETUP_DONE"

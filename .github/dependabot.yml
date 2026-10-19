@@ -57,6 +57,23 @@ updates:
           - "version-update:semver-minor"
           - "version-update:semver-patch"
 
+    # --- Accepted risks (security-backlog remediation, 2026-10) ---
+    # `pnpm audit` went from 70 advisories to the 3 below. They cannot be
+    # closed by a version bump and are consciously accepted:
+    # * aws-sdk (v2, root + libs/storage): EOL, upstream issued no patched
+    #   release; migration to the v3 @aws-sdk/* clients is tracked
+    #   separately (@aws-sdk/client-ses is already on v3). Low severity.
+    # * uuid: a patched release exists (>=11.1.1) but 11+ is ESM-only and
+    #   breaks the CommonJS jest runtime — see the ignore rule above.
+    #   Moderate severity; re-evaluate with the ESM migration.
+    # * braces: upstream advisory has no patched version; dev-only chain
+    #   (eslint / typescript-eslint), not part of the runtime dependency
+    #   graph. High severity, accepted until upstream ships a fix.
+    # (request, extract-zip, node-forge and the old handlebars/critical
+    # paths were cleared by removing the unused html-pdf, puppeteer and
+    # node-html-to-image dependencies — see pnpm.overrides in package.json
+    # for the transitive pins.)
+
     labels:
       - "dependencies"
       - "pnpm"

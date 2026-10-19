@@ -29,6 +29,19 @@ EOF
 docker compose -f /tmp/integration-infra.yml up -d >/dev/null 2>&1 || true
 sleep 10
 
+# Ensure integration DB exists if a local Postgres is used (and we point to it)
+# Try to create DB if needed (ignore errors if using external PG)
+PGHOST="${POSTGRES_HOST:-localhost}"
+PGPORT="${POSTGRES_PORT:-5432}"
+PGUSER="${POSTGRES_USER:-postgres}"
+PGPASSWORD="${POSTGRES_PASSWORD:-postgres}"
+PGDATABASE="${POSTGRES_DB:-credebl_integration}"
+export PGPASSWORD
+
+# create db if not exists using psql if available
+psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -tc "SELECT 1 FROM pg_database WHERE datname='${PGDATABASE}'" | grep -q 1 2>/dev/null || \
+  psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -c "CREATE DATABASE ${PGDATABASE};" 2>/dev/null || true
+
 # migrate
 ./node_modules/.bin/prisma migrate deploy --schema libs/prisma-service/prisma/schema.prisma 2>&1 | tail -1
 

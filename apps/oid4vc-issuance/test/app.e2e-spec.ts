@@ -13,4 +13,12 @@ describe('Oid4vcIssuanceController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
   });
+
+  afterEach(async () => {
+    await app?.close();
+  });
+
+  it('should bootstrap the issuance module', () => {
+    expect(app).toBeDefined();
+  });
 });

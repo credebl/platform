@@ -23,6 +23,23 @@ done
 ENV_FILE="${ROOT_DIR}/.env.integration"
 cp "${ROOT_DIR}/.env.integration.example" "$ENV_FILE" 2>/dev/null || true
 
+# Ensure NATS_AUTH_TYPE=none so NATS nkey is not required (fixes suite load failures)
+export NATS_AUTH_TYPE=none
+export NATS_AUTH_TYPE_NAME=none
+export NATS_TYPE=none
+
+# export into this process so both the services and the jest run inherit it
+# (jest's dotenv/config only reads .env, which may not exist locally)
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +a
+
+# Override after sourcing to be safe
+export NATS_AUTH_TYPE=none
+export NATS_AUTH_TYPE_NAME=none
+export NATS_TYPE=none
+
 PIDS=()
 for app in "${APPS[@]}"; do
   node -r dotenv/config "dist/apps/${app}/main.js" > "${ROOT_DIR}/.tmp-integration/logs/${app}.log" 2>&1 &

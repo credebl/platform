@@ -73,7 +73,7 @@ async function bootstrap(): Promise<void> {
   const options = new DocumentBuilder()
     .setTitle(`${process.env.PLATFORM_NAME}`)
     .setDescription(`${process.env.PLATFORM_NAME} Platform APIs`)
-    .setVersion('1.0')
+    .setVersion(process.env.API_GATEWAY_VERSION || '1.0')
     .addBearerAuth()
     .addServer('/')
     .addServer(`${process.env.PUBLIC_DEV_API_URL}`)

@@ -42,6 +42,22 @@ export PGPASSWORD
 psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -tc "SELECT 1 FROM pg_database WHERE datname='${PGDATABASE}'" | grep -q 1 2>/dev/null || \
   psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -c "CREATE DATABASE ${PGDATABASE};" 2>/dev/null || true
 
+# Construct DB URLs for Prisma from the integration connection components so
+# migrate deploy always targets the throwaway Compose database above.
+DB_URL="postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}?schema=public"
+export DATABASE_URL="$DB_URL"
+export POOL_DATABASE_URL="$DB_URL"
+
+# validate: both must point at the intended temp database, or fail before migrating
+for url_var in DATABASE_URL POOL_DATABASE_URL; do
+  # shellcheck disable=SC2086,SC2298
+  url="${!url_var}"
+  if [[ "$url" != *"@${PGHOST}:${PGPORT}/${PGDATABASE}"* ]]; then
+    echo "ERROR: ${url_var} does not target postgres://${PGHOST}:${PGPORT}/${PGDATABASE} (got: ${url})"
+    exit 1
+  fi
+done
+
 # migrate
 ./node_modules/.bin/prisma migrate deploy --schema libs/prisma-service/prisma/schema.prisma 2>&1 | tail -1
 

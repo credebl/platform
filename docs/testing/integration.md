@@ -24,4 +24,4 @@ Copy `.env.integration.example` to `.env.integration` and adjust (Keycloak/Agent
 
 ## Notes
 - Focus: OID4VC issuance/verification flows via api-gateway and agent-controller integration.
-- No source changes; only test infra/scripts/docs added.
+- The integration-testing changes in this area are limited to test infrastructure, scripts and documentation.

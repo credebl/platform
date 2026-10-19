@@ -13,7 +13,6 @@ import {
   Get,
   Param,
   UseFilters,
-  Header,
   UploadedFile,
   UseInterceptors,
   Logger,
@@ -262,8 +261,6 @@ export class IssuanceController {
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
-  @Header('Content-Disposition', 'attachment; filename="schema.csv"')
-  @Header('Content-Type', 'application/csv')
   @ApiOperation({
     summary: 'Download csv template for bulk-issuance',
     description: 'Download csv template for a specific organization bulk-issuance using template details.'
@@ -288,14 +285,18 @@ export class IssuanceController {
       );
       return res
         .header('Content-Disposition', `attachment; filename="${templateData.fileName}"`)
+        .header('Content-Type', 'application/csv')
         .status(HttpStatus.OK)
         .send(templateData.fileContent);
     } catch (error) {
       return res
         .status(error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR)
         .header('Content-Type', 'application/json')
-        .header('Content-Disposition', '')
-        .send(error);
+        .send({
+          statusCode: error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error.message,
+          error: error.error
+        });
     }
   }
   /**

@@ -86,7 +86,7 @@
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^3.2.2",
     "linebyline": "^1.3.0",
-    "moment": "^2.30.1",
+    "moment": "^2.31.0",
     "morgan": "^1.12.1",
     "multer": "^2.4.0",
     "nanoid": "^5.1.16",

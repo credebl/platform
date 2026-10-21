@@ -42,6 +42,13 @@ export NATS_AUTH_TYPE=none
 export NATS_AUTH_TYPE_NAME=none
 export NATS_TYPE=none
 
+# Rebuild the DB URLs from POSTGRES_* so they always match the database the
+# setup script provisioned (exports from the separate setup run don't reach us,
+# and the sourced file can hold stale derived URLs)
+DB_URL="postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-credebl_integration}?schema=public"
+export DATABASE_URL="$DB_URL"
+export POOL_DATABASE_URL="$DB_URL"
+
 # point the app preload and jest's dotenv/config at the integration env file
 export DOTENV_CONFIG_PATH="$ENV_FILE"
 

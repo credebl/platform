@@ -38,10 +38,13 @@ services:
     ports: ["127.0.0.1:${SMOKE_PG_PORT}:5432"]
 EOF
 
-# ensure infra is torn down on every exit path (startup failure, build
-# failure, jest failure or success); runs exactly once — the success path
-# disarms the trap after running cleanup itself
+# ensure apps and infra are torn down on every exit path (startup failure,
+# build failure, readiness failure or success); runs exactly once — the
+# success path disarms the trap after running cleanup itself
 cleanup() {
+  if [[ ${#PIDS[@]} -gt 0 ]]; then
+    for p in "${PIDS[@]}"; do kill "$p" 2>/dev/null || true; done
+  fi
   docker compose -f "$INFRA_YML" down -v >/dev/null 2>&1 || true
 }
 ENV_FILE="${ROOT_DIR}/.env.smoke"
@@ -103,7 +106,10 @@ while (( SECONDS < deadline )); do
   for i in "${!APPS[@]}"; do
     pid="${PIDS[$i]}"
     if ! kill -0 "$pid" 2>/dev/null; then
-      echo "SMOKE_FAIL app exited early: ${APPS[$i]}"
+      if [[ -z "${app_failed:-}" ]]; then
+        app_failed="${APPS[$i]}"
+        echo "SMOKE_FAIL app exited early: ${app_failed}"
+      fi
       ready=false
       break
     fi
@@ -128,16 +134,20 @@ if [[ "$ready" != "true" ]]; then
   exit 1
 fi
 
-# infra still running after the wait?
-for cid in $(docker compose -f "$INFRA_YML" ps -q 2>/dev/null); do
-  if [[ "$(docker inspect -f '{{.State.Running}}' "$cid" 2>/dev/null || echo false)" != "true" ]]; then
-    echo "SMOKE_FAIL infra container not running: $cid"
-    exit 1
+# infra still running after the wait? (ps --all includes stopped containers,
+# and all 3 services must be running — not just "those that are listed")
+running_count=0
+for cid in $(docker compose -f "$INFRA_YML" ps --all -q 2>/dev/null); do
+  if [[ "$(docker inspect -f '{{.State.Running}}' "$cid" 2>/dev/null || echo false)" == "true" ]]; then
+    running_count=$((running_count + 1))
   fi
 done
+if [[ "$running_count" -lt 3 ]]; then
+  echo "SMOKE_FAIL infra: only ${running_count}/3 containers running"
+  exit 1
+fi
 
-# stop apps, tear down infra, then disarm the trap so cleanup runs exactly once
-for p in "${PIDS[@]}"; do kill "$p" 2>/dev/null || true; done
+# stop apps + infra via cleanup (kills recorded PIDs too), then disarm the trap
 cleanup
 trap - EXIT
 

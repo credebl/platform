@@ -26,7 +26,21 @@ services:
     environment: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres, POSTGRES_DB: credebl_integration}
     ports: ["5432:5432"]
 EOF
-docker compose -f /tmp/integration-infra.yml up -d >/dev/null 2>&1 || true
+# Fail before any PostgreSQL connection if the throwaway Compose infra cannot
+# start — otherwise localhost:5432 may silently reach an unrelated server
+# (e.g. a different local Postgres) and migrate would modify it. Only an
+# explicitly configured external Postgres (POSTGRES_HOST) tolerates this.
+if ! docker compose -f /tmp/integration-infra.yml up -d >/dev/null 2>&1; then
+  if [[ -n "${POSTGRES_HOST:-}" ]]; then
+    echo "WARN: compose infra failed to start; using explicitly configured external Postgres at ${POSTGRES_HOST}"
+  else
+    echo "ERROR: could not start integration infra (is a host port already in use? e.g. 5432/6379/4222)"
+    # compose may have partially started other services — tear them down
+    docker compose -f /tmp/integration-infra.yml down >/dev/null 2>&1 || true
+    rm -f /tmp/integration-infra.yml
+    exit 1
+  fi
+fi
 sleep 10
 
 # Ensure integration DB exists if a local Postgres is used (and we point to it)

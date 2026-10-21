@@ -18,7 +18,15 @@ import {
   IConnectionInvitationResponse,
   GetAllCloudWalletConnections,
   IBasicMessage,
-  IBasicMessageDetails
+  IBasicMessageDetails,
+  IResolveCredentialOffer,
+  IAuthorizeRequestCredential,
+  IRequestCredential,
+  IResolveProofRequest,
+  IAcceptOid4vpProofRequest,
+  IDecodeMdoc,
+  IDecodeSdJwt,
+  IDeleteHolderCredential
 } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { Inject, Injectable } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
@@ -135,5 +143,73 @@ export class CloudWalletService extends BaseService {
 
   sendBasicMessage(messageDetails: IBasicMessageDetails): Promise<Response> {
     return this.natsClient.sendNatsMessage(this.cloudWalletServiceProxy, 'send-basic-message', messageDetails);
+  }
+
+  getSdJwtCredentials(holderDetails: IWalletDetailsForDidList): Promise<Response> {
+    return this.natsClient.sendNatsMessage(this.cloudWalletServiceProxy, 'holder-sd-jwt-credentials', holderDetails);
+  }
+
+  getMdocCredentials(holderDetails: IWalletDetailsForDidList): Promise<Response> {
+    return this.natsClient.sendNatsMessage(this.cloudWalletServiceProxy, 'holder-mdoc-credentials', holderDetails);
+  }
+
+  getW3cCredentials(holderDetails: IWalletDetailsForDidList): Promise<Response> {
+    return this.natsClient.sendNatsMessage(this.cloudWalletServiceProxy, 'holder-w3c-credentials', holderDetails);
+  }
+
+  decodeMdoc(decodeMdocDetails: IDecodeMdoc): Promise<Response> {
+    return this.natsClient.sendNatsMessage(this.cloudWalletServiceProxy, 'holder-decode-mdoc', decodeMdocDetails);
+  }
+
+  decodeSdJwt(decodeSdJwtDetails: IDecodeSdJwt): Promise<Response> {
+    return this.natsClient.sendNatsMessage(this.cloudWalletServiceProxy, 'holder-decode-sdjwt', decodeSdJwtDetails);
+  }
+
+  deleteHolderCredential(deleteCredentialDetails: IDeleteHolderCredential): Promise<Response> {
+    return this.natsClient.sendNatsMessage(
+      this.cloudWalletServiceProxy,
+      'holder-delete-credential',
+      deleteCredentialDetails
+    );
+  }
+
+  resolveCredentialOffer(resolveCredentialOfferDetails: IResolveCredentialOffer): Promise<Response> {
+    return this.natsClient.sendNatsMessage(
+      this.cloudWalletServiceProxy,
+      'oid4vc-holder-resolve-credential-offer',
+      resolveCredentialOfferDetails
+    );
+  }
+
+  authorizationRequest(authorizationRequestDetails: IAuthorizeRequestCredential): Promise<Response> {
+    return this.natsClient.sendNatsMessage(
+      this.cloudWalletServiceProxy,
+      'oid4vc-holder-authorization-request',
+      authorizationRequestDetails
+    );
+  }
+
+  requestCredential(requestCredentialDetails: IRequestCredential): Promise<Response> {
+    return this.natsClient.sendNatsMessage(
+      this.cloudWalletServiceProxy,
+      'oid4vc-holder-request-credential',
+      requestCredentialDetails
+    );
+  }
+
+  resolveProofRequest(resolveProofRequestDetails: IResolveProofRequest): Promise<Response> {
+    return this.natsClient.sendNatsMessage(
+      this.cloudWalletServiceProxy,
+      'oid4vc-holder-resolve-proof-request',
+      resolveProofRequestDetails
+    );
+  }
+
+  acceptProofRequestOid4vc(acceptProofRequestDetails: IAcceptOid4vpProofRequest): Promise<Response> {
+    return this.natsClient.sendNatsMessage(
+      this.cloudWalletServiceProxy,
+      'oid4vc-holder-accept-proof-request',
+      acceptProofRequestDetails
+    );
   }
 }

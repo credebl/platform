@@ -32,15 +32,14 @@ fi
 # Reject an explicit shell DATABASE_URL/POOL_DATABASE_URL that disagrees with
 # POSTGRES_* *before* sourcing .env.integration, so a real environment value is
 # never silently overridden. Checked again after sourcing (see below).
+# Error output never echoes URL values or credentials — only the variable name.
 DB_URL="$(integration_db_url)"
 _require_aligned_db_urls() {
   local var url
   for var in DATABASE_URL POOL_DATABASE_URL; do
     url="${!var:-}"
     if [[ -n "$url" && "$url" != "$DB_URL" ]]; then
-      echo "ERROR: ${var} in the environment conflicts with POSTGRES_* settings"
-      echo "       ${var}=${url}"
-      echo "       POSTGRES_* would derive: ${DB_URL}"
+      echo "ERROR: ${var} is set and does not match the URL derived from POSTGRES_* settings."
       echo "       Use POSTGRES_* (documented) or align ${var} before running."
       return 1
     fi
@@ -65,6 +64,10 @@ set +a
 export NATS_AUTH_TYPE=none
 export NATS_AUTH_TYPE_NAME=none
 export NATS_TYPE=none
+
+# Sourcing may have changed POSTGRES_*; recompute the URL from the current
+# values before validating and exporting it.
+DB_URL="$(integration_db_url)"
 
 # Sourcing may have re-introduced conflicting values; reject those too.
 _require_aligned_db_urls || {

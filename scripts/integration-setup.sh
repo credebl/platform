@@ -17,14 +17,28 @@ source "${ROOT_DIR}/scripts/lib-integration.sh"
 
 # Optional integration env file (the same one integration-run.sh uses), loaded
 # early so POSTGRES_* overrides apply to this standalone flow. Missing file or
-# variables are fine — the defaults below are preserved. Explicit environment
-# variables still win over file values.
+# variables are fine — the defaults below are preserved.
+# Caller-provided POSTGRES_* values win over the file, so explicit environment
+# overrides are not silently replaced.
 ENV_FILE="${ROOT_DIR}/.env.integration"
 if [[ -f "$ENV_FILE" ]]; then
+  _caller_pg=""
+  for _v in POSTGRES_HOST POSTGRES_PORT POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD; do
+    if [[ -n "${!_v:-}" ]]; then
+      _caller_pg="${_caller_pg}${_v}=${!_v}"$'\n'
+    fi
+  done
   set -a
   # shellcheck disable=SC1090
   source "$ENV_FILE"
   set +a
+  # Re-apply only the variables the caller explicitly set (bash 3.2 has no
+  # associative arrays; this newline-delimited form keeps it portable).
+  while IFS= read -r _line; do
+    [[ -n "$_line" ]] || continue
+    export "${_line%%=*}=${_line#*=}"
+  done <<< "$_caller_pg"
+  unset _caller_pg _line _v
 fi
 
 # start infra (minimal)

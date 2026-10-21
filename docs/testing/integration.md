@@ -22,6 +22,12 @@ RUN_INTEGRATION=true ./scripts/integration-run.sh
 ## Env
 Copy `.env.integration.example` to `.env.integration` and adjust (Keycloak/Agent-Controller).
 
+Database connection: `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER` and
+`POSTGRES_PASSWORD` are the supported configuration — `DATABASE_URL` and `POOL_DATABASE_URL`
+are derived from them (credentials percent-encoded) by both the setup and run scripts.
+Set `POSTGRES_*` rather than the URLs; an explicit shell `DATABASE_URL`/`POOL_DATABASE_URL`
+that disagrees with `POSTGRES_*` is rejected with an error.
+
 ## Notes
 - Focus: OID4VC issuance/verification flows via api-gateway and agent-controller integration.
 - The integration-testing changes in this area are limited to test infrastructure, scripts and documentation.

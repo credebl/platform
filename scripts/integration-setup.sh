@@ -12,6 +12,21 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mkdir -p "${ROOT_DIR}/.tmp-integration/logs"
 
+# shellcheck source=scripts/lib-integration.sh
+source "${ROOT_DIR}/scripts/lib-integration.sh"
+
+# Optional integration env file (the same one integration-run.sh uses), loaded
+# early so POSTGRES_* overrides apply to this standalone flow. Missing file or
+# variables are fine — the defaults below are preserved. Explicit environment
+# variables still win over file values.
+ENV_FILE="${ROOT_DIR}/.env.integration"
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
 # start infra (minimal)
 cat > /tmp/integration-infra.yml << 'EOF'
 services:
@@ -33,6 +48,22 @@ EOF
 if ! docker compose -f /tmp/integration-infra.yml up -d >/dev/null 2>&1; then
   if [[ -n "${POSTGRES_HOST:-}" ]]; then
     echo "WARN: compose infra failed to start; using explicitly configured external Postgres at ${POSTGRES_HOST}"
+    # The external-Postgres path still needs NATS and Redis for the harness;
+    # if they are not reachable, fail instead of reporting SETUP_DONE.
+    services_ok=true
+    if ! docker compose -f /tmp/integration-infra.yml ps --status running --services 2>/dev/null | grep -qx 'redis'; then
+      echo "ERROR: redis is not running for the external-Postgres flow"
+      services_ok=false
+    fi
+    if ! docker compose -f /tmp/integration-infra.yml ps --status running --services 2>/dev/null | grep -qx 'nats'; then
+      echo "ERROR: nats is not running for the external-Postgres flow"
+      services_ok=false
+    fi
+    if [[ "$services_ok" != "true" ]]; then
+      docker compose -f /tmp/integration-infra.yml down >/dev/null 2>&1 || true
+      rm -f /tmp/integration-infra.yml
+      exit 1
+    fi
   else
     echo "ERROR: could not start integration infra (is a host port already in use? e.g. 5432/6379/4222)"
     # compose may have partially started other services — tear them down
@@ -58,7 +89,8 @@ psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -tc "SELECT 1 FROM pg_database WHERE
 
 # Construct DB URLs for Prisma from the integration connection components so
 # migrate deploy always targets the throwaway Compose database above.
-DB_URL="postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}?schema=public"
+# Credentials are percent-encoded so reserved characters cannot corrupt the URL.
+DB_URL="$(integration_db_url)"
 export DATABASE_URL="$DB_URL"
 export POOL_DATABASE_URL="$DB_URL"
 

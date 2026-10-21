@@ -12,6 +12,9 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APPS=(oid4vc-issuance oid4vc-verification api-gateway)
 
+# shellcheck source=scripts/lib-integration.sh
+source "${ROOT_DIR}/scripts/lib-integration.sh"
+
 # build (always; a stale dist must not mask a broken build)
 for app in "${APPS[@]}"; do
   ./node_modules/.bin/nest build "$app" >/dev/null
@@ -25,6 +28,27 @@ if [[ ! -f "$ENV_FILE" ]]; then
   cp "${ROOT_DIR}/.env.integration.example" "$ENV_FILE"
   CREATED_ENV=true
 fi
+
+# Reject an explicit shell DATABASE_URL/POOL_DATABASE_URL that disagrees with
+# POSTGRES_* *before* sourcing .env.integration, so a real environment value is
+# never silently overridden. Checked again after sourcing (see below).
+DB_URL="$(integration_db_url)"
+_require_aligned_db_urls() {
+  local var url
+  for var in DATABASE_URL POOL_DATABASE_URL; do
+    url="${!var:-}"
+    if [[ -n "$url" && "$url" != "$DB_URL" ]]; then
+      echo "ERROR: ${var} in the environment conflicts with POSTGRES_* settings"
+      echo "       ${var}=${url}"
+      echo "       POSTGRES_* would derive: ${DB_URL}"
+      echo "       Use POSTGRES_* (documented) or align ${var} before running."
+      return 1
+    fi
+  done
+  return 0
+}
+
+_require_aligned_db_urls || exit 1
 
 # Ensure NATS_AUTH_TYPE=none so NATS nkey is not required (fixes suite load failures)
 export NATS_AUTH_TYPE=none
@@ -42,10 +66,14 @@ export NATS_AUTH_TYPE=none
 export NATS_AUTH_TYPE_NAME=none
 export NATS_TYPE=none
 
-# Rebuild the DB URLs from POSTGRES_* so they always match the database the
-# setup script provisioned (exports from the separate setup run don't reach us,
-# and the sourced file can hold stale derived URLs)
-DB_URL="postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-credebl_integration}?schema=public"
+# Sourcing may have re-introduced conflicting values; reject those too.
+_require_aligned_db_urls || {
+  if [[ "$CREATED_ENV" == "true" ]]; then
+    rm -f "$ENV_FILE"
+  fi
+  exit 1
+}
+
 export DATABASE_URL="$DB_URL"
 export POOL_DATABASE_URL="$DB_URL"
 

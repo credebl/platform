@@ -1,0 +1,114 @@
+#!/bin/bash
+set -euo pipefail
+
+CI="${CI:-false}"
+RUN_INTEGRATION="${RUN_INTEGRATION:-false}"
+
+if [[ "$CI" == "true" && "$RUN_INTEGRATION" != "true" ]]; then
+  echo "CI=true and RUN_INTEGRATION!=true; integration run skipped by default"
+  exit 0
+fi
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+APPS=(oid4vc-issuance oid4vc-verification api-gateway)
+
+# shellcheck source=scripts/lib-integration.sh
+source "${ROOT_DIR}/scripts/lib-integration.sh"
+
+# build (always; a stale dist must not mask a broken build)
+for app in "${APPS[@]}"; do
+  ./node_modules/.bin/nest build "$app" >/dev/null
+done
+
+# env: reuse an existing .env.integration (developers may have adjusted it);
+# only create it from the example when missing, and only remove what we created
+ENV_FILE="${ROOT_DIR}/.env.integration"
+CREATED_ENV=false
+if [[ ! -f "$ENV_FILE" ]]; then
+  cp "${ROOT_DIR}/.env.integration.example" "$ENV_FILE"
+  CREATED_ENV=true
+fi
+
+# Reject an explicit shell DATABASE_URL/POOL_DATABASE_URL that disagrees with
+# POSTGRES_* *before* sourcing .env.integration, so a real environment value is
+# never silently overridden. Checked again after sourcing (see below).
+# Error output never echoes URL values or credentials — only the variable name.
+DB_URL="$(integration_db_url)"
+_require_aligned_db_urls() {
+  local var url
+  for var in DATABASE_URL POOL_DATABASE_URL; do
+    url="${!var:-}"
+    if [[ -n "$url" && "$url" != "$DB_URL" ]]; then
+      echo "ERROR: ${var} is set and does not match the URL derived from POSTGRES_* settings."
+      echo "       Use POSTGRES_* (documented) or align ${var} before running."
+      return 1
+    fi
+  done
+  return 0
+}
+
+_require_aligned_db_urls || exit 1
+
+# Ensure NATS_AUTH_TYPE=none so NATS nkey is not required (fixes suite load failures)
+export NATS_AUTH_TYPE=none
+export NATS_AUTH_TYPE_NAME=none
+export NATS_TYPE=none
+
+# export into this process so both the services and the jest run inherit it
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +a
+
+# Override after sourcing to be safe
+export NATS_AUTH_TYPE=none
+export NATS_AUTH_TYPE_NAME=none
+export NATS_TYPE=none
+
+# Sourcing may have changed POSTGRES_*; recompute the URL from the current
+# values before validating and exporting it.
+DB_URL="$(integration_db_url)"
+
+# Sourcing may have re-introduced conflicting values; reject those too.
+_require_aligned_db_urls || {
+  if [[ "$CREATED_ENV" == "true" ]]; then
+    rm -f "$ENV_FILE"
+  fi
+  exit 1
+}
+
+export DATABASE_URL="$DB_URL"
+export POOL_DATABASE_URL="$DB_URL"
+
+# point the app preload and jest's dotenv/config at the integration env file
+export DOTENV_CONFIG_PATH="$ENV_FILE"
+
+mkdir -p "${ROOT_DIR}/.tmp-integration/logs"
+PIDS=()
+for app in "${APPS[@]}"; do
+  node -r dotenv/config "dist/apps/${app}/main.js" > "${ROOT_DIR}/.tmp-integration/logs/${app}.log" 2>&1 &
+  PIDS+=("$!")
+done
+sleep 15
+
+# jest integration: keep jest's exit status through the tail pipeline
+set +e
+./node_modules/.bin/jest --config jest.integration.config.js --maxWorkers=1 2>&1 | tail -20
+JEST_STATUS="${PIPESTATUS[0]}"
+set -e
+
+# cleanup
+if [[ ${#PIDS[@]} -gt 0 ]]; then
+  for p in "${PIDS[@]}"; do kill "$p" 2>/dev/null || true; done
+fi
+docker compose -f /tmp/integration-infra.yml down -v >/dev/null 2>&1 || true
+if [[ "$CREATED_ENV" == "true" ]]; then
+  rm -f "$ENV_FILE"
+fi
+rm -f /tmp/integration-infra.yml 2>/dev/null || true
+
+if [[ "$JEST_STATUS" -ne 0 ]]; then
+  echo "INTEGRATION_FAILED jest_exit=${JEST_STATUS}"
+  exit "$JEST_STATUS"
+fi
+echo "INTEGRATION_RUN_DONE"

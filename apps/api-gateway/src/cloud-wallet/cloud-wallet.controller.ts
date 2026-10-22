@@ -46,6 +46,9 @@ import { user } from '@prisma/client';
 import { Validator } from '@credebl/common/validator';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { UserRoleGuard } from '../authz/guards/user-role.guard';
+import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
+import { Roles } from '../authz/decorators/roles.decorator';
+import { OrgRoles } from 'libs/org-roles/enums';
 import { AcceptProofRequestDto } from './dtos/accept-proof-request.dto';
 import {
   IBasicMessage,
@@ -80,7 +83,8 @@ export class CloudWalletController {
     description: 'Endpoint to configure the base wallet for the cloud wallet service.'
   })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Base wallet configured successfully', type: ApiResponseDto })
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async configureBaseWallet(
     @Res() res: Response,
     @Body() cloudBaseWalletConfigure: CloudBaseWalletConfigureDto,

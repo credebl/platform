@@ -276,8 +276,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       multer:
-        specifier: ^2.4.0
-        version: 2.4.0
+        specifier: ^2.5.0
+        version: 2.5.0
       nanoid:
         specifier: ^5.1.16
         version: 5.1.16
@@ -4707,6 +4707,10 @@ packages:
 
   multer@2.4.0:
     resolution: {integrity: sha512-7dqa0ZcFfzbefdTuIkzOSMvZWC0J7FLqBOjJUZvDCXShIURWKxAyTT1wHhnE5q19c7jOJf43IYYKjBmZVZmvhg==}
+    engines: {node: '>= 10.16.0'}
+
+  multer@2.5.0:
+    resolution: {integrity: sha512-BsqOzYGVq49JcW2IzoSAxeKYRevb+dGGPPWleOR8Lrlk4igwxu1/9pwSXlByhCb7MVZDrNJFC0IBP5/O5nLYRw==}
     engines: {node: '>= 10.16.0'}
 
   mute-stream@2.0.0:
@@ -11601,6 +11605,12 @@ snapshots:
       msgpackr-extract: 3.0.3
 
   multer@2.4.0:
+    dependencies:
+      append-field: 1.0.0
+      busboy: 1.6.0
+      type-is: 1.6.18
+
+  multer@2.5.0:
     dependencies:
       append-field: 1.0.0
       busboy: 1.6.0

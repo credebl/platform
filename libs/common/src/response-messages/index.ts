@@ -641,7 +641,18 @@ export const ResponseMessages = {
       credentials: 'Credentials fetched successfully',
       credentialByRecordId: 'Credential fetched successfully',
       connectionList: 'Connection list fetched successfully',
-      basicMessageByConnectionId: 'Basic message fetched successfully'
+      basicMessageByConnectionId: 'Basic message fetched successfully',
+      sdJwtCredentials: 'SD-JWT credentials fetched successfully',
+      mdocCredentials: 'mDoc credentials fetched successfully',
+      w3cCredentials: 'W3C credentials fetched successfully',
+      decodeMdoc: 'mDoc credential decoded successfully',
+      decodeSdJwt: 'SD-JWT credential decoded successfully',
+      deleteCredential: 'Credential deleted successfully',
+      resolveCredentialOffer: 'Credential offer resolved successfully',
+      authorizationRequest: 'Authorization request initiated successfully',
+      requestCredential: 'Credential requested successfully',
+      resolveProofRequest: 'Proof request resolved successfully',
+      acceptProofRequestOid4vc: 'Proof request accepted successfully'
     },
     error: {
       baseWalletNotFound: 'Base wallet configuration not found',

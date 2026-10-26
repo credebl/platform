@@ -459,7 +459,21 @@ export enum CommonConstants {
   STORAGE_TYPE_LOCAL = 'local',
   STORAGE_TYPE_RUSTFS = 'rustfs',
 
-  OPENBAO_REQUEST_TIMEOUT = 10000
+  OPENBAO_REQUEST_TIMEOUT = 10000,
+
+  // OID4VC Holder
+  OID4VC_HOLDER_SDJWT_VCS = '/openid4vc/holder/sd-jwt-vcs',
+  OID4VC_HOLDER_MDOC_VCS = '/openid4vc/holder/mdoc-vcs',
+  OID4VC_HOLDER_W3C_VCS = '/openid4vc/holder/w3c-vcs',
+  OID4VC_HOLDER_MDOC_DECODE = '/openid4vc/holder/mdoc-vcs/decode',
+  OID4VC_HOLDER_DECODE_SDJWT = '/openid4vc/holder/decode-sdjwt',
+  OID4VC_HOLDER_DELETE_CREDENTIAL = '/openid4vc/holder/credential',
+  OID4VC_HOLDER_RESOLVE_CREDENTIAL_OFFER = '/openid4vc/holder/resolve-credential-offer',
+  OID4VC_HOLDER_AUTHORIZATION_REQUEST = '/openid4vc/holder/authorization-request',
+  OID4VC_HOLDER_REQUEST_CREDENTIAL = '/openid4vc/holder/request-credential',
+  OID4VC_HOLDER_RESOLVE_PROOF_REQUEST = '/openid4vc/holder/resolve-proof-request',
+  OID4VC_HOLDER_ACCEPT_PROOF_REQUEST = '/openid4vc/holder/accept-proof-request',
+  CLOUD_WALLET_REQUEST_TIMEOUT = 60000
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

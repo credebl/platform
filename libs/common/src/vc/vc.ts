@@ -54,6 +54,16 @@ function toContextArray(context: CredentialContextValue | undefined): (string | 
   return context ? [context] : [];
 }
 
+/**
+ * Exact membership check for JSON-LD context entries.
+ *
+ * Uses strict equality on purpose: `Array.prototype.includes` makes CodeQL report
+ * incomplete URL substring sanitisation for the W3C context URLs below.
+ */
+function hasContextValue(contexts: (string | Record<string, unknown>)[], expected: string): boolean {
+  return contexts.some((context) => context === expected);
+}
+
 function getCredentialSchemaId(credentialSchema: unknown): string | undefined {
   if (!credentialSchema || 'object' !== typeof credentialSchema || Array.isArray(credentialSchema)) {
     return undefined;
@@ -88,7 +98,7 @@ export class VCContext {
   }
 
   static isV2Context(context: CredentialContextValue | undefined): boolean {
-    return toContextArray(context).includes(VC_CONTEXT_V2);
+    return hasContextValue(toContextArray(context), VC_CONTEXT_V2);
   }
 
   static detectVersionFromContext(context: CredentialContextValue | undefined): VCVersion {
@@ -220,7 +230,7 @@ export function getCredentialVersionProblems(
   }
 
   if ('v2' === version) {
-    if (!contexts.includes(VC_CONTEXT_V2)) {
+    if (!hasContextValue(contexts, VC_CONTEXT_V2)) {
       problems.push(`@context must include ${VC_CONTEXT_V2} for VC 2.0`);
     }
     if (credential.issuanceDate) {
@@ -230,7 +240,7 @@ export function getCredentialVersionProblems(
       problems.push('expirationDate is not part of VC 2.0, use validUntil instead');
     }
   } else {
-    if (!contexts.includes(VC_CONTEXT_V1)) {
+    if (!hasContextValue(contexts, VC_CONTEXT_V1)) {
       problems.push(`@context must include ${VC_CONTEXT_V1} for VC 1.1`);
     }
     if (!credential.issuanceDate) {

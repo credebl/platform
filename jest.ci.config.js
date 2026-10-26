@@ -20,7 +20,7 @@ module.exports = {
     '<rootDir>/apps/ledger/src/ledger.controller.spec.ts',
     '<rootDir>/apps/connection/test/',
     '<rootDir>/apps/oid4vc-verification/',
-    '<rootDir>/apps/oid4vc-issuance/',
+    '<rootDir>/apps/oid4vc-issuance/test/',
     '<rootDir>/apps/user/test/',
     '<rootDir>/apps/agent-provisioning/',
     '<rootDir>/apps/agent-service/'

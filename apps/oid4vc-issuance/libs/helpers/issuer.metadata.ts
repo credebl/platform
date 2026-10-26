@@ -11,7 +11,7 @@ import {
   SdJwtTemplate
 } from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
-import { VC_CONTEXT_V1 } from '@credebl/common/vc';
+import { buildCredentialContext, DEFAULT_VC_VERSION, VCContext } from '@credebl/common/vc';
 
 type AttributeDisplay = { name: string; locale: string };
 
@@ -287,6 +287,13 @@ export function buildMdocCredentialConfig(name: string, template: MdocTemplate):
   };
 }
 
+function getTemplateCredentialContext(template: SdJwtTemplate): string[] {
+  const version = template.context?.length
+    ? VCContext.detectVersionFromContext(template.context)
+    : DEFAULT_VC_VERSION;
+  return buildCredentialContext(template.context, version);
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function buildJwtVcJsonLdCredentialConfig(
   name: string,
@@ -320,7 +327,7 @@ export function buildJwtVcJsonLdCredentialConfig(
         }
       },
       credential_definition: {
-        '@context': [VC_CONTEXT_V1],
+        '@context': getTemplateCredentialContext(template),
         type: ['VerifiableCredential', typeName]
       },
       credential_metadata: {
@@ -360,7 +367,7 @@ export function buildLdpVcCredentialConfig(name: string, template: SdJwtTemplate
         }
       },
       credential_definition: {
-        '@context': [VC_CONTEXT_V1],
+        '@context': getTemplateCredentialContext(template),
         type: ['VerifiableCredential', typeName]
       },
       credential_metadata: {

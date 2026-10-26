@@ -1,4 +1,5 @@
 import { OpenId4VcIssuanceSessionState } from '@credebl/enum/enum';
+import { VCVersion } from '@credebl/common/vc';
 
 /* ---------------------------------------------------------
  * Enums
@@ -44,6 +45,11 @@ export interface CredentialRequest {
     validFrom: Date;
     validUntil: Date;
   };
+  /**
+   * Optional VC version guard. Must match the version implied by the template context
+   * (defaults to the template context, or v1.1 when the template has no context configured).
+   */
+  version?: VCVersion;
 }
 
 export interface CreateOidcCredentialOffer {

@@ -3,7 +3,6 @@ import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsO
 import { Transform, Type } from 'class-transformer';
 import { AutoAccept } from '@credebl/enum/enum';
 import { trim } from '@credebl/common/cast.helper';
-import { VCVersion, SUPPORTED_VC_VERSIONS, DEFAULT_VC_VERSION } from '@credebl/common/constants/vc.constants';
 import { Attribute, Credential, CredentialsIssuanceDto, JsonLdCredentialDetailOptions } from './issuance.dto';
 
 class ConnectionAttributes {

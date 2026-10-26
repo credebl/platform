@@ -30,7 +30,7 @@ import { Transform, Type } from 'class-transformer';
 
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { trim } from '@credebl/common/cast.helper';
-import { VCVersion, SUPPORTED_VC_VERSIONS, DEFAULT_VC_VERSION } from '@credebl/common/constants/vc.constants';
+import { VCVersion, SUPPORTED_VC_VERSIONS, DEFAULT_VC_VERSION } from '@credebl/common/vc';
 
 class Issuer {
   @ApiProperty()

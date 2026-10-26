@@ -419,12 +419,3 @@ export enum ClientIdPrefix {
   X509SanDns = 'x509_san_dns',
   X509Hash = 'x509_hash'
 }
-
-export enum VCVersion {
-  V1 = 'v1',
-  V1_1 = 'v1.1',
-  V2 = 'v2'
-}
-
-export const DEFAULT_VC_VERSION = VCVersion.V1_1;
-export const SUPPORTED_VC_VERSIONS = [VCVersion.V1, VCVersion.V1_1, VCVersion.V2] as const;

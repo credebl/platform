@@ -11,7 +11,7 @@ import {
   SdJwtTemplate
 } from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
-import { VC_CONTEXT_V1, VC_CONTEXT_V2 } from '@credebl/common/vc/vc.constants';
+import { VC_CONTEXT_V1 } from '@credebl/common/vc';
 
 type AttributeDisplay = { name: string; locale: string };
 

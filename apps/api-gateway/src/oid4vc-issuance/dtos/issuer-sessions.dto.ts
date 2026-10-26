@@ -23,7 +23,7 @@ import {
   IsBoolean
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { VCVersion, SUPPORTED_VC_VERSIONS, DEFAULT_VC_VERSION } from '@credebl/common/constants/vc.constants';
+import { VCVersion, SUPPORTED_VC_VERSIONS, DEFAULT_VC_VERSION } from '@credebl/common/vc';
 import { Type, Transform } from 'class-transformer';
 import { dateToSeconds } from '@credebl/common/date-only';
 

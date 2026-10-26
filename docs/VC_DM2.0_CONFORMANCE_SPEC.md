@@ -1,8 +1,8 @@
-# VC DM 2.0 Conformance Specification
+# VCDM 2.0 Conformance Specification
 
 ## Executive Summary
 
-This document outlines the changes made to make the CREDEBL SSI platform conformant with W3C Verifiable Credentials Data Model 2.0 (VC DM 2.0) while maintaining full backward compatibility with VC DM 1.1 (current implementation). The implementation introduces versioned credential issuance supporting `v1`, `v1.1`, and `v2` with `v1.1` as the default to preserve existing behavior.
+This document outlines the changes made to make the CREDEBL SSI platform conformant with W3C Verifiable Credentials Data Model 2.0 (VCDM 2.0) while maintaining full backward compatibility with VCDM 1.1 (current implementation). The implementation introduces versioned credential issuance supporting `v1`, `v1.1`, and `v2` with `v1.1` as the default to preserve existing behavior.
 
 ## Table of Contents
 
@@ -12,14 +12,14 @@ This document outlines the changes made to make the CREDEBL SSI platform conform
 4. [Changes Implemented](#changes-implemented)
 5. [Migration Strategy](#migration-strategy)
 6. [Backward Compatibility](#backward-compatibility)
-7. [VC DM 1.1 vs 2.0 Comparison](#vc-dm-11-vs-20-comparison)
+7. [VCDM 1.1 vs 2.0 Comparison](#vc-dm-11-vs-20-comparison)
 8. [Implementation Details by Component](#implementation-details-by-component)
 9. [Testing](#testing)
 10. [Known Considerations](#known-considerations)
 
 ## Objectives
 
-- Support VC DM 2.0 conformant credential structures while preserving existing v1.1 behavior
+- Support VCDM 2.0 conformant credential structures while preserving existing v1.1 behavior
 - Add `version` parameter with options: `v1`, `v1.1`, `v2` (default `v1.1`)
 - Ensure previously issued credentials remain immutable and verifiable
 - Update schema generation, credential construction, DTOs, and OID4VC flows to be version-aware
@@ -29,15 +29,15 @@ This document outlines the changes made to make the CREDEBL SSI platform conform
 ## References
 
 - [W3C VC Data Model 2.0](https://www.w3.org/TR/vc-data-model-2.0/)
-- [W3C VC DM 1.1](https://www.w3.org/TR/vc-data-model/)
+- [W3C VCDM 1.1](https://www.w3.org/TR/vc-data-model/)
 - [Credo-Ts VC Implementation](https://credo.js.org/) (agent-controller)
 
 ## Versioning Strategy
 
 ### Allowed Versions
-- `v1`: Legacy VC DM 1.0 shape
+- `v1`: Legacy VCDM 1.0 shape
 - `v1.1`: Current platform shape (v1 context + `issuanceDate`/`expirationDate`) - **Default**
-- `v2`: VC DM 2.0 conformant shape (v2 context + `validFrom`/`validUntil`)
+- `v2`: VCDM 2.0 conformant shape (v2 context + `validFrom`/`validUntil`)
 
 ### Design Decisions
 1. **Default to v1.1**: Preserves all existing API contracts and behavior; no breaking changes for existing consumers.
@@ -49,14 +49,12 @@ This document outlines the changes made to make the CREDEBL SSI platform conform
 
 ### 1. Centralized VC Constants and Utilities
 
-**Location:** `libs/common/src/vc/`
+**Location:** `libs/common/src/vc/vc.ts`
 
-- `vc.constants.ts`: Defines VC contexts (`VC_CONTEXT_V1`, `VC_CONTEXT_V2`), supported versions enum type, and default version
-- `vc.context.ts`: Helper to detect/get base context based on version
-- `shape-mapper.ts`: Core utility to map credential structures between versions; handles context selection, issuer normalization, validity field mapping
+- `vc.ts`: Defines VC contexts (`VC_CONTEXT_V1`, `VC_CONTEXT_V2`), supported versions and default version, context helpers (`VCContext`), and credential shape mapping (`buildCredentialContext`, `mapCredentialForVersion`)
 - `index.ts`: Barrel export
 
-**Also added to enum library:** `libs/enum/src/enum.ts` - `VCVersion` enum with V1, V1_1, V2 plus constants
+Duplicate VC constant files and duplicate `VCVersion` definitions in the enum library were removed.
 
 ### 2. Core Credential Construction
 
@@ -148,9 +146,9 @@ This document outlines the changes made to make the CREDEBL SSI platform conform
 ### Breaking Changes
 **None.** All changes are additive, with sensible defaults.
 
-## VC DM 1.1 vs 2.0 Comparison
+## VCDM 1.1 vs 2.0 Comparison
 
-| Aspect | VC DM 1.1 (v1/v1.1) | VC DM 2.0 (v2) | Implementation |
+| Aspect | VCDM 1.1 (v1/v1.1) | VCDM 2.0 (v2) | Implementation |
 |---|---|---|---|
 | **@context** | `https://www.w3.org/2018/credentials/v1` | `https://www.w3.org/ns/credentials/v2` | Version-aware selection via `VCContext.getBaseContext()` |
 | **Validity Start** | `issuanceDate` (date-time) | `validFrom` (date-time) | When v2: emit `validFrom` (with `issuanceDate` as compatibility copy). When v1.1: emit `issuanceDate`. |
@@ -217,4 +215,4 @@ This document outlines the changes made to make the CREDEBL SSI platform conform
 
 ## Conclusion
 
-The implementation achieves VC DM 2.0 conformance while maintaining full backward compatibility. All changes follow the approved plan: dual version support with v1.1 default, version-aware credential construction, updated schemas, enhanced DTOs, and lenient verification. The system is ready for v2 credential issuance without disrupting existing workflows.
+The implementation achieves VCDM 2.0 conformance while maintaining full backward compatibility. All changes follow the approved plan: dual version support with v1.1 default, version-aware credential construction, updated schemas, enhanced DTOs, and lenient verification. The system is ready for v2 credential issuance without disrupting existing workflows.

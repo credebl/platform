@@ -10,10 +10,8 @@ import {
   ledgerLessDIDType,
   schemaRequestType
 } from '../../enum/src/enum';
-import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
-import { mapCredentialForVersion } from './vc/shape-mapper';
-import { VCContext } from './vc/vc.context';
-import { VCVersion, DEFAULT_VC_VERSION } from './vc/vc.constants';
+import { IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import { DEFAULT_VC_VERSION, mapCredentialForVersion, VCVersion } from './vc';
 
 import {
   ValidationArguments,

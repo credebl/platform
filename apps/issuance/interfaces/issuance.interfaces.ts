@@ -3,6 +3,7 @@ import { AutoAccept, SchemaType } from '@credebl/enum/enum';
 import { Prisma, organisation } from '@prisma/client';
 
 import { IPrettyVc } from '@credebl/common/interfaces/issuance.interface';
+import { VCVersion } from '@credebl/common/vc';
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { IUserRequestInterface } from 'apps/agent-service/src/interface/agent-service.interface';
 import { IssueCredentialType } from 'apps/api-gateway/src/issuance/interfaces';
@@ -34,6 +35,7 @@ export interface IIssuance {
   label?: string;
   credentialType: string;
   isValidateSchema?: string;
+  version?: VCVersion;
 }
 
 interface IIndy {
@@ -151,10 +153,10 @@ export interface ICredential {
   expirationDate?: string;
   validUntil?: string;
   credentialSubject?: ICredentialSubject | ICredentialSubject[];
-  credentialStatus?: any;
-  credentialSchema?: any;
+  credentialStatus?: unknown;
+  credentialSchema?: unknown;
   id?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface ICredentialSubject {
@@ -188,6 +190,7 @@ export interface OutOfBandCredentialOfferPayload {
   autoAcceptCredential?: string;
   credentialType?: IssueCredentialType;
   isValidateSchema?: boolean;
+  version?: VCVersion;
 }
 
 export interface OutOfBandCredentialOffer {

@@ -282,7 +282,7 @@ export class SchemaService extends BaseService {
     try {
       let createSchema;
 
-      const { description, attributes, schemaName } = schemaPayload;
+      const { description, attributes, schemaName, vcVersion } = schemaPayload;
       const agentDetails = await this.schemaRepository.getAgentDetailsByOrgId(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.schema.error.agentDetailsNotFound, {
@@ -300,7 +300,7 @@ export class SchemaService extends BaseService {
         });
       }
       const url = `${agentEndPoint}${CommonConstants.CREATE_POLYGON_W3C_SCHEMA}`;
-      const schemaObject = await w3cSchemaBuilder(attributes, schemaName, description);
+      const schemaObject = await w3cSchemaBuilder(attributes, schemaName, description, vcVersion);
       if (!schemaObject) {
         throw new BadRequestException(ResponseMessages.schema.error.schemaBuilder, {
           cause: new Error(),

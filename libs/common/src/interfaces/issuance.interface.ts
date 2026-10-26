@@ -1,139 +1,139 @@
 export interface IIssuedCredentialResponse {
-  createDateTime: Date;
-  createdBy: string;
-  connectionId: string;
-  schemaId: string;
-  state: string;
-  orgId: string;
-}
+    createDateTime: Date;
+    createdBy: string;
+    connectionId: string;
+    schemaId: string;
+    state: string;
+    orgId: string;
+  }
 
 export interface IIssuedCredential {
-  totalItems: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-  nextPage: number;
-  previousPage: number;
-  lastPage: number;
-  data: IIssuedCredentialResponse[];
-}
-interface CredentialData {
-  email_identifier: string;
-  [key: string]: string;
-}
-export interface IJsonldCredential {
-  schemaName: string;
-  schemaLedgerId: string;
-  credentialData: CredentialData;
-  orgDid: string;
-  orgId: string;
-  isReuseConnection?: boolean;
-}
+    totalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    nextPage: number;
+    previousPage: number;
+    lastPage: number;
+    data: IIssuedCredentialResponse[];
+  }
+  interface CredentialData {
+    email_identifier: string;
+    [key: string]: string;
+  }
+  export interface IJsonldCredential {
+    schemaName: string;
+    schemaLedgerId: string;
+    credentialData: CredentialData
+    orgDid: string;
+    orgId: string;
+    isReuseConnection?: boolean;
+  }
 
-export interface ICredentialOfferResponse {
-  statusCode: number;
-  message: string;
-  data: ICredentialOfferData[];
-}
-
-interface ICredentialOfferData {
-  statusCode: number;
-  message: string;
-  error?: string;
-  data?: ICredentialOfferDetails;
-}
-
-interface ICredentialAttribute {
-  'mime-type': string;
-  name: string;
-  value: string;
-}
-
-interface ICredentialOfferDetails {
-  _tags?: {
-    connectionId: string;
-    state: string;
-    threadId: string;
-  };
-  metadata?: {
-    '_anoncreds/credential'?: {
-      schemaId: string;
-      credentialDefinitionId: string;
+  export interface ICredentialOfferResponse {
+    statusCode: number;
+    message: string;
+    data: ICredentialOfferData[];
+  }
+  
+  interface ICredentialOfferData {
+    statusCode: number;
+    message: string;
+    error?: string;
+    data?: ICredentialOfferDetails;
+  }
+  
+  interface ICredentialAttribute {
+    'mime-type': string;
+    name: string;
+    value: string;
+  }
+  
+  interface ICredentialOfferDetails {
+    _tags?: {
+      connectionId: string;
+      state: string;
+      threadId: string;
     };
-  };
-  credentials?: unknown[];
-  id: string;
-  createdAt: string;
-  state: string;
-  connectionId: string;
-  threadId: string;
-  protocolVersion: string;
-  credentialAttributes?: ICredentialAttribute[];
-  autoAcceptCredential?: string;
-  contextCorrelationId?: string;
-}
+    metadata?: {
+      '_anoncreds/credential'?: {
+        schemaId: string;
+        credentialDefinitionId: string;
+      };
+    };
+    credentials?: unknown[];
+    id: string;
+    createdAt: string;
+    state: string;
+    connectionId: string;
+    threadId: string;
+    protocolVersion: string;
+    credentialAttributes?: ICredentialAttribute[];
+    autoAcceptCredential?: string;
+    contextCorrelationId?: string;
+    }
+  
+    interface IDeletedIssuanceRecordsCount {
+      count: number;
+    }
+  
+    export interface IDeletedIssuanceRecords {
+      deleteResult: IDeletedIssuanceRecordsCount;
+      recordsToDelete: IIssuedCredentialResponse[];
+    }
 
-interface IDeletedIssuanceRecordsCount {
-  count: number;
-}
+    export interface IPrettyVc{
+      certificate: string;
+      size: string;
+      orientation: string;
+      height?: string;
+      width?: string;
+    }
 
-export interface IDeletedIssuanceRecords {
-  deleteResult: IDeletedIssuanceRecordsCount;
-  recordsToDelete: IIssuedCredentialResponse[];
-}
-
-export interface IPrettyVc {
-  certificate: string;
-  size: string;
-  orientation: string;
-  height?: string;
-  width?: string;
-}
-
-export interface ICredentialSubject {
-  [key: string]: string;
-}
-
-export interface ICredentialIssuer {
-  id: string;
-  [key: string]: unknown;
-}
-
-export interface ICredential {
-  '@context': string[];
-  type: string[];
-  issuer?: ICredentialIssuer | string;
-  issuanceDate?: string;
-  validFrom?: string;
-  expirationDate?: string;
-  validUntil?: string;
-  credentialSubject?: ICredentialSubject | ICredentialSubject[];
-  credentialStatus?: unknown;
-  credentialSchema?: unknown;
-  id?: string;
-  [key: string]: unknown;
-}
-
-export interface IOptions {
-  proofType: string;
-  proofPurpose: string;
-}
-
-export interface ICredentialData {
-  emailId?: string;
-  connectionId?: string;
-  credential?: ICredential;
-  options?: IOptions;
-}
-
-export interface ISchemaObject {
-  $schema?: string;
-  $id?: string;
-  title?: string;
-  description?: string;
-  type?: string;
-  properties?: {
-    [key: string]: object;
-  };
-  required?: string[];
-  [key: string]: any;
-}
+    interface ICredentialSubject {
+      [key: string]: string;
+    }
+    
+    export interface ICredential {
+      "@context": string[];
+      type: string[];
+      issuer?: {
+        id: string;
+        [key: string]: unknown;
+      } | string;
+      issuanceDate?: string;
+      validFrom?: string;
+      expirationDate?: string;
+      validUntil?: string;
+      credentialSubject?: ICredentialSubject | ICredentialSubject[];
+      credentialStatus?: unknown;
+      credentialSchema?: unknown;
+      id?: string;
+      [key: string]: unknown;
+    }
+    
+    interface IOptions {
+      proofType: string;
+      proofPurpose: string;
+    }
+    
+    export interface ICredentialData {
+      emailId?: string;
+      connectionId?: string;
+      credential?: ICredential;
+      options?: IOptions;
+    }
+    
+    export interface ISchemaObject {
+      '$schema': string;
+      '$id': string;
+      type: string;
+      required: string[];
+      properties: {
+        [key: string]: object;
+      };
+      definitions: {
+        [key: string]: object;
+      };
+      title: string;
+      description: string;
+    }

@@ -8,34 +8,32 @@ export const DEFAULT_VC_VERSION: VCVersion = 'v1.1';
 
 export type CredentialSubject = Record<string, unknown> | Record<string, unknown>[];
 
-export class VCContext {
-  static getBaseContext(version: VCVersion): string {
-    if ('v2' === version) {
-      return VC_CONTEXT_V2;
-    }
-    return VC_CONTEXT_V1;
-  }
+/** JSON-LD allows context entries to be plain strings or inline context objects. */
+export type CredentialContextValue = string | (string | Record<string, unknown>)[];
 
-  static isV2Context(context: string | string[] | undefined): boolean {
-    if (!context) {
-      return false;
-    }
-    const contexts = Array.isArray(context) ? context : [context];
-    return contexts.includes(VC_CONTEXT_V2);
-  }
-
-  static detectVersionFromContext(context: string | string[] | undefined): VCVersion {
-    if (this.isV2Context(context)) {
-      return 'v2';
-    }
-    return 'v1.1';
-  }
+/**
+ * Minimal credential shape needed to build/normalise a credential.
+ * Kept structural on purpose so both gateway DTOs and microservice interfaces can use it.
+ */
+export interface VersionedCredentialLike {
+  '@context'?: CredentialContextValue;
+  type?: string[];
+  issuer?: string | { id?: unknown };
+  issuanceDate?: string;
+  expirationDate?: string;
+  validFrom?: string;
+  validUntil?: string;
+  credentialSubject?: CredentialSubject;
+  credentialStatus?: unknown;
+  credentialSchema?: unknown;
+  id?: string;
+  [key: string]: unknown;
 }
 
 export interface CredentialShapeOptions {
   version: VCVersion;
   schemaLedgerId?: string;
-  existingContext?: string | string[];
+  existingContext?: CredentialContextValue;
   issuer?: string | { id: string };
   credentialSubject?: CredentialSubject;
   issuanceDate?: string;
@@ -49,33 +47,92 @@ export interface CredentialShapeOptions {
   [key: string]: unknown;
 }
 
+function toContextArray(context: CredentialContextValue | undefined): (string | Record<string, unknown>)[] {
+  if (Array.isArray(context)) {
+    return context;
+  }
+  return context ? [context] : [];
+}
+
+function getCredentialSchemaId(credentialSchema: unknown): string | undefined {
+  if (!credentialSchema || 'object' !== typeof credentialSchema || Array.isArray(credentialSchema)) {
+    return undefined;
+  }
+
+  const { id } = credentialSchema as { id?: unknown };
+  return 'string' === typeof id ? id : undefined;
+}
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value);
+}
+
+function toDateOnly(value: string): string {
+  return value.split('T')[0];
+}
+
+function isPastOrToday(value: string, now: Date): boolean {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return false;
+  }
+  return parsed.getTime() <= now.getTime();
+}
+
+export class VCContext {
+  static getBaseContext(version: VCVersion): string {
+    if ('v2' === version) {
+      return VC_CONTEXT_V2;
+    }
+    return VC_CONTEXT_V1;
+  }
+
+  static isV2Context(context: CredentialContextValue | undefined): boolean {
+    return toContextArray(context).includes(VC_CONTEXT_V2);
+  }
+
+  static detectVersionFromContext(context: CredentialContextValue | undefined): VCVersion {
+    if (this.isV2Context(context)) {
+      return 'v2';
+    }
+    return 'v1.1';
+  }
+}
+
+/**
+ * Builds an ordered `@context` array for the requested credential version.
+ *
+ * - The version base context is always first.
+ * - The base context of the other version is dropped so a credential never mixes 1.1 and 2.0.
+ * - The schema URL/id is kept for every version so downstream schema resolution keeps working.
+ */
 export function buildCredentialContext(
-  existingContext: string | string[] | undefined,
+  existingContext: CredentialContextValue | undefined,
   version: VCVersion,
   schemaLedgerId?: string
 ): string[] {
   const baseContext = VCContext.getBaseContext(version);
-  let contextArray: string[] = [];
+  const conflictingContext = 'v2' === version ? VC_CONTEXT_V1 : VC_CONTEXT_V2;
 
-  if (Array.isArray(existingContext)) {
-    contextArray = [...existingContext];
-  } else if (existingContext) {
-    contextArray = [existingContext];
-  }
+  const contextArray = toContextArray(existingContext).filter(
+    (context): context is string => 'string' === typeof context && context !== baseContext && context !== conflictingContext
+  );
 
-  if (!contextArray.includes(baseContext)) {
-    contextArray = [baseContext, ...contextArray.filter((c) => c !== baseContext)];
-  }
+  const isUsableSchemaReference =
+    schemaLedgerId &&
+    schemaLedgerId !== baseContext &&
+    !schemaLedgerId.startsWith('https://www.w3.org/') &&
+    !contextArray.includes(schemaLedgerId);
 
-  if (('v1' === version || 'v1.1' === version) && schemaLedgerId && !contextArray.includes(schemaLedgerId)) {
-    if (schemaLedgerId !== baseContext && !schemaLedgerId.startsWith('https://www.w3.org/')) {
-      contextArray.push(schemaLedgerId);
-    }
-  }
-
-  return contextArray;
+  return isUsableSchemaReference ? [baseContext, ...contextArray, schemaLedgerId] : [baseContext, ...contextArray];
 }
 
+/**
+ * Maps a credential to the field names of the requested version.
+ *
+ * VC 2.0 uses `validFrom`/`validUntil` and no longer defines `issuanceDate`/`expirationDate`,
+ * so the fields of the other version are never emitted.
+ */
 export function mapCredentialForVersion(options: CredentialShapeOptions): Record<string, unknown> {
   const {
     version,
@@ -118,32 +175,126 @@ export function mapCredentialForVersion(options: CredentialShapeOptions): Record
   }
 
   if ('v2' === version) {
-    const validFrom = options.validFrom || options.issuanceDate;
-    credential.validFrom = validFrom;
+    const validFrom = options.validFrom ?? options.issuanceDate;
+    if (validFrom) {
+      credential.validFrom = validFrom;
+    }
 
-    const validUntil = options.validUntil || options.expirationDate;
+    const validUntil = options.validUntil ?? options.expirationDate;
     if (validUntil) {
       credential.validUntil = validUntil;
-      credential.expirationDate = validUntil;
-    }
-
-    if (validFrom) {
-      credential.issuanceDate = validFrom;
     }
   } else {
-    if (options.issuanceDate) {
-      credential.issuanceDate = options.issuanceDate;
+    const issuanceDate = options.issuanceDate ?? options.validFrom;
+    if (issuanceDate) {
+      credential.issuanceDate = issuanceDate;
     }
-    if (options.expirationDate) {
-      credential.expirationDate = options.expirationDate;
-    }
-    if (options.validFrom && !options.issuanceDate) {
-      credential.issuanceDate = options.validFrom;
-    }
-    if (options.validUntil && !options.expirationDate) {
-      credential.expirationDate = options.validUntil;
+
+    const expirationDate = options.expirationDate ?? options.validUntil;
+    if (expirationDate) {
+      credential.expirationDate = expirationDate;
     }
   }
 
   return credential;
+}
+
+/**
+ * Lists the reasons why a credential does not match the requested VC version.
+ * An empty list means the credential is consistent with the requested version.
+ */
+export function getCredentialVersionProblems(
+  credential: VersionedCredentialLike | undefined,
+  version: VCVersion
+): string[] {
+  if (!credential) {
+    return [];
+  }
+
+  const problems: string[] = [];
+  const contexts = toContextArray(credential['@context']);
+
+  if (!contexts.length) {
+    problems.push('@context is required');
+    return problems;
+  }
+
+  if ('v2' === version) {
+    if (!contexts.includes(VC_CONTEXT_V2)) {
+      problems.push(`@context must include ${VC_CONTEXT_V2} for VC 2.0`);
+    }
+    if (credential.issuanceDate) {
+      problems.push('issuanceDate is not part of VC 2.0, use validFrom instead');
+    }
+    if (credential.expirationDate) {
+      problems.push('expirationDate is not part of VC 2.0, use validUntil instead');
+    }
+  } else {
+    if (!contexts.includes(VC_CONTEXT_V1)) {
+      problems.push(`@context must include ${VC_CONTEXT_V1} for VC 1.1`);
+    }
+    if (!credential.issuanceDate) {
+      problems.push('issuanceDate is required for VC 1.1');
+    }
+  }
+
+  return problems;
+}
+
+/**
+ * Resolves the schema reference (schema URL or ledger schema id) from a credential.
+ *
+ * VC 2.0 credentials may declare the schema through `credentialSchema` or keep the schema URL in
+ * `@context`; relying on `@context[1]` breaks as soon as the base context is not at index 0.
+ */
+export function resolveSchemaReference(credential: VersionedCredentialLike | undefined): string | undefined {
+  if (!credential) {
+    return undefined;
+  }
+
+  const credentialSchemaId = getCredentialSchemaId(credential.credentialSchema);
+
+  if (credentialSchemaId && isHttpUrl(credentialSchemaId)) {
+    return credentialSchemaId;
+  }
+
+  const contextEntries = toContextArray(credential['@context']).filter(
+    (context): context is string => 'string' === typeof context && !context.startsWith('https://www.w3.org/')
+  );
+
+  return contextEntries.find(isHttpUrl) ?? contextEntries[0] ?? credentialSchemaId;
+}
+
+/**
+ * Returns a copy of the credential with the validity dates of the requested version.
+ *
+ * Past start dates are refreshed to "now" (the original behaviour for re-used offers), while
+ * future start dates are preserved so a credential that is not valid yet is not silently made
+ * valid today.
+ */
+export function withRefreshedValidityDates<T extends VersionedCredentialLike>(
+  credential: T,
+  version: VCVersion,
+  now: Date = new Date()
+): T {
+  const start = credential.validFrom ?? credential.issuanceDate;
+  const end = credential.validUntil ?? credential.expirationDate;
+
+  const refreshed: VersionedCredentialLike = { ...credential };
+  delete refreshed.issuanceDate;
+  delete refreshed.expirationDate;
+  delete refreshed.validFrom;
+  delete refreshed.validUntil;
+
+  if (start) {
+    const shouldRefresh = isPastOrToday(start, now) && toDateOnly(start) !== toDateOnly(now.toISOString());
+    const value = shouldRefresh ? now.toISOString() : start;
+    refreshed['v2' === version ? 'validFrom' : 'issuanceDate'] = value;
+  }
+
+  if (end) {
+    refreshed['v2' === version ? 'validUntil' : 'expirationDate'] = end;
+  }
+
+  return refreshed as T;
 }

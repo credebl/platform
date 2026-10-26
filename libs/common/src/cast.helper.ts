@@ -10,8 +10,8 @@ import {
   ledgerLessDIDType,
   schemaRequestType
 } from '../../enum/src/enum';
-import { IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
-import { DEFAULT_VC_VERSION, mapCredentialForVersion, VCVersion } from './vc';
+import { ICredential, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import { DEFAULT_VC_VERSION, mapCredentialForVersion, VCVersion, withRefreshedValidityDates } from './vc';
 
 import {
   ValidationArguments,
@@ -340,8 +340,12 @@ export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
-export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential, prettyVc: IPrettyVc) => {
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type */
+export const createOobJsonldIssuancePayload = (
+  JsonldCredentialDetails: IJsonldCredential,
+  prettyVc: IPrettyVc,
+  version: VCVersion = DEFAULT_VC_VERSION
+) => {
   const { credentialData, orgDid, orgId, schemaLedgerId, schemaName, isReuseConnection } = JsonldCredentialDetails;
   const credentialSubject = {};
 
@@ -359,7 +363,7 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
         emailId: `${credentialData.email_identifier}`,
         credential: {
           ...mapCredentialForVersion({
-            version: DEFAULT_VC_VERSION as VCVersion,
+            version,
             schemaLedgerId,
             issuer: { id: `${orgDid}` },
             credentialSubject,
@@ -378,9 +382,11 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
     protocolVersion: 'v2',
     credentialType: 'jsonld',
     orgId,
-    isReuseConnection
+    isReuseConnection,
+    version
   };
 };
+/* eslint-enable @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type */
 
 @ValidatorConstraint({ name: 'isHostPortOrDomain', async: false })
 export class IsHostPortOrDomainConstraint implements ValidatorConstraintInterface {
@@ -426,24 +432,16 @@ export function checkDidLedgerAndNetwork(schemaType: string, did: string): boole
   return false;
 }
 
-export function validateAndUpdateIssuanceDates(data: any[]): any[] {
-  const currentDate = new Date().toISOString().split('T')[0];
-
+export function validateAndUpdateIssuanceDates<T extends { credential?: ICredential }>(
+  data: T[],
+  version: VCVersion = DEFAULT_VC_VERSION
+): T[] {
   return data.map((item) => {
-    const cred = item.credential;
-    if (!cred) return item;
-    const startDate = cred.validFrom || cred.issuanceDate;
-    if (startDate) {
-      const startDateOnly = startDate.split('T')[0];
-      if (startDateOnly !== currentDate) {
-        const newDate = new Date().toISOString();
-        if (cred.validFrom) {
-          cred.validFrom = newDate;
-        }
-        cred.issuanceDate = newDate;
-      }
+    if (!item.credential) {
+      return item;
     }
-    return item;
+
+    return { ...item, credential: withRefreshedValidityDates(item.credential, version) };
   });
 }
 

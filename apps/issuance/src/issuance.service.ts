@@ -93,6 +93,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
 import { redisStore } from 'cache-manager-ioredis-yet';
 import { EmailService } from '@credebl/common/email.service';
+import { DEFAULT_VC_VERSION, resolveSchemaReference, VCVersion } from '@credebl/common/vc';
 
 @Injectable()
 export class IssuanceService {
@@ -152,7 +153,9 @@ export class IssuanceService {
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
     try {
-      const { orgId, credentialDefinitionId, comment, credentialData, isValidateSchema } = payload || {};
+      const { orgId, credentialDefinitionId, comment, isValidateSchema } = payload || {};
+      const version: VCVersion = payload.version ?? DEFAULT_VC_VERSION;
+      let credentialData = payload.credentialData ?? [];
 
       if (payload.credentialType === IssueCredentialType.INDY) {
         const schemaResponse: SchemaDetails =
@@ -193,7 +196,7 @@ export class IssuanceService {
       const url = getAgentUrl(agentEndPoint, CommonConstants.CREATE_OFFER);
 
       if (payload.credentialType === IssueCredentialType.JSONLD) {
-        await validateAndUpdateIssuanceDates(credentialData);
+        credentialData = validateAndUpdateIssuanceDates(credentialData, version);
       }
 
       const issuancePromises = credentialData.map(async (credentials) => {
@@ -215,10 +218,7 @@ export class IssuanceService {
             comment
           };
         } else if (payload.credentialType === IssueCredentialType.JSONLD) {
-          const schemaIds = credentialData?.map((item) => {
-            const context: string[] = item?.credential?.['@context'];
-            return Array.isArray(context) && 1 < context.length ? context[1] : undefined;
-          });
+          const schemaIds = credentialData?.map((item) => resolveSchemaReference(item?.credential));
 
           const schemaDetails = await this._getSchemaDetails(schemaIds);
 
@@ -247,7 +247,7 @@ export class IssuanceService {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { id, ...filteredIssuanceAttributes } = payloadAttributes;
 
-          const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
+          const schemaServerUrl = resolveSchemaReference(issueData?.credentialFormats?.jsonld?.credential);
 
           const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
 
@@ -412,7 +412,7 @@ export class IssuanceService {
       }
 
       if (credentialType === IssueCredentialType.JSONLD) {
-        const context = credential?.['@context'][1];
+        const context = resolveSchemaReference(credential);
 
         const schemaDetails = await this.issuanceRepository.getSchemaDetails(String(context));
 
@@ -448,7 +448,7 @@ export class IssuanceService {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, ...filteredIssuanceAttributes } = payloadAttributes;
 
-        const schemaServerUrl = issueData?.credentialFormats?.jsonld?.credential?.['@context']?.[1];
+        const schemaServerUrl = resolveSchemaReference(issueData?.credentialFormats?.jsonld?.credential);
 
         const schemaUrlAttributes = await this.getW3CSchemaAttributes(schemaServerUrl);
 
@@ -756,7 +756,6 @@ export class IssuanceService {
   ): Promise<boolean> {
     try {
       const {
-        credentialOffer,
         comment,
         credentialDefinitionId,
         orgId,
@@ -765,21 +764,20 @@ export class IssuanceService {
         emailId,
         credentialType,
         isReuseConnection,
-        isValidateSchema
+        isValidateSchema,
+        version
       } = outOfBandCredential;
+      let { credentialOffer } = outOfBandCredential;
 
       this.logger.debug('Request reaced isuance microservice service');
       const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
 
       this.logger.debug('The credential to be issued is of type:', credentialType);
       if (IssueCredentialType.JSONLD === credentialType) {
-        await validateAndUpdateIssuanceDates(credentialOffer);
+        credentialOffer = validateAndUpdateIssuanceDates(credentialOffer ?? [], version ?? DEFAULT_VC_VERSION);
 
         this.logger.debug('Validated/Updated Issuance dates credential offer');
-        const schemaIds = credentialOffer?.map((item) => {
-          const context: string[] = item?.credential?.['@context'];
-          return Array.isArray(context) && 1 < context.length ? context[1] : undefined;
-        });
+        const schemaIds = credentialOffer?.map((item) => resolveSchemaReference(item?.credential));
 
         this.logger.debug('Issuing credential with schemaIds', schemaIds);
         const schemaDetails = await this._getSchemaDetails(schemaIds);

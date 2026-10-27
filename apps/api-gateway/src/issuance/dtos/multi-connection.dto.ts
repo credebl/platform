@@ -1,9 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, Validate, ValidateNested } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { AutoAccept } from '@credebl/enum/enum';
 import { trim } from '@credebl/common/cast.helper';
 import { Attribute, Credential, CredentialsIssuanceDto, JsonLdCredentialDetailOptions } from './issuance.dto';
+import { IsCredentialsVersionConsistentConstraint } from '../utils/version.validator';
 
 class ConnectionAttributes {
     @ApiProperty({ example: 'string' })
@@ -92,6 +93,7 @@ export class IssueCredentialDto extends CredentialsIssuanceDto {
     @ArrayMaxSize(Number(process.env.OOB_BATCH_SIZE), { message: `Limit reached (${process.env.OOB_BATCH_SIZE} connections max).` })
     @IsNotEmpty({ message: 'credentialData is required' })
     @Type(() => ConnectionAttributes)
+    @Validate(IsCredentialsVersionConsistentConstraint)
     credentialData: ConnectionAttributes[];
 
     @ApiPropertyOptional()

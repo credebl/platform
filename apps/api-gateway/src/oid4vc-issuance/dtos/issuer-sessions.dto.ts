@@ -23,6 +23,7 @@ import {
   IsBoolean
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { VCVersion, SUPPORTED_VC_VERSIONS } from '@credebl/common/vc';
 import { Type } from 'class-transformer';
 import { dateToSeconds } from '@credebl/common/date-only';
 
@@ -166,6 +167,16 @@ export class CredentialRequestDto {
   })
   @IsOptional()
   validityInfo?: ValidityInfo;
+
+  @ApiPropertyOptional({
+    enum: SUPPORTED_VC_VERSIONS,
+    description:
+      'Optional guard for jwt_vc_json-ld/ldp_vc templates: the credential version always comes from the template (vcVersion), and the request is rejected when this value does not match it. v1 and v1.1 are treated as the same version.'
+  })
+  @IsOptional()
+  @IsIn(SUPPORTED_VC_VERSIONS, { message: 'VC version must be one of v1, v1.1, v2' })
+  version?: VCVersion;
+
 }
 
 export class CreateOidcCredentialOfferDto {

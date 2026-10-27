@@ -96,14 +96,25 @@ export class W3cCredentialDto {
   @IsString()
   issuer: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'Required when validFrom is not provided' })
+  @ValidateIf((credential: W3cCredentialDto) => !credential.validFrom)
   @IsISO8601()
-  issuanceDate: string;
+  issuanceDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsISO8601()
+  validFrom?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsISO8601()
   expirationDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsISO8601()
+  validUntil?: string;
 
   @ApiProperty({ type: W3cCredentialSubjectDto })
   @ValidateNested()

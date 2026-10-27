@@ -696,6 +696,9 @@ export const ResponseMessages = {
       issuerDisplayNotFound: 'Issuer display not found.',
       issuerDetailsNotFound: 'Issuer details not found.',
       templateNameAlreadyExist: 'Template name already exists for this issuer.',
+      vcVersionNotSupportedForFormat: 'vcVersion is only supported for "jwt_vc_json-ld" and "ldp_vc" templates.',
+      vcdm2NotSupportedForLdpVc:
+        'VC Data Model 2.0 (vcVersion "v2") is not supported for "ldp_vc" templates yet. Use "jwt_vc_json-ld" instead.',
       deleteTemplate: 'Error while deleting template.',
       failedDeleteTemplate: '[createTemplate] compensating delete FAILED for templateId='
     }

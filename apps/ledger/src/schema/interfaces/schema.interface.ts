@@ -1,6 +1,7 @@
 import { JSONSchemaType, SchemaTypeEnum } from '@credebl/enum/enum';
 import { UserRoleOrgPermsDto } from '../dtos/user-role-org-perms.dto';
 import { IW3CAttributeValue } from '@credebl/common/interfaces/interface';
+import { VCVersion } from '@credebl/common/vc';
 
 export interface IUserRequestInterface {
   id: string;
@@ -92,6 +93,7 @@ export interface ICreateW3CSchema {
   schemaName: string;
   description: string;
   schemaType: JSONSchemaType;
+  vcVersion?: VCVersion;
 }
 export interface IGenericSchema {
   alias: string;

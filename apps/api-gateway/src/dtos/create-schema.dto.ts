@@ -16,6 +16,7 @@ import {
 } from 'class-validator';
 import { IndySchemaDataType, JSONSchemaType, SchemaTypeEnum, W3CSchemaDataType } from '@credebl/enum/enum';
 import { IsNotSQLInjection, ValidateNestedStructureFields, trim } from '@credebl/common/cast.helper';
+import { DEFAULT_VC_VERSION, SUPPORTED_VC_VERSIONS, VCVersion } from '@credebl/common/vc';
 import { Transform, Type, plainToClass } from 'class-transformer';
 
 export class W3CAttributeValue {
@@ -311,6 +312,11 @@ export class CreateW3CSchemaDto {
   @IsEnum(JSONSchemaType, { message: 'Schema type must be a valid schema type' })
   @IsNotEmpty({ message: 'Type is required' })
   schemaType: JSONSchemaType;
+
+  @ApiPropertyOptional({ enum: SUPPORTED_VC_VERSIONS, default: DEFAULT_VC_VERSION })
+  @IsOptional()
+  @IsEnum(SUPPORTED_VC_VERSIONS, { message: 'vcVersion must be one of v1, v1.1, v2' })
+  vcVersion?: VCVersion = DEFAULT_VC_VERSION;
 }
 
 @ApiExtraModels(CreateSchemaDto, CreateW3CSchemaDto)

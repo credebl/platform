@@ -28,6 +28,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
 import { user } from '@prisma/client';
 import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
+import { DEFAULT_VC_VERSION } from '@credebl/common/vc';
 @Injectable()
 export class IssuanceService extends BaseService {
   constructor(
@@ -50,6 +51,7 @@ export class IssuanceService extends BaseService {
       autoAcceptCredential: issueCredentialDto.autoAcceptCredential,
       credentialType: issueCredentialDto.credentialType,
       isValidateSchema: issueCredentialDto.isValidateSchema,
+      version: issueCredentialDto.version ?? DEFAULT_VC_VERSION,
       user
     };
 
@@ -111,7 +113,8 @@ export class IssuanceService extends BaseService {
         credentialType,
         isShortenUrl,
         reuseConnection,
-        isValidateSchema
+        isValidateSchema,
+        version: issueCredentialDto.version ?? DEFAULT_VC_VERSION
       };
     }
 

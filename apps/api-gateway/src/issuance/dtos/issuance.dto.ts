@@ -9,6 +9,7 @@ import {
   IsDefined,
   IsEmail,
   IsEnum,
+  IsISO8601,
   IsNotEmpty,
   IsObject,
   IsOptional,
@@ -16,10 +17,12 @@ import {
   IsUUID,
   IsUrl,
   MaxLength,
+  Validate,
   ValidateNested
 } from 'class-validator';
 import { AutoAccept, SchemaType, SortValue } from '@credebl/enum/enum';
 import { IsCredentialJsonLdContext, SingleOrArray } from '../utils/helper';
+import { IsCredentialsVersionConsistentConstraint } from '../utils/version.validator';
 import {
   IssueCredentialType,
   JsonLdCredentialDetailCredentialStatusOptions,
@@ -30,6 +33,7 @@ import { Transform, Type } from 'class-transformer';
 
 import { SortFields } from 'apps/connection/src/enum/connection.enum';
 import { trim } from '@credebl/common/cast.helper';
+import { VCVersion, SUPPORTED_VC_VERSIONS, DEFAULT_VC_VERSION } from '@credebl/common/vc';
 
 class Issuer {
   @ApiProperty()
@@ -91,27 +95,43 @@ export class Credential {
   @Type(() => Issuer)
   issuer: Issuer;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'VC 1.1 issuance date; required when the requested version is v1/v1.1' })
   @IsString({ message: 'issuance date should be string' })
-  @IsNotEmpty({ message: 'issuance date is required' })
+  @IsISO8601({}, { message: 'issuance date must be a valid ISO 8601 date' })
   @Type(() => String)
-  issuanceDate: string;
+  @IsOptional()
+  issuanceDate?: string;
+
+  @ApiPropertyOptional({ description: 'VC 2.0 validity start date' })
+  @IsString({ message: 'validFrom should be string' })
+  @IsISO8601({}, { message: 'validFrom must be a valid ISO 8601 date' })
+  @Type(() => String)
+  @IsOptional()
+  validFrom?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @Type(() => PrettyVc)
   prettyVc?: PrettyVc;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: 'VC 1.1 expiration date; omit when using validUntil' })
   @IsString({ message: 'expiration date should be string' })
-  @IsNotEmpty({ message: 'expiration date  is required' })
+  @IsISO8601({}, { message: 'expiration date must be a valid ISO 8601 date' })
   @Type(() => String)
   @IsOptional()
   expirationDate?: string;
 
+  @ApiPropertyOptional({ description: 'VC 2.0 validity end date' })
+  @IsString({ message: 'validUntil should be string' })
+  @IsISO8601({}, { message: 'validUntil must be a valid ISO 8601 date' })
+  @Type(() => String)
+  @IsOptional()
+  validUntil?: string;
+
   @ApiProperty()
   @IsNotEmpty({ message: ' credential subject required' })
   credentialSubject: SingleOrArray<JsonObject>;
+
   [key: string]: unknown;
 }
 
@@ -249,6 +269,11 @@ export class CredentialsIssuanceDto {
   @IsBoolean({ message: 'reuseConnection must be a boolean' })
   reuseConnection?: boolean;
 
+  @ApiPropertyOptional({ enum: SUPPORTED_VC_VERSIONS, default: DEFAULT_VC_VERSION })
+  @IsOptional()
+  @IsEnum(SUPPORTED_VC_VERSIONS, { message: 'VC version must be one of v1, v1.1, v2' })
+  version?: VCVersion = DEFAULT_VC_VERSION;
+
   orgId: string;
 
   isValidateSchema?: boolean;
@@ -285,6 +310,7 @@ export class OOBIssueCredentialDto extends CredentialsIssuanceDto {
   @Type(() => Credential)
   @IsOptional()
   @ValidateNested({ each: true })
+  @Validate(IsCredentialsVersionConsistentConstraint)
   credential?: Credential;
 
   @ApiProperty()
@@ -452,7 +478,13 @@ export class OOBCredentialDtoWithEmail {
   })
   @ValidateNested({ each: true })
   @Type(() => CredentialOffer)
+  @Validate(IsCredentialsVersionConsistentConstraint)
   credentialOffer: CredentialOffer[];
+
+  @ApiPropertyOptional({ enum: SUPPORTED_VC_VERSIONS, default: DEFAULT_VC_VERSION })
+  @IsOptional()
+  @IsEnum(SUPPORTED_VC_VERSIONS, { message: 'VC version must be one of v1, v1.1, v2' })
+  version?: VCVersion = DEFAULT_VC_VERSION;
 
   @ApiProperty({ example: 'string' })
   @IsNotEmpty({ message: 'Please provide valid credential definition id' })

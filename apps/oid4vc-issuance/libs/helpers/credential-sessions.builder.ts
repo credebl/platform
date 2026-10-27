@@ -16,6 +16,7 @@ import { BadRequestException, NotFoundException, UnprocessableEntityException } 
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { dateToSeconds } from '@credebl/common/date-only';
+import { buildCredentialContext, getTemplateVcVersion, isSameDataModel, VCVersion } from '@credebl/common/vc';
 
 /* ============================================================================
    Domain Types
@@ -49,6 +50,7 @@ export interface CredentialRequestDtoLike {
   templateId: string;
   payload: Record<string, unknown>;
   validityInfo?: validityInfo;
+  version?: VCVersion;
   // disclosureFrame?: DisclosureFrame;
 }
 
@@ -556,27 +558,18 @@ function buildJwtVcJsonLdCredential(
     typeName = templateRecord.name.replace(/\s+/g, '');
   }
 
-  const templateContext = (templateRecord.attributes as any)?.context;
-  const context = Array.isArray(templateContext) ? [...templateContext] : ['https://www.w3.org/2018/credentials/v1'];
-  const requiredContextUrl = 'https://www.w3.org/2018/credentials/v1';
-  const normalizeUrlForComparison = (value: unknown): string | null => {
-    if ('string' !== typeof value) {
-      return null;
-    }
-    try {
-      return new URL(value).toString();
-    } catch {
-      return null;
-    }
-  };
-  const normalizedRequiredContext = normalizeUrlForComparison(requiredContextUrl);
-  const hasRequiredContext = context.some(
-    (ctx) => null !== normalizedRequiredContext && normalizeUrlForComparison(ctx) === normalizedRequiredContext
-  );
+  const jsonLdTemplate = templateRecord.attributes as SdJwtTemplate | undefined;
+  const templateContext = jsonLdTemplate?.context;
+  const version: VCVersion = getTemplateVcVersion(jsonLdTemplate);
 
-  if (!hasRequiredContext) {
-    context.unshift(requiredContextUrl);
+  // `version` is an optional guard; v1 and v1.1 produce the same credential shape
+  if (credentialRequest.version && !isSameDataModel(credentialRequest.version, version)) {
+    throw new UnprocessableEntityException(
+      `Credential version "${credentialRequest.version}" does not match the version "${version}" configured in template ${templateRecord.id}`
+    );
   }
+
+  const context = buildCredentialContext(templateContext, version);
 
   const wrappedPayload: Record<string, any> = {
     '@context': context,
@@ -592,10 +585,17 @@ function buildJwtVcJsonLdCredential(
   }
 
   if (credentialRequest.validityInfo) {
-    wrappedPayload.issuanceDate = new Date(credentialRequest.validityInfo.validFrom).toISOString();
-    wrappedPayload.expirationDate = new Date(credentialRequest.validityInfo.validUntil).toISOString();
+    const validFrom = new Date(credentialRequest.validityInfo.validFrom).toISOString();
+    const validUntil = new Date(credentialRequest.validityInfo.validUntil).toISOString();
+    if ('v2' === version) {
+      wrappedPayload.validFrom = validFrom;
+      wrappedPayload.validUntil = validUntil;
+    } else {
+      wrappedPayload.issuanceDate = validFrom;
+      wrappedPayload.expirationDate = validUntil;
+    }
   } else {
-    wrappedPayload.issuanceDate = new Date().toISOString();
+    wrappedPayload['v2' === version ? 'validFrom' : 'issuanceDate'] = new Date().toISOString();
   }
 
   return {

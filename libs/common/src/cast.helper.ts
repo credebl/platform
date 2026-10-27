@@ -10,7 +10,9 @@ import {
   ledgerLessDIDType,
   schemaRequestType
 } from '../../enum/src/enum';
-import { ICredentialData, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import { ICredential, IJsonldCredential, IPrettyVc } from './interfaces/issuance.interface';
+import { DEFAULT_VC_VERSION, mapCredentialForVersion, VCVersion, withRefreshedValidityDates } from './vc';
+
 import {
   ValidationArguments,
   ValidationOptions,
@@ -338,8 +340,12 @@ export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type
-export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldCredential, prettyVc: IPrettyVc) => {
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type */
+export const createOobJsonldIssuancePayload = (
+  JsonldCredentialDetails: IJsonldCredential,
+  prettyVc: IPrettyVc,
+  version: VCVersion = DEFAULT_VC_VERSION
+) => {
   const { credentialData, orgDid, orgId, schemaLedgerId, schemaName, isReuseConnection } = JsonldCredentialDetails;
   const credentialSubject = {};
 
@@ -356,13 +362,14 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
       {
         emailId: `${credentialData.email_identifier}`,
         credential: {
-          '@context': ['https://www.w3.org/2018/credentials/v1', `${schemaLedgerId}`],
-          type: ['VerifiableCredential', `${schemaName}`],
-          issuer: {
-            id: `${orgDid}`
-          },
-          issuanceDate: new Date().toISOString(),
-          credentialSubject,
+          ...mapCredentialForVersion({
+            version,
+            schemaLedgerId,
+            issuer: { id: `${orgDid}` },
+            credentialSubject,
+            type: ['VerifiableCredential', `${schemaName}`],
+            issuanceDate: new Date().toISOString()
+          }),
           prettyVc
         },
         options: {
@@ -375,9 +382,11 @@ export const createOobJsonldIssuancePayload = (JsonldCredentialDetails: IJsonldC
     protocolVersion: 'v2',
     credentialType: 'jsonld',
     orgId,
-    isReuseConnection
+    isReuseConnection,
+    version
   };
 };
+/* eslint-enable @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/explicit-function-return-type */
 
 @ValidatorConstraint({ name: 'isHostPortOrDomain', async: false })
 export class IsHostPortOrDomainConstraint implements ValidatorConstraintInterface {
@@ -423,22 +432,16 @@ export function checkDidLedgerAndNetwork(schemaType: string, did: string): boole
   return false;
 }
 
-export function validateAndUpdateIssuanceDates(data: ICredentialData[]): ICredentialData[] {
-  // Get current date in 'YYYY-MM-DD' format
-  // eslint-disable-next-line prefer-destructuring
-  const currentDate = new Date().toISOString().split('T')[0];
-
+export function validateAndUpdateIssuanceDates<T extends { credential?: ICredential }>(
+  data: T[],
+  version: VCVersion = DEFAULT_VC_VERSION
+): T[] {
   return data.map((item) => {
-    const { issuanceDate } = item.credential;
-    // eslint-disable-next-line prefer-destructuring
-    const issuanceDateOnly = issuanceDate.split('T')[0];
-
-    // If the date does not match the current date, then update it
-    if (issuanceDateOnly !== currentDate) {
-      item.credential.issuanceDate = new Date().toISOString();
+    if (!item.credential) {
+      return item;
     }
 
-    return item;
+    return { ...item, credential: withRefreshedValidityDates(item.credential, version) };
   });
 }
 

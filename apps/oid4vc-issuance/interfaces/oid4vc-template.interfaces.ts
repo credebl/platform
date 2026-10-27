@@ -1,9 +1,11 @@
 import { Prisma, SignerOption } from '@prisma/client';
 import { AttributeType, CredentialFormat } from '@credebl/enum/enum';
+import { VCVersion } from '@credebl/common/vc';
 export interface SdJwtTemplate {
   vct: string;
   schemaUrl?: string;
   context?: string[];
+  vcVersion?: VCVersion;
   attributes: CredentialAttribute[];
 }
 

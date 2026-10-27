@@ -210,7 +210,7 @@ export class CloudWalletService {
   }
 
   /**
-   * Create clous wallet
+   * Create cloud wallet
    * @param cloudWalletDetails
    * @returns cloud wallet details
    */

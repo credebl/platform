@@ -93,14 +93,22 @@ export interface IIssuedCredential {
       [key: string]: string;
     }
     
-    interface ICredential {
+    export interface ICredential {
       "@context": string[];
       type: string[];
       issuer?: {
         id: string;
-      };
+        [key: string]: unknown;
+      } | string;
       issuanceDate?: string;
-      credentialSubject?: ICredentialSubject;
+      validFrom?: string;
+      expirationDate?: string;
+      validUntil?: string;
+      credentialSubject?: ICredentialSubject | ICredentialSubject[];
+      credentialStatus?: unknown;
+      credentialSchema?: unknown;
+      id?: string;
+      [key: string]: unknown;
     }
     
     interface IOptions {

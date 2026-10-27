@@ -6,6 +6,15 @@ This document outlines the changes made to make the CREDEBL SSI platform conform
 
 Credential envelopes are strict: a credential issued as `v2` contains only VCDM 2.0 fields (`validFrom`/`validUntil`, v2 context) and a credential issued as `v1`/`v1.1` contains only VCDM 1.1 fields (`issuanceDate`/`expirationDate`, v1 context). The requested version is validated at the API boundary and is never copied into the credential JSON.
 
+**End-to-end support for `v2` depends on the issuance channel.** The platform shapes VCDM 2.0 credentials for every JSON-LD path, but the agent-controller (Credo 0.7.0) can only sign them on one path today:
+
+| Channel | `v1` / `v1.1` | `v2` |
+|---|---|---|
+| OID4VC `jwt_vc_json-ld` (template `vcVersion: "v2"`) | ✅ VC-JWT (`typ: JWT`, `vc` claim) | ✅ VC-JOSE-COSE (`typ: vc+jwt`), requires agent-controller with the `vc+jwt` signing support |
+| OID4VC `ldp_vc` | ✅ | ❌ rejected by the platform with `400` |
+| DIDComm JSON-LD create-offer / out-of-band / bulk e-mail | ✅ | ❌ the offer is sent, but the agent fails when the holder's request arrives (Credo's JSON-LD issuer only accepts the v1 credential model) |
+| Agent `credential/sign` and `credential/verify` (JSON-LD) | ✅ | ❌ Credo's JSON-LD credential model is v1 only |
+
 ## Table of Contents
 
 1. [Objectives](#objectives)
@@ -44,10 +53,10 @@ Credential envelopes are strict: a credential issued as `v2` contains only VCDM 
 ### Design Decisions
 1. **Default to v1.1**: Preserves all existing API contracts and behavior; no breaking changes for existing consumers.
 2. **Envelope-level versioning**: For JSON-LD create-offer, out-of-band and bulk e-mail flows, `version` is a property of the request envelope (`CredentialsIssuanceDto`, `OOBCredentialDtoWithEmail`), not of each credential. One request issues credentials of exactly one version.
-3. **Template-driven versioning for OID4VC**: The version of an OID4VC credential is derived from the template context. A request may pass `version` as a guard; if it disagrees with the template, the request is rejected with `422 Unprocessable Entity`.
+3. **Template-driven versioning for OID4VC**: The version of an OID4VC credential comes from the template's `vcVersion` (`v1.1` by default; templates created before `vcVersion` existed resolve it from their context). A credential offer request may pass `version` as an optional guard with no default; if it disagrees with the template, the request is rejected with `422 Unprocessable Entity` (`v1` and `v1.1` are treated as the same version).
 4. **Input validation**: Submitted credentials are validated against the requested version at the API boundary (base `@context` and version-specific date fields). Conflicting inputs are rejected, not translated.
 5. **Version-pure date emission**: A `v2` credential never contains `issuanceDate`/`expirationDate` and a v1/v1.1 credential never contains `validFrom`/`validUntil`.
-6. **Agent-controller already v2-aware**: The external agent-controller (credo-ts) detects v2 from context or presence of `validFrom`/`validUntil` and normalizes accordingly.
+6. **Agent-controller support is partial**: The external agent-controller (Credo 0.7.0) can only sign VCDM 2.0 credentials as `vc+jwt` over OID4VC `jwt_vc_json-ld`. VCDM 2.0 with JSON-LD proofs (`ldp_vc`, DIDComm JSON-LD) is not supported by Credo 0.7.0; see the support table above.
 
 ## Changes Implemented
 
@@ -98,13 +107,22 @@ Duplicate VC constant files and duplicate `VCVersion` definitions in the enum li
 - `W3cCredentialDto` includes `validFrom` and `validUntil` (optional); `issuanceDate` is required only when `validFrom` is absent
 
 **OID4VC Issuance DTOs:** `apps/api-gateway/src/oid4vc-issuance/dtos/issuer-sessions.dto.ts`
-- `CredentialRequestDto` accepts an optional `version` guard, validated against the template context in the issuance app
+- `CredentialRequestDto` accepts an optional `version` guard with no default, validated against the template version in the issuance app
+
+**OID4VC Template DTOs:** `apps/api-gateway/src/oid4vc-issuance/dtos/oid4vc-issuer-template.dto.ts`
+- `SdJwtTemplateDto.vcVersion` (optional, `v1` | `v1.1` | `v2`) selects the VC data model of `jwt_vc_json-ld` and `ldp_vc` templates
 
 ### 5. OID4VC Issuance
 
+**Template Version:** `apps/oid4vc-issuance/libs/helpers/template-version.ts`
+- `applyTemplateVcVersion()` stores `vcVersion` on JSON-LD templates and sets the matching `context` (`[base context, schemaUrl]`, or only the base context when there is no `schemaUrl`)
+- New templates default to `v1.1`; an update without `vcVersion` keeps the stored version
+- `v2` is rejected with `400 Bad Request` for `ldp_vc` templates (also when an existing `v2` template is switched to `ldp_vc`), and `vcVersion` is rejected for `dc+sd-jwt` and `mso_mdoc` templates
+- `getTemplateVcVersion()` (`libs/common/src/vc/vc.ts`) resolves the version of stored templates: `vcVersion`, else the version implied by the context, else `v1.1`
+
 **Credential Sessions Builder:** `apps/oid4vc-issuance/libs/helpers/credential-sessions.builder.ts`
-- Derives the credential version from the template context (`v2` when the context contains the v2 URL, otherwise `v1.1`)
-- Rejects a request whose `version` disagrees with the template with `422 Unprocessable Entity`
+- Derives the credential version from the template with `getTemplateVcVersion()`
+- Rejects a request whose `version` disagrees with the template with `422 Unprocessable Entity` (`v1` and `v1.1` match each other)
 - Emits only version-appropriate context and date fields: `validFrom`/`validUntil` for v2, `issuanceDate`/`expirationDate` for v1/v1.1
 - `nbf`/`exp` are unaffected
 
@@ -139,7 +157,7 @@ Duplicate VC constant files and duplicate `VCVersion` definitions in the enum li
 | 4 | Implement version-aware credential construction | ✅ Completed |
 | 5 | Versioned W3C schema generation | ✅ Completed |
 | 6 | Update OID4VC/metadata to honor template version | ✅ Completed |
-| 7 | Agent-controller boundary compatibility (already v2-aware) | ✅ Verified |
+| 7 | Agent-controller boundary compatibility | ⚠️ Partial: OID4VC `jwt_vc_json-ld` only (`vc+jwt`); JSON-LD proofs (`ldp_vc`, DIDComm) pending Credo support |
 | 8 | Verification tolerance (lenient field handling) | ✅ Implemented |
 | 9 | Rollout with v1.1 as default; enable v2 on demand | Ready |
 
@@ -193,40 +211,47 @@ Duplicate VC constant files and duplicate `VCVersion` definitions in the enum li
 ### 5. OID4VC Issuance App
 - **Purpose**: OpenID4VCI flows
 - **Key files**: credential-sessions.builder.ts, issuer.metadata.ts
-- **Changes**: Template context is the source of truth; optional request version guard; version-pure credential payloads and metadata
+- **Changes**: Template `vcVersion` is the source of truth (context for legacy templates); optional request version guard; version-pure credential payloads and metadata; `v2` limited to `jwt_vc_json-ld`
 
 ### 6. Agent-Controller (External - credo-ts)
-- **Location**: `../agent-controller/src/utils/oid4vc-agent.ts`
-- **Status**: Already v2-aware (pre-existing)
-- **Behavior**: Detects v2 from context containing v2 URL or presence of `validFrom`/`validUntil`. Maps fields appropriately for W3cV2Credential class. Sets compatibility fields (`issuanceDate=validFrom`, `expirationDate=validUntil`) when needed.
+- **Location**: `../agent-controller/src/utils/oid4vc-agent.ts`, `../agent-controller/patches/@credo-ts+openid4vc+0.7.0.patch`
+- **Status**: Partial VCDM 2.0 support; the OID4VC `vc+jwt` path requires the agent-controller change that adds `vc+jwt` signing (branch `feat/support-vcdm2.0`)
+- **OID4VC `jwt_vc_json-ld`**: Detects v2 from the v2 context or the presence of `validFrom`/`validUntil`, emits only `validFrom`/`validUntil` and signs as VC-JOSE-COSE (`typ: vc+jwt`, the credential is the JWT payload). The Credo holder accepts `vc+jwt` credentials for this format. VC 1.1 credentials keep the VC-JWT encoding.
+- **Not supported (Credo 0.7.0)**: VCDM 2.0 with JSON-LD proofs: OID4VC `ldp_vc`, DIDComm JSON-LD issuance, and the JSON-LD `credential/sign` and `credential/verify` endpoints all use Credo's v1-only JSON-LD credential model.
+- **Holder listing**: `GET /openid4vc/holder/w3c-vcs` only lists VC 1.1 records; received VC 2.0 credentials are stored as `W3cV2CredentialRecord`.
 
 ## Testing
 
 ### Test Results
-- **CI suite**: 265 passed, 2 skipped; no failures
-- **New unit tests**: 31 tests across the three specs below
-- **TypeScript**: `tsc` clean for `api-gateway`, `issuance`, `ledger` and `oid4vc-issuance`
+- **CI suite** (`jest.ci.config.js`): 275 passed, 2 skipped; no failures
+- **OID4VC issuance specs**: 16 passed (`apps/oid4vc-issuance/` is excluded by `jest.ci.config.js`; run them with `pnpm jest apps/oid4vc-issuance/libs/helpers`)
+- **TypeScript**: `tsc` clean for `api-gateway`, `issuance`, `ledger` and `oid4vc-issuance` (apart from existing errors in third-party typings under `node_modules`)
 
 ### New Tests
 1. **Schema Builder** (`apps/ledger/libs/helpers/w3c.schema.builder.spec.ts`): v1.1 vs v2 required fields and context prefix; validity properties present
 2. **Shape Helpers** (`libs/common/src/vc/vc.spec.ts`): context ordering, version-pure date mapping, version consistency checks, schema reference resolution, date refresh (past vs future), no input mutation
 3. **DTO Validation** (`apps/api-gateway/src/issuance/dtos/issuance.version.spec.ts`): v1.1/v2 happy paths, wrong-context rejection, `issuanceDate` rejection for v2, missing `issuanceDate` rejection for v1.1, OOB bulk DTO validation
+4. **OID4VC DTOs** (`apps/api-gateway/src/oid4vc-issuance/dtos/oid4vc.version.spec.ts`): no default credential `version`, template `vcVersion` optional and validated
+5. **Template Version** (`apps/oid4vc-issuance/libs/helpers/template-version.spec.ts`): v1.1 default, v2 context with and without `schemaUrl`, update fallback, `v2` rejected for `ldp_vc`, `vcVersion` rejected for SD-JWT
+6. **OID4VC Offer Builder** (`apps/oid4vc-issuance/libs/helpers/credential-sessions.builder.spec.ts`): v2 templates issue v2 payloads without a request `version`, v1.1 and legacy templates unchanged, version guard (`v1` ≡ `v1.1`)
 
 ### Recommended Tests (Future)
 1. **Cast Helper**: Verify out-of-band payloads per version
 2. **End-to-end issuance**: Happy path tests for both v1.1 and v2 against a running agent
-3. **OID4VC**: Template version guard and metadata context tests
+3. **OID4VC metadata**: `credential_definition.@context` per template version
 
 ## Known Considerations
 
 1. **Input Matching Requirement**: Inputs must match the requested version. No automatic translation of conflicting fields is performed; mismatches are rejected with a validation error.
 2. **Schema Versioning**: For v2, schemas should be created as new entries with `vcVersion: "v2"`. This is by design to avoid breaking validation of existing credentials.
 3. **Bulk CSV issuance**: The bulk CSV OOB path still builds credentials with the default `v1.1` version because the stored schema record does not retain the credential version. Versioned bulk issuance is a documented follow-up; use the single-credential/v2 flows for v2 issuance.
-4. **OID4VC source of truth**: The template `context` determines the version. Changing a template's context to v2 changes the version of credentials issued from it; existing issued credentials are unaffected.
+4. **OID4VC source of truth**: The template `vcVersion` determines the version. Updating a template's `vcVersion` changes the version of credentials issued from it; existing issued credentials are unaffected.
 5. **Leniency**: Verification remains lenient by design to support both historical and new credential formats during the transition period.
-6. **Agent Boundary**: The platform communicates with agent-controller via NATS; payloads include the credential structure which agent-controller interprets. Our version-aware shaping ensures the correct structure is passed.
-7. **OID4VC Flows**: Both JWT-VC and LDP-VC formats are supported; the implementation maintains compatibility across formats.
+6. **Agent Boundary**: The platform shapes version-pure credentials, but whether the agent can sign them depends on the channel (see the support table in the Executive Summary). DIDComm JSON-LD requests with `version: "v2"` pass platform validation and fail at the agent when the holder requests the credential.
+7. **OID4VC Flows**: `jwt_vc_json-ld` supports `v1`, `v1.1` and `v2`; `ldp_vc` supports `v1` and `v1.1` only.
+8. **Wallet interoperability**: OID4VCI 1.0 defines `jwt_vc_json(-ld)` with the VC 1.1 VC-JWT encoding and has no format identifier for VC-JOSE-COSE. VCDM 2.0 credentials are delivered as `vc+jwt` under `jwt_vc_json-ld`; wallets that do not check the JWT `typ` header may reject them. VC 1.1 issuance is unaffected.
+9. **`@context` vs `credentialSchema`**: The schema URL is placed in `@context` for both versions. Under VCDM 2.0 every `@context` entry must resolve to a JSON-LD context, and VCDM 2.0 recommends referencing a JSON Schema through `credentialSchema` instead; this is not changed yet.
 
 ## Conclusion
 
-The implementation achieves VCDM 2.0 conformance while maintaining full backward compatibility. All changes follow the approved plan: dual version support with v1.1 default, version-aware credential construction, updated schemas, validated DTOs, and version-pure OID4VC payloads. The system is ready for v2 credential issuance without disrupting existing workflows.
+The platform builds VCDM 2.0 conformant credentials on every JSON-LD path while keeping VCDM 1.1 as the default, so existing workflows are unchanged. End-to-end VCDM 2.0 issuance is available through OID4VC `jwt_vc_json-ld` templates with `vcVersion: "v2"` (signed as `vc+jwt`). VCDM 2.0 with JSON-LD proofs (OID4VC `ldp_vc`, DIDComm JSON-LD) remains blocked on agent support in Credo.

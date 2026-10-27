@@ -11,7 +11,7 @@ import {
   SdJwtTemplate
 } from 'apps/oid4vc-issuance/interfaces/oid4vc-template.interfaces';
 import { CredentialFormat } from '@credebl/enum/enum';
-import { buildCredentialContext, DEFAULT_VC_VERSION, VCContext } from '@credebl/common/vc';
+import { buildCredentialContext, getTemplateVcVersion } from '@credebl/common/vc';
 
 type AttributeDisplay = { name: string; locale: string };
 
@@ -288,10 +288,7 @@ export function buildMdocCredentialConfig(name: string, template: MdocTemplate):
 }
 
 function getTemplateCredentialContext(template: SdJwtTemplate): string[] {
-  const version = template.context?.length
-    ? VCContext.detectVersionFromContext(template.context)
-    : DEFAULT_VC_VERSION;
-  return buildCredentialContext(template.context, version);
+  return buildCredentialContext(template.context, getTemplateVcVersion(template));
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type

@@ -16,7 +16,7 @@ import { BadRequestException, NotFoundException, UnprocessableEntityException } 
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { dateToSeconds } from '@credebl/common/date-only';
-import { buildCredentialContext, DEFAULT_VC_VERSION, VCContext, VCVersion } from '@credebl/common/vc';
+import { buildCredentialContext, getTemplateVcVersion, isSameDataModel, VCVersion } from '@credebl/common/vc';
 
 /* ============================================================================
    Domain Types
@@ -558,12 +558,12 @@ function buildJwtVcJsonLdCredential(
     typeName = templateRecord.name.replace(/\s+/g, '');
   }
 
-  const templateContext = (templateRecord.attributes as SdJwtTemplate | undefined)?.context;
-  const version: VCVersion = templateContext?.length
-    ? VCContext.detectVersionFromContext(templateContext)
-    : DEFAULT_VC_VERSION;
+  const jsonLdTemplate = templateRecord.attributes as SdJwtTemplate | undefined;
+  const templateContext = jsonLdTemplate?.context;
+  const version: VCVersion = getTemplateVcVersion(jsonLdTemplate);
 
-  if (credentialRequest.version && credentialRequest.version !== version) {
+  // `version` is an optional guard; v1 and v1.1 produce the same credential shape
+  if (credentialRequest.version && !isSameDataModel(credentialRequest.version, version)) {
     throw new UnprocessableEntityException(
       `Credential version "${credentialRequest.version}" does not match the version "${version}" configured in template ${templateRecord.id}`
     );

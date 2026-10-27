@@ -12,12 +12,14 @@ import {
   IsEmpty,
   ArrayNotEmpty,
   IsDefined,
-  NotEquals
+  NotEquals,
+  IsIn
 } from 'class-validator';
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { SignerOption } from '@prisma/client';
 import { AttributeType, CredentialFormat } from '@credebl/enum/enum';
+import { DEFAULT_VC_VERSION, SUPPORTED_VC_VERSIONS, VCVersion } from '@credebl/common/vc';
 
 class CredentialAttributeDisplayDto {
   @ApiPropertyOptional({ example: 'First Name' })
@@ -203,6 +205,16 @@ export class SdJwtTemplateDto {
   @IsString()
   @IsOptional()
   schemaUrl?: string;
+
+  @ApiPropertyOptional({
+    enum: SUPPORTED_VC_VERSIONS,
+    default: DEFAULT_VC_VERSION,
+    description:
+      'W3C VC Data Model version for "jwt_vc_json-ld" and "ldp_vc" templates. "v2" (VCDM 2.0) is only supported for "jwt_vc_json-ld". When omitted, a new template uses v1.1 and an updated template keeps its current version.'
+  })
+  @IsOptional()
+  @IsIn(SUPPORTED_VC_VERSIONS, { message: 'vcVersion must be one of v1, v1.1, v2' })
+  vcVersion?: VCVersion;
 
   @ApiProperty({
     type: 'array',

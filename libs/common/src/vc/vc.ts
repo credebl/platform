@@ -110,6 +110,31 @@ export class VCContext {
 }
 
 /**
+ * `v1` and `v1.1` share the VC 1.1 data model (v1 context, `issuanceDate`), so they are interchangeable;
+ * only `v2` uses the VC 2.0 data model.
+ */
+export function isSameDataModel(a: VCVersion, b: VCVersion): boolean {
+  return ('v2' === a) === ('v2' === b);
+}
+
+/**
+ * Resolves the VC version of a stored JSON-LD credential template.
+ *
+ * Templates created before `vcVersion` existed only carry a context (or nothing at all), so the
+ * version falls back to the one implied by the context and finally to the v1.1 default.
+ */
+export function getTemplateVcVersion(
+  template: { vcVersion?: VCVersion; context?: CredentialContextValue } | undefined
+): VCVersion {
+  if (template?.vcVersion) {
+    return template.vcVersion;
+  }
+  return toContextArray(template?.context).length
+    ? VCContext.detectVersionFromContext(template?.context)
+    : DEFAULT_VC_VERSION;
+}
+
+/**
  * Builds an ordered `@context` array for the requested credential version.
  *
  * - The version base context is always first.

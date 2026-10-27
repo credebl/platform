@@ -1,6 +1,8 @@
 import {
   buildCredentialContext,
   getCredentialVersionProblems,
+  getTemplateVcVersion,
+  isSameDataModel,
   mapCredentialForVersion,
   resolveSchemaReference,
   VC_CONTEXT_V1,
@@ -213,6 +215,36 @@ describe('vc helpers', () => {
       withRefreshedValidityDates(original, 'v2', now);
 
       expect(original.validFrom).toBe('2025-01-01T00:00:00.000Z');
+    });
+  });
+
+  describe('isSameDataModel', () => {
+    it('treats v1 and v1.1 as the same data model', () => {
+      expect(isSameDataModel('v1', 'v1.1')).toBe(true);
+      expect(isSameDataModel('v1.1', 'v1')).toBe(true);
+      expect(isSameDataModel('v2', 'v2')).toBe(true);
+    });
+
+    it('separates VC 1.1 from VC 2.0', () => {
+      expect(isSameDataModel('v1.1', 'v2')).toBe(false);
+      expect(isSameDataModel('v2', 'v1')).toBe(false);
+    });
+  });
+
+  describe('getTemplateVcVersion', () => {
+    it('uses the explicit template vcVersion', () => {
+      expect(getTemplateVcVersion({ vcVersion: 'v2', context: [VC_CONTEXT_V2] })).toBe('v2');
+      expect(getTemplateVcVersion({ vcVersion: 'v1' })).toBe('v1');
+    });
+
+    it('derives the version from the context of templates created before vcVersion existed', () => {
+      expect(getTemplateVcVersion({ context: [VC_CONTEXT_V1, SCHEMA_URL] })).toBe('v1.1');
+      expect(getTemplateVcVersion({ context: [VC_CONTEXT_V2, SCHEMA_URL] })).toBe('v2');
+    });
+
+    it('defaults to v1.1 when a template has neither vcVersion nor context', () => {
+      expect(getTemplateVcVersion({})).toBe('v1.1');
+      expect(getTemplateVcVersion(undefined)).toBe('v1.1');
     });
   });
 });

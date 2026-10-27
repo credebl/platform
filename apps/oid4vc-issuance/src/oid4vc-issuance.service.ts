@@ -35,14 +35,22 @@ import {
   IssuerResponse,
   IssuerUpdation
 } from '../interfaces/oid4vc-issuance.interfaces';
-import { CreateCredentialTemplate, UpdateCredentialTemplate } from '../interfaces/oid4vc-template.interfaces';
+import {
+  CreateCredentialTemplate,
+  SdJwtTemplate,
+  UpdateCredentialTemplate
+} from '../interfaces/oid4vc-template.interfaces';
+import {
+  applyTemplateVcVersion,
+  assertVcVersionSupportedForFormat,
+  isJsonLdTemplateFormat
+} from '../libs/helpers/template-version';
+import { DEFAULT_VC_VERSION, getTemplateVcVersion } from '@credebl/common/vc';
 import {
   accessTokenSignerKeyType,
   batchCredentialIssuanceDefault,
   credentialConfigurationsSupported,
-  dpopSigningAlgValuesSupported,
-  CREDENTIALS_CONTEXT_V1_URL,
-  CREDENTIALS_CONTEXT_V2_URL
+  dpopSigningAlgValuesSupported
 } from '../constant/issuance';
 import { uuidRegex } from '@credebl/common/common.constant';
 import {
@@ -406,13 +414,7 @@ export class Oid4vcIssuanceService {
       //TODO: add revert mechanism if agent call fails
       const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = credentialTemplate;
 
-      if (
-        (format === CredentialFormat.JwtVcJsonLd || format === CredentialFormat.LdpVc) &&
-        'schemaUrl' in credentialTemplate.template &&
-        credentialTemplate.template.schemaUrl
-      ) {
-        credentialTemplate.template.context = [CREDENTIALS_CONTEXT_V1_URL, credentialTemplate.template.schemaUrl];
-      }
+      credentialTemplate.template = applyTemplateVcVersion(format, credentialTemplate.template);
 
       await this.validateTemplateAgainstSchema(format, credentialTemplate.template, orgId);
 
@@ -501,14 +503,16 @@ export class Oid4vcIssuanceService {
       };
       const { name, description, format, canBeRevoked, appearance, signerOption, noticeUrl } = normalized;
 
-      if (
-        normalized.template &&
-        ((format || template.format) === CredentialFormat.JwtVcJsonLd ||
-          (format || template.format) === CredentialFormat.LdpVc) &&
-        'schemaUrl' in normalized.template &&
-        normalized.template.schemaUrl
-      ) {
-        normalized.template.context = [CREDENTIALS_CONTEXT_V1_URL, normalized.template.schemaUrl];
+      const effectiveFormat = format || template.format;
+      // An update without vcVersion keeps the version the template was created with
+      const storedVcVersion = isJsonLdTemplateFormat(template.format)
+        ? getTemplateVcVersion(template.attributes as unknown as SdJwtTemplate)
+        : DEFAULT_VC_VERSION;
+
+      if (normalized.template) {
+        normalized.template = applyTemplateVcVersion(effectiveFormat, normalized.template, storedVcVersion);
+      } else if (isJsonLdTemplateFormat(effectiveFormat)) {
+        assertVcVersionSupportedForFormat(effectiveFormat, storedVcVersion);
       }
 
       if (normalized.template && (format || template.format)) {

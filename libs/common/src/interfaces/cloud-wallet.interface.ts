@@ -141,7 +141,7 @@ export interface IGetProofPresentationById {
 export interface IGetProofPresentation {
   userId: string;
   email: string;
-  threadId: string;
+  threadId?: string;
 }
 
 export interface ICloudBaseWalletConfigure {

@@ -48,6 +48,22 @@ jobs:
         id: get_tag
         run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
+      # Pre-release tags (anything with a hyphen after the version, e.g. v2.3.0-rc.1
+      # or v2.2.1-alpha.4) must not move the `latest` image tag.
+      - name: Compute image tags
+        id: image_tags
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}
+        run: |
+          {
+            echo 'tags<<EOF'
+            echo "${IMAGE}:${TAG}"
+            if [[ "${TAG}" != *-* ]]; then
+              echo "${IMAGE}:latest"
+            fi
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1
 
@@ -68,6 +84,4 @@ jobs:
           file: Dockerfiles/Dockerfile.${{ matrix.service }}
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}:${{ env.TAG }}
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}:latest
+          tags: ${{ steps.image_tags.outputs.tags }}

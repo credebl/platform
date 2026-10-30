@@ -11,8 +11,8 @@ import {
 } from './jetstream.setup';
 import { PendingAckStore } from './pendingAckStore';
 import { HolderNotificationRepository } from '../holder-notification.repository';
-import { Message } from 'firebase-admin/lib/messaging/messaging-api';
-import * as admin from 'firebase-admin';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getMessaging, Message } from 'firebase-admin/messaging';
 import { IHolderNotification } from '@credebl/common/interfaces/holder-notification.interfaces';
 
 const EVENT_PRESENTATION_ACK = 'presentation.ack';
@@ -27,7 +27,7 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    if (!admin.apps.length) {
+    if (!getApps().length) {
       const projectId = process.env.PROJECT_ID;
       const clientEmail = process.env.CLIENT_EMAIL;
       const privateKey = process.env.PRIVATE_KEY;
@@ -35,8 +35,8 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
       if (!projectId || !clientEmail || !privateKey) {
         throw new Error('Missing Firebase credentials: PROJECT_ID, CLIENT_EMAIL, and PRIVATE_KEY are required');
       }
-      admin.initializeApp({
-        credential: admin.credential.cert({
+      initializeApp({
+        credential: cert({
           projectId,
           clientEmail,
           privateKey: privateKey.replace(/\\n/g, '\n')
@@ -138,8 +138,7 @@ export class JetStreamConsumer implements OnApplicationBootstrap {
       token: notificationDetail.fcmToken
     };
     // Send the notification to the specified device
-    admin
-      .messaging()
+    getMessaging()
       .send(notificationPayload)
       .then((response) => {
         this.logger.log('Successfully sent message:', response);

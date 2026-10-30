@@ -1,6 +1,6 @@
 {
   "name": "api-gateway",
-  "version": "2.1.2",
+  "version": "2.3.0",
   "description": "CREDEBL SSI Platform API Gateway",
   "author": "",
   "license": "MIT",
@@ -62,7 +62,7 @@
     "aws-sdk": "^2.1693.0",
     "axios": "^1.20.0",
     "bcrypt": "^6.0.0",
-    "body-parser": "^1.20.6",
+    "body-parser": "^1.20.9",
     "buffer": "^6.0.3",
     "bull": "^4.16.5",
     "cache-manager": "^5.7.6",
@@ -86,7 +86,7 @@
     "linebyline": "^1.3.0",
     "moment": "^2.31.0",
     "morgan": "^1.12.1",
-    "multer": "^2.4.0",
+    "multer": "^2.5.0",
     "nanoid": "^5.1.16",
     "nats": "^2.29.3",
     "nestjs-cls": "catalog:",
@@ -94,7 +94,7 @@
     "nestjs-supabase-auth": "catalog:",
     "nestjs-typeorm-paginate": "catalog:",
     "node-qpdf2": "^2.0.0",
-    "nodemailer": "^10.0.15",
+    "nodemailer": "^10.1.4",
     "p-limit": "^3.1.0",
     "papaparse": "^5.5.4",
     "passport": "^0.6.0",
@@ -224,7 +224,10 @@
       "moment@<2.31.0": "2.31.0",
       "fast-xml-parser@<5.10.1": "5.10.1",
       "basic-ftp@<6.2.1": "6.2.1",
-      "@grpc/grpc-js@<1.14.5": "1.14.5"
+      "@grpc/grpc-js@<1.14.5": "1.14.5",
+      "follow-redirects@<1.16.1": "1.16.1",
+      "qs@<6.16.1": "6.16.1",
+      "multer@<2.5.0": "2.5.0"
     }
   },
   "packageManager": "pnpm@9.15.9+sha512.68046141893c66fad01c079231128e9afb89ef87e2691d69e4d40eee228988295fd4682181bae55b58418c3a253bde65a505ec7c5f9403ece5cc3cd37dcf2531",

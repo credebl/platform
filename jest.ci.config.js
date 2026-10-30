@@ -22,7 +22,7 @@ module.exports = {
     '<rootDir>/apps/oid4vc-verification/',
     '<rootDir>/apps/oid4vc-issuance/',
     '<rootDir>/apps/user/test/',
-    '<rootDir>/apps/agent-provisioning/',
-    '<rootDir>/apps/agent-service/'
+    '<rootDir>/apps/agent-provisioning/test/',
+    '<rootDir>/apps/agent-service/test/'
   ]
 };

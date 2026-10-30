@@ -16,6 +16,36 @@ updates:
       timezone: "Asia/Kolkata"
 
     groups:
+      # NestJS framework packages (core, common, platform-*, websockets,
+      # microservices, testing) are released in lockstep and must be bumped
+      # together: microservices@11.2.5 deep-requires a helper that only exists
+      # in core@11.2.x, so bumping one package alone breaks the runtime
+      # (see PRs #1778 / #1779). Keep this group FIRST so it takes precedence
+      # over the catch-all groups below, and cover security updates too —
+      # #1778 itself was a Dependabot security PR, which bypasses
+      # version-update groups unless listed explicitly.
+      #
+      # Split majors out (see #1781, which bundled a Nest 11 -> 12 major into
+      # the group and failed CI): minor/patch updates stay continuously
+      # mergeable — including security fixes — while majors bundle into one
+      # deferred PR that never holds back the rest.
+      nestjs:
+        applies-to: version-updates
+        patterns:
+          - "@nestjs/*"
+        update-types:
+          - "minor"
+          - "patch"
+      nestjs-major:
+        applies-to: version-updates
+        patterns:
+          - "@nestjs/*"
+        update-types:
+          - "major"
+      nestjs-security:
+        applies-to: security-updates
+        patterns:
+          - "@nestjs/*"
       # 1) All patch updates in one PR
       patch-updates:
         patterns:

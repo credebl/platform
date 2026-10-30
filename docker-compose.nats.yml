@@ -2,7 +2,7 @@ version: '3'
 services:
   nats:
     container_name: nats # Sets the name of the container to nats
-    image: nats # Uses the official NATS Docker image
+    image: nats:2.15.0 # Uses the official NATS Docker image
     command: ["-c", "/nats-server.conf"]  # Passes the NATS configuration file to the container at startup
     ports:
       - '4222:4222' # Main NATS client communication port

@@ -4,7 +4,7 @@ services:
   nats:
     container_name: nats
     entrypoint: '/nats-server -c /nats-server.conf -DV'  # Corrected the path to nats-server.conf
-    image: nats
+    image: nats:2.15.0
     ports:
       - '4222:4222'
       - '6222:6222'

@@ -20,7 +20,7 @@
     "@nestjs/microservices": "catalog:",
     "@nestjs/swagger": "catalog:",
     "@nestjs/cache-manager": "catalog:",
-    "@prisma/client": "^5.1.1",
+    "@prisma/client": "^7.10.1",
     "@sendgrid/mail": "^7.7.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",

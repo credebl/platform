@@ -64,6 +64,12 @@ const STATIC_BINDING_METHODS_FOR_SDJWT = ['did:key', 'did:web', 'did:jwk', 'jwk'
 
 const STATIC_BINDING_METHODS_FOR_LDP_VC = ['did:key', 'did:web'];
 
+function resolveBindingMethods(template: SdJwtTemplate, defaults: string[]): string[] {
+  return template.cryptographicBindingMethods?.length
+    ? [...new Set(template.cryptographicBindingMethods)]
+    : [...defaults];
+}
+
 const STATIC_CREDENTIAL_ALGS_FOR_MDOC = ['ES256'];
 const STATIC_BINDING_METHODS_FOR_MDOC = ['jwk'];
 
@@ -239,7 +245,7 @@ export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate
       scope: credentialScope,
       vct: template.vct,
       credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS_FOR_SDJWT],
-      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS_FOR_SDJWT],
+      cryptographic_binding_methods_supported: resolveBindingMethods(template, STATIC_BINDING_METHODS_FOR_SDJWT),
       proof_types_supported: {
         jwt: {
           proof_signing_alg_values_supported: ['ES256', 'EdDSA']
@@ -314,7 +320,7 @@ export function buildJwtVcJsonLdCredentialConfig(
       scope: credentialScope,
       vct: template.vct,
       credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS_FOR_SDJWT],
-      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS_FOR_SDJWT],
+      cryptographic_binding_methods_supported: resolveBindingMethods(template, STATIC_BINDING_METHODS_FOR_SDJWT),
       proof_types_supported: {
         jwt: {
           proof_signing_alg_values_supported: ['ES256', 'EdDSA']
@@ -354,7 +360,7 @@ export function buildLdpVcCredentialConfig(name: string, template: SdJwtTemplate
       scope: credentialScope,
       vct: template.vct,
       credential_signing_alg_values_supported: ['Ed25519Signature2018', 'Ed25519Signature2020', 'EdDSA'],
-      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS_FOR_LDP_VC],
+      cryptographic_binding_methods_supported: resolveBindingMethods(template, STATIC_BINDING_METHODS_FOR_LDP_VC),
       proof_types_supported: {
         jwt: {
           proof_signing_alg_values_supported: ['Ed25519Signature2018', 'Ed25519Signature2020', 'EdDSA']

@@ -62,6 +62,8 @@ const ISSUER_DPOP_ALGS_DEFAULT = ['RS256', 'ES256'];
 const STATIC_CREDENTIAL_ALGS_FOR_SDJWT = ['ES256'];
 const STATIC_BINDING_METHODS_FOR_SDJWT = ['did:key', 'did:web', 'did:jwk', 'jwk'];
 
+const STATIC_BINDING_METHODS_FOR_LDP_VC = ['did:key', 'did:web'];
+
 const STATIC_CREDENTIAL_ALGS_FOR_MDOC = ['ES256'];
 const STATIC_BINDING_METHODS_FOR_MDOC = ['jwk'];
 
@@ -352,7 +354,7 @@ export function buildLdpVcCredentialConfig(name: string, template: SdJwtTemplate
       scope: credentialScope,
       vct: template.vct,
       credential_signing_alg_values_supported: ['Ed25519Signature2018', 'Ed25519Signature2020', 'EdDSA'],
-      cryptographic_binding_methods_supported: ['did:key'],
+      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS_FOR_LDP_VC],
       proof_types_supported: {
         jwt: {
           proof_signing_alg_values_supported: ['Ed25519Signature2018', 'Ed25519Signature2020', 'EdDSA']

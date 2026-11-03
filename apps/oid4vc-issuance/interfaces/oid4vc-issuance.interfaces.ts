@@ -59,6 +59,7 @@ export interface IssuerCreation {
   dpopSigningAlgValuesSupported?: string[];
   authorizationServerConfigs: AuthorizationServerConfig;
   batchCredentialIssuanceSize: number;
+  cryptographicBindingMethods?: string[];
 }
 
 export interface IssuerInitialConfig {
@@ -79,6 +80,7 @@ export interface IssuerMetadata {
   createdById: string;
   orgAgentId: string;
   batchCredentialIssuanceSize?: number;
+  cryptographicBindingMethods?: string[];
   isPrimary: boolean;
   orgId: string;
 }
@@ -97,6 +99,7 @@ export interface IssuerUpdation {
   accessTokenSignerKeyType: AccessTokenSignerKeyType;
   display;
   batchCredentialIssuanceSize?: number;
+  cryptographicBindingMethods?: string[];
   isPrimary?: boolean;
   orgId: string;
 }

@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsArray, ValidateNested, IsUrl, IsInt, Min, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsArray, ValidateNested, IsUrl, IsInt, Min, IsBoolean, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
+import { SUPPORTED_HOLDER_BINDING_METHODS } from '@credebl/enum/enum';
 
 export class LogoDto {
   @ApiProperty({
@@ -99,6 +100,18 @@ export class IssuerCreationDto {
   @Min(1, { message: 'batchCredentialIssuanceSize must be greater than 0' })
   batchCredentialIssuanceSize?: number;
 
+  @ApiPropertyOptional({
+    type: [String],
+    enum: SUPPORTED_HOLDER_BINDING_METHODS,
+    example: ['did:key', 'did:web'],
+    description:
+      "Default holder binding methods (cryptographic_binding_methods_supported) for this issuer's templates. A template-level cryptographicBindingMethods overrides it. Empty or omitted falls back to the per-format defaults"
+  })
+  @IsOptional()
+  @IsArray()
+  @IsIn(SUPPORTED_HOLDER_BINDING_METHODS, { each: true })
+  cryptographicBindingMethods?: string[];
+
   @ApiProperty({
     description:
       'Localized display information for the issuer — shown in wallet apps or credential metadata display (multi-lingual supported)',
@@ -178,6 +191,18 @@ export class IssuerUpdationDto {
   @IsOptional()
   @IsInt({ message: 'batchCredentialIssuanceSize must be an integer' })
   batchCredentialIssuanceSize?: number;
+
+  @ApiPropertyOptional({
+    type: [String],
+    enum: SUPPORTED_HOLDER_BINDING_METHODS,
+    example: ['did:key', 'did:web'],
+    description:
+      "Default holder binding methods (cryptographic_binding_methods_supported) for this issuer's templates. A template-level cryptographicBindingMethods overrides it. Empty or omitted falls back to the per-format defaults"
+  })
+  @IsOptional()
+  @IsArray()
+  @IsIn(SUPPORTED_HOLDER_BINDING_METHODS, { each: true })
+  cryptographicBindingMethods?: string[];
 
   @ApiPropertyOptional({
     description: 'Marks whether this issuer is the primary issuer',

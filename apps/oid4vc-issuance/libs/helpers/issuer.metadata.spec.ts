@@ -1,4 +1,5 @@
 import {
+  buildCredentialConfigurationsSupported,
   buildJwtVcJsonLdCredentialConfig,
   buildLdpVcCredentialConfig,
   buildSdJwtCredentialConfig
@@ -31,5 +32,39 @@ describe('cryptographic_binding_methods_supported', () => {
   it('falls back to defaults for an empty list', () => {
     const template = { ...baseTemplate, cryptographicBindingMethods: [] };
     expect(bindingMethods(buildLdpVcCredentialConfig('Test', template))).toEqual(['did:key', 'did:web']);
+  });
+});
+
+describe('issuer-level default binding methods', () => {
+  const row = (name: string, format: string, attributes: object): Record<string, unknown> => ({
+    name,
+    format,
+    attributes,
+    appearance: {}
+  });
+
+  it('applies the issuer default to templates without their own list, and lets a template override it', () => {
+    const configs = buildCredentialConfigurationsSupported(
+      [
+        row('plain', 'ldp_vc', baseTemplate),
+        row('custom', 'ldp_vc', { ...baseTemplate, cryptographicBindingMethods: ['did:key'] })
+      ],
+      ['did:web', 'did:polygon']
+    );
+    expect(configs['plain-ldp-vc'].cryptographic_binding_methods_supported).toEqual(['did:web', 'did:polygon']);
+    expect(configs['custom-ldp-vc'].cryptographic_binding_methods_supported).toEqual(['did:key']);
+  });
+
+  it('falls back to the per-format defaults when the issuer has none', () => {
+    const configs = buildCredentialConfigurationsSupported([row('plain', 'ldp_vc', baseTemplate)], []);
+    expect(configs['plain-ldp-vc'].cryptographic_binding_methods_supported).toEqual(['did:key', 'did:web']);
+  });
+
+  it('leaves mso_mdoc on jwk', () => {
+    const configs = buildCredentialConfigurationsSupported(
+      [row('mdl', 'mso_mdoc', { doctype: 'org.iso.18013.5.1.mDL', namespaces: [] })],
+      ['did:web']
+    );
+    expect(Object.values(configs)[0].cryptographic_binding_methods_supported).toEqual(['jwk']);
   });
 });

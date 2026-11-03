@@ -403,12 +403,20 @@ export function buildCredentialConfig(
  * Build agent payload from Prisma rows (attributes/appearance are Prisma.JsonValue).
  * Safely coerces JSON and then builds the same structure as Builder #2.
  */
-export function buildCredentialConfigurationsSupported(templateRows: unknown[]): Record<string, CredentialConfig> {
+export function buildCredentialConfigurationsSupported(
+  templateRows: unknown[],
+  issuerBindingMethods: string[] = []
+): Record<string, CredentialConfig> {
   const credentialConfigMap: Record<string, CredentialConfig> = {};
 
   for (const templateRow of templateRows as Record<string, unknown>[]) {
     const format = templateRow.format as string;
-    const templateToBuild = templateRow.attributes as SdJwtTemplate | MdocTemplate;
+    const rawTemplate = templateRow.attributes as SdJwtTemplate | MdocTemplate;
+    // Precedence: template-level binding methods, then the issuer default, then the per-format default
+    const templateToBuild =
+      format !== CredentialFormat.Mdoc && !(rawTemplate as SdJwtTemplate).cryptographicBindingMethods?.length
+        ? { ...rawTemplate, cryptographicBindingMethods: issuerBindingMethods }
+        : rawTemplate;
 
     const credentialConfig = buildCredentialConfig(
       templateRow.name as string,

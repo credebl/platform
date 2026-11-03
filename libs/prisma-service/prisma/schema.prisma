@@ -626,6 +626,7 @@ model oid4vc_credentials {
   credentialConfigurationIds String[]
   issuedCredentials          String[]
   publicIssuerId              String
+  notifications              Json?
 
   organisation organisation @relation(fields: [orgId], references: [id], onDelete: Restrict)
 

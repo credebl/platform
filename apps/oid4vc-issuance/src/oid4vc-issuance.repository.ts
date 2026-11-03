@@ -8,6 +8,8 @@ import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { Oid4vciSessionNotification } from '../interfaces/oid4vc-wh-interfaces';
+import { mergeNotificationHistory } from '../libs/helpers/wallet-notifications';
 
 @Injectable()
 export class Oid4vcIssuanceRepository {
@@ -76,8 +78,22 @@ export class Oid4vcIssuanceRepository {
         contextCorrelationId,
         credentialOfferPayload,
         issuedCredentials,
-        issuerId
+        issuerId,
+        notifications
       } = payload;
+      // The agent sends its full notification history on every webhook; older agents send none
+      let notificationHistory = {};
+      if (Array.isArray(notifications)) {
+        const stored = await this.prisma.oid4vc_credentials.findUnique({
+          where: { issuanceSessionId },
+          select: { notifications: true }
+        });
+        const merged = mergeNotificationHistory(
+          stored?.notifications as unknown as Oid4vciSessionNotification[],
+          notifications
+        );
+        notificationHistory = { notifications: merged as unknown as Prisma.InputJsonValue };
+      }
 
       const credentialDetails = await this.prisma.oid4vc_credentials.upsert({
         where: {
@@ -87,7 +103,8 @@ export class Oid4vcIssuanceRepository {
           lastChangedBy: orgId,
           state,
           credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
-          ...(issuedCredentials !== undefined ? { issuedCredentials } : {})
+          ...(issuedCredentials !== undefined ? { issuedCredentials } : {}),
+          ...notificationHistory
         },
         create: {
           lastChangedBy: orgId,
@@ -99,7 +116,8 @@ export class Oid4vcIssuanceRepository {
           issuanceSessionId,
           publicIssuerId: issuerId,
           credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
-          ...(issuedCredentials !== undefined ? { issuedCredentials } : {})
+          ...(issuedCredentials !== undefined ? { issuedCredentials } : {}),
+          ...notificationHistory
         }
       });
 

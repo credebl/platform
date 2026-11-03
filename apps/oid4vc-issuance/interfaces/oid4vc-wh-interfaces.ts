@@ -15,6 +15,24 @@ export interface Oid4vcCredentialOfferWebhookDto {
   state?: string;
   contextCorrelationId?: string;
   issuerId?: string;
+  notification?: Oid4vciWalletNotification;
+  notifications?: Oid4vciSessionNotification[];
+}
+
+export type Oid4vciNotificationEvent = 'credential_accepted' | 'credential_failure' | 'credential_deleted';
+
+export interface Oid4vciWalletNotification {
+  notificationId: string;
+  credentialConfigurationId?: string;
+  event: Oid4vciNotificationEvent;
+  eventDescription?: string;
+  receivedAt: string;
+}
+
+export interface Oid4vciSessionNotification {
+  notificationId: string;
+  credentialConfigurationId?: string;
+  events: Omit<Oid4vciWalletNotification, 'notificationId' | 'credentialConfigurationId'>[];
 }
 
 export interface CredentialPayload {

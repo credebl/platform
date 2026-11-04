@@ -12,6 +12,7 @@ Previous stable release: v2.2.0. Draft: confirm against the final merged PR list
 - OpenBao secret storage (provider, provisioning script, `docker-compose.openbao.yml`, docs/tests) (#1679, #1712)
 - Rust FS / local storage support via `@credebl/storage` (#1670)
 - OID4VC: `jwt_vc_json-ld` / `ldp_vc` (JSON-LD) credential format support (#1646)
+- OID4VC: holder binding methods (`cryptographic_binding_methods_supported`) are configurable per template and per issuer, and `ldp_vc` advertises `did:web` by default. See `docs/oid4vc-holder-binding-methods.md` (#1820)
 - Swagger UIs exposed per module group (#1608)
 - API gateway version via `API_GATEWAY_VERSION` env (#1777)
 - Row-level security migration `enable_rls_if_not_exists` (#1688)
@@ -31,7 +32,7 @@ Previous stable release: v2.2.0. Draft: confirm against the final merged PR list
 - pnpm security overrides added; pnpm 9.15.9
 
 ## Upgrade notes
-- Run `prisma migrate deploy` (new RLS migration). Test on a copy of production data first.
+- Run `prisma migrate deploy`. New migrations: the RLS migration (test on a copy of production data first) and `add_cryptographic_binding_methods_to_oidc_issuer` (adds `oidc_issuer.cryptographicBindingMethods TEXT[] DEFAULT '{}'`, additive, no backfill) (#1820).
 - New agent env vars in `agent.env`: `STATUS_LIST_SERVER_URL`, `STATUS_LIST_API_KEY`, `STATUS_LIST_DEFAULT_SIZE`; platform `STATUS_LIST_HOST` in `.env.demo`.
 - OpenBao is optional; see `openspec/specs/openbao-secret-storage` and `docker-compose.openbao.yml`.
 - Pin the controller image to v2.3.1 (`AFJ_VERSION`).

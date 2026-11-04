@@ -21,5 +21,7 @@ RUN apk update && apk upgrade && apk add --no-cache \
     && adduser -S nextjs -u 1001
 WORKDIR /app
 COPY --from=build --chown=nextjs:nodejs /app ./
+# prisma db seed spawns ts-node by name; calling prisma by path (not npx) leaves node_modules/.bin off PATH
+ENV PATH=/app/node_modules/.bin:$PATH
 USER nextjs
 CMD ["sh", "-c", "cd libs/prisma-service && /app/node_modules/.bin/prisma migrate deploy && /app/node_modules/.bin/prisma db seed"]

@@ -196,6 +196,7 @@ export class Oid4vcIssuanceRepository {
         createdById,
         orgAgentId,
         batchCredentialIssuanceSize,
+        cryptographicBindingMethods,
         authorizationServerUrl,
         isPrimary,
         orgId
@@ -207,6 +208,7 @@ export class Oid4vcIssuanceRepository {
           createdBy: createdById,
           orgAgentId,
           batchCredentialIssuanceSize,
+          cryptographicBindingMethods: cryptographicBindingMethods ?? [],
           authorizationServerUrl,
           isPrimary,
           orgId
@@ -237,7 +239,8 @@ export class Oid4vcIssuanceRepository {
 
   async updateOidcIssuerDetails(createdById: string, issuerConfig: IssuerUpdation): Promise<oidc_issuer> {
     try {
-      const { issuerId, display, batchCredentialIssuanceSize, isPrimary, orgId } = issuerConfig;
+      const { issuerId, display, batchCredentialIssuanceSize, cryptographicBindingMethods, isPrimary, orgId } =
+        issuerConfig;
 
       return await this.prisma.$transaction(async (tx) => {
         const issuer = await tx.oidc_issuer.findFirst({
@@ -277,6 +280,7 @@ export class Oid4vcIssuanceRepository {
             ...(batchCredentialIssuanceSize !== undefined && {
               batchCredentialIssuanceSize
             }),
+            ...(cryptographicBindingMethods !== undefined && { cryptographicBindingMethods }),
             ...(isPrimary !== undefined && { isPrimary })
           }
         });

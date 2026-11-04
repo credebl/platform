@@ -596,6 +596,8 @@ model oidc_issuer {
   orgAgent                    org_agents             @relation(fields: [orgAgentId], references: [id])
   templates                   credential_templates[]
   batchCredentialIssuanceSize Int                    @default(0)
+  // Default holder binding methods for this issuer's templates; empty means use the per-format defaults
+  cryptographicBindingMethods String[]               @default([])
 
   orgId     String?  @db.Uuid
   isPrimary Boolean  @default(false)

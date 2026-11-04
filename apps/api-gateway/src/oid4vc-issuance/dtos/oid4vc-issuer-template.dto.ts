@@ -12,12 +12,13 @@ import {
   IsEmpty,
   ArrayNotEmpty,
   IsDefined,
-  NotEquals
+  NotEquals,
+  IsIn
 } from 'class-validator';
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { SignerOption } from '@prisma/client';
-import { AttributeType, CredentialFormat } from '@credebl/enum/enum';
+import { AttributeType, CredentialFormat, SUPPORTED_HOLDER_BINDING_METHODS } from '@credebl/enum/enum';
 
 class CredentialAttributeDisplayDto {
   @ApiPropertyOptional({ example: 'First Name' })
@@ -203,6 +204,19 @@ export class SdJwtTemplateDto {
   @IsString()
   @IsOptional()
   schemaUrl?: string;
+
+  @ApiPropertyOptional({
+    type: [String],
+    enum: SUPPORTED_HOLDER_BINDING_METHODS,
+    example: ['did:key', 'did:web'],
+    description:
+      'Holder binding methods advertised as cryptographic_binding_methods_supported. Defaults to did:key, did:web, did:jwk and jwk for dc+sd-jwt and jwt_vc_json-ld, and did:key and did:web for ldp_vc'
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsIn(SUPPORTED_HOLDER_BINDING_METHODS, { each: true })
+  cryptographicBindingMethods?: string[];
 
   @ApiProperty({
     type: 'array',

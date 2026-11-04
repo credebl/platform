@@ -12,6 +12,7 @@ import {
   Get,
   Param,
   Query,
+  Delete,
   BadRequestException
 } from '@nestjs/common';
 import {
@@ -56,6 +57,16 @@ import {
   IWalletDetailsForDidList
 } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { CreateConnectionDto } from './dtos/create-connection.dto';
+import {
+  AcceptOid4vpProofRequestDto,
+  AuthorizationRequestDto,
+  DecodeMdocDto,
+  DecodeSdJwtDto,
+  DeleteHolderCredentialDto,
+  RequestCredentialDto,
+  ResolveCredentialOfferDto,
+  ResolveProofRequestDto
+} from './dtos/oid4vc-holder.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -614,6 +625,351 @@ export class CloudWalletController {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.cloudWallet.success.basicMessage,
       data: basicMessageDetails
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Get SD-JWT credentials from wallet
+   * @param res
+   * @param user
+   * @returns SD-JWT credential list
+   */
+  @Get('/holder/sd-jwt-vcs')
+  @ApiOperation({
+    summary: 'Get SD-JWT Credentials',
+    description: 'Endpoint to retrieve all SD-JWT credentials from the cloud wallet.'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'SD-JWT credentials retrieved successfully',
+    type: ApiResponseDto
+  })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async getSdJwtCredentials(@Res() res: Response, @User() user: user): Promise<Response> {
+    const { id, email } = user;
+
+    const holderDetails: IWalletDetailsForDidList = {
+      userId: id,
+      email
+    };
+
+    const sdJwtCredentials = await this.cloudWalletService.getSdJwtCredentials(holderDetails);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.cloudWallet.success.sdJwtCredentials,
+      data: sdJwtCredentials
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Get mDoc credentials from wallet
+   * @param res
+   * @param user
+   * @returns mDoc credential list
+   */
+  @Get('/holder/mdoc-vcs')
+  @ApiOperation({
+    summary: 'Get mDoc Credentials',
+    description: 'Endpoint to retrieve all mDoc credentials from the cloud wallet.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'mDoc credentials retrieved successfully', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async getMdocCredentials(@Res() res: Response, @User() user: user): Promise<Response> {
+    const { id, email } = user;
+
+    const holderDetails: IWalletDetailsForDidList = {
+      userId: id,
+      email
+    };
+
+    const mdocCredentials = await this.cloudWalletService.getMdocCredentials(holderDetails);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.cloudWallet.success.mdocCredentials,
+      data: mdocCredentials
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Get W3C credentials from wallet
+   * @param res
+   * @param user
+   * @returns W3C credential list
+   */
+  @Get('/holder/w3c-vcs')
+  @ApiOperation({
+    summary: 'Get W3C Credentials',
+    description: 'Endpoint to retrieve all W3C credentials from the cloud wallet.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'W3C credentials retrieved successfully', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async getW3cCredentials(@Res() res: Response, @User() user: user): Promise<Response> {
+    const { id, email } = user;
+
+    const holderDetails: IWalletDetailsForDidList = {
+      userId: id,
+      email
+    };
+
+    const w3cCredentials = await this.cloudWalletService.getW3cCredentials(holderDetails);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.cloudWallet.success.w3cCredentials,
+      data: w3cCredentials
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Decode mDoc credential
+   * @param decodeMdoc
+   * @param res
+   * @param user
+   * @returns decoded mDoc credential
+   */
+  @Post('/holder/mdoc-vcs/decode')
+  @ApiOperation({ summary: 'Decode mDoc Credential', description: 'Endpoint to decode a Base64URL encoded mDoc.' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'mDoc decoded successfully', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async decodeMdoc(@Res() res: Response, @Body() decodeMdoc: DecodeMdocDto, @User() user: user): Promise<Response> {
+    const { id, email } = user;
+    decodeMdoc.userId = id;
+    decodeMdoc.email = email;
+
+    const decodeMdocDetails = await this.cloudWalletService.decodeMdoc(decodeMdoc);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.cloudWallet.success.decodeMdoc,
+      data: decodeMdocDetails
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Decode SD-JWT credential
+   * @param decodeSdJwt
+   * @param res
+   * @param user
+   * @returns decoded SD-JWT credential
+   */
+  @Post('/holder/decode-sdjwt')
+  @ApiOperation({ summary: 'Decode SD-JWT Credential', description: 'Endpoint to decode an SD-JWT.' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'SD-JWT decoded successfully', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async decodeSdJwt(@Res() res: Response, @Body() decodeSdJwt: DecodeSdJwtDto, @User() user: user): Promise<Response> {
+    const { id, email } = user;
+    decodeSdJwt.userId = id;
+    decodeSdJwt.email = email;
+
+    const decodeSdJwtDetails = await this.cloudWalletService.decodeSdJwt(decodeSdJwt);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.cloudWallet.success.decodeSdJwt,
+      data: decodeSdJwtDetails
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Delete holder credential
+   * @param deleteHolderCredential
+   * @param res
+   * @param user
+   * @returns success message
+   */
+  @Delete('/holder/credential')
+  @ApiOperation({
+    summary: 'Delete Holder Credential',
+    description: 'Endpoint to delete a credential (SD-JWT, mDoc or W3C) from the cloud wallet.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Credential deleted successfully', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async deleteHolderCredential(
+    @Res() res: Response,
+    @Body() deleteHolderCredential: DeleteHolderCredentialDto,
+    @User() user: user
+  ): Promise<Response> {
+    const { id, email } = user;
+    deleteHolderCredential.userId = id;
+    deleteHolderCredential.email = email;
+
+    const deleteCredentialDetails = await this.cloudWalletService.deleteHolderCredential(deleteHolderCredential);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.cloudWallet.success.deleteCredential,
+      data: deleteCredentialDetails
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Resolve OID4VCI credential offer
+   * @param resolveCredentialOffer
+   * @param res
+   * @param user
+   * @returns resolved credential offer
+   */
+  @Post('/oid4vc/holder/resolve-credential-offer')
+  @ApiOperation({
+    summary: 'Resolve Credential Offer',
+    description: 'Endpoint to resolve an OpenID4VCI credential offer.'
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Credential offer resolved successfully',
+    type: ApiResponseDto
+  })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async resolveCredentialOffer(
+    @Res() res: Response,
+    @Body() resolveCredentialOffer: ResolveCredentialOfferDto,
+    @User() user: user
+  ): Promise<Response> {
+    const { id, email } = user;
+    resolveCredentialOffer.userId = id;
+    resolveCredentialOffer.email = email;
+
+    const resolveCredentialOfferDetails = await this.cloudWalletService.resolveCredentialOffer(resolveCredentialOffer);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.cloudWallet.success.resolveCredentialOffer,
+      data: resolveCredentialOfferDetails
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Initiate OID4VCI authorization request
+   * @param authorizationRequest
+   * @param res
+   * @param user
+   * @returns authorization request details
+   */
+  @Post('/oid4vc/holder/authorization-request')
+  @ApiOperation({
+    summary: 'Request Authorization',
+    description: 'Endpoint to initiate an OpenID4VCI authorization request.'
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Authorization request initiated successfully',
+    type: ApiResponseDto
+  })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async authorizationRequest(
+    @Res() res: Response,
+    @Body() authorizationRequest: AuthorizationRequestDto,
+    @User() user: user
+  ): Promise<Response> {
+    const { id, email } = user;
+    authorizationRequest.userId = id;
+    authorizationRequest.email = email;
+
+    const authorizationRequestDetails = await this.cloudWalletService.authorizationRequest(authorizationRequest);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.cloudWallet.success.authorizationRequest,
+      data: authorizationRequestDetails
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Request credential from issuer
+   * @param requestCredential
+   * @param res
+   * @param user
+   * @returns requested credential
+   */
+  @Post('/oid4vc/holder/request-credential')
+  @ApiOperation({
+    summary: 'Request Credential',
+    description: 'Endpoint to request a credential from an issuer using OpenID4VCI.'
+  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Credential requested successfully', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async requestCredential(
+    @Res() res: Response,
+    @Body() requestCredential: RequestCredentialDto,
+    @User() user: user
+  ): Promise<Response> {
+    const { id, email } = user;
+    requestCredential.userId = id;
+    requestCredential.email = email;
+
+    const requestCredentialDetails = await this.cloudWalletService.requestCredential(requestCredential);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.cloudWallet.success.requestCredential,
+      data: requestCredentialDetails
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Resolve OID4VP proof request
+   * @param resolveProofRequest
+   * @param res
+   * @param user
+   * @returns resolved proof request
+   */
+  @Post('/oid4vc/holder/resolve-proof-request')
+  @ApiOperation({ summary: 'Resolve Proof Request', description: 'Endpoint to resolve an OpenID4VP proof request.' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Proof request resolved successfully', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async resolveProofRequest(
+    @Res() res: Response,
+    @Body() resolveProofRequest: ResolveProofRequestDto,
+    @User() user: user
+  ): Promise<Response> {
+    const { id, email } = user;
+    resolveProofRequest.userId = id;
+    resolveProofRequest.email = email;
+
+    const resolveProofRequestDetails = await this.cloudWalletService.resolveProofRequest(resolveProofRequest);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.cloudWallet.success.resolveProofRequest,
+      data: resolveProofRequestDetails
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Accept OID4VP proof request
+   * @param acceptProofRequest
+   * @param res
+   * @param user
+   * @returns accepted proof presentation
+   */
+  @Post('/oid4vc/holder/accept-proof-request')
+  @ApiOperation({
+    summary: 'Accept OID4VP Proof Request',
+    description: 'Endpoint to accept an OpenID4VP proof request.'
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Proof request accepted successfully',
+    type: ApiResponseDto
+  })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async acceptProofRequestOid4vc(
+    @Res() res: Response,
+    @Body() acceptProofRequest: AcceptOid4vpProofRequestDto,
+    @User() user: user
+  ): Promise<Response> {
+    const { id, email } = user;
+    acceptProofRequest.userId = id;
+    acceptProofRequest.email = email;
+
+    const acceptProofRequestDetails = await this.cloudWalletService.acceptProofRequestOid4vc(acceptProofRequest);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.cloudWallet.success.acceptProofRequestOid4vc,
+      data: acceptProofRequestDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

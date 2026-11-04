@@ -31,7 +31,15 @@ import {
   IConnectionInvitationResponse,
   GetAllCloudWalletConnections,
   IBasicMessage,
-  IBasicMessageDetails
+  IBasicMessageDetails,
+  IResolveCredentialOffer,
+  IAuthorizeRequestCredential,
+  IRequestCredential,
+  IResolveProofRequest,
+  IAcceptOid4vpProofRequest,
+  IDecodeMdoc,
+  IDecodeSdJwt,
+  IDeleteHolderCredential
 } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { CloudWalletRepository } from './cloud-wallet.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -589,5 +597,237 @@ export class CloudWalletService {
       await this.commonService.handleError(error);
       throw error;
     }
+  }
+
+  /**
+   * Get SD-JWT credentials from wallet
+   * @param holderDetails
+   * @returns SD-JWT credential list
+   */
+  async getSdJwtCredentials(holderDetails: IWalletDetailsForDidList): Promise<Response> {
+    try {
+      const { userId } = holderDetails;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_SDJWT_VCS}`;
+      return await this.commonService.httpGet(url, this._holderRequestConfig(decryptedApiKey));
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get mDoc credentials from wallet
+   * @param holderDetails
+   * @returns mDoc credential list
+   */
+  async getMdocCredentials(holderDetails: IWalletDetailsForDidList): Promise<Response> {
+    try {
+      const { userId } = holderDetails;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_MDOC_VCS}`;
+      return await this.commonService.httpGet(url, this._holderRequestConfig(decryptedApiKey));
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get W3C credentials from wallet
+   * @param holderDetails
+   * @returns W3C credential list
+   */
+  async getW3cCredentials(holderDetails: IWalletDetailsForDidList): Promise<Response> {
+    try {
+      const { userId } = holderDetails;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_W3C_VCS}`;
+      return await this.commonService.httpGet(url, this._holderRequestConfig(decryptedApiKey));
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Decode mDoc credential
+   * @param decodeMdocDetails
+   * @returns decoded mDoc credential
+   */
+  async decodeMdoc(decodeMdocDetails: IDecodeMdoc): Promise<Response> {
+    try {
+      const { userId, ...payload } = decodeMdocDetails;
+      delete payload.email;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_MDOC_DECODE}`;
+      return await this.commonService.httpPost(url, payload, this._holderRequestConfig(decryptedApiKey));
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Decode SD-JWT credential
+   * @param decodeSdJwtDetails
+   * @returns decoded SD-JWT credential
+   */
+  async decodeSdJwt(decodeSdJwtDetails: IDecodeSdJwt): Promise<Response> {
+    try {
+      const { userId, ...payload } = decodeSdJwtDetails;
+      delete payload.email;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_DECODE_SDJWT}`;
+      return await this.commonService.httpPost(url, payload, this._holderRequestConfig(decryptedApiKey));
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete holder credential
+   * @param deleteCredentialDetails
+   * @returns deletion response
+   */
+  async deleteHolderCredential(deleteCredentialDetails: IDeleteHolderCredential): Promise<Response> {
+    try {
+      const { userId, ...payload } = deleteCredentialDetails;
+      delete payload.email;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_DELETE_CREDENTIAL}`;
+      const config = this._holderRequestConfig(decryptedApiKey);
+      const deleteResponse = await this.commonService.httpDelete(url, { ...config, data: payload });
+      return deleteResponse?.data ?? null;
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Resolve OID4VCI credential offer
+   * @param resolveCredentialOfferDetails
+   * @returns resolved credential offer
+   */
+  async resolveCredentialOffer(resolveCredentialOfferDetails: IResolveCredentialOffer): Promise<Response> {
+    try {
+      const { userId, ...payload } = resolveCredentialOfferDetails;
+      delete payload.email;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_RESOLVE_CREDENTIAL_OFFER}`;
+      return await this.commonService.httpPost(url, payload, this._holderRequestConfig(decryptedApiKey));
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Initiate OID4VCI authorization request
+   * @param authorizationRequestDetails
+   * @returns authorization request details
+   */
+  async authorizationRequest(authorizationRequestDetails: IAuthorizeRequestCredential): Promise<Response> {
+    try {
+      const { userId, ...payload } = authorizationRequestDetails;
+      delete payload.email;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_AUTHORIZATION_REQUEST}`;
+      return await this.commonService.httpPost(url, payload, this._holderRequestConfig(decryptedApiKey));
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Request credential from issuer
+   * @param requestCredentialDetails
+   * @returns requested credential
+   */
+  async requestCredential(requestCredentialDetails: IRequestCredential): Promise<Response> {
+    try {
+      const { userId, ...payload } = requestCredentialDetails;
+      delete payload.email;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_REQUEST_CREDENTIAL}`;
+      return await this.commonService.httpPost(url, payload, this._holderRequestConfig(decryptedApiKey));
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Resolve OID4VP proof request
+   * @param resolveProofRequestDetails
+   * @returns resolved proof request
+   */
+  async resolveProofRequest(resolveProofRequestDetails: IResolveProofRequest): Promise<Response> {
+    try {
+      const { userId, ...payload } = resolveProofRequestDetails;
+      delete payload.email;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_RESOLVE_PROOF_REQUEST}`;
+      return await this.commonService.httpPost(url, payload, this._holderRequestConfig(decryptedApiKey));
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Accept OID4VP proof request
+   * @param acceptProofRequestDetails
+   * @returns accepted proof presentation
+   */
+  async acceptProofRequestOid4vc(acceptProofRequestDetails: IAcceptOid4vpProofRequest): Promise<Response> {
+    try {
+      const { userId, ...payload } = acceptProofRequestDetails;
+      delete payload.email;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_ACCEPT_PROOF_REQUEST}`;
+      return await this.commonService.httpPost(url, payload, this._holderRequestConfig(decryptedApiKey));
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Build the common request config for holder agent calls
+   * @param decryptedApiKey
+   * @returns http request config
+   */
+  private _holderRequestConfig(decryptedApiKey: string): { headers: { authorization: string }; timeout: number } {
+    const timeout: number = CommonConstants.CLOUD_WALLET_REQUEST_TIMEOUT;
+    return {
+      headers: { authorization: decryptedApiKey },
+      timeout
+    };
   }
 }

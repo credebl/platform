@@ -5,7 +5,7 @@ Previous stable release: v2.2.0. Draft: confirm against the final merged PR list
 
 ## Agent controller compatibility
 - Requires agent-controller v2.3.1 (released 2026-11-03), a patch on v2.3.0 (2026-10-30) that adds optional holder-binding fields to `POST /openid4vc/holder/request-credential`, upgrades Credo 0.7.0 -> 0.7.4 with no storage migration, and clears runtime Dependabot alerts. The image name is unchanged in this release: `ghcr.io/credebl/credo-controller:v2.3.1`. The rename to `agent-controller` is deferred upstream.
-- Controller 2.3.x adds W3C JSON-LD end to end (`ldp_vc` over OID4VC, DCQL verification), X.509 chain support, a tenant session leak fix, and moves its base image to Node 26. Rebuild agent images rather than reusing cached layers.
+- Controller 2.3.x adds W3C JSON-LD end-to-end (`ldp_vc` over OID4VC, DCQL verification), X.509 chain support, a tenant session leak fix, and moves its base image to Node 26. Rebuild agent images rather than reusing cached layers.
 - Holder list endpoints (SD-JWT, mdoc, W3C) return a plain array with no query parameters, but an envelope `{ data, pagination, filters? }` once any parameter is sent. The platform on `main` does not call these endpoints. Any holder-management work (for example #1792) must handle both shapes.
 
 ## Features

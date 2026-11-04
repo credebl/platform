@@ -1,10 +1,10 @@
 # CREDEBL Platform v2.3.0
 
-Released together with agent-controller v2.3.1 (`AFJ_VERSION=ghcr.io/credebl/credo-controller:v2.3.1`).
+Released together with agent-controller v2.3.2 (`AFJ_VERSION=ghcr.io/credebl/credo-controller:v2.3.2`).
 Previous stable release: v2.2.0. Draft: confirm against the final merged PR list before tagging.
 
 ## Agent controller compatibility
-- Requires agent-controller v2.3.1 (released 2026-11-03), a patch on v2.3.0 (2026-10-30) that adds optional holder-binding fields to `POST /openid4vc/holder/request-credential`, upgrades Credo 0.7.0 -> 0.7.4 with no storage migration, and clears runtime Dependabot alerts. The image name is unchanged in this release: `ghcr.io/credebl/credo-controller:v2.3.1`. The rename to `agent-controller` is deferred upstream.
+- Requires agent-controller v2.3.2 (released 2026-11-04), which follows 2.3.0 (2026-10-30) and 2.3.1 (2026-11-03). 2.3.1 adds optional holder-binding fields to `POST /openid4vc/holder/request-credential` and Credo 0.7.0 -> 0.7.4 (no storage migration). 2.3.2 makes `ldp_vc` credentials bind to a `did:web` holder and adds `Ed25519VerificationKey2020` support; the platform's `did:web` default for `ldp_vc` (#1820) relies on it. In 2.3.2, `credentialSubject.id` of new W3C credentials is the holder's bare DID, and DCQL `ldp_vc` queries must use expanded JSON-LD IRIs in `meta.type_values`. The image name is unchanged in this release: `ghcr.io/credebl/credo-controller:v2.3.2`. The rename to `agent-controller` is deferred upstream.
 - Controller 2.3.x adds W3C JSON-LD end-to-end (`ldp_vc` over OID4VC, DCQL verification), X.509 chain support, a tenant session leak fix, and moves its base image to Node 26. Rebuild agent images rather than reusing cached layers.
 - Holder list endpoints (SD-JWT, mdoc, W3C) return a plain array with no query parameters, but an envelope `{ data, pagination, filters? }` once any parameter is sent. The platform on `main` does not call these endpoints. Any holder-management work (for example #1792) must handle both shapes.
 
@@ -35,4 +35,4 @@ Previous stable release: v2.2.0. Draft: confirm against the final merged PR list
 - Run `prisma migrate deploy`. New migrations: the RLS migration (test on a copy of production data first) and `add_cryptographic_binding_methods_to_oidc_issuer` (adds `oidc_issuer.cryptographicBindingMethods TEXT[] DEFAULT '{}'`, additive, no backfill) (#1820).
 - New agent env vars in `agent.env`: `STATUS_LIST_SERVER_URL`, `STATUS_LIST_API_KEY`, `STATUS_LIST_DEFAULT_SIZE`; platform `STATUS_LIST_HOST` in `.env.demo`.
 - OpenBao is optional; see `openspec/specs/openbao-secret-storage` and `docker-compose.openbao.yml`.
-- Pin the controller image to v2.3.1 (`AFJ_VERSION`).
+- Pin the controller image to v2.3.2 (`AFJ_VERSION`).

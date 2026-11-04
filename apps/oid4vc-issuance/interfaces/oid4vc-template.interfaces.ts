@@ -4,6 +4,7 @@ export interface SdJwtTemplate {
   vct: string;
   schemaUrl?: string;
   context?: string[];
+  cryptographicBindingMethods?: string[];
   attributes: CredentialAttribute[];
 }
 

@@ -62,6 +62,14 @@ const ISSUER_DPOP_ALGS_DEFAULT = ['RS256', 'ES256'];
 const STATIC_CREDENTIAL_ALGS_FOR_SDJWT = ['ES256'];
 const STATIC_BINDING_METHODS_FOR_SDJWT = ['did:key', 'did:web', 'did:jwk', 'jwk'];
 
+const STATIC_BINDING_METHODS_FOR_LDP_VC = ['did:key', 'did:web'];
+
+function resolveBindingMethods(template: SdJwtTemplate, defaults: string[]): string[] {
+  return template.cryptographicBindingMethods?.length
+    ? [...new Set(template.cryptographicBindingMethods)]
+    : [...defaults];
+}
+
 const STATIC_CREDENTIAL_ALGS_FOR_MDOC = ['ES256'];
 const STATIC_BINDING_METHODS_FOR_MDOC = ['jwk'];
 
@@ -237,7 +245,7 @@ export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate
       scope: credentialScope,
       vct: template.vct,
       credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS_FOR_SDJWT],
-      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS_FOR_SDJWT],
+      cryptographic_binding_methods_supported: resolveBindingMethods(template, STATIC_BINDING_METHODS_FOR_SDJWT),
       proof_types_supported: {
         jwt: {
           proof_signing_alg_values_supported: ['ES256', 'EdDSA']
@@ -312,7 +320,7 @@ export function buildJwtVcJsonLdCredentialConfig(
       scope: credentialScope,
       vct: template.vct,
       credential_signing_alg_values_supported: [...STATIC_CREDENTIAL_ALGS_FOR_SDJWT],
-      cryptographic_binding_methods_supported: [...STATIC_BINDING_METHODS_FOR_SDJWT],
+      cryptographic_binding_methods_supported: resolveBindingMethods(template, STATIC_BINDING_METHODS_FOR_SDJWT),
       proof_types_supported: {
         jwt: {
           proof_signing_alg_values_supported: ['ES256', 'EdDSA']
@@ -352,7 +360,7 @@ export function buildLdpVcCredentialConfig(name: string, template: SdJwtTemplate
       scope: credentialScope,
       vct: template.vct,
       credential_signing_alg_values_supported: ['Ed25519Signature2018', 'Ed25519Signature2020', 'EdDSA'],
-      cryptographic_binding_methods_supported: ['did:key'],
+      cryptographic_binding_methods_supported: resolveBindingMethods(template, STATIC_BINDING_METHODS_FOR_LDP_VC),
       proof_types_supported: {
         jwt: {
           proof_signing_alg_values_supported: ['Ed25519Signature2018', 'Ed25519Signature2020', 'EdDSA']
@@ -395,12 +403,20 @@ export function buildCredentialConfig(
  * Build agent payload from Prisma rows (attributes/appearance are Prisma.JsonValue).
  * Safely coerces JSON and then builds the same structure as Builder #2.
  */
-export function buildCredentialConfigurationsSupported(templateRows: unknown[]): Record<string, CredentialConfig> {
+export function buildCredentialConfigurationsSupported(
+  templateRows: unknown[],
+  issuerBindingMethods: string[] = []
+): Record<string, CredentialConfig> {
   const credentialConfigMap: Record<string, CredentialConfig> = {};
 
   for (const templateRow of templateRows as Record<string, unknown>[]) {
     const format = templateRow.format as string;
-    const templateToBuild = templateRow.attributes as SdJwtTemplate | MdocTemplate;
+    const rawTemplate = templateRow.attributes as SdJwtTemplate | MdocTemplate;
+    // Precedence: template-level binding methods, then the issuer default, then the per-format default
+    const templateToBuild =
+      format !== CredentialFormat.Mdoc && !(rawTemplate as SdJwtTemplate).cryptographicBindingMethods?.length
+        ? { ...rawTemplate, cryptographicBindingMethods: issuerBindingMethods }
+        : rawTemplate;
 
     const credentialConfig = buildCredentialConfig(
       templateRow.name as string,

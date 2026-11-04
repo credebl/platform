@@ -295,6 +295,23 @@ export enum ledgerLessDIDType {
   DID_WEB = 'did:web'
 }
 
+/**
+ * Holder cryptographic binding methods an issuer can advertise (OID4VCI `cryptographic_binding_methods_supported`).
+ * `jwk` plus the DID methods credo-ts can resolve (core: key, web, jwk; via modules: indy, sov, cheqd, webvh, polygon).
+ * `did:peer` is excluded as it is not publicly resolvable by the issuer.
+ */
+export const SUPPORTED_HOLDER_BINDING_METHODS = [
+  'jwk',
+  'did:key',
+  'did:web',
+  'did:jwk',
+  'did:indy',
+  'did:sov',
+  'did:cheqd',
+  'did:webvh',
+  'did:polygon'
+] as const;
+
 export enum CloudWalletType {
   BASE_WALLET = 'CLOUD_BASE_WALLET',
   SUB_WALLET = 'CLOUD_SUB_WALLET'

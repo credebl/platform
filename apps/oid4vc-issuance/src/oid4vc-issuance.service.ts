@@ -228,6 +228,7 @@ export class Oid4vcIssuanceService {
         createdById: userDetails.id,
         orgAgentId,
         batchCredentialIssuanceSize: issuerCreation?.batchCredentialIssuanceSize,
+        cryptographicBindingMethods: issuerCreation?.cryptographicBindingMethods,
         isPrimary,
         orgId
       };
@@ -1071,7 +1072,10 @@ export class Oid4vcIssuanceService {
       const issuerDetails = await this.oid4vcIssuanceRepository.getOidcIssuerDetailsById(issuerId);
       const templates = await this.oid4vcIssuanceRepository.getTemplatesByIssuerId(issuerId);
 
-      const credentialConfigurationsSupported = buildCredentialConfigurationsSupported(templates);
+      const credentialConfigurationsSupported = buildCredentialConfigurationsSupported(
+        templates,
+        issuerDetails?.cryptographicBindingMethods
+      );
       return buildIssuerPayload({ credentialConfigurationsSupported }, issuerDetails);
     } catch (error) {
       this.logger.error(`[buildOidcIssuerPayload] - error: ${JSON.stringify(error)}`);

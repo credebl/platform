@@ -6,6 +6,7 @@ import {
   IConnectionDetails,
   ICreateConnectionInvitation,
   IDidCreate,
+  IDidX509Import,
   IGetCredDefAgentRedirection,
   IGetSchemaAgentRedirection,
   IIssuanceCreateOffer,
@@ -68,6 +69,26 @@ export class AgentServiceController {
   @MessagePattern({ cmd: 'create-did' })
   async createDid(payload: { createDidDto: IDidCreate; orgId: string; user: IUserRequestInterface }): Promise<object> {
     return this.agentServiceService.createDid(payload.createDidDto, payload.orgId, payload.user);
+  }
+
+  /**
+   * @returns the imported did:x509 and its KMS key
+   */
+  @MessagePattern({ cmd: 'import-did-x509' })
+  async importDidX509(payload: {
+    importDidX509Dto: IDidX509Import;
+    orgId: string;
+    user: IUserRequestInterface;
+  }): Promise<object> {
+    return this.agentServiceService.importDidX509(payload.importDidX509Dto, payload.orgId, payload.user);
+  }
+
+  /**
+   * @returns the certificate chain stored with a did:x509
+   */
+  @MessagePattern({ cmd: 'get-did-x509-chain' })
+  async getDidX509Chain(payload: { orgId: string; did: string }): Promise<object> {
+    return this.agentServiceService.getDidX509Chain(payload.orgId, payload.did);
   }
 
   @MessagePattern({ cmd: 'create-wallet' })

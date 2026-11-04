@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 
@@ -60,6 +60,34 @@ describe('CommonService', () => {
       await expect(service.httpPost('http://127.0.0.1:8080', {})).rejects.toEqual(
         expect.objectContaining({ status: 404 })
       );
+    });
+
+    it('keeps the request body and authorization header out of the error log', async () => {
+      const logError = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+      const axios400 = Object.assign(
+        errorWithResponse('Request failed with status code 400', { status: 400, data: {} }),
+        {
+          toJSON: () => ({
+            message: 'Request failed with status code 400',
+            config: {
+              url: 'http://agent.test/dids/x509/import',
+              method: 'post',
+              data: '{"privateKey":"-----BEGIN PRIVATE KEY-----secret","passphrase":"hunter2"}',
+              headers: { authorization: 'agent-api-key' }
+            }
+          })
+        }
+      );
+      mockHttpService.post.mockReturnValue({ toPromise: () => Promise.reject(axios400) });
+
+      await expect(service.httpPost('http://agent.test/dids/x509/import', {})).rejects.toBeDefined();
+
+      const logged = logError.mock.calls.map((call) => String(call[0])).join('\n');
+      expect(logged).toContain('http://agent.test/dids/x509/import');
+      expect(logged).not.toContain('secret');
+      expect(logged).not.toContain('hunter2');
+      expect(logged).not.toContain('agent-api-key');
+      logError.mockRestore();
     });
   });
 

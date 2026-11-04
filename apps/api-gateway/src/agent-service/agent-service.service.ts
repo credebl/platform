@@ -7,6 +7,7 @@ import { AgentSpinUpSatus, IWalletRecord } from './interface/agent-service.inter
 import { AgentStatus } from './interface/agent-service.interface';
 import { CreateDidDto } from './dto/create-did.dto';
 import { CreateWalletDto } from './dto/create-wallet.dto';
+import { ImportDidX509Dto } from './dto/import-did-x509.dto';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
@@ -45,6 +46,20 @@ export class AgentService extends BaseService {
 
     // NATS call
     return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'create-did', payload);
+  }
+
+  async importDidX509(importDidX509Dto: ImportDidX509Dto, orgId: string, user: user): Promise<object> {
+    const payload = { importDidX509Dto, orgId, user };
+
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'import-did-x509', payload);
+  }
+
+  async getDidX509Chain(orgId: string, did: string): Promise<object> {
+    const payload = { orgId, did };
+
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'get-did-x509-chain', payload);
   }
 
   async createWallet(createWalletDto: CreateWalletDto, user: user): Promise<IWalletRecord> {

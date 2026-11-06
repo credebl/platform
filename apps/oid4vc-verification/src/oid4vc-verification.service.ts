@@ -5,11 +5,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types, camelcase */
-import { fetchConsentNotice } from './oid4vc-verification.helper';
+import { buildVerificationSessionResult, fetchConsentNotice } from './oid4vc-verification.helper';
 
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -25,6 +26,7 @@ import { map } from 'rxjs';
 import {
   CreateVerifier,
   IRequestSigner,
+  OpenId4VcVerificationPresentationState,
   UpdateVerifier,
   VerifierRecord
 } from '@credebl/common/interfaces/oid4vp-verification';
@@ -478,21 +480,34 @@ export class Oid4vpVerificationService extends BaseService {
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      const { agentEndPoint, id } = agentDetails;
+      const { agentEndPoint } = agentDetails;
+      const session = await this.getVerificationSessionById(agentEndPoint, orgId, verificationSessionId);
+      if (!session) {
+        throw new NotFoundException(ResponseMessages.oid4vpSession.error.responseNotFound);
+      }
+
+      if (OpenId4VcVerificationPresentationState.ResponseVerified !== session.state) {
+        this.logger.debug(
+          `[getVerificationSessionResponse] session is in state ${session.state}; returning stored session result`
+        );
+        return buildVerificationSessionResult(session);
+      }
+
       const url = getAgentUrl(
         agentEndPoint,
         CommonConstants.OIDC_VERIFIER_SESSION_RESPONSE_GET_BY_ID,
         verificationSessionId
       );
-      const verifiers = await await this._getOid4vpVerifierSession(url, orgId);
-      if (!verifiers || 0 === verifiers.length) {
+      const agentResponse = await this._getOid4vpVerifierSession(url, orgId);
+      const response = Array.isArray(agentResponse) ? agentResponse[0] : agentResponse;
+      if (!response) {
         throw new NotFoundException(ResponseMessages.oid4vpSession.error.responseNotFound);
       }
       this.logger.debug(`[getVerificationSessionResponse] response fetched successfully for orgId=${orgId}`);
-      return verifiers;
+      return buildVerificationSessionResult(response, session.state, session.errorMessage);
     } catch (error) {
       this.logger.error(`[getVerificationSessionResponse] - error: ${JSON.stringify(error)}`);
-      throw new RpcException(error?.response ?? error);
+      throw this.toRpcException(error);
     }
   }
 
@@ -591,6 +606,26 @@ export class Oid4vpVerificationService extends BaseService {
       );
       throw error;
     }
+  }
+
+  private async getVerificationSessionById(
+    agentEndPoint: string,
+    orgId: string,
+    verificationSessionId: string
+  ): Promise<any> {
+    const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_GET_BY_ID, verificationSessionId);
+    const sessions = await this._getOid4vpVerifierSession(url, orgId);
+    return Array.isArray(sessions) ? sessions[0] : sessions;
+  }
+
+  private toRpcException(error: any): RpcException {
+    if (error instanceof RpcException) {
+      return error;
+    }
+    if (error instanceof HttpException) {
+      return new RpcException(error.getResponse());
+    }
+    return new RpcException(error?.response ?? error);
   }
 
   async _getOid4vpVerifierSession(url: string, orgId: string): Promise<any> {
@@ -733,23 +768,66 @@ export class Oid4vpVerificationService extends BaseService {
     this.logger.debug(
       `[verifyAuthorizationResponse] called for orgId=${orgId}, verificationSessionId=${JSON.stringify(verifyAuthorizationResponse.verificationSessionId)}`
     );
+    let agentEndPoint: string;
+    let verificationAttempted = false;
     try {
       const agentDetails = await this.oid4vpRepository.getAgentEndPoint(orgId);
       if (!agentDetails) {
         throw new NotFoundException(ResponseMessages.issuance.error.agentEndPointNotFound);
       }
-      const { agentEndPoint, id } = agentDetails;
+      ({ agentEndPoint } = agentDetails);
+      const session = await this.getVerificationSessionById(
+        agentEndPoint,
+        orgId,
+        verifyAuthorizationResponse.verificationSessionId
+      );
+      if (!session) {
+        throw new NotFoundException(ResponseMessages.oid4vpSession.error.notFound);
+      }
+
+      if (OpenId4VcVerificationPresentationState.ResponseVerified === session.state) {
+        this.logger.debug(
+          `[verifyAuthorizationResponse] session is already verified; returning stored result for orgId=${orgId}`
+        );
+        return this.getVerificationSessionResponse(orgId, verifyAuthorizationResponse.verificationSessionId);
+      }
+
+      if (OpenId4VcVerificationPresentationState.Error === session.state) {
+        this.logger.debug(`[verifyAuthorizationResponse] session failed; returning stored error result`);
+        return buildVerificationSessionResult(session);
+      }
+
       const url = getAgentUrl(agentEndPoint, CommonConstants.OIDC_VERIFIER_SESSION_AUTH_RESPONSE_VERIFY);
+      verificationAttempted = true;
       const verificationResult = await this.natsClient.sendNatsMessage(
         this.oid4vpVerificationServiceProxy,
         'agent-verify-oid4vp-session-auth-response',
         { url, orgId, verifyAuthorizationResponse }
       );
+      const result = Array.isArray(verificationResult) ? verificationResult[0] : verificationResult;
+      const verifiedSession = result?.verificationSession ?? result;
       this.logger.debug(`[verifyAuthorizationResponse] verification result received successfully for orgId=${orgId}`);
-      return verificationResult;
+      return buildVerificationSessionResult(result, verifiedSession?.state, verifiedSession?.errorMessage);
     } catch (error) {
       this.logger.error(`[verifyAuthorizationResponse] - error: ${JSON.stringify(error)}`);
-      throw new RpcException(error?.response ?? error);
+      if (verificationAttempted && agentEndPoint) {
+        try {
+          const failedSession = await this.getVerificationSessionById(
+            agentEndPoint,
+            orgId,
+            verifyAuthorizationResponse.verificationSessionId
+          );
+          if (OpenId4VcVerificationPresentationState.Error === failedSession?.state) {
+            this.logger.debug(`[verifyAuthorizationResponse] verification failed; returning stored error result`);
+            return buildVerificationSessionResult(failedSession);
+          }
+        } catch (sessionLookupError) {
+          this.logger.error(
+            `[verifyAuthorizationResponse] failed to fetch session after verification error: ${JSON.stringify(sessionLookupError)}`
+          );
+        }
+      }
+      throw this.toRpcException(error);
     }
   }
 }

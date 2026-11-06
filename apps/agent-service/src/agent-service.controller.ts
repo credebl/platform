@@ -427,6 +427,23 @@ export class AgentServiceController {
     return this.agentServiceService.oidcDeleteCredentialOffer(payload.url, payload.orgId);
   }
 
+  @MessagePattern({ cmd: 'agent-service-didcomm-revoke-credential' })
+  async didcommRevokeCredential(payload: {
+    url: string;
+    orgId: string;
+    listId: string;
+    index: number;
+    issuerDid: string;
+  }): Promise<object> {
+    return this.agentServiceService.didcommRevokeCredential(
+      payload.url,
+      payload.orgId,
+      payload.listId,
+      payload.index,
+      payload.issuerDid
+    );
+  }
+
   @MessagePattern({ cmd: 'agent-service-oid4vc-revoke-credential' })
   async oidcRevokeCredential(payload: { url: string; orgId: string }): Promise<object> {
     return this.agentServiceService.oidcRevokeCredential(payload.url, payload.orgId);

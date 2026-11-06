@@ -22,6 +22,7 @@ import { IssuanceService } from './issuance.service';
 import { MessagePattern } from '@nestjs/microservices';
 import { OOBIssueCredentialDto } from 'apps/api-gateway/src/issuance/dtos/issuance.dto';
 import { user } from '@prisma/client';
+import { IUserRequest } from '@credebl/user-request/user-request.interface';
 
 @Controller()
 export class IssuanceController {
@@ -42,6 +43,16 @@ export class IssuanceController {
   @MessagePattern({ cmd: 'send-credential-create-offer-oob' })
   async sendCredentialOutOfBand(payload: OOBIssueCredentialDto): Promise<{ response: object }> {
     return this.issuanceService.sendCredentialOutOfBand(payload);
+  }
+
+  @MessagePattern({ cmd: 'issuance-revoke-credential' })
+  async revokeCredential(payload: {
+    orgId: string;
+    threadId: string;
+    user: IUserRequest;
+  }): Promise<{ response: object }> {
+    const { orgId, threadId, user } = payload;
+    return this.issuanceService.revokeCredential(orgId, threadId, user);
   }
 
   @MessagePattern({ cmd: 'get-all-issued-credentials' })

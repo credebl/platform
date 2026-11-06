@@ -19,7 +19,7 @@ import {
   Scope
 } from '@nestjs/common';
 import { Oid4vcIssuanceRepository } from './oid4vc-issuance.repository';
-import { StatusListAllocatorService } from './status-list-allocator.service';
+import { StatusListAllocatorService } from '@credebl/status-list';
 import { CredentialFormat } from '@credebl/enum/enum';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -748,17 +748,22 @@ export class Oid4vcIssuanceService {
       );
 
       if (createOidcCredentialOffer.isRevocable) {
-        const hasSdJwt = buildOidcCredentialOffer.credentials.some((c) => c.format === CredentialFormat.SdJwtVc);
-        if (hasSdJwt) {
+        const revocableFormats = [CredentialFormat.SdJwtVc, CredentialFormat.JwtVcJsonLd, CredentialFormat.LdpVc];
+        const hasRevocableFormat = buildOidcCredentialOffer.credentials.some((c) =>
+          revocableFormats.includes(c.format)
+        );
+        if (hasRevocableFormat) {
           if (!process.env.STATUS_LIST_HOST) {
-            throw new BadRequestException('Revocable SD-JWT is not supported as STATUS_LIST_HOST is not configured.');
+            throw new BadRequestException(
+              'Revocable credential is not supported as STATUS_LIST_HOST is not configured.'
+            );
           }
           const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
           if (!agentDetailsForAlloc?.orgDid) {
-            throw new BadRequestException('Organization DID is required for revocable SD-JWT credentials');
+            throw new BadRequestException('Organization DID is required for revocable credentials');
           }
           for (const cred of buildOidcCredentialOffer.credentials) {
-            if (cred.format === CredentialFormat.SdJwtVc && !cred.statusListDetails) {
+            if (revocableFormats.includes(cred.format) && !cred.statusListDetails) {
               const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
               cred.statusListDetails = {
                 listId: allocation.listId,
@@ -844,6 +849,9 @@ export class Oid4vcIssuanceService {
   async createOidcCredentialOfferD2A(oidcCredentialD2APayload, orgId: string): Promise<object | string> {
     const newlyAllocatedIndices: { listId: string; index: number }[] = [];
     try {
+      if ('v2.0' === oidcCredentialD2APayload.credentialVersion) {
+        oidcCredentialD2APayload.version = 'v2.0';
+      }
       for (const credential of oidcCredentialD2APayload.credentials) {
         const { signerOptions } = credential;
 
@@ -883,10 +891,15 @@ export class Oid4vcIssuanceService {
       );
 
       if (oidcCredentialD2APayload.isRevocable) {
-        const hasSdJwt = oidcCredentialD2APayload.credentials.some((c) => c.format === CredentialFormat.SdJwtVc);
-        if (hasSdJwt) {
+        const revocableFormats = [CredentialFormat.SdJwtVc, CredentialFormat.JwtVcJsonLd, CredentialFormat.LdpVc];
+        const hasRevocableFormat = oidcCredentialD2APayload.credentials.some((c) =>
+          revocableFormats.includes(c.format)
+        );
+        if (hasRevocableFormat) {
           if (!process.env.STATUS_LIST_HOST) {
-            throw new BadRequestException('Revocable SD-JWT is not supported as STATUS_LIST_HOST is not configured.');
+            throw new BadRequestException(
+              'Revocable credential is not supported as STATUS_LIST_HOST is not configured.'
+            );
           }
           const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
           if (!agentDetailsForAlloc?.orgDid) {
@@ -894,7 +907,7 @@ export class Oid4vcIssuanceService {
           }
           for (const cred of oidcCredentialD2APayload.credentials) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((cred as any).format === CredentialFormat.SdJwtVc && !cred.statusListDetails) {
+            if (revocableFormats.includes((cred as any).format) && !cred.statusListDetails) {
               const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
               cred.statusListDetails = {
                 listId: allocation.listId,
@@ -1056,7 +1069,10 @@ export class Oid4vcIssuanceService {
           url,
           orgId
         };
-        return this.natsCall(pattern, payload);
+        const result = await this.natsCall(pattern, payload);
+        await this.statusListAllocatorService.markCredentialAllocationsRevoked(orgId, issuanceSessionId);
+
+        return result;
       } else {
         throw new BadRequestException('Credential is not revocable as no status list allocation was found.');
       }

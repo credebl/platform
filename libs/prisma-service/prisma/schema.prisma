@@ -397,9 +397,16 @@ model credentials {
   state                String        @default("")
   schemaId             String        @default("")
   credDefId            String        @default("")
+  statusListId         String?       @db.Uuid
+  statusListIndex      Int?
+  statusListUri        String?
+  credentialVersion    String?
+  revokedAt            DateTime?     @db.Timestamptz(6)
   orgId                String?       @db.Uuid
   organisation         organisation? @relation(fields: [orgId], references: [id])
   connections          connections?  @relation(fields: [connectionId], references: [connectionId])
+
+  @@unique([statusListId, statusListIndex])
 }
 
 model presentations {
@@ -673,6 +680,7 @@ model issued_oid4vc_credentials {
   createDateTime    DateTime @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt
   statusListUri     String
+  revokedAt         DateTime? @db.Timestamptz(6)
 
   organisation organisation? @relation(fields: [orgId], references: [id], onDelete: Restrict)
 

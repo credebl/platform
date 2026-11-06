@@ -20,6 +20,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { ContextInterceptorModule } from '@credebl/context/contextInterceptorModule';
 import { GlobalConfigModule } from '@credebl/config/global-config.module';
 import { NATSClient } from '@credebl/common/NATSClient';
+import { StatusListAllocatorService } from '@credebl/status-list';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
     IssuanceService,
     IssuanceRepository,
     UserActivityRepository,
+    StatusListAllocatorService,
     PrismaService,
     Logger,
     OutOfBandIssuance,

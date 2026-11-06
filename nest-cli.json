@@ -62,6 +62,15 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
+    "status-list": {
+      "type": "library",
+      "root": "libs/status-list",
+      "entryFile": "index",
+      "sourceRoot": "libs/status-list/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/status-list/tsconfig.lib.json"
+      }
+    },
     "config": {
       "type": "library",
       "root": "libs/config",

@@ -81,6 +81,7 @@ export const getAgentUrl = (agentEndPoint: string, urlFlag: string, paramId?: st
     [String(CommonConstants.VERIFY_SIGNED_DATA_FROM_AGENT), String(CommonConstants.URL_AGENT_VERIFY_SIGNED_DATA)],
     [String(CommonConstants.CREATE_OFFER), String(CommonConstants.URL_ISSUANCE_CREATE_OFFER)],
     [String(CommonConstants.CREATE_OFFER_OUT_OF_BAND), String(CommonConstants.URL_OUT_OF_BAND_CREDENTIAL_OFFER)],
+    [String(CommonConstants.REVOKE_BITSTRING_CREDENTIAL), String(CommonConstants.URL_ISSUANCE_REVOKE_CREDENTIAL)],
     [String(CommonConstants.GET_OFFER_BY_CRED_ID), String(CommonConstants.URL_ISSUE_GET_CREDS_BY_CRED_REC_ID)],
     [
       String(CommonConstants.URL_GET_PROOF_PRESENTATION_BY_ID_FLAG),

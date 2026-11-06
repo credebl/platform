@@ -58,7 +58,8 @@ export class X509CertificateRepository {
           certificateBase64: createDto.certificateBase64,
           createdBy: createDto.createdBy,
           lastChangedBy: createDto.lastChangedBy,
-          keyId: createDto.keyId
+          keyId: createDto.keyId,
+          isImported: createDto.isImported ?? false
         }
       });
 

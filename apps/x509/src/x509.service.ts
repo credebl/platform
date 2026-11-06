@@ -227,7 +227,10 @@ export class X509CertificateService extends BaseService {
       const importurl = getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.X509_IMPORT_CERTIFICATE);
 
       this.logger.log(`Certificate validation done`);
-      const certificate = await this._importX509CertificateForOrg(options, importurl, orgId);
+      // The certificate is the source of truth for the key type; callers such
+      // as studio may omit it or send a different spelling.
+      const importOptions: IX509ImportCertificateOptionsDto = { ...options, keyType: crv as x5cKeyType };
+      const certificate = await this._importX509CertificateForOrg(importOptions, importurl, orgId);
       if (!certificate) {
         throw new NotFoundException(ResponseMessages.x509.error.errorCreate);
       }
@@ -241,7 +244,8 @@ export class X509CertificateService extends BaseService {
         expiry,
         createdBy: user.id,
         lastChangedBy: user.id,
-        keyId: certificate.response.keyId
+        keyId: certificate.response.keyId,
+        isImported: true
       };
       this.logger.log(`Now adding certificate in platform for org : ${orgId} `);
 

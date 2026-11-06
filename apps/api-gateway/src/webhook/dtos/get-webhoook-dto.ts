@@ -6,11 +6,11 @@ import { trim } from '@credebl/common/cast.helper';
 @ApiExtraModels()
 export class GetWebhookDto {
 
-    @ApiPropertyOptional({example: '2a041d6e-d24c-4ed9-b011-1cfc371a8b8e'})
-    @IsOptional()
+    @ApiProperty({example: '2a041d6e-d24c-4ed9-b011-1cfc371a8b8e'})
     @Transform(({ value }) => trim(value))
+    @IsNotEmpty({ message: 'Please provide the valid orgID' })
     @IsString({ message: 'Organization id must be in string format.' })
-    orgId?: string;
+    orgId: string;
 
     @ApiPropertyOptional({example: '3a041d6e-d24c-4ed9-b011-1cfc371a8b8e'})
     @IsOptional()

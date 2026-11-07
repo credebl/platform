@@ -23,6 +23,18 @@ describe('redactForLog', () => {
     expect(log).toContain(REDACTED);
   });
 
+  it('drops common credential keys', () => {
+    expect(
+      redactForLog({ password: 'p', accessToken: 't', clientId: 'c', clientSecret: 's', 'Set-Cookie': ['k'] })
+    ).toEqual({
+      password: REDACTED,
+      accessToken: REDACTED,
+      clientId: 'c',
+      clientSecret: REDACTED,
+      'Set-Cookie': REDACTED
+    });
+  });
+
   it('matches sensitive keys regardless of case', () => {
     expect(redactForLog({ PrivateKey: 'x', AUTHORIZATION: 'y', ApiKey: 'z' })).toEqual({
       PrivateKey: REDACTED,

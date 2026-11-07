@@ -126,7 +126,7 @@ describe('AgentServiceService did:x509', () => {
       expect(repository.storeDidDetails).not.toHaveBeenCalled();
     });
 
-    it('does not mistake an unreachable agent for a missing route', async () => {
+    it('reports an unreachable agent as unavailable without its address', async () => {
       commonService.httpPost.mockRejectedValue(
         new HttpException({ statusCode: 404, error: 'connect ECONNREFUSED 127.0.0.1:8001' }, HttpStatus.NOT_FOUND)
       );
@@ -134,9 +134,9 @@ describe('AgentServiceService did:x509', () => {
       const error = await service.importDidX509(importPayload, ORG_ID, user).catch((e) => e);
 
       expect(rpcError(error)).toEqual({
-        statusCode: 404,
-        message: 'connect ECONNREFUSED 127.0.0.1:8001',
-        error: 'connect ECONNREFUSED 127.0.0.1:8001'
+        statusCode: 503,
+        message: ResponseMessages.errorMessages.serverError,
+        error: ResponseMessages.errorMessages.serverError
       });
     });
 

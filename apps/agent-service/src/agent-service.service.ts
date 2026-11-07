@@ -1060,10 +1060,15 @@ export class AgentServiceService {
       return error;
     }
 
+    const generic = ResponseMessages.errorMessages.serverError;
+    // CommonService reports an unreachable agent as a 404 whose text names the agent's internal address.
+    if (this.isConnectionRefused(error)) {
+      return new RpcException({ statusCode: HttpStatus.SERVICE_UNAVAILABLE, message: generic, error: generic });
+    }
+
     const status = Number(error?.response?.statusCode ?? error?.response?.status ?? error?.status ?? error?.statusCode);
     const statusCode =
       Number.isInteger(status) && 400 <= status && 600 > status ? status : HttpStatus.INTERNAL_SERVER_ERROR;
-    const generic = ResponseMessages.errorMessages.serverError;
     if (HttpStatus.INTERNAL_SERVER_ERROR <= statusCode) {
       return new RpcException({ statusCode, message: generic, error: generic });
     }
@@ -1080,6 +1085,11 @@ export class AgentServiceService {
       Array.isArray(message) && 0 < message.length && message.every((entry) => 'string' === typeof entry);
     const reason = isText || isTextList ? message : generic;
     return new RpcException({ statusCode, message: reason, error: reason });
+  }
+
+  private isConnectionRefused(error): boolean {
+    const texts = [error?.message, error?.code, error?.response?.message, error?.response?.error];
+    return texts.some((text) => 'string' === typeof text && text.includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED));
   }
 
   private constructUrl(agentDetails): string {

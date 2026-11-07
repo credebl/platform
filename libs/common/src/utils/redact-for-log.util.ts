@@ -1,6 +1,6 @@
 /**
  * Keys whose values never belong in a log line: key material, encrypted key envelopes, request bodies, headers and
- * credentials. Axios errors serialise the whole request (config.data, config.headers, request._header), and validation
+ * credentials (passwords, tokens, secrets, cookies). Axios errors serialise the whole request (config.data, config.headers, request._header), and validation
  * errors echo the rejected `value`, so all of them are dropped wherever they appear.
  */
 const SENSITIVE_KEYS = new Set(
@@ -18,7 +18,16 @@ const SENSITIVE_KEYS = new Set(
     '_header',
     'authorization',
     'apiKey',
-    'request'
+    'request',
+    'password',
+    'token',
+    'accessToken',
+    'refreshToken',
+    'idToken',
+    'secret',
+    'clientSecret',
+    'cookie',
+    'set-cookie'
   ].map((key) => key.toLowerCase())
 );
 

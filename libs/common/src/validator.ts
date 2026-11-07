@@ -29,7 +29,7 @@ export class Validator {
       case DidMethod.INDY === createDid.method && !(createDid.role || createDid.endorserDid):
         errors.push(ResponseMessages.agent.error.requiredEndorserDid);
         break;
-      case DidMethod.POLYGON === createDid.method && !createDid.privatekey:
+      case DidMethod.POLYGON === createDid.method && !createDid.privatekey && !createDid.encryptedKey:
         errors.push(ResponseMessages.agent.error.requiredPrivateKey);
         break;
       case DidMethod.POLYGON === createDid.method && createDid.privatekey && 64 !== createDid.privatekey.length:

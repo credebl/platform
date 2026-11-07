@@ -14,6 +14,7 @@ import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios';
 import { ResponseMessages } from './response-messages';
 import { RpcException } from '@nestjs/microservices';
+import { stringifyForLog } from './utils/redact-for-log.util';
 
 dotenv.config();
 
@@ -32,7 +33,7 @@ export class CommonService {
           return response.data;
         });
     } catch (error) {
-      this.logger.error(`ERROR in POST : ${JSON.stringify(this.redactForLog(error))}`);
+      this.logger.error(`ERROR in POST : ${stringifyForLog(error)}`);
       this.handleCommonErrors(error);
     }
   }
@@ -44,7 +45,7 @@ export class CommonService {
         .toPromise()
         .then((data) => data.data);
     } catch (error) {
-      this.logger.error(`ERROR in GET : ${JSON.stringify(this.redactForLog(error))}`);
+      this.logger.error(`ERROR in GET : ${stringifyForLog(error)}`);
       this.handleCommonErrors(error);
     }
   }
@@ -58,7 +59,7 @@ export class CommonService {
           return response.data;
         });
     } catch (error) {
-      this.logger.error(`ERROR in PATCH : ${JSON.stringify(this.redactForLog(error))}`);
+      this.logger.error(`ERROR in PATCH : ${stringifyForLog(error)}`);
       this.handleCommonErrors(error);
     }
   }
@@ -72,7 +73,7 @@ export class CommonService {
           return data;
         });
     } catch (error) {
-      this.logger.error(`ERROR in DELETE : ${JSON.stringify(this.redactForLog(error))}`);
+      this.logger.error(`ERROR in DELETE : ${stringifyForLog(error)}`);
       this.handleCommonErrors(error);
     }
   }
@@ -167,58 +168,6 @@ export class CommonService {
   /**
    * This function is used to handle common errors inside the CommonService file with HttpException
    */
-  /**
-   * Axios errors serialise the whole request config, which holds the request body and the authorization header.
-   * Recursively strip credentials and key material so they never reach the logs, including from nested validation
-   * errors that echo the rejected value.
-   */
-  private redactForLog(error: any): unknown {
-    const sensitive = new Set([
-      'privateKey',
-      'privateKeyJwk',
-      'privatekey',
-      'passphrase',
-      'encryptedKey',
-      'jwe',
-      'data',
-      'headers',
-      'authorization',
-      'Authorization',
-      'value'
-    ]);
-    const seen = new WeakSet<object>();
-    const serialised = 'function' === typeof error?.toJSON ? error.toJSON() : error;
-
-    const scrub = (input: any): any => {
-      if (!input || 'object' !== typeof input) {
-        return input;
-      }
-      if (seen.has(input)) {
-        return '[Circular]';
-      }
-      seen.add(input);
-      if (Array.isArray(input)) {
-        return input.map(scrub);
-      }
-
-      const source =
-        input instanceof Error
-          ? { name: input.name, message: input.message, ...(input as unknown as Record<string, unknown>) }
-          : input;
-      const output: Record<string, unknown> = {};
-      for (const [key, entry] of Object.entries(source)) {
-        output[key] = sensitive.has(key) ? '[REDACTED]' : scrub(entry);
-      }
-      return output;
-    };
-
-    try {
-      return scrub(serialised);
-    } catch {
-      return '[Unserialisable error]';
-    }
-  }
-
   handleCommonErrors(error): Promise<void> {
     if (error.message.toString().includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)) {
       throw new HttpException(

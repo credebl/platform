@@ -88,6 +88,7 @@ export interface IDidCreate {
   privateKey?: string;
   privateKeyJwk?: Record<string, unknown>;
   passphrase?: string;
+  encryptedKey?: { sessionId: string; jwe: string };
   endpoint?: string;
   method: string;
   did?: string;
@@ -104,8 +105,9 @@ export interface IDidX509Policy {
 
 export interface IDidX509Import {
   certificateChain: string[];
-  privateKey: string;
+  privateKey?: string;
   passphrase?: string;
+  encryptedKey?: { sessionId: string; jwe: string };
   policies?: IDidX509Policy[];
   did?: string;
   isPrimaryDid?: boolean;

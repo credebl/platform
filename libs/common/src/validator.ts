@@ -8,7 +8,7 @@ export class Validator {
   static validateDid(createDid: IDidCreate): void {
     const errors = [];
     // The key material determines the DID when an existing key is imported, so `keyType` and `seed` are not required.
-    const hasImportedKey = Boolean(createDid.privateKey || createDid.privateKeyJwk);
+    const hasImportedKey = Boolean(createDid.privateKey || createDid.privateKeyJwk || createDid.encryptedKey);
 
     switch (true) {
       case DidMethod.WEB === createDid.method && !createDid.domain:

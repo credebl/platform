@@ -880,6 +880,25 @@ export class AgentServiceService {
   }
 
   /**
+   * Creates a single-use key import session on the organization's agent. Only the public half of the session key is
+   * returned, so this call never handles private key material.
+   * @param orgId
+   * @param method DID method the key will be imported for
+   */
+  async createDidImportSession(orgId: string, method: string): Promise<object> {
+    try {
+      const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_DID_IMPORT_SESSION}`;
+
+      return await this.commonService.httpPost(url, { method }, { headers: { authorization: getApiKey } });
+    } catch (error) {
+      this.logger.error(`error in create did import session : ${JSON.stringify(this.redactForLog(error))}`);
+      throw this.toRpcException(error);
+    }
+  }
+
+  /**
    * Create did
    * @param payload
    * @returns did and didDocument
@@ -932,16 +951,8 @@ export class AgentServiceService {
 
       return storeDidDetails;
     } catch (error) {
-      this.logger.error(`error in create did : ${JSON.stringify(error)}`);
-
-      if (error?.response?.error?.message) {
-        throw new RpcException({
-          statusCode: error?.response?.status,
-          error: error?.response?.error?.message
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.logger.error(`error in create did : ${JSON.stringify(this.redactForLog(error))}`);
+      throw this.toRpcException(error);
     }
   }
 
@@ -1005,8 +1016,8 @@ export class AgentServiceService {
         verificationMethodId: imported.verificationMethodId
       };
     } catch (error) {
-      this.logger.error(`error in import did:x509 : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`error in import did:x509 : ${JSON.stringify(this.redactForLog(error))}`);
+      throw this.toRpcException(error);
     }
   }
 
@@ -1034,6 +1045,80 @@ export class AgentServiceService {
     const status = error?.getStatus?.() ?? error?.response?.statusCode ?? error?.status;
     const reason = JSON.stringify(error?.getResponse?.() ?? error?.response ?? '');
     return HttpStatus.NOT_FOUND === status && !reason.includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED);
+  }
+
+  /**
+   * Converts an error into an RpcException that keeps the upstream status and message. Without this the gateway
+   * only sees a generic "Rpc Exception" and reports agent validation failures (an expired import session, a
+   * replayed envelope, ...) as 500 "Something went wrong!".
+   */
+  private toRpcException(error): RpcException {
+    if (error instanceof RpcException) {
+      return error;
+    }
+
+    const statusCode =
+      error?.response?.statusCode ??
+      error?.response?.status ??
+      error?.status ??
+      error?.statusCode ??
+      HttpStatus.INTERNAL_SERVER_ERROR;
+    // CommonService wraps an agent response as { statusCode, error: <agent body> }; local exceptions use
+    // { statusCode, message, error: '<reason phrase>' }, so only an object with its own message is an agent reason.
+    const agentError = error?.response?.error;
+    const agentMessage = 'object' === typeof agentError && agentError?.message ? agentError.message : undefined;
+    const message = agentMessage ?? error?.response?.message ?? error?.message;
+
+    return message ? new RpcException({ statusCode, message }) : new RpcException(error?.response ?? error);
+  }
+
+  /**
+   * Removes key material and HTTP request bodies before an error is serialised into a log line. Agent service logs
+   * must never contain a private key, a passphrase or an encrypted envelope.
+   */
+  private redactForLog(error: unknown): unknown {
+    const sensitive = new Set([
+      'privateKey',
+      'privateKeyJwk',
+      'privatekey',
+      'passphrase',
+      'encryptedKey',
+      'jwe',
+      'data',
+      'headers',
+      'authorization',
+      'Authorization'
+    ]);
+    const seen = new WeakSet<object>();
+
+    const scrub = (value: unknown): unknown => {
+      if (!value || 'object' !== typeof value) {
+        return value;
+      }
+      if (seen.has(value as object)) {
+        return '[Circular]';
+      }
+      seen.add(value as object);
+      if (Array.isArray(value)) {
+        return value.map(scrub);
+      }
+
+      const source =
+        value instanceof Error
+          ? { name: value.name, message: value.message, ...(value as unknown as Record<string, unknown>) }
+          : (value as Record<string, unknown>);
+      const output: Record<string, unknown> = {};
+      for (const [key, entry] of Object.entries(source)) {
+        output[key] = sensitive.has(key) ? '[REDACTED]' : scrub(entry);
+      }
+      return output;
+    };
+
+    try {
+      return scrub(error);
+    } catch {
+      return '[Unserialisable error]';
+    }
   }
 
   private constructUrl(agentDetails): string {

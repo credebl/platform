@@ -1,9 +1,33 @@
 import { trim } from '@credebl/common/cast.helper';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { MaxLength, IsString, Matches, IsNotEmpty, IsOptional, IsObject } from 'class-validator';
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import { IsIn, IsNotEmpty, IsObject, IsOptional, IsString, Matches, MaxLength, ValidateNested } from 'class-validator';
 
 const MAX_PRIVATE_KEY_LENGTH = 20_000;
+const MAX_JWE_LENGTH = 200_000;
+
+/**
+ * Private key material encrypted to a single-use import session. The envelope is opaque to the platform: only the
+ * organization's agent can decrypt it, so it can safely cross the gateway and NATS.
+ */
+export class EncryptedKeyMaterialDto {
+  @ApiProperty({ description: 'Id returned by the create DID import session endpoint' })
+  @IsString({ message: 'encryptedKey.sessionId must be a string.' })
+  @IsNotEmpty({ message: 'encryptedKey.sessionId is required.' })
+  sessionId: string;
+
+  @ApiProperty({ description: 'Compact JWE containing the private key material' })
+  @IsString({ message: 'encryptedKey.jwe must be a string.' })
+  @IsNotEmpty({ message: 'encryptedKey.jwe is required.' })
+  @MaxLength(MAX_JWE_LENGTH, { message: 'encryptedKey.jwe is too long' })
+  jwe: string;
+}
+
+export class CreateDidImportSessionDto {
+  @ApiProperty({ enum: ['key', 'web', 'x509'], example: 'key' })
+  @IsIn(['key', 'web', 'x509'], { message: 'method must be one of key, web, x509' })
+  method: 'key' | 'web' | 'x509';
+}
 
 export class CreateDidDto {
   @ApiProperty({ example: '000000000000000000000000000Seed1' })
@@ -53,25 +77,38 @@ export class CreateDidDto {
   @Transform(({ value }) => trim(value))
   privatekey?: string;
 
-  @ApiPropertyOptional({
-    description:
-      'Existing private key for did:key or did:web: PEM (PKCS#8, SEC1 or PKCS#1, optionally encrypted) or base64 DER (PKCS#8)'
-  })
+  /**
+   * @deprecated Legacy plaintext import. Hidden from the OpenAPI document and rejected unless
+   * `ALLOW_PLAINTEXT_KEY_IMPORT=true`. Use `encryptedKey`.
+   */
+  @ApiHideProperty()
   @IsOptional()
   @IsString({ message: 'privateKey must be in string format.' })
   @MaxLength(MAX_PRIVATE_KEY_LENGTH, { message: 'privateKey is too long' })
   privateKey?: string;
 
-  @ApiPropertyOptional({ description: 'Existing private JWK for did:key or did:web' })
+  /** @deprecated Legacy plaintext import, see `privateKey`. */
+  @ApiHideProperty()
   @IsOptional()
   @IsObject({ message: 'privateKeyJwk must be an object.' })
   privateKeyJwk?: Record<string, unknown>;
 
-  @ApiPropertyOptional({ description: 'Passphrase of an encrypted privateKey' })
+  /** @deprecated Legacy plaintext import, see `privateKey`. */
+  @ApiHideProperty()
   @IsOptional()
   @IsString({ message: 'passphrase must be in string format.' })
   @MaxLength(1000, { message: 'passphrase is too long' })
   passphrase?: string;
+
+  @ApiPropertyOptional({
+    type: EncryptedKeyMaterialDto,
+    description:
+      'Private key material encrypted to a single-use import session. This is the supported way to import an existing did:key or did:web key.'
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EncryptedKeyMaterialDto)
+  encryptedKey?: EncryptedKeyMaterialDto;
 
   @ApiPropertyOptional({ example: 'http://localhost:6006/docs' })
   @IsOptional()

@@ -1,3 +1,8 @@
+export interface EncryptedKeyMaterial {
+  sessionId: string;
+  jwe: string;
+}
+
 export interface IDidCreate {
   keyType?: string;
   seed?: string;
@@ -7,6 +12,7 @@ export interface IDidCreate {
   privateKey?: string;
   privateKeyJwk?: Record<string, unknown>;
   passphrase?: string;
+  encryptedKey?: EncryptedKeyMaterial;
   endpoint?: string;
   method: string;
   did?: string;

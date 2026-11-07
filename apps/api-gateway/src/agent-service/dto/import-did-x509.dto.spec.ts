@@ -41,7 +41,16 @@ describe('ImportDidX509Dto', () => {
     const errors = await errorsFor({ certificateChain: [] });
 
     expect(errors).toContain('certificateChain must contain at least one certificate');
-    expect(errors).toContain('privateKey is required');
+    expect(errors).toContain('privateKey or encryptedKey is required');
+  });
+
+  it('accepts an encrypted key envelope without a plaintext key', async () => {
+    const dto = plainToInstance(ImportDidX509Dto, {
+      certificateChain: [CERT],
+      encryptedKey: { sessionId: 'session-1', jwe: 'a.b.c.d.e' }
+    });
+
+    expect(await validate(dto)).toEqual([]);
   });
 
   it('rejects an empty chain entry', async () => {

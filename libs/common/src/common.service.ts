@@ -72,7 +72,7 @@ export class CommonService {
           return data;
         });
     } catch (error) {
-      this.logger.error(`ERROR in DELETE : ${JSON.stringify(error.response.data)}`);
+      this.logger.error(`ERROR in DELETE : ${JSON.stringify(this.redactForLog(error))}`);
       this.handleCommonErrors(error);
     }
   }
@@ -169,17 +169,54 @@ export class CommonService {
    */
   /**
    * Axios errors serialise the whole request config, which holds the request body and the authorization header.
-   * Strip both so credentials and private keys sent to an agent never reach the logs.
+   * Recursively strip credentials and key material so they never reach the logs, including from nested validation
+   * errors that echo the rejected value.
    */
   private redactForLog(error: any): unknown {
+    const sensitive = new Set([
+      'privateKey',
+      'privateKeyJwk',
+      'privatekey',
+      'passphrase',
+      'encryptedKey',
+      'jwe',
+      'data',
+      'headers',
+      'authorization',
+      'Authorization',
+      'value'
+    ]);
+    const seen = new WeakSet<object>();
     const serialised = 'function' === typeof error?.toJSON ? error.toJSON() : error;
-    if (!serialised?.config) {
-      return serialised;
+
+    const scrub = (input: any): any => {
+      if (!input || 'object' !== typeof input) {
+        return input;
+      }
+      if (seen.has(input)) {
+        return '[Circular]';
+      }
+      seen.add(input);
+      if (Array.isArray(input)) {
+        return input.map(scrub);
+      }
+
+      const source =
+        input instanceof Error
+          ? { name: input.name, message: input.message, ...(input as unknown as Record<string, unknown>) }
+          : input;
+      const output: Record<string, unknown> = {};
+      for (const [key, entry] of Object.entries(source)) {
+        output[key] = sensitive.has(key) ? '[REDACTED]' : scrub(entry);
+      }
+      return output;
+    };
+
+    try {
+      return scrub(serialised);
+    } catch {
+      return '[Unserialisable error]';
     }
-    const config = { ...serialised.config };
-    delete config.data;
-    delete config.headers;
-    return { ...serialised, config };
   }
 
   handleCommonErrors(error): Promise<void> {

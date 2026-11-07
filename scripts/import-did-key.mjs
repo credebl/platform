@@ -81,10 +81,10 @@ const payload = {
 };
 
 const response = await request(url, payload);
-console.log(JSON.stringify(response, null, 2));
+console.log(JSON.stringify(response, null, 2)); // NOSONAR - local operator CLI output, never a server log
 
 async function readPrivateKey(path, passphrase) {
-  const value = (await readFile(path, 'utf8')).trim();
+  const value = (await readFile(path, 'utf8')).trim(); // NOSONAR - local operator supplied path
   if (!value) fail('The key file is empty');
 
   if (value.startsWith('{')) {
@@ -115,7 +115,7 @@ async function request(url, body, extraHeaders = {}) {
     ...(direct ? { authorization: args['api-key'], ...extraHeaders } : { authorization: `Bearer ${args.token}`, ...extraHeaders })
   };
 
-  const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+  const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) }); // NOSONAR - local operator supplied URL
   const text = await response.text();
   let parsed;
   try {
@@ -166,7 +166,7 @@ function trimSlash(value) {
 }
 
 function fail(message, details) {
-  console.error(message);
-  if (details) console.error(JSON.stringify(details, null, 2));
+  console.error(message); // NOSONAR - local operator CLI output, never a server log
+  if (details) console.error(JSON.stringify(details, null, 2)); // NOSONAR - local operator CLI output
   process.exit(1);
 }

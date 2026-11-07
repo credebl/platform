@@ -22,7 +22,7 @@ const SENSITIVE_KEYS = new Set(
   ].map((key) => key.toLowerCase())
 );
 
-const BEARER_TOKEN = /\bBearer\s+[A-Za-z0-9\-._~+/]+=*/gi;
+const BEARER_TOKEN = /\bBearer\s+[A-Z0-9\-._~+/]+=*/gi;
 const PEM_BEGIN = '-----BEGIN ';
 const PEM_END = '-----END ';
 const PEM_DASHES = '-----';
@@ -118,7 +118,8 @@ export function redactForLog(error: unknown): unknown {
 /** `JSON.stringify(redactForLog(error))`, for log lines. */
 export function stringifyForLog(error: unknown): string {
   try {
-    return JSON.stringify(redactForLog(error)) ?? String(error);
+    // JSON.stringify returns undefined for undefined, functions and symbols.
+    return JSON.stringify(redactForLog(error)) ?? typeof error;
   } catch {
     return '[Unserialisable error]';
   }

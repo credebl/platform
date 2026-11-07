@@ -62,6 +62,12 @@ if (direct) {
   fail('--org and --token are required (or use --agent with --api-key)');
 }
 
+// The gateway DTO has no verificationMethodType and its validation pipe strips unknown fields, so the option would be
+// silently ignored there.
+if (!direct && args['verification-method-type']) {
+  fail('--verification-method-type is only supported with --agent');
+}
+
 const privateKeyMaterial = await readPrivateKey(args.key, args.passphrase);
 const session = await createSession(method);
 const encryptedKey = encryptEnvelope(session, privateKeyMaterial);

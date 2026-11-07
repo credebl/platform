@@ -22,13 +22,48 @@ const SENSITIVE_KEYS = new Set(
   ].map((key) => key.toLowerCase())
 );
 
-const PEM_PRIVATE_KEY = /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/g;
 const BEARER_TOKEN = /\bBearer\s+[A-Za-z0-9\-._~+/]+=*/gi;
+const PEM_BEGIN = '-----BEGIN ';
+const PEM_END = '-----END ';
+const PEM_DASHES = '-----';
 
 export const REDACTED = '[REDACTED]';
 
+/**
+ * Replaces every PEM private key block with REDACTED. A forward-only scan keeps this linear in the input length (a
+ * regular expression with lazy quantifiers backtracks on many repeated BEGIN lines). A block without an END line is
+ * redacted to the end of the string.
+ */
+function redactPemPrivateKeys(value: string): string {
+  let output = '';
+  let cursor = 0;
+
+  while (cursor < value.length) {
+    const begin = value.indexOf(PEM_BEGIN, cursor);
+    if (-1 === begin) {
+      break;
+    }
+    const labelEnd = value.indexOf(PEM_DASHES, begin + PEM_BEGIN.length);
+    if (-1 === labelEnd) {
+      break;
+    }
+    if (!value.slice(begin + PEM_BEGIN.length, labelEnd).endsWith('PRIVATE KEY')) {
+      output += value.slice(cursor, labelEnd + PEM_DASHES.length);
+      cursor = labelEnd + PEM_DASHES.length;
+      continue;
+    }
+
+    output += value.slice(cursor, begin) + REDACTED;
+    const end = value.indexOf(PEM_END, labelEnd + PEM_DASHES.length);
+    const endLabelEnd = -1 === end ? -1 : value.indexOf(PEM_DASHES, end + PEM_END.length);
+    cursor = -1 === endLabelEnd ? value.length : endLabelEnd + PEM_DASHES.length;
+  }
+
+  return output + value.slice(cursor);
+}
+
 function scrubString(value: string): string {
-  return value.replace(PEM_PRIVATE_KEY, REDACTED).replace(BEARER_TOKEN, `Bearer ${REDACTED}`);
+  return redactPemPrivateKeys(value).replace(BEARER_TOKEN, `Bearer ${REDACTED}`);
 }
 
 /**

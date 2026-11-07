@@ -59,6 +59,7 @@ export class X509CertificateRepository {
           createdBy: createDto.createdBy,
           lastChangedBy: createDto.lastChangedBy,
           keyId: createDto.keyId,
+          kmsBackend: createDto.kmsBackend,
           isImported: createDto.isImported ?? false
         }
       });

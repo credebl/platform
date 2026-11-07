@@ -24,9 +24,9 @@ export class EncryptedKeyMaterialDto {
 }
 
 export class CreateDidImportSessionDto {
-  @ApiProperty({ enum: ['key', 'web', 'x509'], example: 'key' })
-  @IsIn(['key', 'web', 'x509'], { message: 'method must be one of key, web, x509' })
-  method: 'key' | 'web' | 'x509';
+  @ApiProperty({ enum: ['key', 'web', 'x509', 'polygon'], example: 'key' })
+  @IsIn(['key', 'web', 'x509', 'polygon'], { message: 'method must be one of key, web, x509, polygon' })
+  method: 'key' | 'web' | 'x509' | 'polygon';
 }
 
 export class CreateDidDto {
@@ -71,7 +71,11 @@ export class CreateDidDto {
   @IsString({ message: 'role must be in string format.' })
   role?: string;
 
-  @ApiPropertyOptional({ example: '' })
+  /**
+   * @deprecated Legacy plaintext did:polygon key. Hidden from the OpenAPI document and rejected unless
+   * `ALLOW_PLAINTEXT_KEY_IMPORT=true`. Send the key inside `encryptedKey`.
+   */
+  @ApiHideProperty()
   @IsOptional()
   @IsString({ message: 'private key must be in string format.' })
   @Transform(({ value }) => trim(value))
@@ -103,7 +107,7 @@ export class CreateDidDto {
   @ApiPropertyOptional({
     type: EncryptedKeyMaterialDto,
     description:
-      'Private key material encrypted to a single-use import session. This is the supported way to import an existing did:key or did:web key.'
+      'Private key material encrypted to a single-use import session. This is the supported way to import an existing did:key, did:web or did:polygon key.'
   })
   @IsOptional()
   @ValidateNested()

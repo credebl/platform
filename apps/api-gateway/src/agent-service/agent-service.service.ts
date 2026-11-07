@@ -75,11 +75,12 @@ export class AgentService extends BaseService {
     privateKey?: string;
     privateKeyJwk?: unknown;
     passphrase?: string;
+    privatekey?: string;
   }): void {
     if (['1', 'true', 'yes', 'on'].includes((process.env.ALLOW_PLAINTEXT_KEY_IMPORT ?? '').trim().toLowerCase())) {
       return;
     }
-    if (payload.privateKey || payload.privateKeyJwk || payload.passphrase) {
+    if (payload.privateKey || payload.privateKeyJwk || payload.passphrase || payload.privatekey) {
       throw new BadRequestException(
         'Plaintext private key import is disabled. Request a key import session and send the encryptedKey envelope instead.'
       );

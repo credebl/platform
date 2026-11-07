@@ -29,6 +29,17 @@ describe('AgentService key import gate', () => {
     expect(natsClient.sendNatsMessage).not.toHaveBeenCalled();
   });
 
+  it('rejects a plaintext did:polygon key before it reaches NATS', async () => {
+    await expect(
+      service.createDid(
+        { method: 'polygon', network: 'polygon:testnet', privatekey: 'ab'.repeat(32) } as never,
+        'org-1',
+        {} as never
+      )
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(natsClient.sendNatsMessage).not.toHaveBeenCalled();
+  });
+
   it('rejects a private JWK and a passphrase before they reach NATS', async () => {
     await expect(
       service.importDidX509(

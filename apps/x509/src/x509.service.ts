@@ -90,7 +90,8 @@ export class X509CertificateService extends BaseService {
         expiry: options.validity.notAfter,
         createdBy: user.id,
         lastChangedBy: user.id,
-        keyId: certificate.response.keyId
+        keyId: certificate.response.keyId,
+        kmsBackend: certificate.response.kmsBackend
       };
 
       return await this.x509CertificateRepository.create(createDto);
@@ -245,6 +246,7 @@ export class X509CertificateService extends BaseService {
         createdBy: user.id,
         lastChangedBy: user.id,
         keyId: certificate.response.keyId,
+        kmsBackend: certificate.response.kmsBackend,
         isImported: true
       };
       this.logger.log(`Now adding certificate in platform for org : ${orgId} `);

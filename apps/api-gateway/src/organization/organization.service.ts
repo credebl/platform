@@ -6,7 +6,12 @@ import { BulkSendInvitationDto } from './dtos/send-invitation.dto';
 import { UpdateUserRolesDto } from './dtos/update-user-roles.dto';
 import { UpdateOrganizationDto } from './dtos/update-organization-dto';
 import { organisation, user } from '@prisma/client';
-import { IDidList, IGetOrgById, IGetOrganization } from 'apps/organization/interfaces/organization.interface';
+import {
+  IDidList,
+  IGetOrgById,
+  IGetOrganization,
+  IOrgDidDetails
+} from 'apps/organization/interfaces/organization.interface';
 import { IOrgUsers } from 'apps/user/interfaces/user.interface';
 import {
   IOrgCredentials,
@@ -24,6 +29,7 @@ import { IAccessTokenData } from '@credebl/common/interfaces/interface';
 import { PaginationDto } from '@credebl/common/dtos/pagination.dto';
 import { IClientRoles } from '@credebl/client-registration/interfaces/client.interface';
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
+import { DidResolveSource } from './dtos/resolve-did.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
@@ -210,9 +216,29 @@ export class OrganizationService extends BaseService {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'fetch-organization-user', payload);
   }
 
-  async getDidList(orgId: string): Promise<IDidList[]> {
-    const payload = { orgId };
+  async getDidList(orgId: string, includeArchived = false): Promise<IDidList[]> {
+    const payload = { orgId, includeArchived };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'fetch-organization-dids', payload);
+  }
+
+  async getDidDetails(orgId: string, did: string): Promise<IOrgDidDetails> {
+    const payload = { orgId, did };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'fetch-organization-did-details', payload);
+  }
+
+  async resolveDid(orgId: string, did: string, source: DidResolveSource = 'local'): Promise<object> {
+    const payload = { orgId, did, source };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'resolve-did', payload);
+  }
+
+  async setDidArchived(orgId: string, did: string, isArchived: boolean): Promise<IDidList> {
+    const payload = { orgId, did, isArchived };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'set-organization-did-archived', payload);
+  }
+
+  async deleteDid(orgId: string, did: string): Promise<string> {
+    const payload = { orgId, did };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'delete-organization-did', payload);
   }
 
   async getOrgPofile(orgId: string): Promise<organisation> {

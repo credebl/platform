@@ -37,8 +37,11 @@ import {
   IOrgRole,
   IDidList,
   IPrimaryDidDetails,
-  IOrgDetails
+  IOrgDetails,
+  IOrgDidDetails,
+  IOrgDidRecord
 } from '../interfaces/organization.interface';
+import { evaluateDidDeletion } from './did-deletion';
 import { UserActivityService } from '@credebl/user-activity';
 import { ClientRegistrationService } from '@credebl/client-registration/client-registration.service';
 import { map } from 'rxjs/operators';
@@ -212,12 +215,13 @@ export class OrganizationService {
       throw new ConflictException(ResponseMessages.organisation.error.primaryDid);
     }
   }
-  private async ensureDidBelongsToOrg(orgId: string, did: string): Promise<void> {
-    const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId);
-    const isDidMatch = organizationDidList.some((item) => item.did === did);
-    if (!isDidMatch) {
+  private async ensureDidBelongsToOrg(orgId: string, did: string): Promise<IDidList> {
+    const organizationDidList = await this.organizationRepository.getAllOrganizationDid(orgId, true);
+    const orgDid = organizationDidList.find((item) => item.did === did);
+    if (!orgDid) {
       throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
     }
+    return orgDid;
   }
   /**
    *
@@ -232,7 +236,10 @@ export class OrganizationService {
       await this.ensureNotExistingPrimaryDid(orgId, did);
 
       //check user DID exist in the organization's did list
-      await this.ensureDidBelongsToOrg(orgId, did);
+      const orgDid = await this.ensureDidBelongsToOrg(orgId, did);
+      if (orgDid.isArchived) {
+        throw new ConflictException(ResponseMessages.organisation.error.didArchivedPrimary);
+      }
       const didDetails = await this.organizationRepository.getDidDetailsByDid(did);
 
       if (!didDetails) {
@@ -1954,13 +1961,103 @@ export class OrganizationService {
   /**
    *
    * @param orgId
+   * @param includeArchived whether archived DIDs are returned
    * @returns fetch organization did list
    */
-  async getOrgDidList(orgId: string): Promise<IDidList[]> {
+  async getOrgDidList(orgId: string, includeArchived = false): Promise<IDidList[]> {
     try {
-      return await this.organizationRepository.getAllOrganizationDid(orgId);
+      return await this.organizationRepository.getAllOrganizationDid(orgId, includeArchived);
     } catch (error) {
       this.logger.error(`get Org dids: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  private async getOrgDidOrThrow(orgId: string, did: string): Promise<IOrgDidRecord> {
+    const orgDid = await this.organizationRepository.getOrgDidRecord(orgId, did);
+    if (!orgDid) {
+      throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+    }
+    return orgDid;
+  }
+
+  private toDidListItem(orgDid: IOrgDidRecord): IDidList {
+    return {
+      id: orgDid.id,
+      did: orgDid.did,
+      createDateTime: orgDid.createDateTime,
+      lastChangedDateTime: orgDid.lastChangedDateTime,
+      isPrimaryDid: orgDid.isPrimaryDid,
+      isArchived: orgDid.isArchived,
+      archivedAt: orgDid.archivedAt
+    };
+  }
+
+  /**
+   * @returns the stored details of a DID of the organization together with what depends on it
+   */
+  async getOrgDidDetails(orgId: string, did: string): Promise<IOrgDidDetails> {
+    try {
+      const orgDid = await this.getOrgDidOrThrow(orgId, did);
+      const usage = await this.organizationRepository.getDidUsage(orgId, did);
+
+      return {
+        ...this.toDidListItem(orgDid),
+        method: did.split(':')[1],
+        didDocument: orgDid.didDocument,
+        usage: { wasPrimary: orgDid.wasPrimary, ...usage },
+        deletion: evaluateDidDeletion(orgDid, usage)
+      };
+    } catch (error) {
+      this.logger.error(`get Org did details: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * Archives or unarchives a DID of the organization. The primary DID cannot be archived. Repeating the request
+   * leaves the DID as it is.
+   */
+  async setOrgDidArchived(orgId: string, did: string, isArchived: boolean): Promise<IDidList> {
+    try {
+      const orgDid = await this.getOrgDidOrThrow(orgId, did);
+
+      if (isArchived && orgDid.isPrimaryDid) {
+        throw new ConflictException(ResponseMessages.organisation.error.didArchivePrimary);
+      }
+
+      if (orgDid.isArchived === isArchived) {
+        return this.toDidListItem(orgDid);
+      }
+
+      return await this.organizationRepository.setDidArchived(orgDid.id, isArchived);
+    } catch (error) {
+      this.logger.error(`set Org did archived: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * Deletes only the org_dids row of a DID that nothing depends on. The agent, its keys and the wallet are untouched.
+   * @returns the deleted DID
+   */
+  async deleteOrgDid(orgId: string, did: string): Promise<string> {
+    try {
+      const check = await this.organizationRepository.deleteOrgDidIfAllowed(orgId, did);
+
+      if (!check) {
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+      }
+
+      if (!check.allowed) {
+        throw new ConflictException(
+          `${ResponseMessages.organisation.error.didDeleteNotAllowed}: ${check.reasons.join('; ')}`
+        );
+      }
+
+      return did;
+    } catch (error) {
+      this.logger.error(`delete Org did: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

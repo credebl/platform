@@ -7,6 +7,8 @@ import { IProofRequestAttribute } from './interfaces/verification.interface';
 export class Validator {
   static validateDid(createDid: IDidCreate): void {
     const errors = [];
+    // The key material determines the DID when an existing key is imported, so `keyType` and `seed` are not required.
+    const hasImportedKey = Boolean(createDid.privateKey || createDid.privateKeyJwk || createDid.encryptedKey);
 
     switch (true) {
       case DidMethod.WEB === createDid.method && !createDid.domain:
@@ -20,21 +22,25 @@ export class Validator {
         errors.push(ResponseMessages.agent.error.keyType);
         break;
       case (createDid.method === DidMethod.WEB || createDid.method === DidMethod.KEY) &&
+        !hasImportedKey &&
         !('ed25519' === createDid.keyType || 'bls12381g2' === createDid.keyType):
         errors.push(ResponseMessages.agent.error.keyTypeWeb);
         break;
       case DidMethod.INDY === createDid.method && !(createDid.role || createDid.endorserDid):
         errors.push(ResponseMessages.agent.error.requiredEndorserDid);
         break;
-      case DidMethod.POLYGON === createDid.method && !createDid.privatekey:
+      case DidMethod.POLYGON === createDid.method && !createDid.privatekey && !createDid.encryptedKey:
         errors.push(ResponseMessages.agent.error.requiredPrivateKey);
         break;
       case DidMethod.POLYGON === createDid.method && createDid.privatekey && 64 !== createDid.privatekey.length:
         errors.push(ResponseMessages.agent.error.privateKeyLength);
         break;
-      case (DidMethod.INDY === createDid.method ||
-        DidMethod.KEY === createDid.method ||
-        DidMethod.WEB === createDid.method) &&
+      // Only did:key and did:web can import an existing key; did:indy always needs a seed.
+      case DidMethod.INDY === createDid.method && !createDid.seed:
+        errors.push(ResponseMessages.agent.error.requiredSeed);
+        break;
+      case (DidMethod.KEY === createDid.method || DidMethod.WEB === createDid.method) &&
+        !hasImportedKey &&
         !createDid.seed:
         errors.push(ResponseMessages.agent.error.requiredSeed);
         break;

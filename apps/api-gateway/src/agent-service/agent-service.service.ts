@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { user } from '@prisma/client';
 import { BaseService } from 'libs/service/base.service';
 import { AgentSpinupDto } from './dto/agent-service.dto';
@@ -42,17 +42,49 @@ export class AgentService extends BaseService {
   }
 
   async createDid(createDidDto: CreateDidDto, orgId: string, user: user): Promise<object> {
+    this.assertNoPlaintextKeyMaterial(createDidDto);
+
     const payload = { createDidDto, orgId, user };
 
     // NATS call
     return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'create-did', payload);
   }
 
+  async createDidImportSession(orgId: string, method: string): Promise<object> {
+    const payload = { orgId, method };
+
+    // NATS call
+    return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'create-did-import-session', payload);
+  }
+
   async importDidX509(importDidX509Dto: ImportDidX509Dto, orgId: string, user: user): Promise<object> {
+    this.assertNoPlaintextKeyMaterial(importDidX509Dto);
+
     const payload = { importDidX509Dto, orgId, user };
 
     // NATS call
     return this.natsClient.sendNatsMessage(this.agentServiceProxy, 'import-did-x509', payload);
+  }
+
+  /**
+   * Plaintext key material must never reach NATS, the agent service or the agent logs. Reject it here, at the edge,
+   * unless the explicit migration escape hatch is enabled. The agent itself enforces the same rule, so enabling the
+   * flag on only one side still fails closed.
+   */
+  private assertNoPlaintextKeyMaterial(payload: {
+    privateKey?: string;
+    privateKeyJwk?: unknown;
+    passphrase?: string;
+    privatekey?: string;
+  }): void {
+    if (['1', 'true', 'yes', 'on'].includes((process.env.ALLOW_PLAINTEXT_KEY_IMPORT ?? '').trim().toLowerCase())) {
+      return;
+    }
+    if (payload.privateKey || payload.privateKeyJwk || payload.passphrase || payload.privatekey) {
+      throw new BadRequestException(
+        'Plaintext private key import is disabled. Request a key import session and send the encryptedKey envelope instead.'
+      );
+    }
   }
 
   async getDidX509Chain(orgId: string, did: string): Promise<object> {

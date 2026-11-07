@@ -259,6 +259,10 @@ model org_dids {
   did                 String     @db.VarChar(500)
   didDocument         Json
   orgAgentId          String     @db.Uuid
+  isArchived          Boolean    @default(false)
+  archivedAt          DateTime?  @db.Timestamptz(6)
+  // Existing rows default to true: whether they ever issued credentials is unknown, so they are treated as used.
+  wasPrimary          Boolean    @default(true)
   org_agents          org_agents @relation(fields: [orgAgentId], references: [id])
 }
 
@@ -715,6 +719,7 @@ model x509_certificates {
   certificateBase64 String
   isImported        Boolean  @default(false)
   keyId     String?
+  kmsBackend String?
 
   createdAt           DateTime @default(now())
   createdBy           String   @db.Uuid

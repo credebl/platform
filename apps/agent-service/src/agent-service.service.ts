@@ -62,7 +62,7 @@ import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, Promise
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { Prisma, RecordType, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { CommonService } from '@credebl/common';
+import { CommonService, stringifyForLog } from '@credebl/common';
 import { GetSchemaAgentRedirection } from 'apps/ledger/src/schema/schema.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Socket, io } from 'socket.io-client';
@@ -80,6 +80,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
 import { IVerificationMethod } from 'apps/organization/interfaces/organization.interface';
 import { getAgentUrl } from '@credebl/common/common.utils';
+import { didDocumentsMatch } from './did-document.util';
 import {
   IX509ImportCertificateOptionsDto,
   x509CertificateDecodeDto,
@@ -880,6 +881,25 @@ export class AgentServiceService {
   }
 
   /**
+   * Creates a single-use key import session on the organization's agent. Only the public half of the session key is
+   * returned, so this call never handles private key material.
+   * @param orgId
+   * @param method DID method the key will be imported for
+   */
+  async createDidImportSession(orgId: string, method: string): Promise<object> {
+    try {
+      const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_DID_IMPORT_SESSION}`;
+
+      return await this.commonService.httpPost(url, { method }, { headers: { authorization: getApiKey } });
+    } catch (error) {
+      this.logger.error(`error in create did import session : ${stringifyForLog(error)}`);
+      throw this.toRpcException(error);
+    }
+  }
+
+  /**
    * Create did
    * @param payload
    * @returns did and didDocument
@@ -932,16 +952,8 @@ export class AgentServiceService {
 
       return storeDidDetails;
     } catch (error) {
-      this.logger.error(`error in create did : ${JSON.stringify(error)}`);
-
-      if (error?.response?.error?.message) {
-        throw new RpcException({
-          statusCode: error?.response?.status,
-          error: error?.response?.error?.message
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.logger.error(`error in create did : ${stringifyForLog(error)}`);
+      throw this.toRpcException(error);
     }
   }
 
@@ -1005,8 +1017,8 @@ export class AgentServiceService {
         verificationMethodId: imported.verificationMethodId
       };
     } catch (error) {
-      this.logger.error(`error in import did:x509 : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`error in import did:x509 : ${stringifyForLog(error)}`);
+      throw this.toRpcException(error);
     }
   }
 
@@ -1027,6 +1039,38 @@ export class AgentServiceService {
   }
 
   /**
+   * Resolves a DID stored for the organization through the organization's agent. Nothing is written. Only stored
+   * DIDs are resolved, so the agent cannot be made to fetch arbitrary identifiers.
+   */
+  async resolveDid(orgId: string, did: string, source: 'local' | 'network' = 'local'): Promise<object> {
+    try {
+      const orgDids = await this.agentServiceRepository.getOrgDid(orgId);
+      const storedDid = orgDids.find((orgDid) => orgDid.did === did);
+      if (!storedDid) {
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+      }
+
+      const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const resolvePath = CommonConstants.URL_AGENT_RESOLVE_DID.replace('#', encodeURIComponent(did));
+      // The agent answers from its own record unless told to resolve over the network
+      const query = 'network' === source ? '?useLocalRecord=false' : '';
+      const url = `${agentDetails.agentEndPoint}${resolvePath}${query}`;
+
+      const resolved = await this.commonService.httpGet(url, { headers: { authorization: getApiKey } });
+
+      return {
+        ...resolved,
+        source: 'network' === source ? 'network' : 'local',
+        matchesStored: didDocumentsMatch(resolved?.didDocument, storedDid.didDocument)
+      };
+    } catch (error) {
+      this.logger.error(`error in resolve did : ${stringifyForLog(error)}`);
+      throw this.toRpcException(error);
+    }
+  }
+
+  /**
    * A 404 that is not a refused connection means the agent has no did:x509 route, i.e. it runs a version
    * without did:x509 support
    */
@@ -1034,6 +1078,51 @@ export class AgentServiceService {
     const status = error?.getStatus?.() ?? error?.response?.statusCode ?? error?.status;
     const reason = JSON.stringify(error?.getResponse?.() ?? error?.response ?? '');
     return HttpStatus.NOT_FOUND === status && !reason.includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED);
+  }
+
+  /**
+   * Converts an error into an RpcException that keeps the upstream status and message. Without this the gateway
+   * only sees a generic "Rpc Exception" and reports agent validation failures (an expired import session, a
+   * replayed envelope, ...) as 500 "Something went wrong!".
+   *
+   * Only client errors (4xx) carry the upstream reason. A server error can describe agent or platform internals, so
+   * the caller gets a generic message and the details stay in the redacted log line.
+   */
+  private toRpcException(error): RpcException {
+    if (error instanceof RpcException) {
+      return error;
+    }
+
+    const generic = ResponseMessages.errorMessages.serverError;
+    // CommonService reports an unreachable agent as a 404 whose text names the agent's internal address.
+    if (this.isConnectionRefused(error)) {
+      return new RpcException({ statusCode: HttpStatus.SERVICE_UNAVAILABLE, message: generic, error: generic });
+    }
+
+    const status = Number(error?.response?.statusCode ?? error?.response?.status ?? error?.status ?? error?.statusCode);
+    const statusCode =
+      Number.isInteger(status) && 400 <= status && 600 > status ? status : HttpStatus.INTERNAL_SERVER_ERROR;
+    if (HttpStatus.INTERNAL_SERVER_ERROR <= statusCode) {
+      return new RpcException({ statusCode, message: generic, error: generic });
+    }
+
+    // CommonService wraps an agent response as { statusCode, error: <agent body> }; local exceptions use
+    // { statusCode, message, error: '<reason phrase>' }, so only an agent body without a sibling message is a reason.
+    const agentError = error?.response?.error;
+    const agentMessage = 'object' === typeof agentError && agentError?.message ? agentError.message : undefined;
+    const upstreamMessage = 'string' === typeof agentError && !error?.response?.message ? agentError : undefined;
+    const message = agentMessage ?? upstreamMessage ?? error?.response?.message ?? error?.message;
+
+    const isText = 'string' === typeof message && 0 < message.length;
+    const isTextList =
+      Array.isArray(message) && 0 < message.length && message.every((entry) => 'string' === typeof entry);
+    const reason = isText || isTextList ? message : generic;
+    return new RpcException({ statusCode, message: reason, error: reason });
+  }
+
+  private isConnectionRefused(error): boolean {
+    const texts = [error?.message, error?.code, error?.response?.message, error?.response?.error];
+    return texts.some((text) => 'string' === typeof text && text.includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED));
   }
 
   private constructUrl(agentDetails): string {
@@ -1124,7 +1213,7 @@ export class AgentServiceService {
       );
       return createKeyPairResponse;
     } catch (error) {
-      this.logger.error(`error in createSecp256k1KeyPair : ${JSON.stringify(error)}`);
+      this.logger.error(`error in createSecp256k1KeyPair : ${stringifyForLog(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

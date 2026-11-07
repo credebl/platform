@@ -14,6 +14,7 @@ import { CommonConstants } from './common.constant';
 import { HttpService } from '@nestjs/axios';
 import { ResponseMessages } from './response-messages';
 import { RpcException } from '@nestjs/microservices';
+import { stringifyForLog } from './utils/redact-for-log.util';
 
 dotenv.config();
 
@@ -32,7 +33,7 @@ export class CommonService {
           return response.data;
         });
     } catch (error) {
-      this.logger.error(`ERROR in POST : ${JSON.stringify(this.redactForLog(error))}`);
+      this.logger.error(`ERROR in POST : ${stringifyForLog(error)}`);
       this.handleCommonErrors(error);
     }
   }
@@ -44,7 +45,7 @@ export class CommonService {
         .toPromise()
         .then((data) => data.data);
     } catch (error) {
-      this.logger.error(`ERROR in GET : ${JSON.stringify(this.redactForLog(error))}`);
+      this.logger.error(`ERROR in GET : ${stringifyForLog(error)}`);
       this.handleCommonErrors(error);
     }
   }
@@ -58,7 +59,7 @@ export class CommonService {
           return response.data;
         });
     } catch (error) {
-      this.logger.error(`ERROR in PATCH : ${JSON.stringify(this.redactForLog(error))}`);
+      this.logger.error(`ERROR in PATCH : ${stringifyForLog(error)}`);
       this.handleCommonErrors(error);
     }
   }
@@ -72,7 +73,7 @@ export class CommonService {
           return data;
         });
     } catch (error) {
-      this.logger.error(`ERROR in DELETE : ${JSON.stringify(error.response.data)}`);
+      this.logger.error(`ERROR in DELETE : ${stringifyForLog(error)}`);
       this.handleCommonErrors(error);
     }
   }
@@ -167,21 +168,6 @@ export class CommonService {
   /**
    * This function is used to handle common errors inside the CommonService file with HttpException
    */
-  /**
-   * Axios errors serialise the whole request config, which holds the request body and the authorization header.
-   * Strip both so credentials and private keys sent to an agent never reach the logs.
-   */
-  private redactForLog(error: any): unknown {
-    const serialised = 'function' === typeof error?.toJSON ? error.toJSON() : error;
-    if (!serialised?.config) {
-      return serialised;
-    }
-    const config = { ...serialised.config };
-    delete config.data;
-    delete config.headers;
-    return { ...serialised, config };
-  }
-
   handleCommonErrors(error): Promise<void> {
     if (error.message.toString().includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED)) {
       throw new HttpException(

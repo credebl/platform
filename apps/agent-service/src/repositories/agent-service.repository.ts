@@ -225,7 +225,8 @@ export class AgentServiceRepository {
           orgId,
           did,
           didDocument,
-          isPrimaryDid,
+          isPrimaryDid: Boolean(isPrimaryDid),
+          wasPrimary: Boolean(isPrimaryDid),
           createdBy: userId,
           lastChangedBy: userId,
           orgAgentId

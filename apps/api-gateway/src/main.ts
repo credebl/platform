@@ -175,7 +175,15 @@ async function bootstrap(): Promise<void> {
 
   // Use custom updatable global pipes
   const reflector = app.get(Reflector);
-  app.useGlobalPipes(new UpdatableValidationPipe(reflector, { whitelist: true, transform: true }));
+  // Do not echo the rejected value back: a validation error on a key import request would otherwise return the
+  // private key in the response body.
+  app.useGlobalPipes(
+    new UpdatableValidationPipe(reflector, {
+      whitelist: true,
+      transform: true,
+      validationError: { target: false, value: false }
+    })
+  );
   app.use(
     helmet({
       xssFilter: true

@@ -72,6 +72,14 @@ export class AgentServiceController {
   }
 
   /**
+   * @returns a single-use key import session for the organization's agent
+   */
+  @MessagePattern({ cmd: 'create-did-import-session' })
+  async createDidImportSession(payload: { orgId: string; method: string }): Promise<object> {
+    return this.agentServiceService.createDidImportSession(payload.orgId, payload.method);
+  }
+
+  /**
    * @returns the imported did:x509 and its KMS key
    */
   @MessagePattern({ cmd: 'import-did-x509' })
@@ -89,6 +97,14 @@ export class AgentServiceController {
   @MessagePattern({ cmd: 'get-did-x509-chain' })
   async getDidX509Chain(payload: { orgId: string; did: string }): Promise<object> {
     return this.agentServiceService.getDidX509Chain(payload.orgId, payload.did);
+  }
+
+  /**
+   * @returns the live resolution of a DID stored for the organization
+   */
+  @MessagePattern({ cmd: 'resolve-did' })
+  async resolveDid(payload: { orgId: string; did: string; source?: 'local' | 'network' }): Promise<object> {
+    return this.agentServiceService.resolveDid(payload.orgId, payload.did, payload.source);
   }
 
   @MessagePattern({ cmd: 'create-wallet' })

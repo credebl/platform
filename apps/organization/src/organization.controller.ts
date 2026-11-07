@@ -6,6 +6,7 @@ import { BulkSendInvitationDto } from '../dtos/send-invitation.dto';
 import { UpdateInvitationDto } from '../dtos/update-invitation.dt';
 import {
   IDidList,
+  IOrgDidDetails,
   IGetOrgById,
   IGetOrganization,
   IOrgDetails,
@@ -91,8 +92,23 @@ export class OrganizationController {
    * @returns organization's did list
    */
   @MessagePattern({ cmd: 'fetch-organization-dids' })
-  async getOrgDidList(payload: { orgId: string }): Promise<IDidList[]> {
-    return this.organizationService.getOrgDidList(payload.orgId);
+  async getOrgDidList(payload: { orgId: string; includeArchived?: boolean }): Promise<IDidList[]> {
+    return this.organizationService.getOrgDidList(payload.orgId, payload.includeArchived);
+  }
+
+  @MessagePattern({ cmd: 'fetch-organization-did-details' })
+  async getOrgDidDetails(payload: { orgId: string; did: string }): Promise<IOrgDidDetails> {
+    return this.organizationService.getOrgDidDetails(payload.orgId, payload.did);
+  }
+
+  @MessagePattern({ cmd: 'set-organization-did-archived' })
+  async setOrgDidArchived(payload: { orgId: string; did: string; isArchived: boolean }): Promise<IDidList> {
+    return this.organizationService.setOrgDidArchived(payload.orgId, payload.did, payload.isArchived);
+  }
+
+  @MessagePattern({ cmd: 'delete-organization-did' })
+  async deleteOrgDid(payload: { orgId: string; did: string }): Promise<string> {
+    return this.organizationService.deleteOrgDid(payload.orgId, payload.did);
   }
 
   /**

@@ -107,9 +107,11 @@ export enum CommonConstants {
   // server or agent
   URL_SERVER_STATUS = '/status',
   URL_AGENT_WRITE_DID = '/dids/write',
+  URL_AGENT_DID_IMPORT_SESSION = '/dids/import/session',
   URL_AGENT_GET_DID = '/dids',
   URL_AGENT_IMPORT_DID_X509 = '/dids/x509/import',
   URL_AGENT_GET_DID_X509_CHAIN = '/dids/x509/chain',
+  URL_AGENT_RESOLVE_DID = '/dids/#/resolve',
   DID_X509_PREFIX = 'did:x509:',
   URL_AGENT_GET_ENDPOINT = '/agent',
 

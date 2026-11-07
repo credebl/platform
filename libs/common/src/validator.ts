@@ -7,6 +7,8 @@ import { IProofRequestAttribute } from './interfaces/verification.interface';
 export class Validator {
   static validateDid(createDid: IDidCreate): void {
     const errors = [];
+    // The key material determines the DID when an existing key is imported, so `keyType` and `seed` are not required.
+    const hasImportedKey = Boolean(createDid.privateKey || createDid.privateKeyJwk);
 
     switch (true) {
       case DidMethod.WEB === createDid.method && !createDid.domain:
@@ -20,6 +22,7 @@ export class Validator {
         errors.push(ResponseMessages.agent.error.keyType);
         break;
       case (createDid.method === DidMethod.WEB || createDid.method === DidMethod.KEY) &&
+        !hasImportedKey &&
         !('ed25519' === createDid.keyType || 'bls12381g2' === createDid.keyType):
         errors.push(ResponseMessages.agent.error.keyTypeWeb);
         break;
@@ -35,6 +38,7 @@ export class Validator {
       case (DidMethod.INDY === createDid.method ||
         DidMethod.KEY === createDid.method ||
         DidMethod.WEB === createDid.method) &&
+        !hasImportedKey &&
         !createDid.seed:
         errors.push(ResponseMessages.agent.error.requiredSeed);
         break;

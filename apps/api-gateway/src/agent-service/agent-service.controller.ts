@@ -45,6 +45,7 @@ import { Validator } from '@credebl/common/validator';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { CreateNewDidDto } from './dto/create-new-did.dto';
+import { CreateDidImportSessionDto } from './dto/create-did.dto';
 import { ImportDidX509Dto } from './dto/import-did-x509.dto';
 import { AgentSpinupValidator, TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
@@ -344,6 +345,41 @@ export class AgentController {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.agent.success.createDid,
       data: didDetails
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Create a single-use key import session. The client encrypts the private key to the returned public key and sends
+   * only the envelope to the create DID endpoint, so plaintext key material never crosses the gateway or NATS.
+   * @param orgId The ID of the organization
+   * @param createDidImportSessionDto The DID method the key is imported for
+   * @returns The session id, expiry and public key
+   */
+  @Post('/orgs/:orgId/agents/did/import/session')
+  @ApiOperation({
+    summary: 'Create a DID key import session',
+    description:
+      'Returns a single-use public key and session id. Encrypt the existing private key to the public key and send the resulting JWE envelope as encryptedKey when creating the DID.'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async createDidImportSession(
+    @Param('orgId') orgId: string,
+    @Body() createDidImportSessionDto: CreateDidImportSessionDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    const session = await this.agentService.createDidImportSession(orgId, createDidImportSessionDto.method);
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.createDidImportSession,
+      data: session
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

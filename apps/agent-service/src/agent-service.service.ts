@@ -62,7 +62,7 @@ import { AgentSpinUpStatus, AgentType, DidMethod, Ledgers, OrgAgentType, Promise
 import { AgentServiceRepository } from './repositories/agent-service.repository';
 import { Prisma, RecordType, ledgers, org_agents, organisation, platform_config, user } from '@prisma/client';
 import { CommonConstants } from '@credebl/common/common.constant';
-import { CommonService } from '@credebl/common';
+import { CommonService, stringifyForLog } from '@credebl/common';
 import { GetSchemaAgentRedirection } from 'apps/ledger/src/schema/schema.interface';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { Socket, io } from 'socket.io-client';
@@ -880,6 +880,25 @@ export class AgentServiceService {
   }
 
   /**
+   * Creates a single-use key import session on the organization's agent. Only the public half of the session key is
+   * returned, so this call never handles private key material.
+   * @param orgId
+   * @param method DID method the key will be imported for
+   */
+  async createDidImportSession(orgId: string, method: string): Promise<object> {
+    try {
+      const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_DID_IMPORT_SESSION}`;
+
+      return await this.commonService.httpPost(url, { method }, { headers: { authorization: getApiKey } });
+    } catch (error) {
+      this.logger.error(`error in create did import session : ${stringifyForLog(error)}`);
+      throw this.toRpcException(error);
+    }
+  }
+
+  /**
    * Create did
    * @param payload
    * @returns did and didDocument
@@ -932,16 +951,8 @@ export class AgentServiceService {
 
       return storeDidDetails;
     } catch (error) {
-      this.logger.error(`error in create did : ${JSON.stringify(error)}`);
-
-      if (error?.response?.error?.message) {
-        throw new RpcException({
-          statusCode: error?.response?.status,
-          error: error?.response?.error?.message
-        });
-      } else {
-        throw new RpcException(error.response ? error.response : error);
-      }
+      this.logger.error(`error in create did : ${stringifyForLog(error)}`);
+      throw this.toRpcException(error);
     }
   }
 
@@ -1005,8 +1016,8 @@ export class AgentServiceService {
         verificationMethodId: imported.verificationMethodId
       };
     } catch (error) {
-      this.logger.error(`error in import did:x509 : ${JSON.stringify(error)}`);
-      throw new RpcException(error.response ? error.response : error);
+      this.logger.error(`error in import did:x509 : ${stringifyForLog(error)}`);
+      throw this.toRpcException(error);
     }
   }
 
@@ -1034,6 +1045,41 @@ export class AgentServiceService {
     const status = error?.getStatus?.() ?? error?.response?.statusCode ?? error?.status;
     const reason = JSON.stringify(error?.getResponse?.() ?? error?.response ?? '');
     return HttpStatus.NOT_FOUND === status && !reason.includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED);
+  }
+
+  /**
+   * Converts an error into an RpcException that keeps the upstream status and message. Without this the gateway
+   * only sees a generic "Rpc Exception" and reports agent validation failures (an expired import session, a
+   * replayed envelope, ...) as 500 "Something went wrong!".
+   *
+   * Only client errors (4xx) carry the upstream reason. A server error can describe agent or platform internals, so
+   * the caller gets a generic message and the details stay in the redacted log line.
+   */
+  private toRpcException(error): RpcException {
+    if (error instanceof RpcException) {
+      return error;
+    }
+
+    const status = Number(error?.response?.statusCode ?? error?.response?.status ?? error?.status ?? error?.statusCode);
+    const statusCode =
+      Number.isInteger(status) && 400 <= status && 600 > status ? status : HttpStatus.INTERNAL_SERVER_ERROR;
+    const generic = ResponseMessages.errorMessages.serverError;
+    if (HttpStatus.INTERNAL_SERVER_ERROR <= statusCode) {
+      return new RpcException({ statusCode, message: generic, error: generic });
+    }
+
+    // CommonService wraps an agent response as { statusCode, error: <agent body> }; local exceptions use
+    // { statusCode, message, error: '<reason phrase>' }, so only an agent body without a sibling message is a reason.
+    const agentError = error?.response?.error;
+    const agentMessage = 'object' === typeof agentError && agentError?.message ? agentError.message : undefined;
+    const upstreamMessage = 'string' === typeof agentError && !error?.response?.message ? agentError : undefined;
+    const message = agentMessage ?? upstreamMessage ?? error?.response?.message ?? error?.message;
+
+    const isText = 'string' === typeof message && 0 < message.length;
+    const isTextList =
+      Array.isArray(message) && 0 < message.length && message.every((entry) => 'string' === typeof entry);
+    const reason = isText || isTextList ? message : generic;
+    return new RpcException({ statusCode, message: reason, error: reason });
   }
 
   private constructUrl(agentDetails): string {
@@ -1124,7 +1170,7 @@ export class AgentServiceService {
       );
       return createKeyPairResponse;
     } catch (error) {
-      this.logger.error(`error in createSecp256k1KeyPair : ${JSON.stringify(error)}`);
+      this.logger.error(`error in createSecp256k1KeyPair : ${stringifyForLog(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

@@ -72,6 +72,14 @@ export class AgentServiceController {
   }
 
   /**
+   * @returns a single-use key import session for the organization's agent
+   */
+  @MessagePattern({ cmd: 'create-did-import-session' })
+  async createDidImportSession(payload: { orgId: string; method: string }): Promise<object> {
+    return this.agentServiceService.createDidImportSession(payload.orgId, payload.method);
+  }
+
+  /**
    * @returns the imported did:x509 and its KMS key
    */
   @MessagePattern({ cmd: 'import-did-x509' })

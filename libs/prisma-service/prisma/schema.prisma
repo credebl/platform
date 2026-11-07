@@ -715,6 +715,7 @@ model x509_certificates {
   certificateBase64 String
   isImported        Boolean  @default(false)
   keyId     String?
+  kmsBackend String?
 
   createdAt           DateTime @default(now())
   createdBy           String   @db.Uuid

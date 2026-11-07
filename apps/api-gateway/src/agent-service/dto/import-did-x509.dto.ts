@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -14,6 +14,7 @@ import {
   ValidateIf,
   ValidateNested
 } from 'class-validator';
+import { EncryptedKeyMaterialDto } from './create-did.dto';
 
 export const DID_X509_POLICY_TYPES = ['subject', 'san', 'eku', 'fulcio-issuer'] as const;
 export const DID_X509_SAN_TYPES = ['dns', 'email', 'uri'] as const;
@@ -68,19 +69,32 @@ export class ImportDidX509Dto {
   @MaxLength(MAX_CERTIFICATE_LENGTH, { each: true, message: 'a certificateChain entry is too long' })
   certificateChain: string[];
 
-  @ApiProperty({
-    description: 'Private key of the leaf certificate: PEM (PKCS#8, SEC1 or PKCS#1) or base64 DER (PKCS#8)'
-  })
+  /**
+   * @deprecated Legacy plaintext import. Hidden from the OpenAPI document and rejected unless
+   * `ALLOW_PLAINTEXT_KEY_IMPORT=true`. Use `encryptedKey`.
+   */
+  @ApiHideProperty()
+  @ValidateIf((dto: ImportDidX509Dto) => !dto.encryptedKey)
+  @IsNotEmpty({ message: 'privateKey or encryptedKey is required' })
   @IsString({ message: 'privateKey must be a string' })
-  @IsNotEmpty({ message: 'privateKey is required' })
   @MaxLength(MAX_PRIVATE_KEY_LENGTH, { message: 'privateKey is too long' })
-  privateKey: string;
+  privateKey?: string;
 
-  @ApiPropertyOptional({ description: 'Passphrase of the private key if it is encrypted' })
+  /** @deprecated Legacy plaintext import, see `privateKey`. */
+  @ApiHideProperty()
   @IsOptional()
   @IsString({ message: 'passphrase must be a string' })
   @MaxLength(1000, { message: 'passphrase is too long' })
   passphrase?: string;
+
+  @ApiPropertyOptional({
+    type: EncryptedKeyMaterialDto,
+    description: 'Leaf private key encrypted to a single-use import session (method `x509`)'
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EncryptedKeyMaterialDto)
+  encryptedKey?: EncryptedKeyMaterialDto;
 
   @ApiPropertyOptional({
     type: [DidX509PolicyDto],

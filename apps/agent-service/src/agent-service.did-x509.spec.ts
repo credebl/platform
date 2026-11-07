@@ -133,7 +133,11 @@ describe('AgentServiceService did:x509', () => {
 
       const error = await service.importDidX509(importPayload, ORG_ID, user).catch((e) => e);
 
-      expect(rpcError(error)).toEqual({ statusCode: 404, error: 'connect ECONNREFUSED 127.0.0.1:8001' });
+      expect(rpcError(error)).toEqual({
+        statusCode: 404,
+        message: 'connect ECONNREFUSED 127.0.0.1:8001',
+        error: 'connect ECONNREFUSED 127.0.0.1:8001'
+      });
     });
 
     it('passes agent validation errors through', async () => {
@@ -146,7 +150,42 @@ describe('AgentServiceService did:x509', () => {
 
       const error = await service.importDidX509(importPayload, ORG_ID, user).catch((e) => e);
 
-      expect(rpcError(error)).toEqual({ statusCode: 400, error: 'privateKey does not match the leaf certificate' });
+      expect(rpcError(error)).toEqual({
+        statusCode: 400,
+        message: 'privateKey does not match the leaf certificate',
+        error: 'privateKey does not match the leaf certificate'
+      });
+    });
+
+    it('hides the upstream reason of a server error', async () => {
+      commonService.httpPost.mockRejectedValue(
+        new HttpException(
+          {
+            statusCode: 500,
+            message: 'Request failed with status code 500',
+            error: { message: 'connect to OpenBao at http://10.0.0.5:8200 failed' }
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR
+        )
+      );
+
+      const error = await service.importDidX509(importPayload, ORG_ID, user).catch((e) => e);
+
+      expect(rpcError(error)).toEqual({
+        statusCode: 500,
+        message: ResponseMessages.errorMessages.serverError,
+        error: ResponseMessages.errorMessages.serverError
+      });
+    });
+
+    it('treats an error without an HTTP status as a server error', async () => {
+      commonService.httpPost.mockRejectedValue(new Error('socket hang up'));
+
+      const error = await service.importDidX509(importPayload, ORG_ID, user).catch((e) => e);
+
+      expect(rpcError(error)).toEqual(
+        expect.objectContaining({ statusCode: 500, message: ResponseMessages.errorMessages.serverError })
+      );
     });
   });
 

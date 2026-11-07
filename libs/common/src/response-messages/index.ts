@@ -370,6 +370,7 @@ export const ResponseMessages = {
       create: 'Organization wallet created successfully',
       createWallet: 'Wallet created successfully',
       createDid: 'Did created successfully',
+      createDidImportSession: 'DID key import session created successfully',
       importDidX509: 'did:x509 imported successfully',
       getDidX509Chain: 'did:x509 certificate chain fetched successfully',
       health: 'Agent health details retrieved successfully.',
@@ -414,6 +415,7 @@ export const ResponseMessages = {
       invalidTenantIdIdFormat: 'Invalid tenantId format',
       requiredTenantId: 'Tenant Id is required',
       createDid: 'Error while creating DID',
+      createDidImportSession: 'Error while creating the DID key import session',
       importDidX509: 'Error while importing did:x509',
       getDidX509Chain: 'Error while fetching the did:x509 certificate chain',
       didX509NotSupported:

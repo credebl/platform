@@ -214,6 +214,7 @@ export interface X509CertificateRecord {
   createdAt: Date;
   lastChangedDateTime: Date;
   keyId?: string;
+  kmsBackend?: string | null;
 }
 
 export interface IX509SearchCriteria extends IPaginationSortingDto {

@@ -942,7 +942,7 @@ export class OrganizationRepository {
   // eslint-disable-next-line camelcase
   async getAllOrganizationDid(orgId: string, includeArchived = true): Promise<IDidList[]> {
     try {
-      return this.prisma.org_dids.findMany({
+      return await this.prisma.org_dids.findMany({
         where: {
           orgId,
           ...(includeArchived ? {} : { isArchived: false })

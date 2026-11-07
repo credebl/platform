@@ -80,6 +80,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { SignDataDto } from '../../api-gateway/src/agent-service/dto/agent-service.dto';
 import { IVerificationMethod } from 'apps/organization/interfaces/organization.interface';
 import { getAgentUrl } from '@credebl/common/common.utils';
+import { didDocumentsMatch } from './did-document.util';
 import {
   IX509ImportCertificateOptionsDto,
   x509CertificateDecodeDto,
@@ -1034,6 +1035,38 @@ export class AgentServiceService {
     } catch (error) {
       this.logger.error(`error in get did:x509 chain : ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * Resolves a DID stored for the organization through the organization's agent. Nothing is written. Only stored
+   * DIDs are resolved, so the agent cannot be made to fetch arbitrary identifiers.
+   */
+  async resolveDid(orgId: string, did: string, source: 'local' | 'network' = 'local'): Promise<object> {
+    try {
+      const orgDids = await this.agentServiceRepository.getOrgDid(orgId);
+      const storedDid = orgDids.find((orgDid) => orgDid.did === did);
+      if (!storedDid) {
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+      }
+
+      const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const resolvePath = CommonConstants.URL_AGENT_RESOLVE_DID.replace('#', encodeURIComponent(did));
+      // The agent answers from its own record unless told to resolve over the network
+      const query = 'network' === source ? '?useLocalRecord=false' : '';
+      const url = `${agentDetails.agentEndPoint}${resolvePath}${query}`;
+
+      const resolved = await this.commonService.httpGet(url, { headers: { authorization: getApiKey } });
+
+      return {
+        ...resolved,
+        source: 'network' === source ? 'network' : 'local',
+        matchesStored: didDocumentsMatch(resolved?.didDocument, storedDid.didDocument)
+      };
+    } catch (error) {
+      this.logger.error(`error in resolve did : ${stringifyForLog(error)}`);
+      throw this.toRpcException(error);
     }
   }
 

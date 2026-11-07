@@ -99,6 +99,14 @@ export class AgentServiceController {
     return this.agentServiceService.getDidX509Chain(payload.orgId, payload.did);
   }
 
+  /**
+   * @returns the live resolution of a DID stored for the organization
+   */
+  @MessagePattern({ cmd: 'resolve-did' })
+  async resolveDid(payload: { orgId: string; did: string; source?: 'local' | 'network' }): Promise<object> {
+    return this.agentServiceService.resolveDid(payload.orgId, payload.did, payload.source);
+  }
+
   @MessagePattern({ cmd: 'create-wallet' })
   async createWallet(payload: { createWalletDto: IWallet; user: IUserRequestInterface }): Promise<ITenantRecord> {
     return this.agentServiceService.createWallet(payload.createWalletDto);

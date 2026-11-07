@@ -398,6 +398,7 @@ const migrateOrgAgentDids = async (): Promise<void> => {
         did: agent.orgDid,
         didDocument: agent.didDocument,
         isPrimaryDid: true,
+        wasPrimary: true,
         createdBy: agent.createdBy,
         lastChangedBy: agent.lastChangedBy,
         orgAgentId: agent.id

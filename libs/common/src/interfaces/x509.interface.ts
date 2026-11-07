@@ -232,7 +232,7 @@ export interface IX509ImportCertificateOptionsDto {
    */
   privateKey?: string;
 
-  keyType: KeyType;
+  keyType: KeyType | x5cKeyType;
 }
 
 export interface x509CertificateDecodeDto {

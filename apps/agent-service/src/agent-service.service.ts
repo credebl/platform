@@ -43,6 +43,7 @@ import {
   IReceiveInvitation,
   IQuestionPayload,
   IDidCreate,
+  IDidX509Import,
   IWallet,
   ITenantRecord,
   ICreateConnectionInvitation,
@@ -942,6 +943,97 @@ export class AgentServiceService {
         throw new RpcException(error.response ? error.response : error);
       }
     }
+  }
+
+  /**
+   * Imports a CA issued certificate chain and its leaf private key as a did:x509 into the organization's agent
+   * and records the DID for the organization. The private key and passphrase are only forwarded to the agent,
+   * they are never logged or stored by the platform.
+   */
+  async importDidX509(
+    importDidX509Payload: IDidX509Import,
+    orgId: string,
+    user: IUserRequestInterface
+  ): Promise<object> {
+    try {
+      const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_IMPORT_DID_X509}`;
+
+      const { isPrimaryDid, ...agentPayload } = importDidX509Payload;
+      const imported = await this.commonService
+        .httpPost(url, agentPayload, { headers: { authorization: getApiKey } })
+        .catch((error) => {
+          throw this.isAgentRouteMissing(error)
+            ? new NotFoundException(ResponseMessages.agent.error.didX509NotSupported)
+            : error;
+        });
+
+      if (!imported?.did || !imported?.didDocument) {
+        throw new InternalServerErrorException(ResponseMessages.agent.error.importDidX509, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.serverError
+        });
+      }
+
+      const orgDids = await this.agentServiceRepository.getOrgDid(orgId);
+      if (isPrimaryDid) {
+        await this.updateAllDidsToNonPrimary(orgId, orgDids);
+      }
+
+      // The agent import is idempotent, so is the platform record: importing the same chain again returns it
+      const existingDid = orgDids.find((orgDid) => orgDid.did === imported.did);
+      const orgDid =
+        existingDid ??
+        (await this.storeDid({
+          orgId,
+          did: imported.did,
+          didDocument: imported.didDocument,
+          isPrimaryDid: Boolean(isPrimaryDid),
+          orgAgentId: agentDetails.id,
+          userId: user.id
+        }));
+
+      if (isPrimaryDid) {
+        await this.setPrimaryDidAndLedger(orgId, orgDid, undefined, DidMethod.X509);
+      }
+
+      return {
+        ...orgDid,
+        isPrimaryDid: Boolean(isPrimaryDid) || orgDid.isPrimaryDid,
+        keyId: imported.keyId,
+        verificationMethodId: imported.verificationMethodId
+      };
+    } catch (error) {
+      this.logger.error(`error in import did:x509 : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * Returns the certificate chain the organization's agent stores with a did:x509
+   */
+  async getDidX509Chain(orgId: string, did: string): Promise<object> {
+    try {
+      const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const url = `${agentDetails.agentEndPoint}${CommonConstants.URL_AGENT_GET_DID_X509_CHAIN}/${encodeURIComponent(did)}`;
+
+      return await this.commonService.httpGet(url, { headers: { authorization: getApiKey } });
+    } catch (error) {
+      this.logger.error(`error in get did:x509 chain : ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /**
+   * A 404 that is not a refused connection means the agent has no did:x509 route, i.e. it runs a version
+   * without did:x509 support
+   */
+  private isAgentRouteMissing(error): boolean {
+    const status = error?.getStatus?.() ?? error?.response?.statusCode ?? error?.status;
+    const reason = JSON.stringify(error?.getResponse?.() ?? error?.response ?? '');
+    return HttpStatus.NOT_FOUND === status && !reason.includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED);
   }
 
   private constructUrl(agentDetails): string {

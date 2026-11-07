@@ -42,8 +42,10 @@ import { Roles } from '../authz/decorators/roles.decorator';
 import { OrgRoles } from 'libs/org-roles/enums';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
 import { Validator } from '@credebl/common/validator';
+import { CommonConstants } from '@credebl/common/common.constant';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { CreateNewDidDto } from './dto/create-new-did.dto';
+import { ImportDidX509Dto } from './dto/import-did-x509.dto';
 import { AgentSpinupValidator, TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { AgentConfigureDto } from './dto/agent-configure.dto';
 import { UnauthorizedErrorDto } from '../dtos/unauthorized-error.dto';
@@ -345,6 +347,75 @@ export class AgentController {
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Import a CA issued certificate chain and its leaf private key as a did:x509
+   * @param orgId The ID of the organization
+   * @param importDidX509Dto The certificate chain, private key and optional policies
+   * @returns The imported DID details
+   */
+  @Post('/orgs/:orgId/agents/did/x509/import')
+  @ApiOperation({
+    summary: 'Import did:x509',
+    description:
+      'Import a CA issued certificate chain (leaf first) and its leaf private key as a did:x509 in the organization wallet'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Success', type: ApiResponseDto })
+  async importDidX509(
+    @Param('orgId') orgId: string,
+    @Body() importDidX509Dto: ImportDidX509Dto,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    const didDetails = await this.agentService.importDidX509(importDidX509Dto, orgId, user);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.agent.success.importDidX509,
+      data: didDetails
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Get the certificate chain stored with a did:x509 of the organization
+   * @param orgId The ID of the organization
+   * @param did The did:x509
+   * @returns The stored certificate chain
+   */
+  @Get('/orgs/:orgId/agents/did/x509/chain/:did')
+  @ApiOperation({
+    summary: 'Get did:x509 certificate chain',
+    description: 'Get the certificate chain stored with a did:x509 imported into the organization wallet'
+  })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async getDidX509Chain(
+    @Param('orgId') orgId: string,
+    @Param('did') did: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    if (!did?.startsWith(CommonConstants.DID_X509_PREFIX)) {
+      throw new BadRequestException(ResponseMessages.agent.error.didX509Invalid, {
+        cause: new Error(),
+        description: ResponseMessages.errorMessages.badRequest
+      });
+    }
+
+    const chain = await this.agentService.getDidX509Chain(orgId, did);
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.agent.success.getDidX509Chain,
+      data: chain
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 
   /**

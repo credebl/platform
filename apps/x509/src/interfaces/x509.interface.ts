@@ -11,6 +11,7 @@ export interface CreateX509CertificateEntity {
   createdBy: string;
   lastChangedBy: string;
   keyId?: string;
+  isImported?: boolean;
 }
 
 export interface UpdateCertificateStatusDto {

@@ -92,6 +92,22 @@ export interface IDidCreate {
   endorserDid?: string;
   isPrimaryDid?: boolean;
 }
+export interface IDidX509Policy {
+  type: 'subject' | 'san' | 'eku' | 'fulcio-issuer';
+  fields?: Record<string, string>;
+  sanType?: 'dns' | 'email' | 'uri';
+  value?: string;
+}
+
+export interface IDidX509Import {
+  certificateChain: string[];
+  privateKey: string;
+  passphrase?: string;
+  policies?: IDidX509Policy[];
+  did?: string;
+  isPrimaryDid?: boolean;
+}
+
 export interface ITenantSchema {
   tenantId?: string;
   attributes: string[];

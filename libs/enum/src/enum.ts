@@ -53,7 +53,8 @@ export enum DidMethod {
   INDY = 'indy',
   KEY = 'key',
   WEB = 'web',
-  POLYGON = 'polygon'
+  POLYGON = 'polygon',
+  X509 = 'x509'
 }
 
 export enum Ledgers {

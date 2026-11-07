@@ -133,7 +133,11 @@ describe('AgentServiceService did:x509', () => {
 
       const error = await service.importDidX509(importPayload, ORG_ID, user).catch((e) => e);
 
-      expect(rpcError(error)).toEqual({ statusCode: 404, error: 'connect ECONNREFUSED 127.0.0.1:8001' });
+      expect(rpcError(error)).toEqual({
+        statusCode: 404,
+        message: 'connect ECONNREFUSED 127.0.0.1:8001',
+        error: 'connect ECONNREFUSED 127.0.0.1:8001'
+      });
     });
 
     it('passes agent validation errors through', async () => {
@@ -146,7 +150,11 @@ describe('AgentServiceService did:x509', () => {
 
       const error = await service.importDidX509(importPayload, ORG_ID, user).catch((e) => e);
 
-      expect(rpcError(error)).toEqual({ statusCode: 400, error: 'privateKey does not match the leaf certificate' });
+      expect(rpcError(error)).toEqual({
+        statusCode: 400,
+        message: 'privateKey does not match the leaf certificate',
+        error: 'privateKey does not match the leaf certificate'
+      });
     });
   });
 

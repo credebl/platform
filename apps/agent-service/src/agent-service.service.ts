@@ -1064,12 +1064,15 @@ export class AgentServiceService {
       error?.statusCode ??
       HttpStatus.INTERNAL_SERVER_ERROR;
     // CommonService wraps an agent response as { statusCode, error: <agent body> }; local exceptions use
-    // { statusCode, message, error: '<reason phrase>' }, so only an object with its own message is an agent reason.
+    // { statusCode, message, error: '<reason phrase>' }, so only an agent body without a sibling message is a reason.
     const agentError = error?.response?.error;
     const agentMessage = 'object' === typeof agentError && agentError?.message ? agentError.message : undefined;
-    const message = agentMessage ?? error?.response?.message ?? error?.message;
+    const upstreamMessage = 'string' === typeof agentError && !error?.response?.message ? agentError : undefined;
+    const message = agentMessage ?? upstreamMessage ?? error?.response?.message ?? error?.message;
 
-    return message ? new RpcException({ statusCode, message }) : new RpcException(error?.response ?? error);
+    return message
+      ? new RpcException({ statusCode, message, error: message })
+      : new RpcException(error?.response ?? error);
   }
 
   /**

@@ -80,11 +80,14 @@ export interface IWallet {
 }
 
 export interface IDidCreate {
-  keyType: KeyType;
-  seed: string;
+  keyType?: KeyType;
+  seed?: string;
   domain?: string;
   network?: string;
   privatekey?: string;
+  privateKey?: string;
+  privateKeyJwk?: Record<string, unknown>;
+  passphrase?: string;
   endpoint?: string;
   method: string;
   did?: string;

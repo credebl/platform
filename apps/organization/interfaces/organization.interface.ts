@@ -154,6 +154,33 @@ export interface IDidList {
   did: string;
   lastChangedDateTime: Date;
   isPrimaryDid: boolean;
+  isArchived: boolean;
+  archivedAt: Date | null;
+}
+
+export interface IDidUsage {
+  schemas: number;
+  statusLists: number;
+  holderNotifications: number;
+  invitations: number;
+}
+
+export interface IDidDeletionCheck {
+  allowed: boolean;
+  reasons: string[];
+}
+
+export interface IOrgDidRecord extends IDidList {
+  didDocument: Prisma.JsonValue;
+  wasPrimary: boolean;
+  orgAgentId: string;
+}
+
+export interface IOrgDidDetails extends IDidList {
+  method: string;
+  didDocument: Prisma.JsonValue;
+  usage: IDidUsage & { wasPrimary: boolean };
+  deletion: IDidDeletionCheck;
 }
 
 export interface IPrimaryDid {

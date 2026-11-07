@@ -10,14 +10,17 @@ import {
   IOrganizationInvitations
 } from '@credebl/common/interfaces/organization.interface';
 import {
+  IDidDeletionCheck,
   IDidDetails,
   IDidList,
+  IDidUsage,
   IGetDids,
   IGetOrgById,
   IGetOrganization,
   ILedgerDetails,
   ILedgerNameSpace,
   IOrgDetails,
+  IOrgDidRecord,
   IOrgRoleDetails,
   IPrimaryDidDetails,
   IUpdateOrganization,
@@ -37,6 +40,7 @@ import {
 } from '@prisma/client';
 
 import { CreateOrganizationDto } from '../dtos/create-organization.dto';
+import { evaluateDidDeletion } from '../src/did-deletion';
 import { IOrgRoles } from 'libs/org-roles/interfaces/org-roles.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -936,22 +940,124 @@ export class OrganizationRepository {
   }
 
   // eslint-disable-next-line camelcase
-  async getAllOrganizationDid(orgId: string): Promise<IDidList[]> {
+  async getAllOrganizationDid(orgId: string, includeArchived = true): Promise<IDidList[]> {
     try {
       return this.prisma.org_dids.findMany({
         where: {
-          orgId
+          orgId,
+          ...(includeArchived ? {} : { isArchived: false })
         },
         select: {
           id: true,
           createDateTime: true,
           did: true,
           lastChangedDateTime: true,
-          isPrimaryDid: true
+          isPrimaryDid: true,
+          isArchived: true,
+          archivedAt: true
         }
       });
     } catch (error) {
       this.logger.error(`error in getAllOrganizationDid: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getOrgDidRecord(orgId: string, did: string): Promise<IOrgDidRecord | null> {
+    try {
+      return await this.prisma.org_dids.findFirst({
+        where: { orgId, did },
+        select: {
+          id: true,
+          createDateTime: true,
+          did: true,
+          lastChangedDateTime: true,
+          isPrimaryDid: true,
+          isArchived: true,
+          archivedAt: true,
+          didDocument: true,
+          wasPrimary: true,
+          orgAgentId: true
+        }
+      });
+    } catch (error) {
+      this.logger.error(`[getOrgDidRecord] - get org DID: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Counts what still depends on a DID of the organization. holder_notification has no organization column, so it
+   * is scoped through the organization's OID4VC issuance sessions.
+   */
+  private async countDidUsage(client: Prisma.TransactionClient, orgId: string, did: string): Promise<IDidUsage> {
+    const [schemas, statusLists, invitations, holderNotifications] = await Promise.all([
+      client.schema.count({ where: { orgId, publisherDid: did } }),
+      client.status_list_allocation.count({ where: { orgId, issuerDid: did } }),
+      client.agent_invitations.count({ where: { orgId, invitationDid: did } }),
+      client.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(*) AS "count"
+        FROM "holder_notification" h
+        WHERE h."holderDid" = ${did}
+          AND EXISTS (
+            SELECT 1 FROM "oid4vc_credentials" c
+            WHERE c."issuanceSessionId" = h."sessionId" AND c."orgId" = ${orgId}::uuid
+          )`
+    ]);
+
+    return { schemas, statusLists, holderNotifications: Number(holderNotifications[0]?.count ?? 0), invitations };
+  }
+
+  async getDidUsage(orgId: string, did: string): Promise<IDidUsage> {
+    try {
+      return await this.countDidUsage(this.prisma, orgId, did);
+    } catch (error) {
+      this.logger.error(`[getDidUsage] - count DID usage: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async setDidArchived(id: string, isArchived: boolean): Promise<IDidList> {
+    try {
+      return await this.prisma.org_dids.update({
+        where: { id },
+        data: { isArchived, archivedAt: isArchived ? new Date() : null },
+        select: {
+          id: true,
+          createDateTime: true,
+          did: true,
+          lastChangedDateTime: true,
+          isPrimaryDid: true,
+          isArchived: true,
+          archivedAt: true
+        }
+      });
+    } catch (error) {
+      this.logger.error(`[setDidArchived] - archive DID: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Re-checks the deletion rules inside a transaction and deletes only the org_dids row when they allow it.
+   * Returns null when the organization has no such DID.
+   */
+  async deleteOrgDidIfAllowed(orgId: string, did: string): Promise<IDidDeletionCheck | null> {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const record = await tx.org_dids.findFirst({ where: { orgId, did } });
+        if (!record) {
+          return null;
+        }
+
+        const check = evaluateDidDeletion(record, await this.countDidUsage(tx, orgId, did));
+        if (check.allowed) {
+          await tx.org_dids.delete({ where: { id: record.id } });
+        }
+        return check;
+      });
+    } catch (error) {
+      this.logger.error(`[deleteOrgDidIfAllowed] - delete DID: ${JSON.stringify(error)}`);
       throw error;
     }
   }
@@ -965,7 +1071,8 @@ export class OrganizationRepository {
             id
           },
           data: {
-            isPrimaryDid: true
+            isPrimaryDid: true,
+            wasPrimary: true
           }
         }),
         this.prisma.org_agents.update({

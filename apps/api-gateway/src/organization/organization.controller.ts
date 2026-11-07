@@ -53,6 +53,9 @@ import { validate as isValidUUID } from 'uuid';
 import { UserAccessGuard } from '../authz/guards/user-access-guard';
 import { GetAllOrganizationsDto } from './dtos/get-organizations.dto';
 import { PrimaryDid } from './dtos/set-primary-did.dto';
+import { ResolveDidDto } from './dtos/resolve-did.dto';
+import { GetDidsDto } from './dtos/get-dids.dto';
+import { DidParamPipe } from './pipes/did-param.pipe';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
 import { ClientTokenDto } from './dtos/client-token.dto';
 import { EcosystemRolesGuard } from '../authz/guards/ecosystem-roles.guard';
@@ -457,12 +460,173 @@ export class OrganizationController {
     summary: 'Fetch organization DIDs',
     description: 'Retrieve a list of all DIDs in a specific organization.'
   })
-  async getAllDidByOrgId(@Param('orgId') orgId: string, @Res() res: Response): Promise<Response> {
-    const users = await this.organizationService.getDidList(orgId);
+  async getAllDidByOrgId(
+    @Param('orgId') orgId: string,
+    @Query() getDidsDto: GetDidsDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    const users = await this.organizationService.getDidList(orgId, getDidsDto.includeArchived);
     const finalResponse: IResponse = {
       statusCode: HttpStatus.OK,
       message: ResponseMessages.organisation.success.orgDids,
       data: users
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Fetch the details of a DID of the organization
+   * @param orgId The ID of the organization
+   * @param did The URL-encoded DID
+   * @returns The stored DID with its usage and whether it can be deleted
+   */
+  @Get('/:orgId/dids/:did')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.MEMBER)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({
+    summary: 'Fetch organization DID details',
+    description: 'Retrieve a DID of the organization with its usage and whether it can be deleted.'
+  })
+  @ApiParam({ name: 'did', description: 'URL-encoded DID, for example did%3Aweb%3Aexample.com' })
+  async getDidDetails(
+    @Param('orgId') orgId: string,
+    @Param('did', DidParamPipe) did: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const didDetails = await this.organizationService.getDidDetails(orgId, did);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.orgDidDetails,
+      data: didDetails
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Resolve a DID of the organization live through the organization's agent
+   * @param orgId The ID of the organization
+   * @param did The URL-encoded DID
+   * @returns The resolution result and whether the resolved document matches the stored one
+   */
+  @Get('/:orgId/dids/:did/resolve')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.MEMBER)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({
+    summary: 'Resolve organization DID',
+    description: 'Resolve a DID stored for the organization through its agent. Nothing is changed.'
+  })
+  @ApiParam({ name: 'did', description: 'URL-encoded DID, for example did%3Aweb%3Aexample.com' })
+  async resolveDid(
+    @Param('orgId') orgId: string,
+    @Param('did', DidParamPipe) did: string,
+    @Query() resolveDidDto: ResolveDidDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    const resolution = await this.organizationService.resolveDid(orgId, did, resolveDidDto.source);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.didResolved,
+      data: resolution
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Archive a DID of the organization
+   * @param orgId The ID of the organization
+   * @param did The URL-encoded DID
+   * @returns The updated DID
+   */
+  @Put('/:orgId/dids/:did/archive')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({
+    summary: 'Archive organization DID',
+    description: 'Archive a DID of the organization. The primary DID cannot be archived.'
+  })
+  @ApiParam({ name: 'did', description: 'URL-encoded DID, for example did%3Aweb%3Aexample.com' })
+  async archiveDid(
+    @Param('orgId') orgId: string,
+    @Param('did', DidParamPipe) did: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const orgDid = await this.organizationService.setDidArchived(orgId, did, true);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.didArchived,
+      data: orgDid
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Unarchive a DID of the organization
+   * @param orgId The ID of the organization
+   * @param did The URL-encoded DID
+   * @returns The updated DID
+   */
+  @Put('/:orgId/dids/:did/unarchive')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({
+    summary: 'Unarchive organization DID',
+    description: 'Restore an archived DID of the organization.'
+  })
+  @ApiParam({ name: 'did', description: 'URL-encoded DID, for example did%3Aweb%3Aexample.com' })
+  async unarchiveDid(
+    @Param('orgId') orgId: string,
+    @Param('did', DidParamPipe) did: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const orgDid = await this.organizationService.setDidArchived(orgId, did, false);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.didUnarchived,
+      data: orgDid
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Delete an unused DID of the organization
+   * @param orgId The ID of the organization
+   * @param did The URL-encoded DID
+   * @returns The deleted DID
+   */
+  @Delete('/:orgId/dids/:did')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({
+    summary: 'Delete organization DID',
+    description:
+      'Delete a DID that is not the primary DID, never was one and is not used by schemas, status lists, notifications or invitations. Only the record is deleted, the agent keys and wallet are untouched.'
+  })
+  @ApiParam({ name: 'did', description: 'URL-encoded DID, for example did%3Aweb%3Aexample.com' })
+  async deleteDid(
+    @Param('orgId') orgId: string,
+    @Param('did', DidParamPipe) did: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const deletedDid = await this.organizationService.deleteDid(orgId, did);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.didDeleted,
+      data: deletedDid
     };
 
     return res.status(HttpStatus.OK).json(finalResponse);

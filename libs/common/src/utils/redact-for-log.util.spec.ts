@@ -42,6 +42,17 @@ describe('redactForLog', () => {
     expect(log).toContain('bad key');
   });
 
+  it('keeps public PEM blocks, redacts unterminated private keys and stays fast on repeated headers', () => {
+    const certificate = '-----BEGIN CERTIFICATE-----\nMIIBcert\n-----END CERTIFICATE-----';
+    expect(redactForLog(`chain ${certificate}`)).toBe(`chain ${certificate}`);
+    expect(redactForLog('cut -----BEGIN PRIVATE KEY-----\nMIIEsecret')).toBe(`cut ${REDACTED}`);
+
+    const hostile = '-----BEGIN PRIVATE KEY-----'.repeat(50_000);
+    const started = Date.now();
+    expect(redactForLog(hostile)).toBe(REDACTED);
+    expect(Date.now() - started).toBeLessThan(1_000);
+  });
+
   it('uses the trimmed toJSON of Axios errors and never includes the raw request', () => {
     const axiosError = Object.assign(new Error('Request failed with status code 500'), {
       request: { _header: 'POST /dids/write\r\nauthorization: secret-token\r\n' },

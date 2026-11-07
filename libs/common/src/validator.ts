@@ -35,9 +35,11 @@ export class Validator {
       case DidMethod.POLYGON === createDid.method && createDid.privatekey && 64 !== createDid.privatekey.length:
         errors.push(ResponseMessages.agent.error.privateKeyLength);
         break;
-      case (DidMethod.INDY === createDid.method ||
-        DidMethod.KEY === createDid.method ||
-        DidMethod.WEB === createDid.method) &&
+      // Only did:key and did:web can import an existing key; did:indy always needs a seed.
+      case DidMethod.INDY === createDid.method && !createDid.seed:
+        errors.push(ResponseMessages.agent.error.requiredSeed);
+        break;
+      case (DidMethod.KEY === createDid.method || DidMethod.WEB === createDid.method) &&
         !hasImportedKey &&
         !createDid.seed:
         errors.push(ResponseMessages.agent.error.requiredSeed);

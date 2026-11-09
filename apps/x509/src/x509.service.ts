@@ -29,6 +29,7 @@ import { stringifyForLog } from '@credebl/common';
 import { getAgentUrl } from '@credebl/common/common.utils';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { describeCertificate } from './certificate-summary';
 import { validateCertificateChain } from './certificate-chain';
 import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 
@@ -118,7 +119,7 @@ export class X509CertificateService extends BaseService {
       const collisionForActiveRecords = await this.x509CertificateRepository.hasDateCollision(certificateDateCheckDto);
       if (collisionForActiveRecords.hasCollision) {
         throw new ConflictException(
-          `${ResponseMessages.x509.error.collisionForActivatingX5c}. Conflict Records:[${collisionForActiveRecords.collisions.map((collision) => collision.id)}]`
+          `${ResponseMessages.x509.error.collisionForActivatingX5c} Conflicting certificate: ${collisionForActiveRecords.collisions.map(describeCertificate).join(', ')}`
         );
       }
       const statusDto: UpdateCertificateStatusDto = {

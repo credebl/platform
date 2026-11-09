@@ -1,5 +1,6 @@
 import { X509Certificate } from 'node:crypto';
 import { ConflictException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { x5cKeyType } from '@credebl/enum/enum';
 import { describeIssuanceState } from './issuance-state';
 import { checkMdocIssuance } from './mdoc-preflight';
 
@@ -135,4 +136,64 @@ export function buildReissueRequest(
       ...(grant.tx_code && { txCode: grant.tx_code })
     }
   };
+}
+
+/** The key type of a certificate given as base64 DER, when it is one an X.509 signer can use. */
+export function keyTypeOfCertificate(certificateBase64: string): x5cKeyType | undefined {
+  try {
+    const { publicKey } = new X509Certificate(Buffer.from(certificateBase64, 'base64'));
+    if ('ed25519' === publicKey.asymmetricKeyType) {
+      return x5cKeyType.Ed25519;
+    }
+    if ('ec' === publicKey.asymmetricKeyType && 'prime256v1' === publicKey.asymmetricKeyDetails?.namedCurve) {
+      return x5cKeyType.P256;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** The signing certificate of an offer's credential: the leaf first, then the chain that follows it. */
+export interface CurrentSigner {
+  certificateBase64: string;
+  certificateChain?: string[];
+  keyId?: string;
+}
+
+/**
+ * Replaces the X.509 signing details stored with an offer by the current ones. An offer is usually issued again after
+ * its cause was fixed, for example with a certificate that carries its chain, so the new offer has to use that
+ * certificate and not the one the old offer was built with. Credentials signed another way, and those whose key type
+ * has no current certificate, keep what they had.
+ */
+export async function withCurrentSigners(
+  session: IssuanceSessionRecord,
+  currentSigner: (keyType: x5cKeyType) => Promise<CurrentSigner | null | undefined>
+): Promise<IssuanceSessionRecord> {
+  const credentials = session.issuanceMetadata?.credentials;
+  if (!credentials) {
+    return session;
+  }
+
+  const refreshed = await Promise.all(
+    credentials.map(async (credential) => {
+      const stored = credential.signerOptions?.x5c?.[0];
+      const keyType = 'x5c' === credential.signerOptions?.method && stored ? keyTypeOfCertificate(stored) : undefined;
+      const signer = keyType ? await currentSigner(keyType) : undefined;
+      if (!signer?.keyId) {
+        return credential;
+      }
+      return {
+        ...credential,
+        signerOptions: {
+          ...credential.signerOptions,
+          x5c: [signer.certificateBase64, ...(signer.certificateChain ?? [])],
+          keyId: signer.keyId
+        }
+      };
+    })
+  );
+
+  return { ...session, issuanceMetadata: { ...session.issuanceMetadata, credentials: refreshed } };
 }

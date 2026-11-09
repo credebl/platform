@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { ConflictException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
-import { buildReissueRequest, IssuanceSessionRecord } from './reissue-offer';
+import { buildReissueRequest, IssuanceSessionRecord, keyTypeOfCertificate, withCurrentSigners } from './reissue-offer';
 
 // A throwaway certificate made for these tests (public certificate only): C=IN, valid from 9 Nov 2026 to 9 Nov 2027.
 const SIGNER = `-----BEGIN CERTIFICATE-----
@@ -129,5 +129,56 @@ describe('buildReissueRequest', () => {
     };
     const request = buildReissueRequest(session({ issuanceMetadata: { credentials: [sdJwt] } }), {}, now);
     expect(request.credentials).toEqual([sdJwt]);
+  });
+});
+
+describe('withCurrentSigners', () => {
+  const CURRENT_LEAF = 'CURRENTLEAF';
+  function signerFor(
+    keyType: string
+  ): Promise<{ certificateBase64: string; certificateChain: string[]; keyId: string }> {
+    return Promise.resolve({
+      certificateBase64: `${CURRENT_LEAF}-${keyType}`,
+      certificateChain: ['INTERMEDIATE', 'ROOT'],
+      keyId: 'ob_new'
+    });
+  }
+
+  it('signs with the current certificate and its chain instead of the one the old offer used', async () => {
+    const refreshed = await withCurrentSigners(session(), signerFor);
+
+    expect(refreshed.issuanceMetadata?.credentials?.[0].signerOptions).toEqual({
+      method: 'x5c',
+      x5c: ['CURRENTLEAF-P-256', 'INTERMEDIATE', 'ROOT'],
+      keyId: 'ob_new'
+    });
+  });
+
+  it('keeps what a credential had when there is no current certificate of its key type', async () => {
+    const original = session();
+    const refreshed = await withCurrentSigners(original, () => Promise.resolve(null));
+
+    expect(refreshed.issuanceMetadata?.credentials?.[0].signerOptions).toEqual(
+      original.issuanceMetadata?.credentials?.[0].signerOptions
+    );
+  });
+
+  it('leaves a credential that is not signed with a certificate alone', async () => {
+    const sdJwt = {
+      credentialSupportedId: 'Id-sdjwt',
+      format: 'vc+sd-jwt',
+      signerOptions: { method: 'did' },
+      payload: {}
+    };
+    const refreshed = await withCurrentSigners(session({ issuanceMetadata: { credentials: [sdJwt] } }), signerFor);
+
+    expect(refreshed.issuanceMetadata?.credentials).toEqual([sdJwt]);
+  });
+});
+
+describe('keyTypeOfCertificate', () => {
+  it('reads the key type of a P-256 certificate and nothing for text that is not a certificate', () => {
+    expect(keyTypeOfCertificate(toBase64Der(SIGNER))).toBe('P-256');
+    expect(keyTypeOfCertificate('not a certificate')).toBeUndefined();
   });
 });

@@ -11,7 +11,7 @@ const MAX_JWE_LENGTH = 200_000;
  * organization's agent can decrypt it, so it can safely cross the gateway and NATS.
  */
 export class EncryptedKeyMaterialDto {
-  @ApiProperty({ description: 'Id returned by the create DID import session endpoint' })
+  @ApiProperty({ description: 'Id returned by the key import session endpoint' })
   @IsString({ message: 'encryptedKey.sessionId must be a string.' })
   @IsNotEmpty({ message: 'encryptedKey.sessionId is required.' })
   sessionId: string;
@@ -24,9 +24,11 @@ export class EncryptedKeyMaterialDto {
 }
 
 export class CreateDidImportSessionDto {
-  @ApiProperty({ enum: ['key', 'web', 'x509', 'polygon'], example: 'key' })
-  @IsIn(['key', 'web', 'x509', 'polygon'], { message: 'method must be one of key, web, x509, polygon' })
-  method: 'key' | 'web' | 'x509' | 'polygon';
+  @ApiProperty({ enum: ['key', 'web', 'x509', 'polygon', 'x509-certificate'], example: 'key' })
+  @IsIn(['key', 'web', 'x509', 'polygon', 'x509-certificate'], {
+    message: 'method must be one of key, web, x509, polygon, x509-certificate'
+  })
+  method: 'key' | 'web' | 'x509' | 'polygon' | 'x509-certificate';
 }
 
 export class CreateDidDto {

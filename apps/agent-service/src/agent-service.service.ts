@@ -2397,7 +2397,7 @@ export class AgentServiceService {
         .then(async (response) => response);
       return x509Certificate;
     } catch (error) {
-      this.logger.error(`Error in creating x509 certificate in agent service : ${JSON.stringify(error)}`);
+      this.logger.error(`Error in creating x509 certificate in agent service : ${stringifyForLog(error)}`);
       throw error;
     }
   }

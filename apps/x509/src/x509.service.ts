@@ -25,6 +25,7 @@ import {
   CreateX509CertificateEntity,
   UpdateCertificateStatusDto
 } from './interfaces/x509.interface';
+import { stringifyForLog } from '@credebl/common';
 import { getAgentUrl } from '@credebl/common/common.utils';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -253,7 +254,7 @@ export class X509CertificateService extends BaseService {
 
       return await this.x509CertificateRepository.create(createDto);
     } catch (error) {
-      this.logger.error(`Error in importing certificate: ${error}`);
+      this.logger.error(`Error in importing certificate: ${stringifyForLog(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -324,10 +325,10 @@ export class X509CertificateService extends BaseService {
       const pattern = { cmd: 'agent-import-x509-certificate' };
       const payload = { options, url, orgId };
       this.logger.log(`Requesing agent service for importing x509 certificate`);
-      this.logger.debug(`agent service payload - _importX509CertificateForOrg : `, payload);
+      this.logger.debug(`agent service payload - _importX509CertificateForOrg : ${stringifyForLog(payload)}`);
       return await this.natsCall(pattern, payload);
     } catch (error) {
-      this.logger.error(`[_importX509CertificateForOrg] [NATS call]-  : ${JSON.stringify(error)}`);
+      this.logger.error(`[_importX509CertificateForOrg] [NATS call]-  : ${stringifyForLog(error)}`);
       throw error;
     }
   }

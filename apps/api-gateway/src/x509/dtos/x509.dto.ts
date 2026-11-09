@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
 import {
   ArrayNotEmpty,
   IsArray,
@@ -11,6 +11,7 @@ import {
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
   ValidateNested
 } from 'class-validator';
@@ -18,6 +19,9 @@ import { Transform, Type } from 'class-transformer';
 import { SortFields, X509ExtendedKeyUsage, X509KeyUsage, x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 import { IX509SearchCriteria } from '@credebl/common/interfaces/x509.interface';
 import { toNumber, trim } from '@credebl/common/cast.helper';
+import { EncryptedKeyMaterialDto } from '../../agent-service/dto/create-did.dto';
+
+const MAX_PRIVATE_KEY_LENGTH = 20_000;
 
 export class AuthorityAndSubjectKeyDto {
   @ApiProperty({
@@ -264,12 +268,26 @@ export class X509ImportCertificateOptionsDto {
   @IsString()
   certificate: string;
 
-  @ApiPropertyOptional({
-    description: 'Private key in base64 string format'
+  /**
+   * @deprecated Legacy plaintext import. Hidden from the OpenAPI document and rejected unless
+   * `ALLOW_PLAINTEXT_KEY_IMPORT=true`. Send the key inside `encryptedKey`.
+   */
+  @ApiHideProperty()
+  @IsOptional()
+  @IsString({ message: 'privateKey must be in string format.' })
+  @MaxLength(MAX_PRIVATE_KEY_LENGTH, { message: 'privateKey is too long' })
+  privateKey?: string;
+
+  @ApiProperty({
+    type: EncryptedKeyMaterialDto,
+    description:
+      'Private key of the certificate encrypted to a single-use import session. Create the session with method x509-certificate; the JWE plaintext is {"privateKey": "<PEM or base64 DER>"}.',
+    example: { sessionId: '2f3c8c1e-0000-4000-8000-000000000000', jwe: 'eyJhbGciOi...' }
   })
   @IsOptional()
-  @IsString()
-  privateKey?: string;
+  @ValidateNested()
+  @Type(() => EncryptedKeyMaterialDto)
+  encryptedKey?: EncryptedKeyMaterialDto;
 
   @ApiProperty({
     enum: x5cKeyType,

@@ -26,10 +26,11 @@ describeBundle('webpack production bundle — api-gateway', () => {
     OTEL_LOGGER_NAME: 'smoke',
     NATS_URL: 'nats://127.0.0.1:4222',
     NATS_SERVERS: 'nats://127.0.0.1:4222',
-    NATS_AUTH_TYPE: 'none'
+    NATS_AUTH_TYPE: 'none',
+    JWT_TRUSTED_ISSUERS: 'https://identity.example/realms/bundle-smoke'
   };
 
-  const runBundle = (): string => {
+  const runBundle = (env: NodeJS.ProcessEnv = childEnv): string => {
     const script = [
       `try {`,
       `  require(${JSON.stringify(distEntry)});`,
@@ -39,7 +40,7 @@ describeBundle('webpack production bundle — api-gateway', () => {
       `  process.exit(1);`,
       `}`
     ].join('\n');
-    const options: ExecFileSyncOptions = { env: childEnv, encoding: 'utf8', timeout: 60_000 };
+    const options: ExecFileSyncOptions = { env, encoding: 'utf8', timeout: 60_000 };
     return execFileSync(process.execPath, ['-e', script], options) as unknown as string;
   };
 
@@ -47,6 +48,15 @@ describeBundle('webpack production bundle — api-gateway', () => {
     const output = runBundle();
     expect(output).toContain('BUNDLE_LOADED');
     expect(output).toContain('OpenTelemetry SDK started successfully');
+  });
+
+  it('rejects startup without trusted issuer configuration', () => {
+    expect(() => runBundle({
+      ...childEnv,
+      JWT_TRUSTED_ISSUERS: '',
+      KEYCLOAK_DOMAIN: '',
+      KEYCLOAK_REALM: ''
+    })).toThrow('JWT_TRUSTED_ISSUERS or both KEYCLOAK_DOMAIN and KEYCLOAK_REALM must be configured');
   });
 
   it('does not fail with sdk-trace-base tree-shaking errors', () => {

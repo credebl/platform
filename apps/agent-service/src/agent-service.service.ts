@@ -1154,12 +1154,12 @@ export class AgentServiceService {
     }
   }
 
+  // A single updateMany already clears every DID of the organization. Issuing one per existing DID in
+  // parallel made identical statements lock the same rows against each other and deadlock (Postgres 40P01).
   private async updateAllDidsToNonPrimary(orgId, getDidByOrg): Promise<void> {
-    await Promise.all(
-      getDidByOrg.map(async () => {
-        await this.agentServiceRepository.updateIsPrimaryDid(orgId, false);
-      })
-    );
+    if (getDidByOrg?.length) {
+      await this.agentServiceRepository.updateIsPrimaryDid(orgId, false);
+    }
   }
 
   private async storeDid(createdDidDetails): Promise<OrgDid> {

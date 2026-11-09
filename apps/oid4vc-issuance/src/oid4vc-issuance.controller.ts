@@ -143,6 +143,18 @@ export class Oid4vcIssuanceController {
     return this.oid4vcIssuanceService.updateOidcCredentialOffer(oidcUpdateCredentialPayload, orgId, issuerId);
   }
 
+  @MessagePattern({ cmd: 'oid4vc-credential-offer-reissue' })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async reissueCredentialOffer(payload: {
+    offerId: string;
+    orgId: string;
+    options?: { validityInfo?: { validFrom: string; validUntil: string } };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }): Promise<any> {
+    const { offerId, orgId, options } = payload;
+    return this.oid4vcIssuanceService.reissueCredentialOffer(offerId, orgId, options);
+  }
+
   @MessagePattern({ cmd: 'oid4vc-credential-offer-get-by-id' })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getCredentialOfferDetailsById(payload: {

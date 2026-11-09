@@ -734,7 +734,8 @@ export const ResponseMessages = {
       getById: 'OID4VC Credential offer details fetched successfully.',
       getAll: 'OID4VC Credential offers fetched successfully.',
       update: 'OID4VC Credential offer updated successfully.',
-      delete: 'OID4VC Credential offer deleted successfully.'
+      delete: 'OID4VC Credential offer deleted successfully.',
+      reissue: 'OID4VC Credential offer created again successfully.'
     },
     error: {
       errorCreateOffer: 'Error while creating OID4VC credential offer on agent.',

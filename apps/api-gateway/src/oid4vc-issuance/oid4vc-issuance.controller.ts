@@ -52,6 +52,7 @@ import {
   CreateCredentialOfferD2ADto,
   CreateOidcCredentialOfferDto,
   GetAllCredentialOfferDto,
+  ReissueCredentialOfferDto,
   UpdateCredentialRequestDto
 } from './dtos/issuer-sessions.dto';
 import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
@@ -545,6 +546,40 @@ export class Oid4vcIssuanceController {
       data: oidcIssuer
     };
     return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  @Post('/orgs/:orgId/oid4vc/credential-offer/:id/reissue')
+  @ApiOperation({
+    summary: 'Issue an OID4VC credential offer again',
+    description:
+      'Creates a new offer for the credentials of an offer that cannot be used any more, for example because the wallet used its one-time code and then rejected the credential. The old offer is left as it is. Only pre-authorized, non-revocable offers can be issued again, and an offer the wallet can still use is refused.'
+  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'A new credential offer was created.', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async reissueCredentialOffer(
+    @Param('orgId', orgIdPipe()) orgId: string,
+    @Param('id', uuidPipe(ResponseMessages.oidcIssuerSession.error.invalidOfferId)) offerId: string,
+    @Body() reissueCredentialOfferDto: ReissueCredentialOfferDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    const { validityInfo } = reissueCredentialOfferDto;
+    const reissued = await this.oid4vcIssuanceService.reissueCredentialOffer(offerId, orgId, {
+      ...(validityInfo && {
+        validityInfo: {
+          validFrom: new Date(validityInfo.validFrom).toISOString(),
+          validUntil: new Date(validityInfo.validUntil).toISOString()
+        }
+      })
+    });
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.oidcIssuerSession.success.reissue,
+      data: reissued
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
   }
 
   @Get('/orgs/:orgId/oid4vc/credential-offer')

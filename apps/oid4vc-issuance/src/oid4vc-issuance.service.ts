@@ -694,7 +694,7 @@ export class Oid4vcIssuanceService {
           }
           signerOptions.push({
             method: SignerMethodOption.X5C,
-            x5c: [activeCertificate.certificateBase64],
+            x5c: [activeCertificate.certificateBase64, ...(activeCertificate.certificateChain ?? [])],
             keyId: activeCertificate.keyId
           });
           activeCertificateDetails.push(activeCertificate);
@@ -711,7 +711,7 @@ export class Oid4vcIssuanceService {
           }
           signerOptions.push({
             method: SignerMethodOption.X5C,
-            x5c: [activeCertificate.certificateBase64],
+            x5c: [activeCertificate.certificateBase64, ...(activeCertificate.certificateChain ?? [])],
             keyId: activeCertificate.keyId
           });
           activeCertificateDetails.push(activeCertificate);

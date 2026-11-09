@@ -722,6 +722,8 @@ model x509_certificates {
   isImported        Boolean  @default(false)
   keyId     String?
   kmsBackend String?
+  // The certificates that follow certificateBase64 in the chain (base64 DER): each one issued by the next, root last.
+  certificateChain String[] @default([])
 
   createdAt           DateTime @default(now())
   createdBy           String   @db.Uuid

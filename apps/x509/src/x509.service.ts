@@ -29,6 +29,7 @@ import { stringifyForLog } from '@credebl/common';
 import { getAgentUrl } from '@credebl/common/common.utils';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { validateCertificateChain } from './certificate-chain';
 import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 
 @Injectable()
@@ -226,12 +227,17 @@ export class X509CertificateService extends BaseService {
       } else {
         certStatus = x5cRecordStatus.Active;
       }
+      // Check the chain before anything is imported, so a wrong order leaves no key behind in the agent.
+      const chain = validateCertificateChain(options.certificate, options.certificateChain);
       const importurl = getAgentUrl(await this.getAgentEndpoint(orgId), CommonConstants.X509_IMPORT_CERTIFICATE);
 
       this.logger.log(`Certificate validation done`);
       // The certificate is the source of truth for the key type; callers such
       // as studio may omit it or send a different spelling.
-      const importOptions: IX509ImportCertificateOptionsDto = { ...options, keyType: crv as x5cKeyType };
+      // The chain is kept by the platform; the agent only needs the certificate and its key.
+      const agentOptions: IX509ImportCertificateOptionsDto = { ...options };
+      delete agentOptions.certificateChain;
+      const importOptions: IX509ImportCertificateOptionsDto = { ...agentOptions, keyType: crv as x5cKeyType };
       const certificate = await this._importX509CertificateForOrg(importOptions, importurl, orgId);
       if (!certificate) {
         throw new NotFoundException(ResponseMessages.x509.error.errorCreate);
@@ -248,6 +254,7 @@ export class X509CertificateService extends BaseService {
         lastChangedBy: user.id,
         keyId: certificate.response.keyId,
         kmsBackend: certificate.response.kmsBackend,
+        certificateChain: chain,
         isImported: true
       };
       this.logger.log(`Now adding certificate in platform for org : ${orgId} `);

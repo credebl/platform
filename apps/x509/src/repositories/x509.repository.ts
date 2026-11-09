@@ -60,6 +60,7 @@ export class X509CertificateRepository {
           lastChangedBy: createDto.lastChangedBy,
           keyId: createDto.keyId,
           kmsBackend: createDto.kmsBackend,
+          certificateChain: createDto.certificateChain ?? [],
           isImported: createDto.isImported ?? false
         }
       });

@@ -1,5 +1,6 @@
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
   ArrayNotEmpty,
   IsArray,
   IsBoolean,
@@ -22,6 +23,10 @@ import { toNumber, trim } from '@credebl/common/cast.helper';
 import { EncryptedKeyMaterialDto } from '../../agent-service/dto/create-did.dto';
 
 const MAX_PRIVATE_KEY_LENGTH = 20_000;
+
+// A chain has a handful of certificates and a certificate is a few kilobytes.
+const MAX_CERTIFICATE_CHAIN_LENGTH = 10;
+const MAX_CERTIFICATE_LENGTH = 20000;
 
 export class AuthorityAndSubjectKeyDto {
   @ApiProperty({
@@ -267,6 +272,20 @@ export class X509ImportCertificateOptionsDto {
   })
   @IsString()
   certificate: string;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      'The certificates that follow `certificate` in its chain: intermediate CAs and the root, each issued by the next one. PEM or base64 DER. The platform keeps them and sends them with every credential signed with this certificate, so holders can build the chain up to a certificate they trust.'
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(MAX_CERTIFICATE_CHAIN_LENGTH, {
+    message: `certificateChain can hold at most ${MAX_CERTIFICATE_CHAIN_LENGTH} certificates`
+  })
+  @IsString({ each: true })
+  @MaxLength(MAX_CERTIFICATE_LENGTH, { each: true, message: 'a certificate in certificateChain is too long' })
+  certificateChain?: string[];
 
   /**
    * @deprecated Legacy plaintext import. Hidden from the OpenAPI document and rejected unless

@@ -740,6 +740,8 @@ export const ResponseMessages = {
       errorCreateOffer: 'Error while creating OID4VC credential offer on agent.',
       errorUpdateOffer: 'Error while updating OID4VC credential offer on agent.',
       deleteFailed: 'Failed to delete OID4VC credential offer.',
+      invalidOfferId: 'Invalid OID4VC credential offer ID.',
+      invalidSessionId: 'Invalid OID4VC issuance session ID.',
       missingValidityInfo: 'Validity Info(validFrom, validTo) is required for validity of credential'
     }
   },

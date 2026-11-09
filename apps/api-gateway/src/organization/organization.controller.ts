@@ -539,6 +539,39 @@ export class OrganizationController {
   }
 
   /**
+   * Get the KMS backend that holds the keys of a DID of the organization. The backend is read from the agent and
+   * recorded on the DID, so DIDs created before it was tracked are filled in on first request.
+   * @param orgId The ID of the organization
+   * @param did The URL-encoded DID
+   * @returns The DID, its KMS backend (null when unknown) and its keys
+   */
+  @Get('/:orgId/dids/:did/kms')
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.MEMBER)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  @ApiOperation({
+    summary: 'Get organization DID KMS backend',
+    description:
+      'Get the KMS backend (askar, node, openbao or mixed) that holds the keys of a DID stored for the organization. The backend is null when the agent does not report it.'
+  })
+  @ApiParam({ name: 'did', description: 'URL-encoded DID, for example did%3Aweb%3Aexample.com' })
+  async getDidKms(
+    @Param('orgId') orgId: string,
+    @Param('did', DidParamPipe) did: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    const kms = await this.organizationService.getDidKms(orgId, did);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.organisation.success.didKmsBackend,
+      data: kms
+    };
+
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
    * Archive a DID of the organization
    * @param orgId The ID of the organization
    * @param did The URL-encoded DID

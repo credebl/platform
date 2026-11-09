@@ -43,7 +43,9 @@ import {
   IReceiveInvitation,
   IQuestionPayload,
   IDidCreate,
+  IDidKms,
   IDidX509Import,
+  KMS_BACKENDS,
   IWallet,
   ITenantRecord,
   ICreateConnectionInvitation,
@@ -939,7 +941,8 @@ export class AgentServiceService {
         didDocument: didDetails?.['didDocument'] ?? didDetails?.['didDoc'] ?? didDetails?.['didState']?.['didDocument'],
         isPrimaryDid,
         orgAgentId: agentDetails.id,
-        userId: user.id
+        userId: user.id,
+        kmsBackend: this.toKmsBackend(didDetails?.['kmsBackend'])
       };
       const storeDidDetails = await this.storeDid(createdDidDetails);
 
@@ -1003,7 +1006,8 @@ export class AgentServiceService {
           didDocument: imported.didDocument,
           isPrimaryDid: Boolean(isPrimaryDid),
           orgAgentId: agentDetails.id,
-          userId: user.id
+          userId: user.id,
+          kmsBackend: this.toKmsBackend(imported.kmsBackend)
         }));
 
       if (isPrimaryDid) {
@@ -1014,7 +1018,8 @@ export class AgentServiceService {
         ...orgDid,
         isPrimaryDid: Boolean(isPrimaryDid) || orgDid.isPrimaryDid,
         keyId: imported.keyId,
-        verificationMethodId: imported.verificationMethodId
+        verificationMethodId: imported.verificationMethodId,
+        kmsBackend: this.toKmsBackend(imported.kmsBackend)
       };
     } catch (error) {
       this.logger.error(`error in import did:x509 : ${stringifyForLog(error)}`);
@@ -1068,6 +1073,57 @@ export class AgentServiceService {
       this.logger.error(`error in resolve did : ${stringifyForLog(error)}`);
       throw this.toRpcException(error);
     }
+  }
+
+  /**
+   * Returns the KMS backend of a stored DID as reported by the organization's agent and records it on the DID
+   * when it is new or changed. Only stored DIDs are queried. An agent without the route, or one that does not
+   * report a backend, yields an unknown backend instead of an error.
+   */
+  async getDidKms(orgId: string, did: string): Promise<IDidKms> {
+    try {
+      const orgDids = await this.agentServiceRepository.getOrgDid(orgId);
+      const storedDid = orgDids.find((orgDid) => orgDid.did === did);
+      if (!storedDid) {
+        throw new NotFoundException(ResponseMessages.organisation.error.didNotFound);
+      }
+
+      const agentDetails = await this.agentServiceRepository.getOrgAgentDetails(orgId);
+      const getApiKey = await this.getOrgAgentApiKey(orgId);
+      const kmsPath = CommonConstants.URL_AGENT_GET_DID_KMS.replace('#', encodeURIComponent(did));
+      const url = `${agentDetails.agentEndPoint}${kmsPath}`;
+
+      let response;
+      try {
+        response = await this.commonService.httpGet(url, { headers: { authorization: getApiKey } });
+      } catch (error) {
+        if (this.isAgentRouteMissing(error)) {
+          return { did, kmsBackend: null, keys: [] };
+        }
+        throw error;
+      }
+
+      const kmsBackend = this.toKmsBackend(response?.kmsBackend);
+      if (!kmsBackend) {
+        return { did, kmsBackend: null, keys: [] };
+      }
+
+      if (storedDid.kmsBackend !== kmsBackend) {
+        await this.agentServiceRepository.updateDidKmsBackend(orgId, did, kmsBackend);
+      }
+
+      return { did, kmsBackend, keys: Array.isArray(response?.keys) ? response.keys : [] };
+    } catch (error) {
+      this.logger.error(`error in get did kms backend : ${stringifyForLog(error)}`);
+      throw this.toRpcException(error);
+    }
+  }
+
+  /**
+   * Only the known KMS backends are stored, anything else is treated as unknown
+   */
+  private toKmsBackend(value: unknown): string | null {
+    return 'string' === typeof value && (KMS_BACKENDS as readonly string[]).includes(value) ? value : null;
   }
 
   /**

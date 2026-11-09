@@ -99,6 +99,7 @@ export const ResponseMessages = {
       orgDids: 'Organization DIDs fetched successfully',
       orgDidDetails: 'Organization DID details fetched successfully',
       didResolved: 'DID resolved successfully',
+      didKmsBackend: 'DID KMS backend fetched successfully',
       didArchived: 'DID archived successfully',
       didUnarchived: 'DID unarchived successfully',
       didDeleted: 'DID deleted successfully',

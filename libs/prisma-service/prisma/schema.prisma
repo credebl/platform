@@ -263,6 +263,8 @@ model org_dids {
   archivedAt          DateTime?  @db.Timestamptz(6)
   // Existing rows default to true: whether they ever issued credentials is unknown, so they are treated as used.
   wasPrimary          Boolean    @default(true)
+  // KMS backend holding the DID keys: askar, node, openbao or mixed. Null when unknown (filled lazily from the agent).
+  kmsBackend          String?
   org_agents          org_agents @relation(fields: [orgAgentId], references: [id])
 }
 

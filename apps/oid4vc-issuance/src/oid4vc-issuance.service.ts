@@ -658,6 +658,7 @@ export class Oid4vcIssuanceService {
   ): Promise<any> {
     let buildOidcCredentialOffer: CredentialOfferPayload;
     const newlyAllocatedIndices: { listId: string; index: number }[] = [];
+    let offerCreated = false;
     try {
       const filterTemplateIds = extractTemplateIds(createOidcCredentialOffer);
       if (!filterTemplateIds) {
@@ -787,6 +788,7 @@ export class Oid4vcIssuanceService {
       if (!createCredentialOfferOnAgent) {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
       }
+      offerCreated = true;
 
       // Logic to add noticeUrl in response from agent if it is present in template or request payload
       const { response } = createCredentialOfferOnAgent;
@@ -836,7 +838,11 @@ export class Oid4vcIssuanceService {
 
       return createCredentialOfferOnAgent.response;
     } catch (error) {
-      for (const alloc of newlyAllocatedIndices) {
+      if (offerCreated && 0 < newlyAllocatedIndices.length) {
+        this.logger.error('Status-list allocations were retained because credential offer creation succeeded before local persistence failed');
+      }
+      const allocationsToRelease = offerCreated ? [] : newlyAllocatedIndices;
+      for (const alloc of allocationsToRelease) {
         try {
           await this.statusListAllocatorService.release(alloc.listId, alloc.index);
         } catch (releaseErr) {
@@ -855,6 +861,7 @@ export class Oid4vcIssuanceService {
 
   async createOidcCredentialOfferD2A(oidcCredentialD2APayload, orgId: string): Promise<object | string> {
     const newlyAllocatedIndices: { listId: string; index: number }[] = [];
+    let offerCreated = false;
     try {
       if ('v2.0' === oidcCredentialD2APayload.credentialVersion) {
         oidcCredentialD2APayload.version = 'v2.0';
@@ -931,6 +938,7 @@ export class Oid4vcIssuanceService {
       if (!createCredentialOfferOnAgent) {
         throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
       }
+      offerCreated = true;
 
       let parsedResponse;
       if ('string' === typeof createCredentialOfferOnAgent.response) {
@@ -962,7 +970,11 @@ export class Oid4vcIssuanceService {
 
       return createCredentialOfferOnAgent.response;
     } catch (error) {
-      for (const alloc of newlyAllocatedIndices) {
+      if (offerCreated && 0 < newlyAllocatedIndices.length) {
+        this.logger.error('Status-list allocations were retained because credential offer creation succeeded before local persistence failed');
+      }
+      const allocationsToRelease = offerCreated ? [] : newlyAllocatedIndices;
+      for (const alloc of allocationsToRelease) {
         try {
           await this.statusListAllocatorService.release(alloc.listId, alloc.index);
         } catch (releaseErr) {

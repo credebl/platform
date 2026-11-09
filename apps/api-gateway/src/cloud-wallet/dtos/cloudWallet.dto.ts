@@ -1,8 +1,19 @@
-import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  ValidateNested
+} from 'class-validator';
 
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import { EncryptedKeyMaterialDto } from '../../agent-service/dto/create-did.dto';
 
 export class CreateCloudWalletDto {
   @ApiProperty({ example: 'Credential Wallet', description: 'Cloud wallet label' })
@@ -123,6 +134,12 @@ export class AcceptOfferDto {
   userId?: string;
 }
 
+export class CreateCloudWalletDidImportSessionDto {
+  @ApiProperty({ enum: ['polygon'], example: 'polygon' })
+  @IsIn(['polygon'], { message: 'method must be polygon' })
+  method: 'polygon';
+}
+
 export class CreateCloudWalletDidDto {
   @ApiProperty({ example: '000000000000000000000000000Seed1' })
   @MaxLength(32, { message: 'seed must be at most 32 characters.' })
@@ -165,11 +182,25 @@ export class CreateCloudWalletDidDto {
   @IsString({ message: 'role must be in string format.' })
   role?: string;
 
-  @ApiPropertyOptional({ example: '651727dab6dfdbb4f18afff5f368d13b0dca41fd26bd5e1c7953457524d645e6' })
+  /**
+   * @deprecated Legacy plaintext did:polygon key. Hidden from the OpenAPI document and rejected unless
+   * `ALLOW_PLAINTEXT_KEY_IMPORT=true`. Send the key inside `encryptedKey`.
+   */
+  @ApiHideProperty()
   @IsOptional()
   @IsString({ message: 'private key must be in string format.' })
   @Transform(({ value }) => trim(value))
   privatekey?: string;
+
+  @ApiPropertyOptional({
+    type: EncryptedKeyMaterialDto,
+    description:
+      'Private key encrypted to a single-use import session (POST /cloud-wallet/did/import/session). Required to create a did:polygon.'
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EncryptedKeyMaterialDto)
+  encryptedKey?: EncryptedKeyMaterialDto;
 
   @ApiPropertyOptional({ example: 'http://localhost:6006/docs' })
   @IsOptional()

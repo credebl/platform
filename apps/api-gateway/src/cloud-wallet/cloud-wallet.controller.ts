@@ -30,6 +30,7 @@ import {
   AcceptOfferDto,
   BasicMessageDTO,
   CreateCloudWalletDidDto,
+  CreateCloudWalletDidImportSessionDto,
   CreateCloudWalletDto,
   CredentialListDto,
   GetAllCloudWalletConnectionsDto,
@@ -44,6 +45,7 @@ import { User } from '../authz/decorators/user.decorator';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { user } from '@prisma/client';
 import { Validator } from '@credebl/common/validator';
+import { assertNoPlaintextKeyMaterial } from '@credebl/common/utils/plaintext-key.util';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { UserRoleGuard } from '../authz/guards/user-role.guard';
 import { OrgRolesGuard } from '../authz/guards/org-roles.guard';
@@ -325,6 +327,8 @@ export class CloudWalletController {
     @User() user: user,
     @Res() res: Response
   ): Promise<Response> {
+    // Plaintext key material must be rejected before anything is sent over NATS.
+    assertNoPlaintextKeyMaterial(createDidDto);
     Validator.validateDid(createDidDto);
     const { email, id } = user;
     createDidDto.email = email;
@@ -342,6 +346,48 @@ export class CloudWalletController {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.agent.success.createDid,
       data: didDetails
+    };
+
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Create a single-use key import session on the holder's cloud wallet agent
+   * @param createDidImportSessionDto The DID method the key is imported for
+   * @returns The session id, expiry and public key
+   */
+  @Post('/did/import/session')
+  @ApiOperation({
+    summary: 'Create a DID key import session',
+    description:
+      'Returns a single-use public key and session id. Encrypt the existing private key to the public key and send the resulting JWE envelope as encryptedKey when creating the DID.'
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'DID key import session created successfully',
+    type: ApiResponseDto
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async createDidImportSession(
+    @Body() createDidImportSessionDto: CreateCloudWalletDidImportSessionDto,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    const { email, id } = user;
+    const session = await this.cloudWalletService.createDidImportSession({
+      method: createDidImportSessionDto.method,
+      email,
+      userId: id
+    });
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.cloudWallet.success.createDidImportSession,
+      data: session
     };
 
     return res.status(HttpStatus.CREATED).json(finalResponse);

@@ -62,13 +62,21 @@ export interface ICreateCloudWalletDid {
   network?: string;
   domain?: string;
   role?: string;
+  /** @deprecated Legacy plaintext did:polygon key, rejected by the gateway. Use `encryptedKey`. */
   privatekey?: string;
+  encryptedKey?: { sessionId: string; jwe: string };
   endpoint?: string;
   did?: string;
   endorserDid?: string;
   email?: string;
   userId?: string;
 }
+export interface ICreateCloudWalletDidImportSession {
+  method: string;
+  email?: string;
+  userId?: string;
+}
+
 export interface IGetStoredWalletInfo {
   email: string;
   userId: string;

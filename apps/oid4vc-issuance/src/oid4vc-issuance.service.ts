@@ -67,6 +67,7 @@ import {
 import { x5cKeyType } from '@credebl/enum/enum';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { withIssuanceStatus } from '../libs/helpers/issuance-state';
 import { Oid4vcCredentialOfferWebhookPayload } from '../interfaces/oid4vc-wh-interfaces';
 import { ErrorHandler } from '@credebl/common';
 
@@ -990,7 +991,7 @@ export class Oid4vcIssuanceService {
       if ('string' === typeof offer.response) {
         offer.response = JSON.parse(offer.response);
       }
-      return offer.response;
+      return withIssuanceStatus(offer.response);
     } catch (error) {
       this.logger.error(`[getCredentialOfferDetailsById] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
@@ -1005,7 +1006,7 @@ export class Oid4vcIssuanceService {
       if ('string' === typeof offers.response) {
         offers.response = JSON.parse(offers.response);
       }
-      return offers.response;
+      return withIssuanceStatus(offers.response);
     } catch (error) {
       this.logger.error(`[getCredentialOffers] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);

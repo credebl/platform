@@ -477,7 +477,7 @@ export class OrganizationRepository {
               agentsTypeId: true,
               orgAgentTypeId: true,
               createDateTime: true,
-              tenantId: true,
+              tenantId:true,
               agent_invitations: {
                 select: {
                   id: true,

@@ -80,7 +80,6 @@ import { IssueCredentialDto } from './dtos/multi-connection.dto';
 import { SchemaType } from '@credebl/enum/enum';
 import { CommonConstants } from '../../../../libs/common/src/common.constant';
 import { TrimStringParamPipe } from '@credebl/common/cast.helper';
-import { NotFoundErrorDto } from '../dtos/not-found-error.dto';
 @Controller()
 @UseFilters(CustomExceptionFilter)
 @ApiTags('credentials')
@@ -177,16 +176,7 @@ export class IssuanceController {
   @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER, OrgRoles.VERIFIER, OrgRoles.MEMBER, OrgRoles.HOLDER)
   async getIssueCredentialsbyCredentialRecordId(
     @User() user: IUserRequest,
-    @Param(
-      'credentialRecordId',
-      TrimStringParamPipe,
-      new ParseUUIDPipe({
-        exceptionFactory: (): Error => {
-          throw new BadRequestException(ResponseMessages.issuance.error.invalidCredentialRecordId);
-        }
-      })
-    )
-    credentialRecordId: string,
+    @Param('credentialRecordId', TrimStringParamPipe, new ParseUUIDPipe({exceptionFactory: (): Error => { throw new BadRequestException(ResponseMessages.issuance.error.invalidCredentialRecordId); }})) credentialRecordId: string,
     @Param('orgId') orgId: string,
     @Res() res: Response
   ): Promise<Response> {

@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
+import ContextStorageService, { ContextStorageServiceKey } from '@credebl/context/contextStorageService.interface';
 import { ClientProxy, NatsRecordBuilder } from '@nestjs/microservices';
-import { map } from 'rxjs/operators';
 import * as nats from 'nats';
 import { firstValueFrom } from 'rxjs';
-import ContextStorageService, { ContextStorageServiceKey } from '../../context/src/contextStorageService.interface';
+import { map } from 'rxjs/operators';
 import { v4 } from 'uuid';
 
 @Injectable()

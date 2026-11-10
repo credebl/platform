@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { OpenBaoProvider } from './openbao.provider';
 import { SecretProvider } from './secret-provider.interface';
+import { trimEnvVariables } from './trim-env';
 
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const logger = new Logger('SecretsLoader');
@@ -17,6 +18,9 @@ export function getSecretProvider(providerType: string): SecretProvider | null {
 }
 
 export async function loadConfigSecrets(): Promise<void> {
+  // Normalise values supplied by the container platform before anything reads them
+  trimEnvVariables();
+
   if ('true' !== process.env.ENABLE_BAO?.trim()?.toLowerCase()) {
     logger.log('OpenBao secrets management is disabled. Skipping remote secrets fetching.');
     return;
@@ -55,6 +59,7 @@ export async function loadConfigSecrets(): Promise<void> {
       });
     }
 
+    trimEnvVariables();
     logger.log(`Successfully injected secrets from ${provider.name} into process.env`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

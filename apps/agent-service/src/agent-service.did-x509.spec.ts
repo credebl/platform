@@ -113,6 +113,20 @@ describe('AgentServiceService did:x509', () => {
       expect(result).toEqual(expect.objectContaining({ isPrimaryDid: true }));
     });
 
+    it('clears the primary flag with a single update however many DIDs the organization has', async () => {
+      const existing = Array.from({ length: 20 }, (_, i) => ({
+        id: `org-did-${i}`,
+        did: `did:key:z${i}`,
+        isPrimaryDid: 0 === i
+      }));
+      repository.getOrgDid.mockResolvedValue(existing);
+
+      await service.importDidX509({ ...importPayload, isPrimaryDid: true }, ORG_ID, user);
+
+      expect(repository.updateIsPrimaryDid).toHaveBeenCalledTimes(1);
+      expect(repository.updateIsPrimaryDid).toHaveBeenCalledWith(ORG_ID, false);
+    });
+
     it('reports an agent without the did:x509 route as unsupported', async () => {
       commonService.httpPost.mockRejectedValue(
         new HttpException({ statusCode: 404, error: { message: 'Not Found' } }, HttpStatus.NOT_FOUND)

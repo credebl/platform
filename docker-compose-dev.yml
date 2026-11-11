@@ -1,0 +1,200 @@
+version: '3'
+
+services:
+  nats:
+    container_name: nats
+    entrypoint: '/nats-server -c /nats-server.conf -DV'  # Corrected the path to nats-server.conf
+    image: nats
+    ports:
+      - '4222:4222'
+      - '6222:6222'
+      - '8222:8222'
+   # volumes:
+    #  - ./nats-server.conf:/nats-server.conf  # Mount the config file
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes: 
+      - cache:/data
+  api-gateway:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - redis
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.api-gateway
+    ports:
+      - '5000:5000'
+    env_file:
+      - ./.env
+  user:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.user
+    env_file:
+      - ./.env
+  utility:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.utility
+    env_file:
+      - ./.env
+  connection:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - utility
+      - user
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.connection
+    env_file:
+      - ./.env
+  issuance:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - redis
+      - api-gateway
+      - user
+      - connection
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.issuance
+    env_file:
+      - ./.env
+  ledger:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+      - issuance
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.ledger
+    env_file:
+      - ./.env
+  organization:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+      - issuance
+      - ledger
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.organization
+    env_file:
+      - ./.env
+  verification:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+      - issuance
+      - ledger
+      - organization
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.verification
+    env_file:
+      - ./.env
+  agent-provisioning:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+      - issuance
+      - ledger
+      - organization
+      - verification
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.agent-provisioning
+      args:
+        - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
+    env_file:
+      - ./.env
+    environment:
+      - ROOT_PATH=$PWD/apps/agent-provisioning/AFJ/agent-config
+    volumes:
+      - $PWD/apps/agent-provisioning/AFJ/agent-config:/app/agent-provisioning/AFJ/agent-config
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /app/agent-provisioning/AFJ/token:/app/agent-provisioning/AFJ/token
+      - $PWD/agent.env:/app/agent.env
+  agent-service:
+    depends_on:
+      - nats  # Use depends_on instead of needs
+      - api-gateway
+      - user
+      - connection
+      - issuance
+      - ledger
+      - organization
+      - verification
+      - agent-provisioning
+    command: sh -c 'until (docker logs platform-agent-provisioning-1 | grep "Agent-Provisioning-Service Microservice is listening to NATS"); do sleep 1; done && node dist/apps/agent-service/main.js'
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.agent-service
+    env_file:
+      - ./.env
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    volumes_from:
+      - agent-provisioning
+  cloud-wallet:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.cloud-wallet
+    env_file:
+      - ./.env
+  geolocation:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.geolocation
+    env_file:
+      - ./.env
+  notification:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.notification
+    env_file:
+      - ./.env
+  webhook:
+    depends_on:
+      - nats
+      - api-gateway
+    build:
+      context: ./  # Adjust the context path as needed
+      dockerfile: Dockerfiles/Dockerfile.webhook
+    env_file:
+      - ./.env
+  
+  
+
+  
+volumes:
+  cache:
+    driver: local

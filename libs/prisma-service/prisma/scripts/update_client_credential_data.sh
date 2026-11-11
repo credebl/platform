@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Database connection URL
 DB_URL=$1
@@ -30,7 +30,7 @@ update_client_credentials() {
 }
 
 # Check if CLIENT_ID and CLIENT_SECRET are not empty
-if [[ -n "$CLIENT_ID" && -n "$CLIENT_SECRET" ]]; then
+if [ -n "$CLIENT_ID" ] && [ -n "$CLIENT_SECRET" ]; then
     # Update client credentials if both CLIENT_ID and CLIENT_SECRET are provided
     update_client_credentials
 else

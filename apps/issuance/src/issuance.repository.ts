@@ -9,9 +9,10 @@ import {
   PreviewRequest,
   SchemaDetails
 } from '../interfaces/issuance.interfaces';
-import { PrismaTables, SortValue } from '@credebl/enum/enum';
+import { IssueCredentials, IssuedCredentialStatus } from '../enum/issuance.enum';
 // eslint-disable-next-line camelcase
 import {
+  Prisma,
   agent_invitations,
   credentials,
   file_data,
@@ -21,6 +22,7 @@ import {
   platform_config,
   schema
 } from '@prisma/client';
+import { PrismaTables, SortValue } from '@credebl/enum/enum';
 
 import { FileUploadStatus } from 'apps/api-gateway/src/enum';
 import { IDeletedIssuanceRecords } from '@credebl/common/interfaces/issuance.interface';
@@ -28,6 +30,7 @@ import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/int
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
+
 @Injectable()
 export class IssuanceRepository {
   constructor(
@@ -120,22 +123,72 @@ export class IssuanceRepository {
       schemaId: string;
       state: string;
       orgId: string;
+      connections: {
+        theirLabel: string;
+      };
     }[];
   }> {
     try {
-      const issuedCredentialsList = await this.prisma.credentials.findMany({
+      const schemas = await this.prisma.schema.findMany({
         where: {
-          orgId,
-          ...(schemaIds?.length ? { schemaId: { in: schemaIds } } : {}),
-          ...(!schemaIds?.length && issuedCredentialsSearchCriteria.search
-            ? {
-                OR: [
-                  { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
-                ]
-              }
-            : {})
+          name: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
         },
+        select: { schemaLedgerId: true }
+      });
+
+      const schemaIdsMatched = schemas.map((s) => s.schemaLedgerId);
+      let stateInfo = null;
+      switch (issuedCredentialsSearchCriteria.search.toLowerCase()) {
+        case IssuedCredentialStatus.offerSent.toLowerCase():
+          stateInfo = IssueCredentials.offerSent;
+          break;
+
+        case IssuedCredentialStatus.done.toLowerCase():
+          stateInfo = IssueCredentials.done;
+          break;
+
+        case IssuedCredentialStatus.abandoned.toLowerCase():
+          stateInfo = IssueCredentials.abandoned;
+          break;
+
+        case IssuedCredentialStatus.received.toLowerCase():
+          stateInfo = IssueCredentials.requestReceived;
+          break;
+
+        case IssuedCredentialStatus.proposalReceived.toLowerCase():
+          stateInfo = IssueCredentials.proposalReceived;
+          break;
+
+        case IssuedCredentialStatus.credIssued.toLowerCase():
+          stateInfo = IssueCredentials.offerSent;
+          break;
+
+        default:
+          break;
+      }
+
+      const issuanceWhereClause: Prisma.credentialsWhereInput = {
+        orgId,
+        ...(schemaIds?.length ? { schemaId: { in: schemaIds } } : {}),
+        ...(!schemaIds?.length && issuedCredentialsSearchCriteria.search
+          ? {
+              OR: [
+                { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+                { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
+                { schemaId: { in: schemaIdsMatched } },
+                {
+                  connections: {
+                    theirLabel: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' }
+                  }
+                },
+                { state: { contains: stateInfo ?? issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
+              ]
+            }
+          : {})
+      };
+
+      const issuedCredentialsList = await this.prisma.credentials.findMany({
+        where: issuanceWhereClause,
         select: {
           credentialExchangeId: true,
           createDateTime: true,
@@ -143,7 +196,12 @@ export class IssuanceRepository {
           orgId: true,
           state: true,
           schemaId: true,
-          connectionId: true
+          connectionId: true,
+          connections: {
+            select: {
+              theirLabel: true
+            }
+          }
         },
         orderBy: {
           [issuedCredentialsSearchCriteria?.sortField]:
@@ -153,18 +211,7 @@ export class IssuanceRepository {
         skip: (issuedCredentialsSearchCriteria.pageNumber - 1) * issuedCredentialsSearchCriteria.pageSize
       });
       const issuedCredentialsCount = await this.prisma.credentials.count({
-        where: {
-          orgId,
-          ...(schemaIds?.length ? { schemaId: { in: schemaIds } } : {}),
-          ...(!schemaIds?.length && issuedCredentialsSearchCriteria.search
-            ? {
-                OR: [
-                  { connectionId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } },
-                  { schemaId: { contains: issuedCredentialsSearchCriteria.search, mode: 'insensitive' } }
-                ]
-              }
-            : {})
-        }
+        where: issuanceWhereClause
       });
 
       return { issuedCredentialsCount, issuedCredentialsList };
@@ -221,8 +268,8 @@ export class IssuanceRepository {
           threadId: issueCredentialDto?.threadId,
           connectionId: issueCredentialDto?.connectionId,
           state: issueCredentialDto?.state,
-          schemaId,
-          credDefId
+          credDefId,
+          ...(schemaId ? { schemaId } : {})
         },
         create: {
           createDateTime: issueCredentialDto?.createDateTime,
@@ -275,7 +322,8 @@ export class IssuanceRepository {
 
   async getSchemaDetails(schemaId: string): Promise<schema> {
     try {
-      const schemaDetails = await this.prisma.schema.findFirstOrThrow({
+      //Todo: Enhance this query by using FindFirstOrThrow
+      const schemaDetails = await this.prisma.schema.findFirst({
         where: {
           schemaLedgerId: schemaId
         }
@@ -317,7 +365,7 @@ export class IssuanceRepository {
       return credentialDefRes;
     } catch (error) {
       this.logger.error(`Error in getCredentialDefinitionDetails: ${error.message}`);
-      throw new InternalServerErrorException(error.message);
+      throw error;
     }
   }
 
@@ -728,6 +776,20 @@ export class IssuanceRepository {
       return fileDetails;
     } catch (error) {
       this.logger.error(`[getFileDetailsAndFileDataByFileId] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateSchemaIdByThreadId(threadId: string, schemaId: string): Promise<void> {
+    try {
+      await this.prisma.credentials.update({
+        where: { threadId },
+        data: {
+          schemaId
+        }
+      });
+    } catch (error) {
+      this.logger.error(`[updateSchemaIdByThreadId] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

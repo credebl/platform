@@ -37,7 +37,7 @@ export enum DevelopmentEnvironment {
   TEST = 'test'
 }
 
-export declare enum KeyType {
+export enum KeyType {
   Ed25519 = 'ed25519',
   Bls12381g1g2 = 'bls12381g1g2',
   Bls12381g1 = 'bls12381g1',
@@ -256,4 +256,18 @@ export enum UserRole {
 export enum ProofType {
   POLYGON_PROOFTYPE = 'EcdsaSecp256k1Signature2019',
   NO_LEDGER_PROOFTYPE = 'Ed25519Signature2018'
+}
+
+export enum TokenType {
+  BEARER_TOKEN = 'Bearer'
+}
+
+export enum SessionType {
+  USER_SESSION = 'user-session',
+  ORG_SESSION = 'organization-session'
+}
+
+export enum ProviderType {
+  KEYCLOAK = 'keycloak',
+  SUPABASE = 'supabase'
 }

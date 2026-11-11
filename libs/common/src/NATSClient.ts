@@ -5,7 +5,7 @@ import ContextStorageService, { ContextStorageServiceKey } from '@credebl/contex
 import { ClientProxy, NatsRecordBuilder } from '@nestjs/microservices';
 import * as nats from 'nats';
 import { firstValueFrom } from 'rxjs';
-import { map } from 'rxjs/operators';
+import ContextStorageService, { ContextStorageServiceKey } from '../../context/src/contextStorageService.interface';
 import { v4 } from 'uuid';
 
 @Injectable()

@@ -13,6 +13,7 @@ export interface IAccessTokenData {
   refresh_expires_in: number;
   token_type: string;
   scope: string;
+  sessionId?: string;
 }
 
 export interface IOptionalParams {

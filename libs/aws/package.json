@@ -3,11 +3,9 @@
   "main": "src/index",
   "types": "src/index",
   "version": "0.0.1",
-  "files": ["dist"],
-  "license": "Apache-2.0",
-  "publishConfig": {
-    "access": "public"
-  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "pnpm run clean && pnpm run compile",
     "clean": "rimraf ../../dist/libs/aws",

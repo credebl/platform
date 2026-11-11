@@ -1,10 +1,9 @@
 # Stage 1: Build the application
-FROM node:18-slim as build
+FROM node:18-alpine AS build
 
+# Install OpenSSL
+RUN apk add --no-cache openssl
 RUN npm install -g pnpm
-
-RUN apt-get update -y
-RUN apt-get --no-install-recommends install -y openssl
 # Set the working directory
 WORKDIR /app
 
@@ -25,10 +24,9 @@ RUN cd libs/prisma-service && npx prisma generate
 RUN pnpm run build utility
 
 # Stage 2: Create the final image
-FROM node:18-slim
+FROM node:18-alpine
 
-RUN apt-get update -y
-RUN apt-get --no-install-recommends install -y openssl
+RUN apk add --no-cache openssl
 # Set the working directory
 WORKDIR /app
 # RUN npm install -g pnpm

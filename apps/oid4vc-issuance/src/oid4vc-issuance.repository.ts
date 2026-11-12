@@ -81,10 +81,45 @@ export class Oid4vcIssuanceRepository {
         issuerId,
         notifications
       } = payload;
+      const upsertCredential = (
+        client: Prisma.TransactionClient,
+        notificationHistory: { notifications?: Prisma.InputJsonValue } = {}
+      ): Promise<object> =>
+        client.oid4vc_credentials.upsert({
+          where: {
+            issuanceSessionId
+          },
+          update: {
+            lastChangedBy: orgId,
+            state,
+            credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
+            ...(issuedCredentials !== undefined ? { issuedCredentials } : {}),
+            ...notificationHistory
+          },
+          create: {
+            lastChangedBy: orgId,
+            createdBy: orgId,
+            state,
+            orgId,
+            credentialOfferId,
+            contextCorrelationId,
+            issuanceSessionId,
+            publicIssuerId: issuerId,
+            credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
+            ...(issuedCredentials !== undefined ? { issuedCredentials } : {}),
+            ...notificationHistory
+          }
+        });
+
       // The agent sends its full notification history on every webhook; older agents send none
-      let notificationHistory = {};
-      if (Array.isArray(notifications)) {
-        const stored = await this.prisma.oid4vc_credentials.findUnique({
+      if (!Array.isArray(notifications)) {
+        return await upsertCredential(this.prisma);
+      }
+
+      // Webhooks for one session can overlap, so read, merge and write the history under a per-session lock
+      const credentialDetails = await this.prisma.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${issuanceSessionId}))`;
+        const stored = await tx.oid4vc_credentials.findUnique({
           where: { issuanceSessionId },
           select: { notifications: true }
         });
@@ -92,33 +127,7 @@ export class Oid4vcIssuanceRepository {
           stored?.notifications as unknown as Oid4vciSessionNotification[],
           notifications
         );
-        notificationHistory = { notifications: merged as unknown as Prisma.InputJsonValue };
-      }
-
-      const credentialDetails = await this.prisma.oid4vc_credentials.upsert({
-        where: {
-          issuanceSessionId
-        },
-        update: {
-          lastChangedBy: orgId,
-          state,
-          credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
-          ...(issuedCredentials !== undefined ? { issuedCredentials } : {}),
-          ...notificationHistory
-        },
-        create: {
-          lastChangedBy: orgId,
-          createdBy: orgId,
-          state,
-          orgId,
-          credentialOfferId,
-          contextCorrelationId,
-          issuanceSessionId,
-          publicIssuerId: issuerId,
-          credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
-          ...(issuedCredentials !== undefined ? { issuedCredentials } : {}),
-          ...notificationHistory
-        }
+        return upsertCredential(tx, { notifications: merged as unknown as Prisma.InputJsonValue });
       });
 
       return credentialDetails;

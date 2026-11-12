@@ -40,4 +40,24 @@ describe('mergeNotificationHistory', () => {
     const incoming = [{ events: [accepted] } as Oid4vciSessionNotification, notification('notif-1', [])];
     expect(mergeNotificationHistory([], incoming)).toEqual([notification('notif-1', [])]);
   });
+
+  it('orders events by time, not by how the timestamp is written', () => {
+    const atSecond = { event: 'credential_accepted' as const, receivedAt: '2026-11-03T10:00:06Z' };
+    const later = { event: 'credential_deleted' as const, receivedAt: '2026-11-03T10:00:06.100Z' };
+    const earlierInOffset = { event: 'credential_failure' as const, receivedAt: '2026-11-03T11:00:05+01:00' };
+    const merged = mergeNotificationHistory([], [notification('notif-1', [later, atSecond, earlierInOffset])]);
+    expect(merged).toEqual([notification('notif-1', [earlierInOffset, atSecond, later])]);
+  });
+
+  it('treats the same time written differently as one event', () => {
+    const sameTime = { ...accepted, receivedAt: '2026-11-03T10:00:06Z' };
+    expect(
+      mergeNotificationHistory([notification('notif-1', [accepted])], [notification('notif-1', [sameTime])])
+    ).toEqual([notification('notif-1', [accepted])]);
+  });
+
+  it('skips events that are missing', () => {
+    const incoming = [notification('notif-1', [null, accepted] as unknown as Oid4vciSessionNotification['events'])];
+    expect(mergeNotificationHistory([], incoming)).toEqual([notification('notif-1', [accepted])]);
+  });
 });

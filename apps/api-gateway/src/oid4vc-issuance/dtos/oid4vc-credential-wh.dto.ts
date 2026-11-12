@@ -53,6 +53,44 @@ export class Oid4vciWalletNotificationDto {
   receivedAt!: string;
 }
 
+/**
+ * One event in the notification history the agent keeps for a `notification_id`
+ */
+export class Oid4vciNotificationHistoryEventDto {
+  @ApiProperty({ enum: OID4VCI_NOTIFICATION_EVENTS })
+  @IsIn(OID4VCI_NOTIFICATION_EVENTS)
+  event!: Oid4vciNotificationEvent;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  eventDescription?: string;
+
+  @ApiProperty()
+  @IsISO8601()
+  receivedAt!: string;
+}
+
+/**
+ * The notification history of one `notification_id` in the issuance session
+ */
+export class Oid4vciSessionNotificationDto {
+  @ApiProperty()
+  @IsString()
+  notificationId!: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  credentialConfigurationId?: string;
+
+  @ApiProperty({ type: [Oid4vciNotificationHistoryEventDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => Oid4vciNotificationHistoryEventDto)
+  events!: Oid4vciNotificationHistoryEventDto[];
+}
+
 export class OidcIssueCredentialDto {
   @ApiProperty()
   @IsString()
@@ -110,10 +148,12 @@ export class OidcIssueCredentialDto {
   /**
    * Notification history of the session, as stored by the agent: one entry per `notification_id`, with its events
    */
-  @ApiPropertyOptional({ type: [Object] })
+  @ApiPropertyOptional({ type: [Oid4vciSessionNotificationDto] })
   @IsOptional()
   @IsArray()
-  notifications?: Record<string, unknown>[];
+  @ValidateNested({ each: true })
+  @Type(() => Oid4vciSessionNotificationDto)
+  notifications?: Oid4vciSessionNotificationDto[];
 }
 
 /**

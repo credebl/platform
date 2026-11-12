@@ -21,14 +21,17 @@ export function mergeNotificationHistory(
       ...(existing?.events ?? []),
       ...(Array.isArray(notification.events) ? notification.events : [])
     ].filter((event) => {
-      const key = `${event.event}|${event.receivedAt}`;
+      if (!event?.event || !event.receivedAt) {
+        return false;
+      }
+      const key = `${event.event}|${Date.parse(event.receivedAt)}`;
       if (seen.has(key)) {
         return false;
       }
       seen.add(key);
       return true;
     });
-    uniqueEvents.sort((a, b) => String(a.receivedAt).localeCompare(String(b.receivedAt)));
+    uniqueEvents.sort((a, b) => Date.parse(a.receivedAt) - Date.parse(b.receivedAt));
 
     merged.set(notification.notificationId, {
       ...existing,

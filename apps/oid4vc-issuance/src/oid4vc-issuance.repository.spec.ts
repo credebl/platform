@@ -6,7 +6,10 @@ import { Oid4vcIssuanceRepository } from './oid4vc-issuance.repository';
 describe('Oid4vcIssuanceRepository.storeOidcCredentialDetails', () => {
   const findUnique = jest.fn();
   const upsert = jest.fn().mockResolvedValue({});
-  const prisma = { oid4vc_credentials: { findUnique, upsert } } as unknown as PrismaService;
+  const executeRaw = jest.fn().mockResolvedValue(1);
+  const tx = { oid4vc_credentials: { findUnique, upsert }, $executeRaw: executeRaw };
+  const transaction = jest.fn((run: (client: typeof tx) => Promise<unknown>) => run(tx));
+  const prisma = { ...tx, $transaction: transaction } as unknown as PrismaService;
   const repository = new Oid4vcIssuanceRepository(prisma, new Logger());
 
   const session = {
@@ -38,6 +41,11 @@ describe('Oid4vcIssuanceRepository.storeOidcCredentialDetails', () => {
     const merged = { notificationId: 'notif-1', credentialConfigurationId: 'NotifSdJwt', events: [accepted, deleted] };
     const expected = [merged];
     const [[{ update, create }]] = upsert.mock.calls;
+    const [[lockQuery, lockedSessionId]] = executeRaw.mock.calls;
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(lockQuery.join('?')).toContain('pg_advisory_xact_lock');
+    expect(lockedSessionId).toBe('session-1');
+    expect(executeRaw.mock.invocationCallOrder[0]).toBeLessThan(findUnique.mock.invocationCallOrder[0]);
     expect(findUnique).toHaveBeenCalledWith({
       where: { issuanceSessionId: 'session-1' },
       select: { notifications: true }
@@ -50,6 +58,7 @@ describe('Oid4vcIssuanceRepository.storeOidcCredentialDetails', () => {
     await repository.storeOidcCredentialDetails({ oidcIssueCredentialDto: session }, 'org-1');
 
     const [[{ update, create }]] = upsert.mock.calls;
+    expect(transaction).not.toHaveBeenCalled();
     expect(findUnique).not.toHaveBeenCalled();
     expect(update).not.toHaveProperty('notifications');
     expect(create).not.toHaveProperty('notifications');

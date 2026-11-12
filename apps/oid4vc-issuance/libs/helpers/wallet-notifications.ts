@@ -4,7 +4,11 @@ import {
   Oid4vciSessionNotificationEvent
 } from '../../interfaces/oid4vc-wh-interfaces';
 
-const NOTIFICATION_EVENTS: readonly string[] = ['credential_accepted', 'credential_failure', 'credential_deleted'];
+const NOTIFICATION_EVENTS: ReadonlySet<string> = new Set([
+  'credential_accepted',
+  'credential_failure',
+  'credential_deleted'
+]);
 
 export interface SanitizedNotificationHistory {
   history: Oid4vciSessionNotification[];
@@ -20,7 +24,7 @@ function sanitizeEvent(value: unknown): Oid4vciSessionNotificationEvent | undefi
   if (
     !isRecord(value) ||
     'string' !== typeof value.event ||
-    !NOTIFICATION_EVENTS.includes(value.event) ||
+    !NOTIFICATION_EVENTS.has(value.event) ||
     'string' !== typeof value.receivedAt ||
     Number.isNaN(Date.parse(value.receivedAt))
   ) {

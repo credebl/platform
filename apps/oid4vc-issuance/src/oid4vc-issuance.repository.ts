@@ -8,8 +8,7 @@ import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
-import { Oid4vciSessionNotification } from '../interfaces/oid4vc-wh-interfaces';
-import { mergeNotificationHistory } from '../libs/helpers/wallet-notifications';
+import { mergeNotificationHistory, sanitizeNotificationHistory } from '../libs/helpers/wallet-notifications';
 
 @Injectable()
 export class Oid4vcIssuanceRepository {
@@ -81,11 +80,11 @@ export class Oid4vcIssuanceRepository {
         issuerId,
         notifications
       } = payload;
-      const upsertCredential = (
+      function upsertCredential(
         client: Prisma.TransactionClient,
         notificationHistory: { notifications?: Prisma.InputJsonValue } = {}
-      ): Promise<object> =>
-        client.oid4vc_credentials.upsert({
+      ): Promise<object> {
+        return client.oid4vc_credentials.upsert({
           where: {
             issuanceSessionId
           },
@@ -110,9 +109,17 @@ export class Oid4vcIssuanceRepository {
             ...notificationHistory
           }
         });
+      }
 
-      // The agent sends its full notification history on every webhook; older agents send none
-      if (!Array.isArray(notifications)) {
+      // The agent sends its full notification history on every webhook; older agents send none.
+      // The gateway accepts it as is, so only the well-formed part is stored and the webhook never fails on it.
+      const incoming = sanitizeNotificationHistory(notifications);
+      if (0 < incoming.skipped) {
+        this.logger.warn(
+          `Ignored ${incoming.skipped} malformed notification history item(s) for issuance session ${issuanceSessionId}`
+        );
+      }
+      if (0 === incoming.history.length) {
         return await upsertCredential(this.prisma);
       }
 
@@ -124,8 +131,8 @@ export class Oid4vcIssuanceRepository {
           select: { notifications: true }
         });
         const merged = mergeNotificationHistory(
-          stored?.notifications as unknown as Oid4vciSessionNotification[],
-          notifications
+          sanitizeNotificationHistory(stored?.notifications).history,
+          incoming.history
         );
         return upsertCredential(tx, { notifications: merged as unknown as Prisma.InputJsonValue });
       });

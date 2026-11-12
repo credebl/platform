@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsIn, IsISO8601, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Allow, IsArray, IsIn, IsISO8601, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 /**
@@ -51,44 +51,6 @@ export class Oid4vciWalletNotificationDto {
   @ApiProperty()
   @IsISO8601()
   receivedAt!: string;
-}
-
-/**
- * One event in the notification history the agent keeps for a `notification_id`
- */
-export class Oid4vciNotificationHistoryEventDto {
-  @ApiProperty({ enum: OID4VCI_NOTIFICATION_EVENTS })
-  @IsIn(OID4VCI_NOTIFICATION_EVENTS)
-  event!: Oid4vciNotificationEvent;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  eventDescription?: string;
-
-  @ApiProperty()
-  @IsISO8601()
-  receivedAt!: string;
-}
-
-/**
- * The notification history of one `notification_id` in the issuance session
- */
-export class Oid4vciSessionNotificationDto {
-  @ApiProperty()
-  @IsString()
-  notificationId!: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  credentialConfigurationId?: string;
-
-  @ApiProperty({ type: [Oid4vciNotificationHistoryEventDto] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Oid4vciNotificationHistoryEventDto)
-  events!: Oid4vciNotificationHistoryEventDto[];
 }
 
 export class OidcIssueCredentialDto {
@@ -146,14 +108,18 @@ export class OidcIssueCredentialDto {
   notification?: Oid4vciWalletNotificationDto;
 
   /**
-   * Notification history of the session, as stored by the agent: one entry per `notification_id`, with its events
+   * Notification history of the session, as stored by the agent: one entry per `notification_id`, with its events.
+   * Sent on every webhook once credentials are issued, so it is accepted as is: a change in its shape must not
+   * reject state-change webhooks. It is forwarded unchanged and checked before it is stored.
    */
-  @ApiPropertyOptional({ type: [Oid4vciSessionNotificationDto] })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Oid4vciSessionNotificationDto)
-  notifications?: Oid4vciSessionNotificationDto[];
+  @ApiPropertyOptional({
+    type: 'array',
+    items: { type: 'object' },
+    description:
+      'Entries of { notificationId, credentialConfigurationId, events: [{ event, eventDescription?, receivedAt }] }'
+  })
+  @Allow()
+  notifications?: unknown;
 }
 
 /**

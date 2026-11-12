@@ -64,27 +64,16 @@ describe('OidcIssueCredentialDto wallet notifications', () => {
     await expect(validate({ ...session, notification: withoutId })).rejects.toThrow(BadRequestException);
   });
 
-  it('rejects a history entry with a missing event', async () => {
-    await expect(
-      validate({ ...session, notifications: [{ notificationId: 'notif-1', events: [null] }] })
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it('rejects a history event without receivedAt', async () => {
-    await expect(
-      validate({
-        ...session,
-        notifications: [{ notificationId: 'notif-1', events: [{ event: 'credential_accepted' }] }]
-      })
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it('rejects a history entry without a notificationId', async () => {
-    await expect(
-      validate({
-        ...session,
-        notifications: [{ events: [{ event: 'credential_accepted', receivedAt: notification.receivedAt }] }]
-      })
-    ).rejects.toThrow(BadRequestException);
-  });
+  it.each([
+    ['an entry with a missing event', [{ notificationId: 'notif-1', events: [null] }]],
+    ['an event without receivedAt', [{ notificationId: 'notif-1', events: [{ event: 'credential_accepted' }] }]],
+    ['renamed fields', [{ id: 'notif-1', history: [{ type: 'credential_accepted', at: 1794482136000 }] }]],
+    ['a history that is not an array', { 'notif-1': ['credential_accepted'] }]
+  ])(
+    'accepts and forwards a history with %s unchanged, so state changes are never rejected',
+    async (_case, history) => {
+      const forwarded = await validate({ ...session, notifications: history });
+      expect(forwarded).toEqual({ ...session, notifications: history });
+    }
+  );
 });

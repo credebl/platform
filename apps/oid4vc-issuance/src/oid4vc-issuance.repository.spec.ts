@@ -10,7 +10,8 @@ describe('Oid4vcIssuanceRepository.storeOidcCredentialDetails', () => {
   const tx = { oid4vc_credentials: { findUnique, upsert }, $executeRaw: executeRaw };
   const transaction = jest.fn((run: (client: typeof tx) => Promise<unknown>) => run(tx));
   const prisma = { ...tx, $transaction: transaction } as unknown as PrismaService;
-  const repository = new Oid4vcIssuanceRepository(prisma, new Logger());
+  const logger = new Logger();
+  const repository = new Oid4vcIssuanceRepository(prisma, logger);
 
   const session = {
     id: 'session-1',
@@ -62,5 +63,35 @@ describe('Oid4vcIssuanceRepository.storeOidcCredentialDetails', () => {
     expect(findUnique).not.toHaveBeenCalled();
     expect(update).not.toHaveProperty('notifications');
     expect(create).not.toHaveProperty('notifications');
+  });
+
+  it('stores only the well-formed part of a history and warns about the rest', async () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
+    findUnique.mockResolvedValue(null);
+    const notifications = [{ notificationId: 'notif-1', events: [accepted, { event: 'credential_rejected' }] }, null];
+
+    await repository.storeOidcCredentialDetails({ oidcIssueCredentialDto: { ...session, notifications } }, 'org-1');
+
+    const [[{ update }]] = upsert.mock.calls;
+    expect(update).toMatchObject({
+      state: 'Completed',
+      notifications: [{ notificationId: 'notif-1', events: [accepted] }]
+    });
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Ignored 2 malformed notification history item(s)'));
+  });
+
+  it('still stores the state change when the history has an unexpected shape', async () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
+
+    await repository.storeOidcCredentialDetails(
+      { oidcIssueCredentialDto: { ...session, notifications: { 'notif-1': ['credential_accepted'] } } },
+      'org-1'
+    );
+
+    const [[{ update }]] = upsert.mock.calls;
+    expect(transaction).not.toHaveBeenCalled();
+    expect(update).toMatchObject({ state: 'Completed' });
+    expect(update).not.toHaveProperty('notifications');
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 });

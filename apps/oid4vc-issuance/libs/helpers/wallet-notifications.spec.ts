@@ -1,5 +1,5 @@
 import { Oid4vciSessionNotification } from '../../interfaces/oid4vc-wh-interfaces';
-import { mergeNotificationHistory } from './wallet-notifications';
+import { mergeNotificationHistory, sanitizeNotificationHistory } from './wallet-notifications';
 
 describe('mergeNotificationHistory', () => {
   const accepted = { event: 'credential_accepted' as const, receivedAt: '2026-11-03T10:00:06.000Z' };
@@ -15,7 +15,7 @@ describe('mergeNotificationHistory', () => {
 
   it('takes the incoming history when nothing is stored', () => {
     const incoming = [notification('notif-1', [accepted])];
-    expect(mergeNotificationHistory(null, incoming)).toEqual(incoming);
+    expect(mergeNotificationHistory([], incoming)).toEqual(incoming);
   });
 
   it('adds new events without duplicating stored ones', () => {
@@ -36,11 +36,6 @@ describe('mergeNotificationHistory', () => {
     expect(mergeNotificationHistory(stored, incoming)).toEqual([notification('notif-1', [accepted, failure, deleted])]);
   });
 
-  it('skips entries without a notificationId', () => {
-    const incoming = [{ events: [accepted] } as Oid4vciSessionNotification, notification('notif-1', [])];
-    expect(mergeNotificationHistory([], incoming)).toEqual([notification('notif-1', [])]);
-  });
-
   it('orders events by time, not by how the timestamp is written', () => {
     const atSecond = { event: 'credential_accepted' as const, receivedAt: '2026-11-03T10:00:06Z' };
     const later = { event: 'credential_deleted' as const, receivedAt: '2026-11-03T10:00:06.100Z' };
@@ -55,9 +50,57 @@ describe('mergeNotificationHistory', () => {
       mergeNotificationHistory([notification('notif-1', [accepted])], [notification('notif-1', [sameTime])])
     ).toEqual([notification('notif-1', [accepted])]);
   });
+});
 
-  it('skips events that are missing', () => {
-    const incoming = [notification('notif-1', [null, accepted] as unknown as Oid4vciSessionNotification['events'])];
-    expect(mergeNotificationHistory([], incoming)).toEqual([notification('notif-1', [accepted])]);
+describe('sanitizeNotificationHistory', () => {
+  const accepted = { event: 'credential_accepted', receivedAt: '2026-11-03T10:00:06.000Z' };
+
+  it('keeps a well-formed history as is', () => {
+    const history = [{ notificationId: 'notif-1', credentialConfigurationId: 'NotifSdJwt', events: [accepted] }];
+    expect(sanitizeNotificationHistory(history)).toEqual({ history, skipped: 0 });
+  });
+
+  it('returns an empty history for agents that send none', () => {
+    expect(sanitizeNotificationHistory(undefined)).toEqual({ history: [], skipped: 0 });
+    expect(sanitizeNotificationHistory(null)).toEqual({ history: [], skipped: 0 });
+  });
+
+  it('skips a history that is not an array', () => {
+    expect(sanitizeNotificationHistory({ 'notif-1': [accepted] })).toEqual({ history: [], skipped: 1 });
+  });
+
+  it('skips entries without a notificationId', () => {
+    const history = [null, { events: [accepted] }, { notificationId: 'notif-1', events: [accepted] }];
+    expect(sanitizeNotificationHistory(history)).toEqual({
+      history: [{ notificationId: 'notif-1', events: [accepted] }],
+      skipped: 2
+    });
+  });
+
+  it('skips events that are missing, unknown or have no valid receivedAt', () => {
+    const events = [
+      null,
+      { event: 'credential_rejected', receivedAt: accepted.receivedAt },
+      { event: 'credential_accepted' },
+      { event: 'credential_accepted', receivedAt: 'yesterday' },
+      { ...accepted, eventDescription: 42 },
+      { ...accepted, receivedAt: '2026-11-03T10:00:07.000Z', eventDescription: 'Stored', extra: 'dropped' }
+    ];
+    expect(sanitizeNotificationHistory([{ notificationId: 'notif-1', events }])).toEqual({
+      history: [
+        {
+          notificationId: 'notif-1',
+          events: [accepted, { ...accepted, receivedAt: '2026-11-03T10:00:07.000Z', eventDescription: 'Stored' }]
+        }
+      ],
+      skipped: 4
+    });
+  });
+
+  it('keeps an entry whose events are not an array, with no events', () => {
+    expect(sanitizeNotificationHistory([{ notificationId: 'notif-1', events: 'credential_accepted' }])).toEqual({
+      history: [{ notificationId: 'notif-1', events: [] }],
+      skipped: 1
+    });
   });
 });

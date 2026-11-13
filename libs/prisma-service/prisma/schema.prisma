@@ -677,6 +677,7 @@ model issued_oid4vc_credentials {
 
   organisation organisation? @relation(fields: [orgId], references: [id], onDelete: Restrict)
 
+  @@unique([listId, index], map: "issued_oid4vc_credentials_listId_index_key")
   @@index([orgId, issuanceSessionId])
 }
 

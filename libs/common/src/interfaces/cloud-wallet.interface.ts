@@ -330,3 +330,65 @@ export interface IBasicMessageDetails {
   content: string;
   connectionId: string;
 }
+
+export enum Oid4vcCredentialType {
+  SD_JWT_VC = 'sd-jwt-vc',
+  MSO_MDOC = 'mso_mdoc',
+  W3C_VC = 'w3c-vc'
+}
+
+export interface IResolveCredentialOffer {
+  credentialOfferUri: string;
+  userId?: string;
+  email?: string;
+}
+
+export interface IAuthorizeRequestCredential {
+  credentialOfferUri: string;
+  credentialsToRequest: string[];
+  userId?: string;
+  email?: string;
+}
+
+export interface IRequestCredential {
+  credentialOfferUri: string;
+  credentialsToRequest: string[];
+  authorizationCode?: string;
+  codeVerifier?: string;
+  txCode?: string;
+  userId?: string;
+  email?: string;
+}
+
+export interface IResolveProofRequest {
+  proofRequestUri: string;
+  options?: object;
+  userId?: string;
+  email?: string;
+}
+
+export interface IAcceptOid4vpProofRequest {
+  proofRequestUri: string;
+  options?: object;
+  userId?: string;
+  email?: string;
+}
+
+export interface IDecodeMdoc {
+  base64Url: string;
+  userId?: string;
+  email?: string;
+}
+
+export interface IDecodeSdJwt {
+  jwt: string;
+  userId?: string;
+  email?: string;
+}
+
+export interface IDeleteHolderCredential {
+  credentialType: Oid4vcCredentialType;
+  credentialId: string;
+  userId?: string;
+  email?: string;
+}

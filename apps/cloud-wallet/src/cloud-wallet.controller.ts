@@ -22,7 +22,15 @@ import {
   ICredentialDetails,
   GetAllCloudWalletConnections,
   IBasicMessage,
-  IBasicMessageDetails
+  IBasicMessageDetails,
+  IResolveCredentialOffer,
+  IAuthorizeRequestCredential,
+  IRequestCredential,
+  IResolveProofRequest,
+  IAcceptOid4vpProofRequest,
+  IDecodeMdoc,
+  IDecodeSdJwt,
+  IDeleteHolderCredential
 } from '@credebl/common/interfaces/cloud-wallet.interface';
 
 @Controller()
@@ -107,5 +115,60 @@ export class CloudWalletController {
   @MessagePattern({ cmd: 'send-basic-message' })
   async sendBasicMessage(messageDetails: IBasicMessageDetails): Promise<Response> {
     return this.cloudWalletService.sendBasicMessage(messageDetails);
+  }
+
+  @MessagePattern({ cmd: 'holder-sd-jwt-credentials' })
+  async getSdJwtCredentials(holderDetails: IWalletDetailsForDidList): Promise<Response> {
+    return this.cloudWalletService.getSdJwtCredentials(holderDetails);
+  }
+
+  @MessagePattern({ cmd: 'holder-mdoc-credentials' })
+  async getMdocCredentials(holderDetails: IWalletDetailsForDidList): Promise<Response> {
+    return this.cloudWalletService.getMdocCredentials(holderDetails);
+  }
+
+  @MessagePattern({ cmd: 'holder-w3c-credentials' })
+  async getW3cCredentials(holderDetails: IWalletDetailsForDidList): Promise<Response> {
+    return this.cloudWalletService.getW3cCredentials(holderDetails);
+  }
+
+  @MessagePattern({ cmd: 'holder-decode-mdoc' })
+  async decodeMdoc(decodeMdocDetails: IDecodeMdoc): Promise<Response> {
+    return this.cloudWalletService.decodeMdoc(decodeMdocDetails);
+  }
+
+  @MessagePattern({ cmd: 'holder-decode-sdjwt' })
+  async decodeSdJwt(decodeSdJwtDetails: IDecodeSdJwt): Promise<Response> {
+    return this.cloudWalletService.decodeSdJwt(decodeSdJwtDetails);
+  }
+
+  @MessagePattern({ cmd: 'holder-delete-credential' })
+  async deleteHolderCredential(deleteCredentialDetails: IDeleteHolderCredential): Promise<Response> {
+    return this.cloudWalletService.deleteHolderCredential(deleteCredentialDetails);
+  }
+
+  @MessagePattern({ cmd: 'oid4vc-holder-resolve-credential-offer' })
+  async resolveCredentialOffer(resolveCredentialOfferDetails: IResolveCredentialOffer): Promise<Response> {
+    return this.cloudWalletService.resolveCredentialOffer(resolveCredentialOfferDetails);
+  }
+
+  @MessagePattern({ cmd: 'oid4vc-holder-authorization-request' })
+  async authorizationRequest(authorizationRequestDetails: IAuthorizeRequestCredential): Promise<Response> {
+    return this.cloudWalletService.authorizationRequest(authorizationRequestDetails);
+  }
+
+  @MessagePattern({ cmd: 'oid4vc-holder-request-credential' })
+  async requestCredential(requestCredentialDetails: IRequestCredential): Promise<Response> {
+    return this.cloudWalletService.requestCredential(requestCredentialDetails);
+  }
+
+  @MessagePattern({ cmd: 'oid4vc-holder-resolve-proof-request' })
+  async resolveProofRequest(resolveProofRequestDetails: IResolveProofRequest): Promise<Response> {
+    return this.cloudWalletService.resolveProofRequest(resolveProofRequestDetails);
+  }
+
+  @MessagePattern({ cmd: 'oid4vc-holder-accept-proof-request' })
+  async acceptProofRequestOid4vc(acceptProofRequestDetails: IAcceptOid4vpProofRequest): Promise<Response> {
+    return this.cloudWalletService.acceptProofRequestOid4vc(acceptProofRequestDetails);
   }
 }

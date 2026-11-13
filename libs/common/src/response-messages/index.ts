@@ -734,12 +734,15 @@ export const ResponseMessages = {
       getById: 'OID4VC Credential offer details fetched successfully.',
       getAll: 'OID4VC Credential offers fetched successfully.',
       update: 'OID4VC Credential offer updated successfully.',
-      delete: 'OID4VC Credential offer deleted successfully.'
+      delete: 'OID4VC Credential offer deleted successfully.',
+      reissue: 'OID4VC Credential offer created again successfully.'
     },
     error: {
       errorCreateOffer: 'Error while creating OID4VC credential offer on agent.',
       errorUpdateOffer: 'Error while updating OID4VC credential offer on agent.',
       deleteFailed: 'Failed to delete OID4VC credential offer.',
+      invalidOfferId: 'Invalid OID4VC credential offer ID.',
+      invalidSessionId: 'Invalid OID4VC issuance session ID.',
       missingValidityInfo: 'Validity Info(validFrom, validTo) is required for validity of credential'
     }
   },

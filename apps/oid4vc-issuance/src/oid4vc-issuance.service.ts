@@ -67,6 +67,13 @@ import {
 import { x5cKeyType } from '@credebl/enum/enum';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { withIssuanceStatus } from '../libs/helpers/issuance-state';
+import {
+  buildReissueRequest,
+  IssuanceSessionRecord,
+  ReissueOptions,
+  withCurrentSigners
+} from '../libs/helpers/reissue-offer';
 import { Oid4vcCredentialOfferWebhookPayload } from '../interfaces/oid4vc-wh-interfaces';
 import { ErrorHandler } from '@credebl/common';
 
@@ -990,9 +997,40 @@ export class Oid4vcIssuanceService {
       if ('string' === typeof offer.response) {
         offer.response = JSON.parse(offer.response);
       }
-      return offer.response;
+      return withIssuanceStatus(offer.response);
     } catch (error) {
       this.logger.error(`[getCredentialOfferDetailsById] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
+  private currentSigner(orgId: string, keyType: x5cKeyType): Promise<X509CertificateRecord> {
+    return this.oid4vcIssuanceRepository.getCurrentActiveCertificate(orgId, keyType);
+  }
+
+  /**
+   * Creates a new offer for the credentials of an offer that cannot be used any more, for example because the wallet
+   * used its one-time code and then rejected the credential. The old offer is left as it is.
+   */
+  async reissueCredentialOffer(offerId: string, orgId: string, options: ReissueOptions = {}): Promise<object> {
+    try {
+      const stored = (await this.getCredentialOfferDetailsById(offerId, orgId)) as IssuanceSessionRecord;
+      const session = await withCurrentSigners(stored, (keyType) => this.currentSigner(orgId, keyType));
+      const request = buildReissueRequest(session, options);
+
+      const url = getAgentUrl(
+        await this.getAgentEndpoint(orgId),
+        CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER,
+        session.issuerId
+      );
+      const created = await this._oidcCreateCredentialOffer(request as unknown as CredentialOfferPayload, url, orgId);
+      if (!created) {
+        throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
+      }
+      const response = 'string' === typeof created.response ? JSON.parse(created.response) : created.response;
+      return withIssuanceStatus({ ...response, reissuedFromOfferId: offerId }) as object;
+    } catch (error) {
+      this.logger.error(`[reissueCredentialOffer] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
   }
@@ -1005,7 +1043,7 @@ export class Oid4vcIssuanceService {
       if ('string' === typeof offers.response) {
         offers.response = JSON.parse(offers.response);
       }
-      return offers.response;
+      return withIssuanceStatus(offers.response);
     } catch (error) {
       this.logger.error(`[getCredentialOffers] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);

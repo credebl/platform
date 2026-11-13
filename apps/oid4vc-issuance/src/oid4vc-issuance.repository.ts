@@ -8,6 +8,7 @@ import { x5cKeyType, x5cRecordStatus } from '@credebl/enum/enum';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { mergeNotificationHistory, sanitizeNotificationHistory } from '../libs/helpers/wallet-notifications';
 
 @Injectable()
 export class Oid4vcIssuanceRepository {
@@ -76,31 +77,64 @@ export class Oid4vcIssuanceRepository {
         contextCorrelationId,
         credentialOfferPayload,
         issuedCredentials,
-        issuerId
+        issuerId,
+        notifications
       } = payload;
+      function upsertCredential(
+        client: Prisma.TransactionClient,
+        notificationHistory: { notifications?: Prisma.InputJsonValue } = {}
+      ): Promise<object> {
+        return client.oid4vc_credentials.upsert({
+          where: {
+            issuanceSessionId
+          },
+          update: {
+            lastChangedBy: orgId,
+            state,
+            credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
+            ...(issuedCredentials !== undefined ? { issuedCredentials } : {}),
+            ...notificationHistory
+          },
+          create: {
+            lastChangedBy: orgId,
+            createdBy: orgId,
+            state,
+            orgId,
+            credentialOfferId,
+            contextCorrelationId,
+            issuanceSessionId,
+            publicIssuerId: issuerId,
+            credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
+            ...(issuedCredentials !== undefined ? { issuedCredentials } : {}),
+            ...notificationHistory
+          }
+        });
+      }
 
-      const credentialDetails = await this.prisma.oid4vc_credentials.upsert({
-        where: {
-          issuanceSessionId
-        },
-        update: {
-          lastChangedBy: orgId,
-          state,
-          credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
-          ...(issuedCredentials !== undefined ? { issuedCredentials } : {})
-        },
-        create: {
-          lastChangedBy: orgId,
-          createdBy: orgId,
-          state,
-          orgId,
-          credentialOfferId,
-          contextCorrelationId,
-          issuanceSessionId,
-          publicIssuerId: issuerId,
-          credentialConfigurationIds: credentialOfferPayload.credential_configuration_ids ?? [],
-          ...(issuedCredentials !== undefined ? { issuedCredentials } : {})
-        }
+      // The agent sends its full notification history on every webhook; older agents send none.
+      // The gateway accepts it as is, so only the well-formed part is stored and the webhook never fails on it.
+      const incoming = sanitizeNotificationHistory(notifications);
+      if (0 < incoming.skipped) {
+        this.logger.warn(
+          `Ignored ${incoming.skipped} malformed notification history item(s) for issuance session ${issuanceSessionId}`
+        );
+      }
+      if (0 === incoming.history.length) {
+        return await upsertCredential(this.prisma);
+      }
+
+      // Webhooks for one session can overlap, so read, merge and write the history under a per-session lock
+      const credentialDetails = await this.prisma.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${issuanceSessionId}))`;
+        const stored = await tx.oid4vc_credentials.findUnique({
+          where: { issuanceSessionId },
+          select: { notifications: true }
+        });
+        const merged = mergeNotificationHistory(
+          sanitizeNotificationHistory(stored?.notifications).history,
+          incoming.history
+        );
+        return upsertCredential(tx, { notifications: merged as unknown as Prisma.InputJsonValue });
       });
 
       return credentialDetails;

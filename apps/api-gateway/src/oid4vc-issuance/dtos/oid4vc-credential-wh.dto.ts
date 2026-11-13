@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
+import { Allow, IsArray, IsIn, IsISO8601, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+/**
+ * Notification events a wallet can send to the issuer's notification endpoint (OID4VCI 1.0, section 11)
+ */
+export const OID4VCI_NOTIFICATION_EVENTS = ['credential_accepted', 'credential_failure', 'credential_deleted'] as const;
+export type Oid4vciNotificationEvent = (typeof OID4VCI_NOTIFICATION_EVENTS)[number];
 
 export class CredentialOfferPayloadDto {
   @ApiProperty({ type: [String] })
@@ -16,6 +23,34 @@ export class IssuanceMetadataDto {
   @ApiProperty({ type: [Object] })
   @IsArray()
   credentials!: Record<string, unknown>[];
+}
+
+/**
+ * A wallet notification received by the issuer agent. Sent on its own webhook, next to the issuance session;
+ * it does not change the session state.
+ */
+export class Oid4vciWalletNotificationDto {
+  @ApiProperty()
+  @IsString()
+  notificationId!: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  credentialConfigurationId?: string;
+
+  @ApiProperty({ enum: OID4VCI_NOTIFICATION_EVENTS })
+  @IsIn(OID4VCI_NOTIFICATION_EVENTS)
+  event!: Oid4vciNotificationEvent;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  eventDescription?: string;
+
+  @ApiProperty()
+  @IsISO8601()
+  receivedAt!: string;
 }
 
 export class OidcIssueCredentialDto {
@@ -62,6 +97,29 @@ export class OidcIssueCredentialDto {
   @ApiPropertyOptional()
   @IsOptional()
   orgId: string;
+
+  /**
+   * Present only when this webhook reports a wallet notification
+   */
+  @ApiPropertyOptional({ type: Oid4vciWalletNotificationDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => Oid4vciWalletNotificationDto)
+  notification?: Oid4vciWalletNotificationDto;
+
+  /**
+   * Notification history of the session, as stored by the agent: one entry per `notification_id`, with its events.
+   * Sent on every webhook once credentials are issued, so it is accepted as is: a change in its shape must not
+   * reject state-change webhooks. It is forwarded unchanged and checked before it is stored.
+   */
+  @ApiPropertyOptional({
+    type: 'array',
+    items: { type: 'object' },
+    description:
+      'Entries of { notificationId, credentialConfigurationId, events: [{ event, eventDescription?, receivedAt }] }'
+  })
+  @Allow()
+  notifications?: unknown;
 }
 
 /**

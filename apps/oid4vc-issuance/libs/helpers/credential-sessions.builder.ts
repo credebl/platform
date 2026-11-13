@@ -50,6 +50,7 @@ export interface CredentialRequestDtoLike {
   payload: Record<string, unknown>;
   validityInfo?: validityInfo;
   // disclosureFrame?: DisclosureFrame;
+  credentialVersion?: 'v1.0' | 'v2.0';
 }
 
 export interface CreateOidcCredentialOfferDtoLike {
@@ -64,6 +65,7 @@ export interface CreateOidcCredentialOfferDtoLike {
   };
   publicIssuerId?: string;
   isRevocable?: boolean;
+  credentialVersion?: 'v1.0' | 'v2.0';
 }
 
 export interface ResolvedSignerOption {
@@ -102,6 +104,7 @@ export interface BuiltCredentialOfferBase {
   credentials: BuiltCredential[];
   publicIssuerId?: string;
   isRevocable?: boolean;
+  version?: 'v1.1' | 'v2.0';
 }
 
 export type CredentialOfferPayload = BuiltCredentialOfferBase &
@@ -656,7 +659,8 @@ export function buildCredentialOfferPayload(
   const baseEnvelope: BuiltCredentialOfferBase = {
     credentials: builtCredentials,
     ...(finalPublicIssuerId ? { publicIssuerId: finalPublicIssuerId } : {}),
-    isRevocable: dto.isRevocable
+    isRevocable: dto.isRevocable,
+    ...('v2.0' === dto.credentialVersion ? { version: 'v2.0' as const } : {})
   };
 
   // Determine which authorization flow to return:

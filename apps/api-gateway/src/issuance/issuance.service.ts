@@ -50,6 +50,8 @@ export class IssuanceService extends BaseService {
       autoAcceptCredential: issueCredentialDto.autoAcceptCredential,
       credentialType: issueCredentialDto.credentialType,
       isValidateSchema: issueCredentialDto.isValidateSchema,
+      isRevocable: issueCredentialDto.isRevocable,
+      credentialVersion: issueCredentialDto.credentialVersion,
       user
     };
 
@@ -93,7 +95,9 @@ export class IssuanceService extends BaseService {
         autoAcceptCredential,
         credentialType,
         isShortenUrl,
-        reuseConnection
+        reuseConnection,
+        isRevocable: issueCredentialDto.isRevocable,
+        credentialVersion: issueCredentialDto.credentialVersion
       };
     }
     if (IssueCredentialType.JSONLD === issueCredentialDto.credentialType) {
@@ -111,11 +115,18 @@ export class IssuanceService extends BaseService {
         credentialType,
         isShortenUrl,
         reuseConnection,
-        isValidateSchema
+        isValidateSchema,
+        isRevocable: issueCredentialDto.isRevocable,
+        credentialVersion: issueCredentialDto.credentialVersion
       };
     }
 
     return this.natsClient.sendNats(this.issuanceProxy, 'send-credential-create-offer-oob', payload);
+  }
+
+  revokeCredential(orgId: string, threadId: string, user: IUserRequest): Promise<{ response: object }> {
+    const payload = { orgId, threadId, user };
+    return this.natsClient.sendNats(this.issuanceProxy, 'issuance-revoke-credential', payload);
   }
 
   getIssueCredentials(

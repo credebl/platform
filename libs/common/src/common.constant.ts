@@ -47,6 +47,8 @@ export enum CommonConstants {
 
   //W3cSCHEMA
   W3C_SCHEMA_URL = 'https://www.w3.org/2018/credentials/v1',
+  CREDENTIALS_V2_CONTEXT_URL = 'https://www.w3.org/ns/credentials/v2',
+  BITSTRING_STATUS_LIST_CONTEXT_V1 = 'https://www.w3.org/ns/credentials/status/v1',
 
   // MESSAGING SERVICES
   URL_MSG_SEND_MESSAGE = '/connections/#/send-message',
@@ -78,6 +80,7 @@ export enum CommonConstants {
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   URL_ISSUE_GET_CREDS_BY_CRED_REC_ID = '/didcomm/credentials/#',
   URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/didcomm/credentials/create-offer-oob',
+  URL_ISSUANCE_REVOKE_CREDENTIAL = '/didcomm/credentials/revoke',
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
   URL_SEND_QUESTION = '/didcomm/question-answer/question/#',
   URL_QUESTION_ANSWER_RECORD = '/didcomm/question-answer',
@@ -415,6 +418,7 @@ export enum CommonConstants {
   VERIFY_SIGNED_DATA_FROM_AGENT = 'verify-signed-data-from-agent',
   CREATE_OFFER = 'create-offer',
   CREATE_OFFER_OUT_OF_BAND = 'create-offer-oob',
+  REVOKE_BITSTRING_CREDENTIAL = 'revoke-bitstring-credential',
   GET_OFFER_BY_CRED_ID = 'get-offer-by-cred-id',
   URL_GET_PROOF_PRESENTATION_BY_ID_FLAG = 'get-proof-presentation-by-id',
   REQUEST_PROOF = 'request-proof',

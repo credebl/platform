@@ -495,7 +495,8 @@ export const ResponseMessages = {
       notFound: 'Schema records not found',
       bulkProcess: 'Process initiated for bulk issuance',
       deleteIssuanceRecords: 'Issuance records deleted',
-      fileDetailsAndFileData: 'File details and File data fetched successfully'
+      fileDetailsAndFileData: 'File details and File data fetched successfully',
+      revoke: 'Credential revoked successfully'
     },
     error: {
       invalidCredentialRecordId: 'Please provide valid credential Record Id',
@@ -774,7 +775,8 @@ export const ResponseMessages = {
       deleteFailed: 'Failed to delete OID4VP session verifier.',
       verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.',
       deleteTemplate: 'Error while deleting template.',
-      responseNotFound: 'Verification session response not found.'
+      responseNotFound: 'Verification session response not found.',
+      verificationFailed: 'Verification session failed and cannot be verified again.'
     }
   },
   oid4vpIntentToTemplate: {

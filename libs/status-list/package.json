@@ -1,0 +1,13 @@
+{
+  "name": "@credebl/status-list",
+  "main": "src/index",
+  "types": "src/index",
+  "version": "0.0.1",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf ../../dist/libs/status-list",
+    "compile": "tsc -p tsconfig.build.json"
+  }
+}

@@ -218,7 +218,7 @@ export class AgentServiceRepository {
   // eslint-disable-next-line camelcase
   async storeDidDetails(storeDidDetails: IStoreDidDetails): Promise<org_dids> {
     try {
-      const { orgId, did, didDocument, isPrimaryDid, userId, orgAgentId } = storeDidDetails;
+      const { orgId, did, didDocument, isPrimaryDid, userId, orgAgentId, kmsBackend } = storeDidDetails;
 
       return this.prisma.org_dids.create({
         data: {
@@ -229,11 +229,27 @@ export class AgentServiceRepository {
           wasPrimary: Boolean(isPrimaryDid),
           createdBy: userId,
           lastChangedBy: userId,
-          orgAgentId
+          orgAgentId,
+          kmsBackend: kmsBackend ?? null
         }
       });
     } catch (error) {
       this.logger.error(`[storeDidDetails] - Store DID details: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Records the KMS backend that holds the keys of a DID of the organization
+   */
+  async updateDidKmsBackend(orgId: string, did: string, kmsBackend: string): Promise<Prisma.BatchPayload> {
+    try {
+      return await this.prisma.org_dids.updateMany({
+        where: { orgId, did },
+        data: { kmsBackend }
+      });
+    } catch (error) {
+      this.logger.error(`[updateDidKmsBackend] - update DID KMS backend: ${JSON.stringify(error)}`);
       throw error;
     }
   }

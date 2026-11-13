@@ -215,6 +215,8 @@ export interface X509CertificateRecord {
   lastChangedDateTime: Date;
   keyId?: string;
   kmsBackend?: string | null;
+  /** Certificates that follow certificateBase64 in the chain (base64 DER), each issued by the next. */
+  certificateChain?: string[];
 }
 
 export interface IX509SearchCriteria extends IPaginationSortingDto {
@@ -229,7 +231,19 @@ export interface IX509ImportCertificateOptionsDto {
   certificate: string;
 
   /*
-   Private key in base64 string format
+   The certificates that follow `certificate` in its chain: intermediate CAs and the root, each issued by the next.
+   PEM or base64 DER. Kept by the platform and sent with every credential signed with this certificate.
+   */
+  certificateChain?: string[];
+
+  /*
+   Private key encrypted to a single-use import session (compact JWE). Opaque to the platform.
+   */
+  encryptedKey?: { sessionId: string; jwe: string };
+
+  /**
+   * @deprecated Legacy plaintext import. The gateway rejects it and the agent only accepts it behind an explicit
+   * flag. Use `encryptedKey`.
    */
   privateKey?: string;
 

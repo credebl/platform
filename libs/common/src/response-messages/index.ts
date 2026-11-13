@@ -99,6 +99,7 @@ export const ResponseMessages = {
       orgDids: 'Organization DIDs fetched successfully',
       orgDidDetails: 'Organization DID details fetched successfully',
       didResolved: 'DID resolved successfully',
+      didKmsBackend: 'DID KMS backend fetched successfully',
       didArchived: 'DID archived successfully',
       didUnarchived: 'DID unarchived successfully',
       didDeleted: 'DID deleted successfully',
@@ -454,7 +455,8 @@ export const ResponseMessages = {
       keyType: 'Only ed25519 key type is supported',
       keyTypeWeb: 'Only ed25519 and bls12381g2 key type is supported',
       requiredEndorserDid: 'Role or endorser DID is required',
-      requiredPrivateKey: 'Privatekey is required for polygon method',
+      requiredPrivateKey:
+        'encryptedKey is required for polygon method. Request a key import session and send the encryptedKey envelope',
       privateKeyLength: 'Private key must be exactly 64 characters long',
       requiredSeed: 'Seed is required',
       baseWalletToken: 'Error while fetching base wallet token',
@@ -662,6 +664,7 @@ export const ResponseMessages = {
       getProofById: 'Proof presentation has been successfully received.',
       getProofPresentation: 'Proof presentations has been successfully received.',
       didList: 'DID list fetched sucessfully',
+      createDidImportSession: 'DID key import session created successfully',
       connectionById: 'Connection record fetched successfully',
       credentials: 'Credentials fetched successfully',
       credentialByRecordId: 'Credential fetched successfully',
@@ -819,6 +822,8 @@ export const ResponseMessages = {
         'Certificate date range collides with existing certificates for this organization, In order to active this you need to Inactivate the previous one.',
       notFound: 'x509 certificate record not found.',
       import: 'Failed to import x509 certificate',
+      requiredEncryptedKey:
+        'encryptedKey is required. Request a key import session with method x509-certificate and send the encryptedKey envelope.',
       errorDecode: 'Error while decoding x509 certificate.'
     }
   },

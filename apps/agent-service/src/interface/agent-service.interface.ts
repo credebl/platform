@@ -228,6 +228,21 @@ export interface IStoreDidDetails {
   didDocument?: string;
   userId: string;
   orgAgentId: string;
+  kmsBackend?: string | null;
+}
+
+export const KMS_BACKENDS = ['askar', 'node', 'openbao', 'mixed'] as const;
+
+export interface IDidKmsKey {
+  didDocumentRelativeKeyId: string;
+  kmsKeyId: string;
+  kmsBackend: string;
+}
+
+export interface IDidKms {
+  did: string;
+  kmsBackend: string | null;
+  keys: IDidKmsKey[];
 }
 
 export interface IStoreOrgAgent {
@@ -660,6 +675,7 @@ export interface OrgDid {
   did: string;
   didDocument: Prisma.JsonValue;
   orgAgentId: string;
+  kmsBackend?: string | null;
 }
 
 export interface ILedgers {

@@ -1,22 +1,20 @@
 # CREDEBL Platform v2.3.0
 
-Current candidate: **v2.3.0-rc.3** (pre-release, not for production), released together with agent-controller v2.3.3-rc.1 (`AFJ_VERSION=ghcr.io/credebl/credo-controller:v2.3.3-rc.1`). The final v2.3.0 pins agent-controller v2.3.3.
+Current candidate: **v2.3.0-rc.6** (pre-release, not for production), released together with agent-controller v2.3.3-rc.1 (`AFJ_VERSION=ghcr.io/credebl/credo-controller:v2.3.3-rc.1`). The final v2.3.0 pins agent-controller v2.3.3.
 Previous stable release: v2.2.0. Draft: confirm against the final merged PR list before tagging.
 
-## Changes since v2.3.0-rc.2
-- **Agent controller:** `AFJ_VERSION` moves from v2.3.0 (rc.2) to v2.3.3-rc.1. The platform now needs agent-controller 2.3.3; see "Agent controller compatibility".
+## Changes since v2.3.0-rc.5
+v2.3.0-rc.3 to rc.5 were cut from a release line based on rc.2, with cherry-picks of #1820, #1821, #1822 and #1727 and the v2.3.2 pin. v2.3.0-rc.6 is the first candidate cut from `main`. Compared with rc.5, it adds the following.
+- **Agent controller:** `AFJ_VERSION` moves from v2.3.2 (rc.5) to v2.3.3-rc.1. The platform now needs agent-controller 2.3.3; see "Agent controller compatibility".
 - **Features:**
-  - OID4VC holder binding methods are configurable per template and per issuer, and `ldp_vc` advertises `did:web` by default (#1820).
   - OID4VCI wallet notifications are relayed to the organization's webhook (#1845).
   - Import of a CA issued certificate chain as a `did:x509` (#1823).
   - The KMS backend of each X.509 certificate is stored and returned (#1824).
 - **Fixes:**
   - Agent provisioning runs scripts with `execFile` arguments instead of shell interpolation (#1708).
-  - Cloud wallet holder isolation and agent routing (#1727).
   - A Postgres deadlock when creating a DID for an organization with many DIDs (#1836).
-  - `prisma db seed` finds `ts-node` (#1822).
 - **CI and dependencies:** image builds time out and retry once (#1825); nats 2.15.2 in compose (#1814); minor and patch dependency updates (#1816, #1848); GitHub Actions updates (#1832, #1833).
-- **New migrations:** four; see "Upgrade notes".
+- **New migrations:** three; see "Upgrade notes".
 
 ## Agent controller compatibility
 - **Requires agent-controller v2.3.3.** This candidate pins v2.3.3-rc.1. The image name is unchanged: `ghcr.io/credebl/credo-controller`. The rename to `agent-controller` is deferred upstream.
@@ -70,10 +68,10 @@ Previous stable release: v2.2.0. Draft: confirm against the final merged PR list
 ## Upgrade notes
 - **Migrations:** run `prisma migrate deploy`. New since v2.2.0:
   - `enable_rls_if_not_exists`: row-level security. Test on a copy of production data first (#1688).
-  - `add_cryptographic_binding_methods_to_oidc_issuer`: adds `oidc_issuer.cryptographicBindingMethods TEXT[] DEFAULT '{}'`; additive, no backfill (#1820). New since rc.2.
-  - `add_kms_backend_to_x509_certificates`: adds a nullable `x509_certificates.kmsBackend` column and backfills existing rows (key ids starting with `ob_` become `openbao`, all others `askar`) (#1824). New since rc.2.
-  - `add_did_archive_and_usage_tracking`: adds `org_dids.archivedAt`, `isArchived` (default `false`) and `wasPrimary` (default `true`) (#1824). New since rc.2.
-  - `add_notifications_to_oid4vc_credentials`: adds a nullable `oid4vc_credentials.notifications` jsonb column; additive, no backfill (#1845). New since rc.2.
+  - `add_cryptographic_binding_methods_to_oidc_issuer`: adds `oidc_issuer.cryptographicBindingMethods TEXT[] DEFAULT '{}'`; additive, no backfill (#1820). Already in rc.3 to rc.5.
+  - `add_kms_backend_to_x509_certificates`: adds a nullable `x509_certificates.kmsBackend` column and backfills existing rows (key ids starting with `ob_` become `openbao`, all others `askar`) (#1824). New since rc.5.
+  - `add_did_archive_and_usage_tracking`: adds `org_dids.archivedAt`, `isArchived` (default `false`) and `wasPrimary` (default `true`) (#1824). New since rc.5.
+  - `add_notifications_to_oid4vc_credentials`: adds a nullable `oid4vc_credentials.notifications` jsonb column; additive, no backfill (#1845). New since rc.5.
 - **Existing OID4VC issuers and templates:** they keep the binding methods already published in their agent metadata until their configuration is pushed to the agent again. This includes the new `did:web` default for `ldp_vc`.
   - To re-sync an issuer, update it (`POST /v1/orgs/{orgId}/oid4vc/issuers/{issuerId}`). That re-pushes the issuer configuration.
   - A template's binding methods are pushed when the template is created or updated (`PATCH /v1/orgs/{orgId}/oid4vc/{issuerId}/template/{templateId}`).
@@ -85,4 +83,4 @@ Previous stable release: v2.2.0. Draft: confirm against the final merged PR list
 - **Environment:**
   - New agent env vars in `agent.env`: `STATUS_LIST_SERVER_URL`, `STATUS_LIST_API_KEY`, `STATUS_LIST_DEFAULT_SIZE`. New platform var `STATUS_LIST_HOST` in `.env.demo`.
   - OpenBao is optional; see `openspec/specs/openbao-secret-storage` and `docker-compose.openbao.yml`.
-- **Controller image:** pin it with `AFJ_VERSION`: `ghcr.io/credebl/credo-controller:v2.3.3-rc.1` for this candidate, and v2.3.3 for the final release.
+- **Controller image:** pin it with `AFJ_VERSION`: `ghcr.io/credebl/credo-controller:v2.3.3-rc.1` for this candidate (rc.6), and v2.3.3 for the final release.

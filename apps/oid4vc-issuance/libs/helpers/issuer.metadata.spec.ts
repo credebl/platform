@@ -2,6 +2,7 @@ import {
   buildCredentialConfigurationsSupported,
   buildJwtVcJsonLdCredentialConfig,
   buildLdpVcCredentialConfig,
+  buildMdocCredentialConfig,
   buildSdJwtCredentialConfig
 } from './issuer.metadata';
 
@@ -74,5 +75,24 @@ describe('issuer-level default binding methods', () => {
       []
     );
     expect(Object.values(configs)[0].credential_signing_alg_values_supported).toEqual([-7]);
+  });
+});
+
+describe('proof_signing_alg_values_supported', () => {
+  function proofAlgs(config: Record<string, unknown>): unknown {
+    const [entry] = Object.values(config) as {
+      proof_types_supported?: { jwt?: { proof_signing_alg_values_supported?: unknown } };
+    }[];
+    return entry.proof_types_supported?.jwt?.proof_signing_alg_values_supported;
+  }
+
+  it('lets SD-JWT and jwt_vc_json-ld holders prove possession with an RSA key (RS256)', () => {
+    expect(proofAlgs(buildSdJwtCredentialConfig('Test', baseTemplate))).toEqual(['ES256', 'EdDSA', 'RS256']);
+    expect(proofAlgs(buildJwtVcJsonLdCredentialConfig('Test', baseTemplate))).toEqual(['ES256', 'EdDSA', 'RS256']);
+  });
+
+  it('keeps mso_mdoc device keys on ES256 and EdDSA', () => {
+    const config = buildMdocCredentialConfig('mdl', { doctype: 'org.iso.18013.5.1.mDL', namespaces: [] });
+    expect(proofAlgs(config)).toEqual(['ES256', 'EdDSA']);
   });
 });

@@ -61,6 +61,7 @@ import {
   IWalletDetailsForDidList
 } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { CreateConnectionDto } from './dtos/create-connection.dto';
+import { RequestOid4vcCredentialDto, ResolveOid4vcCredentialOfferDto } from './dtos/oid4vc-holder.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -666,5 +667,90 @@ export class CloudWalletController {
       data: basicMessageDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * Resolve an OID4VCI credential offer
+   * @param resolveOfferDto the offer link from the QR code
+   * @returns the issuer and the credentials offered
+   */
+  @Post('/oid4vc/resolve-offer')
+  @ApiOperation({
+    summary: 'Resolve an OID4VC credential offer',
+    description:
+      'Reads an OpenID4VCI credential offer (the openid-credential-offer:// link from the QR code, or the offer URI) and returns the issuer and the credentials offered. Nothing is requested yet.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Credential offer resolved', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async resolveOid4vcCredentialOffer(
+    @Res() res: Response,
+    @Body() resolveOfferDto: ResolveOid4vcCredentialOfferDto,
+    @User() user: user
+  ): Promise<Response> {
+    const { email, id } = user;
+    resolveOfferDto.email = email;
+    resolveOfferDto.userId = id;
+    const resolvedOffer = await this.cloudWalletService.resolveOid4vcCredentialOffer(resolveOfferDto);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.cloudWallet.success.oid4vcOfferResolved,
+      data: resolvedOffer
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Receive the credentials of an OID4VCI offer
+   * @param requestCredentialDto the offer, the transaction code and the holder binding
+   * @returns the received credentials
+   */
+  @Post('/oid4vc/request-credential')
+  @ApiOperation({
+    summary: 'Receive an OID4VC credential',
+    description:
+      'Requests the credentials of an OpenID4VCI offer (pre-authorized code flow) and stores them in the cloud wallet. With holderDidUrl the credentials are bound to that DID of the wallet, for example a did:web whose key was imported from the DSC certificate of the holder.'
+  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Credential received', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async requestOid4vcCredential(
+    @Res() res: Response,
+    @Body() requestCredentialDto: RequestOid4vcCredentialDto,
+    @User() user: user
+  ): Promise<Response> {
+    const { email, id } = user;
+    requestCredentialDto.email = email;
+    requestCredentialDto.userId = id;
+    const credentials = await this.cloudWalletService.requestOid4vcCredential(requestCredentialDto);
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.cloudWallet.success.oid4vcCredentialReceived,
+      data: credentials
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  /**
+   * List the OID4VC credentials of the cloud wallet
+   * @returns the SD-JWT VC credentials
+   */
+  @Get('/oid4vc/credentials')
+  @ApiOperation({
+    summary: 'Get OID4VC credentials',
+    description: 'Lists the SD-JWT VC credentials the cloud wallet received over OpenID4VCI.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Credentials fetched', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async getOid4vcCredentials(@Res() res: Response, @User() user: user): Promise<Response> {
+    const { email, id } = user;
+    const credentials = await this.cloudWalletService.getOid4vcCredentials({ email, userId: id });
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.cloudWallet.success.oid4vcCredentials,
+      data: credentials
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

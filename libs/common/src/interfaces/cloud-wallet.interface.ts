@@ -55,6 +55,28 @@ export interface IAcceptOffer {
   userId?: string;
 }
 
+/** What to do when the issuer cannot bind a credential to `holderDidUrl`: fail (`require`) or use a new key (`prefer`). */
+export type CloudWalletOid4vcBindingPolicy = 'require' | 'prefer';
+
+export interface ICloudWalletOid4vcOffer {
+  credentialOffer: string;
+  email?: string;
+  userId?: string;
+}
+
+export interface ICloudWalletOid4vcRequestCredential extends ICloudWalletOid4vcOffer {
+  txCode?: string;
+  credentialsToRequest?: string[];
+  holderDidUrl?: string;
+  bindingPolicy?: CloudWalletOid4vcBindingPolicy;
+  sendNotification?: boolean;
+}
+
+export interface ICloudWalletOid4vcCredentialList {
+  email?: string;
+  userId?: string;
+}
+
 export interface ICreateCloudWalletDid {
   seed?: string;
   keyType: string;

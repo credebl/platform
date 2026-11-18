@@ -407,6 +407,9 @@ export enum CommonConstants {
   X509_SERVICE = 'x509-service',
 
   ACCEPT_OFFER = '/didcomm/credentials/accept-offer',
+  CLOUD_WALLET_OID4VC_RESOLVE_OFFER = '/openid4vc/holder/resolve-credential-offer',
+  CLOUD_WALLET_OID4VC_REQUEST_CREDENTIAL = '/openid4vc/holder/request-credential',
+  CLOUD_WALLET_OID4VC_SD_JWT_CREDENTIALS = '/openid4vc/holder/sd-jwt-vcs',
   SEED_LENGTH = 32,
 
   //Agent URL flags

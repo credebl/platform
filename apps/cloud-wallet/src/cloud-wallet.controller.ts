@@ -23,7 +23,10 @@ import {
   ICredentialDetails,
   GetAllCloudWalletConnections,
   IBasicMessage,
-  IBasicMessageDetails
+  IBasicMessageDetails,
+  ICloudWalletOid4vcOffer,
+  ICloudWalletOid4vcRequestCredential,
+  ICloudWalletOid4vcCredentialList
 } from '@credebl/common/interfaces/cloud-wallet.interface';
 
 @Controller()
@@ -113,5 +116,20 @@ export class CloudWalletController {
   @MessagePattern({ cmd: 'send-basic-message' })
   async sendBasicMessage(messageDetails: IBasicMessageDetails): Promise<Response> {
     return this.cloudWalletService.sendBasicMessage(messageDetails);
+  }
+
+  @MessagePattern({ cmd: 'cloud-wallet-oid4vc-resolve-offer' })
+  async resolveOid4vcCredentialOffer(offerDetails: ICloudWalletOid4vcOffer): Promise<Response> {
+    return this.cloudWalletService.resolveOid4vcCredentialOffer(offerDetails);
+  }
+
+  @MessagePattern({ cmd: 'cloud-wallet-oid4vc-request-credential' })
+  async requestOid4vcCredential(requestDetails: ICloudWalletOid4vcRequestCredential): Promise<Response> {
+    return this.cloudWalletService.requestOid4vcCredential(requestDetails);
+  }
+
+  @MessagePattern({ cmd: 'cloud-wallet-oid4vc-credentials' })
+  async getOid4vcCredentials(walletDetails: ICloudWalletOid4vcCredentialList): Promise<Response> {
+    return this.cloudWalletService.getOid4vcCredentials(walletDetails);
   }
 }

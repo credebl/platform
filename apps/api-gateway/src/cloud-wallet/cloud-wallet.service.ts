@@ -19,7 +19,10 @@ import {
   IConnectionInvitationResponse,
   GetAllCloudWalletConnections,
   IBasicMessage,
-  IBasicMessageDetails
+  IBasicMessageDetails,
+  ICloudWalletOid4vcOffer,
+  ICloudWalletOid4vcRequestCredential,
+  ICloudWalletOid4vcCredentialList
 } from '@credebl/common/interfaces/cloud-wallet.interface';
 import { Inject, Injectable } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
@@ -144,5 +147,29 @@ export class CloudWalletService extends BaseService {
 
   sendBasicMessage(messageDetails: IBasicMessageDetails): Promise<Response> {
     return this.natsClient.sendNatsMessage(this.cloudWalletServiceProxy, 'send-basic-message', messageDetails);
+  }
+
+  resolveOid4vcCredentialOffer(offerDetails: ICloudWalletOid4vcOffer): Promise<Response> {
+    return this.natsClient.sendNatsMessage(
+      this.cloudWalletServiceProxy,
+      'cloud-wallet-oid4vc-resolve-offer',
+      offerDetails
+    );
+  }
+
+  requestOid4vcCredential(requestDetails: ICloudWalletOid4vcRequestCredential): Promise<Response> {
+    return this.natsClient.sendNatsMessage(
+      this.cloudWalletServiceProxy,
+      'cloud-wallet-oid4vc-request-credential',
+      requestDetails
+    );
+  }
+
+  getOid4vcCredentials(walletDetails: ICloudWalletOid4vcCredentialList): Promise<Response> {
+    return this.natsClient.sendNatsMessage(
+      this.cloudWalletServiceProxy,
+      'cloud-wallet-oid4vc-credentials',
+      walletDetails
+    );
   }
 }

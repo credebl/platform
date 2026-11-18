@@ -32,8 +32,12 @@ import {
   IConnectionInvitationResponse,
   GetAllCloudWalletConnections,
   IBasicMessage,
-  IBasicMessageDetails
+  IBasicMessageDetails,
+  ICloudWalletOid4vcOffer,
+  ICloudWalletOid4vcRequestCredential,
+  ICloudWalletOid4vcCredentialList
 } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { buildRequestCredentialPayload, toCredentialOfferLink } from './oid4vc-holder.helper';
 import { CloudWalletRepository } from './cloud-wallet.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CloudWalletType } from '@credebl/enum/enum';
@@ -248,16 +252,20 @@ export class CloudWalletService {
         headers: { authorization: decryptedApiKey }
       });
 
-      if (!createCloudWalletResponse && !createCloudWalletResponse.id) {
+      if (!createCloudWalletResponse?.id) {
         throw new InternalServerErrorException(ResponseMessages.cloudWallet.error.createCloudWallet, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.serverError
         });
       }
 
-      const walletKey = await this.commonService.dataEncryption(createCloudWalletResponse.config.walletConfig.token);
+      // Agents on Credo 0.7 return the tenant record without `walletConfig`: the tenant is reached with its token,
+      // so the wallet key is only stored when the agent still returns one.
+      const tenantWalletKey: string | undefined =
+        createCloudWalletResponse.config?.walletConfig?.key ?? createCloudWalletResponse.config?.walletConfig?.token;
+      const walletKey = tenantWalletKey ? await this.commonService.dataEncryption(tenantWalletKey) : undefined;
 
-      if (!walletKey) {
+      if (tenantWalletKey && !walletKey) {
         throw new BadRequestException(ResponseMessages.cloudWallet.error.encryptCloudWalletKey, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.serverError
@@ -631,6 +639,81 @@ export class CloudWalletService {
         }
       );
       return basicMessageResponse;
+    } catch (error) {
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Resolves an OID4VCI credential offer: the issuer, its metadata and the credentials offered. Nothing is requested.
+   * @param offerDetails the offer link (or offer URI) and the wallet user
+   * @returns the resolved offer, as the agent returns it
+   */
+  async resolveOid4vcCredentialOffer(offerDetails: ICloudWalletOid4vcOffer): Promise<Response> {
+    try {
+      const { userId, credentialOffer } = offerDetails;
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const url = `${baseWalletDetails.agentEndpoint}${CommonConstants.CLOUD_WALLET_OID4VC_RESOLVE_OFFER}`;
+
+      return await this.commonService.httpPost(
+        url,
+        { credentialOfferUri: toCredentialOfferLink(credentialOffer) },
+        { headers: { authorization: decryptedApiKey } }
+      );
+    } catch (error) {
+      this.logger.error(`[resolveOid4vcCredentialOffer] - error in resolving the credential offer: ${error}`);
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Requests the credentials of an OID4VCI offer (pre-authorized code flow) and stores them in the user's wallet.
+   * With `holderDidUrl` the credentials are bound to that DID of the wallet, for example a did:web whose key was
+   * imported from the holder's certificate, instead of a new key.
+   * @param requestDetails the offer, the transaction code and the binding options
+   * @returns the received credential records
+   */
+  async requestOid4vcCredential(requestDetails: ICloudWalletOid4vcRequestCredential): Promise<Response> {
+    try {
+      const { email, userId } = requestDetails;
+      const checkUserExist = await this.cloudWalletRepository.checkUserExist(email);
+      if (!checkUserExist) {
+        throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist);
+      }
+
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const url = `${baseWalletDetails.agentEndpoint}${CommonConstants.CLOUD_WALLET_OID4VC_REQUEST_CREDENTIAL}`;
+
+      const credentials = await this.commonService.httpPost(url, buildRequestCredentialPayload(requestDetails), {
+        headers: { authorization: decryptedApiKey }
+      });
+      if (!credentials) {
+        throw new InternalServerErrorException(ResponseMessages.cloudWallet.error.oid4vcRequestCredential, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.serverError
+        });
+      }
+      return credentials;
+    } catch (error) {
+      this.logger.error(`[requestOid4vcCredential] - error in requesting the credential: ${error}`);
+      await this.commonService.handleError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lists the SD-JWT VC credentials the user's wallet received over OID4VCI.
+   * @param walletDetails the wallet user
+   * @returns the SD-JWT VC records
+   */
+  async getOid4vcCredentials(walletDetails: ICloudWalletOid4vcCredentialList): Promise<Response> {
+    try {
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(walletDetails.userId);
+      const url = `${baseWalletDetails.agentEndpoint}${CommonConstants.CLOUD_WALLET_OID4VC_SD_JWT_CREDENTIALS}`;
+
+      return await this.commonService.httpGet(url, { headers: { authorization: decryptedApiKey } });
     } catch (error) {
       await this.commonService.handleError(error);
       throw error;

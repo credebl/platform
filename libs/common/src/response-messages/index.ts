@@ -669,7 +669,10 @@ export const ResponseMessages = {
       credentials: 'Credentials fetched successfully',
       credentialByRecordId: 'Credential fetched successfully',
       connectionList: 'Connection list fetched successfully',
-      basicMessageByConnectionId: 'Basic message fetched successfully'
+      basicMessageByConnectionId: 'Basic message fetched successfully',
+      oid4vcOfferResolved: 'Credential offer resolved successfully',
+      oid4vcCredentialReceived: 'Credential received successfully',
+      oid4vcCredentials: 'OID4VC credentials fetched successfully'
     },
     error: {
       baseWalletNotFound: 'Base wallet configuration not found',
@@ -685,7 +688,8 @@ export const ResponseMessages = {
       agentAlreadyExist: 'Agent already exist.',
       platformAdminRecordNotFound: 'Platform admin reocrd not exist.',
       notFoundBaseWallet: 'The base wallet record is missing.',
-      walletRecordNotFound: 'Wallet record not found.'
+      walletRecordNotFound: 'Wallet record not found.',
+      oid4vcRequestCredential: 'The wallet could not receive the credential from the issuer.'
     }
   },
   oidcIssuer: {

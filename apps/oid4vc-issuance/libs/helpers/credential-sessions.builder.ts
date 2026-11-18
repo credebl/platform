@@ -16,6 +16,7 @@ import { BadRequestException, NotFoundException, UnprocessableEntityException } 
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
 import { dateToSeconds } from '@credebl/common/date-only';
+import { checkMdocIssuance } from './mdoc-preflight';
 
 /* ============================================================================
    Domain Types
@@ -457,6 +458,12 @@ function buildMdocCredential(
 
   if (!validationResult.isValid) {
     throw new UnprocessableEntityException(`${JSON.stringify(validationResult.details)}`);
+  }
+
+  // Catch what a wallet would reject, now, instead of after the offer has been used up.
+  const mdocProblems = checkMdocIssuance(certificateDetail.certificateBase64, incomingPayload);
+  if (0 < mdocProblems.length) {
+    throw new UnprocessableEntityException(mdocProblems.join(' '));
   }
   incomingPayload = {
     ...incomingPayload,

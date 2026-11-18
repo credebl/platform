@@ -156,6 +156,7 @@ export interface IDidList {
   isPrimaryDid: boolean;
   isArchived: boolean;
   archivedAt: Date | null;
+  kmsBackend: string | null;
 }
 
 export interface IDidUsage {

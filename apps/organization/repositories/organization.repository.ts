@@ -954,7 +954,8 @@ export class OrganizationRepository {
           lastChangedDateTime: true,
           isPrimaryDid: true,
           isArchived: true,
-          archivedAt: true
+          archivedAt: true,
+          kmsBackend: true
         }
       });
     } catch (error) {
@@ -975,6 +976,7 @@ export class OrganizationRepository {
           isPrimaryDid: true,
           isArchived: true,
           archivedAt: true,
+          kmsBackend: true,
           didDocument: true,
           wasPrimary: true,
           orgAgentId: true
@@ -1029,7 +1031,8 @@ export class OrganizationRepository {
           lastChangedDateTime: true,
           isPrimaryDid: true,
           isArchived: true,
-          archivedAt: true
+          archivedAt: true,
+          kmsBackend: true
         }
       });
     } catch (error) {

@@ -12,6 +12,7 @@ export interface CreateX509CertificateEntity {
   lastChangedBy: string;
   keyId?: string;
   kmsBackend?: string;
+  certificateChain?: string[];
   isImported?: boolean;
 }
 

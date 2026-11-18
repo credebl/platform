@@ -2,6 +2,7 @@ import {
   IAcceptOffer,
   ICreateCloudWallet,
   ICreateCloudWalletDid,
+  ICreateCloudWalletDidImportSession,
   IReceiveInvitation,
   IAcceptProofRequest,
   IProofRequestRes,
@@ -92,6 +93,14 @@ export class CloudWalletService extends BaseService {
 
   createDid(createDidDetails: ICreateCloudWalletDid): Promise<Response> {
     return this.natsClient.sendNatsMessage(this.cloudWalletServiceProxy, 'create-cloud-wallet-did', createDidDetails);
+  }
+
+  createDidImportSession(sessionDetails: ICreateCloudWalletDidImportSession): Promise<Response> {
+    return this.natsClient.sendNatsMessage(
+      this.cloudWalletServiceProxy,
+      'create-cloud-wallet-did-import-session',
+      sessionDetails
+    );
   }
 
   getDidList(walletDetails: IWalletDetailsForDidList): Promise<IProofRequestRes[]> {

@@ -5,6 +5,7 @@ import { MessagePattern } from '@nestjs/microservices'; // Import the nestjs mic
 import {
   IAcceptOffer,
   ICreateCloudWalletDid,
+  ICreateCloudWalletDidImportSession,
   IReceiveInvitation,
   IAcceptProofRequest,
   IProofRequestRes,
@@ -72,6 +73,11 @@ export class CloudWalletController {
   @MessagePattern({ cmd: 'create-cloud-wallet-did' })
   async createDid(createDidDetails: ICreateCloudWalletDid): Promise<Response> {
     return this.cloudWalletService.createDid(createDidDetails);
+  }
+
+  @MessagePattern({ cmd: 'create-cloud-wallet-did-import-session' })
+  async createDidImportSession(sessionDetails: ICreateCloudWalletDidImportSession): Promise<Response> {
+    return this.cloudWalletService.createDidImportSession(sessionDetails);
   }
 
   @MessagePattern({ cmd: 'cloud-wallet-did-list' })

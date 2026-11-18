@@ -67,4 +67,12 @@ describe('issuer-level default binding methods', () => {
     );
     expect(Object.values(configs)[0].cryptographic_binding_methods_supported).toEqual(['jwk']);
   });
+
+  it('advertises COSE algorithm numbers for mso_mdoc', () => {
+    const configs = buildCredentialConfigurationsSupported(
+      [row('mdl', 'mso_mdoc', { doctype: 'org.iso.18013.5.1.mDL', namespaces: [] })],
+      []
+    );
+    expect(Object.values(configs)[0].credential_signing_alg_values_supported).toEqual([-7]);
+  });
 });

@@ -112,6 +112,7 @@ export enum CommonConstants {
   URL_AGENT_IMPORT_DID_X509 = '/dids/x509/import',
   URL_AGENT_GET_DID_X509_CHAIN = '/dids/x509/chain',
   URL_AGENT_RESOLVE_DID = '/dids/#/resolve',
+  URL_AGENT_GET_DID_KMS = '/dids/#/kms',
   DID_X509_PREFIX = 'did:x509:',
   URL_AGENT_GET_ENDPOINT = '/agent',
 

@@ -142,6 +142,18 @@ export class ValidityInfo {
 }
 
 /* ========= Request DTOs ========= */
+export class ReissueCredentialOfferDto {
+  @ApiPropertyOptional({
+    type: ValidityInfo,
+    description:
+      'The validity of the new mDoc credentials. Defaults to the same length as before, starting now. It must fit the validity of the signing certificate.'
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ValidityInfo)
+  validityInfo?: ValidityInfo;
+}
+
 export class CredentialRequestDto {
   @ApiProperty({
     example: 'c49bdee0-d028-4595-85dc-177c85ea391c',

@@ -117,6 +117,15 @@ export class Oid4vcIssuanceService extends BaseService {
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-update-credential-offer', payload);
   }
 
+  async reissueCredentialOffer(
+    offerId: string,
+    orgId: string,
+    options: { validityInfo?: { validFrom: string; validUntil: string } }
+  ): Promise<object> {
+    const payload = { offerId, orgId, options };
+    return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-credential-offer-reissue', payload);
+  }
+
   async getCredentialOfferDetailsById(offerId: string, orgId: string): Promise<object> {
     const payload = { offerId, orgId };
     return this.natsClient.sendNatsMessage(this.issuanceProxy, 'oid4vc-credential-offer-get-by-id', payload);

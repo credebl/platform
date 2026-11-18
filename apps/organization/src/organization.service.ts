@@ -1989,7 +1989,8 @@ export class OrganizationService {
       lastChangedDateTime: orgDid.lastChangedDateTime,
       isPrimaryDid: orgDid.isPrimaryDid,
       isArchived: orgDid.isArchived,
-      archivedAt: orgDid.archivedAt
+      archivedAt: orgDid.archivedAt,
+      kmsBackend: orgDid.kmsBackend ?? null
     };
   }
 

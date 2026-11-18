@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { CommonService } from '@credebl/common';
+import { CommonService, stringifyForLog } from '@credebl/common';
 import {
   BadRequestException,
   ConflictException,
@@ -11,6 +11,7 @@ import {
 import {
   IAcceptOffer,
   ICreateCloudWalletDid,
+  ICreateCloudWalletDidImportSession,
   IReceiveInvitation,
   IAcceptProofRequest,
   IProofRequestRes,
@@ -408,7 +409,53 @@ export class CloudWalletService {
 
       return didDetailsResponse;
     } catch (error) {
-      this.logger.error(`[createDid] - error in create DID: ${error}`);
+      this.logger.error(`[createDid] - error in create DID: ${stringifyForLog(error)}`);
+      await this.commonService.handleError(error);
+    }
+  }
+
+  /**
+   * Create a single-use key import session on the holder's agent
+   * @param sessionDetails
+   * @returns session id, expiry and public key
+   */
+  async createDidImportSession(sessionDetails: ICreateCloudWalletDidImportSession): Promise<Response> {
+    try {
+      const { method, userId } = sessionDetails;
+
+      const cloudSubWallet = await this.cloudWalletRepository.getCloudSubWallet(userId);
+      if (!cloudSubWallet) {
+        throw new ConflictException(ResponseMessages.cloudWallet.error.walletNotExist);
+      }
+
+      const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
+      const { agentEndpoint } = baseWalletDetails;
+
+      const url = `${agentEndpoint}${CommonConstants.URL_AGENT_DID_IMPORT_SESSION}`;
+
+      const checkCloudWalletAgentHealth = await this.commonService.checkAgentHealth(agentEndpoint, decryptedApiKey);
+
+      if (!checkCloudWalletAgentHealth) {
+        throw new NotFoundException(ResponseMessages.cloudWallet.error.agentNotRunning);
+      }
+      const session = await this.commonService.httpPost(
+        url,
+        { method },
+        {
+          headers: { authorization: decryptedApiKey }
+        }
+      );
+
+      if (!session) {
+        throw new InternalServerErrorException(ResponseMessages.agent.error.createDidImportSession, {
+          cause: new Error(),
+          description: ResponseMessages.errorMessages.serverError
+        });
+      }
+
+      return session;
+    } catch (error) {
+      this.logger.error(`[createDidImportSession] - error in create DID import session: ${stringifyForLog(error)}`);
       await this.commonService.handleError(error);
     }
   }

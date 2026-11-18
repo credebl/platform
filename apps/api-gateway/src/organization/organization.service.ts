@@ -231,6 +231,11 @@ export class OrganizationService extends BaseService {
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'resolve-did', payload);
   }
 
+  async getDidKms(orgId: string, did: string): Promise<object> {
+    const payload = { orgId, did };
+    return this.natsClient.sendNatsMessage(this.serviceProxy, 'get-did-kms', payload);
+  }
+
   async setDidArchived(orgId: string, did: string, isArchived: boolean): Promise<IDidList> {
     const payload = { orgId, did, isArchived };
     return this.natsClient.sendNatsMessage(this.serviceProxy, 'set-organization-did-archived', payload);

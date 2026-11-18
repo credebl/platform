@@ -18,6 +18,7 @@ const record = {
   isPrimaryDid: false,
   isArchived: false,
   archivedAt: null,
+  kmsBackend: 'askar',
   didDocument: { id: DID },
   wasPrimary: false,
   orgAgentId: 'agent-1'
@@ -90,6 +91,7 @@ describe('OrganizationService DID management', () => {
           isPrimaryDid: false,
           isArchived: false,
           archivedAt: null,
+          kmsBackend: 'askar',
           didDocument: { id: DID },
           usage: { wasPrimary: false, ...noUsage },
           deletion: { allowed: true, reasons: [] }

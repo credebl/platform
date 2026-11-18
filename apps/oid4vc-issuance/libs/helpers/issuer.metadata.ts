@@ -70,7 +70,9 @@ function resolveBindingMethods(template: SdJwtTemplate, defaults: string[]): str
     : [...defaults];
 }
 
-const STATIC_CREDENTIAL_ALGS_FOR_MDOC = ['ES256'];
+// OpenID4VCI lists the signing algorithms of an mso_mdoc credential as COSE algorithm numbers (-7 is ES256), not names.
+// A name makes the agent reject the issuer metadata and every holder then fails to fetch it.
+const STATIC_CREDENTIAL_ALGS_FOR_MDOC = [-7];
 const STATIC_BINDING_METHODS_FOR_MDOC = ['jwk'];
 
 /**

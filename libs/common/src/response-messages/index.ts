@@ -15,6 +15,7 @@ export const ResponseMessages = {
       newUser: 'User not found',
       checkEmail: 'User email checked successfully.',
       sendVerificationCode: 'Verification link has been successfully sent on the email. Please verify',
+      verificationSuccess: 'Verification Successful',
       userActivity: 'User activities fetched successfully',
       platformSettings: 'Platform settings updated',
       fetchPlatformSettings: 'Platform settings fetched',

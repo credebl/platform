@@ -135,9 +135,14 @@ export class AcceptOfferDto {
 }
 
 export class CreateCloudWalletDidImportSessionDto {
-  @ApiProperty({ enum: ['polygon'], example: 'polygon' })
-  @IsIn(['polygon'], { message: 'method must be polygon' })
-  method: 'polygon';
+  @ApiProperty({
+    enum: ['key', 'web', 'polygon'],
+    example: 'web',
+    description:
+      'DID method the key is imported for. Use web to create a did:web from an existing key, such as a DSC key.'
+  })
+  @IsIn(['key', 'web', 'polygon'], { message: 'method must be key, web or polygon' })
+  method: 'key' | 'web' | 'polygon';
 }
 
 export class CreateCloudWalletDidDto {

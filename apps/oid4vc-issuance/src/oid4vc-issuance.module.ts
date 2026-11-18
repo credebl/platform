@@ -13,7 +13,7 @@ import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 import { Oid4vcIssuanceRepository } from './oid4vc-issuance.repository';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { PrismaService } from '@credebl/prisma-service';
-import { StatusListAllocatorService } from './status-list-allocator.service';
+import { StatusListAllocatorService } from '@credebl/status-list';
 
 @Module({
   imports: [

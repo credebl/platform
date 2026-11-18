@@ -10,6 +10,7 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsIn,
   IsObject,
   IsOptional,
   IsString,
@@ -248,6 +249,16 @@ export class CredentialsIssuanceDto {
   @IsNotEmpty({ message: 'please provide valid value for reuseConnection' })
   @IsBoolean({ message: 'reuseConnection must be a boolean' })
   reuseConnection?: boolean;
+
+  @ApiPropertyOptional({ default: false })
+  @IsOptional()
+  @IsBoolean({ message: 'isRevocable must be a boolean' })
+  isRevocable?: boolean;
+
+  @ApiPropertyOptional({ enum: ['v1.0', 'v2.0'], default: 'v1.0' })
+  @IsOptional()
+  @IsIn(['v1.0', 'v2.0'], { message: 'credentialVersion must be v1.0 or v2.0' })
+  credentialVersion?: 'v1.0' | 'v2.0';
 
   orgId: string;
 
@@ -488,6 +499,16 @@ export class OOBCredentialDtoWithEmail {
   imageUrl?: string;
 
   isValidateSchema?: boolean;
+
+  @ApiPropertyOptional({ default: false })
+  @IsOptional()
+  @IsBoolean({ message: 'isRevocable must be a boolean' })
+  isRevocable?: boolean;
+
+  @ApiPropertyOptional({ enum: ['v1.0', 'v2.0'], default: 'v1.0' })
+  @IsOptional()
+  @IsIn(['v1.0', 'v2.0'], { message: 'credentialVersion must be v1.0 or v2.0' })
+  credentialVersion?: 'v1.0' | 'v2.0';
 
   orgId: string;
 }

@@ -35,6 +35,16 @@ export enum OpenId4VcVerificationPresentationState {
   Error = 'Error'
 }
 
+export type Oid4vpVerificationStatus = 'verified' | 'pending' | 'failed';
+
+export interface Oid4vpVerificationSessionResult {
+  [key: string]: unknown;
+  responseStatus?: string | null;
+  verificationStatus: Oid4vpVerificationStatus;
+  verified: boolean;
+  error: string | null;
+}
+
 /**
  * Request signer configuration for OID4VP verification presentations
  */

@@ -44,6 +44,7 @@ export interface CredentialRequest {
     validFrom: Date;
     validUntil: Date;
   };
+  credentialVersion?: 'v1.0' | 'v2.0';
 }
 
 export interface CreateOidcCredentialOffer {
@@ -52,6 +53,7 @@ export interface CreateOidcCredentialOffer {
   credentials: CredentialRequest[]; // one or more credentials
   noticeUrl?: string;
   isRevocable?: boolean;
+  credentialVersion?: 'v1.0' | 'v2.0';
 }
 
 export interface GetAllCredentialOffer {

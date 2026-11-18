@@ -32,6 +32,12 @@
       "@credebl/storage/*": [
         "libs/storage/src/*"
       ],
+      "@credebl/status-list": [
+        "libs/status-list/src"
+      ],
+      "@credebl/status-list/*": [
+        "libs/status-list/src/*"
+      ],
       "@credebl/enum": [
         "libs/enum/src"
       ],

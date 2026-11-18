@@ -28,6 +28,7 @@ import {
   IBulkPayloadObject,
   IClientDetails,
   ICreateOfferResponse,
+  ICredential,
   ICredentialPayload,
   IIssuance,
   IIssueData,
@@ -36,6 +37,7 @@ import {
   ISchemaAttributes,
   ISchemaId,
   ISendOfferNatsPayload,
+  IStatusListAllocation,
   ImportFileDetails,
   IssueCredentialWebhookPayload,
   OutOfBandCredentialOfferPayload,
@@ -93,6 +95,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 import { extractAttributeNames, unflattenCsvRow } from '../libs/helpers/attributes.extractor';
 import { redisStore } from 'cache-manager-ioredis-yet';
 import { EmailService } from '@credebl/common/email.service';
+import { StatusListAllocatorService } from '@credebl/status-list';
 
 @Injectable()
 export class IssuanceService {
@@ -114,7 +117,8 @@ export class IssuanceService {
     @Inject(ContextStorageServiceKey)
     private readonly contextStorageService: ContextStorageService,
     private readonly natsClient: NATSClient,
-    private readonly emailService: EmailService
+    private readonly emailService: EmailService,
+    private readonly statusListAllocatorService: StatusListAllocatorService
   ) {}
 
   async getIssuanceRecords(orgId: string): Promise<number> {
@@ -152,7 +156,15 @@ export class IssuanceService {
 
   async sendCredentialCreateOffer(payload: IIssuance): Promise<ICredentialOfferResponse> {
     try {
-      const { orgId, credentialDefinitionId, comment, credentialData, isValidateSchema } = payload || {};
+      const {
+        orgId,
+        credentialDefinitionId,
+        comment,
+        credentialData,
+        isValidateSchema,
+        isRevocable,
+        credentialVersion
+      } = payload || {};
 
       if (payload.credentialType === IssueCredentialType.INDY) {
         const schemaResponse: SchemaDetails =
@@ -256,8 +268,32 @@ export class IssuanceService {
           }
         }
 
+        let allocation: IStatusListAllocation | undefined;
+        if (
+          isRevocable &&
+          payload.credentialType === IssueCredentialType.JSONLD &&
+          issueData?.credentialFormats?.jsonld?.credential
+        ) {
+          allocation = await this.attachBitstringStatusList(
+            orgId,
+            issueData.credentialFormats.jsonld.credential,
+            credentials.credentialVersion || credentialVersion
+          );
+        }
+
         await this.delay(500);
-        return this._sendCredentialCreateOffer(issueData, url, orgId);
+        try {
+          const response = await this._sendCredentialCreateOffer(issueData, url, orgId);
+          if (allocation) {
+            await this.backfillStatusListAllocation(response?.threadId, allocation);
+          }
+          return response;
+        } catch (error) {
+          if (allocation) {
+            await this.releaseStatusListAllocation(allocation);
+          }
+          throw error;
+        }
       });
 
       const results = await Promise.allSettled(issuancePromises);
@@ -344,7 +380,9 @@ export class IssuanceService {
         credentialType,
         isShortenUrl,
         reuseConnection,
-        isValidateSchema
+        isValidateSchema,
+        isRevocable,
+        credentialVersion
       } = payload;
       if (credentialType === IssueCredentialType.INDY) {
         const schemadetailsResponse: SchemaDetails =
@@ -456,7 +494,35 @@ export class IssuanceService {
           validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes, this.logger);
         }
       }
-      const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
+      let allocation: IStatusListAllocation | undefined;
+      if (
+        isRevocable &&
+        credentialType === IssueCredentialType.JSONLD &&
+        issueData?.credentialFormats?.jsonld?.credential
+      ) {
+        allocation = await this.attachBitstringStatusList(
+          orgId,
+          issueData.credentialFormats.jsonld.credential,
+          credentialVersion
+        );
+      }
+
+      let credentialCreateOfferDetails;
+      try {
+        credentialCreateOfferDetails = await this._outOfBandCredentialOffer(issueData, url, orgId);
+      } catch (error) {
+        if (allocation) {
+          await this.releaseStatusListAllocation(allocation);
+        }
+        throw error;
+      }
+      if (allocation) {
+        await this.backfillStatusListAllocation(
+          credentialCreateOfferDetails.response?.credentialRequestThId ||
+            credentialCreateOfferDetails.response?.threadId,
+          allocation
+        );
+      }
       if (isShortenUrl) {
         const invitationUrl: string = credentialCreateOfferDetails.response?.invitationUrl;
         const url: string = await this.storeIssuanceObjectReturnUrl(invitationUrl);
@@ -765,7 +831,9 @@ export class IssuanceService {
         emailId,
         credentialType,
         isReuseConnection,
-        isValidateSchema
+        isValidateSchema,
+        isRevocable,
+        credentialVersion
       } = outOfBandCredential;
 
       this.logger.debug('Request reaced isuance microservice service');
@@ -879,6 +947,8 @@ export class IssuanceService {
         organizationLogoUrl?: string;
         prettyVc?: IPrettyVc;
         isValidateSchema?: boolean;
+        isRevocable?: boolean;
+        credentialVersion?: 'v1.0' | 'v2.0';
       } = {
         credentialType,
         protocolVersion,
@@ -892,6 +962,8 @@ export class IssuanceService {
         url,
         orgId,
         isValidateSchema,
+        isRevocable,
+        credentialVersion,
         organizationDetails,
         iterator: undefined,
         emailId: emailId || '',
@@ -972,7 +1044,9 @@ export class IssuanceService {
       platformName,
       organizationLogoUrl,
       isReuseConnection,
-      isValidateSchema
+      isValidateSchema,
+      isRevocable,
+      credentialVersion
     } = sendEmailCredentialOffer;
     const iterationNo = index + 1;
     try {
@@ -1042,8 +1116,36 @@ export class IssuanceService {
           validateW3CSchemaAttributes(filteredIssuanceAttributes, schemaUrlAttributes, this.logger);
         }
       }
+      let allocation: IStatusListAllocation | undefined;
+      if (
+        isRevocable &&
+        credentialType === IssueCredentialType.JSONLD &&
+        outOfBandIssuancePayload?.credentialFormats?.jsonld?.credential
+      ) {
+        allocation = await this.attachBitstringStatusList(
+          orgId,
+          outOfBandIssuancePayload.credentialFormats.jsonld.credential,
+          credentialVersion
+        );
+      }
+
       this.logger.debug('Payload created for issuance');
-      const credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
+      let credentialCreateOfferDetails;
+      try {
+        credentialCreateOfferDetails = await this._outOfBandCredentialOffer(outOfBandIssuancePayload, url, orgId);
+      } catch (error) {
+        if (allocation) {
+          await this.releaseStatusListAllocation(allocation);
+        }
+        throw error;
+      }
+      if (allocation) {
+        await this.backfillStatusListAllocation(
+          credentialCreateOfferDetails?.response?.credentialRequestThId ||
+            credentialCreateOfferDetails?.response?.threadId,
+          allocation
+        );
+      }
       this.logger.debug('Offer created successfully');
 
       if (!credentialCreateOfferDetails) {
@@ -1513,6 +1615,155 @@ export class IssuanceService {
         );
       });
     return schemaDetails;
+  }
+
+  private resolveCredentialVersion(credential: ICredential, requestedVersion?: 'v1.0' | 'v2.0'): 'v1.0' | 'v2.0' {
+    if (requestedVersion) {
+      return requestedVersion;
+    }
+    const context = Array.isArray(credential?.['@context']) ? credential['@context'] : [];
+    return context.includes(CommonConstants.CREDENTIALS_V2_CONTEXT_URL) ? 'v2.0' : 'v1.0';
+  }
+
+  private async attachBitstringStatusList(
+    orgId: string,
+    credential: ICredential,
+    requestedVersion?: 'v1.0' | 'v2.0'
+  ): Promise<IStatusListAllocation> {
+    const statusListHost = process.env.STATUS_LIST_HOST;
+    if (!statusListHost) {
+      throw new BadRequestException(
+        'Revocable JSON-LD credential is not supported as STATUS_LIST_HOST is not configured.'
+      );
+    }
+
+    const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+    const issuerDid = agentDetails?.orgDid;
+    if (!issuerDid) {
+      throw new BadRequestException(ResponseMessages.issuance.error.agentEndPointNotFound);
+    }
+
+    const { listId, index } = await this.statusListAllocatorService.allocate(orgId, issuerDid);
+    const statusListUri = `${statusListHost.replace(/\/$/, '')}/status-lists/${listId}`;
+    const credentialVersion = this.resolveCredentialVersion(credential, requestedVersion);
+
+    if (!Array.isArray(credential['@context'])) {
+      credential['@context'] = [];
+    }
+    const contexts = [...(credential['@context'] as string[])];
+
+    if ('v2.0' === credentialVersion) {
+      const v2Contexts = contexts.filter((context) => context !== CommonConstants.W3C_SCHEMA_URL);
+      if (!v2Contexts.includes(CommonConstants.CREDENTIALS_V2_CONTEXT_URL)) {
+        v2Contexts.unshift(CommonConstants.CREDENTIALS_V2_CONTEXT_URL);
+      }
+      credential['@context'] = v2Contexts as [];
+      delete credential.issuanceDate;
+      if (!credential.validFrom) {
+        credential.validFrom = new Date().toISOString();
+      }
+    } else if (!contexts.includes(CommonConstants.BITSTRING_STATUS_LIST_CONTEXT_V1)) {
+      contexts.push(CommonConstants.BITSTRING_STATUS_LIST_CONTEXT_V1);
+      credential['@context'] = contexts as [];
+    }
+
+    if (!credential.issuer) {
+      credential.issuer = { id: issuerDid };
+    }
+
+    credential.credentialStatus = {
+      id: `${statusListUri}#${index}`,
+      type: 'BitstringStatusListEntry',
+      statusPurpose: 'revocation',
+      statusListIndex: String(index),
+      statusListCredential: statusListUri
+    };
+
+    return { listId, index, statusListUri, credentialVersion };
+  }
+
+  private async backfillStatusListAllocation(threadId: string, allocation: IStatusListAllocation): Promise<void> {
+    if (!threadId) {
+      this.logger.warn(
+        `[backfillStatusListAllocation] Missing threadId for status list ${allocation.listId} index ${allocation.index}`
+      );
+      return;
+    }
+
+    try {
+      const updated = await this.issuanceRepository.updateCredentialStatusByThreadId(threadId, {
+        statusListId: allocation.listId,
+        statusListIndex: allocation.index,
+        statusListUri: allocation.statusListUri,
+        credentialVersion: allocation.credentialVersion
+      });
+      if (!updated) {
+        this.logger.warn(
+          `[backfillStatusListAllocation] Credential record not found for threadId ${threadId}; allocation ${allocation.listId}#${allocation.index}`
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `[backfillStatusListAllocation] Failed to persist status list allocation for threadId ${threadId}: ${JSON.stringify(error)}`
+      );
+    }
+  }
+
+  private async releaseStatusListAllocation(allocation: IStatusListAllocation): Promise<void> {
+    try {
+      await this.statusListAllocatorService.release(allocation.listId, allocation.index);
+    } catch (error) {
+      this.logger.error(
+        `[releaseStatusListAllocation] Failed to release ${allocation.listId}#${allocation.index}: ${JSON.stringify(error)}`
+      );
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async revokeCredential(orgId: string, threadId: string, user: IUserRequest): Promise<{ response: object }> {
+    try {
+      const credentialRecord = await this.issuanceRepository.getCredentialByThreadId(threadId);
+
+      if (!credentialRecord || credentialRecord.orgId !== orgId) {
+        throw new NotFoundException(ResponseMessages.issuance.error.credentialsNotFound);
+      }
+
+      if (credentialRecord.revokedAt) {
+        return { response: { revoked: true, alreadyRevoked: true } };
+      }
+
+      if (
+        !credentialRecord.statusListId ||
+        null === credentialRecord.statusListIndex ||
+        undefined === credentialRecord.statusListIndex
+      ) {
+        throw new BadRequestException('Credential is not revocable as no status list allocation was found.');
+      }
+
+      const agentDetails = await this.issuanceRepository.getAgentEndPoint(orgId);
+      const issuerDid = agentDetails?.orgDid;
+      if (!issuerDid) {
+        throw new BadRequestException(ResponseMessages.issuance.error.agentEndPointNotFound);
+      }
+
+      const url = getAgentUrl(agentDetails.agentEndPoint, CommonConstants.REVOKE_BITSTRING_CREDENTIAL);
+      const pattern = { cmd: 'agent-service-didcomm-revoke-credential' };
+      const payload = {
+        url,
+        orgId,
+        listId: credentialRecord.statusListId,
+        index: credentialRecord.statusListIndex,
+        issuerDid
+      };
+
+      const result = await this.natsCall(pattern, payload);
+      await this.issuanceRepository.updateCredentialStatusByThreadId(threadId, { revokedAt: new Date() });
+
+      return { response: (result?.response ?? { revoked: true }) as object };
+    } catch (error) {
+      this.logger.error(`[revokeCredential] - error in revoking credential: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
   }
 
   async delay(ms: number): Promise<unknown> {

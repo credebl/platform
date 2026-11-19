@@ -312,6 +312,15 @@ export class UserService {
         checkUserDetails.clientId,
         checkUserDetails.clientSecret
       );
+
+      // Resolve the holder realm role before creating the Keycloak user, so a realm
+      // without it fails with an actionable error instead of a half-registered user.
+      const realmRoles = await this.clientRegistrationService.getAllRealmRoles(token);
+      const holderRoleData = realmRoles?.find((role) => role.name === OrgRoles.HOLDER);
+      if (!holderRoleData) {
+        throw new NotFoundException(ResponseMessages.user.error.holderRealmRoleNotFound);
+      }
+
       if (userInfo.isPasskey) {
         const resUser = await this.userRepository.addUserPassword(email.toLowerCase(), userInfo.password);
         const userDetails = await this.userRepository.getUserDetails(email.toLowerCase());
@@ -357,11 +366,6 @@ export class UserService {
         }
         await this.userRepository.storeUserRole(userDetails.id, getUserRole?.id);
       }
-
-      const realmRoles = await this.clientRegistrationService.getAllRealmRoles(token);
-
-      const holderRole = realmRoles.filter((role) => role.name === OrgRoles.HOLDER);
-      const holderRoleData = 0 < holderRole.length && holderRole[0];
 
       const payload = [
         {

@@ -55,6 +55,8 @@ export const ResponseMessages = {
       invalidEmail: 'Invalid Email Id!',
       adduser: 'Unable to add user details',
       userRoleNotFound: 'User role not found',
+      holderRealmRoleNotFound:
+        'Keycloak realm role holder not found. Create the holder realm role in the configured realm.',
       verifyEmail: 'The verification link has already been sent to your email address. please verify',
       emailNotVerified: 'The verification link has already been sent to your email address. please verify',
       userNotRegisterd: 'The user has not yet completed the registration process',

@@ -358,12 +358,21 @@ export interface IAuthorizeRequestCredential {
   email?: string;
 }
 
+/** What to do when the issuer cannot bind a credential to `holderDidUrl`: fail (`require`) or use a new key (`prefer`). */
+export type CloudWalletOid4vcBindingPolicy = 'require' | 'prefer';
+
 export interface IRequestCredential {
   credentialOfferUri: string;
   credentialsToRequest: string[];
   authorizationCode?: string;
   codeVerifier?: string;
   txCode?: string;
+  /** Bind the credentials to this DID URL of the wallet instead of a new key. */
+  holderDidUrl?: string;
+  /** Defaults to `require` when `holderDidUrl` is set. Ignored without `holderDidUrl`. */
+  bindingPolicy?: CloudWalletOid4vcBindingPolicy;
+  /** Send the `credential_accepted` notification to the issuer (agent default: true). */
+  sendNotification?: boolean;
   userId?: string;
   email?: string;
 }

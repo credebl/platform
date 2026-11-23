@@ -178,6 +178,11 @@ export class CredentialRequestDto {
   })
   @IsOptional()
   validityInfo?: ValidityInfo;
+
+  @ApiPropertyOptional({ enum: ['v1.0', 'v2.0'], default: 'v1.0' })
+  @IsOptional()
+  @IsIn(['v1.0', 'v2.0'], { message: 'credentialVersion must be v1.0 or v2.0' })
+  credentialVersion?: 'v1.0' | 'v2.0';
 }
 
 export class CreateOidcCredentialOfferDto {
@@ -214,6 +219,11 @@ export class CreateOidcCredentialOfferDto {
   @IsOptional()
   @IsBoolean()
   isRevocable?: boolean = false;
+
+  @ApiPropertyOptional({ enum: ['v1.0', 'v2.0'], default: 'v1.0' })
+  @IsOptional()
+  @IsIn(['v1.0', 'v2.0'], { message: 'credentialVersion must be v1.0 or v2.0' })
+  credentialVersion?: 'v1.0' | 'v2.0';
 }
 
 export class GetAllCredentialOfferDto {
@@ -415,6 +425,11 @@ export class CreateCredentialOfferD2ADto {
   @IsOptional()
   @IsBoolean()
   isRevocable?: boolean = false;
+
+  @ApiPropertyOptional({ enum: ['v1.0', 'v2.0'], default: 'v1.0' })
+  @IsOptional()
+  @IsIn(['v1.0', 'v2.0'], { message: 'credentialVersion must be v1.0 or v2.0' })
+  credentialVersion?: 'v1.0' | 'v2.0';
 
   @ExactlyOneOf(['preAuthorizedCodeFlowConfig', 'authorizationCodeFlowConfig'], {
     message: 'Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.'

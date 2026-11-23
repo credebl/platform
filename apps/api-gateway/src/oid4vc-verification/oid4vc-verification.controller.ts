@@ -18,7 +18,8 @@ import {
   Query,
   Put,
   Delete,
-  Logger
+  Logger,
+  UnprocessableEntityException
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -467,20 +468,24 @@ export class Oid4vcVerificationController {
         verificationPresentationId
       );
 
+      const verificationFailed = 'failed' === (result as { verificationStatus?: string })?.verificationStatus;
+
       this.logger.debug(
         `Verification presentation response details fetched successfully for verificationPresentationId: ${verificationPresentationId}`
       );
 
       return res.status(HttpStatus.OK).json({
-        success: true,
-        message: 'Verification presentation response details retrieved successfully.',
+        success: !verificationFailed,
+        message: verificationFailed
+          ? 'Verification presentation response details retrieved; verification failed.'
+          : 'Verification presentation response details retrieved successfully.',
         data: result
       });
     } catch (error) {
-      this.logger.debug(
-        `Error in getVerificationPresentationResponse(): ${error.message || 'Failed to fetch verification presentation response details.'}`
+      this.logger.error(
+        `Error in getVerificationPresentationResponse(): ${error?.message || 'Failed to fetch verification presentation response details.'}`
       );
-      throw new BadRequestException(error.message || 'Failed to fetch verification presentation response details.');
+      throw error;
     }
   }
   /**
@@ -747,8 +752,12 @@ export class Oid4vcVerificationController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Authorization response verified successfully.',
+    description: 'Authorization response verification result fetched successfully.',
     type: ApiResponseDto
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description: 'Verification session failed and cannot be verified again.'
   })
   @ApiBearerAuth()
   @Roles(OrgRoles.OWNER)
@@ -772,12 +781,20 @@ export class Oid4vcVerificationController {
       verifyAuthorizationResponseDto,
       orgId
     );
-    this.logger.debug(`[verifyAuthorizationResponse] Authorization response verified successfully for orgId=${orgId}`);
+    if ('failed' === (result as { verificationStatus?: string })?.verificationStatus) {
+      const verificationError = (result as { error?: string })?.error;
+      throw new UnprocessableEntityException(
+        verificationError || ResponseMessages.oid4vpSession.error.verificationFailed
+      );
+    }
+    this.logger.debug(
+      `[verifyAuthorizationResponse] Authorization response verification result fetched for orgId=${orgId}`
+    );
     const finalResponse: IResponse = {
-      statusCode: HttpStatus.CREATED,
-      message: 'Authorization response verified successfully',
+      statusCode: HttpStatus.OK,
+      message: 'Authorization response verification result fetched successfully',
       data: result
     };
-    return res.status(HttpStatus.CREATED).json(finalResponse);
+    return res.status(HttpStatus.OK).json(finalResponse);
   }
 }

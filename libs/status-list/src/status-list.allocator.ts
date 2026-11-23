@@ -195,6 +195,15 @@ export class StatusListAllocatorService {
     });
   }
 
+  async markCredentialAllocationsRevoked(orgId: string, issuanceSessionId: string): Promise<number> {
+    const result = await this.prisma.issued_oid4vc_credentials.updateMany({
+      where: { orgId, issuanceSessionId, revokedAt: null },
+      data: { revokedAt: new Date() }
+    });
+
+    return result.count;
+  }
+
   async release(listId: string, index: number): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       const allocation = await tx.status_list_allocation.findUnique({

@@ -84,3 +84,10 @@ New since v2.2.1.
 - **Docker compose:** redis moves from 6.2 to 8.10. Check your data and persistence settings before pulling the new image.
 - **Environment:** new platform variables in `.env.demo`: `API_GATEWAY_VERSION`, `ENABLE_SWAGGER`, and for the optional OpenBao provider `ENABLE_BAO`, `SECRETS_PROVIDER`, `BAO_URL`, `BAO_SECRET_PATH`, `BAO_ROLE_ID` and `BAO_SECRET_ID`. See `openspec/specs/openbao-secret-storage` and `docker-compose.openbao.yml`.
 - **Controller image:** pin it with `AFJ_VERSION` to `ghcr.io/credebl/credo-controller:v2.3.3`.
+
+## New contributors
+- @kavin-vs made their first contribution in https://github.com/credebl/platform/pull/1777
+- @SharonOliv made their first contribution in https://github.com/credebl/platform/pull/1763
+- @sign-mark made their first contribution in https://github.com/credebl/platform/pull/1727
+
+**Full Changelog**: https://github.com/credebl/platform/compare/v2.2.1...v2.3.0

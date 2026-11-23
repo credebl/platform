@@ -238,6 +238,9 @@ export class EcosystemService {
       return ecosystem;
     } catch (error) {
       this.logger.error(`Failed to create ecosystem : ${JSON.stringify(error)}`);
+      if (error instanceof RpcException) {
+        throw error;
+      }
       throw new RpcException(error.response ? error.response : error);
     }
   }
@@ -355,7 +358,7 @@ export class EcosystemService {
       if (
         checkUser?.ecosystemId === ecosystemId &&
         checkUser.invitedOrg === orgId &&
-        checkUser.status === Invitation.PENDING &&
+        (checkUser.status === Invitation.PENDING || checkUser.status === Invitation.ACCEPTED) &&
         checkUser.type === InviteType.MEMBER
       ) {
         throw new ConflictException(`Invitation already exists for org with email ${user.email}`);
@@ -396,6 +399,9 @@ export class EcosystemService {
       return response;
     } catch (error) {
       this.logger.error(`Failed to send invitation to member : ${JSON.stringify(error)}`);
+      if (error instanceof RpcException) {
+        throw error;
+      }
       throw new RpcException(error.response ? error.response : error);
     }
   }

@@ -85,6 +85,7 @@ export class EcosystemRepository {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if ('P2002' === error.code) {
           throw new RpcException({
+            statusCode: HttpStatus.CONFLICT,
             status: HttpStatus.CONFLICT,
             message: 'Invitation already exists for this email in the ecosystem'
           });

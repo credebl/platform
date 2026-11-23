@@ -21,7 +21,7 @@ Previous stable release: v2.2.0. Draft: confirm against the final merged PR list
   - **2.3.1:** optional holder-binding fields on `request-credential` (`holderDidUrl`, `bindingPolicy`), and Credo 0.7.0 -> 0.7.4 (no storage migration).
   - **2.3.2:** binding `ldp_vc` credentials to a `did:web` holder, and `Ed25519VerificationKey2020` support; the platform's `did:web` default for `ldp_vc` (#1820) relies on these. Since 2.3.2, `credentialSubject.id` of new W3C credentials is the holder's bare DID, and DCQL `ldp_vc` queries must use expanded JSON-LD IRIs in `meta.type_values`.
 - **From 2.3.0:** W3C JSON-LD end to end (`ldp_vc` over OID4VC, DCQL verification), X.509 chain support, a tenant session leak fix, and a Node 26 base image. Rebuild agent images rather than reusing cached layers.
-- **Holder list endpoints** (SD-JWT, mdoc, W3C) return a plain array when called with no query parameters, but an envelope `{ data, pagination, filters? }` once any parameter is sent. The platform on `main` does not call these endpoints. Any holder-management work (for example #1792) must handle both shapes.
+- **Holder list endpoints** (SD-JWT, mdoc, W3C) return a plain array when called with no query parameters, but an envelope `{ data, pagination, filters? }` once any parameter is sent. Since #1792 the cloud wallet calls them without query parameters and returns the plain array. Any code that sends parameters must handle both shapes.
 
 ## Features
 - OpenBao secret storage (provider, provisioning script, `docker-compose.openbao.yml`, docs/tests) (#1679, #1712)
@@ -31,6 +31,8 @@ Previous stable release: v2.2.0. Draft: confirm against the final merged PR list
 - OID4VCI: wallet notifications (`credential_accepted`, `credential_failure`, `credential_deleted`) are relayed to the organization's webhook. A post with `data.notification` is a notification; the session state stays `Completed`. The notification history is stored per issuance session. See `docs/oid4vci-wallet-notifications.md` (#1845)
 - DIDs: import a CA issued certificate chain and its key as a `did:x509` (`POST /orgs/:orgId/agents/did/x509/import`) and read its chain (`GET /orgs/:orgId/agents/did/x509/chain/:did`) (#1823)
 - X.509: the KMS backend of each certificate (`askar`, `node` or `openbao`) is stored and returned by the X.509 APIs (#1824)
+- Cloud wallet: a holder can bind OID4VC credentials to a DID of its wallet. `POST /v1/oid4vc/holder/request-credential` takes the optional fields `holderDidUrl` (bind to that DID's key instead of a new key), `bindingPolicy` (`require`, the default when `holderDidUrl` is set, or `prefer`) and `sendNotification`. This needs agent-controller v2.3.1 or later (#1852)
+- Cloud wallet: `POST /v1/did/import/session` accepts `key` and `web` as well as `polygon`, so an existing key can be imported as a `did:web` (#1852)
 - Swagger UIs exposed per module group (#1608)
 - API gateway version via `API_GATEWAY_VERSION` env (#1777)
 - Row-level security migration `enable_rls_if_not_exists` (#1688)
@@ -38,6 +40,7 @@ Previous stable release: v2.2.0. Draft: confirm against the final merged PR list
 ## Fixes
 - Agent provisioning: scripts run with `execFile` arguments instead of shell interpolation (#1708)
 - Cloud wallet: holder wallet resolution scoped to the authenticated user, base wallet configuration restricted to platform administrators, agent health checks use the holder tenant token (#1727)
+- Cloud wallet: creating a cloud wallet no longer fails on agents that run Credo 0.7 (#1852)
 - Agent service: creating a DID for an organization with many DIDs no longer deadlocks (#1836)
 - Seed: `prisma db seed` finds `ts-node` (#1822)
 - Invitation: return `org_invitations` array; fetch last `invitationDid` (#1725, #1760)

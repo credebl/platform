@@ -1,0 +1,38 @@
+name: Changeset check
+
+# Tells contributors when a pull request lacks a changeset. Documentation, CI and
+# test-only pull requests pass without one, and an empty changeset
+# (`pnpm changeset --empty`) is an explicit "no release note needed".
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changeset-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  changeset:
+    name: Changeset present
+    runs-on: ubuntu-latest
+    # Dependabot updates and the generated "Version Packages" pull request
+    # never carry a changeset.
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      !startsWith(github.head_ref, 'changeset-release/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check for a changeset
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          CHANGESET_EXEMPT_REGEX: '^(\.github/|\.changeset/|docs/|openspec/|test/|\.husky/)|\.md$|\.spec\.ts$|\.test\.ts$'
+        run: .github/scripts/check-changeset.sh

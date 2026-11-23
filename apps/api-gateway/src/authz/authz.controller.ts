@@ -55,6 +55,9 @@ import { User } from './decorators/user.decorator';
 import { user } from '@prisma/client';
 import * as useragent from 'express-useragent';
 import { EmptyStringParamPipe, TrimStringParamPipe } from '@credebl/common/cast.helper';
+import { Roles } from './decorators/roles.decorator';
+import { OrgRoles } from 'libs/org-roles/enums';
+import { OrgRolesGuard } from './guards/org-roles.guard';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -139,6 +142,34 @@ export class AuthzController {
     const finalResponse: IResponseType = {
       statusCode: HttpStatus.CREATED,
       message: ResponseMessages.user.success.sendVerificationCode
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  @Post('/verify-mail-manually')
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Created', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.PLATFORM_ADMIN)
+  @ApiBearerAuth()
+  @ApiQuery({
+    name: 'clientAlias',
+    required: false,
+    enum: (process.env.SUPPORTED_SSO_CLIENTS || '')
+      .split(',')
+      .map((alias) => alias.trim()?.toUpperCase())
+      .filter(Boolean)
+  })
+  @ApiOperation({ summary: 'Send verification email', description: 'Send verification email to new user' })
+  async verifyEmailManually(
+    @Query('clientAlias', ClientAliasValidationPipe) clientAlias: string,
+    @Body() userEmailVerification: UserEmailVerificationDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    userEmailVerification.clientAlias = clientAlias ?? (await getDefaultClient()).alias;
+    await this.authzService.sendVerificationMail(userEmailVerification);
+    const finalResponse: IResponseType = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.user.success.verificationSuccess
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
   }

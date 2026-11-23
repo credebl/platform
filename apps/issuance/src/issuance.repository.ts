@@ -30,6 +30,7 @@ import { IIssuedCredentialSearchParams } from 'apps/api-gateway/src/issuance/int
 import { IUserRequest } from '@credebl/user-request/user-request.interface';
 import { PrismaService } from '@credebl/prisma-service';
 import { ResponseMessages } from '@credebl/common/response-messages';
+import { extractCredentialStatusDetails } from '../libs/helpers/credential-status.extractor';
 
 @Injectable()
 export class IssuanceRepository {
@@ -258,6 +259,11 @@ export class IssuanceRepository {
         credDefId = issueCredentialDto?.metadata?.['_anoncreds/credential']?.credentialDefinitionId;
       }
 
+      const offeredCredential =
+        issueCredentialDto?.credentialData?.offer?.jsonld?.credential ||
+        issueCredentialDto?.credentialData?.proposal?.jsonld?.credential;
+      const statusDetails = extractCredentialStatusDetails(offeredCredential);
+
       const credentialDetails = await this.prisma.credentials.upsert({
         where: {
           threadId: issueCredentialDto?.threadId
@@ -269,7 +275,8 @@ export class IssuanceRepository {
           connectionId: issueCredentialDto?.connectionId,
           state: issueCredentialDto?.state,
           credDefId,
-          ...(schemaId ? { schemaId } : {})
+          ...(schemaId ? { schemaId } : {}),
+          ...statusDetails
         },
         create: {
           createDateTime: issueCredentialDto?.createDateTime,
@@ -281,7 +288,8 @@ export class IssuanceRepository {
           schemaId,
           credDefId,
           credentialExchangeId: issueCredentialDto?.id,
-          orgId: organisationId
+          orgId: organisationId,
+          ...statusDetails
         }
       });
 
@@ -776,6 +784,33 @@ export class IssuanceRepository {
       return fileDetails;
     } catch (error) {
       this.logger.error(`[getFileDetailsAndFileDataByFileId] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getCredentialByThreadId(threadId: string): Promise<credentials> {
+    try {
+      return this.prisma.credentials.findUnique({
+        where: { threadId }
+      });
+    } catch (error) {
+      this.logger.error(`[getCredentialByThreadId] - error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async updateCredentialStatusByThreadId(
+    threadId: string,
+    data: Prisma.credentialsUpdateManyMutationInput
+  ): Promise<number> {
+    try {
+      const result = await this.prisma.credentials.updateMany({
+        where: { threadId },
+        data
+      });
+      return result.count;
+    } catch (error) {
+      this.logger.error(`[updateCredentialStatusByThreadId] - error: ${JSON.stringify(error)}`);
       throw error;
     }
   }

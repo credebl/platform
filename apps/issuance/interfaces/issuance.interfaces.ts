@@ -19,6 +19,15 @@ interface ICredentialsAttributes {
   attributes: IAttributes[];
   credential?: ICredential;
   options?: IOptions;
+  credentialVersion?: 'v1.0' | 'v2.0';
+  isRevocable?: boolean;
+}
+
+export interface IStatusListAllocation {
+  listId: string;
+  index: number;
+  statusListUri: string;
+  credentialVersion: 'v1.0' | 'v2.0';
 }
 export interface IIssuance {
   user?: IUserRequest;
@@ -34,6 +43,8 @@ export interface IIssuance {
   label?: string;
   credentialType: string;
   isValidateSchema?: string;
+  isRevocable?: boolean;
+  credentialVersion?: 'v1.0' | 'v2.0';
 }
 
 interface IIndy {
@@ -108,6 +119,10 @@ export interface IIssuanceWebhookInterface {
   createDateTime: string;
   connectionId: string;
   threadId: string;
+  credentialData?: {
+    offer?: { jsonld?: { credential?: ICredential } };
+    proposal?: { jsonld?: { credential?: ICredential } };
+  };
   protocolVersion: string;
   credentialAttributes: ICredentialAttributesInterface[];
   orgId: string;
@@ -140,13 +155,22 @@ export interface ICredentialAttributesInterface {
 }
 
 export interface ICredential {
-  '@context': [];
+  '@context': string[];
   type: string[];
   prettyVc?: IPrettyVc;
   issuer?: {
     id: string;
   };
   issuanceDate?: string;
+  validFrom?: string;
+  validUntil?: string;
+  credentialStatus?: {
+    id: string;
+    type: string;
+    statusPurpose: string;
+    statusListIndex: string;
+    statusListCredential: string;
+  };
   credentialSubject?: ICredentialSubject;
 }
 
@@ -173,6 +197,8 @@ export interface OutOfBandCredentialOfferPayload {
   attributes?: IAttributes[];
   protocolVersion?: string;
   isReuseConnection?: boolean;
+  isRevocable?: boolean;
+  credentialVersion?: 'v1.0' | 'v2.0';
   goalCode?: string;
   parentThreadId?: string;
   willConfirm?: boolean;
@@ -303,6 +329,8 @@ export interface SendEmailCredentialOffer {
   organizationLogoUrl?: string;
   prettyVc?: IPrettyVc;
   isValidateSchema?: boolean;
+  isRevocable?: boolean;
+  credentialVersion?: 'v1.0' | 'v2.0';
 }
 
 export interface TemplateDetailsInterface {

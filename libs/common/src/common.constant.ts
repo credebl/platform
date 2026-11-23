@@ -47,6 +47,8 @@ export enum CommonConstants {
 
   //W3cSCHEMA
   W3C_SCHEMA_URL = 'https://www.w3.org/2018/credentials/v1',
+  CREDENTIALS_V2_CONTEXT_URL = 'https://www.w3.org/ns/credentials/v2',
+  BITSTRING_STATUS_LIST_CONTEXT_V1 = 'https://www.w3.org/ns/credentials/status/v1',
 
   // MESSAGING SERVICES
   URL_MSG_SEND_MESSAGE = '/connections/#/send-message',
@@ -78,6 +80,7 @@ export enum CommonConstants {
   // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   URL_ISSUE_GET_CREDS_BY_CRED_REC_ID = '/didcomm/credentials/#',
   URL_OUT_OF_BAND_CREDENTIAL_OFFER = '/didcomm/credentials/create-offer-oob',
+  URL_ISSUANCE_REVOKE_CREDENTIAL = '/didcomm/credentials/revoke',
   URL_ACCEPT_CREDENTIALS = '/credentials/accept-offer',
   URL_SEND_QUESTION = '/didcomm/question-answer/question/#',
   URL_QUESTION_ANSWER_RECORD = '/didcomm/question-answer',
@@ -112,6 +115,7 @@ export enum CommonConstants {
   URL_AGENT_IMPORT_DID_X509 = '/dids/x509/import',
   URL_AGENT_GET_DID_X509_CHAIN = '/dids/x509/chain',
   URL_AGENT_RESOLVE_DID = '/dids/#/resolve',
+  URL_AGENT_GET_DID_KMS = '/dids/#/kms',
   DID_X509_PREFIX = 'did:x509:',
   URL_AGENT_GET_ENDPOINT = '/agent',
 
@@ -415,6 +419,7 @@ export enum CommonConstants {
   VERIFY_SIGNED_DATA_FROM_AGENT = 'verify-signed-data-from-agent',
   CREATE_OFFER = 'create-offer',
   CREATE_OFFER_OUT_OF_BAND = 'create-offer-oob',
+  REVOKE_BITSTRING_CREDENTIAL = 'revoke-bitstring-credential',
   GET_OFFER_BY_CRED_ID = 'get-offer-by-cred-id',
   URL_GET_PROOF_PRESENTATION_BY_ID_FLAG = 'get-proof-presentation-by-id',
   REQUEST_PROOF = 'request-proof',
@@ -464,7 +469,21 @@ export enum CommonConstants {
   STORAGE_TYPE_LOCAL = 'local',
   STORAGE_TYPE_RUSTFS = 'rustfs',
 
-  OPENBAO_REQUEST_TIMEOUT = 10000
+  OPENBAO_REQUEST_TIMEOUT = 10000,
+
+  // OID4VC Holder
+  OID4VC_HOLDER_SDJWT_VCS = '/openid4vc/holder/sd-jwt-vcs',
+  OID4VC_HOLDER_MDOC_VCS = '/openid4vc/holder/mdoc-vcs',
+  OID4VC_HOLDER_W3C_VCS = '/openid4vc/holder/w3c-vcs',
+  OID4VC_HOLDER_MDOC_DECODE = '/openid4vc/holder/mdoc-vcs/decode',
+  OID4VC_HOLDER_DECODE_SDJWT = '/openid4vc/holder/decode-sdjwt',
+  OID4VC_HOLDER_DELETE_CREDENTIAL = '/openid4vc/holder/credential',
+  OID4VC_HOLDER_RESOLVE_CREDENTIAL_OFFER = '/openid4vc/holder/resolve-credential-offer',
+  OID4VC_HOLDER_AUTHORIZATION_REQUEST = '/openid4vc/holder/authorization-request',
+  OID4VC_HOLDER_REQUEST_CREDENTIAL = '/openid4vc/holder/request-credential',
+  OID4VC_HOLDER_RESOLVE_PROOF_REQUEST = '/openid4vc/holder/resolve-proof-request',
+  OID4VC_HOLDER_ACCEPT_PROOF_REQUEST = '/openid4vc/holder/accept-proof-request',
+  CLOUD_WALLET_REQUEST_TIMEOUT = 60000
 }
 export const MICRO_SERVICE_NAME = Symbol('MICRO_SERVICE_NAME');
 export const ATTRIBUTE_NAME_REGEX = /\['(.*?)'\]/;

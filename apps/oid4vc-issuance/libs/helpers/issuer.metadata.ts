@@ -60,6 +60,10 @@ type CredentialConfigurationsSupported = {
 const ISSUER_DPOP_ALGS_DEFAULT = ['RS256', 'ES256'];
 
 const STATIC_CREDENTIAL_ALGS_FOR_SDJWT = ['ES256'];
+
+// Algorithms a holder may sign its JWT proof of possession with. RS256 lets a holder bind a credential to an RSA key,
+// such as the key of an Indian Class 3 DSC imported into a did:web.
+const HOLDER_PROOF_ALGS_FOR_JWT = ['ES256', 'EdDSA', 'RS256'];
 const STATIC_BINDING_METHODS_FOR_SDJWT = ['did:key', 'did:web', 'did:jwk', 'jwk'];
 
 const STATIC_BINDING_METHODS_FOR_LDP_VC = ['did:key', 'did:web'];
@@ -70,7 +74,9 @@ function resolveBindingMethods(template: SdJwtTemplate, defaults: string[]): str
     : [...defaults];
 }
 
-const STATIC_CREDENTIAL_ALGS_FOR_MDOC = ['ES256'];
+// OpenID4VCI lists the signing algorithms of an mso_mdoc credential as COSE algorithm numbers (-7 is ES256), not names.
+// A name makes the agent reject the issuer metadata and every holder then fails to fetch it.
+const STATIC_CREDENTIAL_ALGS_FOR_MDOC = [-7];
 const STATIC_BINDING_METHODS_FOR_MDOC = ['jwk'];
 
 /**
@@ -248,7 +254,7 @@ export function buildSdJwtCredentialConfig(name: string, template: SdJwtTemplate
       cryptographic_binding_methods_supported: resolveBindingMethods(template, STATIC_BINDING_METHODS_FOR_SDJWT),
       proof_types_supported: {
         jwt: {
-          proof_signing_alg_values_supported: ['ES256', 'EdDSA']
+          proof_signing_alg_values_supported: [...HOLDER_PROOF_ALGS_FOR_JWT]
         }
       },
       credential_metadata: {
@@ -323,7 +329,7 @@ export function buildJwtVcJsonLdCredentialConfig(
       cryptographic_binding_methods_supported: resolveBindingMethods(template, STATIC_BINDING_METHODS_FOR_SDJWT),
       proof_types_supported: {
         jwt: {
-          proof_signing_alg_values_supported: ['ES256', 'EdDSA']
+          proof_signing_alg_values_supported: [...HOLDER_PROOF_ALGS_FOR_JWT]
         }
       },
       credential_definition: {

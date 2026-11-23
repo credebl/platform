@@ -71,7 +71,8 @@ describe('AgentServiceService did:x509', () => {
         didDocument: { id: DID },
         isPrimaryDid: false,
         orgAgentId: 'org-agent-1',
-        userId: 'user-1'
+        userId: 'user-1',
+        kmsBackend: null
       });
       expect(repository.setPrimaryDid).not.toHaveBeenCalled();
       expect(result).toEqual(
@@ -82,6 +83,23 @@ describe('AgentServiceService did:x509', () => {
           verificationMethodId: `${DID}#key-1`
         })
       );
+    });
+
+    it('stores the KMS backend the agent reports and returns it', async () => {
+      commonService.httpPost.mockResolvedValue({ ...agentResponse, kmsBackend: 'openbao' });
+
+      const result = await service.importDidX509(importPayload, ORG_ID, user);
+
+      expect(repository.storeDidDetails).toHaveBeenCalledWith(expect.objectContaining({ kmsBackend: 'openbao' }));
+      expect(result).toEqual(expect.objectContaining({ kmsBackend: 'openbao' }));
+    });
+
+    it('ignores a KMS backend it does not know', async () => {
+      commonService.httpPost.mockResolvedValue({ ...agentResponse, kmsBackend: 'vault' });
+
+      await service.importDidX509(importPayload, ORG_ID, user);
+
+      expect(repository.storeDidDetails).toHaveBeenCalledWith(expect.objectContaining({ kmsBackend: null }));
     });
 
     it('never stores the private key', async () => {

@@ -107,6 +107,14 @@ export class AgentServiceController {
     return this.agentServiceService.resolveDid(payload.orgId, payload.did, payload.source);
   }
 
+  /**
+   * @returns the KMS backend of a DID stored for the organization, as reported by its agent
+   */
+  @MessagePattern({ cmd: 'get-did-kms' })
+  async getDidKms(payload: { orgId: string; did: string }): Promise<object> {
+    return this.agentServiceService.getDidKms(payload.orgId, payload.did);
+  }
+
   @MessagePattern({ cmd: 'create-wallet' })
   async createWallet(payload: { createWalletDto: IWallet; user: IUserRequestInterface }): Promise<ITenantRecord> {
     return this.agentServiceService.createWallet(payload.createWalletDto);
@@ -425,6 +433,23 @@ export class AgentServiceController {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async oidcDeleteCredentialOffer(payload: { url: string; orgId: string }): Promise<any> {
     return this.agentServiceService.oidcDeleteCredentialOffer(payload.url, payload.orgId);
+  }
+
+  @MessagePattern({ cmd: 'agent-service-didcomm-revoke-credential' })
+  async didcommRevokeCredential(payload: {
+    url: string;
+    orgId: string;
+    listId: string;
+    index: number;
+    issuerDid: string;
+  }): Promise<object> {
+    return this.agentServiceService.didcommRevokeCredential(
+      payload.url,
+      payload.orgId,
+      payload.listId,
+      payload.index,
+      payload.issuerDid
+    );
   }
 
   @MessagePattern({ cmd: 'agent-service-oid4vc-revoke-credential' })

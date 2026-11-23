@@ -62,13 +62,21 @@ export interface ICreateCloudWalletDid {
   network?: string;
   domain?: string;
   role?: string;
+  /** @deprecated Legacy plaintext did:polygon key, rejected by the gateway. Use `encryptedKey`. */
   privatekey?: string;
+  encryptedKey?: { sessionId: string; jwe: string };
   endpoint?: string;
   did?: string;
   endorserDid?: string;
   email?: string;
   userId?: string;
 }
+export interface ICreateCloudWalletDidImportSession {
+  method: string;
+  email?: string;
+  userId?: string;
+}
+
 export interface IGetStoredWalletInfo {
   email: string;
   userId: string;
@@ -329,4 +337,75 @@ export interface IBasicMessageDetails {
   email?: string;
   content: string;
   connectionId: string;
+}
+
+export enum Oid4vcCredentialType {
+  SD_JWT_VC = 'sd-jwt-vc',
+  MSO_MDOC = 'mso_mdoc',
+  W3C_VC = 'w3c-vc'
+}
+
+export interface IResolveCredentialOffer {
+  credentialOfferUri: string;
+  userId?: string;
+  email?: string;
+}
+
+export interface IAuthorizeRequestCredential {
+  credentialOfferUri: string;
+  credentialsToRequest: string[];
+  userId?: string;
+  email?: string;
+}
+
+/** What to do when the issuer cannot bind a credential to `holderDidUrl`: fail (`require`) or use a new key (`prefer`). */
+export type CloudWalletOid4vcBindingPolicy = 'require' | 'prefer';
+
+export interface IRequestCredential {
+  credentialOfferUri: string;
+  credentialsToRequest: string[];
+  authorizationCode?: string;
+  codeVerifier?: string;
+  txCode?: string;
+  /** Bind the credentials to this DID URL of the wallet instead of a new key. */
+  holderDidUrl?: string;
+  /** Defaults to `require` when `holderDidUrl` is set. Ignored without `holderDidUrl`. */
+  bindingPolicy?: CloudWalletOid4vcBindingPolicy;
+  /** Send the `credential_accepted` notification to the issuer (agent default: true). */
+  sendNotification?: boolean;
+  userId?: string;
+  email?: string;
+}
+
+export interface IResolveProofRequest {
+  proofRequestUri: string;
+  options?: object;
+  userId?: string;
+  email?: string;
+}
+
+export interface IAcceptOid4vpProofRequest {
+  proofRequestUri: string;
+  options?: object;
+  userId?: string;
+  email?: string;
+}
+
+export interface IDecodeMdoc {
+  base64Url: string;
+  userId?: string;
+  email?: string;
+}
+
+export interface IDecodeSdJwt {
+  jwt: string;
+  userId?: string;
+  email?: string;
+}
+
+export interface IDeleteHolderCredential {
+  credentialType: Oid4vcCredentialType;
+  credentialId: string;
+  userId?: string;
+  email?: string;
 }

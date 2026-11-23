@@ -52,9 +52,21 @@ import {
   CreateCredentialOfferD2ADto,
   CreateOidcCredentialOfferDto,
   GetAllCredentialOfferDto,
+  ReissueCredentialOfferDto,
   UpdateCredentialRequestDto
 } from './dtos/issuer-sessions.dto';
 import { IWebhookUrlInfo } from '@credebl/common/interfaces/webhook.interface';
+
+/** Rejects a malformed id with a 400 before it reaches the database, where it would fail as a 500. */
+function uuidPipe(message: string): ParseUUIDPipe {
+  return new ParseUUIDPipe({
+    exceptionFactory: (): Error => {
+      throw new BadRequestException(message);
+    }
+  });
+}
+const orgIdPipe = (): ParseUUIDPipe => uuidPipe(ResponseMessages.organisation.error.invalidOrgId);
+const issuerIdPipe = (): ParseUUIDPipe => uuidPipe(ResponseMessages.oidcIssuer.error.invalidId);
 
 @Controller()
 @UseFilters(CustomExceptionFilter)
@@ -248,9 +260,9 @@ export class Oid4vcIssuanceController {
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async createTemplate(
-    @Param('orgId')
+    @Param('orgId', orgIdPipe())
     orgId: string,
-    @Param('issuerId')
+    @Param('issuerId', issuerIdPipe())
     issuerId: string,
     @User() user: user,
     @Body() CredentialTemplate: CreateCredentialTemplateDto,
@@ -448,9 +460,9 @@ export class Oid4vcIssuanceController {
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async createOidcCredentialOffer(
-    @Param('orgId')
+    @Param('orgId', orgIdPipe())
     orgId: string,
-    @Param('issuerId')
+    @Param('issuerId', issuerIdPipe())
     issuerId: string,
     @User() user: user,
     @Body() oidcCredentialPayload: CreateOidcCredentialOfferDto,
@@ -483,9 +495,9 @@ export class Oid4vcIssuanceController {
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async updateCredentialOffers(
     @Body() oidcUpdateCredentialPayload: UpdateCredentialRequestDto,
-    @Param('orgId') orgId: string,
-    @Param('issuerId') issuerId: string,
-    @Param('credentialId') credentialId: string,
+    @Param('orgId', orgIdPipe()) orgId: string,
+    @Param('issuerId', issuerIdPipe()) issuerId: string,
+    @Param('credentialId', uuidPipe(ResponseMessages.oidcIssuerSession.error.invalidOfferId)) credentialId: string,
     @Res() res: Response
   ): Promise<Response> {
     oidcUpdateCredentialPayload.issuerId = issuerId;
@@ -536,6 +548,40 @@ export class Oid4vcIssuanceController {
     return res.status(HttpStatus.OK).json(finalResponse);
   }
 
+  @Post('/orgs/:orgId/oid4vc/credential-offer/:id/reissue')
+  @ApiOperation({
+    summary: 'Issue an OID4VC credential offer again',
+    description:
+      'Creates a new offer for the credentials of an offer that cannot be used any more, for example because the wallet used its one-time code and then rejected the credential. The old offer is left as it is. Only pre-authorized, non-revocable offers can be issued again, and an offer the wallet can still use is refused.'
+  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'A new credential offer was created.', type: ApiResponseDto })
+  @ApiBearerAuth()
+  @Roles(OrgRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  async reissueCredentialOffer(
+    @Param('orgId', orgIdPipe()) orgId: string,
+    @Param('id', uuidPipe(ResponseMessages.oidcIssuerSession.error.invalidOfferId)) offerId: string,
+    @Body() reissueCredentialOfferDto: ReissueCredentialOfferDto,
+    @Res() res: Response
+  ): Promise<Response> {
+    const { validityInfo } = reissueCredentialOfferDto;
+    const reissued = await this.oid4vcIssuanceService.reissueCredentialOffer(offerId, orgId, {
+      ...(validityInfo && {
+        validityInfo: {
+          validFrom: new Date(validityInfo.validFrom).toISOString(),
+          validUntil: new Date(validityInfo.validUntil).toISOString()
+        }
+      })
+    });
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.CREATED,
+      message: ResponseMessages.oidcIssuerSession.success.reissue,
+      data: reissued
+    };
+    return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
   @Get('/orgs/:orgId/oid4vc/credential-offer')
   @ApiOperation({
     summary: 'Get all OID4VC credential offers',
@@ -574,8 +620,8 @@ export class Oid4vcIssuanceController {
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async deleteCredentialOffers(
-    @Param('orgId') orgId: string,
-    @Param('credentialId') credentialId: string,
+    @Param('orgId', orgIdPipe()) orgId: string,
+    @Param('credentialId', uuidPipe(ResponseMessages.oidcIssuerSession.error.invalidOfferId)) credentialId: string,
     @Res() res: Response
   ): Promise<Response> {
     const deletedofferDetails = await this.oid4vcIssuanceService.deleteCredentialOffers(orgId, credentialId);
@@ -598,7 +644,7 @@ export class Oid4vcIssuanceController {
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async createOidcCredentialOfferD2A(
-    @Param('orgId')
+    @Param('orgId', orgIdPipe())
     orgId: string,
     @Body() oidcCredentialD2APayload: CreateCredentialOfferD2ADto,
     @Res() res: Response
@@ -683,8 +729,9 @@ export class Oid4vcIssuanceController {
   @Roles(OrgRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
   async revokeCredential(
-    @Param('orgId') orgId: string,
-    @Param('issuanceSessionId') issuanceSessionId: string,
+    @Param('orgId', orgIdPipe()) orgId: string,
+    @Param('issuanceSessionId', uuidPipe(ResponseMessages.oidcIssuerSession.error.invalidSessionId))
+    issuanceSessionId: string,
     @Res() res: Response
   ): Promise<Response> {
     const revoked = await this.oid4vcIssuanceService.revokeCredential(issuanceSessionId, orgId);

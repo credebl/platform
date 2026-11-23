@@ -142,6 +142,18 @@ export class ValidityInfo {
 }
 
 /* ========= Request DTOs ========= */
+export class ReissueCredentialOfferDto {
+  @ApiPropertyOptional({
+    type: ValidityInfo,
+    description:
+      'The validity of the new mDoc credentials. Defaults to the same length as before, starting now. It must fit the validity of the signing certificate.'
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ValidityInfo)
+  validityInfo?: ValidityInfo;
+}
+
 export class CredentialRequestDto {
   @ApiProperty({
     example: 'c49bdee0-d028-4595-85dc-177c85ea391c',
@@ -166,6 +178,11 @@ export class CredentialRequestDto {
   })
   @IsOptional()
   validityInfo?: ValidityInfo;
+
+  @ApiPropertyOptional({ enum: ['v1.0', 'v2.0'], default: 'v1.0' })
+  @IsOptional()
+  @IsIn(['v1.0', 'v2.0'], { message: 'credentialVersion must be v1.0 or v2.0' })
+  credentialVersion?: 'v1.0' | 'v2.0';
 }
 
 export class CreateOidcCredentialOfferDto {
@@ -202,6 +219,11 @@ export class CreateOidcCredentialOfferDto {
   @IsOptional()
   @IsBoolean()
   isRevocable?: boolean = false;
+
+  @ApiPropertyOptional({ enum: ['v1.0', 'v2.0'], default: 'v1.0' })
+  @IsOptional()
+  @IsIn(['v1.0', 'v2.0'], { message: 'credentialVersion must be v1.0 or v2.0' })
+  credentialVersion?: 'v1.0' | 'v2.0';
 }
 
 export class GetAllCredentialOfferDto {
@@ -403,6 +425,11 @@ export class CreateCredentialOfferD2ADto {
   @IsOptional()
   @IsBoolean()
   isRevocable?: boolean = false;
+
+  @ApiPropertyOptional({ enum: ['v1.0', 'v2.0'], default: 'v1.0' })
+  @IsOptional()
+  @IsIn(['v1.0', 'v2.0'], { message: 'credentialVersion must be v1.0 or v2.0' })
+  credentialVersion?: 'v1.0' | 'v2.0';
 
   @ExactlyOneOf(['preAuthorizedCodeFlowConfig', 'authorizationCodeFlowConfig'], {
     message: 'Provide exactly one of preAuthorizedCodeFlowConfig or authorizationCodeFlowConfig.'

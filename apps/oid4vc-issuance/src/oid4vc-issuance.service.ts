@@ -19,7 +19,7 @@ import {
   Scope
 } from '@nestjs/common';
 import { Oid4vcIssuanceRepository } from './oid4vc-issuance.repository';
-import { StatusListAllocatorService } from './status-list-allocator.service';
+import { StatusListAllocatorService } from '@credebl/status-list';
 import { CredentialFormat } from '@credebl/enum/enum';
 import { CommonConstants } from '@credebl/common/common.constant';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -67,6 +67,13 @@ import {
 import { x5cKeyType } from '@credebl/enum/enum';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { X509CertificateRecord } from '@credebl/common/interfaces/x509.interface';
+import { withIssuanceStatus } from '../libs/helpers/issuance-state';
+import {
+  buildReissueRequest,
+  IssuanceSessionRecord,
+  ReissueOptions,
+  withCurrentSigners
+} from '../libs/helpers/reissue-offer';
 import { Oid4vcCredentialOfferWebhookPayload } from '../interfaces/oid4vc-wh-interfaces';
 import { ErrorHandler } from '@credebl/common';
 
@@ -694,7 +701,7 @@ export class Oid4vcIssuanceService {
           }
           signerOptions.push({
             method: SignerMethodOption.X5C,
-            x5c: [activeCertificate.certificateBase64],
+            x5c: [activeCertificate.certificateBase64, ...(activeCertificate.certificateChain ?? [])],
             keyId: activeCertificate.keyId
           });
           activeCertificateDetails.push(activeCertificate);
@@ -711,7 +718,7 @@ export class Oid4vcIssuanceService {
           }
           signerOptions.push({
             method: SignerMethodOption.X5C,
-            x5c: [activeCertificate.certificateBase64],
+            x5c: [activeCertificate.certificateBase64, ...(activeCertificate.certificateChain ?? [])],
             keyId: activeCertificate.keyId
           });
           activeCertificateDetails.push(activeCertificate);
@@ -748,17 +755,22 @@ export class Oid4vcIssuanceService {
       );
 
       if (createOidcCredentialOffer.isRevocable) {
-        const hasSdJwt = buildOidcCredentialOffer.credentials.some((c) => c.format === CredentialFormat.SdJwtVc);
-        if (hasSdJwt) {
+        const revocableFormats = [CredentialFormat.SdJwtVc, CredentialFormat.JwtVcJsonLd, CredentialFormat.LdpVc];
+        const hasRevocableFormat = buildOidcCredentialOffer.credentials.some((c) =>
+          revocableFormats.includes(c.format)
+        );
+        if (hasRevocableFormat) {
           if (!process.env.STATUS_LIST_HOST) {
-            throw new BadRequestException('Revocable SD-JWT is not supported as STATUS_LIST_HOST is not configured.');
+            throw new BadRequestException(
+              'Revocable credential is not supported as STATUS_LIST_HOST is not configured.'
+            );
           }
           const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
           if (!agentDetailsForAlloc?.orgDid) {
-            throw new BadRequestException('Organization DID is required for revocable SD-JWT credentials');
+            throw new BadRequestException('Organization DID is required for revocable credentials');
           }
           for (const cred of buildOidcCredentialOffer.credentials) {
-            if (cred.format === CredentialFormat.SdJwtVc && !cred.statusListDetails) {
+            if (revocableFormats.includes(cred.format) && !cred.statusListDetails) {
               const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
               cred.statusListDetails = {
                 listId: allocation.listId,
@@ -844,6 +856,9 @@ export class Oid4vcIssuanceService {
   async createOidcCredentialOfferD2A(oidcCredentialD2APayload, orgId: string): Promise<object | string> {
     const newlyAllocatedIndices: { listId: string; index: number }[] = [];
     try {
+      if ('v2.0' === oidcCredentialD2APayload.credentialVersion) {
+        oidcCredentialD2APayload.version = 'v2.0';
+      }
       for (const credential of oidcCredentialD2APayload.credentials) {
         const { signerOptions } = credential;
 
@@ -883,10 +898,15 @@ export class Oid4vcIssuanceService {
       );
 
       if (oidcCredentialD2APayload.isRevocable) {
-        const hasSdJwt = oidcCredentialD2APayload.credentials.some((c) => c.format === CredentialFormat.SdJwtVc);
-        if (hasSdJwt) {
+        const revocableFormats = [CredentialFormat.SdJwtVc, CredentialFormat.JwtVcJsonLd, CredentialFormat.LdpVc];
+        const hasRevocableFormat = oidcCredentialD2APayload.credentials.some((c) =>
+          revocableFormats.includes(c.format)
+        );
+        if (hasRevocableFormat) {
           if (!process.env.STATUS_LIST_HOST) {
-            throw new BadRequestException('Revocable SD-JWT is not supported as STATUS_LIST_HOST is not configured.');
+            throw new BadRequestException(
+              'Revocable credential is not supported as STATUS_LIST_HOST is not configured.'
+            );
           }
           const agentDetailsForAlloc = await this.oid4vcIssuanceRepository.getAgentEndPoint(orgId);
           if (!agentDetailsForAlloc?.orgDid) {
@@ -894,7 +914,7 @@ export class Oid4vcIssuanceService {
           }
           for (const cred of oidcCredentialD2APayload.credentials) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((cred as any).format === CredentialFormat.SdJwtVc && !cred.statusListDetails) {
+            if (revocableFormats.includes((cred as any).format) && !cred.statusListDetails) {
               const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
               cred.statusListDetails = {
                 listId: allocation.listId,
@@ -990,9 +1010,40 @@ export class Oid4vcIssuanceService {
       if ('string' === typeof offer.response) {
         offer.response = JSON.parse(offer.response);
       }
-      return offer.response;
+      return withIssuanceStatus(offer.response);
     } catch (error) {
       this.logger.error(`[getCredentialOfferDetailsById] - error: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ?? error);
+    }
+  }
+
+  private currentSigner(orgId: string, keyType: x5cKeyType): Promise<X509CertificateRecord> {
+    return this.oid4vcIssuanceRepository.getCurrentActiveCertificate(orgId, keyType);
+  }
+
+  /**
+   * Creates a new offer for the credentials of an offer that cannot be used any more, for example because the wallet
+   * used its one-time code and then rejected the credential. The old offer is left as it is.
+   */
+  async reissueCredentialOffer(offerId: string, orgId: string, options: ReissueOptions = {}): Promise<object> {
+    try {
+      const stored = (await this.getCredentialOfferDetailsById(offerId, orgId)) as IssuanceSessionRecord;
+      const session = await withCurrentSigners(stored, (keyType) => this.currentSigner(orgId, keyType));
+      const request = buildReissueRequest(session, options);
+
+      const url = getAgentUrl(
+        await this.getAgentEndpoint(orgId),
+        CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER,
+        session.issuerId
+      );
+      const created = await this._oidcCreateCredentialOffer(request as unknown as CredentialOfferPayload, url, orgId);
+      if (!created) {
+        throw new NotFoundException(ResponseMessages.oidcIssuerSession.error.errorCreateOffer);
+      }
+      const response = 'string' === typeof created.response ? JSON.parse(created.response) : created.response;
+      return withIssuanceStatus({ ...response, reissuedFromOfferId: offerId }) as object;
+    } catch (error) {
+      this.logger.error(`[reissueCredentialOffer] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
     }
   }
@@ -1005,7 +1056,7 @@ export class Oid4vcIssuanceService {
       if ('string' === typeof offers.response) {
         offers.response = JSON.parse(offers.response);
       }
-      return offers.response;
+      return withIssuanceStatus(offers.response);
     } catch (error) {
       this.logger.error(`[getCredentialOffers] - error: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ?? error);
@@ -1056,7 +1107,10 @@ export class Oid4vcIssuanceService {
           url,
           orgId
         };
-        return this.natsCall(pattern, payload);
+        const result = await this.natsCall(pattern, payload);
+        await this.statusListAllocatorService.markCredentialAllocationsRevoked(orgId, issuanceSessionId);
+
+        return result;
       } else {
         throw new BadRequestException('Credential is not revocable as no status list allocation was found.');
       }

@@ -812,6 +812,26 @@ export class IssuanceController {
 
     return res.status(statusCode).json(finalResponse);
   }
+  @Post('/orgs/:orgId/credentials/:threadId/revoke')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Revoke an issued JSON-LD credential' })
+  @UseGuards(AuthGuard('jwt'), OrgRolesGuard)
+  @Roles(OrgRoles.OWNER, OrgRoles.ADMIN, OrgRoles.ISSUER)
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: ApiResponseDto })
+  async revokeCredential(
+    @User() user: IUserRequest,
+    @Param('orgId', ParseUUIDPipe) orgId: string,
+    @Param('threadId') threadId: string,
+    @Res() res: Response
+  ): Promise<Response> {
+    await this.issueCredentialService.revokeCredential(orgId, threadId, user);
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.issuance.success.revoke
+    });
+  }
+
   /**
    * Creates a out-of-band credential offer and sends them via emails
    * @param user The user making the request

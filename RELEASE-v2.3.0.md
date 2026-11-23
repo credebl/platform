@@ -1,27 +1,34 @@
 # CREDEBL Platform v2.3.0
 
-Current candidate: **v2.3.0-rc.6** (pre-release, not for production), released together with agent-controller v2.3.3-rc.1 (`AFJ_VERSION=ghcr.io/credebl/credo-controller:v2.3.3-rc.1`). The final v2.3.0 pins agent-controller v2.3.3.
+Current candidate: **v2.3.0-rc.6** (pre-release, not for production), released together with agent-controller v2.3.3 (`AFJ_VERSION=ghcr.io/credebl/credo-controller:v2.3.3`). The final v2.3.0 pins the same controller.
 Previous stable release: v2.2.0. Draft: confirm against the final merged PR list before tagging.
 
 ## Changes since v2.3.0-rc.5
 v2.3.0-rc.3 to rc.5 were cut from a release line based on rc.2, with cherry-picks of #1820, #1821, #1822 and #1727 and the v2.3.2 pin. v2.3.0-rc.6 is the first candidate cut from `main`. Compared with rc.5, it adds the following.
-- **Agent controller:** `AFJ_VERSION` moves from v2.3.2 (rc.5) to v2.3.3-rc.1. The platform now needs agent-controller 2.3.3; see "Agent controller compatibility".
+- **Agent controller:** `AFJ_VERSION` moves from v2.3.2 (rc.5) to v2.3.3 (#1857). The platform now needs agent-controller 2.3.3; see "Agent controller compatibility", including the `ALLOW_PLAINTEXT_KEY_IMPORT` setting for did:polygon.
 - **Features:**
   - OID4VCI wallet notifications are relayed to the organization's webhook (#1845).
   - Import of a CA issued certificate chain as a `did:x509` (#1823).
   - The KMS backend of each X.509 certificate is stored and returned (#1824).
+  - Bitstring status-list revocation and structured OID4VP verification results (#1831).
+  - OID4VC offer checks, readable offer states, and issuing an offer again (#1838).
+  - Cloud wallet: OID4VC holder credential management (#1792), and binding OID4VC credentials to a wallet DID (#1852).
+  - OID4VCI issuance accepts RS256 holder proofs for SD-JWT and `jwt_vc_json-ld` (#1851).
 - **Fixes:**
   - Agent provisioning runs scripts with `execFile` arguments instead of shell interpolation (#1708).
   - A Postgres deadlock when creating a DID for an organization with many DIDs (#1836).
 - **CI and dependencies:** image builds time out and retry once (#1825); nats 2.15.2 in compose (#1814); minor and patch dependency updates (#1816, #1848); GitHub Actions updates (#1832, #1833).
-- **New migrations:** three; see "Upgrade notes".
+- **Release process:** release notes and the version bump now come from changesets (#1830); see "Release notes and versioning" in `CONTRIBUTING.md`.
+- **New migrations:** five; see "Upgrade notes".
 
 ## Agent controller compatibility
-- **Requires agent-controller v2.3.3.** This candidate pins v2.3.3-rc.1. The image name is unchanged: `ghcr.io/credebl/credo-controller`. The rename to `agent-controller` is deferred upstream.
+- **Requires agent-controller v2.3.3.** This release pins v2.3.3. The image name is unchanged: `ghcr.io/credebl/credo-controller`. The rename to `agent-controller` is deferred upstream.
 - **What 2.3.3 adds that the platform uses:**
   - **OID4VCI issuer notifications** (credebl/agent-controller#492). Issuers advertise a `notification_endpoint`, return a `notification_id` with each credential, and post wallet notifications on the `/openid4vc-issuance` webhook with `notification` and `notifications[]`. The platform relays them (#1845). `OID4VCI_NOTIFICATION_ENDPOINT_ENABLED=false` turns the endpoint off. A wallet can report a notification only while the session's access token is valid (`OID4VCI_ACCESS_TOKEN_EXPIRY`, default 3600 s).
   - **`did:x509` import** (credebl/agent-controller#473), used by #1823. An older agent returns an "upgrade the agent" error.
   - **KMS backend of X.509 keys** (credebl/agent-controller#478), used by #1824. With an older agent, new certificates have no `kmsBackend`.
+- **did:polygon needs a setting.** Controller 2.3.3 turns plaintext key import off by default. The platform creates did:polygon DIDs by sending `privatekey` to the agent (`POST /dids/write`), and the controller now answers 400 for it. Until the platform sends an encrypted key (`encryptedKey` from `POST /dids/import/session`), set `ALLOW_PLAINTEXT_KEY_IMPORT=true` in the agent environment of deployments that create did:polygon DIDs (credebl/platform#1856).
+- **Other 2.3.3 additions the platform does not use yet:** an optional OpenBao KMS, `selectedCredentials` and `verifierResponse` on `accept-proof-request`, the whole DCQL query in presentation requests, bitstring-status revocation and an optional Indy ledger (OID4VP holder endpoints: credebl/platform#1855).
 - **Holder behaviour in 2.3.3:**
   - **Notifications on by default:** `POST /openid4vc/holder/request-credential` sends `credential_accepted` (or `credential_failure`) to the issuer's notification endpoint. Turn this off with `sendNotification: false` in the request body.
   - **New `notification` field:** each credential returned by `request-credential` has a `notification` field: `{ status: "sent", event }`, `{ status: "skipped", reason }` or `{ status: "failed", event, reason }`. The record fields are unchanged. A notification that can't be sent never fails the request.
@@ -32,7 +39,7 @@ v2.3.0-rc.3 to rc.5 were cut from a release line based on rc.2, with cherry-pick
   - **2.3.1:** optional holder-binding fields on `request-credential` (`holderDidUrl`, `bindingPolicy`), and Credo 0.7.0 -> 0.7.4 (no storage migration).
   - **2.3.2:** binding `ldp_vc` credentials to a `did:web` holder, and `Ed25519VerificationKey2020` support; the platform's `did:web` default for `ldp_vc` (#1820) relies on these. Since 2.3.2, `credentialSubject.id` of new W3C credentials is the holder's bare DID, and DCQL `ldp_vc` queries must use expanded JSON-LD IRIs in `meta.type_values`.
 - **From 2.3.0:** W3C JSON-LD end to end (`ldp_vc` over OID4VC, DCQL verification), X.509 chain support, a tenant session leak fix, and a Node 26 base image. Rebuild agent images rather than reusing cached layers.
-- **Holder list endpoints** (SD-JWT, mdoc, W3C) return a plain array when called with no query parameters, but an envelope `{ data, pagination, filters? }` once any parameter is sent. The platform on `main` does not call these endpoints. Any holder-management work (for example #1792) must handle both shapes.
+- **Holder list endpoints** (SD-JWT, mdoc, W3C) return a plain array when called with no query parameters, but an envelope `{ data, pagination, filters? }` once any parameter is sent. Since #1792 the cloud wallet calls them without query parameters and returns the plain array. Any code that sends parameters must handle both shapes.
 
 ## Features
 - OpenBao secret storage (provider, provisioning script, `docker-compose.openbao.yml`, docs/tests) (#1679, #1712)
@@ -42,6 +49,8 @@ v2.3.0-rc.3 to rc.5 were cut from a release line based on rc.2, with cherry-pick
 - OID4VCI: wallet notifications (`credential_accepted`, `credential_failure`, `credential_deleted`) are relayed to the organization's webhook. A post with `data.notification` is a notification; the session state stays `Completed`. The notification history is stored per issuance session. See `docs/oid4vci-wallet-notifications.md` (#1845)
 - DIDs: import a CA issued certificate chain and its key as a `did:x509` (`POST /orgs/:orgId/agents/did/x509/import`) and read its chain (`GET /orgs/:orgId/agents/did/x509/chain/:did`) (#1823)
 - X.509: the KMS backend of each certificate (`askar`, `node` or `openbao`) is stored and returned by the X.509 APIs (#1824)
+- Cloud wallet: a holder can bind OID4VC credentials to a DID of its wallet. `POST /v1/oid4vc/holder/request-credential` takes the optional fields `holderDidUrl` (bind to that DID's key instead of a new key), `bindingPolicy` (`require`, the default when `holderDidUrl` is set, or `prefer`) and `sendNotification`. This needs agent-controller v2.3.1 or later (#1852)
+- Cloud wallet: `POST /v1/did/import/session` accepts `key` and `web` as well as `polygon`, so an existing key can be imported as a `did:web` (#1852)
 - Swagger UIs exposed per module group (#1608)
 - API gateway version via `API_GATEWAY_VERSION` env (#1777)
 - Row-level security migration `enable_rls_if_not_exists` (#1688)
@@ -49,6 +58,7 @@ v2.3.0-rc.3 to rc.5 were cut from a release line based on rc.2, with cherry-pick
 ## Fixes
 - Agent provisioning: scripts run with `execFile` arguments instead of shell interpolation (#1708)
 - Cloud wallet: holder wallet resolution scoped to the authenticated user, base wallet configuration restricted to platform administrators, agent health checks use the holder tenant token (#1727)
+- Cloud wallet: creating a cloud wallet no longer fails on agents that run Credo 0.7 (#1852)
 - Agent service: creating a DID for an organization with many DIDs no longer deadlocks (#1836)
 - Seed: `prisma db seed` finds `ts-node` (#1822)
 - Invitation: return `org_invitations` array; fetch last `invitationDid` (#1725, #1760)
@@ -68,10 +78,13 @@ v2.3.0-rc.3 to rc.5 were cut from a release line based on rc.2, with cherry-pick
 ## Upgrade notes
 - **Migrations:** run `prisma migrate deploy`. New since v2.2.0:
   - `enable_rls_if_not_exists`: row-level security. Test on a copy of production data first (#1688).
-  - `add_cryptographic_binding_methods_to_oidc_issuer`: adds `oidc_issuer.cryptographicBindingMethods TEXT[] DEFAULT '{}'`; additive, no backfill (#1820). Already in rc.3 to rc.5.
-  - `add_kms_backend_to_x509_certificates`: adds a nullable `x509_certificates.kmsBackend` column and backfills existing rows (key ids starting with `ob_` become `openbao`, all others `askar`) (#1824). New since rc.5.
-  - `add_did_archive_and_usage_tracking`: adds `org_dids.archivedAt`, `isArchived` (default `false`) and `wasPrimary` (default `true`) (#1824). New since rc.5.
-  - `add_notifications_to_oid4vc_credentials`: adds a nullable `oid4vc_credentials.notifications` jsonb column; additive, no backfill (#1845). New since rc.5.
+  - `add_cryptographic_binding_methods_to_oidc_issuer`: adds `oidc_issuer.cryptographicBindingMethods TEXT[] DEFAULT '{}'`; additive, no backfill (#1820).
+  - `add_kms_backend_to_x509_certificates`: adds a nullable `x509_certificates.kmsBackend` column and backfills existing rows (key ids starting with `ob_` become `openbao`, all others `askar`) (#1824).
+  - `add_did_archive_and_usage_tracking`: adds `org_dids.archivedAt`, `isArchived` (default `false`) and `wasPrimary` (default `true`) (#1824).
+  - `add_notifications_to_oid4vc_credentials`: adds a nullable `oid4vc_credentials.notifications` jsonb column; additive, no backfill (#1845).
+  - `add_bitstring_status_to_credentials`: adds nullable `statusListId`, `statusListIndex`, `statusListUri`, `credentialVersion` and `revokedAt` columns to `credentials`, with a unique index on (`statusListId`, `statusListIndex`) (#1831).
+  - `add_revoked_at_to_issued_oid4vc_credentials`: adds a nullable `issued_oid4vc_credentials.revokedAt` column (#1831).
+  - `add_cryptographic_binding_methods_to_oidc_issuer` and `enable_rls_if_not_exists` were already in rc.3 to rc.5; the other five migrations are new since rc.5.
 - **Existing OID4VC issuers and templates:** they keep the binding methods already published in their agent metadata until their configuration is pushed to the agent again. This includes the new `did:web` default for `ldp_vc`.
   - To re-sync an issuer, update it (`POST /v1/orgs/{orgId}/oid4vc/issuers/{issuerId}`). That re-pushes the issuer configuration.
   - A template's binding methods are pushed when the template is created or updated (`PATCH /v1/orgs/{orgId}/oid4vc/{issuerId}/template/{templateId}`).
@@ -83,4 +96,4 @@ v2.3.0-rc.3 to rc.5 were cut from a release line based on rc.2, with cherry-pick
 - **Environment:**
   - New agent env vars in `agent.env`: `STATUS_LIST_SERVER_URL`, `STATUS_LIST_API_KEY`, `STATUS_LIST_DEFAULT_SIZE`. New platform var `STATUS_LIST_HOST` in `.env.demo`.
   - OpenBao is optional; see `openspec/specs/openbao-secret-storage` and `docker-compose.openbao.yml`.
-- **Controller image:** pin it with `AFJ_VERSION`: `ghcr.io/credebl/credo-controller:v2.3.3-rc.1` for this candidate (rc.6), and v2.3.3 for the final release.
+- **Controller image:** pin it with `AFJ_VERSION` to `ghcr.io/credebl/credo-controller:v2.3.3`.

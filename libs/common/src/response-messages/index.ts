@@ -99,6 +99,7 @@ export const ResponseMessages = {
       orgDids: 'Organization DIDs fetched successfully',
       orgDidDetails: 'Organization DID details fetched successfully',
       didResolved: 'DID resolved successfully',
+      didKmsBackend: 'DID KMS backend fetched successfully',
       didArchived: 'DID archived successfully',
       didUnarchived: 'DID unarchived successfully',
       didDeleted: 'DID deleted successfully',
@@ -454,7 +455,8 @@ export const ResponseMessages = {
       keyType: 'Only ed25519 key type is supported',
       keyTypeWeb: 'Only ed25519 and bls12381g2 key type is supported',
       requiredEndorserDid: 'Role or endorser DID is required',
-      requiredPrivateKey: 'Privatekey is required for polygon method',
+      requiredPrivateKey:
+        'encryptedKey is required for polygon method. Request a key import session and send the encryptedKey envelope',
       privateKeyLength: 'Private key must be exactly 64 characters long',
       requiredSeed: 'Seed is required',
       baseWalletToken: 'Error while fetching base wallet token',
@@ -495,7 +497,8 @@ export const ResponseMessages = {
       notFound: 'Schema records not found',
       bulkProcess: 'Process initiated for bulk issuance',
       deleteIssuanceRecords: 'Issuance records deleted',
-      fileDetailsAndFileData: 'File details and File data fetched successfully'
+      fileDetailsAndFileData: 'File details and File data fetched successfully',
+      revoke: 'Credential revoked successfully'
     },
     error: {
       invalidCredentialRecordId: 'Please provide valid credential Record Id',
@@ -662,11 +665,23 @@ export const ResponseMessages = {
       getProofById: 'Proof presentation has been successfully received.',
       getProofPresentation: 'Proof presentations has been successfully received.',
       didList: 'DID list fetched sucessfully',
+      createDidImportSession: 'DID key import session created successfully',
       connectionById: 'Connection record fetched successfully',
       credentials: 'Credentials fetched successfully',
       credentialByRecordId: 'Credential fetched successfully',
       connectionList: 'Connection list fetched successfully',
-      basicMessageByConnectionId: 'Basic message fetched successfully'
+      basicMessageByConnectionId: 'Basic message fetched successfully',
+      sdJwtCredentials: 'SD-JWT credentials fetched successfully',
+      mdocCredentials: 'mDoc credentials fetched successfully',
+      w3cCredentials: 'W3C credentials fetched successfully',
+      decodeMdoc: 'mDoc credential decoded successfully',
+      decodeSdJwt: 'SD-JWT credential decoded successfully',
+      deleteCredential: 'Credential deleted successfully',
+      resolveCredentialOffer: 'Credential offer resolved successfully',
+      authorizationRequest: 'Authorization request initiated successfully',
+      requestCredential: 'Credential requested successfully',
+      resolveProofRequest: 'Proof request resolved successfully',
+      acceptProofRequestOid4vc: 'Proof request accepted successfully'
     },
     error: {
       baseWalletNotFound: 'Base wallet configuration not found',
@@ -731,12 +746,15 @@ export const ResponseMessages = {
       getById: 'OID4VC Credential offer details fetched successfully.',
       getAll: 'OID4VC Credential offers fetched successfully.',
       update: 'OID4VC Credential offer updated successfully.',
-      delete: 'OID4VC Credential offer deleted successfully.'
+      delete: 'OID4VC Credential offer deleted successfully.',
+      reissue: 'OID4VC Credential offer created again successfully.'
     },
     error: {
       errorCreateOffer: 'Error while creating OID4VC credential offer on agent.',
       errorUpdateOffer: 'Error while updating OID4VC credential offer on agent.',
       deleteFailed: 'Failed to delete OID4VC credential offer.',
+      invalidOfferId: 'Invalid OID4VC credential offer ID.',
+      invalidSessionId: 'Invalid OID4VC issuance session ID.',
       missingValidityInfo: 'Validity Info(validFrom, validTo) is required for validity of credential'
     }
   },
@@ -774,7 +792,8 @@ export const ResponseMessages = {
       deleteFailed: 'Failed to delete OID4VP session verifier.',
       verifierIdAlreadyExists: 'Verifier ID already exists for this verifier.',
       deleteTemplate: 'Error while deleting template.',
-      responseNotFound: 'Verification session response not found.'
+      responseNotFound: 'Verification session response not found.',
+      verificationFailed: 'Verification session failed and cannot be verified again.'
     }
   },
   oid4vpIntentToTemplate: {
@@ -819,6 +838,8 @@ export const ResponseMessages = {
         'Certificate date range collides with existing certificates for this organization, In order to active this you need to Inactivate the previous one.',
       notFound: 'x509 certificate record not found.',
       import: 'Failed to import x509 certificate',
+      requiredEncryptedKey:
+        'encryptedKey is required. Request a key import session with method x509-certificate and send the encryptedKey envelope.',
       errorDecode: 'Error while decoding x509 certificate.'
     }
   },

@@ -263,6 +263,8 @@ model org_dids {
   archivedAt          DateTime?  @db.Timestamptz(6)
   // Existing rows default to true: whether they ever issued credentials is unknown, so they are treated as used.
   wasPrimary          Boolean    @default(true)
+  // KMS backend holding the DID keys: askar, node, openbao or mixed. Null when unknown (filled lazily from the agent).
+  kmsBackend          String?
   org_agents          org_agents @relation(fields: [orgAgentId], references: [id])
 }
 
@@ -397,9 +399,16 @@ model credentials {
   state                String        @default("")
   schemaId             String        @default("")
   credDefId            String        @default("")
+  statusListId         String?       @db.Uuid
+  statusListIndex      Int?
+  statusListUri        String?
+  credentialVersion    String?
+  revokedAt            DateTime?     @db.Timestamptz(6)
   orgId                String?       @db.Uuid
   organisation         organisation? @relation(fields: [orgId], references: [id])
   connections          connections?  @relation(fields: [connectionId], references: [connectionId])
+
+  @@unique([statusListId, statusListIndex])
 }
 
 model presentations {
@@ -674,6 +683,7 @@ model issued_oid4vc_credentials {
   createDateTime    DateTime @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt
   statusListUri     String
+  revokedAt         DateTime? @db.Timestamptz(6)
 
   organisation organisation? @relation(fields: [orgId], references: [id], onDelete: Restrict)
 
@@ -721,6 +731,8 @@ model x509_certificates {
   isImported        Boolean  @default(false)
   keyId     String?
   kmsBackend String?
+  // The certificates that follow certificateBase64 in the chain (base64 DER): each one issued by the next, root last.
+  certificateChain String[] @default([])
 
   createdAt           DateTime @default(now())
   createdBy           String   @db.Uuid

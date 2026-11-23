@@ -1,4 +1,4 @@
-import { Inject } from '@nestjs/common';
+import { BadRequestException, Inject } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { BaseService } from 'libs/service/base.service';
@@ -6,6 +6,8 @@ import { BaseService } from 'libs/service/base.service';
 import { user } from '@prisma/client';
 
 import { NATSClient } from '@credebl/common/NATSClient';
+import { assertNoPlaintextKeyMaterial, isPlaintextKeyImportAllowed } from '@credebl/common/utils/plaintext-key.util';
+import { ResponseMessages } from '@credebl/common/response-messages';
 import {
   X509CreateCertificateOptionsDto,
   X509ImportCertificateOptionsDto,
@@ -79,6 +81,12 @@ export class X509Service extends BaseService {
     importDto: X509ImportCertificateOptionsDto,
     reqUser: user
   ): Promise<X509CertificateRecord> {
+    // Plaintext key material must be rejected before anything is logged or sent over NATS.
+    assertNoPlaintextKeyMaterial(importDto);
+    if (!importDto.encryptedKey && !(isPlaintextKeyImportAllowed() && importDto.privateKey)) {
+      throw new BadRequestException(ResponseMessages.x509.error.requiredEncryptedKey);
+    }
+
     this.logger.log(`Start importing x509 certficate by id`);
     this.logger.debug(`certificate  : `, importDto.certificate);
     const payload = { orgId, options: importDto, user: reqUser };

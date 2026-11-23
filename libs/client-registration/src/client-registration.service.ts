@@ -6,7 +6,14 @@
 
 import * as qs from 'qs';
 
-import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException
+} from '@nestjs/common';
 
 import { ClientCredentialTokenPayloadDto } from './dtos/client-credential-token-payload.dto';
 import { ClientTokenDto } from './dtos/client-token.dto';
@@ -323,6 +330,27 @@ export class ClientRegistrationService {
     this.logger.debug(`getClientSpecificRoles ${JSON.stringify(clientRolesResponse)}`);
 
     return clientRolesResponse;
+  }
+
+  async getRealmRoleByName(token: string, roleName: string): Promise<IClientRoles | null> {
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    try {
+      const realmRoleResponse = await this.commonService.httpGet(
+        await this.keycloakUrlService.GetRealmRoleURL(realmName, roleName),
+        this.getAuthHeader(token)
+      );
+
+      this.logger.debug(`getRealmRoleByName ${JSON.stringify(realmRoleResponse)}`);
+
+      return realmRoleResponse;
+    } catch (error) {
+      // Keycloak answers 404 when the realm does not define the role
+      if (HttpStatus.NOT_FOUND === error?.getStatus?.()) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async getAllRealmRoles(token: string): Promise<IClientRoles[]> {

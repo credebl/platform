@@ -18,10 +18,10 @@ describe('UserService.createUserForToken holder realm role', () => {
   } as any;
   const userDetails = { id: 'user-id', clientId: 'client-id', clientSecret: 'client-secret', isEmailVerified: true };
 
-  function createService(realmRoles: { id: string; name: string }[]) {
+  function createService(holderRole: { id: string; name: string } | null) {
     const clientRegistrationService = {
       getManagementToken: jest.fn().mockResolvedValue('management-token'),
-      getAllRealmRoles: jest.fn().mockResolvedValue(realmRoles),
+      getRealmRoleByName: jest.fn().mockResolvedValue(holderRole),
       createUser: jest.fn().mockResolvedValue({ keycloakUserId: 'keycloak-user-id' }),
       createUserHolderRole: jest.fn().mockResolvedValue(undefined)
     };
@@ -58,13 +58,11 @@ describe('UserService.createUserForToken holder realm role', () => {
 
   it('assigns the holder realm role when the realm defines it', async () => {
     const holderRole = { id: 'realm-holder-id', name: OrgRoles.HOLDER };
-    const { clientRegistrationService, userOrgRoleService, service } = createService([
-      { id: 'other-id', name: 'other' },
-      holderRole
-    ]);
+    const { clientRegistrationService, userOrgRoleService, service } = createService(holderRole);
 
     await expect(service.createUserForToken({ ...userInfo })).resolves.toEqual({ userId: 'user-id' });
 
+    expect(clientRegistrationService.getRealmRoleByName).toHaveBeenCalledWith('management-token', OrgRoles.HOLDER);
     expect(clientRegistrationService.createUserHolderRole).toHaveBeenCalledWith(
       'management-token',
       'keycloak-user-id',
@@ -79,7 +77,7 @@ describe('UserService.createUserForToken holder realm role', () => {
   });
 
   it('fails with an actionable error, before creating the Keycloak user, when the realm lacks the holder role', async () => {
-    const { clientRegistrationService, service } = createService([{ id: 'other-id', name: 'other' }]);
+    const { clientRegistrationService, service } = createService(null);
 
     const error = await service.createUserForToken({ ...userInfo }).catch((e) => e);
 

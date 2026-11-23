@@ -1,7 +1,7 @@
 # CREDEBL Platform v2.3.0
 
 Released together with agent-controller v2.3.3 (`AFJ_VERSION=ghcr.io/credebl/credo-controller:v2.3.3`).
-Previous stable release: v2.2.0. Draft: confirm against the final merged PR list before tagging.
+Previous stable release: v2.2.0.
 
 ## Agent controller compatibility
 - **Requires agent-controller v2.3.3.** This release pins v2.3.3. The image name is unchanged: `ghcr.io/credebl/credo-controller`. The rename to `agent-controller` is deferred upstream.

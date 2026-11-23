@@ -664,7 +664,7 @@ export class Oid4vcIssuanceService {
         throw new BadRequestException('Please provide a valid id');
       }
       const getAllOfferTemplates = await this.oid4vcIssuanceRepository.getTemplateByIds(filterTemplateIds, issuerId);
-      if (!getAllOfferTemplates) {
+      if (!getAllOfferTemplates?.length) {
         throw new NotFoundException('No templates found for the issuer');
       }
 
@@ -753,8 +753,7 @@ export class Oid4vcIssuanceService {
         CommonConstants.OIDC_ISSUER_SESSIONS_CREDENTIAL_OFFER,
         issuerDetails.publicIssuerId
       );
-
-      if (createOidcCredentialOffer.isRevocable) {
+      if (buildOidcCredentialOffer.isRevocable) {
         const revocableFormats = [CredentialFormat.SdJwtVc, CredentialFormat.JwtVcJsonLd, CredentialFormat.LdpVc];
         const hasRevocableFormat = buildOidcCredentialOffer.credentials.some((c) =>
           revocableFormats.includes(c.format)
@@ -770,7 +769,7 @@ export class Oid4vcIssuanceService {
             throw new BadRequestException('Organization DID is required for revocable credentials');
           }
           for (const cred of buildOidcCredentialOffer.credentials) {
-            if (revocableFormats.includes(cred.format) && !cred.statusListDetails) {
+            if (true === cred.isRevocable && revocableFormats.includes(cred.format) && !cred.statusListDetails) {
               const allocation = await this.statusListAllocatorService.allocate(orgId, agentDetailsForAlloc.orgDid);
               cred.statusListDetails = {
                 listId: allocation.listId,
@@ -817,8 +816,7 @@ export class Oid4vcIssuanceService {
         responseToSave.credentialOfferId ||
         responseToSave.id ||
         responseToSave.issuanceSession?.id;
-
-      if (sessionId && createOidcCredentialOffer.isRevocable) {
+      if (sessionId && buildOidcCredentialOffer.isRevocable) {
         for (const cred of buildOidcCredentialOffer.credentials) {
           if (cred.statusListDetails) {
             const statusListUri = `${process.env.STATUS_LIST_HOST}/status-lists/${cred.statusListDetails.listId}`;

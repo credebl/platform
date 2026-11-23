@@ -80,6 +80,7 @@ export interface CredentialTemplateRecord {
   name: string;
   format: string;
   signerOption: SignerOption;
+  canBeRevoked: boolean;
   attributes: any; // Stored as JSON in DB; parsed at runtime as SdJwtTemplate | MdocTemplate
 }
 
@@ -93,6 +94,7 @@ export interface BuiltCredential {
   format: CredentialFormat;
   payload: Record<string, unknown>;
   disclosureFrame?: DisclosureFrame;
+  isRevocable?: boolean;
   statusListDetails?: {
     listId: string;
     index: number;
@@ -337,7 +339,6 @@ function buildSdJwtCredential(
 ): BuiltCredential {
   // For SD-JWT format we expect payload to be a flat map of claims (no namespaces)
   let payloadCopy = { ...(credentialRequest.payload as Record<string, unknown>) };
-
   // // strip vct if present per requirement
   // delete payloadCopy.vct;
 
@@ -416,11 +417,13 @@ function buildSdJwtCredential(
     sdJwtTemplate.attributes,
     payloadCopy as Record<string, any>
   );
+
   return {
     credentialSupportedId,
     signerOptions: templateSignerOption ? templateSignerOption : undefined,
     format: apiFormat,
     payload: payloadCopy,
+    isRevocable: templateRecord.canBeRevoked,
     ...(disclosureFrame ? { disclosureFrame } : {})
   };
 }
@@ -481,7 +484,8 @@ function buildMdocCredential(
     credentialSupportedId,
     signerOptions: signerOptions ? signerOptions[0] : undefined,
     format: apiFormat,
-    payload: incomingPayload
+    payload: incomingPayload,
+    isRevocable: templateRecord.canBeRevoked
   };
 }
 
@@ -612,8 +616,47 @@ function buildJwtVcJsonLdCredential(
     credentialSupportedId,
     signerOptions: templateSignerOption ? templateSignerOption : undefined,
     format: apiFormat,
-    payload: wrappedPayload
+    payload: wrappedPayload,
+    isRevocable: templateRecord.canBeRevoked
   };
+}
+
+export function resolveOfferRevocability(
+  dto: Pick<CreateOidcCredentialOfferDtoLike, 'credentials' | 'isRevocable'>,
+  templates: Pick<credential_templates, 'id' | 'canBeRevoked' | 'format'>[]
+): boolean {
+  const templatesById = new Map(templates.map((template) => [template.id, template]));
+  const missingTemplateIds = dto.credentials.map((c) => c.templateId).filter((id) => !templatesById.has(id));
+
+  if (missingTemplateIds.length) {
+    throw new NotFoundException(`Unknown template ids: ${missingTemplateIds.join(', ')}`);
+  }
+
+  const revocationSettings = new Set(
+    dto.credentials.map((credentialRequest) => templatesById.get(credentialRequest.templateId)!.canBeRevoked)
+  );
+
+  if (1 < revocationSettings.size) {
+    throw new BadRequestException(ResponseMessages.oidcIssuerSession.error.mixedRevocationSettings);
+  }
+
+  const derivedIsRevocable = [...revocationSettings][0] ?? false;
+
+  if (undefined !== dto.isRevocable && dto.isRevocable !== derivedIsRevocable) {
+    throw new BadRequestException(ResponseMessages.oidcIssuerSession.error.revocationConflict);
+  }
+
+  if (
+    derivedIsRevocable &&
+    dto.credentials.some(
+      (credentialRequest) =>
+        mapDbFormatToApiFormat(templatesById.get(credentialRequest.templateId)!.format) === CredentialFormat.Mdoc
+    )
+  ) {
+    throw new BadRequestException(ResponseMessages.oidcIssuerSession.error.revocableMdocNotSupported);
+  }
+
+  return derivedIsRevocable;
 }
 
 export function buildCredentialOfferPayload(
@@ -626,14 +669,10 @@ export function buildCredentialOfferPayload(
   signerOptions?: ISignerOption[],
   activeCertificateDetails?: X509CertificateRecord[]
 ): CredentialOfferPayload {
+  const derivedIsRevocable = resolveOfferRevocability(dto, templates);
+
   // Index templates by id
   const templatesById = new Map(templates.map((template) => [template.id, template]));
-
-  // Validate template ids
-  const missingTemplateIds = dto.credentials.map((c) => c.templateId).filter((id) => !templatesById.has(id));
-  if (missingTemplateIds.length) {
-    throw new NotFoundException(`Unknown template ids: ${missingTemplateIds.join(', ')}`);
-  }
 
   // Build each credential using the template's format
   const builtCredentials: BuiltCredential[] = dto.credentials.map((credentialRequest) => {
@@ -666,7 +705,7 @@ export function buildCredentialOfferPayload(
   const baseEnvelope: BuiltCredentialOfferBase = {
     credentials: builtCredentials,
     ...(finalPublicIssuerId ? { publicIssuerId: finalPublicIssuerId } : {}),
-    isRevocable: dto.isRevocable,
+    isRevocable: derivedIsRevocable,
     ...('v2.0' === dto.credentialVersion ? { version: 'v2.0' as const } : {})
   };
 

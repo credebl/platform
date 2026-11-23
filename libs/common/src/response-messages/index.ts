@@ -755,7 +755,10 @@ export const ResponseMessages = {
       deleteFailed: 'Failed to delete OID4VC credential offer.',
       invalidOfferId: 'Invalid OID4VC credential offer ID.',
       invalidSessionId: 'Invalid OID4VC issuance session ID.',
-      missingValidityInfo: 'Validity Info(validFrom, validTo) is required for validity of credential'
+      missingValidityInfo: 'Validity Info(validFrom, validTo) is required for validity of credential',
+      revocationConflict: 'isRevocable does not match the credential template revocation configuration.',
+      mixedRevocationSettings: 'All credential templates in the offer must have the same canBeRevoked setting.',
+      revocableMdocNotSupported: 'Revocation is not supported for mdoc credentials.'
     }
   },
   oid4vp: {

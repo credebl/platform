@@ -215,10 +215,14 @@ export class CreateOidcCredentialOfferDto {
 
   issuerId?: string;
 
-  @ApiPropertyOptional({ example: true, description: 'Flag to enable revocation for the issued credentials' })
+  @ApiPropertyOptional({
+    example: true,
+    description:
+      'Optional assertion of template-derived revocation. Omit to derive from credential templates; when provided it must match every template canBeRevoked value.'
+  })
   @IsOptional()
   @IsBoolean()
-  isRevocable?: boolean = false;
+  isRevocable?: boolean;
 
   @ApiPropertyOptional({ enum: ['v1.0', 'v2.0'], default: 'v1.0' })
   @IsOptional()

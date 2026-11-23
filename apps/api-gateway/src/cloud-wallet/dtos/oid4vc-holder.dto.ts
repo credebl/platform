@@ -2,7 +2,19 @@ import { Oid4vcCredentialType } from '@credebl/common/interfaces/cloud-wallet.in
 import { IsNotSQLInjection, trim } from '@credebl/common/cast.helper';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { ArrayNotEmpty, IsArray, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsIn,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength
+} from 'class-validator';
 
 export class ResolveCredentialOfferDto {
   @ApiProperty({ example: 'openid-credential-offer://?credential_offer=...', description: 'Credential offer URI' })
@@ -75,6 +87,36 @@ export class RequestCredentialDto {
   @IsString({ message: 'txCode must be a string' })
   @Transform(({ value }) => trim(value))
   txCode?: string;
+
+  @ApiPropertyOptional({
+    example: 'did:web:example.com:holders:alice#key-1',
+    description:
+      'DID URL of a DID in the wallet. The credentials are bound to its key instead of a new key, for example a did:web whose key was imported from the holder certificate'
+  })
+  @IsOptional()
+  @IsString({ message: 'holderDidUrl must be a string' })
+  @Transform(({ value }) => trim(value))
+  @Matches(/^did:[a-z0-9]+:\S+$/i, { message: 'holderDidUrl must be a DID or DID URL' })
+  @MaxLength(2048, { message: 'holderDidUrl must be at most 2048 characters' })
+  holderDidUrl?: string;
+
+  @ApiPropertyOptional({
+    enum: ['require', 'prefer'],
+    example: 'require',
+    description:
+      'Used with holderDidUrl. require (default) fails when the issuer cannot bind to the DID; prefer falls back to a new key'
+  })
+  @IsOptional()
+  @IsIn(['require', 'prefer'], { message: 'bindingPolicy must be one of require, prefer' })
+  bindingPolicy?: 'require' | 'prefer';
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Send the credential_accepted notification to the issuer. Defaults to true.'
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'sendNotification must be a boolean' })
+  sendNotification?: boolean;
 
   userId?: string;
 

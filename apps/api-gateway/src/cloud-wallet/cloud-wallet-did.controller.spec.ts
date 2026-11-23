@@ -72,14 +72,16 @@ describe('CloudWalletController DID key import', () => {
     expect(response.status).toHaveBeenCalledWith(201);
   });
 
-  it('only accepts polygon for the session method', async () => {
+  it('accepts key, web and polygon for the session method', async () => {
     const check = async (method: unknown): Promise<number> => {
       const errors = await validate(plainToInstance(CreateCloudWalletDidImportSessionDto, { method }));
       return errors.length;
     };
 
     expect(await check('polygon')).toBe(0);
-    expect(await check('key')).toBeGreaterThan(0);
+    expect(await check('web')).toBe(0);
+    expect(await check('key')).toBe(0);
+    expect(await check('x509')).toBeGreaterThan(0);
     expect(await check(undefined)).toBeGreaterThan(0);
   });
 });

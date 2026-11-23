@@ -42,6 +42,7 @@ import {
   IDecodeSdJwt,
   IDeleteHolderCredential
 } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { withHolderBinding } from './oid4vc-holder.helper';
 import { CloudWalletRepository } from './cloud-wallet.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
 import { CloudWalletType } from '@credebl/enum/enum';
@@ -256,16 +257,20 @@ export class CloudWalletService {
         headers: { authorization: decryptedApiKey }
       });
 
-      if (!createCloudWalletResponse && !createCloudWalletResponse.id) {
+      if (!createCloudWalletResponse?.id) {
         throw new InternalServerErrorException(ResponseMessages.cloudWallet.error.createCloudWallet, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.serverError
         });
       }
 
-      const walletKey = await this.commonService.dataEncryption(createCloudWalletResponse.config.walletConfig.token);
+      // Agents on Credo 0.7 return the tenant record without `walletConfig`: the tenant is reached with its token,
+      // so the wallet key is only stored when the agent still returns one.
+      const tenantWalletKey: string | undefined =
+        createCloudWalletResponse.config?.walletConfig?.key ?? createCloudWalletResponse.config?.walletConfig?.token;
+      const walletKey = tenantWalletKey ? await this.commonService.dataEncryption(tenantWalletKey) : undefined;
 
-      if (!walletKey) {
+      if (tenantWalletKey && !walletKey) {
         throw new BadRequestException(ResponseMessages.cloudWallet.error.encryptCloudWalletKey, {
           cause: new Error(),
           description: ResponseMessages.errorMessages.serverError
@@ -817,7 +822,11 @@ export class CloudWalletService {
       const { agentEndpoint } = baseWalletDetails;
 
       const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_REQUEST_CREDENTIAL}`;
-      return await this.commonService.httpPost(url, payload, this._holderRequestConfig(decryptedApiKey));
+      return await this.commonService.httpPost(
+        url,
+        withHolderBinding(payload),
+        this._holderRequestConfig(decryptedApiKey)
+      );
     } catch (error) {
       await this.commonService.handleError(error);
       throw error;

@@ -35,6 +35,16 @@ describe('ClientRegistrationService.getRealmRoleByName', () => {
     await expect(service.getRealmRoleByName('token', 'holder')).resolves.toBeNull();
   });
 
+  it('rethrows a refused connection, which the HTTP layer reports as 404', async () => {
+    const refused = new HttpException(
+      { statusCode: HttpStatus.NOT_FOUND, error: 'connect ECONNREFUSED 127.0.0.1:8080' },
+      HttpStatus.NOT_FOUND
+    );
+    const { service } = createService(jest.fn().mockRejectedValue(refused));
+
+    await expect(service.getRealmRoleByName('token', 'holder')).rejects.toBe(refused);
+  });
+
   it('rethrows errors other than 404', async () => {
     const unauthorized = new HttpException({ statusCode: HttpStatus.UNAUTHORIZED }, HttpStatus.UNAUTHORIZED);
     const { service } = createService(jest.fn().mockRejectedValue(unauthorized));

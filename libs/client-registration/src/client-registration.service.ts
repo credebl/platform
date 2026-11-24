@@ -345,8 +345,13 @@ export class ClientRegistrationService {
 
       return realmRoleResponse;
     } catch (error) {
-      // Keycloak answers 404 when the realm does not define the role
-      if (HttpStatus.NOT_FOUND === error?.getStatus?.()) {
+      // Keycloak answers 404 when the realm does not define the role. The HTTP
+      // layer also reports a refused connection as 404, so keep that one out:
+      // an unreachable Keycloak is not a missing role.
+      const body = error?.getResponse?.();
+      const refused =
+        'string' === typeof body?.error && body.error.includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED);
+      if (HttpStatus.NOT_FOUND === error?.getStatus?.() && !refused) {
         return null;
       }
       throw error;

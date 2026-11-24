@@ -49,34 +49,15 @@ describe('EcosystemService inviteMemberToEcosystem', () => {
     });
   });
 
-  it('throws 409 Conflict when re-inviting an accepted ecosystem member', async () => {
+  it.each([
+    { status: Invitation.ACCEPTED, desc: 'an accepted' },
+    { status: Invitation.PENDING, desc: 'a pending' }
+  ])('throws 409 Conflict when re-inviting $desc ecosystem member', async ({ status }) => {
     mockEcosystemRepository.getEcosystemInvitationsByEmail.mockResolvedValue({
-      id: 'invitation-1',
+      id: 'invitation-id',
       ecosystemId: 'eco-1',
       invitedOrg: 'org-1',
-      status: Invitation.ACCEPTED,
-      type: InviteType.MEMBER
-    });
-
-    try {
-      await service.inviteMemberToEcosystem('org-1', 'req-user-id', 'eco-1');
-      fail('Expected inviteMemberToEcosystem to throw');
-    } catch (error) {
-      expect(error).toBeInstanceOf(RpcException);
-      const rpcError = (error as RpcException).getError() as { statusCode?: number; status?: number; message?: string };
-      expect(rpcError.statusCode ?? rpcError.status).toBe(HttpStatus.CONFLICT);
-      expect(rpcError.message).toContain('member@org.com');
-    }
-
-    expect(mockEcosystemRepository.createEcosystemInvitation).not.toHaveBeenCalled();
-  });
-
-  it('throws 409 Conflict when re-inviting a pending ecosystem member', async () => {
-    mockEcosystemRepository.getEcosystemInvitationsByEmail.mockResolvedValue({
-      id: 'invitation-2',
-      ecosystemId: 'eco-1',
-      invitedOrg: 'org-1',
-      status: Invitation.PENDING,
+      status,
       type: InviteType.MEMBER
     });
 

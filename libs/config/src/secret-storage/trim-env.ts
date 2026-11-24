@@ -1,8 +1,11 @@
 /**
- * Keys whose values must be kept verbatim. `CRYPTO_PRIVATE_KEY` is used as an encryption secret, so
- * trimming it would change the derived key and make previously encrypted data unreadable.
+ * Keys whose values must be kept verbatim.
+ * - `CRYPTO_PRIVATE_KEY` is an encryption secret: trimming it would change the derived key and make
+ *   previously encrypted data unreadable.
+ * - `SMTP_PASS` is a password: leading/trailing spaces may be significant, and it is passed unchanged
+ *   to the SMTP server, so trimming could break authentication.
  */
-export const UNTRIMMED_ENV_KEYS: ReadonlySet<string> = new Set(['CRYPTO_PRIVATE_KEY']);
+export const UNTRIMMED_ENV_KEYS: ReadonlySet<string> = new Set(['CRYPTO_PRIVATE_KEY', 'SMTP_PASS']);
 
 /**
  * Removes leading/trailing whitespace from every environment variable value, except those listed in

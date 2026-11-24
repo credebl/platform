@@ -21,12 +21,12 @@ describe('trimEnvVariables', () => {
     expect(env).toEqual({ A: 'a b', B: '', C: undefined });
   });
 
-  it('keeps CRYPTO_PRIVATE_KEY verbatim while trimming other values', () => {
-    const env: NodeJS.ProcessEnv = { CRYPTO_PRIVATE_KEY: ' secret ', OTHER: ' value ' };
+  it('keeps CRYPTO_PRIVATE_KEY and SMTP_PASS verbatim while trimming other values', () => {
+    const env: NodeJS.ProcessEnv = { CRYPTO_PRIVATE_KEY: ' secret ', SMTP_PASS: ' pass ', OTHER: ' value ' };
 
     trimEnvVariables(env);
 
-    expect(env).toEqual({ CRYPTO_PRIVATE_KEY: ' secret ', OTHER: 'value' });
+    expect(env).toEqual({ CRYPTO_PRIVATE_KEY: ' secret ', SMTP_PASS: ' pass ', OTHER: 'value' });
   });
 
   it('trims process.env by default', () => {

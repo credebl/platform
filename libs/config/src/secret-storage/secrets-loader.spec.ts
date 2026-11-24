@@ -101,4 +101,27 @@ describe('loadConfigSecrets', () => {
 
     expect(process.env.SMTP_HOST).toBeUndefined();
   });
+
+  it('trims existing environment values before the remote-secrets checks', async () => {
+    process.env.ENABLE_BAO = ' true ';
+    process.env.SECRETS_PROVIDER = ' openbao ';
+    process.env.SMTP_HOST = ' smtp.example.com ';
+    loadSecrets.mockResolvedValue({});
+
+    await loadConfigSecrets();
+
+    expect(process.env.SMTP_HOST).toBe('smtp.example.com');
+    expect(loadSecrets).toHaveBeenCalledTimes(1);
+  });
+
+  it('trims fetched secrets after injecting them, but keeps CRYPTO_PRIVATE_KEY verbatim', async () => {
+    process.env.ENABLE_BAO = 'true';
+    process.env.SECRETS_PROVIDER = 'openbao';
+    loadSecrets.mockResolvedValue({ DATABASE_URL: ' postgres://db ', CRYPTO_PRIVATE_KEY: ' key ' });
+
+    await loadConfigSecrets();
+
+    expect(process.env.DATABASE_URL).toBe('postgres://db');
+    expect(process.env.CRYPTO_PRIVATE_KEY).toBe(' key ');
+  });
 });

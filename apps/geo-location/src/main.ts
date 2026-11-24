@@ -1,3 +1,4 @@
+import '@credebl/config/secret-storage/trim-env.init';
 import * as dotenv from 'dotenv';
 
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';

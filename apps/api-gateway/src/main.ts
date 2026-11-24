@@ -1,3 +1,4 @@
+import '@credebl/config/secret-storage/trim-env.init';
 import { otelSDK } from './tracer';
 import * as dotenv from 'dotenv';
 import * as express from 'express';

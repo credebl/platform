@@ -17,6 +17,15 @@ import { NATSClient } from '@credebl/common/NATSClient';
           process.env.API_GATEWAY_NKEY_SEED,
           process.env.NATS_CREDS_FILE
         )
+      },
+      {
+        name: 'ORGANIZATION_NATS_CLIENT',
+        transport: Transport.NATS,
+        options: getNatsOptions(
+          CommonConstants.ORGANIZATION_SERVICE,
+          process.env.API_GATEWAY_NKEY_SEED,
+          process.env.NATS_CREDS_FILE
+        )
       }
     ])
   ],

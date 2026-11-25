@@ -37,6 +37,9 @@ import {
   IOrgRole,
   IDidList,
   IPrimaryDidDetails,
+  IHolderPrimaryDid,
+  IHolderPrimaryDidScope,
+  IHolderWalletInfo,
   IOrgDetails,
   IOrgDidDetails,
   IOrgDidRecord
@@ -298,6 +301,48 @@ export class OrganizationService {
       return ResponseMessages.organisation.success.primaryDid;
     } catch (error) {
       this.logger.error(`In setPrimaryDid method: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /** Find the caller's holder wallet for primary-DID access checks. A wallet without a tenant is not usable. */
+  async findHolderWallet(userId: string, holderTenantId?: string): Promise<IHolderWalletInfo | null> {
+    try {
+      const wallet = await this.organizationRepository.findHolderWallet(userId, holderTenantId);
+      return wallet?.tenantId ? wallet : null;
+    } catch (error) {
+      this.logger.error(`In findHolderWallet method: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  /** Get the UI-only primary DID suggestion, scoped to organization, user and holder tenant. */
+  async getHolderPrimaryDid(scope: IHolderPrimaryDidScope): Promise<IHolderPrimaryDid | null> {
+    try {
+      await this.ensureOrganizationExists(scope.orgId);
+      return await this.organizationRepository.getHolderPrimaryDid(scope);
+    } catch (error) {
+      this.logger.error(`In getHolderPrimaryDid method: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async setHolderPrimaryDid(preference: IHolderPrimaryDid): Promise<IHolderPrimaryDid> {
+    try {
+      await this.ensureOrganizationExists(preference.orgId);
+      return await this.organizationRepository.setHolderPrimaryDid(preference);
+    } catch (error) {
+      this.logger.error(`In setHolderPrimaryDid method: ${JSON.stringify(error)}`);
+      throw new RpcException(error.response ? error.response : error);
+    }
+  }
+
+  async deleteHolderPrimaryDid(scope: IHolderPrimaryDidScope): Promise<boolean> {
+    try {
+      await this.ensureOrganizationExists(scope.orgId);
+      return await this.organizationRepository.deleteHolderPrimaryDid(scope);
+    } catch (error) {
+      this.logger.error(`In deleteHolderPrimaryDid method: ${JSON.stringify(error)}`);
       throw new RpcException(error.response ? error.response : error);
     }
   }

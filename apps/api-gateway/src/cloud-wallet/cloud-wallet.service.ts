@@ -29,16 +29,23 @@ import {
   IDecodeSdJwt,
   IDeleteHolderCredential
 } from '@credebl/common/interfaces/cloud-wallet.interface';
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { BaseService } from 'libs/service/base.service';
 import { NATSClient } from '@credebl/common/NATSClient';
 import { ClientProxy } from '@nestjs/microservices';
+import { ResponseMessages } from '@credebl/common/response-messages';
+import {
+  IHolderPrimaryDid,
+  IHolderPrimaryDidScope,
+  IHolderWalletInfo
+} from 'apps/organization/interfaces/organization.interface';
 
 @Injectable()
 export class CloudWalletService extends BaseService {
   constructor(
     @Inject('NATS_CLIENT') private readonly cloudWalletServiceProxy: ClientProxy,
-    private readonly natsClient: NATSClient
+    private readonly natsClient: NATSClient,
+    @Inject('ORGANIZATION_NATS_CLIENT') private readonly organizationServiceProxy: ClientProxy
   ) {
     super('CloudWalletServiceProxy');
   }
@@ -220,5 +227,99 @@ export class CloudWalletService extends BaseService {
       'oid4vc-holder-accept-proof-request',
       acceptProofRequestDetails
     );
+  }
+
+  /**
+   * Primary DID suggestion APIs. These are UI-only preferences: nothing here adds a holderDidUrl to a
+   * credential request, and the fresh-key option remains the default in the wallet UI.
+   */
+  findHolderWallet(payload: { userId: string; holderTenantId?: string }): Promise<IHolderWalletInfo | null> {
+    return this.natsClient.sendNatsMessage(this.organizationServiceProxy, 'find-holder-wallet', payload);
+  }
+
+  getHolderPrimaryDid(scope: IHolderPrimaryDidScope): Promise<IHolderPrimaryDid | null> {
+    return this.natsClient.sendNatsMessage(this.organizationServiceProxy, 'get-holder-primary-did', scope);
+  }
+
+  setHolderPrimaryDid(preference: IHolderPrimaryDid): Promise<IHolderPrimaryDid> {
+    return this.natsClient.sendNatsMessage(this.organizationServiceProxy, 'set-holder-primary-did', preference);
+  }
+
+  deleteHolderPrimaryDid(scope: IHolderPrimaryDidScope): Promise<boolean> {
+    return this.natsClient.sendNatsMessage(this.organizationServiceProxy, 'delete-holder-primary-did', scope);
+  }
+
+  async getHolderPrimaryDidForUser(orgId: string, userId: string): Promise<IHolderPrimaryDid | null> {
+    const wallet = await this.findHolderWallet({ userId });
+    if (!wallet?.tenantId) {
+      return null;
+    }
+    return this.getHolderPrimaryDid({ orgId, userId, holderTenantId: wallet.tenantId });
+  }
+
+  async setHolderPrimaryDidForUser(
+    orgId: string,
+    userId: string,
+    email: string,
+    didUrl: string,
+    holderTenantId: string
+  ): Promise<IHolderPrimaryDid> {
+    const wallet = await this.findHolderWallet({ userId, holderTenantId });
+    if (!wallet?.tenantId || wallet.tenantId !== holderTenantId) {
+      throw new ForbiddenException(ResponseMessages.holderPrimaryDid.error.accessDenied);
+    }
+
+    let didList: unknown[];
+    try {
+      didList = (await this.getDidList({ userId, email })) ?? [];
+    } catch (error) {
+      this.logger.error('Could not load holder DIDs while validating a primary DID suggestion');
+      throw new BadRequestException(ResponseMessages.holderPrimaryDid.error.notFound);
+    }
+
+    if (!this.holderHasDid(didList, didUrl)) {
+      throw new BadRequestException(ResponseMessages.holderPrimaryDid.error.notFound);
+    }
+
+    return this.setHolderPrimaryDid({ orgId, userId, holderTenantId, didUrl });
+  }
+
+  async deleteHolderPrimaryDidForUser(orgId: string, userId: string): Promise<boolean> {
+    const wallet = await this.findHolderWallet({ userId });
+    if (!wallet?.tenantId) {
+      return false;
+    }
+    return this.deleteHolderPrimaryDid({ orgId, userId, holderTenantId: wallet.tenantId });
+  }
+
+  /** Accepts a bare DID or a DID URL whose verification method is listed in the holder tenant's DID document. */
+  private holderHasDid(didList: unknown[], didUrl: string): boolean {
+    const [bareDid, fragment] = didUrl.split('#');
+
+    return didList.some((entry) => {
+      if (!entry || 'object' !== typeof entry) {
+        return false;
+      }
+      const record = entry as {
+        did?: string;
+        didUrl?: string;
+        id?: string;
+        didDocument?: { verificationMethod?: { id?: string }[] };
+      };
+      const candidate = record.didUrl ?? record.did ?? record.id;
+
+      if (candidate !== didUrl && candidate !== bareDid) {
+        return false;
+      }
+      if (!fragment) {
+        return true;
+      }
+
+      const methods = record.didDocument?.verificationMethod;
+      return (
+        !Array.isArray(methods) ||
+        methods.some((method) => method?.id === didUrl || true === method?.id?.endsWith(`#${fragment}`))
+      );
+    });
   }
 }

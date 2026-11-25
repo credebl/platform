@@ -700,6 +700,19 @@ export const ResponseMessages = {
       walletRecordNotFound: 'Wallet record not found.'
     }
   },
+  holderPrimaryDid: {
+    success: {
+      fetched: 'Primary DID suggestion fetched',
+      saved: 'Primary DID suggestion saved',
+      deleted: 'Primary DID suggestion deleted'
+    },
+    error: {
+      // Stable code for the platform-side validation failure
+      notFound: 'PRIMARY_DID_NOT_FOUND',
+      accessDenied: 'HOLDER_TENANT_ACCESS_DENIED',
+      orgNotFound: 'Organization not found'
+    }
+  },
   oidcIssuer: {
     success: {
       create: 'OID4VC issuer created successfully.',

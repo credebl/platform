@@ -361,6 +361,22 @@ export interface IAuthorizeRequestCredential {
 /** What to do when the issuer cannot bind a credential to `holderDidUrl`: fail (`require`) or use a new key (`prefer`). */
 export type CloudWalletOid4vcBindingPolicy = 'require' | 'prefer';
 
+/** Per-offer holder binding choice. Mirrors the agent-controller contract (see docs/oid4vc-holder-binding-design.md). */
+export type CredentialBindingMode = 'new-key' | 'existing-did';
+export type CredentialBindingPolicy = 'require' | 'prefer';
+
+export interface CredentialBindingOptions {
+  mode: CredentialBindingMode;
+  /** Required for `existing-did`; must be absent for `new-key`. */
+  holderDidUrl?: string;
+  /** Equivalent to the flat `bindingPolicy`; only used with `existing-did`. */
+  policy?: CredentialBindingPolicy;
+  /** Only valid for `new-key`; validated against issuer metadata by agent-controller. */
+  didMethod?: string;
+  /** Only valid for `new-key`; validated against issuer metadata/KMS by agent-controller. */
+  signatureAlgorithm?: string;
+}
+
 export interface IRequestCredential {
   credentialOfferUri: string;
   credentialsToRequest: string[];
@@ -371,6 +387,8 @@ export interface IRequestCredential {
   holderDidUrl?: string;
   /** Defaults to `require` when `holderDidUrl` is set. Ignored without `holderDidUrl`. */
   bindingPolicy?: CloudWalletOid4vcBindingPolicy;
+  /** Forwarded unchanged to agent-controller; takes precedence when both forms are supplied and agree. */
+  binding?: CredentialBindingOptions;
   /** Send the `credential_accepted` notification to the issuer (agent default: true). */
   sendNotification?: boolean;
   userId?: string;

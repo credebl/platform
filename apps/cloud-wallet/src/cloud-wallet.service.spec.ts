@@ -17,6 +17,10 @@ describe('CloudWalletService holder isolation', () => {
   function createService(getCloudSubWallet = jest.fn().mockResolvedValue(holderWallet)) {
     const commonService = {
       httpGet: jest.fn().mockResolvedValue([]),
+      httpPost: jest.fn().mockResolvedValue({}),
+      handleError: jest.fn((error) => {
+        throw error;
+      }),
       decryptPassword: jest.fn().mockResolvedValue('holder-token'),
       checkAgentHealth: jest.fn().mockResolvedValue(true)
     };
@@ -101,5 +105,45 @@ describe('CloudWalletService holder isolation', () => {
       headers: { authorization: 'holder-token' },
       params: { threadId: 'thread/with?reserved=characters' }
     });
+  });
+
+  it('forwards a nested fresh-key binding without a flat holder DID', async () => {
+    const { commonService, service } = createService();
+
+    await service.requestCredential({
+      userId: 'holder-user',
+      email: 'holder@example.test',
+      credentialOfferUri: 'offer',
+      credentialsToRequest: ['Person'],
+      binding: { mode: 'new-key', signatureAlgorithm: 'EdDSA' }
+    } as any);
+
+    expect(commonService.httpPost).toHaveBeenCalledWith(
+      'https://wallet-agent.example/openid4vc/holder/request-credential',
+      {
+        credentialOfferUri: 'offer',
+        credentialsToRequest: ['Person'],
+        binding: { mode: 'new-key', signatureAlgorithm: 'EdDSA' }
+      },
+      expect.objectContaining({ headers: { authorization: 'holder-token' } })
+    );
+  });
+
+  it('rejects a conflicting holder DID before any offer or token call', async () => {
+    const { commonService, repository, service } = createService();
+
+    await expect(
+      service.requestCredential({
+        userId: 'holder-user',
+        email: 'holder@example.test',
+        credentialOfferUri: 'offer',
+        credentialsToRequest: ['Person'],
+        holderDidUrl: 'did:web:example.com#key-1',
+        binding: { mode: 'new-key' }
+      } as any)
+    ).rejects.toMatchObject({ response: expect.objectContaining({ error: 'CONFLICTING_HOLDER_DID_URL' }) });
+
+    expect(repository.getCloudSubWallet).not.toHaveBeenCalled();
+    expect(commonService.httpPost).not.toHaveBeenCalled();
   });
 });

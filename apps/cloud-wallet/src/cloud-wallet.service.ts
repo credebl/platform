@@ -3,6 +3,7 @@ import { CommonService, stringifyForLog } from '@credebl/common';
 import {
   BadRequestException,
   ConflictException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -42,6 +43,7 @@ import {
   IDecodeSdJwt,
   IDeleteHolderCredential
 } from '@credebl/common/interfaces/cloud-wallet.interface';
+import { BindingChoiceError } from './oid4vc-holder-binding';
 import { withHolderBinding } from './oid4vc-holder.helper';
 import { CloudWalletRepository } from './cloud-wallet.repository';
 import { ResponseMessages } from '@credebl/common/response-messages';
@@ -818,15 +820,28 @@ export class CloudWalletService {
     try {
       const { userId, ...payload } = requestCredentialDetails;
       delete payload.email;
+
+      // Validate the holder's binding choice before any offer or tx code is redeemed.
+      let agentPayload: ReturnType<typeof withHolderBinding>;
+      try {
+        agentPayload = withHolderBinding(payload);
+      } catch (error) {
+        if (error instanceof BindingChoiceError) {
+          throw new BadRequestException({
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: error.message,
+            error: error.codes[0] ?? 'INVALID_BINDING',
+            details: error.codes
+          });
+        }
+        throw error;
+      }
+
       const [baseWalletDetails, decryptedApiKey] = await this._commonCloudWalletInfo(userId);
       const { agentEndpoint } = baseWalletDetails;
 
       const url = `${agentEndpoint}${CommonConstants.OID4VC_HOLDER_REQUEST_CREDENTIAL}`;
-      return await this.commonService.httpPost(
-        url,
-        withHolderBinding(payload),
-        this._holderRequestConfig(decryptedApiKey)
-      );
+      return await this.commonService.httpPost(url, agentPayload, this._holderRequestConfig(decryptedApiKey));
     } catch (error) {
       await this.commonService.handleError(error);
       throw error;

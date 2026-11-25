@@ -33,4 +33,32 @@ describe('withHolderBinding', () => {
   it('drops a binding policy that has no holder DID', () => {
     expect(withHolderBinding({ ...base, bindingPolicy: 'prefer' })).toEqual(base);
   });
+
+  it('forwards a nested fresh-key binding without any flat holder DID', () => {
+    expect(withHolderBinding({ ...base, binding: { mode: 'new-key', didMethod: 'did:jwk' } })).toEqual({
+      ...base,
+      binding: { mode: 'new-key', didMethod: 'did:jwk' }
+    });
+  });
+
+  it('forwards a nested existing-DID binding and agrees with a matching flat DID', () => {
+    const holderDidUrl = 'did:web:example.com:holders:alice#key-1';
+    expect(
+      withHolderBinding({ ...base, holderDidUrl, binding: { mode: 'existing-did', holderDidUrl, policy: 'prefer' } })
+    ).toEqual({
+      ...base,
+      binding: { mode: 'existing-did', holderDidUrl, policy: 'prefer' }
+    });
+  });
+
+  it('rejects did:key with an RSA algorithm before the request is forwarded', () => {
+    const payload = {
+      ...base,
+      binding: { mode: 'new-key' as const, didMethod: 'did:key', signatureAlgorithm: 'RS256' }
+    };
+
+    expect(() => withHolderBinding(payload)).toThrow(
+      expect.objectContaining({ codes: ['INCOMPATIBLE_DID_METHOD_AND_ALGORITHM'] })
+    );
+  });
 });

@@ -16,3 +16,5 @@ $ npm install
 
 ### library schematic prompts you for a prefix (credebl alias) for the library:
 `What prefix would you like to use for the library (default: @app)? credebl`
+## Health endpoints
+Each microservice can expose `/health/live` and `/health/ready` when `HEALTH_PORT` is set. See [docs/microservice-health-endpoints.md](docs/microservice-health-endpoints.md).

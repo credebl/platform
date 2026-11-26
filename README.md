@@ -160,6 +160,10 @@ nest start agent-service [--watch]
 
 Deploy `agent-service` and `agent-provisioning` together: ledger JSON is now passed directly as a process argument. Local and Docker scripts need `SCHEMA_FILE_SERVER_URL` and `AGENT_API_KEY`; AWS settings are required only for the corresponding ECS/Fargate scripts.
 
+### • Health endpoints (Optional)
+
+Every NATS microservice can expose `GET /health/live` and `GET /health/ready` on a separate HTTP port, for container health checks and uptime monitors. Set `HEALTH_PORT` for the service to enable it (off by default). Readiness returns `503` when NATS, the database or (issuance, notification) Redis is unreachable. See [docs/microservice-health-endpoints.md](docs/microservice-health-endpoints.md).
+
 ## Testing
 
 Tests are written with [Jest](https://jestjs.io) and run via pnpm (the repo's package manager):

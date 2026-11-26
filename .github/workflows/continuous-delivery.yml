@@ -7,6 +7,10 @@ name: Continuous Delivery
 # Building arm64 on a native runner replaces the QEMU emulation used before, which
 # crashed or hung on some services (`qemu: uncaught target signal 4`) and made a
 # normal run take up to 36 minutes per stuck image.
+#
+# The per-architecture images use staging tags scoped to the workflow run
+# (ci-<run id>-<arch>). They cannot collide with release tags (v*), and a manifest
+# is only built from images pushed by this run, never from an earlier run's.
 
 on:
   push:
@@ -79,7 +83,7 @@ jobs:
           file: Dockerfiles/Dockerfile.${{ matrix.service }}
           push: true
           platforms: linux/${{ matrix.arch }}
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}:${{ env.TAG }}-${{ matrix.arch }}
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.service }}:ci-${{ github.run_id }}-${{ matrix.arch }}
           cache-from: type=gha,scope=${{ matrix.service }}-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}-${{ matrix.arch }}
 
@@ -88,7 +92,8 @@ jobs:
     runs-on: ubuntu-24.04
     needs: build
     # Run even when another service's build failed: each service only needs its
-    # own two architecture images, and the create step fails if one is missing.
+    # own two architecture images from this run, and the create step fails if one
+    # is missing.
     if: ${{ !cancelled() }}
     timeout-minutes: 10
 
@@ -149,6 +154,6 @@ jobs:
           fi
           docker buildx imagetools create \
             "${tags[@]}" \
-            "${IMAGE}:${TAG}-amd64" \
-            "${IMAGE}:${TAG}-arm64"
+            "${IMAGE}:ci-${GITHUB_RUN_ID}-amd64" \
+            "${IMAGE}:ci-${GITHUB_RUN_ID}-arm64"
           docker buildx imagetools inspect "${IMAGE}:${TAG}"

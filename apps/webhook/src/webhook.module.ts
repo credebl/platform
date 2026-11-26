@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { CommonModule } from '@credebl/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { Logger, Module } from '@nestjs/common';
@@ -15,6 +16,7 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.WEBHOOK_SERVICE),
     ConfigModule.forRoot(),
     ClientsModule.register([
       {

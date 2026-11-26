@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { Logger, Module } from '@nestjs/common';
 import { LedgerController } from './ledger.controller';
 import { LedgerService } from './ledger.service';
@@ -15,6 +16,7 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.LEDGER_SERVICE),
     GlobalConfigModule,
     LoggerModule,
     PlatformConfig,

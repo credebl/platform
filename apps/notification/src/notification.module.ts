@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { CommonModule } from '@credebl/common';
 import { getNatsOptions } from '@credebl/common/nats.config';
 import { shouldLoadNatsNotification } from '@credebl/common/common.utils';
@@ -19,6 +20,7 @@ import { NatsModule } from './nats/nats.module';
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.NOTIFICATION_SERVICE),
     ConfigModule.forRoot(),
     ClientsModule.register([
       {

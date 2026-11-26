@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { CommonModule } from '@credebl/common';
 import { PrismaService } from '@credebl/prisma-service';
 import { Logger, Module } from '@nestjs/common';
@@ -24,6 +25,7 @@ import { StatusListAllocatorService } from '@credebl/status-list';
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.ISSUANCE_SERVICE),
     ConfigModule.forRoot(),
     ClientsModule.register([
       {

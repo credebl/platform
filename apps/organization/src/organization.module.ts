@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Logger, Module } from '@nestjs/common';
 
@@ -27,6 +28,7 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
 import { NATSClient } from '@credebl/common/NATSClient';
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.ORGANIZATION_SERVICE),
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',

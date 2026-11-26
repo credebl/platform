@@ -34,6 +34,7 @@ import { RevocationModule } from './revocation/revocation.module';
 import { SchemaModule } from './schema/schema.module';
 import { UserModule } from './user/user.module';
 import { UtilitiesModule } from './utilities/utilities.module';
+import { HealthModule } from './health/health.module';
 import { VerificationModule } from './verification/verification.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { X509Module } from './x509/x509.module';
@@ -70,6 +71,7 @@ import { shouldLoadOidcModules } from '@credebl/common/common.utils';
     ConnectionModule,
     IssuanceModule,
     UtilitiesModule,
+    HealthModule,
     WebhookModule,
     NotificationModule,
     EcosystemModule,

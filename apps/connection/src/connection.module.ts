@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 /* eslint-disable array-bracket-spacing */
 import { Logger, Module } from '@nestjs/common';
 import { ConnectionController } from './connection.controller';
@@ -19,6 +20,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.CONNECTION_SERVICE),
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',

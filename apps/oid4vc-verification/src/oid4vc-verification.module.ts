@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { Logger, Module } from '@nestjs/common';
 import { Oid4vpVerificationController } from './oid4vc-verification.controller';
 import { Oid4vpVerificationService } from './oid4vc-verification.service';
@@ -17,6 +18,7 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.OIDC4VC_VERIFICATION_SERVICE),
     ConfigModule.forRoot(),
     ContextInterceptorModule,
     PlatformConfig,

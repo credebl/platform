@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { Logger, Module } from '@nestjs/common';
 import { GeoLocationController } from './geo-location.controller';
 import { GeoLocationService } from './geo-location.service';
@@ -15,6 +16,7 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.GEO_LOCATION_SERVICE),
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',

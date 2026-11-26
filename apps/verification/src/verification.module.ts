@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { Logger, Module } from '@nestjs/common';
 import { VerificationController } from './verification.controller';
 import { VerificationService } from './verification.service';
@@ -20,6 +21,7 @@ import { NATSClient } from '@credebl/common/NATSClient';
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.VERIFICATION_SERVICE),
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',

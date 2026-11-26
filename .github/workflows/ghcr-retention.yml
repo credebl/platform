@@ -1,0 +1,73 @@
+name: GHCR retention (dry run)
+
+# Reports which old pre-release container images would be deleted from ghcr.io/credebl.
+# It is a dry run: nothing is deleted. Read the log of each run, and only set
+# `dry-run: false` once the list looks right and the retention proposal is agreed.
+#
+# Proposed policy
+#   v1.2.3, v1.2.3-rc.N, latest   never touched (not matched by any filter below)
+#   *-alpha.N, *-beta.N           older than 90 days, except the 10 newest of those older ones
+#   ci-<run id>-<arch>            older than 7 days (staging tags of the delivery workflow)
+#
+# Not expressible with this action, so check the dry-run list by hand:
+#   - "newest 10 per base version" (the keep-n-most-recent count is per image)
+#   - alphas that have a GitHub release entry (e.g. v2.3.1-alpha.1)
+#   - the newest alpha of the line in development
+# Multi-arch child images (the per-architecture manifests behind a tag) are
+# protected automatically as long as the multi-arch tag that points to them is kept.
+#
+# Token: set the repository secret GHCR_CLEANUP_TOKEN to a classic personal access
+# token with read:packages (and delete:packages before deleting for real). Without
+# it the run falls back to GITHUB_TOKEN, which only works if this repository has the
+# Admin role on each package, and which cannot use wildcards in image names (so
+# they are listed in full below).
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read # needs `write` once dry-run is turned off
+
+concurrency:
+  group: ghcr-retention
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAMES: >-
+    agent-provisioning agent-service api-gateway cloud-wallet connection
+    geolocation issuance ledger notification user utility verification webhook
+    organization seed x509 oid4vc-issuance oid4vc-verification ecosystem
+
+jobs:
+  retention:
+    name: Report images to delete
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Old alpha and beta images
+        uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
+        with:
+          account: ${{ github.repository_owner }}
+          token: ${{ secrets.GHCR_CLEANUP_TOKEN || secrets.GITHUB_TOKEN }}
+          image-names: ${{ env.IMAGE_NAMES }}
+          image-tags: '*-alpha.* *-beta.*'
+          tag-selection: tagged
+          cut-off: 90d
+          timestamp-to-use: created_at
+          keep-n-most-recent: 10
+          dry-run: true
+
+      - name: Old delivery staging images
+        uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
+        with:
+          account: ${{ github.repository_owner }}
+          token: ${{ secrets.GHCR_CLEANUP_TOKEN || secrets.GITHUB_TOKEN }}
+          image-names: ${{ env.IMAGE_NAMES }}
+          image-tags: 'ci-*'
+          tag-selection: tagged
+          cut-off: 7d
+          timestamp-to-use: created_at
+          dry-run: true

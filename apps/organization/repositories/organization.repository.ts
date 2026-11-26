@@ -17,6 +17,10 @@ import {
   IGetDids,
   IGetOrgById,
   IGetOrganization,
+  IHolderPrimaryDid,
+  IHolderPrimaryDidScope,
+  IHolderPrimaryDidStore,
+  IHolderWalletInfo,
   ILedgerDetails,
   ILedgerNameSpace,
   IOrgDetails,
@@ -26,7 +30,7 @@ import {
   IUpdateOrganization,
   OrgInvitation
 } from '../interfaces/organization.interface';
-import { Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
+import { CloudWalletType, Invitation, PrismaTables, SortValue } from '@credebl/enum/enum';
 // eslint-disable-next-line camelcase
 import {
   Prisma,
@@ -935,6 +939,70 @@ export class OrganizationRepository {
       });
     } catch (error) {
       this.logger.error(`Delete Org Invitation Error: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  private get holderPrimaryDidStore(): IHolderPrimaryDidStore {
+    return (this.prisma as unknown as { oid4vc_holder_primary_did: IHolderPrimaryDidStore })
+      .oid4vc_holder_primary_did;
+  }
+
+  /**
+   * Holder wallets are cloud wallet sub-wallets. Finding one by user (and optionally tenant) is how the platform
+   * checks that a caller may set a primary DID suggestion for that tenant.
+   */
+  async findHolderWallet(userId: string, holderTenantId?: string): Promise<IHolderWalletInfo | null> {
+    try {
+      return await this.prisma.cloud_wallet_user_info.findFirst({
+        where: {
+          userId,
+          type: CloudWalletType.SUB_WALLET,
+          ...(holderTenantId ? { tenantId: holderTenantId } : { tenantId: { not: null } })
+        },
+        select: { userId: true, tenantId: true }
+      });
+    } catch (error) {
+      this.logger.error(`[findHolderWallet] - get holder wallet: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async getHolderPrimaryDid(scope: IHolderPrimaryDidScope): Promise<IHolderPrimaryDid | null> {
+    try {
+      return await this.holderPrimaryDidStore.findFirst({ where: scope });
+    } catch (error) {
+      this.logger.error(`[getHolderPrimaryDid] - get preference: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async setHolderPrimaryDid(preference: IHolderPrimaryDid): Promise<IHolderPrimaryDid> {
+    try {
+      const { orgId, userId, holderTenantId, didUrl } = preference;
+      const scope: IHolderPrimaryDidScope = { orgId, userId, holderTenantId };
+      const existing = await this.holderPrimaryDidStore.findFirst({ where: scope });
+
+      if (existing) {
+        return await this.holderPrimaryDidStore.update({
+          where: { id: existing.id },
+          data: { didUrl, lastChangedDateTime: new Date() }
+        });
+      }
+
+      return await this.holderPrimaryDidStore.create({ data: { ...scope, didUrl } });
+    } catch (error) {
+      this.logger.error(`[setHolderPrimaryDid] - save preference: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
+
+  async deleteHolderPrimaryDid(scope: IHolderPrimaryDidScope): Promise<boolean> {
+    try {
+      const result = await this.holderPrimaryDidStore.deleteMany({ where: scope });
+      return 0 < result.count;
+    } catch (error) {
+      this.logger.error(`[deleteHolderPrimaryDid] - delete preference: ${JSON.stringify(error)}`);
       throw error;
     }
   }

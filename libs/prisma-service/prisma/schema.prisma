@@ -34,6 +34,7 @@ model user {
   token                  token[]
   user_role_mapping      user_role_mapping[]
   cloud_wallet_user_info cloud_wallet_user_info[]
+  oid4vcHolderPrimaryDids oid4vc_holder_primary_did[]
   accounts               account[]
   sessions               session[]
   ecosystemInvitations   ecosystem_invitations[]
@@ -162,7 +163,8 @@ model organisation {
   ecosystem_invitations  ecosystem_invitations[]
   status_list_allocations status_list_allocation[]
   issued_oid4vc_credentials issued_oid4vc_credentials[]
-  oidc_issuer oidc_issuer[] 
+  oidc_issuer oidc_issuer[]
+  oid4vcHolderPrimaryDids oid4vc_holder_primary_did[]
 }
 
 model org_invitations {
@@ -588,6 +590,23 @@ model cloud_wallet_user_info {
 enum CloudWalletType {
   CLOUD_BASE_WALLET
   CLOUD_SUB_WALLET
+}
+
+// UI-only suggestion. Never injected into an OID4VC request by the platform.
+model oid4vc_holder_primary_did {
+  id                  String   @id @default(uuid()) @db.Uuid
+  orgId               String   @db.Uuid
+  userId              String   @db.Uuid
+  holderTenantId      String   @db.Text
+  didUrl              String   @db.Text
+  createDateTime      DateTime @default(now()) @db.Timestamptz(6)
+  lastChangedDateTime DateTime @default(now()) @db.Timestamptz(6)
+
+  organisation organisation @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user         user         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId, holderTenantId])
+  @@index([userId, holderTenantId])
 }
 
 model client_aliases {

@@ -11,9 +11,11 @@ import {
   UseGuards,
   Get,
   Param,
+  Put,
   Query,
   Delete,
-  BadRequestException
+  BadRequestException,
+  ForbiddenException
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -72,6 +74,7 @@ import {
   ResolveCredentialOfferDto,
   ResolveProofRequestDto
 } from './dtos/oid4vc-holder.dto';
+import { SetHolderPrimaryDidDto } from './dtos/oid4vc-holder-primary-did.dto';
 
 @UseFilters(CustomExceptionFilter)
 @Controller()
@@ -957,6 +960,97 @@ export class CloudWalletController {
       data: requestCredentialDetails
     };
     return res.status(HttpStatus.CREATED).json(finalResponse);
+  }
+
+  private assertPrimaryDidUser(userId: string, user: user): void {
+    if (!user?.id || user.id !== userId) {
+      throw new ForbiddenException(ResponseMessages.holderPrimaryDid.error.accessDenied);
+    }
+  }
+
+  /**
+   * Get the platform's primary DID suggestion for a holder tenant. This is a UI hint only; it is never
+   * injected into a credential request. Returns 204 when no suggestion exists.
+   */
+  @Get('/orgs/:orgId/users/:userId/oid4vc/holder/primary-did')
+  @ApiOperation({
+    summary: 'Get holder primary DID suggestion',
+    description: 'Returns the UI-only primary DID suggestion for the holder tenant, or 204 if none is saved.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Suggestion fetched', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async getHolderPrimaryDid(
+    @Param('orgId') orgId: string,
+    @Param('userId') userId: string,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    this.assertPrimaryDidUser(userId, user);
+    const preference = await this.cloudWalletService.getHolderPrimaryDidForUser(orgId, userId);
+
+    if (!preference) {
+      return res.status(HttpStatus.NO_CONTENT).send();
+    }
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.holderPrimaryDid.success.fetched,
+      data: preference
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /**
+   * Save a primary DID suggestion after verifying the DID exists in the holder tenant via the holder agent.
+   */
+  @Put('/orgs/:orgId/users/:userId/oid4vc/holder/primary-did')
+  @ApiOperation({
+    summary: 'Set holder primary DID suggestion',
+    description: 'Saves a DID as a suggested (never required) pre-fill for the holder tenant.'
+  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Suggestion saved', type: ApiResponseDto })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async setHolderPrimaryDid(
+    @Param('orgId') orgId: string,
+    @Param('userId') userId: string,
+    @Body() primaryDid: SetHolderPrimaryDidDto,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    this.assertPrimaryDidUser(userId, user);
+    const preference = await this.cloudWalletService.setHolderPrimaryDidForUser(
+      orgId,
+      userId,
+      user.email,
+      primaryDid.didUrl,
+      primaryDid.holderTenantId
+    );
+
+    const finalResponse: IResponse = {
+      statusCode: HttpStatus.OK,
+      message: ResponseMessages.holderPrimaryDid.success.saved,
+      data: preference
+    };
+    return res.status(HttpStatus.OK).json(finalResponse);
+  }
+
+  /** Clear the holder tenant's primary DID suggestion. */
+  @Delete('/orgs/:orgId/users/:userId/oid4vc/holder/primary-did')
+  @ApiOperation({
+    summary: 'Delete holder primary DID suggestion',
+    description: 'Clears the UI-only primary DID suggestion for the holder tenant.'
+  })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Suggestion deleted' })
+  @UseGuards(AuthGuard('jwt'), UserRoleGuard)
+  async deleteHolderPrimaryDid(
+    @Param('orgId') orgId: string,
+    @Param('userId') userId: string,
+    @User() user: user,
+    @Res() res: Response
+  ): Promise<Response> {
+    this.assertPrimaryDidUser(userId, user);
+    await this.cloudWalletService.deleteHolderPrimaryDidForUser(orgId, userId);
+    return res.status(HttpStatus.NO_CONTENT).send();
   }
 
   /**

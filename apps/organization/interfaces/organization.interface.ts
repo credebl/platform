@@ -334,3 +334,39 @@ export interface IOrgDetails {
   orgAgents: IOrgAgentDetails[];
   userOrgRoles: IUserOrgRolesDetails[];
 }
+
+export interface IHolderWalletInfo {
+  userId?: string;
+  tenantId?: string;
+}
+
+export interface IHolderPrimaryDid {
+  orgId: string;
+  userId: string;
+  holderTenantId: string;
+  didUrl: string;
+  createDateTime?: Date;
+  lastChangedDateTime?: Date;
+}
+
+/** Narrow Prisma delegate shape so the repository does not depend on a regenerated client in unit tests. */
+export interface IHolderPrimaryDidRecord extends IHolderPrimaryDid {
+  id: string;
+  createDateTime: Date;
+  lastChangedDateTime: Date;
+}
+
+export interface IHolderPrimaryDidStore {
+  findFirst(args: { where: IHolderPrimaryDidScope }): Promise<IHolderPrimaryDidRecord | null>;
+  create(args: {
+    data: { orgId: string; userId: string; holderTenantId: string; didUrl: string };
+  }): Promise<IHolderPrimaryDidRecord>;
+  update(args: { where: { id: string }; data: { didUrl: string; lastChangedDateTime: Date } }): Promise<IHolderPrimaryDidRecord>;
+  deleteMany(args: { where: IHolderPrimaryDidScope }): Promise<{ count: number }>;
+}
+
+export interface IHolderPrimaryDidScope {
+  orgId: string;
+  userId: string;
+  holderTenantId: string;
+}

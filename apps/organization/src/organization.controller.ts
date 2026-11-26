@@ -9,6 +9,9 @@ import {
   IOrgDidDetails,
   IGetOrgById,
   IGetOrganization,
+  IHolderPrimaryDid,
+  IHolderPrimaryDidScope,
+  IHolderWalletInfo,
   IOrgDetails,
   IUpdateOrganization,
   Payload
@@ -57,6 +60,35 @@ export class OrganizationController {
   @MessagePattern({ cmd: 'set-primary-did' })
   async setPrimaryDid(@Body() payload: { orgId: string; did: string; id: string }): Promise<string> {
     return this.organizationService.setPrimaryDid(payload.orgId, payload.did, payload.id);
+  }
+
+  /**
+   * Find the holder sub-wallet for a user. Used by the gateway to check tenant access before saving a suggestion.
+   */
+  @MessagePattern({ cmd: 'find-holder-wallet' })
+  async findHolderWallet(
+    @Body() payload: { userId: string; holderTenantId?: string }
+  ): Promise<IHolderWalletInfo | null> {
+    return this.organizationService.findHolderWallet(payload.userId, payload.holderTenantId);
+  }
+
+  @MessagePattern({ cmd: 'get-holder-primary-did' })
+  async getHolderPrimaryDid(
+    @Body() payload: IHolderPrimaryDidScope
+  ): Promise<IHolderPrimaryDid | null> {
+    return this.organizationService.getHolderPrimaryDid(payload);
+  }
+
+  @MessagePattern({ cmd: 'set-holder-primary-did' })
+  async setHolderPrimaryDid(
+    @Body() payload: IHolderPrimaryDid
+  ): Promise<IHolderPrimaryDid> {
+    return this.organizationService.setHolderPrimaryDid(payload);
+  }
+
+  @MessagePattern({ cmd: 'delete-holder-primary-did' })
+  async deleteHolderPrimaryDid(@Body() payload: IHolderPrimaryDidScope): Promise<boolean> {
+    return this.organizationService.deleteHolderPrimaryDid(payload);
   }
 
   /**

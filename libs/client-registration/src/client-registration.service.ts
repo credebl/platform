@@ -6,7 +6,14 @@
 
 import * as qs from 'qs';
 
-import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException
+} from '@nestjs/common';
 
 import { ClientCredentialTokenPayloadDto } from './dtos/client-credential-token-payload.dto';
 import { ClientTokenDto } from './dtos/client-token.dto';
@@ -323,6 +330,32 @@ export class ClientRegistrationService {
     this.logger.debug(`getClientSpecificRoles ${JSON.stringify(clientRolesResponse)}`);
 
     return clientRolesResponse;
+  }
+
+  async getRealmRoleByName(token: string, roleName: string): Promise<IClientRoles | null> {
+    const realmName = process.env.KEYCLOAK_REALM;
+
+    try {
+      const realmRoleResponse = await this.commonService.httpGet(
+        await this.keycloakUrlService.GetRealmRoleURL(realmName, roleName),
+        this.getAuthHeader(token)
+      );
+
+      this.logger.debug(`getRealmRoleByName ${JSON.stringify(realmRoleResponse)}`);
+
+      return realmRoleResponse;
+    } catch (error) {
+      // Keycloak answers 404 when the realm does not define the role. The HTTP
+      // layer also reports a refused connection as 404, so keep that one out:
+      // an unreachable Keycloak is not a missing role.
+      const body = error?.getResponse?.();
+      const refused =
+        'string' === typeof body?.error && body.error.includes(CommonConstants.RESP_ERR_HTTP_ECONNREFUSED);
+      if (HttpStatus.NOT_FOUND === error?.getStatus?.() && !refused) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async getAllRealmRoles(token: string): Promise<IClientRoles[]> {

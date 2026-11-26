@@ -9,6 +9,7 @@ import { NestFactory } from '@nestjs/core';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import { UserModule } from './user.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { startMicroserviceHealth } from '@credebl/common/health/health-server';
 import { loadConfigSecrets } from '@credebl/config/secret-storage/secrets-loader';
 
 dotenv.config();
@@ -17,14 +18,20 @@ const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
   await loadConfigSecrets();
+  const natsOptions = getNatsOptions(
+    CommonConstants.USER_SERVICE,
+    process.env.USER_NKEY_SEED,
+    process.env.NATS_CREDS_FILE
+  );
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(UserModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(CommonConstants.USER_SERVICE, process.env.USER_NKEY_SEED, process.env.NATS_CREDS_FILE)
+    options: natsOptions
   });
   app.useLogger(app.get(NestjsLoggerServiceAdapter));
   app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen();
+  startMicroserviceHealth(app, CommonConstants.USER_SERVICE, natsOptions);
   logger.log('User Microservice is listening to NATS ');
   const supportedProviders = ['sendgrid', 'resend', 'smtp'] as const;
   type EmailProvider = (typeof supportedProviders)[number];

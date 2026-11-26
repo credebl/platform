@@ -9,6 +9,7 @@ import { NestFactory } from '@nestjs/core';
 import NestjsLoggerServiceAdapter from '@credebl/logger/nestjsLoggerServiceAdapter';
 import { WebhookModule } from '../src/webhook.module';
 import { getNatsOptions } from '@credebl/common/nats.config';
+import { startMicroserviceHealth } from '@credebl/common/health/health-server';
 import { loadConfigSecrets } from '@credebl/config/secret-storage/secrets-loader';
 
 dotenv.config();
@@ -17,18 +18,20 @@ const logger = new Logger();
 
 async function bootstrap(): Promise<void> {
   await loadConfigSecrets();
+  const natsOptions = getNatsOptions(
+    CommonConstants.WEBHOOK_SERVICE,
+    process.env.ISSUANCE_NKEY_SEED,
+    process.env.NATS_CREDS_FILE
+  );
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(WebhookModule, {
     transport: Transport.NATS,
-    options: getNatsOptions(
-      CommonConstants.WEBHOOK_SERVICE,
-      process.env.ISSUANCE_NKEY_SEED,
-      process.env.NATS_CREDS_FILE
-    )
+    options: natsOptions
   });
   app.useLogger(app.get(NestjsLoggerServiceAdapter));
   app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen();
+  startMicroserviceHealth(app, CommonConstants.WEBHOOK_SERVICE, natsOptions);
   logger.log('Webhook-Service Microservice is listening to NATS ');
 }
 bootstrap();

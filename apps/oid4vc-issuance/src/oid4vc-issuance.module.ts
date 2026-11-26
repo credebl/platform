@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { Logger, Module } from '@nestjs/common';
 import { Oid4vcIssuanceController } from './oid4vc-issuance.controller';
 import { Oid4vcIssuanceService } from './oid4vc-issuance.service';
@@ -17,6 +18,7 @@ import { StatusListAllocatorService } from '@credebl/status-list';
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.OIDC4VC_ISSUANCE_SERVICE),
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',

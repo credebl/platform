@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { Logger, Module } from '@nestjs/common';
 import { AgentProvisioningController } from './agent-provisioning.controller';
 import { AgentProvisioningService } from './agent-provisioning.service';
@@ -11,6 +12,7 @@ import { ContextInterceptorModule } from '@credebl/context/contextInterceptorMod
 import { ConfigModule as PlatformConfig } from '@credebl/config/config.module';
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.AGENT_PROVISIONING),
     ConfigModule.forRoot(),
     GlobalConfigModule,
     LoggerModule,

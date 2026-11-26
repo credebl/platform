@@ -6,3 +6,4 @@ export * from './utils/url-validator.util';
 export * from './utils/redact-for-log.util';
 export * from './utils/plaintext-key.util';
 export * from './health/health-server';
+export * from './health/health-ping';

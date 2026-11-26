@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { Logger, Module } from '@nestjs/common';
 import { X509CertificateService } from './x509.service';
 import { PrismaService } from '@credebl/prisma-service';
@@ -13,6 +14,7 @@ import { X509CertificateController } from './x509.controller';
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.X509_SERVICE),
     GlobalConfigModule,
     LoggerModule,
     PlatformConfig,

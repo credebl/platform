@@ -1,3 +1,4 @@
+import { HealthPingModule } from '@credebl/common/health/health-ping';
 import { Logger, Module } from '@nestjs/common';
 import { CloudWalletController } from './cloud-wallet.controller';
 import { CloudWalletService } from './cloud-wallet.service';
@@ -15,6 +16,7 @@ import { CommonConstants, MICRO_SERVICE_NAME } from '@credebl/common/common.cons
 
 @Module({
   imports: [
+    HealthPingModule.register(CommonConstants.CLOUD_WALLET_SERVICE),
     ClientsModule.register([
       {
         name: 'NATS_CLIENT',
